@@ -1,0 +1,26 @@
+type object
+
+type game:
+	string author
+	int version
+
+type action
+
+type physical
+
+type containing < physical:
+	list<item> contents
+
+type room < containing
+	string name
+	string description
+
+type item < physical:
+	bool scenery
+	item holder
+
+type box < item, containing:
+	bool closable
+	bool closed
+
+type person < physical:

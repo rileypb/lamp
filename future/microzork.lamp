@@ -1,0 +1,23 @@
+# A complete game in Lamp, with one room and two objects
+
+game Micro-Zork: # indicates the name of the game we're compiling
+	author Phil Riley
+	version 1
+
+room West of House: # here : indicates containment
+	contains small mailbox
+	capacity = 1
+	most important content = small mailbox
+
+item small mailbox: 
+	is box
+	can open
+	can close
+	contains leaflet
+
+item leaflet:
+	described by "\"WELCOME TO ZORK!
+ 
+ZORK is a game of adventure, danger, and low cunning. In it you will explore some of the most amazing territory ever seen by mortals. No computer should be without one!\""
+
+ 

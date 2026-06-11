@@ -1,0 +1,38 @@
+# Definitions of the basic actions.
+
+action take:
+	parse as:
+		take $noun
+		get $noun
+		pick up $noun
+		pick $noun up
+
+	(verb, noun) ->
+		noun.holder = player
+	(verb, noun:(scenery) ->
+		error "You can't take that."
+
+parse :take $noun: -> drop
+parse :drop $noun: -> drop
+parse :put down $noun: -> drop
+parse :put $noun down: -> drop
+
+action drop:
+	"drop"/"throw"/"put down"
+	parse $verb $noun
+	(verb, noun) ->
+		noun.holder = player.holder
+
+
+
+action examine:
+	"examine"/"look at"
+	parse $verb $noun
+	(verb, noun) ->
+		print(noun.description)
+
+action insert:
+	"put"/"insert"
+	parse $verb $noun in $noun
+	(verb, noun1, noun2) ->
+		noun1.holder = noun2

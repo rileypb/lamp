@@ -1,0 +1,7 @@
+# specify what happens at startup.
+
+on startup:
+	let this_game = game.all.first
+	print this_game.name
+	print "by " + this_game.author
+	print "version " + this_game.version

@@ -1,0 +1,11 @@
+game Extended:
+    author Test Author
+    version 1
+
+on startup:
+    let this_game = game.all.first
+    this_game.version = this_game.version + 1
+    print "after " + this_game.version
+
+on validation:
+    error "invalid state"
