@@ -7,15 +7,14 @@ type game:
 
 type physical
 
-type container < physical:
-	list<item> contents
+type container < physical
 
 type room < container:
 	string description
 
 type item < physical:
 	bool scenery
-	item holder
+	container holder
 
 type box < item, container:
 	bool closable

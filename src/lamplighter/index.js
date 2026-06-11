@@ -96,7 +96,7 @@ function fireEvent(eventName) {
 }
 
 function print(value) {
-    printImpl(value);
+    printImpl(formatValue(value));
 }
 
 function setPrint(nextPrintImpl) {
@@ -105,6 +105,13 @@ function setPrint(nextPrintImpl) {
 
 function error(message) {
     throw new Error(String(message));
+}
+
+function formatValue(value) {
+    if (value && typeof value === "object" && typeof value.name === "string") {
+        return value.name;
+    }
+    return value;
 }
 
 function makeList(items) {

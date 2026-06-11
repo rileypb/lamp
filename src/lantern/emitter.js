@@ -152,6 +152,9 @@ function emitExpression(expr) {
     if (expr.kind === "StringLiteral") {
         return JSON.stringify(expr.value);
     }
+    if (expr.kind === "VariableExpr") {
+        return expr.name;
+    }
     if (expr.kind === "NumberLiteral") {
         return String(expr.value);
     }

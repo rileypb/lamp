@@ -46,6 +46,10 @@ function createStringLiteral(value) {
     return { kind: "StringLiteral", value };
 }
 
+function createVariableExpr(name) {
+    return { kind: "VariableExpr", name };
+}
+
 function createNumberLiteral(value) {
     return { kind: "NumberLiteral", value };
 }
@@ -85,6 +89,7 @@ module.exports = {
     createFieldDecl,
     createFieldAssign,
     createStringLiteral,
+    createVariableExpr,
     createNumberLiteral,
     createPropertyAccess,
     createConcat,
