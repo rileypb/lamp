@@ -1,6 +1,7 @@
 const typeRegistry = new Map();
 const instanceRegistry = new Map();
 const eventRegistry = new Map();
+const kindRegistry = new Map();
 
 let printImpl = (value) => {
     console.log(String(value));
@@ -134,11 +135,32 @@ function isTypeOrSubtype(candidateTypeName, ancestorTypeName) {
     return false;
 }
 
+function defineKind(name, kindDef) {
+    if (kindRegistry.has(name)) {
+        throw new Error(`Kind already defined: ${name}`);
+    }
+    kindRegistry.set(name, kindDef);
+}
+
+function enumKind(...labels) {
+    return { kindType: "enum", labels };
+}
+
+function kind(name) {
+    if (!kindRegistry.has(name)) {
+        throw new Error(`Unknown kind: ${name}`);
+    }
+    return kindRegistry.get(name);
+}
+
 module.exports = {
     bootstrapBuiltins,
     defineType,
     createObject,
     type,
+    defineKind,
+    enum: enumKind,
+    kind,
     onEvent,
     run,
     print,

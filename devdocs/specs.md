@@ -138,6 +138,30 @@ All objects expose the following built-in fields:
 - `all` — the collection of all instances of this object's type. `game.all` has type `list<game>`.
 - `type` — the type of this object. `this_game.type` is `game`.
 
+### Kinds
+
+A **kind** defines a range of values, as distinct from a type which defines a class of discrete objects. Kinds are used to type object fields.
+
+#### Kind declarations
+
+```lamp
+kind KIND_NAME = KIND_EXPR
+```
+
+`kind` binds a name to a kind expression. The name can then be used as a field type in type declarations.
+
+#### Built-in kind constructors
+
+- `enum(LABEL, ...)` — produces a kind whose values are the given labels. Labels are bare identifiers (no quotes).
+
+```lamp
+kind color = enum(red, green, blue)
+```
+
+#### Output behavior
+
+Every kind has an output function for printing a value of that kind. The `enum` kind's output function is built-in. For example, if `color` is defined as above, then `print red` outputs `red`, and so on for the other labels. An unset value of an enum kind outputs as `none`.
+
 ### Events
 
 Events are objects of type `event`. Built-in event types include `startup`:

@@ -1,5 +1,6 @@
 function emitProgram(programAst, options = {}) {
     const runtimeRequirePath = options.runtimeRequirePath || "../lamplighter";
+    const kindNodes = programAst.nodes.filter((node) => node.kind === "KindDecl");
     const typeNodes = programAst.nodes.filter((node) => node.kind === "TypeDecl");
     const objectNodes = programAst.nodes.filter((node) => node.kind === "ObjectDecl");
     const eventNodes = programAst.nodes.filter((node) => node.kind === "EventHandler");
@@ -10,6 +11,22 @@ function emitProgram(programAst, options = {}) {
     lines.push(`const lamplighter = require(${JSON.stringify(runtimeRequirePath)});`);
     lines.push("lamplighter.bootstrapBuiltins();");
     lines.push("");
+
+    for (const kindNode of kindNodes) {
+        lines.push(emitKindDecl(kindNode));
+    }
+
+    if (kindNodes.length > 0) {
+        lines.push("");
+    }
+
+    for (const kindNode of kindNodes) {
+        lines.push(`const ${kindNode.name} = lamplighter.kind(${JSON.stringify(kindNode.name)});`);
+    }
+
+    if (kindNodes.length > 0) {
+        lines.push("");
+    }
 
     for (const typeNode of typeNodes) {
         lines.push(emitTypeDecl(typeNode));
@@ -44,6 +61,18 @@ function emitProgram(programAst, options = {}) {
     lines.push("");
 
     return `${lines.join("\n")}`;
+}
+
+function emitKindDecl(node) {
+    return `lamplighter.defineKind(${JSON.stringify(node.name)}, ${emitKindExpr(node.kindExpr)});`;
+}
+
+function emitKindExpr(expr) {
+    if (expr.kind === "EnumExpr") {
+        const labelArgs = expr.labels.map((l) => JSON.stringify(l)).join(", ");
+        return `lamplighter.enum(${labelArgs})`;
+    }
+    throw new Error(`Unsupported kind expression kind: ${expr.kind}`);
 }
 
 function emitTypeDecl(node) {

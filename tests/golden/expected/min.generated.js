@@ -3,7 +3,13 @@
 const lamplighter = require("../../../src/lamplighter");
 lamplighter.bootstrapBuiltins();
 
-lamplighter.defineType("game", null, {"author":"string","version":"int"});
+lamplighter.defineKind("color", lamplighter.enum("red", "green", "blue"));
+lamplighter.defineKind("reltype", lamplighter.enum("dev", "beta", "release"));
+
+const color = lamplighter.kind("color");
+const reltype = lamplighter.kind("reltype");
+
+lamplighter.defineType("game", null, {"author":"string","version":"int","release":"reltype"});
 
 const game = lamplighter.type("game");
 
@@ -14,6 +20,7 @@ lamplighter.onEvent("startup", () => {
     lamplighter.print(this_game.name);
     lamplighter.print("by " + this_game.author);
     lamplighter.print("version " + this_game.version);
+    lamplighter.print("release type " + this_game.release);
 });
 
 lamplighter.run();

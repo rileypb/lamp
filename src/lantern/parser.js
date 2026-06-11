@@ -13,6 +13,8 @@ const {
     createNumberLiteral,
     createPropertyAccess,
     createConcat,
+    createKindDecl,
+    createEnumExpr,
 } = require("./ast");
 
 function parseSource(sourceText, filePath) {
@@ -79,6 +81,13 @@ function parseNodes(lines, startIndex, baseIndent, filePath) {
         }
         if (line.indent > baseIndent) {
             throw syntaxError(filePath, line.lineNumber, "Unexpected indentation");
+        }
+
+        if (content.startsWith("kind ")) {
+            const { node, nextIndex } = parseKindDecl(lines, index, filePath);
+            nodes.push(node);
+            index = nextIndex;
+            continue;
         }
 
         if (content.startsWith("type ")) {
@@ -335,6 +344,27 @@ function parseChildBlock(lines, headerIndex, filePath) {
     }
 
     return { lines: blockLines, nextIndex: index };
+}
+
+function parseKindDecl(lines, index, filePath) {
+    const line = lines[index];
+    const content = line.text.trim();
+    const match = content.match(/^kind\s+([A-Za-z_][A-Za-z0-9_]*)\s*=\s*(.+)$/);
+    if (!match) {
+        throw syntaxError(filePath, line.lineNumber, "Invalid kind declaration");
+    }
+    const name = match[1];
+    const kindExpr = parseKindExpr(match[2].trim(), filePath, line.lineNumber);
+    return { node: createKindDecl(name, kindExpr), nextIndex: index + 1 };
+}
+
+function parseKindExpr(raw, filePath, lineNumber) {
+    const enumMatch = raw.match(/^enum\((.+)\)$/);
+    if (enumMatch) {
+        const labels = enumMatch[1].split(",").map((s) => s.trim()).filter(Boolean);
+        return createEnumExpr(labels);
+    }
+    throw syntaxError(filePath, lineNumber, `Unsupported kind expression: ${raw}`);
 }
 
 function syntaxError(filePath, lineNumber, message) {

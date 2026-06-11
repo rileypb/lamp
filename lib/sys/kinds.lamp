@@ -1,0 +1,10 @@
+# kinds - a lot like composite primitives
+
+# one way to tell types from kinds is that types are instantiated as objects (discrete entities with attributes), whereas kinds define a *range* of values that can then be used to define attributes.
+
+# here, enum is a built-in function that returns a kind. red, green, and blue are of a kind called label.
+kind color = enum(red, green, blue)
+
+# every kind has an output function for printing a value of that kind. The enum kind's output function is built-in.
+
+kind reltype = enum(dev, beta, release)

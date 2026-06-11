@@ -54,10 +54,20 @@ function createConcat(left, right) {
     return { kind: "Concat", left, right };
 }
 
+function createKindDecl(name, kindExpr) {
+    return { kind: "KindDecl", name, kindExpr };
+}
+
+function createEnumExpr(labels) {
+    return { kind: "EnumExpr", labels };
+}
+
 module.exports = {
     createProgram,
     createTypeDecl,
     createObjectDecl,
+    createKindDecl,
+    createEnumExpr,
     createEventHandler,
     createLetStatement,
     createPrintStatement,

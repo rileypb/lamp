@@ -1,3 +1,4 @@
 Minimal
 by Phil Riley
 version 1
+release type undefined

@@ -3,4 +3,5 @@
 type game:
 	string author
 	int version
+	reltype release
 
