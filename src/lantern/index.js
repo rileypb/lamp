@@ -4,6 +4,7 @@ const fs = require("fs");
 const path = require("path");
 const { parseSource } = require("./parser");
 const { emitProgram } = require("./emitter");
+const { checkProgram } = require("./checker");
 
 function main() {
     try {
@@ -47,6 +48,8 @@ function runCompilation() {
     }
 
     const mergedProgram = { kind: "Program", nodes: allNodes };
+    checkProgram(mergedProgram);
+
     const outputJs = emitProgram(mergedProgram, { runtimeRequirePath });
 
     fs.mkdirSync(path.dirname(outputFile), { recursive: true });
@@ -60,20 +63,20 @@ function reportCompileError(error) {
     const diagnostic = parseDiagnostic(message);
 
     if (!diagnostic) {
-        console.error(`Compile error: ${message}`);
+        console.log(`Compile error: ${message}`);
         return;
     }
 
     const { filePath, lineNumber, detail } = diagnostic;
-    console.error(`Compile error: ${filePath}:${lineNumber}: ${detail}`);
+    console.log(`Compile error: ${filePath}:${lineNumber}: ${detail}`);
 
     try {
         const fileText = fs.readFileSync(filePath, "utf8");
         const lines = fileText.split(/\r?\n/);
         const lineText = lines[lineNumber - 1] || "";
         const firstTokenColumn = Math.max(0, lineText.search(/\S|$/));
-        console.error(`  ${lineNumber} | ${lineText}`);
-        console.error(`    | ${" ".repeat(firstTokenColumn)}^`);
+        console.log(`  ${lineNumber} | ${lineText}`);
+        console.log(`    | ${" ".repeat(firstTokenColumn)}^`);
     } catch (_readError) {
         // Best-effort diagnostics only.
     }

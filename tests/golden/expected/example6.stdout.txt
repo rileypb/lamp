@@ -1,0 +1,3 @@
+Compile error: /Users/rileypb/dev/lamp/tests/fixtures/example6.lamp:7: type error: field "version" expects int, got string ("illegal")
+  7 | 	game.all.first.version = "illegal"
+    |  ^

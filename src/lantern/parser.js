@@ -206,7 +206,7 @@ function parseObjectFields(lines, filePath) {
         if (!match) {
             throw syntaxError(filePath, line.lineNumber, "Invalid object field assignment");
         }
-        fields.push(createFieldAssign(match[1], parseSimpleValue(match[2])));
+        fields.push(createFieldAssign(match[1], parseSimpleValue(match[2]), filePath, line.lineNumber));
     }
     return fields;
 }
@@ -294,7 +294,7 @@ function parseStatementBlock(lines, startIndex, baseIndent, filePath, localNames
         const assignMatch = content.match(/^([A-Za-z_][A-Za-z0-9_]*(?:\.[A-Za-z_][A-Za-z0-9_]*)+)\s*=\s*(.+)$/);
         if (assignMatch) {
             statements.push(
-                createAssignStatement(assignMatch[1].split("."), parseExpression(assignMatch[2], filePath, line.lineNumber, localNames)),
+                createAssignStatement(assignMatch[1].split("."), parseExpression(assignMatch[2], filePath, line.lineNumber, localNames), filePath, line.lineNumber),
             );
             index += 1;
             continue;

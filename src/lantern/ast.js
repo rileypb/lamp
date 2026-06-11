@@ -22,8 +22,8 @@ function createPrintStatement(expr) {
     return { kind: "PrintStatement", expr };
 }
 
-function createAssignStatement(targetChain, expr) {
-    return { kind: "AssignStatement", targetChain, expr };
+function createAssignStatement(targetChain, expr, filePath, lineNumber) {
+    return { kind: "AssignStatement", targetChain, expr, filePath, lineNumber };
 }
 
 function createErrorStatement(expr) {
@@ -38,8 +38,8 @@ function createFieldDecl(typeName, fieldName) {
     return { kind: "FieldDecl", typeName, fieldName };
 }
 
-function createFieldAssign(fieldName, value) {
-    return { kind: "FieldAssign", fieldName, value };
+function createFieldAssign(fieldName, value, filePath, lineNumber) {
+    return { kind: "FieldAssign", fieldName, value, filePath, lineNumber };
 }
 
 function createStringLiteral(value) {

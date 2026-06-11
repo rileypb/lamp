@@ -1,0 +1,8 @@
+game Game 1:
+    author Test Author
+    version 1
+    release dev
+
+on startup:
+	game.all.first.version = "illegal"
+    print game.all.first.version

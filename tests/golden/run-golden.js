@@ -50,7 +50,10 @@ function discoverCases() {
                     const expectedStdoutPath = path.join(expectedDir, `${baseName}.stdout.txt`);
                     const expectedStdout = fs.readFileSync(expectedStdoutPath, "utf8");
                     const expectedJsExists = fs.existsSync(expectedJsCandidate);
-                    const expectCompileFailure = !expectedJsExists && expectedStdout.trimStart().startsWith("error:");
+                    const expectCompileFailure = !expectedJsExists && (
+                        expectedStdout.trimStart().startsWith("error:") ||
+                        expectedStdout.trimStart().startsWith("Compile error:")
+                    );
 
                     return {
                         inputPath,
