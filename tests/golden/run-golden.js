@@ -17,7 +17,7 @@ function main() {
     for (const testCase of cases) {
         const compileResult = compileCase(testCase.inputPath, testCase.generatedPath, testCase.expectCompileFailure);
 
-        if (!testCase.expectCompileFailure) {
+        if (!testCase.expectCompileFailure && testCase.expectedJsPath) {
             assertFileMatches(testCase.generatedPath, testCase.expectedJsPath, `${path.basename(testCase.inputPath)} generated JavaScript`);
         }
 
@@ -46,15 +46,18 @@ function discoverCases() {
                     const baseName = path.basename(entry, ".lamp");
                     const inputPath = path.join(rootDir, entry);
                     const generatedPath = path.join(tmpDir, `${baseName}.generated.js`);
-                    const expectedJsPath = path.join(expectedDir, `${baseName}.generated.js`);
+                    const expectedJsCandidate = path.join(expectedDir, `${baseName}.generated.js`);
                     const expectedStdoutPath = path.join(expectedDir, `${baseName}.stdout.txt`);
+                    const expectedStdout = fs.readFileSync(expectedStdoutPath, "utf8");
+                    const expectedJsExists = fs.existsSync(expectedJsCandidate);
+                    const expectCompileFailure = !expectedJsExists && expectedStdout.trimStart().startsWith("error:");
 
                     return {
                         inputPath,
                         generatedPath,
-                        expectedJsPath,
+                        expectedJsPath: expectedJsExists ? expectedJsCandidate : null,
                         expectedStdoutPath,
-                        expectCompileFailure: !fs.existsSync(expectedJsPath),
+                        expectCompileFailure,
                     };
                 });
         });
@@ -96,8 +99,71 @@ function assertFileMatches(actualPath, expectedPath, label) {
 
 function assertTextMatches(actual, expected, label) {
     if (actual !== expected) {
-        throw new Error(`Golden mismatch for ${label}`);
+        throw new Error(buildDiffMessage(label, expected, actual));
     }
+}
+
+function buildDiffMessage(label, expected, actual) {
+    const expectedLines = splitLines(expected);
+    const actualLines = splitLines(actual);
+    const maxLines = Math.max(expectedLines.length, actualLines.length);
+
+    const differingIndices = [];
+    for (let i = 0; i < maxLines; i += 1) {
+        if ((expectedLines[i] || "") !== (actualLines[i] || "")) {
+            differingIndices.push(i);
+        }
+    }
+
+    const sections = [];
+    const maxDiffsToShow = 20;
+    const shown = differingIndices.slice(0, maxDiffsToShow);
+
+    for (const index of shown) {
+        const expectedLine = expectedLines[index] || "";
+        const actualLine = actualLines[index] || "";
+
+        sections.push(`line ${index + 1}:`);
+        sections.push(`  expected (${expectedLine.length}): ${showWhitespace(expectedLine)}`);
+        sections.push(`  actual   (${actualLine.length}): ${showWhitespace(actualLine)}`);
+        sections.push(`  marker         : ${buildCharMarker(expectedLine, actualLine)}`);
+    }
+
+    if (differingIndices.length > shown.length) {
+        sections.push(`... ${differingIndices.length - shown.length} more differing line(s) omitted.`);
+    }
+
+    return [
+        `Golden mismatch for ${label}`,
+        `expected length=${expected.length}, actual length=${actual.length}`,
+        "Whitespace legend: space=· tab=⇥ carriage-return=␍",
+        ...sections,
+    ].join("\n");
+}
+
+function splitLines(text) {
+    const normalized = text.replace(/\r\n/g, "\n");
+    return normalized.split("\n");
+}
+
+function showWhitespace(line) {
+    return line
+        .replace(/\t/g, "⇥")
+        .replace(/ /g, "·")
+        .replace(/\r/g, "␍");
+}
+
+function buildCharMarker(expectedLine, actualLine) {
+    const expectedVisible = showWhitespace(expectedLine);
+    const actualVisible = showWhitespace(actualLine);
+    const maxLen = Math.max(expectedVisible.length, actualVisible.length);
+    let marker = "";
+
+    for (let i = 0; i < maxLen; i += 1) {
+        marker += expectedVisible[i] === actualVisible[i] ? " " : "^";
+    }
+
+    return marker || "(empty)";
 }
 
 main();
