@@ -6,6 +6,15 @@ const { parseSource } = require("./parser");
 const { emitProgram } = require("./emitter");
 
 function main() {
+    try {
+        runCompilation();
+    } catch (error) {
+        reportCompileError(error);
+        process.exit(1);
+    }
+}
+
+function runCompilation() {
     const [, , inputFileArg, outputFileArg] = process.argv;
 
     if (!inputFileArg) {
@@ -44,6 +53,43 @@ function main() {
     fs.writeFileSync(outputFile, outputJs, "utf8");
 
     console.log(`Lantern compiled ${sourceFiles.length} file(s) to ${outputFile}`);
+}
+
+function reportCompileError(error) {
+    const message = error && error.message ? error.message : String(error);
+    const diagnostic = parseDiagnostic(message);
+
+    if (!diagnostic) {
+        console.error(`Compile error: ${message}`);
+        return;
+    }
+
+    const { filePath, lineNumber, detail } = diagnostic;
+    console.error(`Compile error: ${filePath}:${lineNumber}: ${detail}`);
+
+    try {
+        const fileText = fs.readFileSync(filePath, "utf8");
+        const lines = fileText.split(/\r?\n/);
+        const lineText = lines[lineNumber - 1] || "";
+        const firstTokenColumn = Math.max(0, lineText.search(/\S|$/));
+        console.error(`  ${lineNumber} | ${lineText}`);
+        console.error(`    | ${" ".repeat(firstTokenColumn)}^`);
+    } catch (_readError) {
+        // Best-effort diagnostics only.
+    }
+}
+
+function parseDiagnostic(message) {
+    const match = message.match(/^(.*):(\d+):\s(.+)$/);
+    if (!match) {
+        return null;
+    }
+
+    return {
+        filePath: match[1],
+        lineNumber: Number(match[2]),
+        detail: match[3],
+    };
 }
 
 function gatherSourceFiles(libSysDir, userFile) {

@@ -5,3 +5,20 @@ type game:
 	int version
 	reltype release
 
+type physical
+
+type container < physical:
+	list<item> contents
+
+type room < container:
+	string description
+
+type item < physical:
+	bool scenery
+	item holder
+
+type box < item, container:
+	bool closable
+	bool closed
+
+type person < physical:

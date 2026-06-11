@@ -3,6 +3,10 @@
 		"/^node tests/golden/run-golden\\.js$/": {
 			"approve": true,
 			"matchCommandLine": true
+		},
+		"/^node src/lantern/index\\.js sample/min\\.lamp$/": {
+			"approve": true,
+			"matchCommandLine": true
 		}
 	}
 }
