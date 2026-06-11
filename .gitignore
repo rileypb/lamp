@@ -137,5 +137,4 @@ dist
 
 
 *.generated.js
-*.stdout.txt
-/tests/golden/tmp
+/tests/golden/tmp/*

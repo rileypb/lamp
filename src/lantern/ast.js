@@ -30,6 +30,10 @@ function createErrorStatement(expr) {
     return { kind: "ErrorStatement", expr };
 }
 
+function createIfStatement(condition, thenBody, elseBody) {
+    return { kind: "IfStatement", condition, thenBody, elseBody };
+}
+
 function createFieldDecl(typeName, fieldName) {
     return { kind: "FieldDecl", typeName, fieldName };
 }
@@ -54,6 +58,10 @@ function createConcat(left, right) {
     return { kind: "Concat", left, right };
 }
 
+function createEqualsExpr(left, right) {
+    return { kind: "EqualsExpr", left, right };
+}
+
 function createKindDecl(name, kindExpr) {
     return { kind: "KindDecl", name, kindExpr };
 }
@@ -73,10 +81,12 @@ module.exports = {
     createPrintStatement,
     createAssignStatement,
     createErrorStatement,
+    createIfStatement,
     createFieldDecl,
     createFieldAssign,
     createStringLiteral,
     createNumberLiteral,
     createPropertyAccess,
     createConcat,
+    createEqualsExpr,
 };

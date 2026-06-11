@@ -1,5 +1,4 @@
 Extended
 by Test Author
-version 1
-release type undefined
+version 1 beta
 after 2

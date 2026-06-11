@@ -1,6 +1,7 @@
 game Extended:
     author Test Author
     version 1
+	release beta
 
 on startup:
     let this_game = game.all.first

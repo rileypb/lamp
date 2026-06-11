@@ -105,7 +105,7 @@ function emitValue(valueNode) {
 }
 
 function emitEventHandler(node) {
-    const bodyLines = node.body.map((statement) => `    ${emitStatement(statement)}`);
+    const bodyLines = emitStatementList(node.body, 1);
     return [
         `lamplighter.onEvent(${JSON.stringify(node.eventName)}, () => {`,
         ...bodyLines,
@@ -113,18 +113,37 @@ function emitEventHandler(node) {
     ].join("\n");
 }
 
-function emitStatement(statement) {
+function emitStatementList(statements, indentLevel) {
+    return statements.flatMap((statement) => emitStatementLines(statement, indentLevel));
+}
+
+function emitStatementLines(statement, indentLevel) {
+    const indent = "    ".repeat(indentLevel);
+
     if (statement.kind === "LetStatement") {
-        return `let ${statement.name} = ${emitExpression(statement.expr)};`;
+        return [`${indent}let ${statement.name} = ${emitExpression(statement.expr)};`];
     }
     if (statement.kind === "PrintStatement") {
-        return `lamplighter.print(${emitExpression(statement.expr)});`;
+        return [`${indent}lamplighter.print(${emitExpression(statement.expr)});`];
     }
     if (statement.kind === "AssignStatement") {
-        return `${statement.targetChain.join(".")} = ${emitExpression(statement.expr)};`;
+        return [`${indent}${statement.targetChain.join(".")} = ${emitExpression(statement.expr)};`];
     }
     if (statement.kind === "ErrorStatement") {
-        return `lamplighter.error(${emitExpression(statement.expr)});`;
+        return [`${indent}lamplighter.error(${emitExpression(statement.expr)});`];
+    }
+    if (statement.kind === "IfStatement") {
+        const lines = [`${indent}if (${emitExpression(statement.condition)}) {`];
+        lines.push(...emitStatementList(statement.thenBody, indentLevel + 1));
+        lines.push(`${indent}}`);
+
+        if (statement.elseBody) {
+            lines[lines.length - 1] = `${indent}} else {`;
+            lines.push(...emitStatementList(statement.elseBody, indentLevel + 1));
+            lines.push(`${indent}}`);
+        }
+
+        return lines;
     }
     throw new Error(`Unsupported statement kind: ${statement.kind}`);
 }
@@ -141,6 +160,9 @@ function emitExpression(expr) {
     }
     if (expr.kind === "Concat") {
         return `${emitExpression(expr.left)} + ${emitExpression(expr.right)}`;
+    }
+    if (expr.kind === "EqualsExpr") {
+        return `${emitExpression(expr.left)} === ${emitExpression(expr.right)}`;
     }
     throw new Error(`Unsupported expression kind: ${expr.kind}`);
 }

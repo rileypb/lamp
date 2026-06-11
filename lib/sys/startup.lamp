@@ -4,5 +4,7 @@ on startup:
 	let this_game = game.all.first
 	print this_game.name
 	print "by " + this_game.author
-	print "version " + this_game.version 
-	print "release type " + this_game.release
+	if this_game.release == final:
+		print "version " + this_game.version 
+	else:
+		print "version " + this_game.version + " " + this_game.release

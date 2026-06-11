@@ -7,4 +7,4 @@ kind color = enum(red, green, blue)
 
 # every kind has an output function for printing a value of that kind. The enum kind's output function is built-in.
 
-kind reltype = enum(dev, beta, release)
+kind reltype = enum(dev, beta, final)
