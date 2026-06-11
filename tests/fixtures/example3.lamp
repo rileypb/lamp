@@ -1,0 +1,7 @@
+game Example 2:
+    author Test Author
+    version 1
+    release dev
+
+on startup:
+	print game.all.first

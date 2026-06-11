@@ -108,10 +108,33 @@ function error(message) {
 }
 
 function formatValue(value) {
+    if (isListValue(value)) {
+        return formatListValue(value.items);
+    }
     if (value && typeof value === "object" && typeof value.name === "string") {
         return value.name;
     }
     return value;
+}
+
+function isListValue(value) {
+    return Boolean(value) && typeof value === "object" && Array.isArray(value.items) && typeof value.first !== "undefined";
+}
+
+function formatListValue(items) {
+    const formattedItems = items.map((item) => String(formatValue(item)));
+
+    if (formattedItems.length === 0) {
+        return "";
+    }
+    if (formattedItems.length === 1) {
+        return formattedItems[0];
+    }
+    if (formattedItems.length === 2) {
+        return `${formattedItems[0]} and ${formattedItems[1]}`;
+    }
+
+    return `${formattedItems.slice(0, -1).join(", ")} and ${formattedItems[formattedItems.length - 1]}`;
 }
 
 function makeList(items) {
