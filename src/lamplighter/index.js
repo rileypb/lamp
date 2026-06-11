@@ -14,30 +14,33 @@ function bootstrapBuiltins() {
         return;
     }
 
-    defineType("object", null, {});
-    defineType("type", "object", {});
-    defineType("event", "object", {});
-    defineType("string", "object", {});
-    defineType("int", "object", {});
-    defineType("bool", "object", {});
-    defineType("real", "object", {});
-    defineType("list", "object", {});
+    defineType("object", [], {});
+    defineType("type", ["object"], {});
+    defineType("event", ["object"], {});
+    defineType("string", ["object"], {});
+    defineType("int", ["object"], {});
+    defineType("bool", ["object"], {});
+    defineType("real", ["object"], {});
+    defineType("list", ["object"], {});
 
     builtinsInitialized = true;
 }
 
-function defineType(name, parent, fields) {
+function defineType(name, parents, fields) {
     if (typeRegistry.has(name)) {
         throw new Error(`Type already defined: ${name}`);
     }
 
-    if (parent && !typeRegistry.has(parent)) {
-        throw new Error(`Parent type is not defined: ${parent}`);
+    const normalizedParents = normalizeParentList(parents);
+    for (const parentName of normalizedParents) {
+        if (!typeRegistry.has(parentName)) {
+            throw new Error(`Parent type is not defined: ${parentName}`);
+        }
     }
 
     typeRegistry.set(name, {
         name,
-        parent,
+        parents: normalizedParents,
         fields: { ...fields },
     });
 
@@ -124,15 +127,41 @@ function getInstancesForTypeAndSubtypes(typeName) {
 }
 
 function isTypeOrSubtype(candidateTypeName, ancestorTypeName) {
-    let currentTypeName = candidateTypeName;
-    while (currentTypeName) {
+    const stack = [candidateTypeName];
+    const visited = new Set();
+
+    while (stack.length > 0) {
+        const currentTypeName = stack.pop();
+        if (!currentTypeName || visited.has(currentTypeName)) {
+            continue;
+        }
+        visited.add(currentTypeName);
+
         if (currentTypeName === ancestorTypeName) {
             return true;
         }
+
         const currentType = typeRegistry.get(currentTypeName);
-        currentTypeName = currentType ? currentType.parent : null;
+        const parents = currentType ? currentType.parents || [] : [];
+        for (const parentName of parents) {
+            stack.push(parentName);
+        }
     }
+
     return false;
+}
+
+function normalizeParentList(parents) {
+    if (parents == null) {
+        return [];
+    }
+    if (Array.isArray(parents)) {
+        return [...parents];
+    }
+    if (typeof parents === "string") {
+        return [parents];
+    }
+    throw new Error("Invalid parent type list");
 }
 
 function defineKind(name, kindDef) {

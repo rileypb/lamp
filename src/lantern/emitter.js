@@ -81,7 +81,7 @@ function emitTypeDecl(node) {
         fields[field.fieldName] = field.typeName;
     }
 
-    return `lamplighter.defineType(${JSON.stringify(node.name)}, ${node.parent ? JSON.stringify(node.parent) : "null"}, ${JSON.stringify(fields)});`;
+    return `lamplighter.defineType(${JSON.stringify(node.name)}, ${JSON.stringify(node.parents || [])}, ${JSON.stringify(fields)});`;
 }
 
 function emitObjectDecl(node) {

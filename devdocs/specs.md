@@ -14,9 +14,16 @@
 - Lantern parses `lib/sys/*.lamp` plus one user entry file (for example, `sample/min.lamp`) and emits one standalone Node.js JavaScript file.
 - The parsed game must define at least one object of type `game`.
 - If no `game` object is present, Lantern reports `error: no game object defined.` and exits with a nonzero status.
+- On compile failure, Lantern reports diagnostics in the form `Compile error: <file>:<line>: <detail>` and includes the source line with a caret marker.
 - The emitted file is directly runnable from the command line.
 - The emitted file requires the Lamplighter library and executes through it.
 - Lighthouse integration is out of scope for this iteration.
+
+#### Known limitations (v0)
+
+- Bare identifiers in expressions are treated as string literals unless they are part of a dotted property-access chain.
+- Kind values are currently represented at runtime as strings.
+- Runtime execution currently fires only the `startup` event from `run()`.
 
 ### Lamplighter
 
@@ -34,6 +41,12 @@ Lantern-generated JavaScript targets the following Lamplighter API surface:
 - `defineType(name, parent, fields)`
     - Registers a type definition.
     - `parent` may be `null`.
+- `defineKind(name, kindDef)`
+    - Registers a kind definition.
+- `enum(...labels)`
+    - Creates an enum kind definition.
+- `kind(name)`
+    - Returns a registered kind definition.
 - `createObject(typeName, objectName, fieldValues)`
     - Creates and registers an object instance.
     - Sets universal fields `name` and `type` on the instance.
@@ -125,6 +138,14 @@ type TYPE_NAME < PARENT_TYPE_NAME:
 
 Instances of `TYPE_NAME` inherit all fields declared on `PARENT_TYPE_NAME`. The body may add further fields.
 
+A type may inherit from multiple parent types by separating parent names with commas:
+
+```lamp
+type TYPE_NAME < PARENT_A, PARENT_B:
+    FIELD_TYPE FIELD_NAME
+    ...
+```
+
 ```lamp
 type startup < event
 ```
@@ -160,7 +181,7 @@ kind color = enum(red, green, blue)
 
 #### Output behavior
 
-Every kind has an output function for printing a value of that kind. The `enum` kind's output function is built-in. For example, if `color` is defined as above, then `print red` outputs `red`, and so on for the other labels. An unset value of an enum kind outputs as `none`.
+The runtime currently represents enum values as strings and prints them via standard string output (for example, `dev`, `beta`, `final`).
 
 ### Events
 
@@ -212,6 +233,17 @@ TARGET.FIELD = EXPRESSION
 error EXPRESSION
 ```
 
+- **Conditional** — python-style conditional blocks with optional `else`:
+
+```lamp
+if EXPRESSION:
+    STATEMENT
+    ...
+else:
+    STATEMENT
+    ...
+```
+
 ### Expressions
 
 - **Property access** — chains of `.`-separated names:
@@ -227,3 +259,11 @@ this_game.name
 "by " + this_game.author
 "version " + this_game.version
 ```
+
+- **Equality comparison** — `==` compares two expressions:
+
+```lamp
+this_game.release == final
+```
+
+- **Bare identifiers in expressions** (without `.`) are currently treated as string literals. This supports enum-label checks such as `== final`.

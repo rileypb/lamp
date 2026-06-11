@@ -118,13 +118,13 @@ function parseTypeDecl(lines, index, filePath) {
     const line = lines[index];
     const content = line.text.trim();
 
-    const fullMatch = content.match(/^type\s+([A-Za-z_][A-Za-z0-9_]*)\s*(?:<\s*([A-Za-z_][A-Za-z0-9_]*))?\s*:?$/);
+    const fullMatch = content.match(/^type\s+([A-Za-z_][A-Za-z0-9_]*)\s*(?:<\s*([^:]+?))?\s*:?$/);
     if (!fullMatch) {
         throw syntaxError(filePath, line.lineNumber, "Invalid type declaration");
     }
 
     const name = fullMatch[1];
-    const parent = fullMatch[2] || null;
+    const parents = parseParentTypeList(fullMatch[2], filePath, line.lineNumber);
     const hasBody = content.endsWith(":");
     let fields = [];
     let nextIndex = index + 1;
@@ -136,9 +136,26 @@ function parseTypeDecl(lines, index, filePath) {
     }
 
     return {
-        node: createTypeDecl(name, parent, fields),
+        node: createTypeDecl(name, parents, fields),
         nextIndex,
     };
+}
+
+function parseParentTypeList(rawParentList, filePath, lineNumber) {
+    if (!rawParentList) {
+        return [];
+    }
+
+    return rawParentList
+        .split(",")
+        .map((part) => part.trim())
+        .filter((part) => part.length > 0)
+        .map((parentName) => {
+            if (!/^[A-Za-z_][A-Za-z0-9_]*$/.test(parentName)) {
+                throw syntaxError(filePath, lineNumber, `Invalid parent type name: ${parentName}`);
+            }
+            return parentName;
+        });
 }
 
 function parseTypeFields(lines, filePath) {

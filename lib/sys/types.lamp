@@ -21,4 +21,4 @@ type box < item, container:
 	bool closable
 	bool closed
 
-type person < physical:
+type person < physical
