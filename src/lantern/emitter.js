@@ -117,7 +117,12 @@ function emitObjectDecl(node) {
     }
 
     const pairs = Object.entries(fields).map(([key, value]) => `${JSON.stringify(key)}: ${value}`);
-    return `lamplighter.createObject(${JSON.stringify(node.typeName)}, ${JSON.stringify(node.objectName)}, { ${pairs.join(", ")} });`;
+    const call = `lamplighter.createObject(${JSON.stringify(node.typeName)}, ${JSON.stringify(node.objectName)}, { ${pairs.join(", ")} })`;
+
+    if (/^[A-Za-z_][A-Za-z0-9_]*$/.test(node.objectName)) {
+        return `const ${node.objectName} = ${call};`;
+    }
+    return `${call};`;
 }
 
 function emitValue(valueNode) {
@@ -204,6 +209,10 @@ function emitExpression(expr) {
     }
     if (expr.kind === "GlobalExpr") {
         return `lamplighter.getGlobal(${JSON.stringify(expr.name)})`;
+    }
+    if (expr.kind === "ParenNameExpr") {
+        const base = `lamplighter.getObject(${JSON.stringify(expr.objectName)})`;
+        return expr.fieldChain.length === 0 ? base : `${base}.${expr.fieldChain.join(".")}`;
     }
     throw new Error(`Unsupported expression kind: ${expr.kind}`);
 }

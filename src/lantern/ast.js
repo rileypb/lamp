@@ -94,6 +94,10 @@ function createGlobalExpr(name) {
     return { kind: "GlobalExpr", name };
 }
 
+function createParenNameExpr(objectName, fieldChain) {
+    return { kind: "ParenNameExpr", objectName, fieldChain };
+}
+
 module.exports = {
     createProgram,
     createTypeDecl,
@@ -119,4 +123,5 @@ module.exports = {
     createEqualsExpr,
     createMultiplyExpr,
     createGlobalExpr,
+    createParenNameExpr,
 };

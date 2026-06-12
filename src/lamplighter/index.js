@@ -1,5 +1,6 @@
 const typeRegistry = new Map();
 const instanceRegistry = new Map();
+const nameRegistry = new Map();
 const eventRegistry = new Map();
 const kindRegistry = new Map();
 const globalRegistry = new Map();
@@ -62,7 +63,15 @@ function createObject(typeName, objectName, fieldValues) {
     };
 
     instanceRegistry.get(typeName).push(instance);
+    nameRegistry.set(objectName, instance);
     return instance;
+}
+
+function getObject(name) {
+    if (!nameRegistry.has(name)) {
+        throw new Error(`Unknown object: ${name}`);
+    }
+    return nameRegistry.get(name);
 }
 
 function type(name) {
@@ -239,6 +248,7 @@ module.exports = {
     bootstrapBuiltins,
     defineType,
     createObject,
+    getObject,
     defineGlobal,
     setGlobal,
     getGlobal,

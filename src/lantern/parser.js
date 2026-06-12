@@ -23,6 +23,7 @@ const {
     createEnumExpr,
     createMultiplyExpr,
     createGlobalExpr,
+    createParenNameExpr,
 } = require("./ast");
 
 function parseSource(sourceText, filePath, globalNames = new Set()) {
@@ -427,6 +428,23 @@ function parseExpression(raw, filePath, lineNumber, localNames = new Set(), glob
         return createStringLiteral(text);
     }
 
+    if (text.startsWith("(")) {
+        const closeIdx = text.indexOf(")");
+        if (closeIdx === -1) {
+            throw syntaxError(filePath, lineNumber, "Unclosed '('");
+        }
+        const inner = text.slice(1, closeIdx).trim();
+        const rest = text.slice(closeIdx + 1).trim();
+        if (!/^[A-Za-z_][A-Za-z0-9_ ]*$/.test(inner)) {
+            throw syntaxError(filePath, lineNumber, "Expected object name inside '(...)'");
+        }
+        const fieldChain = rest === "" ? [] : rest.startsWith(".") ? rest.slice(1).split(".") : null;
+        if (fieldChain === null) {
+            throw syntaxError(filePath, lineNumber, "Expected '.' after '(Name)'");
+        }
+        return createParenNameExpr(inner, fieldChain);
+    }
+
     throw syntaxError(filePath, lineNumber, "Unsupported expression");
 }
 
@@ -434,6 +452,7 @@ function splitOnTopLevelPlus(raw) {
     const parts = [];
     let current = "";
     let inString = false;
+    let depth = 0;
 
     for (let i = 0; i < raw.length; i += 1) {
         const ch = raw[i];
@@ -442,10 +461,14 @@ function splitOnTopLevelPlus(raw) {
             current += ch;
             continue;
         }
-        if (!inString && ch === "+") {
-            parts.push(current.trim());
-            current = "";
-            continue;
+        if (!inString) {
+            if (ch === "(") { depth += 1; current += ch; continue; }
+            if (ch === ")") { depth -= 1; current += ch; continue; }
+            if (ch === "+" && depth === 0) {
+                parts.push(current.trim());
+                current = "";
+                continue;
+            }
         }
         current += ch;
     }
@@ -461,6 +484,7 @@ function splitOnTopLevelStar(raw) {
     const parts = [];
     let current = "";
     let inString = false;
+    let depth = 0;
 
     for (let i = 0; i < raw.length; i += 1) {
         const ch = raw[i];
@@ -469,10 +493,14 @@ function splitOnTopLevelStar(raw) {
             current += ch;
             continue;
         }
-        if (!inString && ch === "*") {
-            parts.push(current.trim());
-            current = "";
-            continue;
+        if (!inString) {
+            if (ch === "(") { depth += 1; current += ch; continue; }
+            if (ch === ")") { depth -= 1; current += ch; continue; }
+            if (ch === "*" && depth === 0) {
+                parts.push(current.trim());
+                current = "";
+                continue;
+            }
         }
         current += ch;
     }
@@ -488,6 +516,7 @@ function splitOnTopLevelEquals(raw) {
     const parts = [];
     let current = "";
     let inString = false;
+    let depth = 0;
 
     for (let i = 0; i < raw.length; i += 1) {
         const ch = raw[i];
@@ -499,11 +528,15 @@ function splitOnTopLevelEquals(raw) {
             continue;
         }
 
-        if (!inString && ch === "=" && next === "=") {
-            parts.push(current.trim());
-            current = "";
-            i += 1;
-            continue;
+        if (!inString) {
+            if (ch === "(") { depth += 1; current += ch; continue; }
+            if (ch === ")") { depth -= 1; current += ch; continue; }
+            if (ch === "=" && next === "=" && depth === 0) {
+                parts.push(current.trim());
+                current = "";
+                i += 1;
+                continue;
+            }
         }
 
         current += ch;

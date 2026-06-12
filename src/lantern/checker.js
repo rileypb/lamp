@@ -191,6 +191,9 @@ function inferExprType(expr, typeSchema, kindSchema, localTypes) {
     if (expr.kind === "GlobalExpr") {
         return null;
     }
+    if (expr.kind === "ParenNameExpr") {
+        return null;
+    }
     return null;
 }
 
