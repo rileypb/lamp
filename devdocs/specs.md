@@ -356,6 +356,34 @@ For multi-word object names, the name is wrapped in parentheses:
 
 - **Bare identifiers** in expressions are resolved in this order: local variable (introduced by `let`), declared global, then string literal. The string-literal fallback supports enum-label comparisons such as `== final`.
 
+## Implementation notes
+
+### Compiler pipeline
+
+Lantern compiles in three passes:
+
+1. **Pre-scan** (`index.js`): scan all source files with a single regex per line to collect declared global names. Produces a `Set<string>` of global names.
+2. **Parse** (`parser.js`): parse each file into an AST using the collected global names so that global references in expressions are resolved correctly.
+3. **Check** (`checker.js`) + **emit** (`emitter.js`): semantic check then emit standalone Node.js JavaScript.
+
+### Parser design
+
+The outer parser is line-by-line and indentation-driven. Each line is classified by its leading keyword (`type`, `kind`, `global`, `on`, …) and dispatched to a dedicated parse function. Block structure is handled by comparing indentation levels; `parseChildBlock` and `parseStatementBlock` consume lines until indentation falls back to the enclosing level.
+
+Expression parsing (`parseExpression`) uses a **tokenizer + Pratt parser** (top-down operator precedence):
+
+**Tokenizer** (`tokenizeExpression`): scans the raw expression string character by character and produces a flat token stream. Token types: `NUMBER`, `STRING`, `IDENT`, `PLUS`, `STAR`, `EQEQ`, `LPAREN`, `RPAREN`, `DOT`, `EOF`. Negative number literals (e.g. `-7`) are recognized when the preceding token is not a value token.
+
+**Pratt parser**: a `parse(minBP)` function that drives a loop over the token stream. Each token has either a *null denotation* (nud — starts an expression) or a *left denotation* (led — extends an expression to the left). Operator precedences:
+
+| Operator | Binding power |
+|---|---|
+| `==` | 5 |
+| `+` | 10 |
+| `*` | 20 |
+
+Adding a new infix operator requires one entry in the `BP` table and one branch in `led`. DOT (`.`) is not a binary operator in the Pratt table; instead, `nud(IDENT)` eagerly consumes any following `.field` chain to build `PropertyAccess` nodes. Parentheses (`(…)`) are consumed by `nud(LPAREN)` and always denote a multi-word object name reference — arithmetic grouping is not currently supported.
+
 ### Static checking
 
 Lantern performs a semantic checking pass before emission.

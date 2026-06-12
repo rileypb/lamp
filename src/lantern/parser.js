@@ -370,183 +370,150 @@ function parseIfStatement(lines, index, baseIndent, filePath, localNames, global
     };
 }
 
+function tokenizeExpression(raw, filePath, lineNumber) {
+    const tokens = [];
+    let i = 0;
+
+    function prevIsValue() {
+        if (tokens.length === 0) return false;
+        const t = tokens[tokens.length - 1].type;
+        return t === "NUMBER" || t === "STRING" || t === "IDENT" || t === "RPAREN";
+    }
+
+    while (i < raw.length) {
+        const ch = raw[i];
+        if (ch === " " || ch === "\t") { i += 1; continue; }
+        if (ch === '"') {
+            let j = i + 1;
+            while (j < raw.length && raw[j] !== '"') {
+                if (raw[j] === "\\") j += 1;
+                j += 1;
+            }
+            tokens.push({ type: "STRING", value: raw.slice(i + 1, j) });
+            i = j + 1;
+            continue;
+        }
+        if (ch === "+") { tokens.push({ type: "PLUS" }); i += 1; continue; }
+        if (ch === "*") { tokens.push({ type: "STAR" }); i += 1; continue; }
+        if (ch === "(") { tokens.push({ type: "LPAREN" }); i += 1; continue; }
+        if (ch === ")") { tokens.push({ type: "RPAREN" }); i += 1; continue; }
+        if (ch === ".") { tokens.push({ type: "DOT" }); i += 1; continue; }
+        if (ch === "=" && raw[i + 1] === "=") { tokens.push({ type: "EQEQ" }); i += 2; continue; }
+        if (ch === "-" && !prevIsValue() && i + 1 < raw.length && /\d/.test(raw[i + 1])) {
+            let j = i + 1;
+            while (j < raw.length && /\d/.test(raw[j])) j += 1;
+            if (j < raw.length && raw[j] === ".") {
+                j += 1;
+                while (j < raw.length && /\d/.test(raw[j])) j += 1;
+                tokens.push({ type: "NUMBER", value: parseFloat(raw.slice(i, j)) });
+            } else {
+                tokens.push({ type: "NUMBER", value: Number(raw.slice(i, j)) });
+            }
+            i = j;
+            continue;
+        }
+        if (/\d/.test(ch)) {
+            let j = i;
+            while (j < raw.length && /\d/.test(raw[j])) j += 1;
+            if (j < raw.length && raw[j] === ".") {
+                j += 1;
+                while (j < raw.length && /\d/.test(raw[j])) j += 1;
+                tokens.push({ type: "NUMBER", value: parseFloat(raw.slice(i, j)) });
+            } else {
+                tokens.push({ type: "NUMBER", value: Number(raw.slice(i, j)) });
+            }
+            i = j;
+            continue;
+        }
+        if (/[A-Za-z_]/.test(ch)) {
+            let j = i;
+            while (j < raw.length && /[A-Za-z0-9_]/.test(raw[j])) j += 1;
+            tokens.push({ type: "IDENT", value: raw.slice(i, j) });
+            i = j;
+            continue;
+        }
+        throw syntaxError(filePath, lineNumber, `Unexpected character in expression: ${JSON.stringify(ch)}`);
+    }
+    tokens.push({ type: "EOF" });
+    return tokens;
+}
+
 function parseExpression(raw, filePath, lineNumber, localNames = new Set(), globalNames = new Set()) {
-    const eqParts = splitOnTopLevelEquals(raw);
-    if (eqParts.length > 1) {
-        let expr = parseExpression(eqParts[0], filePath, lineNumber, localNames, globalNames);
-        for (let i = 1; i < eqParts.length; i += 1) {
-            expr = createEqualsExpr(expr, parseExpression(eqParts[i], filePath, lineNumber, localNames, globalNames));
+    const tokens = tokenizeExpression(raw, filePath, lineNumber);
+    let pos = 0;
+
+    const peek = () => tokens[pos];
+    const consume = () => tokens[pos++];
+    const expect = (type) => {
+        const t = peek();
+        if (t.type !== type) throw syntaxError(filePath, lineNumber, `Expected ${type}, got ${t.type}`);
+        return consume();
+    };
+
+    // Binding powers (left-associative: right side parses at same bp, so same-level op binds left)
+    const BP = { EQEQ: 5, PLUS: 10, STAR: 20 };
+
+    function parse(minBP) {
+        const tok = consume();
+        let left = nud(tok);
+        while (true) {
+            const t = peek();
+            const bp = BP[t.type];
+            if (bp === undefined || bp <= minBP) break;
+            consume();
+            left = led(t, left);
         }
-        return expr;
+        return left;
     }
 
-    const parts = splitOnTopLevelPlus(raw);
-    if (parts.length > 1) {
-        let expr = parseExpression(parts[0], filePath, lineNumber, localNames, globalNames);
-        for (let i = 1; i < parts.length; i += 1) {
-            expr = createConcat(expr, parseExpression(parts[i], filePath, lineNumber, localNames, globalNames));
-        }
-        return expr;
-    }
-
-    const starParts = splitOnTopLevelStar(raw);
-    if (starParts.length > 1) {
-        let expr = parseExpression(starParts[0], filePath, lineNumber, localNames, globalNames);
-        for (let i = 1; i < starParts.length; i += 1) {
-            expr = createMultiplyExpr(expr, parseExpression(starParts[i], filePath, lineNumber, localNames, globalNames));
-        }
-        return expr;
-    }
-
-    const text = raw.trim();
-    if (text.startsWith('"') && text.endsWith('"')) {
-        return createStringLiteral(text.slice(1, -1));
-    }
-    if (text === "true") {
-        return createBooleanLiteral(true);
-    }
-    if (text === "false") {
-        return createBooleanLiteral(false);
-    }
-    if (/^-?\d+\.\d+$/.test(text)) {
-        return createNumberLiteral(parseFloat(text));
-    }
-    if (/^-?\d+$/.test(text)) {
-        return createNumberLiteral(Number(text));
-    }
-
-    if (/^[A-Za-z_][A-Za-z0-9_]*(\.[A-Za-z_][A-Za-z0-9_]*)*$/.test(text)) {
-        if (text.includes(".")) {
-            return createPropertyAccess(text.split("."));
-        }
-        if (localNames.has(text)) {
-            return createVariableExpr(text);
-        }
-        if (globalNames.has(text)) {
-            return createGlobalExpr(text);
-        }
-        return createStringLiteral(text);
-    }
-
-    if (text.startsWith("(")) {
-        const closeIdx = text.indexOf(")");
-        if (closeIdx === -1) {
-            throw syntaxError(filePath, lineNumber, "Unclosed '('");
-        }
-        const inner = text.slice(1, closeIdx).trim();
-        const rest = text.slice(closeIdx + 1).trim();
-        if (!/^[A-Za-z_][A-Za-z0-9_ ]*$/.test(inner)) {
-            throw syntaxError(filePath, lineNumber, "Expected object name inside '(...)'");
-        }
-        const fieldChain = rest === "" ? [] : rest.startsWith(".") ? rest.slice(1).split(".") : null;
-        if (fieldChain === null) {
-            throw syntaxError(filePath, lineNumber, "Expected '.' after '(Name)'");
-        }
-        return createParenNameExpr(inner, fieldChain);
-    }
-
-    throw syntaxError(filePath, lineNumber, "Unsupported expression");
-}
-
-function splitOnTopLevelPlus(raw) {
-    const parts = [];
-    let current = "";
-    let inString = false;
-    let depth = 0;
-
-    for (let i = 0; i < raw.length; i += 1) {
-        const ch = raw[i];
-        if (ch === '"' && raw[i - 1] !== "\\") {
-            inString = !inString;
-            current += ch;
-            continue;
-        }
-        if (!inString) {
-            if (ch === "(") { depth += 1; current += ch; continue; }
-            if (ch === ")") { depth -= 1; current += ch; continue; }
-            if (ch === "+" && depth === 0) {
-                parts.push(current.trim());
-                current = "";
-                continue;
+    function nud(tok) {
+        if (tok.type === "STRING") return createStringLiteral(tok.value);
+        if (tok.type === "NUMBER") return createNumberLiteral(tok.value);
+        if (tok.type === "IDENT") {
+            const name = tok.value;
+            if (name === "true") return createBooleanLiteral(true);
+            if (name === "false") return createBooleanLiteral(false);
+            // Eagerly consume .field.field... chain
+            const chain = [name];
+            while (peek().type === "DOT") {
+                consume();
+                if (peek().type !== "IDENT") throw syntaxError(filePath, lineNumber, "Expected identifier after '.'");
+                chain.push(consume().value);
             }
+            if (chain.length > 1) return createPropertyAccess(chain);
+            if (localNames.has(name)) return createVariableExpr(name);
+            if (globalNames.has(name)) return createGlobalExpr(name);
+            return createStringLiteral(name);
         }
-        current += ch;
-    }
-
-    if (current.trim() !== "") {
-        parts.push(current.trim());
-    }
-
-    return parts;
-}
-
-function splitOnTopLevelStar(raw) {
-    const parts = [];
-    let current = "";
-    let inString = false;
-    let depth = 0;
-
-    for (let i = 0; i < raw.length; i += 1) {
-        const ch = raw[i];
-        if (ch === '"' && raw[i - 1] !== "\\") {
-            inString = !inString;
-            current += ch;
-            continue;
-        }
-        if (!inString) {
-            if (ch === "(") { depth += 1; current += ch; continue; }
-            if (ch === ")") { depth -= 1; current += ch; continue; }
-            if (ch === "*" && depth === 0) {
-                parts.push(current.trim());
-                current = "";
-                continue;
+        if (tok.type === "LPAREN") {
+            // (Object Name).field — parens delimit multi-word object names, not grouping
+            const nameParts = [];
+            while (peek().type === "IDENT") nameParts.push(consume().value);
+            if (peek().type !== "RPAREN") throw syntaxError(filePath, lineNumber, "Expected object name inside '(...)'");
+            consume();
+            const fieldChain = [];
+            while (peek().type === "DOT") {
+                consume();
+                if (peek().type !== "IDENT") throw syntaxError(filePath, lineNumber, "Expected field name after '.'");
+                fieldChain.push(consume().value);
             }
+            return createParenNameExpr(nameParts.join(" "), fieldChain);
         }
-        current += ch;
+        throw syntaxError(filePath, lineNumber, `Unexpected token in expression: ${tok.type}`);
     }
 
-    if (current.trim() !== "") {
-        parts.push(current.trim());
+    function led(op, left) {
+        if (op.type === "PLUS") return createConcat(left, parse(BP.PLUS));
+        if (op.type === "STAR") return createMultiplyExpr(left, parse(BP.STAR));
+        if (op.type === "EQEQ") return createEqualsExpr(left, parse(BP.EQEQ));
+        throw syntaxError(filePath, lineNumber, `Unexpected operator: ${op.type}`);
     }
 
-    return parts;
-}
-
-function splitOnTopLevelEquals(raw) {
-    const parts = [];
-    let current = "";
-    let inString = false;
-    let depth = 0;
-
-    for (let i = 0; i < raw.length; i += 1) {
-        const ch = raw[i];
-        const next = raw[i + 1];
-
-        if (ch === '"' && raw[i - 1] !== "\\") {
-            inString = !inString;
-            current += ch;
-            continue;
-        }
-
-        if (!inString) {
-            if (ch === "(") { depth += 1; current += ch; continue; }
-            if (ch === ")") { depth -= 1; current += ch; continue; }
-            if (ch === "=" && next === "=" && depth === 0) {
-                parts.push(current.trim());
-                current = "";
-                i += 1;
-                continue;
-            }
-        }
-
-        current += ch;
+    const result = parse(0);
+    if (peek().type !== "EOF") {
+        throw syntaxError(filePath, lineNumber, `Unexpected token in expression: ${peek().type}`);
     }
-
-    if (current.trim() !== "") {
-        parts.push(current.trim());
-    }
-
-    return parts.length > 1 ? parts : [raw.trim()];
+    return result;
 }
 
 function findFirstBlockLineIndex(lines, headerIndex, filePath) {
