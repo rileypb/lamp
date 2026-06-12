@@ -10,6 +10,3 @@ game Game 1:
 room Your Tent:
     description "This is your tent."
 
-on person.holder change:
-    print "The player moved to " + player.holder
-

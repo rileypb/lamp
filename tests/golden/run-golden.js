@@ -13,23 +13,40 @@ const tmpDir = path.join(projectRoot, "tests", "golden", "tmp");
 
 function main() {
     const cases = discoverCases();
+    const failures = [];
 
     for (const testCase of cases) {
-        const compileResult = compileCase(testCase.inputPath, testCase.generatedPath, testCase.expectCompileFailure);
+        const name = path.basename(testCase.inputPath);
+        try {
+            const compileResult = compileCase(testCase.inputPath, testCase.generatedPath, testCase.expectCompileFailure);
 
-        if (!testCase.expectCompileFailure && testCase.expectedJsPath) {
-            assertFileMatches(testCase.generatedPath, testCase.expectedJsPath, `${path.basename(testCase.inputPath)} generated JavaScript`);
+            if (!testCase.expectCompileFailure && testCase.expectedJsPath) {
+                assertFileMatches(testCase.generatedPath, testCase.expectedJsPath, `${name} generated JavaScript`);
+            }
+
+            const stdout = testCase.expectCompileFailure ? compileResult.stdout : runGenerated(testCase.generatedPath);
+            assertTextMatches(
+                stdout,
+                fs.readFileSync(testCase.expectedStdoutPath, "utf8"),
+                `${name} runtime stdout`,
+            );
+        } catch (error) {
+            failures.push({ name, message: error.message });
         }
-
-        const stdout = testCase.expectCompileFailure ? compileResult.stdout : runGenerated(testCase.generatedPath);
-        assertTextMatches(
-            stdout,
-            fs.readFileSync(testCase.expectedStdoutPath, "utf8"),
-            `${path.basename(testCase.inputPath)} runtime stdout`,
-        );
     }
 
-    console.log("Golden checks passed.");
+    if (failures.length === 0) {
+        console.log(`Golden checks passed. (${cases.length} tests)`);
+        return;
+    }
+
+    for (const { name, message } of failures) {
+        console.error(`FAIL: ${name}`);
+        console.error(message);
+        console.error("");
+    }
+    console.error(`${failures.length} of ${cases.length} test(s) failed.`);
+    process.exit(1);
 }
 
 function discoverCases() {
