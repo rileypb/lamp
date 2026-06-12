@@ -1,0 +1,2 @@
+on move to room:
+	print_room_description(player.holder)

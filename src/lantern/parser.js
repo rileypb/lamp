@@ -31,6 +31,7 @@ const {
     createLessThanExpr,
     createBreakStatement,
     createForStatement,
+    createChangeHandler,
 } = require("./ast");
 
 function parseSource(sourceText, filePath, globalNames = new Set()) {
@@ -128,9 +129,16 @@ function parseNodes(lines, startIndex, baseIndent, filePath, globalNames = new S
         }
 
         if (content.startsWith("on ")) {
-            const { node, nextIndex } = parseEventHandler(lines, index, filePath, globalNames);
-            nodes.push(node);
-            index = nextIndex;
+            const changeMatch = content.match(/^on\s+([A-Za-z_][A-Za-z0-9_]*)\.([A-Za-z_][A-Za-z0-9_]*)\s+change\s*:\s*$/);
+            if (changeMatch) {
+                const { node, nextIndex } = parseChangeHandler(lines, index, filePath, globalNames, changeMatch);
+                nodes.push(node);
+                index = nextIndex;
+            } else {
+                const { node, nextIndex } = parseEventHandler(lines, index, filePath, globalNames);
+                nodes.push(node);
+                index = nextIndex;
+            }
             continue;
         }
 
@@ -278,6 +286,19 @@ function parseSimpleValue(rawValue) {
         return createStringLiteral(value.slice(1, -1));
     }
     return createStringLiteral(value);
+}
+
+function parseChangeHandler(lines, index, filePath, globalNames, match) {
+    const typeName = match[1];
+    const fieldName = match[2];
+    const blockStart = findFirstBlockLineIndex(lines, index, filePath);
+    const blockIndent = lines[blockStart].indent;
+    const localNames = new Set(["self"]);
+    const parsed = parseStatementBlock(lines, blockStart, blockIndent, filePath, localNames, globalNames);
+    return {
+        node: createChangeHandler(typeName, fieldName, parsed.statements),
+        nextIndex: parsed.nextIndex,
+    };
 }
 
 function parseEventHandler(lines, index, filePath, globalNames = new Set()) {

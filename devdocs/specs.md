@@ -77,6 +77,10 @@ Lantern-generated JavaScript targets the following Lamplighter API surface:
     - `all.first` returns the first element in that list.
 - `onEvent(eventName, handler)`
     - Registers an event handler callback.
+- `registerChangeHandler(typeName, fieldName, handler)`
+    - Registers a change handler for `typeName.fieldName`. The handler receives the changed instance as its first argument (`self`).
+- `setField(instance, fieldName, value)`
+    - Assigns `value` to `instance[fieldName]` and fires all registered change handlers for that field on the instance's type and all parent types.
 - `dispatch(eventName)`
     - Fires the named event immediately, invoking all registered handlers in registration order.
 - `run()`
@@ -315,6 +319,25 @@ on startup:
     let this_game = game.all.first
     print this_game.name
 ```
+
+#### Change handlers
+
+```lamp
+on TYPE.FIELD change:
+    STATEMENT
+    ...
+```
+
+Defines a handler that runs whenever the named field is assigned on any instance of `TYPE`. Inside the body, `self` is the instance whose field changed.
+
+```lamp
+on person.holder change:
+    print self.name + " moved to " + self.holder.name
+```
+
+Change handlers fire for the declared type and any subtype. Multiple handlers for the same field are all called in registration order.
+
+Field assignments inside handler bodies (and all event handler bodies) use the `setField` runtime call rather than direct property assignment, so changes are always observed.
 
 ### Statements
 

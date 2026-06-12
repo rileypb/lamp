@@ -4,6 +4,7 @@ const nameRegistry = new Map();
 const eventRegistry = new Map();
 const kindRegistry = new Map();
 const globalRegistry = new Map();
+const changeHandlerRegistry = new Map();
 
 let printImpl = (value) => {
     console.log(String(value));
@@ -87,6 +88,31 @@ function type(name) {
     };
 }
 
+function registerChangeHandler(typeName, fieldName, handler) {
+    const key = `${typeName}\x00${fieldName}`;
+    if (!changeHandlerRegistry.has(key)) {
+        changeHandlerRegistry.set(key, []);
+    }
+    changeHandlerRegistry.get(key).push(handler);
+}
+
+function setField(instance, fieldName, value) {
+    instance[fieldName] = value;
+    const visited = new Set();
+    function fireForType(typeName) {
+        if (visited.has(typeName)) return;
+        visited.add(typeName);
+        const handlers = changeHandlerRegistry.get(`${typeName}\x00${fieldName}`) || [];
+        for (const handler of handlers) {
+            handler(instance);
+        }
+        for (const parent of (typeRegistry.get(typeName)?.parents || [])) {
+            fireForType(parent);
+        }
+    }
+    fireForType(instance.type);
+}
+
 function onEvent(eventName, handler) {
     if (!eventRegistry.has(eventName)) {
         eventRegistry.set(eventName, []);
@@ -133,6 +159,13 @@ function setPrint(nextPrintImpl) {
 
 function error(message) {
     throw new Error(String(message));
+}
+
+function concat(left, right) {
+    if (typeof left === "number" && typeof right === "number") {
+        return left + right;
+    }
+    return String(formatValue(left)) + String(formatValue(right));
 }
 
 function formatValue(value) {
@@ -256,7 +289,10 @@ module.exports = {
     defineKind,
     enum: enumKind,
     kind,
+    concat,
     onEvent,
+    registerChangeHandler,
+    setField,
     dispatch: fireEvent,
     run,
     print,

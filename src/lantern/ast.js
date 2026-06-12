@@ -122,6 +122,10 @@ function createForStatement(varName, start, finish, step, body) {
     return { kind: "ForStatement", varName, start, finish, step, body };
 }
 
+function createChangeHandler(typeName, fieldName, body) {
+    return { kind: "ChangeHandler", typeName, fieldName, body };
+}
+
 function createLessThanExpr(left, right) {
     return { kind: "LessThanExpr", left, right };
 }
@@ -159,4 +163,5 @@ module.exports = {
     createLessThanExpr,
     createBreakStatement,
     createForStatement,
+    createChangeHandler,
 };

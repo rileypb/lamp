@@ -1,0 +1,15 @@
+
+lib advent
+
+game Game 1:
+    author Test Author
+    version 1
+    release dev
+    start Your Tent
+
+room Your Tent:
+    description "This is your tent."
+
+on person.holder change:
+    print "The player moved to " + player.holder
+

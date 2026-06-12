@@ -12,6 +12,9 @@ function checkProgram(programAst) {
             checkGlobalAssign(node, globalTypes, typeSchema, kindSchema);
         } else if (node.kind === "EventHandler") {
             checkStatements(node.body, typeSchema, kindSchema, new Map());
+        } else if (node.kind === "ChangeHandler") {
+            const localTypes = new Map([["self", node.typeName]]);
+            checkStatements(node.body, typeSchema, kindSchema, localTypes);
         }
     }
 }

@@ -88,10 +88,15 @@ function emitProgram(programAst, options = {}) {
         lines.push("");
     }
 
+    const changeHandlerNodes = programAst.nodes.filter((node) => node.kind === "ChangeHandler");
     const globalNames = new Set(globalDeclNodes.map((n) => n.name));
 
     for (const eventNode of eventNodes) {
         lines.push(emitEventHandler(eventNode, globalNames));
+    }
+
+    for (const changeNode of changeHandlerNodes) {
+        lines.push(emitChangeHandler(changeNode, globalNames));
     }
 
     lines.push("");
@@ -224,6 +229,15 @@ function emitEventHandler(node, globalNames = new Set()) {
     ].join("\n");
 }
 
+function emitChangeHandler(node, globalNames = new Set()) {
+    const bodyLines = emitStatementList(node.body, 1, globalNames);
+    return [
+        `lamplighter.registerChangeHandler(${JSON.stringify(node.typeName)}, ${JSON.stringify(node.fieldName)}, (self) => {`,
+        ...bodyLines,
+        "});",
+    ].join("\n");
+}
+
 function emitStatementList(statements, indentLevel, globalNames = new Set()) {
     return statements.flatMap((statement) => emitStatementLines(statement, indentLevel, globalNames));
 }
@@ -240,8 +254,12 @@ function emitStatementLines(statement, indentLevel, globalNames = new Set()) {
     if (statement.kind === "AssignStatement") {
         const [head, ...tail] = statement.targetChain;
         const headExpr = globalNames.has(head) ? `lamplighter.getGlobal(${JSON.stringify(head)})` : head;
-        const target = tail.length === 0 ? headExpr : `${headExpr}.${tail.join(".")}`;
-        return [`${indent}${target} = ${emitExpression(statement.expr, globalNames)};`];
+        if (tail.length === 0) {
+            return [`${indent}${headExpr} = ${emitExpression(statement.expr, globalNames)};`];
+        }
+        const objExpr = tail.length === 1 ? headExpr : `${headExpr}.${tail.slice(0, -1).join(".")}`;
+        const fieldName = tail[tail.length - 1];
+        return [`${indent}lamplighter.setField(${objExpr}, ${JSON.stringify(fieldName)}, ${emitExpression(statement.expr, globalNames)});`];
     }
     if (statement.kind === "ErrorStatement") {
         return [`${indent}lamplighter.error(${emitExpression(statement.expr, globalNames)});`];
@@ -303,7 +321,7 @@ function emitExpression(expr, globalNames = new Set()) {
         return tail.length === 0 ? headExpr : `${headExpr}.${tail.join(".")}`;
     }
     if (expr.kind === "Concat") {
-        return `${emitExpression(expr.left, globalNames)} + ${emitExpression(expr.right, globalNames)}`;
+        return `lamplighter.concat(${emitExpression(expr.left, globalNames)}, ${emitExpression(expr.right, globalNames)})`;
     }
     if (expr.kind === "EqualsExpr") {
         return `${emitExpression(expr.left, globalNames)} === ${emitExpression(expr.right, globalNames)}`;
