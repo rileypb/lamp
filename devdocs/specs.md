@@ -50,6 +50,9 @@ Lantern-generated JavaScript targets the following Lamplighter API surface:
 - `createObject(typeName, objectName, fieldValues)`
     - Creates and registers an object instance.
     - Sets universal fields `name` and `type` on the instance.
+    - Also registers the instance under its name for lookup by `getObject`.
+- `getObject(name)`
+    - Returns the object instance registered under `name`.
 - `type(name)`
     - Returns a type handle.
     - Type handle exposes `all`, which includes instances of the type and all subtypes.
@@ -65,6 +68,12 @@ Lantern-generated JavaScript targets the following Lamplighter API surface:
     - Lists print as human-readable strings using `,` and `and`.
 - `setPrint(fn)`
     - Replaces the output implementation used by `print`.
+- `defineGlobal(name, value)`
+    - Registers a named global with an initial value.
+- `setGlobal(name, value)`
+    - Assigns a new value to a previously registered global.
+- `getGlobal(name)`
+    - Returns the current value of a named global.
 - `error(message)`
     - Stops execution by throwing a runtime error.
 
@@ -122,10 +131,10 @@ Built-in complex types:
 - `event`
 
 Built-in primitive types:
-- `string`
-- `int`
-- `bool`
-- `real`
+- `string` — string values; literals are written in double quotes: `"hello"`
+- `int` — integer values; literals are plain digits: `42`, `-7`
+- `bool` — boolean values; literals are `true` and `false`
+- `real` — floating-point values; literals require a decimal point: `3.14`, `-0.5`
 - `list<T>` (generic list of elements of type `T`)
 
 #### Type inheritance
@@ -211,6 +220,14 @@ USE OXFORD COMMA = true
 
 Global assignments are type-checked against the type declared in the corresponding global declaration.
 
+#### Globals in expressions
+
+Single-word global names may be used directly in expressions. They resolve to the current value of the global at the point of evaluation.
+
+```lamp
+2 * radius * PI
+```
+
 ### Events
 
 Events are objects of type `event`. Built-in event types include `startup`:
@@ -289,7 +306,7 @@ game.all.first
 this_game.name
 ```
 
-- **String concatenation** — `+` joins strings:
+- **Addition and concatenation** — `+` adds numeric values or concatenates strings:
 
 ```lamp
 "by " + this_game.author
@@ -301,7 +318,21 @@ this_game.name
 - `int + int` produces `int`
 - `real + int` and `int + real` produce `real`
 - if either side is `string`, the result is `string`
-- enum-kind values may be implicitly coerced to `string` when concatenated with a `string`
+- enum-kind values may be implicitly coerced to `string` when used with `+`
+
+- **Multiplication** — `*` multiplies numeric values:
+
+```lamp
+2 * circle.radius
+2 * (Unit Circle).radius * PI
+```
+
+`*` is type-directed:
+
+- `int * int` produces `int`
+- `real * int` and `int * real` produce `real`
+
+`*` has higher precedence than `+`.
 
 - **Equality comparison** — `==` compares two expressions:
 
@@ -309,7 +340,21 @@ this_game.name
 this_game.release == final
 ```
 
-- **Bare identifiers in expressions** that are not local variables are treated as string literals. This supports enum-label checks such as `== final`.
+- **Object name reference** — a named object can be referenced directly in expressions. For single-word object names the name is used as a bare identifier:
+
+```lamp
+MyCircle.radius
+```
+
+For multi-word object names, the name is wrapped in parentheses:
+
+```lamp
+(Unit Circle).radius
+```
+
+`(NAME)` looks up the object named `NAME` at runtime. A `.`-separated field chain may follow.
+
+- **Bare identifiers** in expressions are resolved in this order: local variable (introduced by `let`), declared global, then string literal. The string-literal fallback supports enum-label comparisons such as `== final`.
 
 ### Static checking
 
@@ -319,4 +364,4 @@ Lantern performs a semantic checking pass before emission.
 - Field assignments in executable code are checked against the target field type.
 - Primitive fields (`string`, `int`, `real`) reject incompatible inferred expression types.
 - Enum-kind fields reject labels outside the enum definition.
-- Expression inference currently covers literals, local variables, property-access chains, `+`, and `==`.
+- Expression inference currently covers literals, local variables, property-access chains, `+`, `*`, and `==`. Globals and object name references (`(Name)`) currently return unknown type and are not statically checked.
