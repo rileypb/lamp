@@ -85,7 +85,7 @@ function checkObjectDecl(node, typeSchema, kindSchema) {
 function checkStatements(statements, typeSchema, kindSchema, localTypes) {
     for (const stmt of statements) {
         if (stmt.kind === "LetStatement") {
-            const varType = inferExprType(stmt.expr, typeSchema, localTypes);
+            const varType = inferExprType(stmt.expr, typeSchema, kindSchema, localTypes);
             if (varType) {
                 localTypes.set(stmt.name, varType);
             }
@@ -108,7 +108,7 @@ function checkAssignStatement(stmt, typeSchema, kindSchema, localTypes) {
 
     const objectChain = chain.slice(0, -1);
     const fieldName = chain[chain.length - 1];
-    const containerType = resolveObjectType(objectChain, typeSchema, localTypes);
+    const containerType = resolveChainType(objectChain, typeSchema, kindSchema, localTypes);
 
     if (!containerType) {
         return;
@@ -128,20 +128,59 @@ function checkAssignStatement(stmt, typeSchema, kindSchema, localTypes) {
         stmt.filePath,
         stmt.lineNumber,
         `field "${fieldName}"`,
+        localTypes,
     );
 }
 
-function inferExprType(expr, typeSchema, localTypes) {
-    if (expr.kind === "PropertyAccess") {
-        return resolveObjectType(expr.chain, typeSchema, localTypes);
+function inferExprType(expr, typeSchema, kindSchema, localTypes) {
+    if (expr.kind === "StringLiteral") {
+        return "string";
+    }
+    if (expr.kind === "NumberLiteral") {
+        return "int";
     }
     if (expr.kind === "VariableExpr") {
         return localTypes.get(expr.name) || null;
     }
+    if (expr.kind === "PropertyAccess") {
+        return resolveChainType(expr.chain, typeSchema, kindSchema, localTypes);
+    }
+    if (expr.kind === "Concat") {
+        const leftType = inferExprType(expr.left, typeSchema, kindSchema, localTypes);
+        const rightType = inferExprType(expr.right, typeSchema, kindSchema, localTypes);
+        return inferConcatType(leftType, rightType, kindSchema);
+    }
+    if (expr.kind === "EqualsExpr") {
+        return "bool";
+    }
     return null;
 }
 
-function resolveObjectType(chain, typeSchema, localTypes) {
+function inferConcatType(leftType, rightType, kindSchema) {
+    if (leftType === null || rightType === null) {
+        return null;
+    }
+    if (isNumericType(leftType) && isNumericType(rightType)) {
+        return (leftType === "real" || rightType === "real") ? "real" : "int";
+    }
+    if (isStringCompatible(leftType, kindSchema) && isStringCompatible(rightType, kindSchema)) {
+        return "string";
+    }
+    return null;
+}
+
+function isNumericType(type) {
+    return type === "int" || type === "real";
+}
+
+function isStringCompatible(type, kindSchema) {
+    if (type === "string" || type === "int" || type === "real") {
+        return true;
+    }
+    return kindSchema.has(type);
+}
+
+function resolveChainType(chain, typeSchema, kindSchema, localTypes) {
     const { typeFields, typeParents } = typeSchema;
     let currentType = null;
 
@@ -163,51 +202,48 @@ function resolveObjectType(chain, typeSchema, localTypes) {
             if (!fieldType) {
                 return null;
             }
-            if (typeFields.has(fieldType) || typeParents.has(fieldType)) {
-                currentType = fieldType;
-            } else {
-                return null;
-            }
+            currentType = fieldType;
         }
     }
 
     return currentType;
 }
 
-function checkValueCompatibility(valueNode, fieldTypeName, typeSchema, kindSchema, filePath, lineNumber, context) {
-    // Only check literal values — complex expressions are not statically typed yet.
-    const isLiteral = valueNode.kind === "StringLiteral" || valueNode.kind === "NumberLiteral";
-    if (!isLiteral) {
-        return;
-    }
+function checkValueCompatibility(valueNode, fieldTypeName, typeSchema, kindSchema, filePath, lineNumber, context, localTypes = new Map()) {
+    const inferredType = inferExprType(valueNode, typeSchema, kindSchema, localTypes);
 
-    if (fieldTypeName === "string") {
-        if (valueNode.kind !== "StringLiteral") {
-            throw typeError(filePath, lineNumber, `${context} expects string, got ${describeValue(valueNode)}`);
-        }
-        return;
-    }
-
-    if (fieldTypeName === "int" || fieldTypeName === "real") {
-        if (valueNode.kind !== "NumberLiteral") {
-            throw typeError(filePath, lineNumber, `${context} expects ${fieldTypeName}, got ${describeValue(valueNode)}`);
-        }
+    if (inferredType === null) {
         return;
     }
 
     if (kindSchema.has(fieldTypeName)) {
         const kindDef = kindSchema.get(fieldTypeName);
         if (kindDef.kind === "EnumExpr") {
-            if (valueNode.kind !== "StringLiteral" || !kindDef.labels.includes(valueNode.value)) {
-                const got = valueNode.kind === "StringLiteral" ? `"${valueNode.value}"` : describeValue(valueNode);
-                throw typeError(
-                    filePath,
-                    lineNumber,
-                    `${context} expects one of (${kindDef.labels.join(", ")}), got ${got}`,
-                );
+            if (valueNode.kind === "StringLiteral") {
+                if (!kindDef.labels.includes(valueNode.value)) {
+                    throw typeError(
+                        filePath,
+                        lineNumber,
+                        `${context} expects one of (${kindDef.labels.join(", ")}), got "${valueNode.value}"`,
+                    );
+                }
+                return;
+            }
+            if (inferredType !== fieldTypeName) {
+                throw typeError(filePath, lineNumber, `${context} expects kind "${fieldTypeName}", got "${inferredType}"`);
             }
         }
         return;
+    }
+
+    if (PRIMITIVE_TYPES.has(fieldTypeName)) {
+        if (inferredType === fieldTypeName) {
+            return;
+        }
+        if (fieldTypeName === "real" && inferredType === "int") {
+            return;
+        }
+        throw typeError(filePath, lineNumber, `${context} expects ${fieldTypeName}, got ${inferredType}`);
     }
 }
 
