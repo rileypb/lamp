@@ -2,8 +2,8 @@ function createProgram(nodes) {
     return { kind: "Program", nodes };
 }
 
-function createTypeDecl(name, parents, fields) {
-    return { kind: "TypeDecl", name, parents, fields };
+function createTypeDecl(name, parents, fields, filePath, lineNumber) {
+    return { kind: "TypeDecl", name, parents, fields, filePath, lineNumber };
 }
 
 function createObjectDecl(typeName, objectName, fields) {

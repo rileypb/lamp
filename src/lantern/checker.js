@@ -21,13 +21,33 @@ function buildTypeSchema(nodes) {
     const typeParents = new Map();
 
     for (const node of nodes) {
-        if (node.kind === "TypeDecl") {
-            const fields = new Map();
-            for (const f of node.fields) {
-                fields.set(f.fieldName, f.typeName);
-            }
-            typeFields.set(node.name, fields);
+        if (node.kind !== "TypeDecl") {
+            continue;
+        }
+
+        const isReopen = typeFields.has(node.name);
+
+        if (!isReopen) {
+            typeFields.set(node.name, new Map());
             typeParents.set(node.name, node.parents || []);
+        } else if (node.parents && node.parents.length > 0) {
+            throw typeError(
+                node.filePath,
+                node.lineNumber,
+                `type "${node.name}" reopens but specifies parents; parents may only be set in the original declaration`,
+            );
+        }
+
+        const existingFields = typeFields.get(node.name);
+        for (const f of node.fields) {
+            if (existingFields.has(f.fieldName)) {
+                throw typeError(
+                    node.filePath,
+                    node.lineNumber,
+                    `type "${node.name}" reopens but field "${f.fieldName}" is already declared`,
+                );
+            }
+            existingFields.set(f.fieldName, f.typeName);
         }
     }
 

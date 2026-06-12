@@ -169,7 +169,7 @@ function parseTypeDecl(lines, index, filePath) {
     }
 
     return {
-        node: createTypeDecl(name, parents, fields),
+        node: createTypeDecl(name, parents, fields, filePath, line.lineNumber),
         nextIndex,
     };
 }

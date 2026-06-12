@@ -32,19 +32,29 @@ function emitProgram(programAst, options = {}) {
         lines.push("");
     }
 
+    // Merge reopened type declarations: multiple TypeDecl nodes with the same name → one defineType call
+    const mergedTypes = new Map();
     for (const typeNode of typeNodes) {
+        if (!mergedTypes.has(typeNode.name)) {
+            mergedTypes.set(typeNode.name, { ...typeNode, fields: [...typeNode.fields] });
+        } else {
+            mergedTypes.get(typeNode.name).fields.push(...typeNode.fields);
+        }
+    }
+
+    for (const typeNode of mergedTypes.values()) {
         lines.push(emitTypeDecl(typeNode));
     }
 
-    if (typeNodes.length > 0) {
+    if (mergedTypes.size > 0) {
         lines.push("");
     }
 
-    for (const typeNode of typeNodes) {
+    for (const typeNode of mergedTypes.values()) {
         lines.push(`const ${typeNode.name} = lamplighter.type(${JSON.stringify(typeNode.name)});`);
     }
 
-    if (typeNodes.length > 0) {
+    if (mergedTypes.size > 0) {
         lines.push("");
     }
 

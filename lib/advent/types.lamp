@@ -1,0 +1,21 @@
+#advent types
+
+type game:
+	room start
+
+type physical
+
+type container < physical
+
+type room < container:
+	string description
+
+type item < physical:
+	bool scenery
+	container holder
+
+type box < item, container:
+	bool closable
+	bool closed
+
+type person < physical

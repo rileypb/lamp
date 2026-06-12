@@ -1,5 +1,3 @@
 global bool USE OXFORD COMMA = false
 
 global real PI = 3.141592653
-
-global person player = yourself
