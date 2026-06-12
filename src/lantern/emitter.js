@@ -199,6 +199,12 @@ function emitExpression(expr) {
     if (expr.kind === "EqualsExpr") {
         return `${emitExpression(expr.left)} === ${emitExpression(expr.right)}`;
     }
+    if (expr.kind === "MultiplyExpr") {
+        return `${emitExpression(expr.left)} * ${emitExpression(expr.right)}`;
+    }
+    if (expr.kind === "GlobalExpr") {
+        return `lamplighter.getGlobal(${JSON.stringify(expr.name)})`;
+    }
     throw new Error(`Unsupported expression kind: ${expr.kind}`);
 }
 

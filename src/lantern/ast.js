@@ -86,6 +86,14 @@ function createEnumExpr(labels) {
     return { kind: "EnumExpr", labels };
 }
 
+function createMultiplyExpr(left, right) {
+    return { kind: "MultiplyExpr", left, right };
+}
+
+function createGlobalExpr(name) {
+    return { kind: "GlobalExpr", name };
+}
+
 module.exports = {
     createProgram,
     createTypeDecl,
@@ -109,4 +117,6 @@ module.exports = {
     createPropertyAccess,
     createConcat,
     createEqualsExpr,
+    createMultiplyExpr,
+    createGlobalExpr,
 };

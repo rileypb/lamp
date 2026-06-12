@@ -21,11 +21,13 @@ const {
     createEqualsExpr,
     createKindDecl,
     createEnumExpr,
+    createMultiplyExpr,
+    createGlobalExpr,
 } = require("./ast");
 
-function parseSource(sourceText, filePath) {
+function parseSource(sourceText, filePath, globalNames = new Set()) {
     const lines = preprocessLines(sourceText);
-    const { nodes } = parseNodes(lines, 0, 0, filePath);
+    const { nodes } = parseNodes(lines, 0, 0, filePath, globalNames);
     return createProgram(nodes);
 }
 
@@ -71,7 +73,7 @@ function computeIndent(line) {
     return count;
 }
 
-function parseNodes(lines, startIndex, baseIndent, filePath) {
+function parseNodes(lines, startIndex, baseIndent, filePath, globalNames = new Set()) {
     const nodes = [];
     let index = startIndex;
 
@@ -118,7 +120,7 @@ function parseNodes(lines, startIndex, baseIndent, filePath) {
         }
 
         if (content.startsWith("on ")) {
-            const { node, nextIndex } = parseEventHandler(lines, index, filePath);
+            const { node, nextIndex } = parseEventHandler(lines, index, filePath, globalNames);
             nodes.push(node);
             index = nextIndex;
             continue;
@@ -248,7 +250,7 @@ function parseSimpleValue(rawValue) {
     return createStringLiteral(value);
 }
 
-function parseEventHandler(lines, index, filePath) {
+function parseEventHandler(lines, index, filePath, globalNames = new Set()) {
     const line = lines[index];
     const content = line.text.trim();
     const match = content.match(/^on\s+([A-Za-z_][A-Za-z0-9_]*)\s*:\s*$/);
@@ -258,7 +260,7 @@ function parseEventHandler(lines, index, filePath) {
 
     const blockStart = findFirstBlockLineIndex(lines, index, filePath);
     const blockIndent = lines[blockStart].indent;
-    const parsed = parseStatementBlock(lines, blockStart, blockIndent, filePath, new Set());
+    const parsed = parseStatementBlock(lines, blockStart, blockIndent, filePath, new Set(), globalNames);
 
     return {
         node: createEventHandler(match[1], parsed.statements),
@@ -266,7 +268,7 @@ function parseEventHandler(lines, index, filePath) {
     };
 }
 
-function parseStatementBlock(lines, startIndex, baseIndent, filePath, localNames) {
+function parseStatementBlock(lines, startIndex, baseIndent, filePath, localNames, globalNames = new Set()) {
     const statements = [];
     let index = startIndex;
 
@@ -288,7 +290,7 @@ function parseStatementBlock(lines, startIndex, baseIndent, filePath, localNames
         }
 
         if (content.startsWith("if ")) {
-            const parsedIf = parseIfStatement(lines, index, baseIndent, filePath, localNames);
+            const parsedIf = parseIfStatement(lines, index, baseIndent, filePath, localNames, globalNames);
             statements.push(parsedIf.statement);
             index = parsedIf.nextIndex;
             continue;
@@ -299,20 +301,20 @@ function parseStatementBlock(lines, startIndex, baseIndent, filePath, localNames
             if (!match) {
                 throw syntaxError(filePath, line.lineNumber, "Invalid let statement");
             }
-            statements.push(createLetStatement(match[1], parseExpression(match[2], filePath, line.lineNumber, localNames)));
+            statements.push(createLetStatement(match[1], parseExpression(match[2], filePath, line.lineNumber, localNames, globalNames)));
             localNames.add(match[1]);
             index += 1;
             continue;
         }
 
         if (content.startsWith("print ")) {
-            statements.push(createPrintStatement(parseExpression(content.slice(6), filePath, line.lineNumber, localNames)));
+            statements.push(createPrintStatement(parseExpression(content.slice(6), filePath, line.lineNumber, localNames, globalNames)));
             index += 1;
             continue;
         }
 
         if (content.startsWith("error ")) {
-            statements.push(createErrorStatement(parseExpression(content.slice(6), filePath, line.lineNumber, localNames)));
+            statements.push(createErrorStatement(parseExpression(content.slice(6), filePath, line.lineNumber, localNames, globalNames)));
             index += 1;
             continue;
         }
@@ -320,7 +322,7 @@ function parseStatementBlock(lines, startIndex, baseIndent, filePath, localNames
         const assignMatch = content.match(/^([A-Za-z_][A-Za-z0-9_]*(?:\.[A-Za-z_][A-Za-z0-9_]*)+)\s*=\s*(.+)$/);
         if (assignMatch) {
             statements.push(
-                createAssignStatement(assignMatch[1].split("."), parseExpression(assignMatch[2], filePath, line.lineNumber, localNames), filePath, line.lineNumber),
+                createAssignStatement(assignMatch[1].split("."), parseExpression(assignMatch[2], filePath, line.lineNumber, localNames, globalNames), filePath, line.lineNumber),
             );
             index += 1;
             continue;
@@ -332,7 +334,7 @@ function parseStatementBlock(lines, startIndex, baseIndent, filePath, localNames
     return { statements, nextIndex: index };
 }
 
-function parseIfStatement(lines, index, baseIndent, filePath, localNames) {
+function parseIfStatement(lines, index, baseIndent, filePath, localNames, globalNames = new Set()) {
     const line = lines[index];
     const content = line.text.trim();
     const ifMatch = content.match(/^if\s+(.+)\s*:\s*$/);
@@ -340,10 +342,10 @@ function parseIfStatement(lines, index, baseIndent, filePath, localNames) {
         throw syntaxError(filePath, line.lineNumber, "Invalid if statement");
     }
 
-    const condition = parseExpression(ifMatch[1], filePath, line.lineNumber, localNames);
+    const condition = parseExpression(ifMatch[1], filePath, line.lineNumber, localNames, globalNames);
     const thenStart = findFirstBlockLineIndex(lines, index, filePath);
     const thenIndent = lines[thenStart].indent;
-    const parsedThen = parseStatementBlock(lines, thenStart, thenIndent, filePath, new Set(localNames));
+    const parsedThen = parseStatementBlock(lines, thenStart, thenIndent, filePath, new Set(localNames), globalNames);
 
     let elseBody = null;
     let nextIndex = parsedThen.nextIndex;
@@ -355,7 +357,7 @@ function parseIfStatement(lines, index, baseIndent, filePath, localNames) {
         if (elseLine.indent === baseIndent && elseContent === "else:") {
             const elseStart = findFirstBlockLineIndex(lines, elseIndex, filePath);
             const elseIndent = lines[elseStart].indent;
-            const parsedElse = parseStatementBlock(lines, elseStart, elseIndent, filePath, new Set(localNames));
+            const parsedElse = parseStatementBlock(lines, elseStart, elseIndent, filePath, new Set(localNames), globalNames);
             elseBody = parsedElse.statements;
             nextIndex = parsedElse.nextIndex;
         }
@@ -367,21 +369,30 @@ function parseIfStatement(lines, index, baseIndent, filePath, localNames) {
     };
 }
 
-function parseExpression(raw, filePath, lineNumber, localNames = new Set()) {
+function parseExpression(raw, filePath, lineNumber, localNames = new Set(), globalNames = new Set()) {
     const eqParts = splitOnTopLevelEquals(raw);
     if (eqParts.length > 1) {
-        let expr = parseExpression(eqParts[0], filePath, lineNumber, localNames);
+        let expr = parseExpression(eqParts[0], filePath, lineNumber, localNames, globalNames);
         for (let i = 1; i < eqParts.length; i += 1) {
-            expr = createEqualsExpr(expr, parseExpression(eqParts[i], filePath, lineNumber, localNames));
+            expr = createEqualsExpr(expr, parseExpression(eqParts[i], filePath, lineNumber, localNames, globalNames));
         }
         return expr;
     }
 
     const parts = splitOnTopLevelPlus(raw);
     if (parts.length > 1) {
-        let expr = parseExpression(parts[0], filePath, lineNumber, localNames);
+        let expr = parseExpression(parts[0], filePath, lineNumber, localNames, globalNames);
         for (let i = 1; i < parts.length; i += 1) {
-            expr = createConcat(expr, parseExpression(parts[i], filePath, lineNumber, localNames));
+            expr = createConcat(expr, parseExpression(parts[i], filePath, lineNumber, localNames, globalNames));
+        }
+        return expr;
+    }
+
+    const starParts = splitOnTopLevelStar(raw);
+    if (starParts.length > 1) {
+        let expr = parseExpression(starParts[0], filePath, lineNumber, localNames, globalNames);
+        for (let i = 1; i < starParts.length; i += 1) {
+            expr = createMultiplyExpr(expr, parseExpression(starParts[i], filePath, lineNumber, localNames, globalNames));
         }
         return expr;
     }
@@ -410,6 +421,9 @@ function parseExpression(raw, filePath, lineNumber, localNames = new Set()) {
         if (localNames.has(text)) {
             return createVariableExpr(text);
         }
+        if (globalNames.has(text)) {
+            return createGlobalExpr(text);
+        }
         return createStringLiteral(text);
     }
 
@@ -429,6 +443,33 @@ function splitOnTopLevelPlus(raw) {
             continue;
         }
         if (!inString && ch === "+") {
+            parts.push(current.trim());
+            current = "";
+            continue;
+        }
+        current += ch;
+    }
+
+    if (current.trim() !== "") {
+        parts.push(current.trim());
+    }
+
+    return parts;
+}
+
+function splitOnTopLevelStar(raw) {
+    const parts = [];
+    let current = "";
+    let inString = false;
+
+    for (let i = 0; i < raw.length; i += 1) {
+        const ch = raw[i];
+        if (ch === '"' && raw[i - 1] !== "\\") {
+            inString = !inString;
+            current += ch;
+            continue;
+        }
+        if (!inString && ch === "*") {
             parts.push(current.trim());
             current = "";
             continue;

@@ -177,6 +177,20 @@ function inferExprType(expr, typeSchema, kindSchema, localTypes) {
     if (expr.kind === "EqualsExpr") {
         return "bool";
     }
+    if (expr.kind === "MultiplyExpr") {
+        const leftType = inferExprType(expr.left, typeSchema, kindSchema, localTypes);
+        const rightType = inferExprType(expr.right, typeSchema, kindSchema, localTypes);
+        if (leftType === null || rightType === null) {
+            return null;
+        }
+        if (isNumericType(leftType) && isNumericType(rightType)) {
+            return (leftType === "real" || rightType === "real") ? "real" : "int";
+        }
+        return null;
+    }
+    if (expr.kind === "GlobalExpr") {
+        return null;
+    }
     return null;
 }
 

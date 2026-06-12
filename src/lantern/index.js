@@ -36,9 +36,17 @@ function runCompilation() {
     const sourceFiles = gatherSourceFiles(libSysDir, inputFile);
     const allNodes = [];
 
+    const globalNames = new Set();
     for (const sourceFile of sourceFiles) {
         const source = fs.readFileSync(sourceFile, "utf8");
-        const ast = parseSource(source, sourceFile);
+        for (const name of extractGlobalNames(source)) {
+            globalNames.add(name);
+        }
+    }
+
+    for (const sourceFile of sourceFiles) {
+        const source = fs.readFileSync(sourceFile, "utf8");
+        const ast = parseSource(source, sourceFile, globalNames);
         allNodes.push(...ast.nodes);
     }
 
@@ -106,6 +114,18 @@ function gatherSourceFiles(libSysDir, userFile) {
 
 function hasGameObject(nodes) {
     return nodes.some((node) => node.kind === "ObjectDecl" && node.typeName === "game");
+}
+
+function extractGlobalNames(sourceText) {
+    const names = new Set();
+    for (const line of sourceText.split(/\r?\n/)) {
+        const code = line.replace(/#.*$/, "").trim();
+        const match = code.match(/^global\s+[A-Za-z_][A-Za-z0-9_<>]*\s+([A-Za-z_][A-Za-z0-9_]*)\s*=/);
+        if (match) {
+            names.add(match[1]);
+        }
+    }
+    return names;
 }
 
 function toNodeRequirePath(relativePath) {
