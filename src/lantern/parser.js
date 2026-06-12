@@ -26,6 +26,9 @@ const {
     createParenNameExpr,
     createNoneLiteral,
     createLibImport,
+    createDispatchStatement,
+    createWhileStatement,
+    createLessThanExpr,
 } = require("./ast");
 
 function parseSource(sourceText, filePath, globalNames = new Set()) {
@@ -332,8 +335,10 @@ function parseStatementBlock(lines, startIndex, baseIndent, filePath, localNames
             continue;
         }
 
-        if (content.startsWith("print ")) {
-            statements.push(createPrintStatement(parseExpression(content.slice(6), filePath, line.lineNumber, localNames, globalNames)));
+        if (content === "print" || content.startsWith("print ")) {
+            const exprSrc = content.slice(5).trim();
+            const expr = exprSrc === "" ? createStringLiteral("") : parseExpression(exprSrc, filePath, line.lineNumber, localNames, globalNames);
+            statements.push(createPrintStatement(expr));
             index += 1;
             continue;
         }
@@ -344,7 +349,24 @@ function parseStatementBlock(lines, startIndex, baseIndent, filePath, localNames
             continue;
         }
 
-        const assignMatch = content.match(/^([A-Za-z_][A-Za-z0-9_]*(?:\.[A-Za-z_][A-Za-z0-9_]*)+)\s*=\s*(.+)$/);
+        if (content.startsWith("dispatch ")) {
+            const match = content.match(/^dispatch\s+([A-Za-z_][A-Za-z0-9_]*)$/);
+            if (!match) {
+                throw syntaxError(filePath, line.lineNumber, "Invalid dispatch statement");
+            }
+            statements.push(createDispatchStatement(match[1]));
+            index += 1;
+            continue;
+        }
+
+        if (content.startsWith("while ")) {
+            const parsed = parseWhileStatement(lines, index, baseIndent, filePath, localNames, globalNames);
+            statements.push(parsed.statement);
+            index = parsed.nextIndex;
+            continue;
+        }
+
+        const assignMatch = content.match(/^([A-Za-z_][A-Za-z0-9_]*(?:\.[A-Za-z_][A-Za-z0-9_]*)*)\s*=\s*(.+)$/);
         if (assignMatch) {
             statements.push(
                 createAssignStatement(assignMatch[1].split("."), parseExpression(assignMatch[2], filePath, line.lineNumber, localNames, globalNames), filePath, line.lineNumber),
@@ -394,6 +416,24 @@ function parseIfStatement(lines, index, baseIndent, filePath, localNames, global
     };
 }
 
+function parseWhileStatement(lines, index, baseIndent, filePath, localNames, globalNames = new Set()) {
+    const line = lines[index];
+    const match = line.text.trim().match(/^while\s+(.+?)\s*:\s*$/);
+    if (!match) {
+        throw syntaxError(filePath, line.lineNumber, "Invalid while statement");
+    }
+
+    const condition = parseExpression(match[1], filePath, line.lineNumber, localNames, globalNames);
+    const bodyStart = findFirstBlockLineIndex(lines, index, filePath);
+    const bodyIndent = lines[bodyStart].indent;
+    const parsedBody = parseStatementBlock(lines, bodyStart, bodyIndent, filePath, new Set(localNames), globalNames);
+
+    return {
+        statement: createWhileStatement(condition, parsedBody.statements),
+        nextIndex: parsedBody.nextIndex,
+    };
+}
+
 function tokenizeExpression(raw, filePath, lineNumber) {
     const tokens = [];
     let i = 0;
@@ -423,6 +463,8 @@ function tokenizeExpression(raw, filePath, lineNumber) {
         if (ch === ")") { tokens.push({ type: "RPAREN" }); i += 1; continue; }
         if (ch === ".") { tokens.push({ type: "DOT" }); i += 1; continue; }
         if (ch === "=" && raw[i + 1] === "=") { tokens.push({ type: "EQEQ" }); i += 2; continue; }
+        if (ch === "<") { tokens.push({ type: "LT" }); i += 1; continue; }
+        if (ch === ">") { tokens.push({ type: "GT" }); i += 1; continue; }
         if (ch === "-" && !prevIsValue() && i + 1 < raw.length && /\d/.test(raw[i + 1])) {
             let j = i + 1;
             while (j < raw.length && /\d/.test(raw[j])) j += 1;
@@ -475,7 +517,7 @@ function parseExpression(raw, filePath, lineNumber, localNames = new Set(), glob
     };
 
     // Binding powers (left-associative: right side parses at same bp, so same-level op binds left)
-    const BP = { EQEQ: 5, PLUS: 10, STAR: 20 };
+    const BP = { EQEQ: 5, LT: 5, GT: 5, PLUS: 10, STAR: 20 };
 
     function parse(minBP) {
         const tok = consume();
@@ -531,6 +573,8 @@ function parseExpression(raw, filePath, lineNumber, localNames = new Set(), glob
         if (op.type === "PLUS") return createConcat(left, parse(BP.PLUS));
         if (op.type === "STAR") return createMultiplyExpr(left, parse(BP.STAR));
         if (op.type === "EQEQ") return createEqualsExpr(left, parse(BP.EQEQ));
+        if (op.type === "LT") return createLessThanExpr(left, parse(BP.LT));
+        if (op.type === "GT") return createLessThanExpr(parse(BP.GT), left);
         throw syntaxError(filePath, lineNumber, `Unexpected operator: ${op.type}`);
     }
 

@@ -59,7 +59,13 @@ function emitProgram(programAst, options = {}) {
     }
 
     for (const objectNode of objectNodes) {
-        lines.push(emitObjectDecl(objectNode));
+        lines.push(emitObjectDecl(objectNode, mergedTypes, kindNames));
+    }
+
+    // Set object-typed fields after all objects exist so forward references work
+    const objectFieldInits = objectNodes.flatMap((n) => emitObjectFieldInits(n, mergedTypes, kindNames));
+    for (const init of objectFieldInits) {
+        lines.push(init);
     }
 
     if (objectNodes.length > 0) {
@@ -96,6 +102,37 @@ function emitProgram(programAst, options = {}) {
 }
 
 const PRIMITIVE_TYPES = new Set(["bool", "int", "real", "string"]);
+
+function resolveFieldType(typeName, fieldName, mergedTypes) {
+    const visited = new Set();
+    function search(name) {
+        if (visited.has(name)) return null;
+        visited.add(name);
+        const typeNode = mergedTypes.get(name);
+        if (!typeNode) return null;
+        for (const f of typeNode.fields) {
+            if (f.fieldName === fieldName) return f.typeName;
+        }
+        for (const parent of (typeNode.parents || [])) {
+            const result = search(parent);
+            if (result !== null) return result;
+        }
+        return null;
+    }
+    return search(typeName);
+}
+
+function isObjectTypedField(field, typeName, mergedTypes, kindNames) {
+    if (field.value.kind !== "StringLiteral") return false;
+    const fieldType = resolveFieldType(typeName, field.fieldName, mergedTypes);
+    return fieldType !== null && !PRIMITIVE_TYPES.has(fieldType) && !kindNames.has(fieldType);
+}
+
+function objectRef(objectName) {
+    return /^[A-Za-z_][A-Za-z0-9_]*$/.test(objectName)
+        ? objectName
+        : `lamplighter.getObject(${JSON.stringify(objectName)})`;
+}
 
 function emitGlobalDecl(node, kindNames = new Set()) {
     let valueExpr;
@@ -139,10 +176,12 @@ function emitTypeDecl(node) {
     return `lamplighter.defineType(${JSON.stringify(node.name)}, ${JSON.stringify(node.parents || [])}, ${JSON.stringify(fields)});`;
 }
 
-function emitObjectDecl(node) {
+function emitObjectDecl(node, mergedTypes = new Map(), kindNames = new Set()) {
     const fields = {};
     for (const field of node.fields) {
-        fields[field.fieldName] = emitValue(field.value);
+        if (!isObjectTypedField(field, node.typeName, mergedTypes, kindNames)) {
+            fields[field.fieldName] = emitValue(field.value);
+        }
     }
 
     const pairs = Object.entries(fields).map(([key, value]) => `${JSON.stringify(key)}: ${value}`);
@@ -152,6 +191,12 @@ function emitObjectDecl(node) {
         return `const ${node.objectName} = ${call};`;
     }
     return `${call};`;
+}
+
+function emitObjectFieldInits(node, mergedTypes, kindNames) {
+    return node.fields
+        .filter((field) => isObjectTypedField(field, node.typeName, mergedTypes, kindNames))
+        .map((field) => `${objectRef(node.objectName)}.${field.fieldName} = lamplighter.getObject(${JSON.stringify(field.value.value)});`);
 }
 
 function emitValue(valueNode) {
@@ -201,6 +246,9 @@ function emitStatementLines(statement, indentLevel, globalNames = new Set()) {
     if (statement.kind === "ErrorStatement") {
         return [`${indent}lamplighter.error(${emitExpression(statement.expr, globalNames)});`];
     }
+    if (statement.kind === "DispatchStatement") {
+        return [`${indent}lamplighter.dispatch(${JSON.stringify(statement.eventName)});`];
+    }
     if (statement.kind === "IfStatement") {
         const lines = [`${indent}if (${emitExpression(statement.condition, globalNames)}) {`];
         lines.push(...emitStatementList(statement.thenBody, indentLevel + 1, globalNames));
@@ -212,6 +260,12 @@ function emitStatementLines(statement, indentLevel, globalNames = new Set()) {
             lines.push(`${indent}}`);
         }
 
+        return lines;
+    }
+    if (statement.kind === "WhileStatement") {
+        const lines = [`${indent}while (${emitExpression(statement.condition, globalNames)}) {`];
+        lines.push(...emitStatementList(statement.body, indentLevel + 1, globalNames));
+        lines.push(`${indent}}`);
         return lines;
     }
     throw new Error(`Unsupported statement kind: ${statement.kind}`);
@@ -240,6 +294,9 @@ function emitExpression(expr, globalNames = new Set()) {
     }
     if (expr.kind === "EqualsExpr") {
         return `${emitExpression(expr.left, globalNames)} === ${emitExpression(expr.right, globalNames)}`;
+    }
+    if (expr.kind === "LessThanExpr") {
+        return `${emitExpression(expr.left, globalNames)} < ${emitExpression(expr.right, globalNames)}`;
     }
     if (expr.kind === "MultiplyExpr") {
         return `${emitExpression(expr.left, globalNames)} * ${emitExpression(expr.right, globalNames)}`;

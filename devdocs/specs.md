@@ -7,6 +7,9 @@
 - Lantern is a command-line tool.
 - Lantern takes a .lamp source file as input and produces a JavaScript file as output.
 - The output JavaScript file is a representation of the game that can be executed with the Lamplighter runtime.
+- `npm run compile INPUT.lamp OUTPUT.js` — compile a source file
+- `npm run exe -- INPUT.lamp` — compile and immediately run a source file (output goes to `build/`)
+- `npm test` — run the golden test suite
 - `lib/sys/` is the system library. Every invocation of Lantern automatically parses all `.lamp` files in `lib/sys/` — no explicit import is required.
 - Other subdirectories of `lib/` (e.g. `lib/test/`, `lib/advent/`) are optional libraries that must be imported explicitly with `lib LIBNAME`.
 - `.lamp` files placed directly in `lib/` (not inside a named subdirectory) are not parsed and are not available for import.
@@ -74,6 +77,8 @@ Lantern-generated JavaScript targets the following Lamplighter API surface:
     - `all.first` returns the first element in that list.
 - `onEvent(eventName, handler)`
     - Registers an event handler callback.
+- `dispatch(eventName)`
+    - Fires the named event immediately, invoking all registered handlers in registration order.
 - `run()`
     - Executes the runtime entry sequence.
     - In v0, this fires the `startup` event.
@@ -129,6 +134,16 @@ An object with no fields omits the `:` and body entirely:
 ```lamp
 person yourself
 ```
+
+Object-typed field values are written as the object's name (bare or multi-word):
+
+```lamp
+game One-Room Game:
+    author Test Author
+    start West of House
+```
+
+Object-typed fields are resolved after all objects have been created, so the referenced object may be declared anywhere in the source — before or after the object that references it.
 
 #### Type declarations
 
@@ -315,13 +330,16 @@ let NAME = EXPRESSION
 print EXPRESSION
 ```
 
-- **Field assignment** — updates an object field:
+`print` with no argument prints a blank line.
+
+- **Assignment** — updates a local variable or object field:
 
 ```lamp
+NAME = EXPRESSION
 TARGET.FIELD = EXPRESSION
 ```
 
-Object-field assignments are compile-time checked against the declared field type when Lantern can infer the type of `EXPRESSION`.
+A single-name target reassigns a `let`-bound local. A dotted target assigns to an object field. Field assignments are compile-time checked against the declared field type when Lantern can infer the expression type.
 
 - **Error** — aborts execution with a message:
 
@@ -339,6 +357,22 @@ else:
     STATEMENT
     ...
 ```
+
+- **While loop** — python-style loop that repeats while a condition holds:
+
+```lamp
+while EXPRESSION:
+    STATEMENT
+    ...
+```
+
+- **Dispatch** — fires a named event, invoking all registered handlers for that event:
+
+```lamp
+dispatch EVENT_NAME
+```
+
+`EVENT_NAME` is a single identifier. Any number of `on EVENT_NAME:` handlers may exist; all are called in registration order.
 
 ### Expressions
 
@@ -383,10 +417,12 @@ this_game.name
 
 `*` has higher precedence than `+`.
 
-- **Equality comparison** — `==` compares two expressions:
+- **Comparison** — `==`, `<`, and `>` compare two expressions and produce `bool`:
 
 ```lamp
 this_game.release == final
+i < 5
+count > 0
 ```
 
 - **Object name reference** — a named object can be referenced directly in expressions. For single-word object names the name is used as a bare identifier:
@@ -422,7 +458,7 @@ Lantern compiles in three passes:
 2. **Parse** (`parser.js`): parse each file into an AST using the collected global names so that global references in expressions are resolved correctly.
 3. **Check** (`checker.js`) + **emit** (`emitter.js`): semantic check then emit standalone Node.js JavaScript.
 
-The emitted program runs in this order: kinds → kind constants → types → type constants → objects → global declarations → global assignments → event handler registrations → `run()`. Globals are placed after objects so that object-name initial values (e.g. `global person player = yourself`) can call `lamplighter.getObject(...)` against already-registered instances.
+The emitted program runs in this order: kinds → kind constants → types → type constants → objects (primitive/kind fields only) → object-typed field assignments → global declarations → global assignments → event handler registrations → `run()`. Globals and object-typed field assignments are placed after all `createObject` calls so that any `lamplighter.getObject(...)` reference resolves against an already-registered instance regardless of declaration order.
 
 ### Parser design
 
@@ -430,13 +466,13 @@ The outer parser is line-by-line and indentation-driven. Each line is classified
 
 Expression parsing (`parseExpression`) uses a **tokenizer + Pratt parser** (top-down operator precedence):
 
-**Tokenizer** (`tokenizeExpression`): scans the raw expression string character by character and produces a flat token stream. Token types: `NUMBER`, `STRING`, `IDENT`, `PLUS`, `STAR`, `EQEQ`, `LPAREN`, `RPAREN`, `DOT`, `EOF`. Negative number literals (e.g. `-7`) are recognized when the preceding token is not a value token.
+**Tokenizer** (`tokenizeExpression`): scans the raw expression string character by character and produces a flat token stream. Token types: `NUMBER`, `STRING`, `IDENT`, `PLUS`, `STAR`, `EQEQ`, `LT`, `GT`, `LPAREN`, `RPAREN`, `DOT`, `EOF`. Negative number literals (e.g. `-7`) are recognized when the preceding token is not a value token.
 
 **Pratt parser**: a `parse(minBP)` function that drives a loop over the token stream. Each token has either a *null denotation* (nud — starts an expression) or a *left denotation* (led — extends an expression to the left). Operator precedences:
 
 | Operator | Binding power |
 |---|---|
-| `==` | 5 |
+| `==`, `<`, `>` | 5 |
 | `+` | 10 |
 | `*` | 20 |
 

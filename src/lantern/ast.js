@@ -106,6 +106,18 @@ function createLibImport(name) {
     return { kind: "LibImport", name };
 }
 
+function createDispatchStatement(eventName) {
+    return { kind: "DispatchStatement", eventName };
+}
+
+function createWhileStatement(condition, body) {
+    return { kind: "WhileStatement", condition, body };
+}
+
+function createLessThanExpr(left, right) {
+    return { kind: "LessThanExpr", left, right };
+}
+
 module.exports = {
     createProgram,
     createTypeDecl,
@@ -134,4 +146,7 @@ module.exports = {
     createParenNameExpr,
     createNoneLiteral,
     createLibImport,
+    createDispatchStatement,
+    createWhileStatement,
+    createLessThanExpr,
 };

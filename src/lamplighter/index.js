@@ -257,6 +257,7 @@ module.exports = {
     enum: enumKind,
     kind,
     onEvent,
+    dispatch: fireEvent,
     run,
     print,
     setPrint,

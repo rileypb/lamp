@@ -1,3 +1,8 @@
 on startup:
 	player.holder = game.all.first.start
+	dispatch started
+
+on started:
 	print player.holder
+	print
+	print player.holder.description

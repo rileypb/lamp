@@ -129,6 +129,8 @@ function checkStatements(statements, typeSchema, kindSchema, localTypes) {
             if (stmt.elseBody) {
                 checkStatements(stmt.elseBody, typeSchema, kindSchema, new Map(localTypes));
             }
+        } else if (stmt.kind === "WhileStatement") {
+            checkStatements(stmt.body, typeSchema, kindSchema, new Map(localTypes));
         }
     }
 }
@@ -198,6 +200,9 @@ function inferExprType(expr, typeSchema, kindSchema, localTypes) {
         return inferConcatType(leftType, rightType, kindSchema);
     }
     if (expr.kind === "EqualsExpr") {
+        return "bool";
+    }
+    if (expr.kind === "LessThanExpr") {
         return "bool";
     }
     if (expr.kind === "MultiplyExpr") {
