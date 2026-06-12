@@ -98,6 +98,10 @@ function createParenNameExpr(objectName, fieldChain) {
     return { kind: "ParenNameExpr", objectName, fieldChain };
 }
 
+function createNoneLiteral() {
+    return { kind: "NoneLiteral" };
+}
+
 module.exports = {
     createProgram,
     createTypeDecl,
@@ -124,4 +128,5 @@ module.exports = {
     createMultiplyExpr,
     createGlobalExpr,
     createParenNameExpr,
+    createNoneLiteral,
 };

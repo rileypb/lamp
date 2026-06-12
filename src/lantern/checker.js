@@ -163,6 +163,9 @@ function inferExprType(expr, typeSchema, kindSchema, localTypes) {
     if (expr.kind === "NumberLiteral") {
         return Number.isInteger(expr.value) ? "int" : "real";
     }
+    if (expr.kind === "NoneLiteral") {
+        return null;
+    }
     if (expr.kind === "VariableExpr") {
         return localTypes.get(expr.name) || null;
     }
@@ -297,6 +300,9 @@ function inferLiteralType(valueNode) {
     }
     if (valueNode.kind === "NumberLiteral") {
         return Number.isInteger(valueNode.value) ? "int" : "real";
+    }
+    if (valueNode.kind === "NoneLiteral") {
+        return null;
     }
     return null;
 }

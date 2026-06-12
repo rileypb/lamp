@@ -4,6 +4,7 @@ type game:
 	string author
 	int version
 	reltype release
+	room start
 
 type physical
 

@@ -24,6 +24,7 @@ const {
     createMultiplyExpr,
     createGlobalExpr,
     createParenNameExpr,
+    createNoneLiteral,
 } = require("./ast");
 
 function parseSource(sourceText, filePath, globalNames = new Set()) {
@@ -198,13 +199,22 @@ function parseTypeFields(lines, filePath) {
 function parseObjectDecl(lines, index, filePath) {
     const line = lines[index];
     const content = line.text.trim();
-    const headerMatch = content.match(/^([A-Za-z_][A-Za-z0-9_]*)\s+(.+):$/);
-    if (!headerMatch) {
+    const headerWithBody = content.match(/^([A-Za-z_][A-Za-z0-9_]*)\s+(.+):$/);
+    const headerNoBody = !headerWithBody && content.match(/^([A-Za-z_][A-Za-z0-9_]*)\s+(.+)$/);
+
+    if (!headerWithBody && !headerNoBody) {
         throw syntaxError(filePath, line.lineNumber, "Invalid object declaration");
     }
 
-    const typeName = headerMatch[1];
-    const objectName = headerMatch[2].trim();
+    if (headerNoBody) {
+        return {
+            node: createObjectDecl(headerNoBody[1], headerNoBody[2].trim(), []),
+            nextIndex: index + 1,
+        };
+    }
+
+    const typeName = headerWithBody[1];
+    const objectName = headerWithBody[2].trim();
 
     const block = parseChildBlock(lines, index, filePath);
     const fields = parseObjectFields(block.lines, filePath);
@@ -238,6 +248,9 @@ function parseSimpleValue(rawValue) {
     }
     if (value === "false") {
         return createBooleanLiteral(false);
+    }
+    if (value === "none") {
+        return createNoneLiteral();
     }
     if (/^-?\d+\.\d+$/.test(value)) {
         return createNumberLiteral(parseFloat(value));
@@ -473,6 +486,7 @@ function parseExpression(raw, filePath, lineNumber, localNames = new Set(), glob
             const name = tok.value;
             if (name === "true") return createBooleanLiteral(true);
             if (name === "false") return createBooleanLiteral(false);
+            if (name === "none") return createNoneLiteral();
             // Eagerly consume .field.field... chain
             const chain = [name];
             while (peek().type === "DOT") {
@@ -592,12 +606,13 @@ function parseKindDecl(lines, index, filePath) {
 function parseGlobalDecl(lines, index, filePath) {
     const line = lines[index];
     const content = line.text.trim();
-    const match = content.match(/^global\s+([A-Za-z_][A-Za-z0-9_<>]*)\s+(.+?)\s*=\s*(.+)$/);
+    const match = content.match(/^global\s+([A-Za-z_][A-Za-z0-9_<>]*)\s+(.+?)(?:\s*=\s*(.+))?$/);
     if (!match) {
         throw syntaxError(filePath, line.lineNumber, "Invalid global declaration");
     }
+    const value = match[3] !== undefined ? parseSimpleValue(match[3]) : createNoneLiteral();
     return {
-        node: createGlobalDecl(match[2].trim(), match[1].trim(), parseSimpleValue(match[3]), filePath, line.lineNumber),
+        node: createGlobalDecl(match[2].trim(), match[1].trim(), value, filePath, line.lineNumber),
         nextIndex: index + 1,
     };
 }
