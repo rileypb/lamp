@@ -402,7 +402,7 @@ function tokenizeExpression(raw, filePath, lineNumber) {
         if (ch === "-" && !prevIsValue() && i + 1 < raw.length && /\d/.test(raw[i + 1])) {
             let j = i + 1;
             while (j < raw.length && /\d/.test(raw[j])) j += 1;
-            if (j < raw.length && raw[j] === ".") {
+            if (j < raw.length && raw[j] === "." && j + 1 < raw.length && /\d/.test(raw[j + 1])) {
                 j += 1;
                 while (j < raw.length && /\d/.test(raw[j])) j += 1;
                 tokens.push({ type: "NUMBER", value: parseFloat(raw.slice(i, j)) });
@@ -415,7 +415,7 @@ function tokenizeExpression(raw, filePath, lineNumber) {
         if (/\d/.test(ch)) {
             let j = i;
             while (j < raw.length && /\d/.test(raw[j])) j += 1;
-            if (j < raw.length && raw[j] === ".") {
+            if (j < raw.length && raw[j] === "." && j + 1 < raw.length && /\d/.test(raw[j + 1])) {
                 j += 1;
                 while (j < raw.length && /\d/.test(raw[j])) j += 1;
                 tokens.push({ type: "NUMBER", value: parseFloat(raw.slice(i, j)) });
@@ -510,8 +510,12 @@ function parseExpression(raw, filePath, lineNumber, localNames = new Set(), glob
     }
 
     const result = parse(0);
-    if (peek().type !== "EOF") {
-        throw syntaxError(filePath, lineNumber, `Unexpected token in expression: ${peek().type}`);
+    const trailing = peek();
+    if (trailing.type === "DOT") {
+        throw syntaxError(filePath, lineNumber, "property access '.' requires a variable or object reference, not a literal value");
+    }
+    if (trailing.type !== "EOF") {
+        throw syntaxError(filePath, lineNumber, `Unexpected token in expression: ${trailing.type}`);
     }
     return result;
 }
