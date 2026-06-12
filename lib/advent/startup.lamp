@@ -1,0 +1,3 @@
+on startup:
+	player.holder = game.all.first.start
+	print player.holder

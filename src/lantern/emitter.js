@@ -82,8 +82,10 @@ function emitProgram(programAst, options = {}) {
         lines.push("");
     }
 
+    const globalNames = new Set(globalDeclNodes.map((n) => n.name));
+
     for (const eventNode of eventNodes) {
-        lines.push(emitEventHandler(eventNode));
+        lines.push(emitEventHandler(eventNode, globalNames));
     }
 
     lines.push("");
@@ -168,8 +170,8 @@ function emitValue(valueNode) {
     throw new Error(`Unsupported value kind: ${valueNode.kind}`);
 }
 
-function emitEventHandler(node) {
-    const bodyLines = emitStatementList(node.body, 1);
+function emitEventHandler(node, globalNames = new Set()) {
+    const bodyLines = emitStatementList(node.body, 1, globalNames);
     return [
         `lamplighter.onEvent(${JSON.stringify(node.eventName)}, () => {`,
         ...bodyLines,
@@ -177,33 +179,36 @@ function emitEventHandler(node) {
     ].join("\n");
 }
 
-function emitStatementList(statements, indentLevel) {
-    return statements.flatMap((statement) => emitStatementLines(statement, indentLevel));
+function emitStatementList(statements, indentLevel, globalNames = new Set()) {
+    return statements.flatMap((statement) => emitStatementLines(statement, indentLevel, globalNames));
 }
 
-function emitStatementLines(statement, indentLevel) {
+function emitStatementLines(statement, indentLevel, globalNames = new Set()) {
     const indent = "    ".repeat(indentLevel);
 
     if (statement.kind === "LetStatement") {
-        return [`${indent}let ${statement.name} = ${emitExpression(statement.expr)};`];
+        return [`${indent}let ${statement.name} = ${emitExpression(statement.expr, globalNames)};`];
     }
     if (statement.kind === "PrintStatement") {
-        return [`${indent}lamplighter.print(${emitExpression(statement.expr)});`];
+        return [`${indent}lamplighter.print(${emitExpression(statement.expr, globalNames)});`];
     }
     if (statement.kind === "AssignStatement") {
-        return [`${indent}${statement.targetChain.join(".")} = ${emitExpression(statement.expr)};`];
+        const [head, ...tail] = statement.targetChain;
+        const headExpr = globalNames.has(head) ? `lamplighter.getGlobal(${JSON.stringify(head)})` : head;
+        const target = tail.length === 0 ? headExpr : `${headExpr}.${tail.join(".")}`;
+        return [`${indent}${target} = ${emitExpression(statement.expr, globalNames)};`];
     }
     if (statement.kind === "ErrorStatement") {
-        return [`${indent}lamplighter.error(${emitExpression(statement.expr)});`];
+        return [`${indent}lamplighter.error(${emitExpression(statement.expr, globalNames)});`];
     }
     if (statement.kind === "IfStatement") {
-        const lines = [`${indent}if (${emitExpression(statement.condition)}) {`];
-        lines.push(...emitStatementList(statement.thenBody, indentLevel + 1));
+        const lines = [`${indent}if (${emitExpression(statement.condition, globalNames)}) {`];
+        lines.push(...emitStatementList(statement.thenBody, indentLevel + 1, globalNames));
         lines.push(`${indent}}`);
 
         if (statement.elseBody) {
             lines[lines.length - 1] = `${indent}} else {`;
-            lines.push(...emitStatementList(statement.elseBody, indentLevel + 1));
+            lines.push(...emitStatementList(statement.elseBody, indentLevel + 1, globalNames));
             lines.push(`${indent}}`);
         }
 
@@ -212,7 +217,7 @@ function emitStatementLines(statement, indentLevel) {
     throw new Error(`Unsupported statement kind: ${statement.kind}`);
 }
 
-function emitExpression(expr) {
+function emitExpression(expr, globalNames = new Set()) {
     if (expr.kind === "StringLiteral") {
         return JSON.stringify(expr.value);
     }
@@ -226,16 +231,18 @@ function emitExpression(expr) {
         return String(expr.value);
     }
     if (expr.kind === "PropertyAccess") {
-        return expr.chain.join(".");
+        const [head, ...tail] = expr.chain;
+        const headExpr = globalNames.has(head) ? `lamplighter.getGlobal(${JSON.stringify(head)})` : head;
+        return tail.length === 0 ? headExpr : `${headExpr}.${tail.join(".")}`;
     }
     if (expr.kind === "Concat") {
-        return `${emitExpression(expr.left)} + ${emitExpression(expr.right)}`;
+        return `${emitExpression(expr.left, globalNames)} + ${emitExpression(expr.right, globalNames)}`;
     }
     if (expr.kind === "EqualsExpr") {
-        return `${emitExpression(expr.left)} === ${emitExpression(expr.right)}`;
+        return `${emitExpression(expr.left, globalNames)} === ${emitExpression(expr.right, globalNames)}`;
     }
     if (expr.kind === "MultiplyExpr") {
-        return `${emitExpression(expr.left)} * ${emitExpression(expr.right)}`;
+        return `${emitExpression(expr.left, globalNames)} * ${emitExpression(expr.right, globalNames)}`;
     }
     if (expr.kind === "NoneLiteral") {
         return "null";
