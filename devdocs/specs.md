@@ -19,11 +19,23 @@
 - The emitted file requires the Lamplighter library and executes through it.
 - Lighthouse integration is out of scope for this iteration.
 
+#### Library imports (planned, not yet implemented)
+
+User files may import an optional standard library with:
+
+```lamp
+lib LIBNAME
+```
+
+This will include all `.lamp` files from `lib/LIBNAME/` in the compilation, in addition to `lib/sys/`. For example, `lib test` includes `lib/test/*.lamp`. Library imports are not currently parsed or executed; support is planned for a future iteration.
+
 #### Known limitations (v0)
 
 - Kind values are currently represented at runtime as strings.
 - Runtime execution currently fires only the `startup` event from `run()`.
 - Type-checking is only as strong as the current expression inference rules; expressions whose types cannot yet be inferred are not rejected.
+- Object-typed fields and globals are not statically type-checked (the checker returns unknown type for object references and `none`).
+- `lib LIBNAME` import syntax is not yet implemented; the directive is currently parsed as an object declaration and will cause a runtime error.
 
 ### Lamplighter
 
@@ -109,6 +121,12 @@ game Minimal:
     version 1
 ```
 
+An object with no fields omits the `:` and body entirely:
+
+```lamp
+person yourself
+```
+
 #### Type declarations
 
 ```lamp
@@ -125,6 +143,16 @@ type game:
     int version
 ```
 
+`FIELD_TYPE` may be any primitive type, kind name, or object type name. An object-typed field holds a reference to an instance of that type (or `none`):
+
+```lamp
+type game:
+    string author
+    int version
+    reltype release
+    room start
+```
+
 Built-in complex types:
 - `object`
 - `type`
@@ -136,6 +164,8 @@ Built-in primitive types:
 - `bool` — boolean values; literals are `true` and `false`
 - `real` — floating-point values; literals require a decimal point: `3.14`, `-0.5`
 - `list<T>` (generic list of elements of type `T`)
+
+The literal `none` represents the absence of an object reference. It is valid wherever an object-typed value is expected and evaluates to `null` at runtime.
 
 #### Type inheritance
 
@@ -204,11 +234,27 @@ A **global** declares a named value that persists for the lifetime of the game. 
 global TYPE_NAME GLOBAL_NAME = VALUE
 ```
 
-Declares a global named `GLOBAL_NAME` of type `TYPE_NAME` with an initial value of `VALUE`. `TYPE_NAME` may be any primitive type or kind name.
+Declares a global named `GLOBAL_NAME` of type `TYPE_NAME` with an initial value of `VALUE`. `TYPE_NAME` may be any primitive type, kind name, or object type name.
 
 ```lamp
 global bool USE OXFORD COMMA = false
+global real PI = 3.141592653
 ```
+
+For object-typed globals, the initial value may be an existing object name or the literal `none` (no object assigned):
+
+```lamp
+global person player = yourself
+global person player = none
+```
+
+The `= VALUE` clause is optional for object-typed globals; omitting it is equivalent to `= none`:
+
+```lamp
+global person player
+```
+
+Globals are initialized at program startup after all objects have been created, so an object-name initial value always refers to an already-registered instance.
 
 #### Global assignments
 
@@ -354,6 +400,13 @@ For multi-word object names, the name is wrapped in parentheses:
 
 `(NAME)` looks up the object named `NAME` at runtime. A `.`-separated field chain may follow.
 
+- **`none`** — the absent-object literal, valid in any expression context that accepts an object reference:
+
+```lamp
+if this_game.start == none:
+    error "no start room defined"
+```
+
 - **Bare identifiers** in expressions are resolved in this order: local variable (introduced by `let`), declared global, then string literal. The string-literal fallback supports enum-label comparisons such as `== final`.
 
 ## Implementation notes
@@ -365,6 +418,8 @@ Lantern compiles in three passes:
 1. **Pre-scan** (`index.js`): scan all source files with a single regex per line to collect declared global names. Produces a `Set<string>` of global names.
 2. **Parse** (`parser.js`): parse each file into an AST using the collected global names so that global references in expressions are resolved correctly.
 3. **Check** (`checker.js`) + **emit** (`emitter.js`): semantic check then emit standalone Node.js JavaScript.
+
+The emitted program runs in this order: kinds → kind constants → types → type constants → objects → global declarations → global assignments → event handler registrations → `run()`. Globals are placed after objects so that object-name initial values (e.g. `global person player = yourself`) can call `lamplighter.getObject(...)` against already-registered instances.
 
 ### Parser design
 
