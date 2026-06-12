@@ -33,7 +33,7 @@ function runCompilation() {
     const runtimeModulePath = path.join(projectRoot, "src", "lamplighter");
     const runtimeRequirePath = toNodeRequirePath(path.relative(path.dirname(outputFile), runtimeModulePath));
 
-    const sourceFiles = gatherSourceFiles(libSysDir, inputFile);
+    const sourceFiles = gatherSourceFiles(libSysDir, inputFile, projectRoot);
     const allNodes = [];
 
     const globalNames = new Set();
@@ -103,13 +103,55 @@ function parseDiagnostic(message) {
     };
 }
 
-function gatherSourceFiles(libSysDir, userFile) {
+function gatherSourceFiles(libSysDir, userFile, projectRoot) {
     const sysFiles = fs.readdirSync(libSysDir)
         .filter((entry) => entry.endsWith(".lamp"))
         .sort()
         .map((entry) => path.join(libSysDir, entry));
 
-    return [...sysFiles, userFile];
+    const userSource = fs.readFileSync(userFile, "utf8");
+    const libImports = extractLibImports(userSource, userFile);
+    const userFileDir = path.dirname(userFile);
+
+    const libFiles = [];
+    for (const { name, filePath, lineNumber } of libImports) {
+        const libDir = resolveLibDir(name, projectRoot, userFileDir);
+        if (!libDir) {
+            throw new Error(`${filePath}:${lineNumber}: library not found: ${name}`);
+        }
+        const files = fs.readdirSync(libDir)
+            .filter((entry) => entry.endsWith(".lamp"))
+            .sort()
+            .map((entry) => path.join(libDir, entry));
+        libFiles.push(...files);
+    }
+
+    return [...sysFiles, ...libFiles, userFile];
+}
+
+function extractLibImports(sourceText, filePath) {
+    const imports = [];
+    const lines = sourceText.split(/\r?\n/);
+    for (let i = 0; i < lines.length; i += 1) {
+        const code = lines[i].replace(/#.*$/, "").trim();
+        const match = code.match(/^lib\s+([A-Za-z_][A-Za-z0-9_]*)$/);
+        if (match) {
+            imports.push({ name: match[1], filePath, lineNumber: i + 1 });
+        }
+    }
+    return imports;
+}
+
+function resolveLibDir(libName, projectRoot, userFileDir) {
+    const internalPath = path.join(projectRoot, "lib", libName);
+    if (fs.existsSync(internalPath) && fs.statSync(internalPath).isDirectory()) {
+        return internalPath;
+    }
+    const localPath = path.join(userFileDir, "lib", libName);
+    if (fs.existsSync(localPath) && fs.statSync(localPath).isDirectory()) {
+        return localPath;
+    }
+    return null;
 }
 
 function hasGameObject(nodes) {

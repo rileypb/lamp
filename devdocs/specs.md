@@ -21,15 +21,17 @@
 - The emitted file requires the Lamplighter library and executes through it.
 - Lighthouse integration is out of scope for this iteration.
 
-#### Library imports (planned, not yet implemented)
+#### Library imports
 
-User files may import an optional standard library with:
+A user file may import an optional library with:
 
 ```lamp
 lib LIBNAME
 ```
 
-This will include all `.lamp` files from `lib/LIBNAME/` in the compilation, in addition to `lib/sys/`. For example, `lib test` includes `lib/test/*.lamp`. Library imports are not currently parsed or executed; support is planned for a future iteration.
+This includes all `.lamp` files from the resolved library directory in the compilation, inserted after `lib/sys/` and before the user file. Multiple `lib` lines are allowed; their files are included in the order the directives appear.
+
+**Resolution order**: Lantern searches for `LIBNAME` by looking first in the project-level `lib/` directory (`lib/LIBNAME/`), then in a `lib/` directory adjacent to the user file (`<user-file-dir>/lib/LIBNAME/`). The first match wins. If neither location exists, Lantern reports a compile error: `file:line: library not found: LIBNAME`.
 
 #### Known limitations (v0)
 
@@ -37,7 +39,6 @@ This will include all `.lamp` files from `lib/LIBNAME/` in the compilation, in a
 - Runtime execution currently fires only the `startup` event from `run()`.
 - Type-checking is only as strong as the current expression inference rules; expressions whose types cannot yet be inferred are not rejected.
 - Object-typed fields and globals are not statically type-checked (the checker returns unknown type for object references and `none`).
-- `lib LIBNAME` import syntax is not yet implemented; the directive is currently parsed as an object declaration and will cause a runtime error.
 
 ### Lamplighter
 

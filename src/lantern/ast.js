@@ -102,6 +102,10 @@ function createNoneLiteral() {
     return { kind: "NoneLiteral" };
 }
 
+function createLibImport(name) {
+    return { kind: "LibImport", name };
+}
+
 module.exports = {
     createProgram,
     createTypeDecl,
@@ -129,4 +133,5 @@ module.exports = {
     createGlobalExpr,
     createParenNameExpr,
     createNoneLiteral,
+    createLibImport,
 };

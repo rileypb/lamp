@@ -25,6 +25,7 @@ const {
     createGlobalExpr,
     createParenNameExpr,
     createNoneLiteral,
+    createLibImport,
 } = require("./ast");
 
 function parseSource(sourceText, filePath, globalNames = new Set()) {
@@ -125,6 +126,16 @@ function parseNodes(lines, startIndex, baseIndent, filePath, globalNames = new S
             const { node, nextIndex } = parseEventHandler(lines, index, filePath, globalNames);
             nodes.push(node);
             index = nextIndex;
+            continue;
+        }
+
+        if (content.startsWith("lib ")) {
+            const match = content.match(/^lib\s+([A-Za-z_][A-Za-z0-9_]*)$/);
+            if (!match) {
+                throw syntaxError(filePath, line.lineNumber, "Invalid library import");
+            }
+            nodes.push(createLibImport(match[1]));
+            index += 1;
             continue;
         }
 
