@@ -1,0 +1,13 @@
+{
+  "name": "lamp",
+  "version": "0.1.0",
+  "bin": {
+    "lantern": "./src/lantern/index.js",
+    "lantern-exe": "./src/lantern/exe.js"
+  },
+  "scripts": {
+    "compile": "node src/lantern/index.js",
+    "exe": "node src/lantern/exe.js",
+    "test": "node tests/golden/run-golden.js"
+  }
+}
