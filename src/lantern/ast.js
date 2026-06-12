@@ -114,6 +114,10 @@ function createWhileStatement(condition, body) {
     return { kind: "WhileStatement", condition, body };
 }
 
+function createBreakStatement() {
+    return { kind: "BreakStatement" };
+}
+
 function createLessThanExpr(left, right) {
     return { kind: "LessThanExpr", left, right };
 }
@@ -149,4 +153,5 @@ module.exports = {
     createDispatchStatement,
     createWhileStatement,
     createLessThanExpr,
+    createBreakStatement,
 };

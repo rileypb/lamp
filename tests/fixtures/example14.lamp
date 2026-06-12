@@ -1,0 +1,13 @@
+game Game 1:
+    author Test Author
+    version 1
+    release dev
+
+on startup:
+	let i = 0
+	while true:
+		i = i + 1
+		print i
+		if i == 5:
+			break
+

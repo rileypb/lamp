@@ -29,6 +29,7 @@ const {
     createDispatchStatement,
     createWhileStatement,
     createLessThanExpr,
+    createBreakStatement,
 } = require("./ast");
 
 function parseSource(sourceText, filePath, globalNames = new Set()) {
@@ -355,6 +356,12 @@ function parseStatementBlock(lines, startIndex, baseIndent, filePath, localNames
                 throw syntaxError(filePath, line.lineNumber, "Invalid dispatch statement");
             }
             statements.push(createDispatchStatement(match[1]));
+            index += 1;
+            continue;
+        }
+
+        if (content === "break") {
+            statements.push(createBreakStatement());
             index += 1;
             continue;
         }

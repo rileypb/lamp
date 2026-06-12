@@ -262,6 +262,9 @@ function emitStatementLines(statement, indentLevel, globalNames = new Set()) {
 
         return lines;
     }
+    if (statement.kind === "BreakStatement") {
+        return [`${indent}break;`];
+    }
     if (statement.kind === "WhileStatement") {
         const lines = [`${indent}while (${emitExpression(statement.condition, globalNames)}) {`];
         lines.push(...emitStatementList(statement.body, indentLevel + 1, globalNames));
