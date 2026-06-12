@@ -2,6 +2,8 @@ const {
     createProgram,
     createTypeDecl,
     createObjectDecl,
+    createGlobalDecl,
+    createGlobalAssign,
     createEventHandler,
     createLetStatement,
     createPrintStatement,
@@ -13,6 +15,7 @@ const {
     createStringLiteral,
     createVariableExpr,
     createNumberLiteral,
+    createBooleanLiteral,
     createPropertyAccess,
     createConcat,
     createEqualsExpr,
@@ -88,6 +91,20 @@ function parseNodes(lines, startIndex, baseIndent, filePath) {
 
         if (content.startsWith("kind ")) {
             const { node, nextIndex } = parseKindDecl(lines, index, filePath);
+            nodes.push(node);
+            index = nextIndex;
+            continue;
+        }
+
+        if (content.startsWith("global ")) {
+            const { node, nextIndex } = parseGlobalDecl(lines, index, filePath);
+            nodes.push(node);
+            index = nextIndex;
+            continue;
+        }
+
+        if (isTopLevelGlobalAssign(content)) {
+            const { node, nextIndex } = parseGlobalAssign(lines, index, filePath);
             nodes.push(node);
             index = nextIndex;
             continue;
@@ -213,6 +230,15 @@ function parseObjectFields(lines, filePath) {
 
 function parseSimpleValue(rawValue) {
     const value = rawValue.trim();
+    if (value === "true") {
+        return createBooleanLiteral(true);
+    }
+    if (value === "false") {
+        return createBooleanLiteral(false);
+    }
+    if (/^-?\d+\.\d+$/.test(value)) {
+        return createNumberLiteral(parseFloat(value));
+    }
     if (/^-?\d+$/.test(value)) {
         return createNumberLiteral(Number(value));
     }
@@ -364,6 +390,15 @@ function parseExpression(raw, filePath, lineNumber, localNames = new Set()) {
     if (text.startsWith('"') && text.endsWith('"')) {
         return createStringLiteral(text.slice(1, -1));
     }
+    if (text === "true") {
+        return createBooleanLiteral(true);
+    }
+    if (text === "false") {
+        return createBooleanLiteral(false);
+    }
+    if (/^-?\d+\.\d+$/.test(text)) {
+        return createNumberLiteral(parseFloat(text));
+    }
     if (/^-?\d+$/.test(text)) {
         return createNumberLiteral(Number(text));
     }
@@ -507,6 +542,44 @@ function parseKindDecl(lines, index, filePath) {
     const name = match[1];
     const kindExpr = parseKindExpr(match[2].trim(), filePath, line.lineNumber);
     return { node: createKindDecl(name, kindExpr), nextIndex: index + 1 };
+}
+
+function parseGlobalDecl(lines, index, filePath) {
+    const line = lines[index];
+    const content = line.text.trim();
+    const match = content.match(/^global\s+([A-Za-z_][A-Za-z0-9_<>]*)\s+(.+?)\s*=\s*(.+)$/);
+    if (!match) {
+        throw syntaxError(filePath, line.lineNumber, "Invalid global declaration");
+    }
+    return {
+        node: createGlobalDecl(match[2].trim(), match[1].trim(), parseSimpleValue(match[3]), filePath, line.lineNumber),
+        nextIndex: index + 1,
+    };
+}
+
+function parseGlobalAssign(lines, index, filePath) {
+    const line = lines[index];
+    const content = line.text.trim();
+    const match = content.match(/^(.+?)\s*=\s*(.+)$/);
+    if (!match) {
+        throw syntaxError(filePath, line.lineNumber, "Invalid global assignment");
+    }
+    return {
+        node: createGlobalAssign(match[1].trim(), parseSimpleValue(match[2]), filePath, line.lineNumber),
+        nextIndex: index + 1,
+    };
+}
+
+function isTopLevelGlobalAssign(content) {
+    return content.includes("=")
+        && !content.includes(":")
+        && !content.startsWith("let ")
+        && !content.startsWith("print ")
+        && !content.startsWith("error ")
+        && !content.startsWith("if ")
+        && !content.startsWith("type ")
+        && !content.startsWith("kind ")
+        && !content.startsWith("on ");
 }
 
 function parseKindExpr(raw, filePath, lineNumber) {

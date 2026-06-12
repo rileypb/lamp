@@ -21,9 +21,9 @@
 
 #### Known limitations (v0)
 
-- Bare identifiers in expressions are treated as string literals unless they are part of a dotted property-access chain.
 - Kind values are currently represented at runtime as strings.
 - Runtime execution currently fires only the `startup` event from `run()`.
+- Type-checking is only as strong as the current expression inference rules; expressions whose types cannot yet be inferred are not rejected.
 
 ### Lamplighter
 
@@ -38,9 +38,9 @@ Lantern-generated JavaScript targets the following Lamplighter API surface:
 - `bootstrapBuiltins()`
     - Initializes built-in runtime types.
     - Safe to call multiple times.
-- `defineType(name, parent, fields)`
+- `defineType(name, parents, fields)`
     - Registers a type definition.
-    - `parent` may be `null`.
+    - `parents` may be empty, or may contain one or more parent type names.
 - `defineKind(name, kindDef)`
     - Registers a kind definition.
 - `enum(...labels)`
@@ -61,6 +61,8 @@ Lantern-generated JavaScript targets the following Lamplighter API surface:
     - In v0, this fires the `startup` event.
 - `print(value)`
     - Sends output to the active output implementation.
+    - Objects print as their `name`.
+    - Lists print as human-readable strings using `,` and `and`.
 - `setPrint(fn)`
     - Replaces the output implementation used by `print`.
 - `error(message)`
@@ -183,6 +185,32 @@ kind color = enum(red, green, blue)
 
 The runtime currently represents enum values as strings and prints them via standard string output (for example, `dev`, `beta`, `final`).
 
+### Globals
+
+A **global** declares a named value that persists for the lifetime of the game. Globals are accessible to the Lamplighter runtime and may be overridden by user files.
+
+#### Global declarations
+
+```lamp
+global TYPE_NAME GLOBAL_NAME = VALUE
+```
+
+Declares a global named `GLOBAL_NAME` of type `TYPE_NAME` with an initial value of `VALUE`. `TYPE_NAME` may be any primitive type or kind name.
+
+```lamp
+global bool USE OXFORD COMMA = false
+```
+
+#### Global assignments
+
+At the top level, a bare `NAME = VALUE` line assigns a new value to a previously-declared global. This lets user files override defaults set by the standard library.
+
+```lamp
+USE OXFORD COMMA = true
+```
+
+Global assignments are type-checked against the type declared in the corresponding global declaration.
+
 ### Events
 
 Events are objects of type `event`. Built-in event types include `startup`:
@@ -227,6 +255,8 @@ print EXPRESSION
 TARGET.FIELD = EXPRESSION
 ```
 
+Object-field assignments are compile-time checked against the declared field type when Lantern can infer the type of `EXPRESSION`.
+
 - **Error** — aborts execution with a message:
 
 ```lamp
@@ -246,6 +276,12 @@ else:
 
 ### Expressions
 
+- **Variable reference** — a local name introduced by `let`:
+
+```lamp
+this_game
+```
+
 - **Property access** — chains of `.`-separated names:
 
 ```lamp
@@ -260,10 +296,27 @@ this_game.name
 "version " + this_game.version
 ```
 
+`+` is type-directed:
+
+- `int + int` produces `int`
+- `real + int` and `int + real` produce `real`
+- if either side is `string`, the result is `string`
+- enum-kind values may be implicitly coerced to `string` when concatenated with a `string`
+
 - **Equality comparison** — `==` compares two expressions:
 
 ```lamp
 this_game.release == final
 ```
 
-- **Bare identifiers in expressions** (without `.`) are currently treated as string literals. This supports enum-label checks such as `== final`.
+- **Bare identifiers in expressions** that are not local variables are treated as string literals. This supports enum-label checks such as `== final`.
+
+### Static checking
+
+Lantern performs a semantic checking pass before emission.
+
+- Object-declaration field values are checked against the declared field type.
+- Field assignments in executable code are checked against the target field type.
+- Primitive fields (`string`, `int`, `real`) reject incompatible inferred expression types.
+- Enum-kind fields reject labels outside the enum definition.
+- Expression inference currently covers literals, local variables, property-access chains, `+`, and `==`.

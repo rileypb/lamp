@@ -2,6 +2,7 @@ const typeRegistry = new Map();
 const instanceRegistry = new Map();
 const eventRegistry = new Map();
 const kindRegistry = new Map();
+const globalRegistry = new Map();
 
 let printImpl = (value) => {
     console.log(String(value));
@@ -99,6 +100,24 @@ function print(value) {
     printImpl(formatValue(value));
 }
 
+function defineGlobal(name, value) {
+    if (globalRegistry.has(name)) {
+        throw new Error(`Global already defined: ${name}`);
+    }
+    globalRegistry.set(name, value);
+}
+
+function setGlobal(name, value) {
+    if (!globalRegistry.has(name)) {
+        throw new Error(`Unknown global: ${name}`);
+    }
+    globalRegistry.set(name, value);
+}
+
+function getGlobal(name) {
+    return globalRegistry.get(name);
+}
+
 function setPrint(nextPrintImpl) {
     printImpl = nextPrintImpl;
 }
@@ -123,6 +142,7 @@ function isListValue(value) {
 
 function formatListValue(items) {
     const formattedItems = items.map((item) => String(formatValue(item)));
+    const useOxfordComma = Boolean(getGlobal("USE OXFORD COMMA"));
 
     if (formattedItems.length === 0) {
         return "";
@@ -134,6 +154,9 @@ function formatListValue(items) {
         return `${formattedItems[0]} and ${formattedItems[1]}`;
     }
 
+    if (useOxfordComma) {
+        return `${formattedItems.slice(0, -1).join(", ")}, and ${formattedItems[formattedItems.length - 1]}`;
+    }
     return `${formattedItems.slice(0, -1).join(", ")} and ${formattedItems[formattedItems.length - 1]}`;
 }
 
@@ -216,6 +239,9 @@ module.exports = {
     bootstrapBuiltins,
     defineType,
     createObject,
+    defineGlobal,
+    setGlobal,
+    getGlobal,
     type,
     defineKind,
     enum: enumKind,

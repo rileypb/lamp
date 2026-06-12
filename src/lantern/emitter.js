@@ -1,5 +1,7 @@
 function emitProgram(programAst, options = {}) {
     const runtimeRequirePath = options.runtimeRequirePath || "../lamplighter";
+    const globalDeclNodes = programAst.nodes.filter((node) => node.kind === "GlobalDecl");
+    const globalAssignNodes = programAst.nodes.filter((node) => node.kind === "GlobalAssign");
     const kindNodes = programAst.nodes.filter((node) => node.kind === "KindDecl");
     const typeNodes = programAst.nodes.filter((node) => node.kind === "TypeDecl");
     const objectNodes = programAst.nodes.filter((node) => node.kind === "ObjectDecl");
@@ -11,6 +13,22 @@ function emitProgram(programAst, options = {}) {
     lines.push(`const lamplighter = require(${JSON.stringify(runtimeRequirePath)});`);
     lines.push("lamplighter.bootstrapBuiltins();");
     lines.push("");
+
+    for (const globalDeclNode of globalDeclNodes) {
+        lines.push(emitGlobalDecl(globalDeclNode));
+    }
+
+    if (globalDeclNodes.length > 0) {
+        lines.push("");
+    }
+
+    for (const globalAssignNode of globalAssignNodes) {
+        lines.push(emitGlobalAssign(globalAssignNode));
+    }
+
+    if (globalAssignNodes.length > 0) {
+        lines.push("");
+    }
 
     for (const kindNode of kindNodes) {
         lines.push(emitKindDecl(kindNode));
@@ -63,6 +81,14 @@ function emitProgram(programAst, options = {}) {
     return `${lines.join("\n")}`;
 }
 
+function emitGlobalDecl(node) {
+    return `lamplighter.defineGlobal(${JSON.stringify(node.name)}, ${emitValue(node.value)});`;
+}
+
+function emitGlobalAssign(node) {
+    return `lamplighter.setGlobal(${JSON.stringify(node.name)}, ${emitValue(node.value)});`;
+}
+
 function emitKindDecl(node) {
     return `lamplighter.defineKind(${JSON.stringify(node.name)}, ${emitKindExpr(node.kindExpr)});`;
 }
@@ -97,6 +123,9 @@ function emitObjectDecl(node) {
 function emitValue(valueNode) {
     if (valueNode.kind === "StringLiteral") {
         return JSON.stringify(valueNode.value);
+    }
+    if (valueNode.kind === "BooleanLiteral") {
+        return valueNode.value ? "true" : "false";
     }
     if (valueNode.kind === "NumberLiteral") {
         return String(valueNode.value);
@@ -154,6 +183,9 @@ function emitExpression(expr) {
     }
     if (expr.kind === "VariableExpr") {
         return expr.name;
+    }
+    if (expr.kind === "BooleanLiteral") {
+        return expr.value ? "true" : "false";
     }
     if (expr.kind === "NumberLiteral") {
         return String(expr.value);

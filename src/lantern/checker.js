@@ -3,10 +3,13 @@ const PRIMITIVE_TYPES = new Set(["string", "int", "bool", "real"]);
 function checkProgram(programAst) {
     const typeSchema = buildTypeSchema(programAst.nodes);
     const kindSchema = buildKindSchema(programAst.nodes);
+    const globalTypes = buildGlobalTypeSchema(programAst.nodes);
 
     for (const node of programAst.nodes) {
         if (node.kind === "ObjectDecl") {
             checkObjectDecl(node, typeSchema, kindSchema);
+        } else if (node.kind === "GlobalAssign") {
+            checkGlobalAssign(node, globalTypes, typeSchema, kindSchema);
         } else if (node.kind === "EventHandler") {
             checkStatements(node.body, typeSchema, kindSchema, new Map());
         }
@@ -39,6 +42,16 @@ function buildKindSchema(nodes) {
         }
     }
     return kindSchema;
+}
+
+function buildGlobalTypeSchema(nodes) {
+    const globalTypes = new Map();
+    for (const node of nodes) {
+        if (node.kind === "GlobalDecl") {
+            globalTypes.set(node.name, node.typeName || inferLiteralType(node.value));
+        }
+    }
+    return globalTypes;
 }
 
 function getAllFields(typeName, typeSchema) {
@@ -100,6 +113,14 @@ function checkStatements(statements, typeSchema, kindSchema, localTypes) {
     }
 }
 
+function checkGlobalAssign(node, globalTypes, typeSchema, kindSchema) {
+    const globalType = globalTypes.get(node.name);
+    if (!globalType) {
+        throw typeError(node.filePath, node.lineNumber, `unknown global "${node.name}"`);
+    }
+    checkValueCompatibility(node.value, globalType, typeSchema, kindSchema, node.filePath, node.lineNumber, `global "${node.name}"`);
+}
+
 function checkAssignStatement(stmt, typeSchema, kindSchema, localTypes) {
     const chain = stmt.targetChain;
     if (chain.length < 2) {
@@ -133,11 +154,14 @@ function checkAssignStatement(stmt, typeSchema, kindSchema, localTypes) {
 }
 
 function inferExprType(expr, typeSchema, kindSchema, localTypes) {
+    if (expr.kind === "BooleanLiteral") {
+        return "bool";
+    }
     if (expr.kind === "StringLiteral") {
         return "string";
     }
     if (expr.kind === "NumberLiteral") {
-        return "int";
+        return Number.isInteger(expr.value) ? "int" : "real";
     }
     if (expr.kind === "VariableExpr") {
         return localTypes.get(expr.name) || null;
@@ -245,6 +269,19 @@ function checkValueCompatibility(valueNode, fieldTypeName, typeSchema, kindSchem
         }
         throw typeError(filePath, lineNumber, `${context} expects ${fieldTypeName}, got ${inferredType}`);
     }
+}
+
+function inferLiteralType(valueNode) {
+    if (valueNode.kind === "BooleanLiteral") {
+        return "bool";
+    }
+    if (valueNode.kind === "StringLiteral") {
+        return "string";
+    }
+    if (valueNode.kind === "NumberLiteral") {
+        return Number.isInteger(valueNode.value) ? "int" : "real";
+    }
+    return null;
 }
 
 function describeValue(valueNode) {

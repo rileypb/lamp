@@ -10,6 +10,14 @@ function createObjectDecl(typeName, objectName, fields) {
     return { kind: "ObjectDecl", typeName, objectName, fields };
 }
 
+function createGlobalDecl(name, typeName, value, filePath, lineNumber) {
+    return { kind: "GlobalDecl", name, typeName, value, filePath, lineNumber };
+}
+
+function createGlobalAssign(name, value, filePath, lineNumber) {
+    return { kind: "GlobalAssign", name, value, filePath, lineNumber };
+}
+
 function createEventHandler(eventName, body) {
     return { kind: "EventHandler", eventName, body };
 }
@@ -54,6 +62,10 @@ function createNumberLiteral(value) {
     return { kind: "NumberLiteral", value };
 }
 
+function createBooleanLiteral(value) {
+    return { kind: "BooleanLiteral", value };
+}
+
 function createPropertyAccess(chain) {
     return { kind: "PropertyAccess", chain };
 }
@@ -78,6 +90,8 @@ module.exports = {
     createProgram,
     createTypeDecl,
     createObjectDecl,
+    createGlobalDecl,
+    createGlobalAssign,
     createKindDecl,
     createEnumExpr,
     createEventHandler,
@@ -91,6 +105,7 @@ module.exports = {
     createStringLiteral,
     createVariableExpr,
     createNumberLiteral,
+    createBooleanLiteral,
     createPropertyAccess,
     createConcat,
     createEqualsExpr,

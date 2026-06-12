@@ -30,21 +30,21 @@ For files not covered by the source-of-truth hierarchy (for example, CI configs,
 	b. Complete the requested task.
 	c. At the end of the response, add or extend the relevant doc following the Documentation Workflow rules below.
 
-## What Copilot Should Not Do
+## What an Agent Should Not Do
 - Do not make assumptions about user intent beyond what is explicitly stated in the prompt or existing documentation. If requirements are incomplete, propose concrete next steps to clarify them before proceeding with implementation.
 - Do not introduce new npm dependencies without explicit justification. If a dependency would materially simplify the implementation, name it, state what it replaces, and ask for approval before adding it to package.json. Never add dependencies silently in generated code.
 - DO NOT edit files in lib/ without explicit instructions to do so. 
 - DO NOT edit files in sample/ without explicit instructions to do so. This directory is intended to be a stable reference for intended usage patterns and should not be changed except by the user.
 - The future/ directory is for dumping experimental code and should not be used for implementing intended behavior. Do not add or edit files in future/ without explicit instructions to do so.
 
-## How Copilot Should Help
+## How an Agent Should Help
 
 - Prefer edits scoped to a single function or module at a time. If a task requires changes across more than two files, break it into sequential steps and propose each before proceeding.
 - Keep architecture, specs, and code aligned.
 - Propose concrete next steps when requirements are incomplete.
 - Preserve existing naming unless a rename is requested.
 - Do not introduce new npm dependencies without explicit justification. If a dependency would materially simplify the implementation, name it, state what it replaces, and ask for approval before adding it to package.json. Never add dependencies silently in generated code.
-- If a question is about end-user gameplay rather than development, briefly answer from the player perspective but note that detailed player documentation is outside the scope of this repo's Copilot instructions.
+- If a question is about end-user gameplay rather than development, briefly answer from the player perspective but note that detailed player documentation is outside the scope of this repo's AGENTS.md instructions.
 
 ## Documentation Workflow
 
