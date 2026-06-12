@@ -131,6 +131,10 @@ function checkStatements(statements, typeSchema, kindSchema, localTypes) {
             }
         } else if (stmt.kind === "WhileStatement") {
             checkStatements(stmt.body, typeSchema, kindSchema, new Map(localTypes));
+        } else if (stmt.kind === "ForStatement") {
+            const bodyTypes = new Map(localTypes);
+            bodyTypes.set(stmt.varName, "int");
+            checkStatements(stmt.body, typeSchema, kindSchema, bodyTypes);
         }
     }
 }

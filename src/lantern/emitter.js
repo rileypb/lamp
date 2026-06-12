@@ -265,6 +265,16 @@ function emitStatementLines(statement, indentLevel, globalNames = new Set()) {
     if (statement.kind === "BreakStatement") {
         return [`${indent}break;`];
     }
+    if (statement.kind === "ForStatement") {
+        const start = emitExpression(statement.start, globalNames);
+        const finish = emitExpression(statement.finish, globalNames);
+        const step = emitExpression(statement.step, globalNames);
+        const v = statement.varName;
+        const lines = [`${indent}for (let ${v} = ${start}; ${v} <= ${finish}; ${v} += ${step}) {`];
+        lines.push(...emitStatementList(statement.body, indentLevel + 1, globalNames));
+        lines.push(`${indent}}`);
+        return lines;
+    }
     if (statement.kind === "WhileStatement") {
         const lines = [`${indent}while (${emitExpression(statement.condition, globalNames)}) {`];
         lines.push(...emitStatementList(statement.body, indentLevel + 1, globalNames));

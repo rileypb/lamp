@@ -30,6 +30,7 @@ const {
     createWhileStatement,
     createLessThanExpr,
     createBreakStatement,
+    createForStatement,
 } = require("./ast");
 
 function parseSource(sourceText, filePath, globalNames = new Set()) {
@@ -366,6 +367,13 @@ function parseStatementBlock(lines, startIndex, baseIndent, filePath, localNames
             continue;
         }
 
+        if (content.startsWith("for ")) {
+            const parsed = parseForStatement(lines, index, filePath, localNames, globalNames);
+            statements.push(parsed.statement);
+            index = parsed.nextIndex;
+            continue;
+        }
+
         if (content.startsWith("while ")) {
             const parsed = parseWhileStatement(lines, index, baseIndent, filePath, localNames, globalNames);
             statements.push(parsed.statement);
@@ -420,6 +428,33 @@ function parseIfStatement(lines, index, baseIndent, filePath, localNames, global
     return {
         statement: createIfStatement(condition, parsedThen.statements, elseBody),
         nextIndex,
+    };
+}
+
+function parseForStatement(lines, index, filePath, localNames, globalNames = new Set()) {
+    const line = lines[index];
+    const content = line.text.trim();
+    const match = content.match(/^for\s+([A-Za-z_][A-Za-z0-9_]*)\s*=\s*(.+?)\s+to\s+(.+?)(?:\s+step\s+(.+?))?\s*:\s*$/);
+    if (!match) {
+        throw syntaxError(filePath, line.lineNumber, "Invalid for statement");
+    }
+
+    const varName = match[1];
+    const start = parseExpression(match[2], filePath, line.lineNumber, localNames, globalNames);
+    const finish = parseExpression(match[3], filePath, line.lineNumber, localNames, globalNames);
+    const step = match[4]
+        ? parseExpression(match[4], filePath, line.lineNumber, localNames, globalNames)
+        : createNumberLiteral(1);
+
+    const bodyLocalNames = new Set(localNames);
+    bodyLocalNames.add(varName);
+    const bodyStart = findFirstBlockLineIndex(lines, index, filePath);
+    const bodyIndent = lines[bodyStart].indent;
+    const parsedBody = parseStatementBlock(lines, bodyStart, bodyIndent, filePath, bodyLocalNames, globalNames);
+
+    return {
+        statement: createForStatement(varName, start, finish, step, parsedBody.statements),
+        nextIndex: parsedBody.nextIndex,
     };
 }
 

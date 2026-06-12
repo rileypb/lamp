@@ -1,0 +1,9 @@
+game Game 1:
+    author Test Author
+    version 1
+    release dev
+
+on startup:
+	for i = 1 to 5:
+		print i
+
