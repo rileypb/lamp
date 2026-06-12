@@ -7,7 +7,9 @@
 - Lantern is a command-line tool.
 - Lantern takes a .lamp source file as input and produces a JavaScript file as output.
 - The output JavaScript file is a representation of the game that can be executed with the Lamplighter runtime.
-- Any .lamp files in the lib/ directory are considered part of the standard library and should be available for import in user games. Any in lib/sys are automatically included in all games and do not require an explicit import.
+- `lib/sys/` is the system library. Every invocation of Lantern automatically parses all `.lamp` files in `lib/sys/` — no explicit import is required.
+- Other subdirectories of `lib/` (e.g. `lib/test/`, `lib/advent/`) are optional libraries that must be imported explicitly with `lib LIBNAME`.
+- `.lamp` files placed directly in `lib/` (not inside a named subdirectory) are not parsed and are not available for import.
 
 #### First iteration scope
 
