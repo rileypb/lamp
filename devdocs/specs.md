@@ -366,6 +366,26 @@ while EXPRESSION:
     ...
 ```
 
+- **For loop** — counted loop from `START` to `FINISH` (inclusive), incrementing by `STEP` each iteration. `step STEP` is optional and defaults to 1.
+
+```lamp
+for VAR = START to FINISH:
+    STATEMENT
+    ...
+
+for VAR = START to FINISH step STEP:
+    STATEMENT
+    ...
+```
+
+`VAR` is a new local variable scoped to the loop body. `to` implies counting upward; the loop condition is `VAR <= FINISH`.
+
+- **Break** — exits the innermost enclosing `while` or `for` loop:
+
+```lamp
+break
+```
+
 - **Dispatch** — fires a named event, invoking all registered handlers for that event:
 
 ```lamp
