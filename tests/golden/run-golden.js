@@ -96,8 +96,8 @@ function compileCase(inputPath, outputPath, expectCompileFailure) {
             throw error;
         }
 
-        if (typeof error.stdout === "string") {
-            return { stdout: error.stdout };
+        if (typeof error.stderr === "string") {
+            return { stdout: error.stderr };
         }
         throw error;
     }

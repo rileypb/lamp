@@ -51,7 +51,7 @@ function runCompilation() {
     }
 
     if (!hasGameObject(allNodes)) {
-        console.log("error: no game object defined.");
+        console.error("error: no game object defined.");
         process.exit(1);
     }
 
@@ -71,20 +71,20 @@ function reportCompileError(error) {
     const diagnostic = parseDiagnostic(message);
 
     if (!diagnostic) {
-        console.log(`Compile error: ${message}`);
+        console.error(`Compile error: ${message}`);
         return;
     }
 
     const { filePath, lineNumber, detail } = diagnostic;
-    console.log(`Compile error: ${filePath}:${lineNumber}: ${detail}`);
+    console.error(`Compile error: ${filePath}:${lineNumber}: ${detail}`);
 
     try {
         const fileText = fs.readFileSync(filePath, "utf8");
         const lines = fileText.split(/\r?\n/);
         const lineText = lines[lineNumber - 1] || "";
         const firstTokenColumn = Math.max(0, lineText.search(/\S|$/));
-        console.log(`  ${lineNumber} | ${lineText}`);
-        console.log(`    | ${" ".repeat(firstTokenColumn)}^`);
+        console.error(`  ${lineNumber} | ${lineText}`);
+        console.error(`    | ${" ".repeat(firstTokenColumn)}^`);
     } catch (_readError) {
         // Best-effort diagnostics only.
     }

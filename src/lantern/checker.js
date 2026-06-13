@@ -270,8 +270,22 @@ function resolveChainType(chain, typeSchema, kindSchema, localTypes) {
                 return null;
             }
         } else {
-            if (token === "all" || token === "first") {
+            if (token === "all") {
+                currentType = `list<${currentType}>`;
                 continue;
+            }
+            if (token === "first") {
+                const listMatch = currentType.match(/^list<(.+)>$/);
+                if (listMatch) {
+                    currentType = listMatch[1];
+                } else {
+                    return null;
+                }
+                continue;
+            }
+            const listMatch = currentType.match(/^list<(.+)>$/);
+            if (listMatch) {
+                return null;
             }
             const allFields = getAllFields(currentType, typeSchema);
             const fieldType = allFields.get(token);

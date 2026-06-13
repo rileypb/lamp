@@ -18,8 +18,8 @@
 
 - Lantern parses `lib/sys/*.lamp` plus one user entry file (for example, `sample/min.lamp`) and emits one standalone Node.js JavaScript file.
 - The parsed game must define at least one object of type `game`.
-- If no `game` object is present, Lantern reports `error: no game object defined.` and exits with a nonzero status.
-- On compile failure, Lantern reports diagnostics in the form `Compile error: <file>:<line>: <detail>` and includes the source line with a caret marker.
+- If no `game` object is present, Lantern reports `error: no game object defined.` to **stderr** and exits with a nonzero status.
+- On compile failure, Lantern reports diagnostics to **stderr** in the form `Compile error: <file>:<line>: <detail>` and includes the source line with a caret marker.
 - The emitted file is directly runnable from the command line.
 - The emitted file requires the Lamplighter library and executes through it.
 - Lighthouse integration is out of scope for this iteration.
@@ -40,7 +40,7 @@ This includes all `.lamp` files from the resolved library directory in the compi
 
 - Kind values are currently represented at runtime as strings.
 - Runtime execution currently fires only the `startup` event from `run()`.
-- Type-checking is only as strong as the current expression inference rules; expressions whose types cannot yet be inferred are not rejected.
+- Expressions whose types cannot be inferred (globals, object name references, `list<T>` field assignments) are not rejected — unknown type is treated as compatible with any field type.
 - Object-typed fields and globals are not statically type-checked (the checker returns unknown type for object references and `none`).
 
 ### Lamplighter
@@ -529,4 +529,5 @@ Lantern performs a semantic checking pass before emission.
 - Field assignments in executable code are checked against the target field type.
 - Primitive fields (`string`, `int`, `real`) reject incompatible inferred expression types.
 - Enum-kind fields reject labels outside the enum definition.
-- Expression inference currently covers literals, local variables, property-access chains, `+`, `*`, and `==`. Globals and object name references (`(Name)`) currently return unknown type and are not statically checked.
+- Expression inference covers literals, local variables, property-access chains (including `.all` → `list<T>` and `.first` → `T`), `+`, `*`, `==`, `<`, and `>`. Globals and object name references (`(Name)`) currently return unknown type and are not statically checked.
+- `list<T>` is recognized as a valid field type in chain resolution. Element-level validation of `list<T>` field assignments is not yet performed.
