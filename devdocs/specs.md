@@ -113,7 +113,26 @@ Lantern-generated JavaScript targets the following Lamplighter API surface:
 - **Indentation** defines block structure. A block begins after `:` and ends when indentation returns to the enclosing level.
 - `#` introduces a line comment.
 - Source files are plain text with one statement per line.
-- Multi-word identifiers and values are valid (for example, `game Minimal` and `author Phil Riley`).
+
+#### Names and identifiers
+
+An **identifier** names an object, type, kind, global, field, or local variable. Identifiers are single tokens and never contain spaces.
+
+Object names, global names, and object references support a **display coercion** so that a single-token identifier can stand for a multi-word display name:
+
+- `_` (underscore) renders as a space.
+- `-` (hyphen) renders as a literal hyphen.
+- `\_` (backslash-underscore) renders as a literal underscore.
+
+The coerced string is the name's canonical identity: it is both the lookup key used to resolve references and the value of the object's `name` field. For example, `room West_of_House:` declares an object whose name is `West of House`, and the reference `West_of_House` elsewhere resolves to the same object. `One-Room_Game` denotes the name `One-Room Game`; `well-worn_map` denotes `well-worn map`.
+
+A separator may appear only *between* two identifier characters — neither `-` nor `_` (nor the `\_` escape) may be the first or last character of an identifier. This prevents a name from coercing to a string with leading or trailing whitespace. A leading `-` followed by digits is a negative-number literal (`-7`), not part of an identifier.
+
+Local variables (introduced by `let`) and loop variables (introduced by `for`) are restricted to plain identifiers matching `[A-Za-z_][A-Za-z0-9_]*`: they may not contain `-` and no coercion is applied. These names are internal and are never displayed. Type names, kind names, and field names are likewise plain identifiers.
+
+Free text that contains spaces or punctuation is written as a double-quoted string literal, not a bare identifier (for example, `author "Phil Riley"`).
+
+The following words are **reserved** and may not be used as a name (object, type, kind, global, field, event, or local): `type`, `kind`, `global`, `on`, `for`, `while`, `if`, `else`, `let`, `print`, `error`, `dispatch`, `break`, `lib`, `to`, `step`, `change`. A reservation applies only to a whole identifier: a reserved word appearing *inside* a longer identifier is unrestricted, so `move_to_room` (which denotes the name `move to room`) is a valid identifier even though `to` is reserved.
 
 ### Objects and types
 
@@ -125,11 +144,11 @@ TYPE_NAME OBJECT_NAME:
     ...
 ```
 
-`TYPE_NAME OBJECT_NAME:` declares an object named `OBJECT_NAME` of type `TYPE_NAME`. A trailing `:` starts the body. Each indented line is a field assignment `FIELD_NAME VALUE`. Values may be multi-word text.
+`TYPE_NAME OBJECT_NAME:` declares an object named `OBJECT_NAME` of type `TYPE_NAME`. A trailing `:` starts the body. Each indented line is a field assignment `FIELD_NAME VALUE`. A `VALUE` is a literal (number, double-quoted string, `true`, `false`, or `none`) or an object reference written as an identifier. Free text containing spaces is written as a quoted string; multi-word object names use the underscore convention described in Names and identifiers.
 
 ```lamp
 game Minimal:
-    author Phil Riley
+    author "Phil Riley"
     version 1
 ```
 
@@ -139,12 +158,12 @@ An object with no fields omits the `:` and body entirely:
 person yourself
 ```
 
-Object-typed field values are written as the object's name (bare or multi-word):
+Object-typed field values are written as the referenced object's name (an identifier):
 
 ```lamp
-game One-Room Game:
-    author Test Author
-    start West of House
+game One-Room_Game:
+    author "Test Author"
+    start West_of_House
 ```
 
 Object-typed fields are resolved after all objects have been created, so the referenced object may be declared anywhere in the source — before or after the object that references it.
@@ -259,7 +278,7 @@ global TYPE_NAME GLOBAL_NAME = VALUE
 Declares a global named `GLOBAL_NAME` of type `TYPE_NAME` with an initial value of `VALUE`. `TYPE_NAME` may be any primitive type, kind name, or object type name.
 
 ```lamp
-global bool USE OXFORD COMMA = false
+global bool USE_OXFORD_COMMA = false
 global real PI = 3.141592653
 ```
 
@@ -283,7 +302,7 @@ Globals are initialized at program startup after all objects have been created, 
 At the top level, a bare `NAME = VALUE` line assigns a new value to a previously-declared global. This lets user files override defaults set by the standard library.
 
 ```lamp
-USE OXFORD COMMA = true
+USE_OXFORD_COMMA = true
 ```
 
 Global assignments are type-checked against the type declared in the corresponding global declaration.
@@ -450,7 +469,7 @@ this_game.name
 
 ```lamp
 2 * circle.radius
-2 * (Unit Circle).radius * PI
+2 * Unit_Circle.radius * PI
 ```
 
 `*` is type-directed:
@@ -468,19 +487,12 @@ i < 5
 count > 0
 ```
 
-- **Object name reference** — a named object can be referenced directly in expressions. For single-word object names the name is used as a bare identifier:
+- **Object name reference** — a named object can be referenced directly in expressions by its identifier. Multi-word names use the underscore convention (see Names and identifiers); the coerced name is looked up at runtime. A `.`-separated field chain may follow:
 
 ```lamp
 MyCircle.radius
+Unit_Circle.radius
 ```
-
-For multi-word object names, the name is wrapped in parentheses:
-
-```lamp
-(Unit Circle).radius
-```
-
-`(NAME)` looks up the object named `NAME` at runtime. A `.`-separated field chain may follow.
 
 - **`none`** — the absent-object literal, valid in any expression context that accepts an object reference:
 
@@ -504,6 +516,8 @@ Lantern compiles in three passes:
 The emitted program runs in this order: kinds → kind constants → types → type constants → objects (primitive/kind fields only) → object-typed field assignments → global declarations → global assignments → event handler registrations → `run()`. Globals and object-typed field assignments are placed after all `createObject` calls so that any `lamplighter.getObject(...)` reference resolves against an already-registered instance regardless of declaration order.
 
 ### Parser design
+
+> **Note:** this subsection describes the *current* parser implementation, which still uses the pre-refactor surface syntax (multi-word bare names and the `(Multi Word)` reference form). The intended syntax is the underscore-identifier scheme defined above under "Names and identifiers"; the planned rewrite to a single full-file tokenizer plus recursive-descent parser is tracked in `devdocs/parser_refactor.md`. This subsection will be updated when that refactor lands.
 
 The outer parser is line-by-line and indentation-driven. Each line is classified by its leading keyword (`type`, `kind`, `global`, `on`, …) and dispatched to a dedicated parse function. Block structure is handled by comparing indentation levels; `parseChildBlock` and `parseStatementBlock` consume lines until indentation falls back to the enclosing level.
 
@@ -529,5 +543,5 @@ Lantern performs a semantic checking pass before emission.
 - Field assignments in executable code are checked against the target field type.
 - Primitive fields (`string`, `int`, `real`) reject incompatible inferred expression types.
 - Enum-kind fields reject labels outside the enum definition.
-- Expression inference covers literals, local variables, property-access chains (including `.all` → `list<T>` and `.first` → `T`), `+`, `*`, `==`, `<`, and `>`. Globals and object name references (`(Name)`) currently return unknown type and are not statically checked.
+- Expression inference covers literals, local variables, property-access chains (including `.all` → `list<T>` and `.first` → `T`), `+`, `*`, `==`, `<`, and `>`. Globals and object name references currently return unknown type and are not statically checked.
 - `list<T>` is recognized as a valid field type in chain resolution. Element-level validation of `list<T>` field assignments is not yet performed.

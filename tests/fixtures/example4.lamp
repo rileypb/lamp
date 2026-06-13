@@ -1,7 +1,7 @@
 lib test
 
-game Example 2:
-    author Test Author
+game Example_2:
+    author "Test Author"
     version 1
     release dev
 

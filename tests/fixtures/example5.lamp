@@ -1,17 +1,17 @@
 lib test
 
-game Game 1:
-    author Test Author
+game Game_1:
+    author "Test Author"
     version 1
     release dev
     
-game Game 2:
-    author Test Author
+game Game_2:
+    author "Test Author"
     version 1
     release dev
 
-game Game 3:
-    author Test Author
+game Game_3:
+    author "Test Author"
     version 1
     release dev
 

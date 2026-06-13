@@ -3,7 +3,7 @@
 lib test
 
 game Minimal: # indicates the name of the game we're compiling
-	author Phil Riley
+	author "Phil Riley"
 	version 1
 	release final
 

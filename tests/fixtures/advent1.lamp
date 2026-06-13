@@ -1,12 +1,12 @@
 lib advent
 
-game One-Room Game:
-	author Test Author
+game One-Room_Game:
+	author "Test Author"
 	version 0
 	release dev
-	start West of House
+	start West_of_House
 
-room West of House:
+room West_of_House:
 	description "You are standing in an open field west of a white house, with a boarded front door."
 
 

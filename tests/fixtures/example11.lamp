@@ -1,14 +1,14 @@
 lib test
 
-game Game 1:
-    author Test Author
+game Game_1:
+    author "Test Author"
     version 1
     release dev
     
 type circle:
     real radius
 
-circle Unit Circle:
+circle Unit_Circle:
     radius 2.0
 
 on startup:

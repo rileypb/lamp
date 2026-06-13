@@ -2,7 +2,7 @@
 
 const fs = require("fs");
 const path = require("path");
-const { parseSource } = require("./parser");
+const { parseSource } = require("./parser_rd");
 const { emitProgram } = require("./emitter");
 const { checkProgram } = require("./checker");
 

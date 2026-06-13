@@ -1,0 +1,485 @@
+// Recursive-descent parser over the full-file token stream (tokenizer.js).
+//
+// Produces the exact same AST as the legacy line-scanning parser (parser.js),
+// so the checker and emitter are unaffected. This is the step-3 rewrite from
+// devdocs/parser_refactor.md; it consumes the new underscore-identifier
+// surface syntax (specs.md, "Names and identifiers").
+//
+// Name-role coercion (`coerceName`) is applied only where the legacy parser
+// took raw multi-word text: object names, global names, object references.
+// Plain identifiers (locals, loop vars, type/kind/field/event names) keep
+// their raw spelling and are required to be JavaScript-safe.
+
+const ast = require("./ast");
+const { tokenize, coerceName } = require("./tokenizer");
+
+const JS_IDENT = /^[A-Za-z_][A-Za-z0-9_]*$/;
+const BP = { EQEQ: 5, LT: 5, GT: 5, PLUS: 10, STAR: 20 };
+
+function parseSource(sourceText, filePath, globalNames = new Set()) {
+    const tokens = tokenize(sourceText, filePath);
+    return createParser(tokens, filePath, globalNames).parseProgram();
+}
+
+function createParser(tokens, filePath, globalNames) {
+    let pos = 0;
+
+    const peek = (offset = 0) => tokens[pos + offset];
+    const next = () => tokens[pos++];
+    const at = (type) => peek().type === type;
+    const atKeyword = (value) => peek().type === "KEYWORD" && peek().value === value;
+
+    function err(message, line) {
+        return syntaxError(filePath, line !== undefined ? line : peek().line, message);
+    }
+
+    function expect(type, message) {
+        if (peek().type !== type) {
+            throw err(message || `Expected ${type}, got ${peek().type}`);
+        }
+        return next();
+    }
+
+    function expectKeyword(value) {
+        if (!atKeyword(value)) {
+            throw err(`Expected '${value}'`);
+        }
+        return next();
+    }
+
+    const expectNewline = () => expect("NEWLINE", "Expected end of line");
+
+    // A plain identifier: locals, loop vars, type/kind/field/event/lib names.
+    // No coercion; must be JavaScript-safe (rejects '-' and the '\_' escape).
+    function plainName(what) {
+        const token = peek();
+        if (token.type !== "IDENT") {
+            throw err(`Expected ${what}`, token.line);
+        }
+        next();
+        if (!JS_IDENT.test(token.value)) {
+            throw err(`${what} must be a plain identifier: ${token.value}`, token.line);
+        }
+        return token.value;
+    }
+
+    // A coerced name: object names, global names. Underscores become spaces;
+    // a leading/trailing separator is rejected (it would coerce to leading or
+    // trailing whitespace).
+    function coercedName(what) {
+        const token = peek();
+        if (token.type !== "IDENT") {
+            throw err(`Expected ${what}`, token.line);
+        }
+        next();
+        const raw = token.value;
+        if (raw[0] === "_" || raw[raw.length - 1] === "_") {
+            throw err(`${what} may not begin or end with a separator: ${raw}`, token.line);
+        }
+        return coerceName(raw);
+    }
+
+    function parseProgram() {
+        const nodes = [];
+        while (!at("EOF")) {
+            nodes.push(parseDeclaration());
+        }
+        return ast.createProgram(nodes);
+    }
+
+    function parseDeclaration() {
+        const token = peek();
+        if (token.type === "KEYWORD") {
+            switch (token.value) {
+                case "type": return parseTypeDecl();
+                case "kind": return parseKindDecl();
+                case "global": return parseGlobalDecl();
+                case "on": return parseOnHandler();
+                case "lib": return parseLibImport();
+                default: throw err(`Unexpected '${token.value}' at top level`);
+            }
+        }
+        if (token.type === "IDENT") {
+            return peek(1).type === "EQUALS" ? parseGlobalAssign() : parseObjectDecl();
+        }
+        throw err(`Unexpected token at top level: ${token.type}`);
+    }
+
+    function parseTypeDecl() {
+        const keyword = expectKeyword("type");
+        const name = plainName("type name");
+        const parents = [];
+        if (at("LT")) {
+            next();
+            parents.push(plainName("parent type name"));
+            while (at("COMMA")) {
+                next();
+                parents.push(plainName("parent type name"));
+            }
+        }
+        let fields = [];
+        if (at("COLON")) {
+            next();
+            expectNewline();
+            fields = parseTypeBody();
+        } else {
+            expectNewline();
+        }
+        return ast.createTypeDecl(name, parents, fields, filePath, keyword.line);
+    }
+
+    function parseTypeBody() {
+        expect("INDENT", "Expected an indented block");
+        const fields = [];
+        while (!at("DEDENT")) {
+            const fieldType = parseFieldType();
+            const fieldName = plainName("field name");
+            expectNewline();
+            fields.push(ast.createFieldDecl(fieldType, fieldName));
+        }
+        next();
+        return fields;
+    }
+
+    function parseFieldType() {
+        const base = plainName("type name");
+        if (at("LT")) {
+            next();
+            const inner = plainName("type name");
+            expect("GT", "Expected '>' to close list type");
+            return `${base}<${inner}>`;
+        }
+        return base;
+    }
+
+    function parseObjectDecl() {
+        const typeName = plainName("object type");
+        const objectName = coercedName("object name");
+        let fields = [];
+        if (at("COLON")) {
+            next();
+            expectNewline();
+            fields = parseObjectBody();
+        } else {
+            expectNewline();
+        }
+        return ast.createObjectDecl(typeName, objectName, fields);
+    }
+
+    function parseObjectBody() {
+        expect("INDENT", "Expected an indented block");
+        const fields = [];
+        while (!at("DEDENT")) {
+            const nameToken = peek();
+            const fieldName = plainName("field name");
+            const value = parseSimpleValue();
+            expectNewline();
+            fields.push(ast.createFieldAssign(fieldName, value, filePath, nameToken.line));
+        }
+        next();
+        return fields;
+    }
+
+    // Object-field and global values are literals or a bare object reference,
+    // never full expressions (mirrors the legacy parseSimpleValue).
+    function parseSimpleValue() {
+        const token = next();
+        if (token.type === "NUMBER") return ast.createNumberLiteral(token.value);
+        if (token.type === "STRING") return ast.createStringLiteral(token.value);
+        if (token.type === "IDENT") {
+            if (token.value === "true") return ast.createBooleanLiteral(true);
+            if (token.value === "false") return ast.createBooleanLiteral(false);
+            if (token.value === "none") return ast.createNoneLiteral();
+            return ast.createStringLiteral(coerceName(token.value));
+        }
+        throw err(`Expected a value, got ${token.type}`, token.line);
+    }
+
+    function parseGlobalDecl() {
+        const keyword = expectKeyword("global");
+        const typeName = parseFieldType();
+        const name = coercedName("global name");
+        let value;
+        if (at("EQUALS")) {
+            next();
+            value = parseSimpleValue();
+        } else {
+            value = ast.createNoneLiteral();
+        }
+        expectNewline();
+        return ast.createGlobalDecl(name, typeName, value, filePath, keyword.line);
+    }
+
+    function parseGlobalAssign() {
+        const nameToken = peek();
+        const name = coercedName("global name");
+        expect("EQUALS");
+        const value = parseSimpleValue();
+        expectNewline();
+        return ast.createGlobalAssign(name, value, filePath, nameToken.line);
+    }
+
+    function parseKindDecl() {
+        expectKeyword("kind");
+        const name = plainName("kind name");
+        expect("EQUALS");
+        const kindExpr = parseKindExpr();
+        expectNewline();
+        return ast.createKindDecl(name, kindExpr);
+    }
+
+    function parseKindExpr() {
+        const ctor = peek();
+        if (ctor.type === "IDENT" && ctor.value === "enum") {
+            next();
+            expect("LPAREN", "Expected '(' after enum");
+            const labels = [];
+            if (!at("RPAREN")) {
+                labels.push(plainName("enum label"));
+                while (at("COMMA")) {
+                    next();
+                    labels.push(plainName("enum label"));
+                }
+            }
+            expect("RPAREN", "Expected ')' to close enum");
+            return ast.createEnumExpr(labels);
+        }
+        throw err("Unsupported kind expression", ctor.line);
+    }
+
+    function parseOnHandler() {
+        expectKeyword("on");
+        const first = plainName("event or type name");
+        if (at("DOT")) {
+            next();
+            const fieldName = plainName("field name");
+            expectKeyword("change");
+            expect("COLON", "Expected ':' after change handler header");
+            expectNewline();
+            const body = parseBlock(new Set(["self"]));
+            return ast.createChangeHandler(first, fieldName, body);
+        }
+        expect("COLON", "Expected ':' after event name");
+        expectNewline();
+        const body = parseBlock(new Set());
+        return ast.createEventHandler(first, body);
+    }
+
+    function parseLibImport() {
+        expectKeyword("lib");
+        const name = plainName("library name");
+        expectNewline();
+        return ast.createLibImport(name);
+    }
+
+    function parseBlock(localNames) {
+        expect("INDENT", "Expected an indented block");
+        const statements = [];
+        while (!at("DEDENT")) {
+            if (at("EOF")) {
+                throw err("Unexpected end of input inside block");
+            }
+            statements.push(parseStatement(localNames));
+        }
+        next();
+        return statements;
+    }
+
+    function parseStatement(localNames) {
+        const token = peek();
+        if (token.type === "KEYWORD") {
+            switch (token.value) {
+                case "let": return parseLet(localNames);
+                case "print": return parsePrint(localNames);
+                case "if": return parseIf(localNames);
+                case "while": return parseWhile(localNames);
+                case "for": return parseFor(localNames);
+                case "dispatch": return parseDispatch();
+                case "error": return parseErrorStatement(localNames);
+                case "break":
+                    next();
+                    expectNewline();
+                    return ast.createBreakStatement();
+                default: throw err(`Unexpected '${token.value}' in statement`);
+            }
+        }
+        if (token.type === "IDENT") {
+            return parseAssign(localNames);
+        }
+        throw err(`Unexpected token in statement: ${token.type}`);
+    }
+
+    function parseLet(localNames) {
+        expectKeyword("let");
+        const name = plainName("variable name");
+        expect("EQUALS");
+        const expr = parseExpression(0, localNames);
+        expectNewline();
+        localNames.add(name);
+        return ast.createLetStatement(name, expr);
+    }
+
+    function parsePrint(localNames) {
+        expectKeyword("print");
+        const expr = at("NEWLINE") ? ast.createStringLiteral("") : parseExpression(0, localNames);
+        expectNewline();
+        return ast.createPrintStatement(expr);
+    }
+
+    function parseErrorStatement(localNames) {
+        expectKeyword("error");
+        const expr = parseExpression(0, localNames);
+        expectNewline();
+        return ast.createErrorStatement(expr);
+    }
+
+    function parseDispatch() {
+        expectKeyword("dispatch");
+        const name = plainName("event name");
+        expectNewline();
+        return ast.createDispatchStatement(name);
+    }
+
+    function parseIf(localNames) {
+        expectKeyword("if");
+        const condition = parseExpression(0, localNames);
+        expect("COLON", "Expected ':' after if condition");
+        expectNewline();
+        const thenBody = parseBlock(new Set(localNames));
+        let elseBody = null;
+        if (atKeyword("else")) {
+            next();
+            expect("COLON", "Expected ':' after else");
+            expectNewline();
+            elseBody = parseBlock(new Set(localNames));
+        }
+        return ast.createIfStatement(condition, thenBody, elseBody);
+    }
+
+    function parseWhile(localNames) {
+        expectKeyword("while");
+        const condition = parseExpression(0, localNames);
+        expect("COLON", "Expected ':' after while condition");
+        expectNewline();
+        const body = parseBlock(new Set(localNames));
+        return ast.createWhileStatement(condition, body);
+    }
+
+    function parseFor(localNames) {
+        expectKeyword("for");
+        const varName = plainName("loop variable");
+        expect("EQUALS");
+        const start = parseExpression(0, localNames);
+        expectKeyword("to");
+        const finish = parseExpression(0, localNames);
+        let step;
+        if (atKeyword("step")) {
+            next();
+            step = parseExpression(0, localNames);
+        } else {
+            step = ast.createNumberLiteral(1);
+        }
+        expect("COLON", "Expected ':' after for header");
+        expectNewline();
+        const bodyLocals = new Set(localNames);
+        bodyLocals.add(varName);
+        const body = parseBlock(bodyLocals);
+        return ast.createForStatement(varName, start, finish, step, body);
+    }
+
+    function parseAssign(localNames) {
+        const headToken = peek();
+        const chain = [readTargetSegment()];
+        while (at("DOT")) {
+            next();
+            chain.push(readTargetSegment());
+        }
+        expect("EQUALS", "Expected '=' in assignment");
+        const expr = parseExpression(0, localNames);
+        expectNewline();
+        return ast.createAssignStatement(chain, expr, filePath, headToken.line);
+    }
+
+    function readTargetSegment() {
+        const token = peek();
+        if (token.type !== "IDENT") {
+            throw err("Expected a name in assignment target", token.line);
+        }
+        next();
+        return token.value;
+    }
+
+    function parseExpression(minBP, localNames) {
+        let left = parseNud(localNames);
+        while (true) {
+            const token = peek();
+            const bp = BP[token.type];
+            if (bp === undefined || bp <= minBP) break;
+            next();
+            left = parseLed(token, left, localNames);
+        }
+        // A trailing '.' at the end of a complete expression means property
+        // access was attempted on something that is not a reference (e.g. a
+        // literal). minBP === 0 marks a top-level expression boundary.
+        if (minBP === 0 && at("DOT")) {
+            throw err("property access '.' requires a variable or object reference, not a literal value");
+        }
+        return left;
+    }
+
+    function parseNud(localNames) {
+        const token = next();
+        if (token.type === "STRING") return ast.createStringLiteral(token.value);
+        if (token.type === "NUMBER") return ast.createNumberLiteral(token.value);
+        if (token.type === "IDENT") return parseIdentExpr(token, localNames);
+        throw err(`Unexpected token in expression: ${token.type}`, token.line);
+    }
+
+    function parseLed(op, left, localNames) {
+        if (op.type === "PLUS") return ast.createConcat(left, parseExpression(BP.PLUS, localNames));
+        if (op.type === "STAR") return ast.createMultiplyExpr(left, parseExpression(BP.STAR, localNames));
+        if (op.type === "EQEQ") return ast.createEqualsExpr(left, parseExpression(BP.EQEQ, localNames));
+        if (op.type === "LT") return ast.createLessThanExpr(left, parseExpression(BP.LT, localNames));
+        if (op.type === "GT") return ast.createLessThanExpr(parseExpression(BP.GT, localNames), left);
+        throw err(`Unexpected operator: ${op.type}`, op.line);
+    }
+
+    function parseIdentExpr(token, localNames) {
+        const raw = token.value;
+        if (raw === "true") return ast.createBooleanLiteral(true);
+        if (raw === "false") return ast.createBooleanLiteral(false);
+        if (raw === "none") return ast.createNoneLiteral();
+
+        const fields = [];
+        while (at("DOT")) {
+            next();
+            fields.push(expect("IDENT", "Expected field name after '.'").value);
+        }
+
+        if (fields.length === 0) {
+            if (localNames.has(raw)) return ast.createVariableExpr(raw);
+            if (globalNames.has(raw)) return ast.createGlobalExpr(coerceName(raw));
+            const coerced = coerceName(raw);
+            return JS_IDENT.test(coerced)
+                ? ast.createStringLiteral(coerced)
+                : ast.createParenNameExpr(coerced, []);
+        }
+
+        if (localNames.has(raw)) return ast.createPropertyAccess([raw, ...fields]);
+        if (globalNames.has(raw)) return ast.createPropertyAccess([coerceName(raw), ...fields]);
+        const coerced = coerceName(raw);
+        return JS_IDENT.test(coerced)
+            ? ast.createPropertyAccess([coerced, ...fields])
+            : ast.createParenNameExpr(coerced, fields);
+    }
+
+    return { parseProgram };
+}
+
+function syntaxError(filePath, lineNumber, message) {
+    return new Error(`${filePath}:${lineNumber}: ${message}`);
+}
+
+module.exports = {
+    parseSource,
+};
