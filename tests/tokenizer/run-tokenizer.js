@@ -87,6 +87,37 @@ const tokenCases = [
         src: 'print "a \\" b"',
         expect: 'KEYWORD(print) STRING(a \\" b) NEWLINE EOF',
     },
+    // New single-char tokens and priority ordering
+    {
+        name: "MINUS SLASH CARET tokenize as infix operators",
+        src: "5 - 3 / 2 ^ 4",
+        expect: "NUMBER(5) MINUS NUMBER(3) SLASH NUMBER(2) CARET NUMBER(4) NEWLINE EOF",
+    },
+    {
+        name: "negative number scanner wins over MINUS: -digit → NUMBER not MINUS+NUMBER",
+        src: "print -7",
+        expect: "KEYWORD(print) NUMBER(-7) NEWLINE EOF",
+    },
+    {
+        name: "MINUS produced when hyphen is followed by a space then digit (a - 7)",
+        src: "a - 7",
+        expect: "IDENT(a) MINUS NUMBER(7) NEWLINE EOF",
+    },
+    {
+        name: "subtraction of a negative: 10 - -7 → MINUS then NUMBER(-7)",
+        src: "10 - -7",
+        expect: "NUMBER(10) MINUS NUMBER(-7) NEWLINE EOF",
+    },
+    {
+        name: "interior-hyphen identifier scanner wins over MINUS: x-y stays one IDENT",
+        src: "x-y",
+        expect: "IDENT(x-y) NEWLINE EOF",
+    },
+    {
+        name: "<= and >= produce LTE and GTE; bare < and > still produce LT and GT",
+        src: "a < b <= c > d >= e",
+        expect: "IDENT(a) LT IDENT(b) LTE IDENT(c) GT IDENT(d) GTE IDENT(e) NEWLINE EOF",
+    },
 ];
 
 const coerceCases = [
