@@ -132,7 +132,7 @@ Local variables (introduced by `let`) and loop variables (introduced by `for`) a
 
 Free text that contains spaces or punctuation is written as a double-quoted string literal, not a bare identifier (for example, `author "Phil Riley"`).
 
-The following words are **reserved** and may not be used as a name (object, type, kind, global, field, event, or local): `type`, `kind`, `global`, `on`, `for`, `while`, `if`, `else`, `let`, `print`, `error`, `dispatch`, `break`, `lib`, `to`, `step`, `change`. A reservation applies only to a whole identifier: a reserved word appearing *inside* a longer identifier is unrestricted, so `move_to_room` (which denotes the name `move to room`) is a valid identifier even though `to` is reserved.
+The following words are **reserved** and may not be used as a name (object, type, kind, global, field, event, or local): `type`, `kind`, `global`, `on`, `for`, `while`, `if`, `else`, `let`, `print`, `error`, `dispatch`, `break`, `lib`, `to`, `step`, `change`, `function`, `return`. A reservation applies only to a whole identifier: a reserved word appearing *inside* a longer identifier is unrestricted, so `move_to_room` (which denotes the name `move to room`) is a valid identifier even though `to` is reserved.
 
 ### Objects and types
 
@@ -358,6 +358,78 @@ Change handlers fire for the declared type and any subtype. Multiple handlers fo
 
 Field assignments inside handler bodies (and all event handler bodies) use the `setField` runtime call rather than direct property assignment, so changes are always observed.
 
+### Functions
+
+A **function** is a named, reusable block of statements declared at the top level of a source file (including library files).
+
+#### Function declarations
+
+```lamp
+function RETURN_TYPE NAME(PARAM_TYPE PARAM_NAME, ...):
+    STATEMENT
+    ...
+```
+
+`function` declares a named function with a return type, an optional parameter list, and an indented body. A function with no parameters uses an empty `()`. The body is a block that follows the same indentation rules as event handlers.
+
+```lamp
+function void greet(string greeting, string subject):
+    print greeting + ", " + subject + "!"
+
+function int add(int a, int b):
+    return a + b
+
+function int factorial(int n):
+    if n == 0:
+        return 1
+    return n * factorial(n - 1)
+```
+
+`RETURN_TYPE` is either `void` (no value returned) or a primitive type name (`int`, `string`, `bool`, `real`). Parameter types follow the same conventions as field types in type declarations, with the addition of `function` (see Function references below).
+
+Functions are visible across all source files compiled together — a function declared in `lib/sys/` or an imported library is callable from the user file and vice versa. Recursive calls are supported.
+
+#### Return statement
+
+```lamp
+return EXPRESSION
+return
+```
+
+`return EXPRESSION` exits the enclosing function and produces the value of `EXPRESSION` as the call result. A bare `return` (no expression) exits a `void` function early. A `void` function that reaches the end of its body without a `return` also exits normally.
+
+The static checker validates that the returned expression type is compatible with the declared return type when the type can be inferred.
+
+#### Function call statement
+
+A function call may appear as a standalone statement:
+
+```lamp
+greet("Hello", "World")
+fn(n)
+```
+
+Arguments are full expressions and may include literals, variables, arithmetic, other function calls, and function references. The static checker verifies that the argument count matches the declaration and that argument types are compatible with parameter types where inferable.
+
+#### Function references
+
+The type `function` denotes a function value. A parameter of type `function` accepts any declared function passed by name (without calling it):
+
+```lamp
+function int apply(int n, function fn):
+    return fn(n)
+
+function int double(int n):
+    return n * 2
+
+on startup:
+    print apply(5, double)   # prints 10
+```
+
+A function reference is written as a bare identifier (the function name, without `()`). Inside the body, a `function`-typed parameter is called the same way as any other function: `fn(args)`.
+
+Function references are currently untyped beyond the `function` tag — the static checker does not validate that the referenced function's signature matches the parameter's expected signature.
+
 ### Statements
 
 - **Variable binding** — binds a local name to a value:
@@ -455,7 +527,7 @@ this_game.name
 
 ```lamp
 "by " + this_game.author
-"version " + this_game.version
+score + 10
 ```
 
 `+` is type-directed:
@@ -464,6 +536,24 @@ this_game.name
 - `real + int` and `int + real` produce `real`
 - if either side is `string`, the result is `string`
 - enum-kind values may be implicitly coerced to `string` when used with `+`
+
+- **Subtraction** — `-` subtracts numeric values:
+
+```lamp
+n - 1
+total - cost
+```
+
+Type rules mirror `+` for numeric operands. `-` has the same precedence as `+`.
+
+- **Unary minus** — a leading `-` negates a numeric value:
+
+```lamp
+-7
+-x
+```
+
+Unary minus has higher precedence than `*` and `/`, so `-x^2` parses as `-(x^2)`.
 
 - **Multiplication** — `*` multiplies numeric values:
 
@@ -477,14 +567,41 @@ this_game.name
 - `int * int` produces `int`
 - `real * int` and `int * real` produce `real`
 
-`*` has higher precedence than `+`.
+`*` has higher precedence than `+` and `-`.
 
-- **Comparison** — `==`, `<`, and `>` compare two expressions and produce `bool`:
+- **Division** — `/` divides numeric values:
+
+```lamp
+total / count
+circumference / (2 * PI)
+```
+
+Type rules mirror `*`. Division by zero produces `NaN` rather than an error.
+
+- **Exponentiation** — `^` raises the left operand to the power of the right operand:
+
+```lamp
+2 ^ 10
+x ^ 0.5
+```
+
+`^` has higher precedence than `*` and `/` and is right-associative, so `2 ^ 3 ^ 2` parses as `2 ^ (3 ^ 2)`.
+
+- **Grouping** — parentheses override precedence:
+
+```lamp
+(a + b) * c
+circumference / (2 * PI)
+```
+
+- **Comparison** — `==`, `<`, `<=`, `>`, and `>=` compare two expressions and produce `bool`. `!=` is not supported.
 
 ```lamp
 this_game.release == final
 i < 5
 count > 0
+score >= 100
+n <= limit
 ```
 
 - **Object name reference** — a named object can be referenced directly in expressions by its identifier. Multi-word names use the underscore convention (see Names and identifiers); the coerced name is looked up at runtime. A `.`-separated field chain may follow:
@@ -501,7 +618,24 @@ if this_game.start == none:
     error "no start room defined"
 ```
 
-- **Bare identifiers** in expressions are resolved in this order: local variable (introduced by `let`), declared global, then string literal. The string-literal fallback supports enum-label comparisons such as `== final`.
+- **Function call expression** — calls a named function and produces its return value:
+
+```lamp
+add(3, 4)
+factorial(n - 1)
+apply(5, double)
+```
+
+Arguments are full expressions. A call expression may appear anywhere a value is expected: in `let` bindings, as arguments to other calls, in arithmetic, etc.
+
+- **Function reference** — a declared function name used without `()` produces a `function` value that can be passed as an argument:
+
+```lamp
+let f = double
+apply(5, double)
+```
+
+- **Bare identifiers** in expressions are resolved in this order: local variable (introduced by `let`), declared global, declared function (producing a function reference), then string literal. The string-literal fallback supports enum-label comparisons such as `== final`.
 
 ## Implementation notes
 
@@ -509,31 +643,33 @@ if this_game.start == none:
 
 Lantern compiles in three passes:
 
-1. **Pre-scan** (`index.js`): scan all source files with a single regex per line to collect declared global names. Produces a `Set<string>` of global names.
-2. **Parse** (`parser.js`): parse each file into an AST using the collected global names so that global references in expressions are resolved correctly.
+1. **Pre-scan** (`index.js`): scan all source files with a single regex per line to collect declared global names and declared function names. Produces a `Set<string>` of global names and a `Set<string>` of function names. Both sets are needed so the parser can distinguish globals, function references, and enum-label string literals in expression context.
+2. **Parse** (`parser_rd.js`): parse each file into an AST using the collected global and function names so that bare identifiers in expressions are resolved correctly.
 3. **Check** (`checker.js`) + **emit** (`emitter.js`): semantic check then emit standalone Node.js JavaScript.
 
-The emitted program runs in this order: kinds → kind constants → types → type constants → objects (primitive/kind fields only) → object-typed field assignments → global declarations → global assignments → event handler registrations → `run()`. Globals and object-typed field assignments are placed after all `createObject` calls so that any `lamplighter.getObject(...)` reference resolves against an already-registered instance regardless of declaration order.
+The emitted program runs in this order: kinds → kind constants → types → type constants → objects (primitive/kind fields only) → object-typed field assignments → global declarations → global assignments → function definitions → event handler registrations → `run()`. Globals and object-typed field assignments are placed after all `createObject` calls so that any `lamplighter.getObject(...)` reference resolves against an already-registered instance regardless of declaration order. Function definitions are emitted before event handler registrations so they are in scope when handlers run.
 
 ### Parser design
 
-> **Note:** this subsection describes the *current* parser implementation, which still uses the pre-refactor surface syntax (multi-word bare names and the `(Multi Word)` reference form). The intended syntax is the underscore-identifier scheme defined above under "Names and identifiers"; the planned rewrite to a single full-file tokenizer plus recursive-descent parser is tracked in `devdocs/parser_refactor.md`. This subsection will be updated when that refactor lands.
+The parser (`parser_rd.js`) is a full-file recursive-descent parser over a token stream produced by `tokenizer.js`. It implements the underscore-identifier surface syntax defined above under "Names and identifiers".
 
-The outer parser is line-by-line and indentation-driven. Each line is classified by its leading keyword (`type`, `kind`, `global`, `on`, …) and dispatched to a dedicated parse function. Block structure is handled by comparing indentation levels; `parseChildBlock` and `parseStatementBlock` consume lines until indentation falls back to the enclosing level.
+**Tokenizer** (`tokenizer.js`): scans the entire source file and emits a flat token stream with Python-style significant indentation (`INDENT` / `DEDENT` / `NEWLINE`). Token types: `NUMBER`, `STRING`, `IDENT`, `KEYWORD`, `PLUS`, `MINUS`, `STAR`, `SLASH`, `CARET`, `EQEQ`, `LT`, `GT`, `LTE`, `GTE`, `LPAREN`, `RPAREN`, `DOT`, `COMMA`, `COLON`, `EQUALS`, `INDENT`, `DEDENT`, `NEWLINE`, `EOF`. Reserved words are emitted as `KEYWORD` tokens, not `IDENT`. Coercion (underscore → space, etc.) is not applied by the tokenizer; the parser calls `coerceName` where appropriate.
 
-Expression parsing (`parseExpression`) uses a **tokenizer + Pratt parser** (top-down operator precedence):
+**Recursive-descent parser**: top-level declarations are dispatched by the leading keyword or by the shape of the first two tokens. Block structure is driven by `INDENT` / `DEDENT` tokens. Expression parsing uses a **Pratt parser** (top-down operator precedence):
 
-**Tokenizer** (`tokenizeExpression`): scans the raw expression string character by character and produces a flat token stream. Token types: `NUMBER`, `STRING`, `IDENT`, `PLUS`, `STAR`, `EQEQ`, `LT`, `GT`, `LPAREN`, `RPAREN`, `DOT`, `EOF`. Negative number literals (e.g. `-7`) are recognized when the preceding token is not a value token.
-
-**Pratt parser**: a `parse(minBP)` function that drives a loop over the token stream. Each token has either a *null denotation* (nud — starts an expression) or a *left denotation* (led — extends an expression to the left). Operator precedences:
+- A `parseNud` function handles prefix position (literals, identifiers, unary minus, parenthesized sub-expressions).
+- A `parseLed` function handles infix position (binary operators).
+- Operator binding powers (higher binds tighter):
 
 | Operator | Binding power |
 |---|---|
-| `==`, `<`, `>` | 5 |
-| `+` | 10 |
-| `*` | 20 |
+| `==`, `<`, `<=`, `>`, `>=` | 5 |
+| `+`, `-` | 10 |
+| `*`, `/` | 20 |
+| unary `-` | 25 |
+| `^` | 30 (right-associative) |
 
-Adding a new infix operator requires one entry in the `BP` table and one branch in `led`. DOT (`.`) is not a binary operator in the Pratt table; instead, `nud(IDENT)` eagerly consumes any following `.field` chain to build `PropertyAccess` nodes. Parentheses (`(…)`) are consumed by `nud(LPAREN)` and always denote a multi-word object name reference — arithmetic grouping is not currently supported.
+Identifier disambiguation in expression position (`parseIdentExpr`) resolves in this order: `true`/`false`/`none` literals → function call (IDENT followed by `LPAREN`) → property-access chain (IDENT followed by `.`) → local variable → global → function reference → string literal (enum-label fallback).
 
 ### Static checking
 
@@ -545,3 +681,7 @@ Lantern performs a semantic checking pass before emission.
 - Enum-kind fields reject labels outside the enum definition.
 - Expression inference covers literals, local variables, property-access chains (including `.all` → `list<T>` and `.first` → `T`), `+`, `*`, `==`, `<`, and `>`. Globals and object name references currently return unknown type and are not statically checked.
 - `list<T>` is recognized as a valid field type in chain resolution. Element-level validation of `list<T>` field assignments is not yet performed.
+- Function call statements are checked for correct argument count and compatible argument types against the declared parameter types.
+- `return EXPRESSION` inside a function body is checked against the function's declared return type when the expression type can be inferred.
+- Function parameters and the loop variable in `for` are typed as locals within their enclosing body. Function parameters take the declared parameter type; the loop variable has type `int`.
+- `function`-typed parameters and `FunctionRefExpr` values are accepted without deeper signature checking — the static checker does not currently validate that a passed function's parameter list or return type matches what the receiving parameter expects.
