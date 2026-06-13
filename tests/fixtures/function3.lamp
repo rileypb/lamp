@@ -1,0 +1,12 @@
+game Game_1:
+    author "Test Author"
+    version 1
+    release dev
+
+on startup:
+    let result = add(3, 4)
+    print result
+    print add(1, 2) + add(3, 4)
+
+function int add(int a, int b):
+    return a + b

@@ -324,6 +324,7 @@ function createParser(tokens, filePath, globalNames) {
                 case "for": return parseFor(localNames);
                 case "dispatch": return parseDispatch();
                 case "error": return parseErrorStatement(localNames);
+                case "return": return parseReturn(localNames);
                 case "break":
                     next();
                     expectNewline();
@@ -353,6 +354,13 @@ function createParser(tokens, filePath, globalNames) {
         expect("RPAREN", "Expected ')'");
         expectNewline();
         return ast.createCallStatement(name, args, filePath, nameToken.line);
+    }
+
+    function parseReturn(localNames) {
+        expectKeyword("return");
+        const expr = at("NEWLINE") ? null : parseExpression(0, localNames);
+        expectNewline();
+        return ast.createReturnStatement(expr);
     }
 
     function parseLet(localNames) {
@@ -508,6 +516,20 @@ function createParser(tokens, filePath, globalNames) {
         if (raw === "true") return ast.createBooleanLiteral(true);
         if (raw === "false") return ast.createBooleanLiteral(false);
         if (raw === "none") return ast.createNoneLiteral();
+
+        if (at("LPAREN")) {
+            next();
+            const args = [];
+            if (!at("RPAREN")) {
+                args.push(parseExpression(0, localNames));
+                while (at("COMMA")) {
+                    next();
+                    args.push(parseExpression(0, localNames));
+                }
+            }
+            expect("RPAREN", "Expected ')'");
+            return ast.createCallExpr(raw, args);
+        }
 
         const fields = [];
         while (at("DOT")) {

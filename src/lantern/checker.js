@@ -18,7 +18,8 @@ function checkProgram(programAst) {
             checkStatements(node.body, typeSchema, kindSchema, localTypes, functionSchema);
         } else if (node.kind === "FunctionDecl") {
             const localTypes = new Map(node.params.map((p) => [p.name, p.typeName]));
-            checkStatements(node.body, typeSchema, kindSchema, localTypes, functionSchema);
+            const expectedReturn = node.returnType === "void" ? null : node.returnType;
+            checkStatements(node.body, typeSchema, kindSchema, localTypes, functionSchema, expectedReturn);
         }
     }
 }
@@ -27,7 +28,7 @@ function buildFunctionSchema(nodes) {
     const functionSchema = new Map();
     for (const node of nodes) {
         if (node.kind === "FunctionDecl") {
-            functionSchema.set(node.name, node.params);
+            functionSchema.set(node.name, { params: node.params, returnType: node.returnType });
         }
     }
     return functionSchema;
@@ -132,52 +133,67 @@ function checkObjectDecl(node, typeSchema, kindSchema) {
     }
 }
 
-function checkStatements(statements, typeSchema, kindSchema, localTypes, functionSchema = new Map()) {
+function checkStatements(statements, typeSchema, kindSchema, localTypes, functionSchema = new Map(), expectedReturnType = null) {
     for (const stmt of statements) {
         if (stmt.kind === "LetStatement") {
-            const varType = inferExprType(stmt.expr, typeSchema, kindSchema, localTypes);
+            const varType = inferExprType(stmt.expr, typeSchema, kindSchema, localTypes, functionSchema);
             if (varType) {
                 localTypes.set(stmt.name, varType);
             }
         } else if (stmt.kind === "AssignStatement") {
             checkAssignStatement(stmt, typeSchema, kindSchema, localTypes);
         } else if (stmt.kind === "IfStatement") {
-            checkStatements(stmt.thenBody, typeSchema, kindSchema, new Map(localTypes), functionSchema);
+            checkStatements(stmt.thenBody, typeSchema, kindSchema, new Map(localTypes), functionSchema, expectedReturnType);
             if (stmt.elseBody) {
-                checkStatements(stmt.elseBody, typeSchema, kindSchema, new Map(localTypes), functionSchema);
+                checkStatements(stmt.elseBody, typeSchema, kindSchema, new Map(localTypes), functionSchema, expectedReturnType);
             }
         } else if (stmt.kind === "WhileStatement") {
-            checkStatements(stmt.body, typeSchema, kindSchema, new Map(localTypes), functionSchema);
+            checkStatements(stmt.body, typeSchema, kindSchema, new Map(localTypes), functionSchema, expectedReturnType);
         } else if (stmt.kind === "ForStatement") {
             const bodyTypes = new Map(localTypes);
             bodyTypes.set(stmt.varName, "int");
-            checkStatements(stmt.body, typeSchema, kindSchema, bodyTypes, functionSchema);
+            checkStatements(stmt.body, typeSchema, kindSchema, bodyTypes, functionSchema, expectedReturnType);
         } else if (stmt.kind === "CallStatement") {
             checkCallStatement(stmt, typeSchema, kindSchema, localTypes, functionSchema);
+        } else if (stmt.kind === "ReturnStatement") {
+            if (stmt.expr !== null && expectedReturnType !== null) {
+                checkValueCompatibility(
+                    stmt.expr,
+                    expectedReturnType,
+                    typeSchema,
+                    kindSchema,
+                    null,
+                    null,
+                    "return value",
+                    localTypes,
+                    functionSchema,
+                );
+            }
         }
     }
 }
 
 function checkCallStatement(stmt, typeSchema, kindSchema, localTypes, functionSchema) {
-    const params = functionSchema.get(stmt.name);
-    if (!params) return;
-    if (stmt.args.length !== params.length) {
+    const fn = functionSchema.get(stmt.name);
+    if (!fn) return;
+    if (stmt.args.length !== fn.params.length) {
         throw typeError(
             stmt.filePath,
             stmt.lineNumber,
-            `function "${stmt.name}" expects ${params.length} argument(s), got ${stmt.args.length}`,
+            `function "${stmt.name}" expects ${fn.params.length} argument(s), got ${stmt.args.length}`,
         );
     }
-    for (let i = 0; i < params.length; i++) {
+    for (let i = 0; i < fn.params.length; i++) {
         checkValueCompatibility(
             stmt.args[i],
-            params[i].typeName,
+            fn.params[i].typeName,
             typeSchema,
             kindSchema,
             stmt.filePath,
             stmt.lineNumber,
             `argument ${i + 1} of "${stmt.name}"`,
             localTypes,
+            functionSchema,
         );
     }
 }
@@ -222,7 +238,7 @@ function checkAssignStatement(stmt, typeSchema, kindSchema, localTypes) {
     );
 }
 
-function inferExprType(expr, typeSchema, kindSchema, localTypes) {
+function inferExprType(expr, typeSchema, kindSchema, localTypes, functionSchema = new Map()) {
     if (expr.kind === "BooleanLiteral") {
         return "bool";
     }
@@ -242,8 +258,8 @@ function inferExprType(expr, typeSchema, kindSchema, localTypes) {
         return resolveChainType(expr.chain, typeSchema, kindSchema, localTypes);
     }
     if (expr.kind === "Concat") {
-        const leftType = inferExprType(expr.left, typeSchema, kindSchema, localTypes);
-        const rightType = inferExprType(expr.right, typeSchema, kindSchema, localTypes);
+        const leftType = inferExprType(expr.left, typeSchema, kindSchema, localTypes, functionSchema);
+        const rightType = inferExprType(expr.right, typeSchema, kindSchema, localTypes, functionSchema);
         return inferConcatType(leftType, rightType, kindSchema);
     }
     if (expr.kind === "EqualsExpr") {
@@ -253,8 +269,8 @@ function inferExprType(expr, typeSchema, kindSchema, localTypes) {
         return "bool";
     }
     if (expr.kind === "MultiplyExpr") {
-        const leftType = inferExprType(expr.left, typeSchema, kindSchema, localTypes);
-        const rightType = inferExprType(expr.right, typeSchema, kindSchema, localTypes);
+        const leftType = inferExprType(expr.left, typeSchema, kindSchema, localTypes, functionSchema);
+        const rightType = inferExprType(expr.right, typeSchema, kindSchema, localTypes, functionSchema);
         if (leftType === null || rightType === null) {
             return null;
         }
@@ -268,6 +284,11 @@ function inferExprType(expr, typeSchema, kindSchema, localTypes) {
     }
     if (expr.kind === "ParenNameExpr") {
         return null;
+    }
+    if (expr.kind === "CallExpr") {
+        const fn = functionSchema.get(expr.name);
+        if (!fn || fn.returnType === "void") return null;
+        return fn.returnType;
     }
     return null;
 }
@@ -339,8 +360,8 @@ function resolveChainType(chain, typeSchema, kindSchema, localTypes) {
     return currentType;
 }
 
-function checkValueCompatibility(valueNode, fieldTypeName, typeSchema, kindSchema, filePath, lineNumber, context, localTypes = new Map()) {
-    const inferredType = inferExprType(valueNode, typeSchema, kindSchema, localTypes);
+function checkValueCompatibility(valueNode, fieldTypeName, typeSchema, kindSchema, filePath, lineNumber, context, localTypes = new Map(), functionSchema = new Map()) {
+    const inferredType = inferExprType(valueNode, typeSchema, kindSchema, localTypes, functionSchema);
 
     if (inferredType === null) {
         return;

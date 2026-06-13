@@ -2,7 +2,7 @@
 // names, property-access chains, function calls) and never need extra parens.
 const SAFE_ATOM = new Set([
     "StringLiteral", "NumberLiteral", "BooleanLiteral", "NoneLiteral",
-    "VariableExpr", "PropertyAccess", "GlobalExpr", "ParenNameExpr", "Concat", "DivideExpr",
+    "VariableExpr", "PropertyAccess", "GlobalExpr", "ParenNameExpr", "Concat", "DivideExpr", "CallExpr",
 ]);
 
 // JS operator precedence for the binary/unary expression kinds we emit.
@@ -354,6 +354,10 @@ function emitStatementLines(statement, indentLevel, globalNames = new Set()) {
         const argExprs = statement.args.map((a) => emitExpression(a, globalNames)).join(", ");
         return [`${indent}${statement.name}(${argExprs});`];
     }
+    if (statement.kind === "ReturnStatement") {
+        if (statement.expr === null) return [`${indent}return;`];
+        return [`${indent}return ${emitExpression(statement.expr, globalNames)};`];
+    }
     throw new Error(`Unsupported statement kind: ${statement.kind}`);
 }
 
@@ -411,6 +415,10 @@ function emitExpression(expr, globalNames = new Set()) {
     if (expr.kind === "ParenNameExpr") {
         const base = `lamplighter.getObject(${JSON.stringify(expr.objectName)})`;
         return expr.fieldChain.length === 0 ? base : `${base}.${expr.fieldChain.join(".")}`;
+    }
+    if (expr.kind === "CallExpr") {
+        const argExprs = expr.args.map((a) => emitExpression(a, globalNames)).join(", ");
+        return `${expr.name}(${argExprs})`;
     }
     throw new Error(`Unsupported expression kind: ${expr.kind}`);
 }

@@ -158,6 +158,14 @@ function createCallStatement(name, args, filePath, lineNumber) {
     return { kind: "CallStatement", name, args, filePath, lineNumber };
 }
 
+function createCallExpr(name, args) {
+    return { kind: "CallExpr", name, args };
+}
+
+function createReturnStatement(expr) {
+    return { kind: "ReturnStatement", expr };
+}
+
 module.exports = {
     createProgram,
     createTypeDecl,
@@ -199,4 +207,6 @@ module.exports = {
     createChangeHandler,
     createFunctionDecl,
     createCallStatement,
+    createCallExpr,
+    createReturnStatement,
 };
