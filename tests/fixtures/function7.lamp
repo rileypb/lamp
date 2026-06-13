@@ -1,0 +1,19 @@
+game Game_1:
+    author "Test Author"
+    version 1
+    release dev
+
+global int x = 0
+
+lib fntest
+
+function int foo(int n):
+    return 2 * n
+
+function int foo(int n) when x == 3:
+    return 11 * n
+
+on startup:
+    print foo(5)
+    x = 3
+    print foo(5)

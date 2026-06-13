@@ -16,6 +16,12 @@ const { tokenize, coerceName } = require("./tokenizer");
 const JS_IDENT = /^[A-Za-z_][A-Za-z0-9_]*$/;
 const BP = { EQEQ: 5, LT: 5, GT: 5, LTE: 5, GTE: 5, PLUS: 10, MINUS: 10, STAR: 20, SLASH: 20, CARET: 30 };
 
+function getInfixBP(token) {
+    if (token.type === "KEYWORD" && token.value === "or") return 1;
+    if (token.type === "KEYWORD" && token.value === "and") return 2;
+    return BP[token.type];
+}
+
 function parseSource(sourceText, filePath, globalNames = new Set(), functionNames = new Set()) {
     const tokens = tokenize(sourceText, filePath);
     return createParser(tokens, filePath, globalNames, functionNames).parseProgram();
@@ -278,7 +284,7 @@ function createParser(tokens, filePath, globalNames, functionNames = new Set()) 
     }
 
     function parseFunctionDecl() {
-        expectKeyword("function");
+        const keyword = expectKeyword("function");
         const returnType = plainName("return type");
         const name = plainName("function name");
         expect("LPAREN", "Expected '(' after function name");
@@ -291,11 +297,16 @@ function createParser(tokens, filePath, globalNames, functionNames = new Set()) 
             }
         }
         expect("RPAREN", "Expected ')' to close parameter list");
+        let whenExpr = null;
+        if (atKeyword("when")) {
+            next();
+            whenExpr = parseExpression(0, new Set());
+        }
         expect("COLON", "Expected ':' after function header");
         expectNewline();
         const paramLocals = new Set(params.map((p) => p.name));
         const body = parseBlock(paramLocals);
-        return ast.createFunctionDecl(name, returnType, params, body);
+        return ast.createFunctionDecl(name, returnType, params, whenExpr, body, filePath, keyword.line);
     }
 
     function parseFunctionParam() {
@@ -471,7 +482,7 @@ function createParser(tokens, filePath, globalNames, functionNames = new Set()) 
         let left = parseNud(localNames);
         while (true) {
             const token = peek();
-            const bp = BP[token.type];
+            const bp = getInfixBP(token);
             if (bp === undefined || bp <= minBP) break;
             next();
             left = parseLed(token, left, localNames);
@@ -493,6 +504,7 @@ function createParser(tokens, filePath, globalNames, functionNames = new Set()) 
         // Unary minus: RBP 25 — tighter than +/- (10) and */÷ (20), looser than ^ (30),
         // so `-x^2` parses as `-(x^2)` and `-x*2` as `(-x)*2`.
         if (token.type === "MINUS") return ast.createNegateExpr(parseExpression(25, localNames));
+        if (token.type === "KEYWORD" && token.value === "not") return ast.createNotExpr(parseExpression(3, localNames));
         if (token.type === "LPAREN") {
             const expr = parseExpression(0, localNames);
             expect("RPAREN", "Expected ')' to close expression");
@@ -512,6 +524,8 @@ function createParser(tokens, filePath, globalNames, functionNames = new Set()) 
         if (op.type === "GT") return ast.createLessThanExpr(parseExpression(BP.GT, localNames), left);
         if (op.type === "LTE") return ast.createLessOrEqualExpr(left, parseExpression(BP.LTE, localNames));
         if (op.type === "GTE") return ast.createLessOrEqualExpr(parseExpression(BP.GTE, localNames), left);
+        if (op.type === "KEYWORD" && op.value === "and") return ast.createAndExpr(left, parseExpression(2, localNames));
+        if (op.type === "KEYWORD" && op.value === "or") return ast.createOrExpr(left, parseExpression(1, localNames));
         throw err(`Unexpected operator: ${op.type}`, op.line);
     }
 

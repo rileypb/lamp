@@ -6,6 +6,8 @@ function checkProgram(programAst) {
     const globalTypes = buildGlobalTypeSchema(programAst.nodes);
     const functionSchema = buildFunctionSchema(programAst.nodes);
 
+    checkFunctionOverloads(programAst.nodes, typeSchema, kindSchema, functionSchema);
+
     for (const node of programAst.nodes) {
         if (node.kind === "ObjectDecl") {
             checkObjectDecl(node, typeSchema, kindSchema);
@@ -22,6 +24,85 @@ function checkProgram(programAst) {
             checkStatements(node.body, typeSchema, kindSchema, localTypes, functionSchema, expectedReturn);
         }
     }
+}
+
+function checkFunctionOverloads(nodes, typeSchema, kindSchema, functionSchema) {
+    const groups = new Map();
+    for (let i = 0; i < nodes.length; i++) {
+        const node = nodes[i];
+        if (node.kind !== "FunctionDecl") continue;
+        if (!groups.has(node.name)) groups.set(node.name, []);
+        groups.get(node.name).push({ node, index: i });
+    }
+
+    for (const [name, overloads] of groups) {
+        for (const { node } of overloads) {
+            if (node.whenExpr !== null) {
+                checkWhenExprRestrictions(node.whenExpr, name, node.filePath, node.lineNumber);
+                const whenType = inferExprType(node.whenExpr, typeSchema, kindSchema, new Map(), functionSchema);
+                if (whenType !== null && whenType !== "bool") {
+                    throw new Error(`${node.filePath}:${node.lineNumber}: type error: when condition of "${name}" must be boolean`);
+                }
+            }
+        }
+
+        if (overloads.length === 1) continue;
+
+        const base = overloads[0].node;
+        let unconditionalCount = 0;
+        const conditionStrings = [];
+
+        for (const { node } of overloads) {
+            if (node.params.length !== base.params.length || node.returnType !== base.returnType) {
+                throw new Error(`${node.filePath}:${node.lineNumber}: type error: all overloads of "${name}" must have the same signature`);
+            }
+            for (let i = 0; i < node.params.length; i++) {
+                if (node.params[i].name !== base.params[i].name || node.params[i].typeName !== base.params[i].typeName) {
+                    throw new Error(`${node.filePath}:${node.lineNumber}: type error: all overloads of "${name}" must use the same parameter names and types`);
+                }
+            }
+
+            if (node.whenExpr === null) {
+                unconditionalCount++;
+                if (unconditionalCount > 1) {
+                    throw new Error(`${node.filePath}:${node.lineNumber}: type error: function "${name}" has multiple unconditional definitions`);
+                }
+            } else {
+                const condStr = serializeWhenExpr(node.whenExpr);
+                if (conditionStrings.includes(condStr)) {
+                    console.warn(`Warning: function "${name}" has duplicate when condition: ${condStr}`);
+                }
+                conditionStrings.push(condStr);
+            }
+        }
+    }
+}
+
+function checkWhenExprRestrictions(expr, funcName, filePath, lineNumber) {
+    if (expr.kind === "CallExpr") {
+        throw new Error(`${filePath}:${lineNumber}: type error: when condition of "${funcName}" may not contain function calls`);
+    }
+    if (expr.kind === "FunctionRefExpr") {
+        throw new Error(`${filePath}:${lineNumber}: type error: when condition of "${funcName}" may not reference functions`);
+    }
+    for (const key of ["left", "right", "expr"]) {
+        if (expr[key]) checkWhenExprRestrictions(expr[key], funcName, filePath, lineNumber);
+    }
+}
+
+function serializeWhenExpr(expr) {
+    if (expr.kind === "AndExpr") return `(${serializeWhenExpr(expr.left)} and ${serializeWhenExpr(expr.right)})`;
+    if (expr.kind === "OrExpr") return `(${serializeWhenExpr(expr.left)} or ${serializeWhenExpr(expr.right)})`;
+    if (expr.kind === "NotExpr") return `(not ${serializeWhenExpr(expr.expr)})`;
+    if (expr.kind === "EqualsExpr") return `(${serializeWhenExpr(expr.left)} == ${serializeWhenExpr(expr.right)})`;
+    if (expr.kind === "LessThanExpr") return `(${serializeWhenExpr(expr.left)} < ${serializeWhenExpr(expr.right)})`;
+    if (expr.kind === "LessOrEqualExpr") return `(${serializeWhenExpr(expr.left)} <= ${serializeWhenExpr(expr.right)})`;
+    if (expr.kind === "GlobalExpr") return `g:${expr.name}`;
+    if (expr.kind === "NumberLiteral") return String(expr.value);
+    if (expr.kind === "StringLiteral") return JSON.stringify(expr.value);
+    if (expr.kind === "BooleanLiteral") return String(expr.value);
+    if (expr.kind === "NegateExpr") return `(-${serializeWhenExpr(expr.expr)})`;
+    return expr.kind;
 }
 
 function buildFunctionSchema(nodes) {
@@ -266,6 +347,18 @@ function inferExprType(expr, typeSchema, kindSchema, localTypes, functionSchema 
         return "bool";
     }
     if (expr.kind === "LessThanExpr") {
+        return "bool";
+    }
+    if (expr.kind === "LessOrEqualExpr") {
+        return "bool";
+    }
+    if (expr.kind === "AndExpr") {
+        return "bool";
+    }
+    if (expr.kind === "OrExpr") {
+        return "bool";
+    }
+    if (expr.kind === "NotExpr") {
         return "bool";
     }
     if (expr.kind === "MultiplyExpr") {

@@ -150,8 +150,20 @@ function createPowerExpr(left, right) {
     return { kind: "PowerExpr", left, right };
 }
 
-function createFunctionDecl(name, returnType, params, body) {
-    return { kind: "FunctionDecl", name, returnType, params, body };
+function createFunctionDecl(name, returnType, params, whenExpr, body, filePath, lineNumber) {
+    return { kind: "FunctionDecl", name, returnType, params, whenExpr, body, filePath, lineNumber };
+}
+
+function createAndExpr(left, right) {
+    return { kind: "AndExpr", left, right };
+}
+
+function createOrExpr(left, right) {
+    return { kind: "OrExpr", left, right };
+}
+
+function createNotExpr(expr) {
+    return { kind: "NotExpr", expr };
 }
 
 function createCallStatement(name, args, filePath, lineNumber) {
@@ -214,4 +226,7 @@ module.exports = {
     createCallExpr,
     createReturnStatement,
     createFunctionRefExpr,
+    createAndExpr,
+    createOrExpr,
+    createNotExpr,
 };

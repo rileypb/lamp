@@ -31,6 +31,10 @@ const KEYWORDS = new Set([
     "change",
     "function",
     "return",
+    "when",
+    "and",
+    "or",
+    "not",
 ]);
 
 const SINGLE_CHAR_TOKENS = {

@@ -127,8 +127,15 @@ function emitProgram(programAst, options = {}) {
     const changeHandlerNodes = programAst.nodes.filter((node) => node.kind === "ChangeHandler");
     const globalNames = new Set(globalDeclNodes.map((n) => n.name));
 
-    for (const functionNode of functionNodes) {
-        lines.push(emitFunctionDecl(functionNode, globalNames));
+    const functionGroups = new Map();
+    for (let i = 0; i < functionNodes.length; i++) {
+        const node = functionNodes[i];
+        if (!functionGroups.has(node.name)) functionGroups.set(node.name, []);
+        functionGroups.get(node.name).push({ node, definitionIndex: i });
+    }
+
+    for (const [name, overloads] of functionGroups) {
+        lines.push(emitFunctionGroup(name, overloads, globalNames));
         lines.push("");
     }
 
@@ -271,6 +278,49 @@ function emitFunctionDecl(node, globalNames = new Set()) {
     ].join("\n");
 }
 
+function computeSpecificity(expr) {
+    if (expr.kind === "AndExpr") return computeSpecificity(expr.left) + computeSpecificity(expr.right);
+    if (expr.kind === "OrExpr") return Math.max(computeSpecificity(expr.left), computeSpecificity(expr.right));
+    if (expr.kind === "NotExpr") return computeSpecificity(expr.expr);
+    return 1;
+}
+
+function emitFunctionGroup(name, overloads, globalNames) {
+    const unconditional = overloads.find((o) => o.node.whenExpr === null);
+    const conditionals = overloads
+        .filter((o) => o.node.whenExpr !== null)
+        .map((o) => ({ node: o.node, index: o.definitionIndex, specificity: computeSpecificity(o.node.whenExpr) }))
+        .sort((a, b) => b.specificity !== a.specificity ? b.specificity - a.specificity : b.index - a.index);
+
+    const referenceNode = (unconditional || conditionals[0]).node;
+    const paramList = referenceNode.params.map((p) => p.name).join(", ");
+
+    const lines = [];
+    lines.push(`function ${name}(${paramList}) {`);
+
+    if (conditionals.length === 0) {
+        lines.push(...emitStatementList(referenceNode.body, 1, globalNames));
+    } else {
+        const [first, ...rest] = conditionals;
+        lines.push(`    if (${emitExpression(first.node.whenExpr, globalNames)}) {`);
+        lines.push(...emitStatementList(first.node.body, 2, globalNames));
+        for (const cond of rest) {
+            lines.push(`    } else if (${emitExpression(cond.node.whenExpr, globalNames)}) {`);
+            lines.push(...emitStatementList(cond.node.body, 2, globalNames));
+        }
+        lines.push(`    } else {`);
+        if (unconditional) {
+            lines.push(...emitStatementList(unconditional.node.body, 2, globalNames));
+        } else {
+            lines.push(`        throw new Error(\`no matching version of ${name} for current game state\`);`);
+        }
+        lines.push(`    }`);
+    }
+
+    lines.push("}");
+    return lines.join("\n");
+}
+
 function emitEventHandler(node, globalNames = new Set()) {
     const bodyLines = emitStatementList(node.body, 1, globalNames);
     return [
@@ -304,13 +354,17 @@ function emitStatementLines(statement, indentLevel, globalNames = new Set()) {
     }
     if (statement.kind === "AssignStatement") {
         const [head, ...tail] = statement.targetChain;
+        const valueExpr = emitExpression(statement.expr, globalNames);
+        if (tail.length === 0 && globalNames.has(head)) {
+            return [`${indent}lamplighter.setGlobal(${JSON.stringify(head)}, ${valueExpr});`];
+        }
         const headExpr = globalNames.has(head) ? `lamplighter.getGlobal(${JSON.stringify(head)})` : head;
         if (tail.length === 0) {
-            return [`${indent}${headExpr} = ${emitExpression(statement.expr, globalNames)};`];
+            return [`${indent}${head} = ${valueExpr};`];
         }
         const objExpr = tail.length === 1 ? headExpr : `${headExpr}.${tail.slice(0, -1).join(".")}`;
         const fieldName = tail[tail.length - 1];
-        return [`${indent}lamplighter.setField(${objExpr}, ${JSON.stringify(fieldName)}, ${emitExpression(statement.expr, globalNames)});`];
+        return [`${indent}lamplighter.setField(${objExpr}, ${JSON.stringify(fieldName)}, ${valueExpr});`];
     }
     if (statement.kind === "ErrorStatement") {
         return [`${indent}lamplighter.error(${emitExpression(statement.expr, globalNames)});`];
@@ -422,6 +476,15 @@ function emitExpression(expr, globalNames = new Set()) {
     }
     if (expr.kind === "FunctionRefExpr") {
         return expr.name;
+    }
+    if (expr.kind === "AndExpr") {
+        return `(${emitExpression(expr.left, globalNames)} && ${emitExpression(expr.right, globalNames)})`;
+    }
+    if (expr.kind === "OrExpr") {
+        return `(${emitExpression(expr.left, globalNames)} || ${emitExpression(expr.right, globalNames)})`;
+    }
+    if (expr.kind === "NotExpr") {
+        return `!(${emitExpression(expr.expr, globalNames)})`;
     }
     throw new Error(`Unsupported expression kind: ${expr.kind}`);
 }
