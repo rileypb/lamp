@@ -1,0 +1,12 @@
+game Game_1:
+    author "Test Author"
+    version 1
+    release dev
+
+global int x = 0
+
+function int foo(int n) when Game_1.release == dev:
+    return n * 8
+
+on startup:
+    print foo(1)
