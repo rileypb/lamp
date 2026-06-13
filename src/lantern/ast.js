@@ -166,6 +166,10 @@ function createReturnStatement(expr) {
     return { kind: "ReturnStatement", expr };
 }
 
+function createFunctionRefExpr(name) {
+    return { kind: "FunctionRefExpr", name };
+}
+
 module.exports = {
     createProgram,
     createTypeDecl,
@@ -209,4 +213,5 @@ module.exports = {
     createCallStatement,
     createCallExpr,
     createReturnStatement,
+    createFunctionRefExpr,
 };

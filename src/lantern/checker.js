@@ -290,6 +290,9 @@ function inferExprType(expr, typeSchema, kindSchema, localTypes, functionSchema 
         if (!fn || fn.returnType === "void") return null;
         return fn.returnType;
     }
+    if (expr.kind === "FunctionRefExpr") {
+        return "function";
+    }
     return null;
 }
 

@@ -2,7 +2,7 @@
 // names, property-access chains, function calls) and never need extra parens.
 const SAFE_ATOM = new Set([
     "StringLiteral", "NumberLiteral", "BooleanLiteral", "NoneLiteral",
-    "VariableExpr", "PropertyAccess", "GlobalExpr", "ParenNameExpr", "Concat", "DivideExpr", "CallExpr",
+    "VariableExpr", "PropertyAccess", "GlobalExpr", "ParenNameExpr", "Concat", "DivideExpr", "CallExpr", "FunctionRefExpr",
 ]);
 
 // JS operator precedence for the binary/unary expression kinds we emit.
@@ -419,6 +419,9 @@ function emitExpression(expr, globalNames = new Set()) {
     if (expr.kind === "CallExpr") {
         const argExprs = expr.args.map((a) => emitExpression(a, globalNames)).join(", ");
         return `${expr.name}(${argExprs})`;
+    }
+    if (expr.kind === "FunctionRefExpr") {
+        return expr.name;
     }
     throw new Error(`Unsupported expression kind: ${expr.kind}`);
 }

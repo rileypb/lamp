@@ -16,12 +16,12 @@ const { tokenize, coerceName } = require("./tokenizer");
 const JS_IDENT = /^[A-Za-z_][A-Za-z0-9_]*$/;
 const BP = { EQEQ: 5, LT: 5, GT: 5, LTE: 5, GTE: 5, PLUS: 10, MINUS: 10, STAR: 20, SLASH: 20, CARET: 30 };
 
-function parseSource(sourceText, filePath, globalNames = new Set()) {
+function parseSource(sourceText, filePath, globalNames = new Set(), functionNames = new Set()) {
     const tokens = tokenize(sourceText, filePath);
-    return createParser(tokens, filePath, globalNames).parseProgram();
+    return createParser(tokens, filePath, globalNames, functionNames).parseProgram();
 }
 
-function createParser(tokens, filePath, globalNames) {
+function createParser(tokens, filePath, globalNames, functionNames = new Set()) {
     let pos = 0;
 
     const peek = (offset = 0) => tokens[pos + offset];
@@ -143,6 +143,10 @@ function createParser(tokens, filePath, globalNames) {
     }
 
     function parseFieldType() {
+        if (atKeyword("function")) {
+            next();
+            return "function";
+        }
         const base = plainName("type name");
         if (at("LT")) {
             next();
@@ -540,6 +544,7 @@ function createParser(tokens, filePath, globalNames) {
         if (fields.length === 0) {
             if (localNames.has(raw)) return ast.createVariableExpr(raw);
             if (globalNames.has(raw)) return ast.createGlobalExpr(coerceName(raw));
+            if (functionNames.has(raw)) return ast.createFunctionRefExpr(raw);
             const coerced = coerceName(raw);
             return JS_IDENT.test(coerced)
                 ? ast.createStringLiteral(coerced)

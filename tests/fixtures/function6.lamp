@@ -1,0 +1,15 @@
+game Game_1:
+    author "Test Author"
+    version 1
+    release dev
+
+lib fntest
+
+function int foo(int n, function fn):
+    return fn(n)
+
+function int bar(int n):
+    return n + 7
+
+on startup:
+    print foo(5, bar)
