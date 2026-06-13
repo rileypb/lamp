@@ -435,6 +435,11 @@ function createParser(tokens, filePath, globalNames) {
         // Unary minus: RBP 25 — tighter than +/- (10) and */÷ (20), looser than ^ (30),
         // so `-x^2` parses as `-(x^2)` and `-x*2` as `(-x)*2`.
         if (token.type === "MINUS") return ast.createNegateExpr(parseExpression(25, localNames));
+        if (token.type === "LPAREN") {
+            const expr = parseExpression(0, localNames);
+            expect("RPAREN", "Expected ')' to close expression");
+            return expr;
+        }
         throw err(`Unexpected token in expression: ${token.type}`, token.line);
     }
 

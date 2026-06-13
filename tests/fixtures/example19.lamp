@@ -1,0 +1,18 @@
+lib test
+
+game Example_19:
+    author "Test Author"
+    version 1
+    release dev
+
+on startup:
+    let a = (3 + 4) * 2
+    print a
+    let b = 10 / (3 - 1)
+    print b
+    let c = (2 ^ 3) ^ 2
+    print c
+    let d = 2 ^ (3 ^ 2)
+    print d
+    let e = (4 - 1) * 3
+    print e

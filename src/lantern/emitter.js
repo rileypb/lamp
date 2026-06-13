@@ -1,3 +1,35 @@
+// Expressions whose emitted form is already self-delimiting (literals, variable
+// names, property-access chains, function calls) and never need extra parens.
+const SAFE_ATOM = new Set([
+    "StringLiteral", "NumberLiteral", "BooleanLiteral", "NoneLiteral",
+    "VariableExpr", "PropertyAccess", "GlobalExpr", "ParenNameExpr", "Concat",
+]);
+
+// JS operator precedence for the binary/unary expression kinds we emit.
+const EXPR_JS_PREC = {
+    PowerExpr: 15,
+    MultiplyExpr: 14,
+    DivideExpr: 14,
+    SubtractExpr: 13,
+    LessThanExpr: 12,
+    EqualsExpr: 11,
+};
+
+// Emits `expr` wrapped in parens when JS precedence requires it.
+//   rightOperand: true when this is the right side of a left-associative op
+//     (same precedence also needs parens: `a-(b-c)` ≠ `a-b-c`).
+//   leftOfPower: true when this is the left side of `**`; JS disallows any
+//     unparenthesized non-atom there, so wrap everything that isn't an atom.
+function wrapIfNeeded(expr, parentPrec, globalNames, { rightOperand = false, leftOfPower = false } = {}) {
+    if (leftOfPower && !SAFE_ATOM.has(expr.kind)) {
+        return `(${emitExpression(expr, globalNames)})`;
+    }
+    const childPrec = EXPR_JS_PREC[expr.kind];
+    if (childPrec === undefined) return emitExpression(expr, globalNames);
+    const needsParens = rightOperand ? childPrec <= parentPrec : childPrec < parentPrec;
+    return needsParens ? `(${emitExpression(expr, globalNames)})` : emitExpression(expr, globalNames);
+}
+
 function emitProgram(programAst, options = {}) {
     const runtimeRequirePath = options.runtimeRequirePath || "../lamplighter";
     const globalDeclNodes = programAst.nodes.filter((node) => node.kind === "GlobalDecl");
@@ -330,19 +362,19 @@ function emitExpression(expr, globalNames = new Set()) {
         return `${emitExpression(expr.left, globalNames)} < ${emitExpression(expr.right, globalNames)}`;
     }
     if (expr.kind === "MultiplyExpr") {
-        return `${emitExpression(expr.left, globalNames)} * ${emitExpression(expr.right, globalNames)}`;
+        return `${wrapIfNeeded(expr.left, 14, globalNames)} * ${wrapIfNeeded(expr.right, 14, globalNames, { rightOperand: true })}`;
     }
     if (expr.kind === "NegateExpr") {
         return `-(${emitExpression(expr.expr, globalNames)})`;
     }
     if (expr.kind === "SubtractExpr") {
-        return `${emitExpression(expr.left, globalNames)} - ${emitExpression(expr.right, globalNames)}`;
+        return `${wrapIfNeeded(expr.left, 13, globalNames)} - ${wrapIfNeeded(expr.right, 13, globalNames, { rightOperand: true })}`;
     }
     if (expr.kind === "DivideExpr") {
-        return `${emitExpression(expr.left, globalNames)} / ${emitExpression(expr.right, globalNames)}`;
+        return `${wrapIfNeeded(expr.left, 14, globalNames)} / ${wrapIfNeeded(expr.right, 14, globalNames, { rightOperand: true })}`;
     }
     if (expr.kind === "PowerExpr") {
-        return `${emitExpression(expr.left, globalNames)} ** ${emitExpression(expr.right, globalNames)}`;
+        return `${wrapIfNeeded(expr.left, 15, globalNames, { leftOfPower: true })} ** ${wrapIfNeeded(expr.right, 15, globalNames)}`;
     }
     if (expr.kind === "NoneLiteral") {
         return "null";

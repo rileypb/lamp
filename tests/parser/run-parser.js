@@ -193,6 +193,140 @@ const cases = [
             assert.deepStrictEqual(parse("lib test"), [{ kind: "LibImport", name: "test" }]);
         },
     },
+    // Arithmetic operators
+    {
+        name: "expression: subtraction produces SubtractExpr",
+        run() {
+            const [handler] = parse(["on startup:", "    let x = 10 - 3"].join("\n"));
+            assert.deepStrictEqual(handler.body[0].expr, {
+                kind: "SubtractExpr",
+                left: { kind: "NumberLiteral", value: 10 },
+                right: { kind: "NumberLiteral", value: 3 },
+            });
+        },
+    },
+    {
+        name: "expression: division produces DivideExpr",
+        run() {
+            const [handler] = parse(["on startup:", "    let x = 20 / 4"].join("\n"));
+            assert.deepStrictEqual(handler.body[0].expr, {
+                kind: "DivideExpr",
+                left: { kind: "NumberLiteral", value: 20 },
+                right: { kind: "NumberLiteral", value: 4 },
+            });
+        },
+    },
+    {
+        name: "expression: power produces PowerExpr",
+        run() {
+            const [handler] = parse(["on startup:", "    let x = 2 ^ 8"].join("\n"));
+            assert.deepStrictEqual(handler.body[0].expr, {
+                kind: "PowerExpr",
+                left: { kind: "NumberLiteral", value: 2 },
+                right: { kind: "NumberLiteral", value: 8 },
+            });
+        },
+    },
+    {
+        name: "expression: power is right-associative (2^3^2 = 2^(3^2))",
+        run() {
+            const [handler] = parse(["on startup:", "    let x = 2 ^ 3 ^ 2"].join("\n"));
+            assert.deepStrictEqual(handler.body[0].expr, {
+                kind: "PowerExpr",
+                left: { kind: "NumberLiteral", value: 2 },
+                right: {
+                    kind: "PowerExpr",
+                    left: { kind: "NumberLiteral", value: 3 },
+                    right: { kind: "NumberLiteral", value: 2 },
+                },
+            });
+        },
+    },
+    {
+        name: "expression: + and * precedence (* binds tighter than +)",
+        run() {
+            const [handler] = parse(["on startup:", "    let x = 1 + 2 * 3"].join("\n"));
+            assert.deepStrictEqual(handler.body[0].expr, {
+                kind: "Concat",
+                left: { kind: "NumberLiteral", value: 1 },
+                right: {
+                    kind: "MultiplyExpr",
+                    left: { kind: "NumberLiteral", value: 2 },
+                    right: { kind: "NumberLiteral", value: 3 },
+                },
+            });
+        },
+    },
+    // Unary negation
+    {
+        name: "expression: unary minus produces NegateExpr",
+        run() {
+            const [handler] = parse(["on startup:", "    let n = 5", "    let y = -n"].join("\n"));
+            assert.deepStrictEqual(handler.body[1].expr, {
+                kind: "NegateExpr",
+                expr: { kind: "VariableExpr", name: "n" },
+            });
+        },
+    },
+    {
+        name: "expression: unary minus binds looser than ^ (-n^2 = -(n^2))",
+        run() {
+            const [handler] = parse(["on startup:", "    let n = 5", "    let y = -n ^ 2"].join("\n"));
+            assert.deepStrictEqual(handler.body[1].expr, {
+                kind: "NegateExpr",
+                expr: {
+                    kind: "PowerExpr",
+                    left: { kind: "VariableExpr", name: "n" },
+                    right: { kind: "NumberLiteral", value: 2 },
+                },
+            });
+        },
+    },
+    {
+        name: "expression: unary minus binds tighter than * (-n*2 = (-n)*2)",
+        run() {
+            const [handler] = parse(["on startup:", "    let n = 5", "    let y = -n * 2"].join("\n"));
+            assert.deepStrictEqual(handler.body[1].expr, {
+                kind: "MultiplyExpr",
+                left: {
+                    kind: "NegateExpr",
+                    expr: { kind: "VariableExpr", name: "n" },
+                },
+                right: { kind: "NumberLiteral", value: 2 },
+            });
+        },
+    },
+    // Parenthesized expressions
+    {
+        name: "expression: parens override precedence ((3+4)*2 = Multiply(Concat(3,4),2))",
+        run() {
+            const [handler] = parse(["on startup:", "    let x = (3 + 4) * 2"].join("\n"));
+            assert.deepStrictEqual(handler.body[0].expr, {
+                kind: "MultiplyExpr",
+                left: {
+                    kind: "Concat",
+                    left: { kind: "NumberLiteral", value: 3 },
+                    right: { kind: "NumberLiteral", value: 4 },
+                },
+                right: { kind: "NumberLiteral", value: 2 },
+            });
+        },
+    },
+    {
+        name: "expression: parens force left-assoc on power ((2^3)^2)",
+        run() {
+            const [handler] = parse(["on startup:", "    let x = (2 ^ 3) ^ 2"].join("\n"));
+            assert.deepStrictEqual(handler.body[0].expr, {
+                kind: "PowerExpr",
+                left: {
+                    kind: "PowerExpr",
+                    left: { kind: "NumberLiteral", value: 2 },
+                    right: { kind: "NumberLiteral", value: 3 },
+                },
+                right: { kind: "NumberLiteral", value: 2 },
+            });
+        },
+    },
 ];
 
 // The parser must reject these with a clear error.
@@ -202,6 +336,7 @@ const rejectCases = [
     { name: "hyphen in local variable name", src: "on startup:\n    let bad-name = 1", message: /plain identifier/ },
     { name: "reserved word as object name", src: "game while:\n    version 1", message: /Expected object name/ },
     { name: "property access on a literal", src: "on startup:\n    print 2.name", message: /property access '\.' requires a variable or object reference/ },
+    { name: "unmatched left parenthesis", src: "on startup:\n    let x = (3 + 4", message: /close expression/ },
 ];
 
 let failures = 0;
