@@ -24,7 +24,9 @@ function main() {
                 assertFileMatches(testCase.generatedPath, testCase.expectedJsPath, `${name} generated JavaScript`);
             }
 
-            const stdout = testCase.expectCompileFailure ? compileResult.stdout : runGenerated(testCase.generatedPath);
+            const stdout = testCase.expectCompileFailure
+                ? compileResult.stdout
+                : runGenerated(testCase.generatedPath, testCase.expectRuntimeFailure);
             assertTextMatches(
                 stdout,
                 fs.readFileSync(testCase.expectedStdoutPath, "utf8"),
@@ -71,6 +73,7 @@ function discoverCases() {
                         expectedStdout.trimStart().startsWith("error:") ||
                         expectedStdout.trimStart().startsWith("Compile error:")
                     );
+                    const expectRuntimeFailure = expectedStdout.trimStart().startsWith("Runtime error:");
 
                     return {
                         inputPath,
@@ -78,6 +81,7 @@ function discoverCases() {
                         expectedJsPath: expectedJsExists ? expectedJsCandidate : null,
                         expectedStdoutPath,
                         expectCompileFailure,
+                        expectRuntimeFailure,
                     };
                 });
         });
@@ -103,12 +107,22 @@ function compileCase(inputPath, outputPath, expectCompileFailure) {
     }
 }
 
-function runGenerated(generatedPath) {
-    return execFileSync("node", [generatedPath], {
-        cwd: projectRoot,
-        stdio: "pipe",
-        encoding: "utf8",
-    });
+function runGenerated(generatedPath, expectRuntimeFailure = false) {
+    try {
+        return execFileSync("node", [generatedPath], {
+            cwd: projectRoot,
+            stdio: "pipe",
+            encoding: "utf8",
+        });
+    } catch (error) {
+        if (!expectRuntimeFailure) throw error;
+        const stderr = typeof error.stderr === "string" ? error.stderr : "";
+        const errorLine = stderr.split("\n").find((l) => /^Error: /.test(l));
+        if (!errorLine) {
+            throw new Error(`Runtime failure but could not extract error message from stderr:\n${stderr}`);
+        }
+        return `Runtime error: ${errorLine.slice("Error: ".length)}\n`;
+    }
 }
 
 function assertFileMatches(actualPath, expectedPath, label) {

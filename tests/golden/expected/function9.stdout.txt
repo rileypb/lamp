@@ -1,0 +1,1 @@
+Runtime error: no matching version of foo for current game state

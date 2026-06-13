@@ -132,7 +132,7 @@ Local variables (introduced by `let`) and loop variables (introduced by `for`) a
 
 Free text that contains spaces or punctuation is written as a double-quoted string literal, not a bare identifier (for example, `author "Phil Riley"`).
 
-The following words are **reserved** and may not be used as a name (object, type, kind, global, field, event, or local): `type`, `kind`, `global`, `on`, `for`, `while`, `if`, `else`, `let`, `print`, `error`, `dispatch`, `break`, `lib`, `to`, `step`, `change`, `function`, `return`. A reservation applies only to a whole identifier: a reserved word appearing *inside* a longer identifier is unrestricted, so `move_to_room` (which denotes the name `move to room`) is a valid identifier even though `to` is reserved.
+The following words are **reserved** and may not be used as a name (object, type, kind, global, field, event, or local): `type`, `kind`, `global`, `on`, `for`, `while`, `if`, `else`, `let`, `print`, `error`, `dispatch`, `break`, `lib`, `to`, `step`, `change`, `function`, `return`, `when`, `and`, `or`, `not`. A reservation applies only to a whole identifier: a reserved word appearing *inside* a longer identifier is unrestricted, so `move_to_room` (which denotes the name `move to room`) is a valid identifier even though `to` is reserved.
 
 ### Objects and types
 
@@ -430,6 +430,43 @@ A function reference is written as a bare identifier (the function name, without
 
 Function references are currently untyped beyond the `function` tag — the static checker does not validate that the referenced function's signature matches the parameter's expected signature.
 
+#### Conditional overloads
+
+A function may have multiple definitions, each with an optional `when` guard:
+
+```lamp
+function RETURN_TYPE NAME(PARAM_TYPE PARAM_NAME, ...) when CONDITION:
+    STATEMENT
+    ...
+```
+
+When a function is called, Lamp evaluates which definition applies by selecting the one whose `when` condition is true and has the highest **specificity**. An unconditional definition (no `when` clause) acts as the fallback with specificity 0.
+
+Specificity rules (see `devdocs/specificity.md` for full detail):
+- Each atomic condition contributes 1 point.
+- `COND_A and COND_B` has specificity equal to the sum of its parts.
+- `COND_A or COND_B` has specificity equal to the maximum of its parts.
+- `not COND` has the same specificity as `COND`.
+- When two matching definitions tie in specificity, the last one defined wins.
+
+If no condition matches and there is no unconditional fallback, Lamp throws a runtime error.
+
+```lamp
+function int damage(int base):
+    return base
+
+function int damage(int base) when hero_buffed == true:
+    return base * 2
+
+function int damage(int base) when hero_buffed == true and boss_fight == true:
+    return base * 3
+```
+
+**Constraints** (enforced at compile time):
+- All overloads of a function must share the same parameter count, parameter names, parameter types, and return type.
+- At most one overload may be unconditional. Multiple unconditional definitions are an error.
+- `when` conditions may only reference globals and object properties — not parameters, local variables, or function calls.
+
 ### Statements
 
 - **Variable binding** — binds a local name to a value:
@@ -594,6 +631,29 @@ x ^ 0.5
 circumference / (2 * PI)
 ```
 
+- **Boolean conjunction** — `and` combines two boolean expressions; the result is `true` only if both sides are `true`:
+
+```lamp
+x > 0 and x < 10
+alive and has_key
+```
+
+- **Boolean disjunction** — `or` combines two boolean expressions; the result is `true` if either side is `true`:
+
+```lamp
+score == 0 or lives == 0
+door_open or window_open
+```
+
+- **Boolean negation** — `not` inverts a boolean expression:
+
+```lamp
+not game_over
+not (x == 0 or y == 0)
+```
+
+`not` has higher precedence than `and`, which has higher precedence than `or`. So `not a or b and c` parses as `(not a) or (b and c)`.
+
 - **Comparison** — `==`, `<`, `<=`, `>`, and `>=` compare two expressions and produce `bool`. `!=` is not supported.
 
 ```lamp
@@ -663,6 +723,9 @@ The parser (`parser_rd.js`) is a full-file recursive-descent parser over a token
 
 | Operator | Binding power |
 |---|---|
+| `or` | 1 |
+| `and` | 2 |
+| unary `not` | 3 |
 | `==`, `<`, `<=`, `>`, `>=` | 5 |
 | `+`, `-` | 10 |
 | `*`, `/` | 20 |
@@ -685,3 +748,4 @@ Lantern performs a semantic checking pass before emission.
 - `return EXPRESSION` inside a function body is checked against the function's declared return type when the expression type can be inferred.
 - Function parameters and the loop variable in `for` are typed as locals within their enclosing body. Function parameters take the declared parameter type; the loop variable has type `int`.
 - `function`-typed parameters and `FunctionRefExpr` values are accepted without deeper signature checking — the static checker does not currently validate that a passed function's parameter list or return type matches what the receiving parameter expects.
+- Conditional overloads (`when` clauses) are validated: all overloads of a function must share the same signature; at most one may be unconditional; `when` conditions may not contain function calls or function references; `when` conditions must produce a `bool` value. Syntactically identical `when` conditions on the same function produce a warning.

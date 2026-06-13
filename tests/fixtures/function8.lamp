@@ -1,0 +1,38 @@
+game Game_1:
+    author "Test Author"
+    version 1
+    release dev
+
+global int x = 0
+global int y = 0
+
+# foo: tests specificity selection (higher specificity wins)
+function int foo(int n):
+    return n
+
+function int foo(int n) when x == 1:
+    return n * 10
+
+function int foo(int n) when x == 1 and y == 1:
+    return n * 100
+
+# bar: tests tie-breaking (same specificity, last defined wins)
+function int bar(int n):
+    return n
+
+function int bar(int n) when x == 1:
+    return n * 10
+
+function int bar(int n) when y == 1:
+    return n * 20
+
+on startup:
+    print foo(2)
+    x = 1
+    print foo(2)
+    y = 1
+    print foo(2)
+    y = 0
+    print bar(3)
+    y = 1
+    print bar(3)
