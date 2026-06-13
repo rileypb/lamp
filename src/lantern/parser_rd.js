@@ -96,6 +96,7 @@ function createParser(tokens, filePath, globalNames) {
                 case "global": return parseGlobalDecl();
                 case "on": return parseOnHandler();
                 case "lib": return parseLibImport();
+                case "function": return parseFunctionDecl();
                 default: throw err(`Unexpected '${token.value}' at top level`);
             }
         }
@@ -272,6 +273,18 @@ function createParser(tokens, filePath, globalNames) {
         return ast.createLibImport(name);
     }
 
+    function parseFunctionDecl() {
+        expectKeyword("function");
+        const returnType = plainName("return type");
+        const name = plainName("function name");
+        expect("LPAREN", "Expected '(' after function name");
+        expect("RPAREN", "Expected ')' to close parameter list");
+        expect("COLON", "Expected ':' after function header");
+        expectNewline();
+        const body = parseBlock(new Set());
+        return ast.createFunctionDecl(name, returnType, body);
+    }
+
     function parseBlock(localNames) {
         expect("INDENT", "Expected an indented block");
         const statements = [];
@@ -304,9 +317,18 @@ function createParser(tokens, filePath, globalNames) {
             }
         }
         if (token.type === "IDENT") {
+            if (peek(1).type === "LPAREN") return parseCallStatement();
             return parseAssign(localNames);
         }
         throw err(`Unexpected token in statement: ${token.type}`);
+    }
+
+    function parseCallStatement() {
+        const name = plainName("function name");
+        expect("LPAREN", "Expected '('");
+        expect("RPAREN", "Expected ')'");
+        expectNewline();
+        return ast.createCallStatement(name);
     }
 
     function parseLet(localNames) {

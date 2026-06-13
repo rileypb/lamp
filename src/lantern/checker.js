@@ -15,6 +15,8 @@ function checkProgram(programAst) {
         } else if (node.kind === "ChangeHandler") {
             const localTypes = new Map([["self", node.typeName]]);
             checkStatements(node.body, typeSchema, kindSchema, localTypes);
+        } else if (node.kind === "FunctionDecl") {
+            checkStatements(node.body, typeSchema, kindSchema, new Map());
         }
     }
 }

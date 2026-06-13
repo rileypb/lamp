@@ -29,6 +29,7 @@ const KEYWORDS = new Set([
     "to",
     "step",
     "change",
+    "function",
 ]);
 
 const SINGLE_CHAR_TOKENS = {

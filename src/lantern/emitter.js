@@ -41,6 +41,7 @@ function emitProgram(programAst, options = {}) {
     const typeNodes = programAst.nodes.filter((node) => node.kind === "TypeDecl");
     const objectNodes = programAst.nodes.filter((node) => node.kind === "ObjectDecl");
     const eventNodes = programAst.nodes.filter((node) => node.kind === "EventHandler");
+    const functionNodes = programAst.nodes.filter((node) => node.kind === "FunctionDecl");
 
     const kindNames = new Set(kindNodes.map((n) => n.name));
 
@@ -125,6 +126,11 @@ function emitProgram(programAst, options = {}) {
 
     const changeHandlerNodes = programAst.nodes.filter((node) => node.kind === "ChangeHandler");
     const globalNames = new Set(globalDeclNodes.map((n) => n.name));
+
+    for (const functionNode of functionNodes) {
+        lines.push(emitFunctionDecl(functionNode, globalNames));
+        lines.push("");
+    }
 
     for (const eventNode of eventNodes) {
         lines.push(emitEventHandler(eventNode, globalNames));
@@ -255,6 +261,15 @@ function emitValue(valueNode) {
     throw new Error(`Unsupported value kind: ${valueNode.kind}`);
 }
 
+function emitFunctionDecl(node, globalNames = new Set()) {
+    const bodyLines = emitStatementList(node.body, 1, globalNames);
+    return [
+        `function ${node.name}() {`,
+        ...bodyLines,
+        "}",
+    ].join("\n");
+}
+
 function emitEventHandler(node, globalNames = new Set()) {
     const bodyLines = emitStatementList(node.body, 1, globalNames);
     return [
@@ -333,6 +348,9 @@ function emitStatementLines(statement, indentLevel, globalNames = new Set()) {
         lines.push(...emitStatementList(statement.body, indentLevel + 1, globalNames));
         lines.push(`${indent}}`);
         return lines;
+    }
+    if (statement.kind === "CallStatement") {
+        return [`${indent}${statement.name}();`];
     }
     throw new Error(`Unsupported statement kind: ${statement.kind}`);
 }

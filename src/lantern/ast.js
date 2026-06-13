@@ -150,6 +150,14 @@ function createPowerExpr(left, right) {
     return { kind: "PowerExpr", left, right };
 }
 
+function createFunctionDecl(name, returnType, body) {
+    return { kind: "FunctionDecl", name, returnType, body };
+}
+
+function createCallStatement(name) {
+    return { kind: "CallStatement", name };
+}
+
 module.exports = {
     createProgram,
     createTypeDecl,
@@ -189,4 +197,6 @@ module.exports = {
     createBreakStatement,
     createForStatement,
     createChangeHandler,
+    createFunctionDecl,
+    createCallStatement,
 };
