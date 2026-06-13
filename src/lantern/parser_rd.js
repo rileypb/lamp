@@ -278,11 +278,26 @@ function createParser(tokens, filePath, globalNames) {
         const returnType = plainName("return type");
         const name = plainName("function name");
         expect("LPAREN", "Expected '(' after function name");
+        const params = [];
+        if (!at("RPAREN")) {
+            params.push(parseFunctionParam());
+            while (at("COMMA")) {
+                next();
+                params.push(parseFunctionParam());
+            }
+        }
         expect("RPAREN", "Expected ')' to close parameter list");
         expect("COLON", "Expected ':' after function header");
         expectNewline();
-        const body = parseBlock(new Set());
-        return ast.createFunctionDecl(name, returnType, body);
+        const paramLocals = new Set(params.map((p) => p.name));
+        const body = parseBlock(paramLocals);
+        return ast.createFunctionDecl(name, returnType, params, body);
+    }
+
+    function parseFunctionParam() {
+        const typeName = parseFieldType();
+        const name = plainName("parameter name");
+        return { typeName, name };
     }
 
     function parseBlock(localNames) {
@@ -317,18 +332,27 @@ function createParser(tokens, filePath, globalNames) {
             }
         }
         if (token.type === "IDENT") {
-            if (peek(1).type === "LPAREN") return parseCallStatement();
+            if (peek(1).type === "LPAREN") return parseCallStatement(localNames);
             return parseAssign(localNames);
         }
         throw err(`Unexpected token in statement: ${token.type}`);
     }
 
-    function parseCallStatement() {
+    function parseCallStatement(localNames) {
+        const nameToken = peek();
         const name = plainName("function name");
         expect("LPAREN", "Expected '('");
+        const args = [];
+        if (!at("RPAREN")) {
+            args.push(parseExpression(0, localNames));
+            while (at("COMMA")) {
+                next();
+                args.push(parseExpression(0, localNames));
+            }
+        }
         expect("RPAREN", "Expected ')'");
         expectNewline();
-        return ast.createCallStatement(name);
+        return ast.createCallStatement(name, args, filePath, nameToken.line);
     }
 
     function parseLet(localNames) {

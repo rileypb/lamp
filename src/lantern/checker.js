@@ -4,6 +4,7 @@ function checkProgram(programAst) {
     const typeSchema = buildTypeSchema(programAst.nodes);
     const kindSchema = buildKindSchema(programAst.nodes);
     const globalTypes = buildGlobalTypeSchema(programAst.nodes);
+    const functionSchema = buildFunctionSchema(programAst.nodes);
 
     for (const node of programAst.nodes) {
         if (node.kind === "ObjectDecl") {
@@ -11,14 +12,25 @@ function checkProgram(programAst) {
         } else if (node.kind === "GlobalAssign") {
             checkGlobalAssign(node, globalTypes, typeSchema, kindSchema);
         } else if (node.kind === "EventHandler") {
-            checkStatements(node.body, typeSchema, kindSchema, new Map());
+            checkStatements(node.body, typeSchema, kindSchema, new Map(), functionSchema);
         } else if (node.kind === "ChangeHandler") {
             const localTypes = new Map([["self", node.typeName]]);
-            checkStatements(node.body, typeSchema, kindSchema, localTypes);
+            checkStatements(node.body, typeSchema, kindSchema, localTypes, functionSchema);
         } else if (node.kind === "FunctionDecl") {
-            checkStatements(node.body, typeSchema, kindSchema, new Map());
+            const localTypes = new Map(node.params.map((p) => [p.name, p.typeName]));
+            checkStatements(node.body, typeSchema, kindSchema, localTypes, functionSchema);
         }
     }
+}
+
+function buildFunctionSchema(nodes) {
+    const functionSchema = new Map();
+    for (const node of nodes) {
+        if (node.kind === "FunctionDecl") {
+            functionSchema.set(node.name, node.params);
+        }
+    }
+    return functionSchema;
 }
 
 function buildTypeSchema(nodes) {
@@ -120,7 +132,7 @@ function checkObjectDecl(node, typeSchema, kindSchema) {
     }
 }
 
-function checkStatements(statements, typeSchema, kindSchema, localTypes) {
+function checkStatements(statements, typeSchema, kindSchema, localTypes, functionSchema = new Map()) {
     for (const stmt of statements) {
         if (stmt.kind === "LetStatement") {
             const varType = inferExprType(stmt.expr, typeSchema, kindSchema, localTypes);
@@ -130,17 +142,43 @@ function checkStatements(statements, typeSchema, kindSchema, localTypes) {
         } else if (stmt.kind === "AssignStatement") {
             checkAssignStatement(stmt, typeSchema, kindSchema, localTypes);
         } else if (stmt.kind === "IfStatement") {
-            checkStatements(stmt.thenBody, typeSchema, kindSchema, new Map(localTypes));
+            checkStatements(stmt.thenBody, typeSchema, kindSchema, new Map(localTypes), functionSchema);
             if (stmt.elseBody) {
-                checkStatements(stmt.elseBody, typeSchema, kindSchema, new Map(localTypes));
+                checkStatements(stmt.elseBody, typeSchema, kindSchema, new Map(localTypes), functionSchema);
             }
         } else if (stmt.kind === "WhileStatement") {
-            checkStatements(stmt.body, typeSchema, kindSchema, new Map(localTypes));
+            checkStatements(stmt.body, typeSchema, kindSchema, new Map(localTypes), functionSchema);
         } else if (stmt.kind === "ForStatement") {
             const bodyTypes = new Map(localTypes);
             bodyTypes.set(stmt.varName, "int");
-            checkStatements(stmt.body, typeSchema, kindSchema, bodyTypes);
+            checkStatements(stmt.body, typeSchema, kindSchema, bodyTypes, functionSchema);
+        } else if (stmt.kind === "CallStatement") {
+            checkCallStatement(stmt, typeSchema, kindSchema, localTypes, functionSchema);
         }
+    }
+}
+
+function checkCallStatement(stmt, typeSchema, kindSchema, localTypes, functionSchema) {
+    const params = functionSchema.get(stmt.name);
+    if (!params) return;
+    if (stmt.args.length !== params.length) {
+        throw typeError(
+            stmt.filePath,
+            stmt.lineNumber,
+            `function "${stmt.name}" expects ${params.length} argument(s), got ${stmt.args.length}`,
+        );
+    }
+    for (let i = 0; i < params.length; i++) {
+        checkValueCompatibility(
+            stmt.args[i],
+            params[i].typeName,
+            typeSchema,
+            kindSchema,
+            stmt.filePath,
+            stmt.lineNumber,
+            `argument ${i + 1} of "${stmt.name}"`,
+            localTypes,
+        );
     }
 }
 

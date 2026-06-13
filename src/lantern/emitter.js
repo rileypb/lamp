@@ -262,9 +262,10 @@ function emitValue(valueNode) {
 }
 
 function emitFunctionDecl(node, globalNames = new Set()) {
+    const paramList = node.params.map((p) => p.name).join(", ");
     const bodyLines = emitStatementList(node.body, 1, globalNames);
     return [
-        `function ${node.name}() {`,
+        `function ${node.name}(${paramList}) {`,
         ...bodyLines,
         "}",
     ].join("\n");
@@ -350,7 +351,8 @@ function emitStatementLines(statement, indentLevel, globalNames = new Set()) {
         return lines;
     }
     if (statement.kind === "CallStatement") {
-        return [`${indent}${statement.name}();`];
+        const argExprs = statement.args.map((a) => emitExpression(a, globalNames)).join(", ");
+        return [`${indent}${statement.name}(${argExprs});`];
     }
     throw new Error(`Unsupported statement kind: ${statement.kind}`);
 }

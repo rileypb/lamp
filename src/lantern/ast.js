@@ -150,12 +150,12 @@ function createPowerExpr(left, right) {
     return { kind: "PowerExpr", left, right };
 }
 
-function createFunctionDecl(name, returnType, body) {
-    return { kind: "FunctionDecl", name, returnType, body };
+function createFunctionDecl(name, returnType, params, body) {
+    return { kind: "FunctionDecl", name, returnType, params, body };
 }
 
-function createCallStatement(name) {
-    return { kind: "CallStatement", name };
+function createCallStatement(name, args, filePath, lineNumber) {
+    return { kind: "CallStatement", name, args, filePath, lineNumber };
 }
 
 module.exports = {
