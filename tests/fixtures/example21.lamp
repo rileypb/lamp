@@ -1,0 +1,15 @@
+lib test
+
+game Example_21:
+    author "Test Author"
+    version 1
+    release dev
+
+on startup:
+    print 10 / 2
+    print 10 / 0
+    print 0 / 0
+    let a = (-2) ^ 0.5
+    print a
+    let b = (-2) ^ 2
+    print b

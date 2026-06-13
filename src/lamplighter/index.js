@@ -168,6 +168,10 @@ function concat(left, right) {
     return String(formatValue(left)) + String(formatValue(right));
 }
 
+function divide(a, b) {
+    return b === 0 ? NaN : a / b;
+}
+
 function formatValue(value) {
     if (isListValue(value)) {
         return formatListValue(value.items);
@@ -290,6 +294,7 @@ module.exports = {
     enum: enumKind,
     kind,
     concat,
+    divide,
     onEvent,
     registerChangeHandler,
     setField,

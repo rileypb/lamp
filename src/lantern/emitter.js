@@ -2,14 +2,13 @@
 // names, property-access chains, function calls) and never need extra parens.
 const SAFE_ATOM = new Set([
     "StringLiteral", "NumberLiteral", "BooleanLiteral", "NoneLiteral",
-    "VariableExpr", "PropertyAccess", "GlobalExpr", "ParenNameExpr", "Concat",
+    "VariableExpr", "PropertyAccess", "GlobalExpr", "ParenNameExpr", "Concat", "DivideExpr",
 ]);
 
 // JS operator precedence for the binary/unary expression kinds we emit.
 const EXPR_JS_PREC = {
     PowerExpr: 15,
     MultiplyExpr: 14,
-    DivideExpr: 14,
     SubtractExpr: 13,
     LessThanExpr: 12,
     LessOrEqualExpr: 12,
@@ -22,8 +21,11 @@ const EXPR_JS_PREC = {
 //   leftOfPower: true when this is the left side of `**`; JS disallows any
 //     unparenthesized non-atom there, so wrap everything that isn't an atom.
 function wrapIfNeeded(expr, parentPrec, globalNames, { rightOperand = false, leftOfPower = false } = {}) {
-    if (leftOfPower && !SAFE_ATOM.has(expr.kind)) {
-        return `(${emitExpression(expr, globalNames)})`;
+    if (leftOfPower) {
+        // JS forbids an unparenthesized non-atom left of **: -2**n is a SyntaxError.
+        const unsafeLeft = !SAFE_ATOM.has(expr.kind)
+            || (expr.kind === "NumberLiteral" && expr.value < 0);
+        if (unsafeLeft) return `(${emitExpression(expr, globalNames)})`;
     }
     const childPrec = EXPR_JS_PREC[expr.kind];
     if (childPrec === undefined) return emitExpression(expr, globalNames);
@@ -375,7 +377,7 @@ function emitExpression(expr, globalNames = new Set()) {
         return `${wrapIfNeeded(expr.left, 13, globalNames)} - ${wrapIfNeeded(expr.right, 13, globalNames, { rightOperand: true })}`;
     }
     if (expr.kind === "DivideExpr") {
-        return `${wrapIfNeeded(expr.left, 14, globalNames)} / ${wrapIfNeeded(expr.right, 14, globalNames, { rightOperand: true })}`;
+        return `lamplighter.divide(${emitExpression(expr.left, globalNames)}, ${emitExpression(expr.right, globalNames)})`;
     }
     if (expr.kind === "PowerExpr") {
         return `${wrapIfNeeded(expr.left, 15, globalNames, { leftOfPower: true })} ** ${wrapIfNeeded(expr.right, 15, globalNames)}`;
