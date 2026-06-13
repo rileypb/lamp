@@ -2,8 +2,6 @@ on startup:
 	player.holder = game.all.first.start
 	dispatch started
 
-
-
 on person.holder change:
 	print player.holder
 	print
