@@ -327,6 +327,29 @@ const cases = [
             });
         },
     },
+    // <= and >= operators
+    {
+        name: "expression: <= produces LessOrEqualExpr",
+        run() {
+            const [handler] = parse(["on startup:", "    let n = 5", "    let y = n <= 10"].join("\n"));
+            assert.deepStrictEqual(handler.body[1].expr, {
+                kind: "LessOrEqualExpr",
+                left: { kind: "VariableExpr", name: "n" },
+                right: { kind: "NumberLiteral", value: 10 },
+            });
+        },
+    },
+    {
+        name: "expression: >= swaps operands into LessOrEqualExpr",
+        run() {
+            const [handler] = parse(["on startup:", "    let n = 5", "    let y = 10 >= n"].join("\n"));
+            assert.deepStrictEqual(handler.body[1].expr, {
+                kind: "LessOrEqualExpr",
+                left: { kind: "VariableExpr", name: "n" },
+                right: { kind: "NumberLiteral", value: 10 },
+            });
+        },
+    },
 ];
 
 // The parser must reject these with a clear error.

@@ -130,6 +130,10 @@ function createLessThanExpr(left, right) {
     return { kind: "LessThanExpr", left, right };
 }
 
+function createLessOrEqualExpr(left, right) {
+    return { kind: "LessOrEqualExpr", left, right };
+}
+
 function createNegateExpr(expr) {
     return { kind: "NegateExpr", expr };
 }
@@ -177,6 +181,7 @@ module.exports = {
     createDispatchStatement,
     createWhileStatement,
     createLessThanExpr,
+    createLessOrEqualExpr,
     createNegateExpr,
     createSubtractExpr,
     createDivideExpr,

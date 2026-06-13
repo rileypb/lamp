@@ -14,7 +14,7 @@ const ast = require("./ast");
 const { tokenize, coerceName } = require("./tokenizer");
 
 const JS_IDENT = /^[A-Za-z_][A-Za-z0-9_]*$/;
-const BP = { EQEQ: 5, LT: 5, GT: 5, PLUS: 10, MINUS: 10, STAR: 20, SLASH: 20, CARET: 30 };
+const BP = { EQEQ: 5, LT: 5, GT: 5, LTE: 5, GTE: 5, PLUS: 10, MINUS: 10, STAR: 20, SLASH: 20, CARET: 30 };
 
 function parseSource(sourceText, filePath, globalNames = new Set()) {
     const tokens = tokenize(sourceText, filePath);
@@ -452,6 +452,8 @@ function createParser(tokens, filePath, globalNames) {
         if (op.type === "EQEQ") return ast.createEqualsExpr(left, parseExpression(BP.EQEQ, localNames));
         if (op.type === "LT") return ast.createLessThanExpr(left, parseExpression(BP.LT, localNames));
         if (op.type === "GT") return ast.createLessThanExpr(parseExpression(BP.GT, localNames), left);
+        if (op.type === "LTE") return ast.createLessOrEqualExpr(left, parseExpression(BP.LTE, localNames));
+        if (op.type === "GTE") return ast.createLessOrEqualExpr(parseExpression(BP.GTE, localNames), left);
         throw err(`Unexpected operator: ${op.type}`, op.line);
     }
 

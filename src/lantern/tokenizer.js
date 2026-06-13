@@ -32,8 +32,6 @@ const KEYWORDS = new Set([
 ]);
 
 const SINGLE_CHAR_TOKENS = {
-    "<": "LT",
-    ">": "GT",
     "+": "PLUS",
     "-": "MINUS",
     "*": "STAR",
@@ -163,6 +161,28 @@ function tokenizeLine(s, lineNumber, filePath, tokens) {
                 i += 2;
             } else {
                 tokens.push({ type: "EQUALS", line: lineNumber });
+                i += 1;
+            }
+            continue;
+        }
+
+        if (ch === "<") {
+            if (s[i + 1] === "=") {
+                tokens.push({ type: "LTE", line: lineNumber });
+                i += 2;
+            } else {
+                tokens.push({ type: "LT", line: lineNumber });
+                i += 1;
+            }
+            continue;
+        }
+
+        if (ch === ">") {
+            if (s[i + 1] === "=") {
+                tokens.push({ type: "GTE", line: lineNumber });
+                i += 2;
+            } else {
+                tokens.push({ type: "GT", line: lineNumber });
                 i += 1;
             }
             continue;

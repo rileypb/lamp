@@ -1,0 +1,22 @@
+lib test
+
+game Example_20:
+    author "Test Author"
+    version 1
+    release dev
+
+on startup:
+    let a = 3
+    let b = 5
+    if a <= b:
+        print "a le b"
+    if b >= a:
+        print "b ge a"
+    if a <= 3:
+        print "a le 3"
+    if 5 >= b:
+        print "5 ge b"
+    if a <= 2:
+        print "wrong"
+    if 4 >= b:
+        print "wrong"

@@ -12,6 +12,7 @@ const EXPR_JS_PREC = {
     DivideExpr: 14,
     SubtractExpr: 13,
     LessThanExpr: 12,
+    LessOrEqualExpr: 12,
     EqualsExpr: 11,
 };
 
@@ -360,6 +361,9 @@ function emitExpression(expr, globalNames = new Set()) {
     }
     if (expr.kind === "LessThanExpr") {
         return `${emitExpression(expr.left, globalNames)} < ${emitExpression(expr.right, globalNames)}`;
+    }
+    if (expr.kind === "LessOrEqualExpr") {
+        return `${emitExpression(expr.left, globalNames)} <= ${emitExpression(expr.right, globalNames)}`;
     }
     if (expr.kind === "MultiplyExpr") {
         return `${wrapIfNeeded(expr.left, 14, globalNames)} * ${wrapIfNeeded(expr.right, 14, globalNames, { rightOperand: true })}`;
