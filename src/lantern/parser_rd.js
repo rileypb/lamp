@@ -14,7 +14,7 @@ const ast = require("./ast");
 const { tokenize, coerceName } = require("./tokenizer");
 
 const JS_IDENT = /^[A-Za-z_][A-Za-z0-9_]*$/;
-const BP = { EQEQ: 5, LT: 5, GT: 5, PLUS: 10, STAR: 20 };
+const BP = { EQEQ: 5, LT: 5, GT: 5, PLUS: 10, MINUS: 10, STAR: 20, SLASH: 20, CARET: 30 };
 
 function parseSource(sourceText, filePath, globalNames = new Set()) {
     const tokens = tokenize(sourceText, filePath);
@@ -437,7 +437,10 @@ function createParser(tokens, filePath, globalNames) {
 
     function parseLed(op, left, localNames) {
         if (op.type === "PLUS") return ast.createConcat(left, parseExpression(BP.PLUS, localNames));
+        if (op.type === "MINUS") return ast.createSubtractExpr(left, parseExpression(BP.MINUS, localNames));
         if (op.type === "STAR") return ast.createMultiplyExpr(left, parseExpression(BP.STAR, localNames));
+        if (op.type === "SLASH") return ast.createDivideExpr(left, parseExpression(BP.SLASH, localNames));
+        if (op.type === "CARET") return ast.createPowerExpr(left, parseExpression(BP.CARET - 1, localNames));
         if (op.type === "EQEQ") return ast.createEqualsExpr(left, parseExpression(BP.EQEQ, localNames));
         if (op.type === "LT") return ast.createLessThanExpr(left, parseExpression(BP.LT, localNames));
         if (op.type === "GT") return ast.createLessThanExpr(parseExpression(BP.GT, localNames), left);

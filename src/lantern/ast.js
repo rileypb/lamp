@@ -130,6 +130,18 @@ function createLessThanExpr(left, right) {
     return { kind: "LessThanExpr", left, right };
 }
 
+function createSubtractExpr(left, right) {
+    return { kind: "SubtractExpr", left, right };
+}
+
+function createDivideExpr(left, right) {
+    return { kind: "DivideExpr", left, right };
+}
+
+function createPowerExpr(left, right) {
+    return { kind: "PowerExpr", left, right };
+}
+
 module.exports = {
     createProgram,
     createTypeDecl,
@@ -161,6 +173,9 @@ module.exports = {
     createDispatchStatement,
     createWhileStatement,
     createLessThanExpr,
+    createSubtractExpr,
+    createDivideExpr,
+    createPowerExpr,
     createBreakStatement,
     createForStatement,
     createChangeHandler,

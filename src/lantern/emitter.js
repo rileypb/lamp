@@ -332,6 +332,15 @@ function emitExpression(expr, globalNames = new Set()) {
     if (expr.kind === "MultiplyExpr") {
         return `${emitExpression(expr.left, globalNames)} * ${emitExpression(expr.right, globalNames)}`;
     }
+    if (expr.kind === "SubtractExpr") {
+        return `${emitExpression(expr.left, globalNames)} - ${emitExpression(expr.right, globalNames)}`;
+    }
+    if (expr.kind === "DivideExpr") {
+        return `${emitExpression(expr.left, globalNames)} / ${emitExpression(expr.right, globalNames)}`;
+    }
+    if (expr.kind === "PowerExpr") {
+        return `${emitExpression(expr.left, globalNames)} ** ${emitExpression(expr.right, globalNames)}`;
+    }
     if (expr.kind === "NoneLiteral") {
         return "null";
     }
