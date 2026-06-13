@@ -1,0 +1,10 @@
+game Game_1:
+    author "Test Author"
+    version 1
+    release dev
+
+lib fntest
+
+on startup:
+    print double(5)
+    print double(double(3))

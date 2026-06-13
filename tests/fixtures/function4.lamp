@@ -1,0 +1,12 @@
+game Game_1:
+    author "Test Author"
+    version 1
+    release dev
+
+on startup:
+    print factorial(5)
+
+function int factorial(int n):
+    if n == 0:
+        return 1
+    return n * factorial(n - 1)
