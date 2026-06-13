@@ -432,6 +432,9 @@ function createParser(tokens, filePath, globalNames) {
         if (token.type === "STRING") return ast.createStringLiteral(token.value);
         if (token.type === "NUMBER") return ast.createNumberLiteral(token.value);
         if (token.type === "IDENT") return parseIdentExpr(token, localNames);
+        // Unary minus: RBP 25 — tighter than +/- (10) and */÷ (20), looser than ^ (30),
+        // so `-x^2` parses as `-(x^2)` and `-x*2` as `(-x)*2`.
+        if (token.type === "MINUS") return ast.createNegateExpr(parseExpression(25, localNames));
         throw err(`Unexpected token in expression: ${token.type}`, token.line);
     }
 

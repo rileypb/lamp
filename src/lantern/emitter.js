@@ -332,6 +332,9 @@ function emitExpression(expr, globalNames = new Set()) {
     if (expr.kind === "MultiplyExpr") {
         return `${emitExpression(expr.left, globalNames)} * ${emitExpression(expr.right, globalNames)}`;
     }
+    if (expr.kind === "NegateExpr") {
+        return `-(${emitExpression(expr.expr, globalNames)})`;
+    }
     if (expr.kind === "SubtractExpr") {
         return `${emitExpression(expr.left, globalNames)} - ${emitExpression(expr.right, globalNames)}`;
     }
