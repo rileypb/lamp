@@ -1,0 +1,3 @@
+Compile error: tests/fixtures/override3.lamp:8: type error: "triple" is declared as both a native function and a Lamp function
+  8 | native function int triple(int n)
+    | ^

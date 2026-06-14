@@ -4,7 +4,7 @@ const fs = require("fs");
 const path = require("path");
 const { parseSource } = require("./parser_rd");
 const { emitProgram } = require("./emitter");
-const { checkProgram } = require("./checker");
+const { checkProgram, serializeWhenExpr } = require("./checker");
 
 function main() {
     try {
@@ -61,7 +61,7 @@ function runCompilation() {
         process.exit(1);
     }
 
-    const mergedProgram = { kind: "Program", nodes: allNodes };
+    const mergedProgram = { kind: "Program", nodes: deduplicateFunctions(allNodes) };
     checkProgram(mergedProgram, { nativeFunctionNames });
 
     const outputJs = emitProgram(mergedProgram, { runtimeRequirePath, nativeJsContents });
@@ -205,6 +205,23 @@ function extractGlobalNames(sourceText) {
         }
     }
     return names;
+}
+
+function deduplicateFunctions(nodes) {
+    const seen = new Map();
+    for (let i = 0; i < nodes.length; i++) {
+        const node = nodes[i];
+        if (node.kind !== "FunctionDecl") continue;
+        const condKey = node.whenExpr === null ? null : serializeWhenExpr(node.whenExpr);
+        const key = `${node.name}\0${condKey}`;
+        seen.set(key, i);
+    }
+    return nodes.filter((node, i) => {
+        if (node.kind !== "FunctionDecl") return true;
+        const condKey = node.whenExpr === null ? null : serializeWhenExpr(node.whenExpr);
+        const key = `${node.name}\0${condKey}`;
+        return seen.get(key) === i;
+    });
 }
 
 function toNodeRequirePath(relativePath) {

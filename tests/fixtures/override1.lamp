@@ -1,0 +1,12 @@
+game Game_1:
+    author "Test Author"
+    version 1
+    release dev
+
+lib overridetest
+
+function int triple(int n):
+    return n * 100
+
+on startup:
+    print triple(3)

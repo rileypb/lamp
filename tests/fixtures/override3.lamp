@@ -1,0 +1,11 @@
+game Game_1:
+    author "Test Author"
+    version 1
+    release dev
+
+lib overridetest
+
+native function int triple(int n)
+
+on startup:
+    print triple(3)

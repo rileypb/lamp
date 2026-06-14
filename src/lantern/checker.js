@@ -7,6 +7,7 @@ function checkProgram(programAst, options = {}) {
     const globalTypes = buildGlobalTypeSchema(programAst.nodes);
     const functionSchema = buildFunctionSchema(programAst.nodes);
 
+    checkNativeVsLampConflicts(programAst.nodes);
     checkNativeFunctions(programAst.nodes, nativeFunctionNames);
     checkFunctionOverloads(programAst.nodes, typeSchema, kindSchema, functionSchema);
 
@@ -37,6 +38,17 @@ function checkNativeFunctions(nodes, nativeFunctionNames) {
     }
 }
 
+function checkNativeVsLampConflicts(nodes) {
+    const lampNames = new Set(
+        nodes.filter((n) => n.kind === "FunctionDecl").map((n) => n.name)
+    );
+    for (const node of nodes) {
+        if (node.kind === "NativeFunctionDecl" && lampNames.has(node.name)) {
+            throw new Error(`${node.filePath}:${node.lineNumber}: type error: "${node.name}" is declared as both a native function and a Lamp function`);
+        }
+    }
+}
+
 function checkFunctionOverloads(nodes, typeSchema, kindSchema, functionSchema) {
     const groups = new Map();
     for (let i = 0; i < nodes.length; i++) {
@@ -60,8 +72,6 @@ function checkFunctionOverloads(nodes, typeSchema, kindSchema, functionSchema) {
         if (overloads.length === 1) continue;
 
         const base = overloads[0].node;
-        let unconditionalCount = 0;
-        const conditionStrings = [];
 
         for (const { node } of overloads) {
             if (node.params.length !== base.params.length || node.returnType !== base.returnType) {
@@ -71,19 +81,6 @@ function checkFunctionOverloads(nodes, typeSchema, kindSchema, functionSchema) {
                 if (node.params[i].name !== base.params[i].name || node.params[i].typeName !== base.params[i].typeName) {
                     throw new Error(`${node.filePath}:${node.lineNumber}: type error: all overloads of "${name}" must use the same parameter names and types`);
                 }
-            }
-
-            if (node.whenExpr === null) {
-                unconditionalCount++;
-                if (unconditionalCount > 1) {
-                    throw new Error(`${node.filePath}:${node.lineNumber}: type error: function "${name}" has multiple unconditional definitions`);
-                }
-            } else {
-                const condStr = serializeWhenExpr(node.whenExpr);
-                if (conditionStrings.includes(condStr)) {
-                    console.warn(`Warning: function "${name}" has duplicate when condition: ${condStr}`);
-                }
-                conditionStrings.push(condStr);
             }
         }
     }
@@ -535,4 +532,4 @@ function typeError(filePath, lineNumber, message) {
     return new Error(`${filePath}:${lineNumber}: type error: ${message}`);
 }
 
-module.exports = { checkProgram };
+module.exports = { checkProgram, serializeWhenExpr };
