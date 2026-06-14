@@ -6,8 +6,8 @@ game Relation_2:
 type place
 
 relation adjacent:
-    place a
-    place b
+    place source
+    place target
 
 on startup:
-    print "adjacent registered"
+    print adjacent.all

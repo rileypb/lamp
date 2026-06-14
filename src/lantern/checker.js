@@ -11,6 +11,7 @@ function checkProgram(programAst, options = {}) {
     checkNativeVsLampConflicts(programAst.nodes);
     checkNativeFunctions(programAst.nodes, nativeFunctionNames);
     checkFunctionOverloads(programAst.nodes, typeSchema, kindSchema, functionSchema);
+    checkRelationDecls(programAst.nodes, typeSchema);
 
     for (const node of programAst.nodes) {
         if (node.kind === "ObjectDecl") {
@@ -31,6 +32,23 @@ function checkProgram(programAst, options = {}) {
             const localTypes = new Map(node.params.map((p) => [p.name, p.typeName]));
             const expectedReturn = node.returnType === "void" ? null : node.returnType;
             checkStatements(node.body, typeSchema, kindSchema, localTypes, functionSchema, expectedReturn, globalNames);
+        }
+    }
+}
+
+function checkRelationDecls(nodes, typeSchema) {
+    for (const node of nodes) {
+        if (node.kind !== "RelationDecl") continue;
+        const fieldTypeByName = new Map(node.fields.map((f) => [f.fieldName, f.typeName]));
+        for (const invertedName of (node.invertedFields || [])) {
+            const fieldType = fieldTypeByName.get(invertedName);
+            if (getAllFields(fieldType, typeSchema).get("inverse") !== fieldType) {
+                throw typeError(
+                    node.filePath,
+                    node.lineNumber,
+                    `inverted field "${invertedName}" requires type "${fieldType}" to declare an "inverse" field of type "${fieldType}"`,
+                );
+            }
         }
     }
 }
@@ -345,6 +363,9 @@ function checkAssignStatement(stmt, typeSchema, kindSchema, localTypes) {
 
 function inferExprType(expr, typeSchema, kindSchema, localTypes, functionSchema = new Map()) {
     if (expr.kind === "BooleanLiteral") {
+        return "bool";
+    }
+    if (expr.kind === "RelationQuery") {
         return "bool";
     }
     if (expr.kind === "StringLiteral") {

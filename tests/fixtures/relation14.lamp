@@ -1,0 +1,31 @@
+game Relation_14:
+    author "Test Author"
+    version 1
+    release dev
+
+type room
+type direction:
+    direction inverse
+
+global room here = hall
+
+room foyer
+room hall
+direction north:
+    inverse south
+direction south:
+    inverse north
+
+relation connects:
+    room source
+    direction dir inverted
+    room target
+    syntax "connects [source] [dir] [target]"
+
+bidi connects foyer north hall
+
+on startup:
+    if connects hall south foyer:
+        print "reverse edge found"
+    if connects here _ _:
+        print "here has an exit"

@@ -288,7 +288,7 @@ function emitRelationDecl(node) {
         fields[field.fieldName] = field.typeName;
     }
     const syntaxArg = node.syntax === null ? "null" : JSON.stringify(node.syntax);
-    return `lamplighter.defineRelation(${JSON.stringify(node.name)}, ${JSON.stringify(fields)}, ${syntaxArg});`;
+    return `lamplighter.defineRelation(${JSON.stringify(node.name)}, ${JSON.stringify(fields)}, ${syntaxArg}, ${JSON.stringify(node.invertedFields || [])});`;
 }
 
 function emitRelationAssert(node) {
@@ -304,7 +304,33 @@ function emitRelationAssert(node) {
             : emitValue(field.value);
         return `${JSON.stringify(field.fieldName)}: ${valueExpr}`;
     });
-    return `lamplighter.addRelation(${JSON.stringify(node.relationName)}, { ${pairs.join(", ")} });`;
+    const opts = [];
+    if (node.instanceName) opts.push(`name: ${JSON.stringify(node.instanceName)}`);
+    if (node.bidi) opts.push("bidi: true");
+    const optionsArg = opts.length > 0 ? `, { ${opts.join(", ")} }` : "";
+    return `lamplighter.addRelation(${JSON.stringify(node.relationName)}, { ${pairs.join(", ")} }${optionsArg});`;
+}
+
+function emitRelationQuery(node, globalNames) {
+    const schema = relationFieldSchemas.get(node.relationName) || {};
+    const pairs = node.fields.map((field) => {
+        const fieldType = schema[field.fieldName];
+        let valueExpr;
+        if (field.value.kind === "WildcardExpr") {
+            valueExpr = "lamplighter.ANY";
+        } else if (
+            field.value.kind === "StringLiteral"
+            && fieldType !== undefined
+            && !PRIMITIVE_TYPES.has(fieldType)
+            && !relationKindNames.has(fieldType)
+        ) {
+            valueExpr = `lamplighter.getObject(${JSON.stringify(field.value.value)})`;
+        } else {
+            valueExpr = emitExpression(field.value, globalNames);
+        }
+        return `${JSON.stringify(field.fieldName)}: ${valueExpr}`;
+    });
+    return `(lamplighter.queryRelation(${JSON.stringify(node.relationName)}, { ${pairs.join(", ")} }).length > 0)`;
 }
 
 function emitObjectDecl(node, mergedTypes = new Map(), kindNames = new Set()) {
@@ -569,6 +595,9 @@ function emitExpression(expr, globalNames = new Set()) {
     }
     if (expr.kind === "NotExpr") {
         return `!(${emitExpression(expr.expr, globalNames)})`;
+    }
+    if (expr.kind === "RelationQuery") {
+        return emitRelationQuery(expr, globalNames);
     }
     throw new Error(`Unsupported expression kind: ${expr.kind}`);
 }

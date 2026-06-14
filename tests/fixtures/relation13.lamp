@@ -1,0 +1,30 @@
+game Relation_13:
+    author "Test Author"
+    version 1
+    release dev
+
+type room
+type direction
+
+room foyer
+room hall
+room study
+direction north
+direction east
+
+relation connects:
+    room source
+    direction dir
+    room target
+    syntax "connects [source] [dir] [target]"
+
+connects foyer north hall
+connects foyer east study
+
+on startup:
+    if connects foyer _ _:
+        print "foyer has an exit"
+    if connects study _ _:
+        print "study has an exit"
+    else:
+        print "study has no exits"

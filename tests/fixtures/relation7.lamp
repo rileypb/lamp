@@ -1,0 +1,19 @@
+game Relation_7:
+    author "Test Author"
+    version 1
+    release dev
+
+type room
+
+room foyer
+room hall
+
+relation links:
+    room source
+    room target
+    syntax "links [source] to [target]"
+
+links foyer to hall
+
+on startup:
+    print links.all

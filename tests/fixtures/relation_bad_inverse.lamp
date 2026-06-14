@@ -1,4 +1,4 @@
-game Relation_1:
+game Relation_Bad_Inverse:
     author "Test Author"
     version 1
     release dev
@@ -8,9 +8,5 @@ type direction
 
 relation connects:
     room source
-    direction dir
+    direction dir inverted
     room target
-    syntax "connects [source] [dir] [target]"
-
-on startup:
-    print connects.all

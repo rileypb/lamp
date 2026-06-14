@@ -7,6 +7,10 @@ const globalRegistry = new Map();
 const changeHandlerRegistry = new Map();
 const relationRegistry = new Map();
 
+// Wildcard sentinel for relation queries: matches any value in a slot. Distinct
+// from null/none (which match only an unset field).
+const ANY = Symbol("relation-wildcard");
+
 let printImpl = (value) => {
     console.log(String(value));
 };
@@ -56,9 +60,14 @@ function defineType(name, parents, fields) {
 // A relation type is registered as an ordinary type (so `TYPE.all` and the
 // instance registry work) plus a relation-specific record carrying the field
 // schema and optional syntax template for later phases (assertion, querying).
-function defineRelation(name, fields, syntaxTemplate = null) {
+function defineRelation(name, fields, syntaxTemplate = null, invertedFields = []) {
     defineType(name, [], fields);
-    relationRegistry.set(name, { name, fields: { ...fields }, syntax: syntaxTemplate });
+    relationRegistry.set(name, {
+        name,
+        fields: { ...fields },
+        syntax: syntaxTemplate,
+        invertedFields: [...invertedFields],
+    });
 }
 
 // Asserts a relation instance. Deduplicates by field values (object fields by
@@ -72,12 +81,20 @@ function addRelation(typeName, fields, options = {}) {
 
     const existing = findMatchingRelation(typeName, fields);
     if (existing) {
+        if (options.name && !existing.name) {
+            existing.name = options.name;
+            nameRegistry.set(options.name, existing);
+        }
+        if (options.bidi) {
+            existing.bidi = true;
+        }
         return existing;
     }
 
     const instance = {
         name: options.name ?? null,
         type: typeName,
+        bidi: Boolean(options.bidi),
         ...fields,
     };
 
@@ -88,15 +105,57 @@ function addRelation(typeName, fields, options = {}) {
     return instance;
 }
 
+// An instance matches `fields` if its own field values match, or — for a
+// bidirectional instance — if its mechanically computed inverse matches (so the
+// reverse edge of a `bidi` deduplicates against it).
 function findMatchingRelation(typeName, fields) {
-    const instances = instanceRegistry.get(typeName) || [];
-    const fieldNames = Object.keys(fields);
-    for (const instance of instances) {
-        if (fieldNames.every((fieldName) => instance[fieldName] === fields[fieldName])) {
+    const keys = Object.keys(relationRegistry.get(typeName).fields);
+    const matches = (mapping) => keys.every((key) => mapping[key] === fields[key]);
+    for (const instance of (instanceRegistry.get(typeName) || [])) {
+        if (matches(instance)) {
+            return instance;
+        }
+        if (instance.bidi && matches(relationInverse(typeName, instance))) {
             return instance;
         }
     }
     return null;
+}
+
+// Returns all instances matching a query mapping. A slot holding ANY matches any
+// value; other slots match by identity/value. A bidirectional instance also
+// matches if its mechanical inverse matches the query.
+function queryRelation(typeName, query) {
+    if (!relationRegistry.has(typeName)) {
+        throw new Error(`Cannot query unknown relation: ${typeName}`);
+    }
+    const keys = Object.keys(relationRegistry.get(typeName).fields);
+    const matches = (mapping) => keys.every((key) => query[key] === ANY || mapping[key] === query[key]);
+    const results = [];
+    for (const instance of (instanceRegistry.get(typeName) || [])) {
+        if (matches(instance) || (instance.bidi && matches(relationInverse(typeName, instance)))) {
+            results.push(instance);
+        }
+    }
+    return results;
+}
+
+// The mechanical inverse mapping: swap source/target, replace each `inverted`
+// field with its value's own inverse, copy everything else.
+function relationInverse(typeName, src) {
+    const rel = relationRegistry.get(typeName);
+    const inverted = new Set(rel.invertedFields || []);
+    const out = {};
+    for (const key of Object.keys(rel.fields)) {
+        if (key === "source") {
+            out.target = src.source;
+        } else if (key === "target") {
+            out.source = src.target;
+        } else {
+            out[key] = inverted.has(key) ? (src[key] == null ? null : src[key].inverse) : src[key];
+        }
+    }
+    return out;
 }
 
 function createObject(typeName, objectName, fieldValues) {
@@ -239,7 +298,7 @@ function formatRelationValue(instance) {
 }
 
 function isListValue(value) {
-    return Boolean(value) && typeof value === "object" && Array.isArray(value.items) && typeof value.first !== "undefined";
+    return Boolean(value) && typeof value === "object" && Array.isArray(value.items) && "first" in value;
 }
 
 function formatListValue(items) {
@@ -247,7 +306,7 @@ function formatListValue(items) {
     const useOxfordComma = Boolean(getGlobal("USE OXFORD COMMA"));
 
     if (formattedItems.length === 0) {
-        return "";
+        return "nothing";
     }
     if (formattedItems.length === 1) {
         return formattedItems[0];
@@ -342,6 +401,8 @@ module.exports = {
     defineType,
     defineRelation,
     addRelation,
+    queryRelation,
+    ANY,
     createObject,
     getObject,
     defineGlobal,

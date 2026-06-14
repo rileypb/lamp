@@ -1,10 +1,14 @@
-game Relation_1:
+game Relation_6:
     author "Test Author"
     version 1
     release dev
 
 type room
 type direction
+
+room foyer
+room hall
+direction north
 
 relation connects:
     room source
@@ -13,4 +17,5 @@ relation connects:
     syntax "connects [source] [dir] [target]"
 
 on startup:
+    connects foyer north hall
     print connects.all

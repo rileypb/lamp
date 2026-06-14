@@ -85,6 +85,17 @@ Lantern-generated JavaScript targets the following Lamplighter API surface:
     - Returns a type handle.
     - Type handle exposes `all`, which includes instances of the type and all subtypes.
     - `all.first` returns the first element in that list.
+- `defineRelation(name, fields, syntaxTemplate?, invertedFields?)`
+    - Registers a relation type. Internally registers it as a type (so `name.all` and the instance registry work) and records the field schema, optional syntax template, and the list of `inverted`-tagged field names.
+- `addRelation(typeName, fields, options?)`
+    - Creates a relation instance from a field-value mapping.
+    - Deduplicates by field values (object fields by identity, value fields by equality); asserting an identical instance returns the existing one. For a `bidi` instance, an assertion that matches its mechanical inverse also deduplicates against it.
+    - `options` may carry `name` (registers the instance for `getObject`) and `bidi` (marks the instance bidirectional, upgrading an existing match in place).
+    - The instance is added to the relation type's `all` list.
+- `queryRelation(typeName, query)`
+    - Returns the list of relation instances matching a query mapping. A slot holding the `ANY` wildcard sentinel matches any value; other slots match by identity (objects) or value (primitives). A `bidi` instance also matches if its mechanical inverse matches.
+- `ANY`
+    - The wildcard sentinel used in `queryRelation` slots, distinct from `null`/`none`.
 - `onEvent(eventName, handler)`
     - Registers an event handler callback.
 - `registerChangeHandler(typeName, fieldName, handler)`
@@ -100,6 +111,7 @@ Lantern-generated JavaScript targets the following Lamplighter API surface:
     - Sends output to the active output implementation.
     - Objects print as their `name`.
     - Lists print as human-readable strings using `,` and `and`.
+    - An empty list prints as `nothing` (the default empty-list display string; subject to change).
 - `setPrint(fn)`
     - Replaces the output implementation used by `print`.
 - `defineGlobal(name, value)`
@@ -142,7 +154,7 @@ Local variables (introduced by `let`) and loop variables (introduced by `for`) a
 
 Free text that contains spaces or punctuation is written as a double-quoted string literal, not a bare identifier (for example, `author "Phil Riley"`).
 
-The following words are **reserved** and may not be used as a name (object, type, kind, global, field, event, or local): `type`, `kind`, `global`, `on`, `for`, `while`, `if`, `else`, `let`, `print`, `error`, `dispatch`, `break`, `lib`, `to`, `step`, `change`, `function`, `native`, `return`, `when`, `and`, `or`, `not`. A reservation applies only to a whole identifier: a reserved word appearing *inside* a longer identifier is unrestricted, so `move_to_room` (which denotes the name `move to room`) is a valid identifier even though `to` is reserved.
+The following words are **reserved** and may not be used as a name (object, type, kind, global, field, event, or local): `type`, `kind`, `global`, `on`, `for`, `while`, `if`, `else`, `let`, `print`, `error`, `dispatch`, `break`, `lib`, `to`, `step`, `change`, `function`, `native`, `return`, `when`, `and`, `or`, `not`, `relation`, `bidi`. (`syntax`, `source`, `target`, and `inverted` are contextual keywords recognized only inside a `relation` body and are not globally reserved.) A reservation applies only to a whole identifier: a reserved word appearing *inside* a longer identifier is unrestricted, so `move_to_room` (which denotes the name `move to room`) is a valid identifier even though `to` is reserved.
 
 ### Objects and types
 
@@ -496,6 +508,104 @@ function int damage(int base) when hero_buffed == true and boss_fight == true:
 - All overloads of a function must share the same parameter count, parameter names, parameter types, and return type.
 - At most one overload may be unconditional. Multiple unconditional definitions are an error.
 - `when` conditions may only reference globals and object properties — not parameters, local variables, or function calls.
+
+### Relations
+
+A **relation** is a typed, directed edge connecting objects in the game graph. A relation type declares a set of fields (its endpoints and any extra data); a relation *instance* connects specific objects according to that type. Relations are the basis for graph-structured state such as room connectivity.
+
+The full relation design and roadmap live in `devdocs/relations.md`. This section specifies the behavior implemented so far.
+
+#### Relation type declarations
+
+```lamp
+relation TYPE_NAME:
+    ENDPOINT_TYPE source
+    ENDPOINT_TYPE target
+    FIELD_TYPE FIELD_NAME [inverted]
+    ...
+    syntax "TEMPLATE"
+```
+
+`relation` declares a relation type — a directed **binary** edge. Every relation must declare exactly one `source` and one `target`; these are role keywords (in the field-name position) that fix the relation's canonical orientation, `source → target`. The two endpoints may have any types. Any number of additional labelled fields may follow (`FIELD_TYPE FIELD_NAME`), each optionally tagged `inverted`. The optional `syntax` line gives a custom assertion template (see below).
+
+`syntax`, `source`, `target`, and `inverted` are contextual keywords: they are special only inside a `relation` body and are otherwise ordinary identifiers.
+
+```lamp
+relation connects:
+    room source
+    direction dir inverted
+    room target
+    syntax "connects [source] [dir] [target]"
+```
+
+A relation type participates in the universal `all` field: `connects.all` is the list of all instances of that relation.
+
+Canonical orientation is established for every relation, not just bidirectional ones; it is what lets one relation be compared to another (e.g. a future rule deriving `older_than(a, b)` from `father(a, b)`). n-ary "group" relations are not yet supported.
+
+#### Bidirectional relations
+
+The `bidi` modifier asserts a relation that is traversable from either endpoint as a **single** instance (not two):
+
+```lamp
+bidi connects foyer north hall
+```
+
+The reverse direction is the relation's **mechanical inverse**: swap `source` and `target`, replace each `inverted` field with its value's own inverse, and copy the rest. An `inverted` field's type must declare an `inverse` field of that same type (so `direction dir inverted` requires `direction` to have a `direction inverse` field, with values like `north.inverse = south`). Asserting the reverse edge of a `bidi` instance deduplicates against it, and `bidi` over an existing one-way instance upgrades it in place.
+
+#### Asserting relation instances
+
+An assertion creates a relation instance. Asserting an instance whose field values are all equal to an existing instance's (object fields compared by identity, value fields by value) is a no-op that reuses the existing instance — relations are deduplicated. Assertions may appear at the top level or inside event handlers, change handlers, and function bodies.
+
+**Block form** is always available, with or without a `syntax` template:
+
+```lamp
+connects:
+    source foyer
+    dir north
+    target hall
+```
+
+**Custom-syntax form** is available when the relation declares a `syntax` template:
+
+```lamp
+connects foyer north hall
+```
+
+In a template, `[FIELD_NAME]` marks a slot filled by the value at that position; every other token is a literal that must appear verbatim. A literal token may be a reserved word (for example, `to` in `"links [source] to [target]"`). A template must begin with a literal token (conventionally the relation type name); this leading literal is how the parser recognizes a custom-syntax line. Two relation templates may not share a leading literal.
+
+A custom-syntax assertion may name the instance by placing a name immediately after the leading literal, before the first slot value:
+
+```lamp
+connects north_door foyer north hall
+```
+
+The name is coerced like an object name (`north_door` → `north door`) and registered for lookup by `getObject`. The parser distinguishes the named form by arity (one extra leading identifier). A named assertion that deduplicates against an existing unnamed instance applies the name to that instance.
+
+#### Querying relation instances
+
+In expression position, a relation's custom-syntax template is a **boolean query** that is `true` when at least one matching instance exists:
+
+```lamp
+if connects foyer north hall:
+    print "There's a passage north."
+```
+
+A slot may be `_` (a wildcard matching any value) instead of a value:
+
+```lamp
+if connects foyer _ _:
+    print "The foyer has at least one exit."
+```
+
+Query slots are atoms: a value (object name, literal), a global or local variable, a property-access chain, or `_`. Operators, indexing, and function calls are not allowed inside a slot (bind them to a `let` first). A query against a `bidi` relation also matches via the relation's mechanical inverse, so the reverse direction is found. A query is an ordinary `bool` expression and composes with `and`, `or`, `not`, and `if`/`while` conditions. `_` is valid only in a query — using it in an assertion is a compile error.
+
+#### Printing relation instances
+
+A relation instance with a name prints as its name. An anonymous instance prints as its type name followed by a parenthesized, declaration-order field summary, with object-valued fields shown by name:
+
+```
+connects(foyer, north, hall)
+```
 
 ### Name resolution and scope
 

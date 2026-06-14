@@ -22,12 +22,12 @@ function getInfixBP(token) {
     return BP[token.type];
 }
 
-function parseSource(sourceText, filePath, globalNames = new Set(), functionNames = new Set(), relationNames = new Set()) {
+function parseSource(sourceText, filePath, globalNames = new Set(), functionNames = new Set(), relationNames = new Set(), relationTemplates = new Map()) {
     const tokens = tokenize(sourceText, filePath);
-    return createParser(tokens, filePath, globalNames, functionNames, relationNames).parseProgram();
+    return createParser(tokens, filePath, globalNames, functionNames, relationNames, relationTemplates).parseProgram();
 }
 
-function createParser(tokens, filePath, globalNames, functionNames = new Set(), relationNames = new Set()) {
+function createParser(tokens, filePath, globalNames, functionNames = new Set(), relationNames = new Set(), relationTemplates = new Map()) {
     let pos = 0;
 
     const peek = (offset = 0) => tokens[pos + offset];
@@ -99,6 +99,7 @@ function createParser(tokens, filePath, globalNames, functionNames = new Set(), 
             switch (token.value) {
                 case "type": return parseTypeDecl();
                 case "relation": return parseRelationDecl();
+                case "bidi": return parseBidiAssert();
                 case "kind": return parseKindDecl();
                 case "global": return parseGlobalDecl();
                 case "on": return parseOnHandler();
@@ -110,6 +111,7 @@ function createParser(tokens, filePath, globalNames, functionNames = new Set(), 
         }
         if (token.type === "IDENT") {
             if (relationNames.has(token.value) && peek(1).type === "COLON") return parseRelationAssert();
+            if (relationTemplates.has(token.value)) return parseCustomSyntaxAssert(relationTemplates.get(token.value));
             return peek(1).type === "EQUALS" ? parseGlobalAssign() : parseObjectDecl();
         }
         throw err(`Unexpected token at top level: ${token.type}`);
@@ -156,17 +158,22 @@ function createParser(tokens, filePath, globalNames, functionNames = new Set(), 
         const name = plainName("relation name");
         expect("COLON", "Expected ':' after relation name");
         expectNewline();
-        const { fields, syntax } = parseRelationBody();
-        return ast.createRelationDecl(name, fields, syntax, filePath, keyword.line);
+        const { fields, syntax, invertedFields } = parseRelationBody(keyword.line);
+        return ast.createRelationDecl(name, fields, syntax, invertedFields, filePath, keyword.line);
     }
 
     // A relation body holds field declarations plus an optional `syntax "..."`
-    // line. `syntax` is a contextual keyword: it tokenizes as an IDENT and is
-    // only special when it leads a line and is followed by a string literal.
-    function parseRelationBody() {
+    // line. `source`, `target`, `inverted`, and `syntax` are contextual keywords:
+    // they tokenize as IDENTs and are only special in these positions. A relation
+    // must declare exactly one `source` and one `target` (its canonical endpoints);
+    // a labelled field may carry a trailing `inverted` tag.
+    function parseRelationBody(declLine) {
         expect("INDENT", "Expected an indented block");
         const fields = [];
+        const invertedFields = [];
         let syntax = null;
+        let sourceCount = 0;
+        let targetCount = 0;
         while (!at("DEDENT")) {
             if (at("IDENT") && peek().value === "syntax" && peek(1).type === "STRING") {
                 next();
@@ -177,11 +184,40 @@ function createParser(tokens, filePath, globalNames, functionNames = new Set(), 
             }
             const fieldType = parseFieldType();
             const fieldName = plainName("field name");
+            if (at("IDENT") && peek().value === "inverted") {
+                next();
+                invertedFields.push(fieldName);
+            }
             expectNewline();
+            if (fieldName === "source") sourceCount += 1;
+            if (fieldName === "target") targetCount += 1;
             fields.push(ast.createFieldDecl(fieldType, fieldName));
         }
         next();
-        return { fields, syntax };
+        if (sourceCount !== 1 || targetCount !== 1) {
+            throw err("a relation must declare exactly one 'source' and one 'target'", declLine);
+        }
+        return { fields, syntax, invertedFields };
+    }
+
+    // `bidi RELATION ...` — a bidirectional assertion. Parses the following
+    // block- or custom-syntax assertion and marks it bidirectional.
+    function parseBidiAssert() {
+        expectKeyword("bidi");
+        const token = peek();
+        if (token.type !== "IDENT") {
+            throw err("Expected a relation assertion after 'bidi'", token.line);
+        }
+        let node;
+        if (relationNames.has(token.value) && peek(1).type === "COLON") {
+            node = parseRelationAssert();
+        } else if (relationTemplates.has(token.value)) {
+            node = parseCustomSyntaxAssert(relationTemplates.get(token.value));
+        } else {
+            throw err(`'${token.value}' is not a relation`, token.line);
+        }
+        node.bidi = true;
+        return node;
     }
 
     // Block-form anonymous assertion: `RELATION_NAME:` followed by an indented
@@ -192,7 +228,99 @@ function createParser(tokens, filePath, globalNames, functionNames = new Set(), 
         expect("COLON", "Expected ':' after relation name");
         expectNewline();
         const fields = parseObjectBody();
-        return ast.createRelationAssert(relationName, fields, filePath, nameToken.line);
+        return ast.createRelationAssert(relationName, fields, null, filePath, nameToken.line);
+    }
+
+    // Counts tokens on the current logical line (until NEWLINE/COLON), used to
+    // tell a named custom-syntax assertion (one extra leading identifier) from
+    // an anonymous one by arity.
+    function countLineTokens() {
+        let count = 0;
+        let i = pos;
+        while (tokens[i] && tokens[i].type !== "NEWLINE" && tokens[i].type !== "COLON" && tokens[i].type !== "EOF") {
+            count += 1;
+            i += 1;
+        }
+        return count;
+    }
+
+    // Custom-syntax assertion driven by a relation's `syntax` template. Literal
+    // parts must match verbatim (IDENT or KEYWORD tokens both allowed, so a
+    // reserved word like `to` may appear as a literal); slot parts consume one
+    // simple value. Produces the same RelationAssert node as the block form.
+    function parseCustomSyntaxAssert(template) {
+        const headToken = peek();
+        const expected = template.parts.length;
+        const actual = countLineTokens();
+
+        next(); // leading literal (matched by dispatch)
+
+        let instanceName = null;
+        if (actual === expected + 1) {
+            instanceName = coercedName("relation instance name");
+        } else if (actual !== expected) {
+            throw err(`wrong number of values in ${template.relationName} assertion`, headToken.line);
+        }
+
+        const fields = [];
+        for (let i = 1; i < template.parts.length; i += 1) {
+            const part = template.parts[i];
+            if (part.kind === "literal") {
+                const token = peek();
+                if ((token.type === "IDENT" || token.type === "KEYWORD") && token.value === part.text) {
+                    next();
+                } else {
+                    throw err(`Expected '${part.text}' in ${template.relationName} assertion`, token.line);
+                }
+            } else {
+                const valueToken = peek();
+                const value = parseSimpleValue();
+                fields.push(ast.createFieldAssign(part.field, value, filePath, valueToken.line));
+            }
+        }
+        expectNewline();
+        return ast.createRelationAssert(template.relationName, fields, instanceName, filePath, headToken.line);
+    }
+
+    // A relation query in expression position. The leading literal has already
+    // been consumed by parseNud. Each slot is an atom (`_` wildcard, literal,
+    // object name, variable/global, or property-access chain) — not a full
+    // expression — so operators and indexing terminate the slot naturally and
+    // function calls are explicitly rejected.
+    function parseRelationQuery(template, localNames, headLine) {
+        const fields = [];
+        for (let i = 1; i < template.parts.length; i += 1) {
+            const part = template.parts[i];
+            if (part.kind === "literal") {
+                const token = peek();
+                if ((token.type === "IDENT" || token.type === "KEYWORD") && token.value === part.text) {
+                    next();
+                } else {
+                    throw err(`Expected '${part.text}' in ${template.relationName} query`, token.line);
+                }
+            } else {
+                fields.push({ fieldName: part.field, value: parseRelationSlot(localNames, template.relationName) });
+            }
+        }
+        return ast.createRelationQuery(template.relationName, fields, filePath, headLine);
+    }
+
+    function parseRelationSlot(localNames, relationName) {
+        if (at("IDENT") && peek().value === "_") {
+            next();
+            return ast.createWildcardExpr();
+        }
+        const token = next();
+        if (token.type === "NUMBER") return ast.createNumberLiteral(token.value);
+        if (token.type === "STRING") return ast.createStringLiteral(token.value);
+        if (token.type === "IDENT") {
+            const expr = parseIdentExpr(token, localNames);
+            if (expr.kind === "CallExpr") {
+                throw err(`function calls are not allowed in a ${relationName} query slot`, token.line);
+            }
+            return expr;
+        }
+        throw err(`Expected a value or '_' in ${relationName} query`, token.line);
     }
 
     function parseFieldType() {
@@ -248,6 +376,7 @@ function createParser(tokens, filePath, globalNames, functionNames = new Set(), 
             if (token.value === "true") return ast.createBooleanLiteral(true);
             if (token.value === "false") return ast.createBooleanLiteral(false);
             if (token.value === "none") return ast.createNoneLiteral();
+            if (token.value === "_") throw err("'_' is only valid as a wildcard in a relation query", token.line);
             return ast.createStringLiteral(coerceName(token.value));
         }
         throw err(`Expected a value, got ${token.type}`, token.line);
@@ -406,6 +535,7 @@ function createParser(tokens, filePath, globalNames, functionNames = new Set(), 
                 case "dispatch": return parseDispatch();
                 case "error": return parseErrorStatement(localNames);
                 case "return": return parseReturn(localNames);
+                case "bidi": return parseBidiAssert();
                 case "break":
                     next();
                     expectNewline();
@@ -415,6 +545,7 @@ function createParser(tokens, filePath, globalNames, functionNames = new Set(), 
         }
         if (token.type === "IDENT") {
             if (relationNames.has(token.value) && peek(1).type === "COLON") return parseRelationAssert();
+            if (relationTemplates.has(token.value)) return parseCustomSyntaxAssert(relationTemplates.get(token.value));
             if (peek(1).type === "LPAREN") return parseCallStatement(localNames);
             return parseAssign(localNames);
         }
@@ -569,7 +700,15 @@ function createParser(tokens, filePath, globalNames, functionNames = new Set(), 
         const token = next();
         if (token.type === "STRING") return ast.createStringLiteral(token.value);
         if (token.type === "NUMBER") return ast.createNumberLiteral(token.value);
-        if (token.type === "IDENT") return parseIdentExpr(token, localNames);
+        if (token.type === "IDENT") {
+            // A relation query in expression position (`connects foyer north hall`).
+            // Guard on `!at("DOT")` so the type handle (`connects.all`) stays a
+            // property access rather than being parsed as a query.
+            if (relationTemplates.has(token.value) && !at("DOT")) {
+                return parseRelationQuery(relationTemplates.get(token.value), localNames, token.line);
+            }
+            return parseIdentExpr(token, localNames);
+        }
         // Unary minus: RBP 25 — tighter than +/- (10) and */÷ (20), looser than ^ (30),
         // so `-x^2` parses as `-(x^2)` and `-x*2` as `(-x)*2`.
         if (token.type === "MINUS") return ast.createNegateExpr(parseExpression(25, localNames));

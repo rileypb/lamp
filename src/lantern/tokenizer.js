@@ -37,6 +37,7 @@ const KEYWORDS = new Set([
     "not",
     "native",
     "relation",
+    "bidi",
 ]);
 
 const SINGLE_CHAR_TOKENS = {

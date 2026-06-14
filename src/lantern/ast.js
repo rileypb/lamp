@@ -10,12 +10,20 @@ function createObjectDecl(typeName, objectName, fields) {
     return { kind: "ObjectDecl", typeName, objectName, fields };
 }
 
-function createRelationDecl(name, fields, syntax, filePath, lineNumber) {
-    return { kind: "RelationDecl", name, fields, syntax, filePath, lineNumber };
+function createRelationDecl(name, fields, syntax, invertedFields, filePath, lineNumber) {
+    return { kind: "RelationDecl", name, fields, syntax, invertedFields, filePath, lineNumber };
 }
 
-function createRelationAssert(relationName, fields, filePath, lineNumber) {
-    return { kind: "RelationAssert", relationName, fields, filePath, lineNumber };
+function createRelationAssert(relationName, fields, instanceName, filePath, lineNumber) {
+    return { kind: "RelationAssert", relationName, fields, instanceName, bidi: false, filePath, lineNumber };
+}
+
+function createRelationQuery(relationName, fields, filePath, lineNumber) {
+    return { kind: "RelationQuery", relationName, fields, filePath, lineNumber };
+}
+
+function createWildcardExpr() {
+    return { kind: "WildcardExpr" };
 }
 
 function createGlobalDecl(name, typeName, value, filePath, lineNumber) {
@@ -204,6 +212,8 @@ module.exports = {
     createObjectDecl,
     createRelationDecl,
     createRelationAssert,
+    createRelationQuery,
+    createWildcardExpr,
     createGlobalDecl,
     createGlobalAssign,
     createKindDecl,

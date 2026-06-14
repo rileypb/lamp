@@ -41,6 +41,7 @@ function runCompilation() {
     const globalNames = new Set();
     const functionNames = new Set();
     const relationNames = new Set();
+    const rawTemplates = [];
     for (const sourceFile of sourceFiles) {
         const source = fs.readFileSync(sourceFile, "utf8");
         for (const name of extractGlobalNames(source)) {
@@ -52,11 +53,14 @@ function runCompilation() {
         for (const name of extractRelationNames(source)) {
             relationNames.add(name);
         }
+        rawTemplates.push(...extractRelationTemplates(source));
     }
+
+    const relationTemplates = buildRelationTemplateDispatch(rawTemplates);
 
     for (const sourceFile of sourceFiles) {
         const source = fs.readFileSync(sourceFile, "utf8");
-        const ast = parseSource(source, sourceFile, globalNames, functionNames, relationNames);
+        const ast = parseSource(source, sourceFile, globalNames, functionNames, relationNames, relationTemplates);
         allNodes.push(...ast.nodes);
     }
 
@@ -221,6 +225,52 @@ function extractRelationNames(sourceText) {
         }
     }
     return names;
+}
+
+// A `syntax "..."` line associates with the most recent `relation NAME:` — the
+// only place a syntax line may legally appear, so proximity is unambiguous.
+function extractRelationTemplates(sourceText) {
+    const templates = [];
+    let currentRelation = null;
+    for (const line of sourceText.split(/\r?\n/)) {
+        const code = line.replace(/#.*$/, "").trim();
+        const relMatch = code.match(/^relation\s+([A-Za-z_][A-Za-z0-9_]*)\s*:/);
+        if (relMatch) {
+            currentRelation = relMatch[1];
+            continue;
+        }
+        const synMatch = code.match(/^syntax\s+"(.*)"$/);
+        if (synMatch && currentRelation) {
+            templates.push({ relationName: currentRelation, template: synMatch[1] });
+        }
+    }
+    return templates;
+}
+
+function parseTemplateParts(template) {
+    return template.trim().split(/\s+/).filter(Boolean).map((part) => {
+        const slot = part.match(/^\[([A-Za-z_][A-Za-z0-9_]*)\]$/);
+        return slot ? { kind: "slot", field: slot[1] } : { kind: "literal", text: part };
+    });
+}
+
+// Maps each template's leading literal to its relation + parsed parts so the
+// parser can dispatch a custom-syntax line on its first token. Enforces the
+// "template begins with a literal" rule and rejects colliding leading literals.
+function buildRelationTemplateDispatch(rawTemplates) {
+    const dispatch = new Map();
+    for (const { relationName, template } of rawTemplates) {
+        const parts = parseTemplateParts(template);
+        if (parts.length === 0 || parts[0].kind !== "literal") {
+            throw new Error(`relation "${relationName}": syntax template must begin with a literal token`);
+        }
+        const leading = parts[0].text;
+        if (dispatch.has(leading)) {
+            throw new Error(`ambiguous relation syntax: leading token "${leading}" is used by more than one relation template`);
+        }
+        dispatch.set(leading, { relationName, parts });
+    }
+    return dispatch;
 }
 
 function deduplicateFunctions(nodes) {

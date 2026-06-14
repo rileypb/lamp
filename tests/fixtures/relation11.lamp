@@ -1,0 +1,28 @@
+game Relation_11:
+    author "Test Author"
+    version 1
+    release dev
+
+type room
+type direction:
+    direction inverse
+
+room foyer
+room hall
+direction north:
+    inverse south
+direction south:
+    inverse north
+
+relation connects:
+    room source
+    direction dir inverted
+    room target
+    syntax "connects [source] [dir] [target]"
+
+connects foyer north hall
+bidi connects foyer north hall
+connects hall south foyer
+
+on startup:
+    print connects.all

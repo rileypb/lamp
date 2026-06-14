@@ -1,0 +1,2 @@
+foyer has an exit
+study has no exits

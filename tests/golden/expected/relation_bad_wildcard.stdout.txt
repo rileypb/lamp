@@ -1,0 +1,3 @@
+Compile error: tests/fixtures/relation_bad_wildcard.lamp:19: '_' is only valid as a wildcard in a relation query
+  19 | connects foyer _ hall
+    | ^
