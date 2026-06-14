@@ -9,11 +9,3 @@ lib tinyadvent
 room foyer:
     description "A test room."
 
-on startup:
-    input = readline()
-    words = split(input)
-    print input
-    print words
-    print words[0]
-    print words[1]
-    print words[2]

@@ -1,8 +1,4 @@
 foyer
 
 A test room.
-take brass lamp
-take, brass and lamp
-take
-brass
-lamp
+hello
