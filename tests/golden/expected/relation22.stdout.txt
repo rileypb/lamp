@@ -1,0 +1,4 @@
+none
+foyer connects north to hall
+foyer has exit
+none

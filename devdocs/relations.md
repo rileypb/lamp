@@ -397,10 +397,17 @@ As-built notes:
 - **`disconnect` validates relation membership**: `removeRelationByName` throws a runtime error if the name is not registered or refers to a non-relation object (not in `relationRegistry`).
 - **No checker changes**: consistent with prior phases; field-name validation against the relation schema is still not checked at compile time.
 
-### Phase 8 — Partial queries and specificity integration
+### Phase 8 — Partial queries and specificity integration ✅ done
 - Allow `_` in query slots in both `if` expressions and `when` clauses.
 - Wire partial query specificity into the conditional overload system (each bound slot = 1 point).
 - Parameter references inside `when` conditions are out of scope for this phase.
+
+As-built notes:
+- **`when` queries already parsed.** A relation query in expression position parses correctly in a `when` clause (Phase 6 left the parser wired); Phase 8 only needed the specificity wiring and a bugfix.
+- **Specificity rule:** `emitFunctionGroup` computes specificity by calling `computeSpecificity(whenExpr)`. For a `RelationQuery`, this now returns the count of non-`WildcardExpr` field slots. A fully-wildcard query (`when connects _ _ _`) contributes 0 points (same as unconditional); a fully-bound query (`when connects foyer north hall`) contributes 3.
+- **`serializeWhenExpr` bug fixed.** `deduplicateFunctions` uses `serializeWhenExpr` to produce a deduplication key. The function fell through to `return expr.kind` for `RelationQuery` and `WildcardExpr`, making all relation-query `when` conditions serialize identically to `"RelationQuery"`. This caused all but the last-defined overload with a relation-query `when` to be silently dropped. Fixed by adding explicit cases for both node kinds, producing a canonical string like `query:connects(source:"foyer",dir:_,target:"hall")`.
+- **No checker changes.** Relation queries in `when` position were already type-checked (a boolean `RelationQuery` returns `"bool"` from `inferExprType`). The `checkWhenExprRestrictions` traversal doesn't need to walk `RelationQuery.fields` because the parser already rejects function calls in slot position.
+- **Parameter references in `when` still out of scope.** `parseExpression` is called with `new Set()` for `localNames`, so function parameters cannot be referenced in `when` slots. A slot containing a parameter name falls through to a string-literal (enum-label fallback), which would emit an incorrect `getObject` call at runtime. This will need a parser-level restriction or explicit support when parameter-in-`when` is added.
 
 ### Phase 9 — Change handlers
 - Parse `on RELATION_TYPE add:` and `on RELATION_TYPE remove:`.

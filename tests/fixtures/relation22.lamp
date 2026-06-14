@@ -1,0 +1,48 @@
+game Relation_22:
+    author "Test Author"
+    version 1
+    release dev
+
+type room
+type direction:
+    direction inverse
+
+room foyer
+room hall
+room study
+direction north:
+    inverse south
+direction south:
+    inverse north
+direction east:
+    inverse west
+direction west:
+    inverse east
+
+relation connects:
+    room source
+    direction dir inverted
+    room target
+    syntax "connects [source] [dir] [target]"
+
+# specificity 0 (fallback)
+function void check():
+    print "none"
+
+# specificity 1: one bound slot
+function void check() when connects foyer _ _:
+    print "foyer has exit"
+
+# specificity 3: three bound slots, wins over specificity 1
+function void check() when connects foyer north hall:
+    print "foyer connects north to hall"
+
+on startup:
+    check()
+    connects foyer north hall
+    check()
+    remove connects foyer north _
+    connects foyer east study
+    check()
+    remove connects _ _ _
+    check()

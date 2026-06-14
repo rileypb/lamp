@@ -460,6 +460,7 @@ function computeSpecificity(expr) {
     if (expr.kind === "AndExpr") return computeSpecificity(expr.left) + computeSpecificity(expr.right);
     if (expr.kind === "OrExpr") return Math.max(computeSpecificity(expr.left), computeSpecificity(expr.right));
     if (expr.kind === "NotExpr") return computeSpecificity(expr.expr);
+    if (expr.kind === "RelationQuery") return expr.fields.filter((f) => f.value.kind !== "WildcardExpr").length;
     return 1;
 }
 

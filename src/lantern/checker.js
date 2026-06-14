@@ -149,6 +149,11 @@ function serializeWhenExpr(expr) {
     if (expr.kind === "StringLiteral") return JSON.stringify(expr.value);
     if (expr.kind === "BooleanLiteral") return String(expr.value);
     if (expr.kind === "NegateExpr") return `(-${serializeWhenExpr(expr.expr)})`;
+    if (expr.kind === "WildcardExpr") return "_";
+    if (expr.kind === "RelationQuery") {
+        const slots = expr.fields.map((f) => `${f.fieldName}:${serializeWhenExpr(f.value)}`).join(",");
+        return `query:${expr.relationName}(${slots})`;
+    }
     return expr.kind;
 }
 
