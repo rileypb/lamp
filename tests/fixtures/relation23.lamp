@@ -1,0 +1,38 @@
+game Relation_23:
+    author "Test Author"
+    version 1
+    release dev
+
+type room
+type direction:
+    direction inverse
+
+room foyer
+room hall
+room study
+direction north:
+    inverse south
+direction south:
+    inverse north
+direction east:
+    inverse west
+direction west:
+    inverse east
+
+relation connects:
+    room source
+    direction dir inverted
+    room target
+    syntax "connects [source] [dir] [target]"
+
+on connects add:
+    print "added edge"
+
+on connects remove:
+    print "removed edge"
+
+on startup:
+    connects foyer north hall
+    connects foyer east study
+    remove connects foyer north _
+    remove connects _ _ _

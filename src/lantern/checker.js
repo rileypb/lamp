@@ -38,6 +38,9 @@ function checkProgram(programAst, options = {}) {
         } else if (node.kind === "ChangeHandler") {
             const localTypes = new Map([["self", node.typeName]]);
             checkStatements(node.body, typeSchema, kindSchema, localTypes, functionSchema, null, globalNames);
+        } else if (node.kind === "RelationAddHandler" || node.kind === "RelationRemoveHandler") {
+            const localTypes = new Map([["self", node.relationName]]);
+            checkStatements(node.body, typeSchema, kindSchema, localTypes, functionSchema, null, globalNames);
         } else if (node.kind === "FunctionDecl") {
             for (const p of node.params) {
                 if (globalNames.has(p.name)) {

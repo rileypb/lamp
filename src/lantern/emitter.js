@@ -199,6 +199,8 @@ function emitProgram(programAst, options = {}) {
     }
 
     const changeHandlerNodes = programAst.nodes.filter((node) => node.kind === "ChangeHandler");
+    const relationAddHandlerNodes = programAst.nodes.filter((node) => node.kind === "RelationAddHandler");
+    const relationRemoveHandlerNodes = programAst.nodes.filter((node) => node.kind === "RelationRemoveHandler");
     const globalNames = new Set(globalDeclNodes.map((n) => n.name));
 
     const functionGroups = new Map();
@@ -219,6 +221,14 @@ function emitProgram(programAst, options = {}) {
 
     for (const changeNode of changeHandlerNodes) {
         lines.push(emitChangeHandler(changeNode, globalNames));
+    }
+
+    for (const node of relationAddHandlerNodes) {
+        lines.push(emitRelationAddHandler(node, globalNames));
+    }
+
+    for (const node of relationRemoveHandlerNodes) {
+        lines.push(emitRelationRemoveHandler(node, globalNames));
     }
 
     lines.push("");
@@ -513,6 +523,24 @@ function emitChangeHandler(node, globalNames = new Set()) {
     const bodyLines = emitStatementList(node.body, 1, globalNames);
     return [
         `lamplighter.registerChangeHandler(${JSON.stringify(node.typeName)}, ${JSON.stringify(node.fieldName)}, (self) => {`,
+        ...bodyLines,
+        "});",
+    ].join("\n");
+}
+
+function emitRelationAddHandler(node, globalNames = new Set()) {
+    const bodyLines = emitStatementList(node.body, 1, globalNames);
+    return [
+        `lamplighter.registerRelationAddHandler(${JSON.stringify(node.relationName)}, (self) => {`,
+        ...bodyLines,
+        "});",
+    ].join("\n");
+}
+
+function emitRelationRemoveHandler(node, globalNames = new Set()) {
+    const bodyLines = emitStatementList(node.body, 1, globalNames);
+    return [
+        `lamplighter.registerRelationRemoveHandler(${JSON.stringify(node.relationName)}, (self) => {`,
         ...bodyLines,
         "});",
     ].join("\n");

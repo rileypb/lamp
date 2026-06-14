@@ -5,6 +5,8 @@ const eventRegistry = new Map();
 const kindRegistry = new Map();
 const globalRegistry = new Map();
 const changeHandlerRegistry = new Map();
+const relationAddHandlerRegistry = new Map();
+const relationRemoveHandlerRegistry = new Map();
 const relationRegistry = new Map();
 
 // Wildcard sentinel for relation queries: matches any value in a slot. Distinct
@@ -102,6 +104,9 @@ function addRelation(typeName, fields, options = {}) {
     if (options.name) {
         nameRegistry.set(options.name, instance);
     }
+    for (const handler of (relationAddHandlerRegistry.get(typeName) || [])) {
+        handler(instance);
+    }
     return instance;
 }
 
@@ -168,6 +173,9 @@ function removeRelation(typeName, query) {
         if (instance.name) {
             nameRegistry.delete(instance.name);
         }
+        for (const handler of (relationRemoveHandlerRegistry.get(typeName) || [])) {
+            handler(instance);
+        }
     }
 }
 
@@ -178,10 +186,14 @@ function removeRelationByName(name) {
     if (!instance || !relationRegistry.has(instance.type)) {
         throw new Error(`No relation instance named '${name}'`);
     }
-    const instances = instanceRegistry.get(instance.type) || [];
+    const typeName = instance.type;
+    const instances = instanceRegistry.get(typeName) || [];
     const idx = instances.indexOf(instance);
     if (idx !== -1) instances.splice(idx, 1);
     nameRegistry.delete(name);
+    for (const handler of (relationRemoveHandlerRegistry.get(typeName) || [])) {
+        handler(instance);
+    }
 }
 
 // Value query: returns the `outputField` of matching (oriented) edges.
@@ -254,6 +266,20 @@ function type(name) {
             return makeList(allInstances);
         },
     };
+}
+
+function registerRelationAddHandler(relationName, handler) {
+    if (!relationAddHandlerRegistry.has(relationName)) {
+        relationAddHandlerRegistry.set(relationName, []);
+    }
+    relationAddHandlerRegistry.get(relationName).push(handler);
+}
+
+function registerRelationRemoveHandler(relationName, handler) {
+    if (!relationRemoveHandlerRegistry.has(relationName)) {
+        relationRemoveHandlerRegistry.set(relationName, []);
+    }
+    relationRemoveHandlerRegistry.get(relationName).push(handler);
 }
 
 function registerChangeHandler(typeName, fieldName, handler) {
@@ -481,6 +507,8 @@ module.exports = {
     divide,
     onEvent,
     registerChangeHandler,
+    registerRelationAddHandler,
+    registerRelationRemoveHandler,
     setField,
     dispatch: fireEvent,
     run,

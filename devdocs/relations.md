@@ -409,9 +409,17 @@ As-built notes:
 - **No checker changes.** Relation queries in `when` position were already type-checked (a boolean `RelationQuery` returns `"bool"` from `inferExprType`). The `checkWhenExprRestrictions` traversal doesn't need to walk `RelationQuery.fields` because the parser already rejects function calls in slot position.
 - **Parameter references in `when` still out of scope.** `parseExpression` is called with `new Set()` for `localNames`, so function parameters cannot be referenced in `when` slots. A slot containing a parameter name falls through to a string-literal (enum-label fallback), which would emit an incorrect `getObject` call at runtime. This will need a parser-level restriction or explicit support when parameter-in-`when` is added.
 
-### Phase 9 — Change handlers
+### Phase 9 — Change handlers ✅ done
 - Parse `on RELATION_TYPE add:` and `on RELATION_TYPE remove:`.
 - Fire registered handlers from `addRelation` / `removeRelation`.
+
+As-built notes:
+- **Surface syntax:** `on connects add:` and `on connects remove:`, each introducing a block with `self` in scope as the relation instance. `add` is a contextual keyword (IDENT "add" recognized only in this parse position); `remove` reuses the existing KEYWORD token.
+- **`self` type:** The relation type name (e.g. `connects`). Accessible as a plain variable in the handler body; field access like `self.source` works at runtime. The checker registers `self` with the relation type name but does not validate field names against it (relation types are not in `typeSchema`, consistent with all prior phases).
+- **Add fires on new instances only.** `addRelation` fires after the instance is inserted and its name is registered. Deduplicated no-ops (and bidi upgrades) return early without firing.
+- **Remove fires after the instance is spliced out** and its name is unregistered, for both `removeRelation` (wildcard/value match) and `removeRelationByName` (named removal). Each matched instance triggers the handler once.
+- **New runtime API:** `registerRelationAddHandler(relationName, handler)` and `registerRelationRemoveHandler(relationName, handler)` in Lamplighter. Two separate registries (`relationAddHandlerRegistry`, `relationRemoveHandlerRegistry`), keyed by relation type name.
+- **No changes to parser pre-scan, AST node filtering in emitter's dedup logic, or existing test fixtures.**
 
 ## Open Questions
 

@@ -557,6 +557,20 @@ function createParser(tokens, filePath, globalNames, functionNames = new Set(), 
             const body = parseBlock(new Set(["self"]));
             return ast.createChangeHandler(first, fieldName, body);
         }
+        if (at("IDENT") && peek().value === "add") {
+            next();
+            expect("COLON", "Expected ':' after 'add'");
+            expectNewline();
+            const body = parseBlock(new Set(["self"]));
+            return ast.createRelationAddHandler(first, body);
+        }
+        if (atKeyword("remove")) {
+            next();
+            expect("COLON", "Expected ':' after 'remove'");
+            expectNewline();
+            const body = parseBlock(new Set(["self"]));
+            return ast.createRelationRemoveHandler(first, body);
+        }
         expect("COLON", "Expected ':' after event name");
         expectNewline();
         const body = parseBlock(new Set());

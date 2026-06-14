@@ -159,6 +159,14 @@ function createChangeHandler(typeName, fieldName, body) {
     return { kind: "ChangeHandler", typeName, fieldName, body };
 }
 
+function createRelationAddHandler(relationName, body) {
+    return { kind: "RelationAddHandler", relationName, body };
+}
+
+function createRelationRemoveHandler(relationName, body) {
+    return { kind: "RelationRemoveHandler", relationName, body };
+}
+
 function createLessThanExpr(left, right) {
     return { kind: "LessThanExpr", left, right };
 }
@@ -265,6 +273,8 @@ module.exports = {
     createBreakStatement,
     createForStatement,
     createChangeHandler,
+    createRelationAddHandler,
+    createRelationRemoveHandler,
     createFunctionDecl,
     createNativeFunctionDecl,
     createCallStatement,
