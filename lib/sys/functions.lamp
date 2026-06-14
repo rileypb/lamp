@@ -1,0 +1,2 @@
+native function string readline()
+native function list<string> split(string input)
