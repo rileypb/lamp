@@ -309,13 +309,13 @@ Globals are initialized at program startup after all objects have been created, 
 
 #### Global assignments
 
-At the top level, a bare `NAME = VALUE` line assigns a new value to a previously-declared global. This lets user files override defaults set by the standard library.
+A bare `NAME = VALUE` line assigns a new value to a previously-declared global, whether at the top level or inside a local context (an event handler, change handler, or function body). At the top level this lets user files override defaults set by the standard library; inside a local context it mutates shared game state.
 
 ```lamp
 USE_OXFORD_COMMA = true
 ```
 
-Global assignments are type-checked against the type declared in the corresponding global declaration.
+Global assignments are type-checked against the type declared in the corresponding global declaration. Inside a local context the same syntax is used; because locals may not shadow globals (see Name resolution and scope), `NAME = VALUE` is never ambiguous about whether it targets a local or a global.
 
 #### Globals in expressions
 
@@ -497,13 +497,51 @@ function int damage(int base) when hero_buffed == true and boss_fight == true:
 - At most one overload may be unconditional. Multiple unconditional definitions are an error.
 - `when` conditions may only reference globals and object properties — not parameters, local variables, or function calls.
 
+### Name resolution and scope
+
+A **local context** is the body of an event handler, change handler, or function. Within a local context, names are drawn from two disjoint namespaces:
+
+- **Locals** — names introduced by `let`, by a function parameter, or by a `for` loop variable. A local is visible only within the context (and nested blocks) in which it is introduced.
+- **Globals** — names introduced by a `global` declaration, visible everywhere.
+
+#### Single resolution model
+
+A bare single-name reference resolves the same way in every position — read or write — within a local context:
+
+1. a local binding in scope, otherwise
+2. a declared global.
+
+Because reads and writes share one resolution order, a name always denotes the same binding whether it is read or assigned. `score = score + 1` reads and writes the same `score`.
+
+#### No shadowing
+
+A `let` binding, function parameter, or `for` loop variable may not reuse the name of a declared global. Declaring a local that shadows a global is a compile error:
+
+```lamp
+global score = 0
+on startup:
+    let score = 10        # error: local 'score' shadows global 'score'
+```
+
+This keeps the local and global namespaces disjoint, so the single resolution model never has to choose between a local and a global of the same name.
+
+#### Assignment resolves a target, never declares one
+
+A single-name assignment `NAME = EXPRESSION` reassigns an existing binding:
+
+- if `NAME` is a local in scope, it reassigns that local;
+- otherwise if `NAME` is a declared global, it assigns the global;
+- otherwise it is a compile error — assignment never implicitly declares a new local. Use `let` to introduce a local.
+
 ### Statements
 
-- **Variable binding** — binds a local name to a value:
+- **Variable binding** — introduces a new local bound to a value:
 
 ```lamp
 let NAME = EXPRESSION
 ```
+
+`NAME` must not collide with a declared global (see Name resolution and scope).
 
 - **Output** — writes a value to the player:
 
@@ -513,14 +551,14 @@ print EXPRESSION
 
 `print` with no argument prints a blank line.
 
-- **Assignment** — updates a local variable or object field:
+- **Assignment** — updates an existing local variable, global, or object field:
 
 ```lamp
 NAME = EXPRESSION
 TARGET.FIELD = EXPRESSION
 ```
 
-A single-name target reassigns a `let`-bound local. A dotted target assigns to an object field. Field assignments are compile-time checked against the declared field type when Lantern can infer the expression type.
+A single-name target reassigns the binding `NAME` resolves to — a local if one is in scope, otherwise a declared global (see Name resolution and scope). Assigning a name that is neither a local in scope nor a declared global is a compile error. A dotted target assigns to an object field. Field assignments are compile-time checked against the declared field type when Lantern can infer the expression type.
 
 - **Error** — aborts execution with a message:
 
@@ -780,3 +818,8 @@ Lantern performs a semantic checking pass before emission.
 - `function`-typed parameters and `FunctionRefExpr` values are accepted without deeper signature checking — the static checker does not currently validate that a passed function's parameter list or return type matches what the receiving parameter expects.
 - Conditional overloads (`when` clauses) are validated: all overloads of a function must share the same signature; at most one may be unconditional; `when` conditions may not contain function calls or function references; `when` conditions must produce a `bool` value. Syntactically identical `when` conditions on the same function produce a warning.
 - Native function declarations are validated against the collected native JavaScript: if a `native function` declaration names a function that does not appear (as a `function NAME(` pattern) in any `index.js` from the compiled library set, Lantern reports a compile error.
+
+## Open Questions
+
+- **Write-side resolution divergence (current implementation does not match the spec above).** Reads of a bare name are resolved at parse time against the `let`-tracked local set (`parser_rd.js`, `parseLet`/`parseExpression`), so a local wins. Single-name assignment targets are not resolved at parse time; the emitter resolves them against the declared-global set only (`emitter.js`, `emitStatementLines`), so a global wins. When a local shadows a global the two disagree: a read sees the local while a write calls `setGlobal` on the global. The **Name resolution and scope** rules (single resolution model + no shadowing) eliminate this by construction, but the implementation does not yet (a) enforce the shadow ban, (b) error on assignment to an undeclared name, or (c) thread local scope into write-side resolution. Until those land, the spec describes intended behavior and the implementation diverges.
+- Should the no-shadowing rule extend to top-level `let`-style bindings if locals are ever permitted outside a local context, or remain scoped to local contexts only?
