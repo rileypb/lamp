@@ -1,0 +1,16 @@
+game Relation_1:
+    author "Test Author"
+    version 1
+    release dev
+
+type room
+type direction
+
+relation connects:
+    room source
+    direction dir
+    room target
+    syntax "connects [source] [dir] [target]"
+
+on startup:
+    print "connects registered"

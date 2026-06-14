@@ -5,6 +5,7 @@ const eventRegistry = new Map();
 const kindRegistry = new Map();
 const globalRegistry = new Map();
 const changeHandlerRegistry = new Map();
+const relationRegistry = new Map();
 
 let printImpl = (value) => {
     console.log(String(value));
@@ -50,6 +51,14 @@ function defineType(name, parents, fields) {
     if (!instanceRegistry.has(name)) {
         instanceRegistry.set(name, []);
     }
+}
+
+// A relation type is registered as an ordinary type (so `TYPE.all` and the
+// instance registry work) plus a relation-specific record carrying the field
+// schema and optional syntax template for later phases (assertion, querying).
+function defineRelation(name, fields, syntaxTemplate = null) {
+    defineType(name, [], fields);
+    relationRegistry.set(name, { name, fields: { ...fields }, syntax: syntaxTemplate });
 }
 
 function createObject(typeName, objectName, fieldValues) {
@@ -284,6 +293,7 @@ function kind(name) {
 module.exports = {
     bootstrapBuiltins,
     defineType,
+    defineRelation,
     createObject,
     getObject,
     defineGlobal,

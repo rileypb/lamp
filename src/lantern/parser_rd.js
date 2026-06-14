@@ -98,6 +98,7 @@ function createParser(tokens, filePath, globalNames, functionNames = new Set()) 
         if (token.type === "KEYWORD") {
             switch (token.value) {
                 case "type": return parseTypeDecl();
+                case "relation": return parseRelationDecl();
                 case "kind": return parseKindDecl();
                 case "global": return parseGlobalDecl();
                 case "on": return parseOnHandler();
@@ -147,6 +148,39 @@ function createParser(tokens, filePath, globalNames, functionNames = new Set()) 
         }
         next();
         return fields;
+    }
+
+    function parseRelationDecl() {
+        const keyword = expectKeyword("relation");
+        const name = plainName("relation name");
+        expect("COLON", "Expected ':' after relation name");
+        expectNewline();
+        const { fields, syntax } = parseRelationBody();
+        return ast.createRelationDecl(name, fields, syntax, filePath, keyword.line);
+    }
+
+    // A relation body holds field declarations plus an optional `syntax "..."`
+    // line. `syntax` is a contextual keyword: it tokenizes as an IDENT and is
+    // only special when it leads a line and is followed by a string literal.
+    function parseRelationBody() {
+        expect("INDENT", "Expected an indented block");
+        const fields = [];
+        let syntax = null;
+        while (!at("DEDENT")) {
+            if (at("IDENT") && peek().value === "syntax" && peek(1).type === "STRING") {
+                next();
+                const template = expect("STRING", "Expected syntax template string");
+                expectNewline();
+                syntax = template.value;
+                continue;
+            }
+            const fieldType = parseFieldType();
+            const fieldName = plainName("field name");
+            expectNewline();
+            fields.push(ast.createFieldDecl(fieldType, fieldName));
+        }
+        next();
+        return { fields, syntax };
     }
 
     function parseFieldType() {

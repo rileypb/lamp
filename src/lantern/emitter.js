@@ -40,6 +40,7 @@ function emitProgram(programAst, options = {}) {
     const globalAssignNodes = programAst.nodes.filter((node) => node.kind === "GlobalAssign");
     const kindNodes = programAst.nodes.filter((node) => node.kind === "KindDecl");
     const typeNodes = programAst.nodes.filter((node) => node.kind === "TypeDecl");
+    const relationNodes = programAst.nodes.filter((node) => node.kind === "RelationDecl");
     const objectNodes = programAst.nodes.filter((node) => node.kind === "ObjectDecl");
     const eventNodes = programAst.nodes.filter((node) => node.kind === "EventHandler");
     const functionNodes = programAst.nodes.filter((node) => node.kind === "FunctionDecl");
@@ -101,6 +102,22 @@ function emitProgram(programAst, options = {}) {
     }
 
     if (mergedTypes.size > 0) {
+        lines.push("");
+    }
+
+    for (const relationNode of relationNodes) {
+        lines.push(emitRelationDecl(relationNode));
+    }
+
+    if (relationNodes.length > 0) {
+        lines.push("");
+    }
+
+    for (const relationNode of relationNodes) {
+        lines.push(`const ${relationNode.name} = lamplighter.type(${JSON.stringify(relationNode.name)});`);
+    }
+
+    if (relationNodes.length > 0) {
         lines.push("");
     }
 
@@ -237,6 +254,15 @@ function emitTypeDecl(node) {
     }
 
     return `lamplighter.defineType(${JSON.stringify(node.name)}, ${JSON.stringify(node.parents || [])}, ${JSON.stringify(fields)});`;
+}
+
+function emitRelationDecl(node) {
+    const fields = {};
+    for (const field of node.fields) {
+        fields[field.fieldName] = field.typeName;
+    }
+    const syntaxArg = node.syntax === null ? "null" : JSON.stringify(node.syntax);
+    return `lamplighter.defineRelation(${JSON.stringify(node.name)}, ${JSON.stringify(fields)}, ${syntaxArg});`;
 }
 
 function emitObjectDecl(node, mergedTypes = new Map(), kindNames = new Set()) {

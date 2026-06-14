@@ -10,6 +10,10 @@ function createObjectDecl(typeName, objectName, fields) {
     return { kind: "ObjectDecl", typeName, objectName, fields };
 }
 
+function createRelationDecl(name, fields, syntax, filePath, lineNumber) {
+    return { kind: "RelationDecl", name, fields, syntax, filePath, lineNumber };
+}
+
 function createGlobalDecl(name, typeName, value, filePath, lineNumber) {
     return { kind: "GlobalDecl", name, typeName, value, filePath, lineNumber };
 }
@@ -194,6 +198,7 @@ module.exports = {
     createProgram,
     createTypeDecl,
     createObjectDecl,
+    createRelationDecl,
     createGlobalDecl,
     createGlobalAssign,
     createKindDecl,

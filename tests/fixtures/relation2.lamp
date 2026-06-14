@@ -1,0 +1,13 @@
+game Relation_2:
+    author "Test Author"
+    version 1
+    release dev
+
+type place
+
+relation adjacent:
+    place a
+    place b
+
+on startup:
+    print "adjacent registered"
