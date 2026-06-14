@@ -1,0 +1,11 @@
+game Game_1:
+    author "Test Author"
+    version 1
+    release dev
+
+lib nativetest
+
+native function int addd(int a, int b)
+
+on startup:
+    print addd(3, 4)
