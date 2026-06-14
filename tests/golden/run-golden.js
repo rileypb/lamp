@@ -24,9 +24,9 @@ function main() {
                 assertFileMatches(testCase.generatedPath, testCase.expectedJsPath, `${name} generated JavaScript`);
             }
 
-            const stdout = testCase.expectCompileFailure
+            const stdout = normalizeProjectPaths(testCase.expectCompileFailure
                 ? compileResult.stdout
-                : runGenerated(testCase.generatedPath, testCase.expectRuntimeFailure);
+                : runGenerated(testCase.generatedPath, testCase.expectRuntimeFailure));
             assertTextMatches(
                 stdout,
                 fs.readFileSync(testCase.expectedStdoutPath, "utf8"),
@@ -198,6 +198,10 @@ function buildCharMarker(expectedLine, actualLine) {
     }
 
     return marker || "(empty)";
+}
+
+function normalizeProjectPaths(text) {
+    return text.split(projectRoot + "/").join("");
 }
 
 main();
