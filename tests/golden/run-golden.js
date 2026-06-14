@@ -26,7 +26,7 @@ function main() {
 
             const stdout = normalizeProjectPaths(testCase.expectCompileFailure
                 ? compileResult.stdout
-                : runGenerated(testCase.generatedPath, testCase.expectRuntimeFailure));
+                : runGenerated(testCase.generatedPath, testCase.expectRuntimeFailure, testCase.stdinContent));
             assertTextMatches(
                 stdout,
                 fs.readFileSync(testCase.expectedStdoutPath, "utf8"),
@@ -74,6 +74,8 @@ function discoverCases() {
                         expectedStdout.trimStart().startsWith("Compile error:")
                     );
                     const expectRuntimeFailure = expectedStdout.trimStart().startsWith("Runtime error:");
+                    const stdinPath = path.join(expectedDir, `${baseName}.stdin.txt`);
+                    const stdinContent = fs.existsSync(stdinPath) ? fs.readFileSync(stdinPath, "utf8") : null;
 
                     return {
                         inputPath,
@@ -82,6 +84,7 @@ function discoverCases() {
                         expectedStdoutPath,
                         expectCompileFailure,
                         expectRuntimeFailure,
+                        stdinContent,
                     };
                 });
         });
@@ -107,12 +110,13 @@ function compileCase(inputPath, outputPath, expectCompileFailure) {
     }
 }
 
-function runGenerated(generatedPath, expectRuntimeFailure = false) {
+function runGenerated(generatedPath, expectRuntimeFailure = false, stdinContent = null) {
     try {
         return execFileSync("node", [generatedPath], {
             cwd: projectRoot,
             stdio: "pipe",
             encoding: "utf8",
+            input: stdinContent !== null ? stdinContent : undefined,
         });
     } catch (error) {
         if (!expectRuntimeFailure) throw error;

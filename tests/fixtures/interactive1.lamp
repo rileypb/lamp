@@ -1,0 +1,12 @@
+game Interactive_1:
+	author "Test Author"
+	version 1
+	release dev
+
+lib interactivetest
+
+on startup:
+	let line = readline()
+	print line
+
+	
