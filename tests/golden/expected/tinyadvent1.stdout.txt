@@ -1,0 +1,7 @@
+foyer
+
+A test room.
+take, brass and lamp
+take
+brass
+lamp

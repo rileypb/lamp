@@ -1,0 +1,4 @@
+on startup:
+	player.holder = game.all.first.start
+	dispatch started
+

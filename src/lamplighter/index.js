@@ -303,4 +303,5 @@ module.exports = {
     print,
     setPrint,
     error,
+    makeList,
 };

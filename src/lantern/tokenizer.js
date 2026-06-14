@@ -49,6 +49,8 @@ const SINGLE_CHAR_TOKENS = {
     "(": "LPAREN",
     ")": "RPAREN",
     ",": "COMMA",
+    "[": "LBRACKET",
+    "]": "RBRACKET",
 };
 
 function tokenize(sourceText, filePath) {

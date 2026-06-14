@@ -14,7 +14,7 @@ const ast = require("./ast");
 const { tokenize, coerceName } = require("./tokenizer");
 
 const JS_IDENT = /^[A-Za-z_][A-Za-z0-9_]*$/;
-const BP = { EQEQ: 5, LT: 5, GT: 5, LTE: 5, GTE: 5, PLUS: 10, MINUS: 10, STAR: 20, SLASH: 20, CARET: 30 };
+const BP = { EQEQ: 5, LT: 5, GT: 5, LTE: 5, GTE: 5, PLUS: 10, MINUS: 10, STAR: 20, SLASH: 20, CARET: 30, LBRACKET: 40 };
 
 function getInfixBP(token) {
     if (token.type === "KEYWORD" && token.value === "or") return 1;
@@ -287,7 +287,7 @@ function createParser(tokens, filePath, globalNames, functionNames = new Set()) 
     function parseNativeFunctionDecl() {
         const keyword = expectKeyword("native");
         expectKeyword("function");
-        const returnType = plainName("return type");
+        const returnType = parseFieldType();
         const name = plainName("function name");
         expect("LPAREN", "Expected '(' after function name");
         const params = [];
@@ -305,7 +305,7 @@ function createParser(tokens, filePath, globalNames, functionNames = new Set()) 
 
     function parseFunctionDecl() {
         const keyword = expectKeyword("function");
-        const returnType = plainName("return type");
+        const returnType = parseFieldType();
         const name = plainName("function name");
         expect("LPAREN", "Expected '(' after function name");
         const params = [];
@@ -546,6 +546,11 @@ function createParser(tokens, filePath, globalNames, functionNames = new Set()) 
         if (op.type === "GTE") return ast.createLessOrEqualExpr(parseExpression(BP.GTE, localNames), left);
         if (op.type === "KEYWORD" && op.value === "and") return ast.createAndExpr(left, parseExpression(2, localNames));
         if (op.type === "KEYWORD" && op.value === "or") return ast.createOrExpr(left, parseExpression(1, localNames));
+        if (op.type === "LBRACKET") {
+            const index = parseExpression(0, localNames);
+            expect("RBRACKET", "Expected ']' to close index expression");
+            return ast.createIndexExpr(left, index);
+        }
         throw err(`Unexpected operator: ${op.type}`, op.line);
     }
 

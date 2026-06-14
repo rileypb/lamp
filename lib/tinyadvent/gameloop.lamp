@@ -1,0 +1,2 @@
+native function list<string> read4()
+native function string readline()

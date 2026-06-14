@@ -1,0 +1,17 @@
+game Test_1:
+    author "Test Author"
+    version 1
+    release dev
+    start foyer
+
+lib tinyadvent
+
+room foyer:
+    description "A test room."
+
+on startup:
+    let words = read4()
+    print words
+    print words[0]
+    print words[1]
+    print words[2]

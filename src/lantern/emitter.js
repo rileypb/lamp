@@ -2,7 +2,7 @@
 // names, property-access chains, function calls) and never need extra parens.
 const SAFE_ATOM = new Set([
     "StringLiteral", "NumberLiteral", "BooleanLiteral", "NoneLiteral",
-    "VariableExpr", "PropertyAccess", "GlobalExpr", "ParenNameExpr", "Concat", "DivideExpr", "CallExpr", "FunctionRefExpr",
+    "VariableExpr", "PropertyAccess", "GlobalExpr", "ParenNameExpr", "Concat", "DivideExpr", "CallExpr", "FunctionRefExpr", "IndexExpr",
 ]);
 
 // JS operator precedence for the binary/unary expression kinds we emit.
@@ -437,6 +437,9 @@ function emitExpression(expr, globalNames = new Set()) {
     }
     if (expr.kind === "NumberLiteral") {
         return String(expr.value);
+    }
+    if (expr.kind === "IndexExpr") {
+        return `${emitExpression(expr.target, globalNames)}.items[${emitExpression(expr.index, globalNames)}]`;
     }
     if (expr.kind === "PropertyAccess") {
         const [head, ...tail] = expr.chain;

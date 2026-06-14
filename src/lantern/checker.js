@@ -394,6 +394,11 @@ function inferExprType(expr, typeSchema, kindSchema, localTypes, functionSchema 
     if (expr.kind === "FunctionRefExpr") {
         return "function";
     }
+    if (expr.kind === "IndexExpr") {
+        const targetType = inferExprType(expr.target, typeSchema, kindSchema, localTypes, functionSchema);
+        const listMatch = targetType && targetType.match(/^list<(.+)>$/);
+        return listMatch ? listMatch[1] : null;
+    }
     return null;
 }
 

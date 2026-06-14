@@ -187,7 +187,7 @@ function extractFunctionNames(sourceText) {
     const names = new Set();
     for (const line of sourceText.split(/\r?\n/)) {
         const code = line.replace(/#.*$/, "").trim();
-        const match = code.match(/^(?:native\s+)?function\s+[A-Za-z_][A-Za-z0-9_]*\s+([A-Za-z_][A-Za-z0-9_]*)\s*\(/);
+        const match = code.match(/^(?:native\s+)?function\s+[A-Za-z_][A-Za-z0-9_<>]*\s+([A-Za-z_][A-Za-z0-9_]*)\s*\(/);
         if (match) {
             names.add(match[1]);
         }

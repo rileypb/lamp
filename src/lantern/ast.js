@@ -70,6 +70,10 @@ function createPropertyAccess(chain) {
     return { kind: "PropertyAccess", chain };
 }
 
+function createIndexExpr(target, index) {
+    return { kind: "IndexExpr", target, index };
+}
+
 function createConcat(left, right) {
     return { kind: "Concat", left, right };
 }
@@ -234,4 +238,5 @@ module.exports = {
     createAndExpr,
     createOrExpr,
     createNotExpr,
+    createIndexExpr,
 };
