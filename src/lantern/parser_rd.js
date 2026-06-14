@@ -289,6 +289,8 @@ function createParser(tokens, filePath, globalNames, functionNames = new Set(), 
     // function calls are explicitly rejected.
     function parseRelationQuery(template, localNames, headLine) {
         const fields = [];
+        let outputField = null;
+        let outputMode = null;
         for (let i = 1; i < template.parts.length; i += 1) {
             const part = template.parts[i];
             if (part.kind === "literal") {
@@ -299,13 +301,31 @@ function createParser(tokens, filePath, globalNames, functionNames = new Set(), 
                     throw err(`Expected '${part.text}' in ${template.relationName} query`, token.line);
                 }
             } else {
-                fields.push({ fieldName: part.field, value: parseRelationSlot(localNames, template.relationName) });
+                const slot = parseRelationSlot(localNames, template.relationName);
+                if (slot.kind === "OutputSlot") {
+                    if (outputField !== null) {
+                        throw err(`a ${template.relationName} query may have only one '?' output slot`, headLine);
+                    }
+                    outputField = part.field;
+                    outputMode = slot.mode;
+                    fields.push({ fieldName: part.field, value: ast.createWildcardExpr() });
+                } else {
+                    fields.push({ fieldName: part.field, value: slot });
+                }
             }
         }
-        return ast.createRelationQuery(template.relationName, fields, filePath, headLine);
+        return ast.createRelationQuery(template.relationName, fields, outputField, outputMode, filePath, headLine);
     }
 
     function parseRelationSlot(localNames, relationName) {
+        if (at("QUESTION")) {
+            next();
+            let mode = "all";
+            if (at("IDENT") && (peek().value === "all" || peek().value === "first" || peek().value === "only")) {
+                mode = next().value;
+            }
+            return ast.createOutputSlot(mode);
+        }
         if (at("IDENT") && peek().value === "_") {
             next();
             return ast.createWildcardExpr();
@@ -320,7 +340,7 @@ function createParser(tokens, filePath, globalNames, functionNames = new Set(), 
             }
             return expr;
         }
-        throw err(`Expected a value or '_' in ${relationName} query`, token.line);
+        throw err(`Expected a value, '_', or '?' in ${relationName} query`, token.line);
     }
 
     function parseFieldType() {

@@ -53,6 +53,7 @@ const SINGLE_CHAR_TOKENS = {
     ",": "COMMA",
     "[": "LBRACKET",
     "]": "RBRACKET",
+    "?": "QUESTION",
 };
 
 function tokenize(sourceText, filePath) {

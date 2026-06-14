@@ -122,9 +122,10 @@ function findMatchingRelation(typeName, fields) {
     return null;
 }
 
-// Returns all instances matching a query mapping. A slot holding ANY matches any
-// value; other slots match by identity/value. A bidirectional instance also
-// matches if its mechanical inverse matches the query.
+// Returns the matching edges as **oriented** field-mappings: a direct match
+// yields the instance itself; a bidirectional instance matched via its inverse
+// yields the inverse mapping, so reading a field reflects the queried direction.
+// A slot holding ANY matches any value; other slots match by identity/value.
 function queryRelation(typeName, query) {
     if (!relationRegistry.has(typeName)) {
         throw new Error(`Cannot query unknown relation: ${typeName}`);
@@ -133,11 +134,34 @@ function queryRelation(typeName, query) {
     const matches = (mapping) => keys.every((key) => query[key] === ANY || mapping[key] === query[key]);
     const results = [];
     for (const instance of (instanceRegistry.get(typeName) || [])) {
-        if (matches(instance) || (instance.bidi && matches(relationInverse(typeName, instance)))) {
+        if (matches(instance)) {
             results.push(instance);
+        } else if (instance.bidi) {
+            const inverse = relationInverse(typeName, instance);
+            if (matches(inverse)) {
+                results.push(inverse);
+            }
         }
     }
     return results;
+}
+
+// Value query: returns the `outputField` of matching (oriented) edges.
+//   "all"   -> a list of the values
+//   "first" -> the first value, or none if no match
+//   "only"  -> the single value, none if no match, runtime error if more than one
+function queryRelationValue(typeName, query, outputField, mode) {
+    const values = queryRelation(typeName, query).map((mapping) => mapping[outputField]);
+    if (mode === "all") {
+        return makeList(values);
+    }
+    if (mode === "first") {
+        return values.length > 0 ? values[0] : null;
+    }
+    if (values.length > 1) {
+        throw new Error(`relation query expected at most one ${typeName} but matched ${values.length}`);
+    }
+    return values.length === 1 ? values[0] : null;
 }
 
 // The mechanical inverse mapping: swap source/target, replace each `inverted`
@@ -402,6 +426,7 @@ module.exports = {
     defineRelation,
     addRelation,
     queryRelation,
+    queryRelationValue,
     ANY,
     createObject,
     getObject,

@@ -330,7 +330,11 @@ function emitRelationQuery(node, globalNames) {
         }
         return `${JSON.stringify(field.fieldName)}: ${valueExpr}`;
     });
-    return `(lamplighter.queryRelation(${JSON.stringify(node.relationName)}, { ${pairs.join(", ")} }).length > 0)`;
+    const mapping = `{ ${pairs.join(", ")} }`;
+    if (!node.outputField) {
+        return `(lamplighter.queryRelation(${JSON.stringify(node.relationName)}, ${mapping}).length > 0)`;
+    }
+    return `lamplighter.queryRelationValue(${JSON.stringify(node.relationName)}, ${mapping}, ${JSON.stringify(node.outputField)}, ${JSON.stringify(node.outputMode)})`;
 }
 
 function emitObjectDecl(node, mergedTypes = new Map(), kindNames = new Set()) {

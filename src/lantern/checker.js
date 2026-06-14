@@ -1,7 +1,22 @@
 const PRIMITIVE_TYPES = new Set(["string", "int", "bool", "real"]);
 
+// Relation field schemas (relationName -> Map(fieldName -> typeName)), set at the
+// start of checkProgram so inferExprType can type value queries by their output
+// slot. Module-scoped to avoid threading it through every inference call.
+let relationSchema = new Map();
+
+function buildRelationSchema(nodes) {
+    const schema = new Map();
+    for (const node of nodes) {
+        if (node.kind !== "RelationDecl") continue;
+        schema.set(node.name, new Map(node.fields.map((f) => [f.fieldName, f.typeName])));
+    }
+    return schema;
+}
+
 function checkProgram(programAst, options = {}) {
     const nativeFunctionNames = options.nativeFunctionNames || new Set();
+    relationSchema = buildRelationSchema(programAst.nodes);
     const typeSchema = buildTypeSchema(programAst.nodes);
     const kindSchema = buildKindSchema(programAst.nodes);
     const globalTypes = buildGlobalTypeSchema(programAst.nodes);
@@ -366,7 +381,15 @@ function inferExprType(expr, typeSchema, kindSchema, localTypes, functionSchema 
         return "bool";
     }
     if (expr.kind === "RelationQuery") {
-        return "bool";
+        if (!expr.outputField) {
+            return "bool";
+        }
+        const fields = relationSchema.get(expr.relationName);
+        const fieldType = fields ? fields.get(expr.outputField) : null;
+        if (!fieldType) {
+            return null;
+        }
+        return expr.outputMode === "all" ? `list<${fieldType}>` : fieldType;
     }
     if (expr.kind === "StringLiteral") {
         return "string";

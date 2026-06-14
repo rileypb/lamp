@@ -1,0 +1,24 @@
+game Relation_Only_Ambiguous:
+    author "Test Author"
+    version 1
+    release dev
+
+type room
+type direction
+
+room foyer
+room hall
+room study
+direction north
+
+relation connects:
+    room source
+    direction dir
+    room target
+    syntax "connects [source] [dir] [target]"
+
+connects foyer north hall
+connects foyer north study
+
+on startup:
+    print connects foyer north ?only

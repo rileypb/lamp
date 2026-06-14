@@ -1,0 +1,43 @@
+game Relation_16:
+    author "Test Author"
+    version 1
+    release dev
+
+type room:
+    string description
+type direction:
+    direction inverse
+
+room foyer:
+    description "You're in the foyer."
+room hall:
+    description "You're in the hall."
+room study:
+    description "You're in the study."
+
+direction north:
+    inverse south
+direction south:
+    inverse north
+direction east:
+    inverse west
+direction west:
+    inverse east
+
+relation connects:
+    room source
+    direction dir inverted
+    room target
+    syntax "connects [source] [dir] [target]"
+
+bidi connects foyer north hall
+bidi connects hall east study
+
+on startup:
+    let dest = connects foyer north ?only
+    print dest.description
+    let back = connects hall south ?only
+    print back.description
+    let nowhere = connects study north ?only
+    if nowhere == none:
+        print "You can't go north from the study."

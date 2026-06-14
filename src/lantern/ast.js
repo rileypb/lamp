@@ -18,12 +18,17 @@ function createRelationAssert(relationName, fields, instanceName, filePath, line
     return { kind: "RelationAssert", relationName, fields, instanceName, bidi: false, filePath, lineNumber };
 }
 
-function createRelationQuery(relationName, fields, filePath, lineNumber) {
-    return { kind: "RelationQuery", relationName, fields, filePath, lineNumber };
+function createRelationQuery(relationName, fields, outputField, outputMode, filePath, lineNumber) {
+    return { kind: "RelationQuery", relationName, fields, outputField, outputMode, filePath, lineNumber };
 }
 
 function createWildcardExpr() {
     return { kind: "WildcardExpr" };
+}
+
+// Transient parse-only node for a `?`/`?all`/`?first`/`?only` output slot.
+function createOutputSlot(mode) {
+    return { kind: "OutputSlot", mode };
 }
 
 function createGlobalDecl(name, typeName, value, filePath, lineNumber) {
@@ -214,6 +219,7 @@ module.exports = {
     createRelationAssert,
     createRelationQuery,
     createWildcardExpr,
+    createOutputSlot,
     createGlobalDecl,
     createGlobalAssign,
     createKindDecl,

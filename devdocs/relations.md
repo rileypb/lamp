@@ -203,6 +203,25 @@ Evaluates to `true` if `foyer` has any outgoing `connects` relation regardless o
 
 The wildcard `_` is distinct from the value `none`: `_` matches any value in the slot, whereas `none` matches only an unset (absent) field. They must compile to different runtime sentinels so that "field is unset" remains expressible as a query.
 
+### Value Queries
+
+A query may **retrieve a value** instead of testing existence by marking one slot as the output with `?` (and a multiplicity qualifier). Exactly one output slot is allowed:
+
+- `?` or `?all` → a `list<T>` of the values at that slot across all matching edges.
+- `?first` → the first such value, or `none` if there are no matches.
+- `?only` → the single value; `none` if there are no matches, and a **runtime error** if more than one matches (a cardinality assertion — most `(source, dir) → target` lookups should be functional).
+
+`T` is the output slot's declared field type, so `let dest = connects here d ?only` types `dest` as `room`, and `connects foyer d ?` types as `list<room>`. Other slots may still be bound values or `_` wildcards alongside the single output slot.
+
+```lamp
+let dest = connects foyer north ?only     # the room reached going north (or none)
+let back = connects hall south ?only      # bidi: the oriented reverse, foyer
+let exits = connects foyer _ ?all         # list<room> of every room reachable from foyer
+let way  = connects foyer ? hall          # list<direction> from foyer to hall
+```
+
+For `bidi` edges, value queries return the **inverse-oriented** value: `connects hall south ?only` against `bidi connects foyer north hall` yields `foyer`, because the matched edge is oriented to the query direction. (This is the reverse-oriented view deferred from Phases 5–6, now required.)
+
 Partial queries are also valid in `when` clauses and contribute to specificity: each bound (non-wildcard) slot adds 1 point, consistent with the existing specificity rules for atomic conditions.
 
 ```lamp
@@ -351,7 +370,18 @@ As-built notes:
 - **No node-indexed store yet.** `queryRelation` linear-scans, matching a slot's `ANY` as wildcard and matching a `bidi` instance via its mechanical inverse too. The dedicated index stays deferred (optimization only).
 - **`when`/specificity stays Phase 8.** A query parses in a `when` clause, but partial-query specificity and parameter-in-`when` are not wired up yet.
 
-Out of scope (still deferred): value-returning queries + reverse-oriented views, the node-indexed store, and `when`/specificity integration.
+Out of scope (still deferred): the node-indexed store, and `when`/specificity integration.
+
+### Phase 6b — Value-returning queries ✅ done
+- Output slot marker `?` / `?all` / `?first` / `?only` (exactly one per query); `?`/`?all` → `list<T>`, `?first` → `T`/none, `?only` → `T`/none with a runtime error on more than one match.
+- `queryRelation` now returns **oriented** field-mappings (inverse mapping for a `bidi` match), and `queryRelationValue` extracts the output field per the multiplicity mode.
+- Output type inferred from the slot's declared field type (`T` or `list<T>`).
+
+As-built notes:
+- **`?` is a new token**; `all`/`first`/`only` are contextual qualifiers recognized only immediately after `?` (so `.first`/`.all` on lists are untouched).
+- **Reverse-oriented views are now implemented** (the deferred Phase 5/6 item) — required so a value query reads the correct endpoint for a `bidi` match.
+- **No node-indexed store still** — `queryRelation` linear-scans and computes the inverse on the fly.
+- **Discovered gap (not relations):** passing a bare object name as a *function argument* (`go(north)`) emits the string `"north"` instead of resolving the object, because call arguments aren't checked against parameter types. The navigation fixture avoids routing objects through function params; this general function-argument gap is noted in Known Issues.
 
 ### Phase 7 — Remove / disconnect
 - Parse `remove TEMPLATE` and `disconnect NAME`.
@@ -375,6 +405,11 @@ Out of scope (still deferred): value-returning queries + reverse-oriented views,
 - **Relation inheritance**: Whether relation types can inherit from one another (`relation TYPE < PARENT`) is not yet decided. Treated as out of scope until a concrete need arises.
 - **Group (n-ary) relations**: Relations are binary for now (one `source`, one `target`). Support for relations over more than two endpoints is intended future work; until then, model them with an intermediate object.
 - **Cross-relation reasoning**: Canonical `source`/`target` orientation is in place specifically to enable later rules that derive one relation from another (e.g. `father(a, b)` ⇒ `older_than(a, b)`). The rule/inference mechanism itself is unspecified.
+- **Edge-valued queries**: value queries currently return *field values* at the output slot (`connects foyer north ?only` → the target room). A way to retrieve the matching **edge(s)** themselves — the relation instances, so you can read several of their fields or pass them around — is wanted but unspecified. Open questions: surface syntax (an output marker for "the whole edge" vs. a different form), what an anonymous edge value exposes, and how it interacts with the reverse-oriented view (a `bidi` match would hand back an oriented edge, not the raw stored instance).
+
+## Known Issues
+
+- **Object names as function arguments** (pre-existing, not relation-specific): passing a bare object name to a function (`go(north)`) emits the string `"north"` rather than resolving the object, because call arguments are not checked against the function's declared parameter types (object-typed fields *are* resolved via that check elsewhere). Surfaced while writing a relation navigation fixture; the fixture works around it. Fix would resolve object-typed call arguments to `getObject` the way object field values are.
 - **Additional instance fields** (deferred from Phase 4): the `connects NAME ...:` body of extra typed fields (`bool locked = false`). Needs decisions on (1) whether extra fields participate in deduplication or dedup stays endpoint-only, (2) whether the anonymous-instance print summary includes them, and (3) how fields absent from the relation schema are typed, checked, and queried.
 - **Mutation through a reverse-oriented view**: a query matching a `bidi` instance via its inverse index entry returns a view with endpoints oriented to the query, not the stored object. Reading is fine; writing a field through that view is the open wart. Intended guidance is to mutate via the canonical (named) instance or a forward match; whether reverse views should proxy writes back to the underlying instance is unresolved.
 

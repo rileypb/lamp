@@ -93,9 +93,11 @@ Lantern-generated JavaScript targets the following Lamplighter API surface:
     - `options` may carry `name` (registers the instance for `getObject`) and `bidi` (marks the instance bidirectional, upgrading an existing match in place).
     - The instance is added to the relation type's `all` list.
 - `queryRelation(typeName, query)`
-    - Returns the list of relation instances matching a query mapping. A slot holding the `ANY` wildcard sentinel matches any value; other slots match by identity (objects) or value (primitives). A `bidi` instance also matches if its mechanical inverse matches.
+    - Returns the matching edges as **oriented** field-mappings (the instance for a direct match; its mechanical inverse for a `bidi` instance matched in reverse). A slot holding the `ANY` wildcard sentinel matches any value; other slots match by identity (objects) or value (primitives).
+- `queryRelationValue(typeName, query, outputField, mode)`
+    - Extracts `outputField` from the matching oriented edges. `mode` is `"all"` (returns a list), `"first"` (first value or `none`), or `"only"` (the single value, `none` if none, runtime error if more than one).
 - `ANY`
-    - The wildcard sentinel used in `queryRelation` slots, distinct from `null`/`none`.
+    - The wildcard sentinel used in query slots, distinct from `null`/`none`.
 - `onEvent(eventName, handler)`
     - Registers an event handler callback.
 - `registerChangeHandler(typeName, fieldName, handler)`
@@ -597,7 +599,21 @@ if connects foyer _ _:
     print "The foyer has at least one exit."
 ```
 
-Query slots are atoms: a value (object name, literal), a global or local variable, a property-access chain, or `_`. Operators, indexing, and function calls are not allowed inside a slot (bind them to a `let` first). A query against a `bidi` relation also matches via the relation's mechanical inverse, so the reverse direction is found. A query is an ordinary `bool` expression and composes with `and`, `or`, `not`, and `if`/`while` conditions. `_` is valid only in a query — using it in an assertion is a compile error.
+Query slots are atoms: a value (object name, literal), a global or local variable, a property-access chain, or `_`. Operators, indexing, and function calls are not allowed inside a slot (bind them to a `let` first). A query against a `bidi` relation also matches via the relation's mechanical inverse, so the reverse direction is found. A boolean query is an ordinary `bool` expression and composes with `and`, `or`, `not`, and `if`/`while` conditions. `_` is valid only in a query — using it in an assertion is a compile error.
+
+A query may instead **retrieve a value** by marking exactly one slot as the output with `?` and a multiplicity qualifier:
+
+```lamp
+let dest = connects foyer north ?only     # the room reached, none if absent, error if ambiguous
+let exits = connects foyer _ ?all         # list<room> of all rooms reachable from foyer
+let way  = connects foyer ? hall          # list<direction> from foyer to hall
+```
+
+- `?` or `?all` → a `list<T>` of the output slot's values across all matches.
+- `?first` → the first value, or `none` if there are no matches.
+- `?only` → the single value; `none` if no match, and a runtime error if more than one matches.
+
+`T` is the output slot's declared field type. A value query against a `bidi` relation returns the inverse-oriented value, so `connects hall south ?only` (with `bidi connects foyer north hall`) yields `foyer`. (`all`, `first`, and `only` are contextual qualifiers recognized only immediately after `?`.)
 
 #### Printing relation instances
 
