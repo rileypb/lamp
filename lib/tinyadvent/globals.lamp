@@ -1,1 +1,6 @@
 global person player = yourself
+
+global string input = none
+
+global list<string> words = none
+
