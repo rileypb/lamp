@@ -15,3 +15,9 @@ direction west
 direction northwest
 direction up
 direction down
+
+relation connects:
+	room source
+	direction dir
+	room target
+	syntax "connects [source] [dir] [target]"

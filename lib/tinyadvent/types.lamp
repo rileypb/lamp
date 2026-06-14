@@ -21,3 +21,5 @@ type box < item, container:
 type person < physical
 
 type direction
+
+type relation

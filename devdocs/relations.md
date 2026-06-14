@@ -9,7 +9,7 @@ Relations are typed, directed edges in the Lamp object graph. Every object (room
 - All objects are graph nodes.
 - A **relation instance** is a directed edge connecting two or more objects according to a declared relation type.
 - Relation instances are themselves objects: they can be named, can have additional fields, and can be referenced. They are not garbage-collected because they are reachable through the objects they connect.
-- Relations are directed by default. Bidirectional relations (see below) are a single instance with symmetric traversal, not two separate instances.
+- Relations are directed by default. A bidirectional relation is a **single instance** that is indexed for traversal from both endpoints (see Bidirectional Relations), not two separate instances.
 - Asserting the same relation with identical field values twice produces one instance. Equality is determined field by field: object-typed fields are matched by identity; value-typed fields (`string`, `int`, `bool`, `real`, kind values) are matched by value. Custom equality functions on relation types are a planned extension (see Open Questions).
 - Relation types participate in the `TYPE.all` mechanism: `connects.all` returns all instances of type `connects`.
 
@@ -26,6 +26,8 @@ Fields declare the schema of the relation. Field types follow the same rules as 
 
 The `syntax` field is optional. If omitted, the block form is used for all assertions and queries.
 
+`syntax` is a **contextual keyword**: it is meaningful only as a field position inside a `relation` body. It is not globally reserved and may be used as an ordinary identifier elsewhere.
+
 ### Example
 
 ```lamp
@@ -41,12 +43,12 @@ relation connects:
 The `syntax` value is a string where:
 - `[FIELD_NAME]` marks a slot filled by the value of that field.
 - All other tokens are literals that must appear verbatim.
-- The relation type name does not need to appear in the template, but by convention it should appear first for parser disambiguation.
+- **A template must begin with a literal token** (not a slot). By strong convention that leading literal is the relation type name. This requirement is what makes statement-position dispatch decidable: a parser cannot dispatch on a leading slot, because a slot matches any object identifier.
 - Literal tokens in templates may be reserved keywords (e.g. `via`, `in`) — the template parser accepts keyword tokens in literal positions.
 
-The parser collects all syntax templates during the pre-scan phase, alongside global and function names. At parse time, a line in a statement position whose first token matches a relation type name (or the first literal in its template) is dispatched to that relation's template parser.
+The parser collects all syntax templates during the pre-scan phase, alongside global and function names. At parse time, a line in a statement position whose leading literal matches a relation template's leading literal is dispatched to that relation's template parser.
 
-If two relation types produce ambiguous first tokens, Lantern reports a compile error at relation declaration time. If two templates share a first token, the parser attempts disambiguation on subsequent literal tokens; if no unambiguous prefix exists, it is also a compile error.
+If two templates share a leading literal, the parser attempts disambiguation on subsequent literal tokens. If no unambiguous literal prefix distinguishes two templates, Lantern reports a compile error at relation declaration time.
 
 ## Asserting a Relation Instance
 
@@ -66,7 +68,7 @@ The instance exists and is reachable via the connected objects, but has no stand
 connects north_door foyer north hall
 ```
 
-The instance can be referred to by `north_door` elsewhere (to add fields, disconnect it by name, etc.).
+The name appears immediately after the leading literal, before the first slot value. The instance can then be referred to by `north_door` elsewhere (to add fields, disconnect it by name, etc.). The parser distinguishes the named form by arity: a template with N slots takes N values when anonymous and N+1 leading identifiers when named.
 
 ### With additional fields
 
@@ -92,30 +94,43 @@ This is always valid regardless of whether a syntax template is defined.
 
 ## Bidirectional Relations
 
-The `bidi` modifier creates a single relation instance that is traversable in both directions.
+The `bidi` modifier creates a single relation instance that is traversable from either endpoint.
 
 ```lamp
 bidi connects foyer north hall
 ```
 
-This creates one instance. Traversal from `foyer` via `north` yields `hall`; reverse traversal from `hall` is computed by calling the relation type's `inverse` function (see below).
+`bidi` produces **one instance**. To make reverse traversal queryable, the instance is registered in the relation store under two index entries that point at the same object:
 
-`bidi` is syntactic sugar: the emitted runtime representation is a single relation instance with a symmetric traversal flag, not two instances.
+- the forward mapping (`source = foyer, dir = north, target = hall`), and
+- the inverse mapping, computed once at assertion time via the relation type's inverse operation (`source = hall, dir = south, target = foyer`).
 
-### Inverse functions
+A query matches the instance if **either** index entry matches. There is still exactly one underlying instance, so its fields, name, and any extra data are shared across both traversal directions.
 
-Each relation type that supports `bidi` must declare an `inverse` function. This is a **function on a type** — a method — which is a new concept not yet present in Lamp. The function receives the relation instance and returns a new field-value mapping representing the reversed traversal. Because the inverse may depend on any field (not just swapping endpoints), it must be expressible as a full Lamp function body.
+### Interaction with deduplication
+
+- Asserting a plain (one-way) relation whose values equal the inverse mapping of an existing `bidi` instance is a **no-op** — the reverse edge already exists.
+- Asserting `bidi` over endpoints that already have a one-way instance **upgrades that instance in place**: it is marked bidirectional and gains the inverse index entry. No second instance is created.
+- Asserting one-way over an existing `bidi` instance is a no-op.
+
+### Inverse operation
+
+A relation type that supports `bidi` must supply an **inverse operation**: given an instance, it produces the field-mapping of the reverse traversal. Because the inverse may depend on any field (not just swapping endpoints), it must be expressible as a full Lamp body.
+
+Two pieces of this are **not yet designed** and are tracked in Open Questions:
+
+1. **How the inverse operation is declared and bound to its relation type.** This needs the "functions on types" feature, which does not yet exist. The example below is illustrative, not final syntax.
+2. **A relation constructor expression** distinct from the assertion statement. The inverse operation must *produce a field-mapping value* without adding an edge to the store; assertion (the bare template statement) is a side-effecting statement. These must be different surface forms. The constructor form below (`connects(field = value, ...)`) is provisional.
 
 ```lamp
+# provisional syntax — pending "functions on types" and a constructor expression
 function connects inverse(connects self):
-    return connects self.target self.dir.inverse self.source
+    return connects(source = self.target, dir = self.dir.inverse, target = self.source)
 ```
 
-This requires:
-- **Functions on types**: a function declared with a type-qualified name (`TYPE FUNCTION_NAME`) that receives an instance of that type as a first parameter.
-- **`direction.inverse`**: the `direction` type needs an `inverse` field of type `direction` (e.g. `north.inverse = south`) so that the inverse function can look up the opposing direction.
+The inverse operation also depends on the `direction` type exposing an `inverse` field of type `direction` (e.g. `north.inverse = south`) so the opposing direction can be looked up.
 
-Functions on types are not yet designed. Phase 5 is blocked on that design being settled first.
+Phase 5 is blocked on items 1 and 2 above being designed first.
 
 ## Removing a Relation
 
@@ -125,13 +140,13 @@ Two removal forms are supported:
 remove connects foyer north hall
 ```
 
-Matches and removes all instances satisfying the template (including `_` wildcards, see Partial Queries). Because deduplication means at most one anonymous instance matches any fully-bound template, a fully-bound `remove` always removes zero or one instance.
+Matches and removes all instances satisfying the template (including `_` wildcards, see Partial Queries). Removal operates on the whole instance: if the matched template corresponds to either index entry of a `bidi` instance, the entire instance (both index entries) is removed. Because deduplication means at most one instance matches any fully-bound template, a fully-bound `remove` removes zero or one instance. If the removed instance is named, its name registration is also dropped, so a subsequent `getObject` for that name returns nothing.
 
 ```lamp
 disconnect north_door
 ```
 
-Removes the named instance `north_door`. Unambiguous and O(1).
+Removes the named instance `north_door` (both index entries if bidirectional) and unregisters its name. If no relation instance is registered under that name, this is a runtime error.
 
 ## Querying Relations
 
@@ -142,7 +157,7 @@ if connects foyer north hall:
     ...
 ```
 
-Evaluates to `true` if at least one relation instance of type `connects` matches all three slots.
+Evaluates to `true` if at least one relation instance of type `connects` matches all three slots (in either traversal direction, for `bidi` instances).
 
 ### Partial Queries
 
@@ -155,7 +170,9 @@ if connects foyer _ _:
 
 Evaluates to `true` if `foyer` has any outgoing `connects` relation regardless of direction or destination.
 
-Partial queries are also valid in `when` clauses and contribute to specificity: each bound slot adds 1 point, consistent with the existing specificity rules for atomic conditions.
+The wildcard `_` is distinct from the value `none`: `_` matches any value in the slot, whereas `none` matches only an unset (absent) field. They must compile to different runtime sentinels so that "field is unset" remains expressible as a query.
+
+Partial queries are also valid in `when` clauses and contribute to specificity: each bound (non-wildcard) slot adds 1 point, consistent with the existing specificity rules for atomic conditions.
 
 ```lamp
 function void go(direction d) when connects foyer d _:
@@ -190,16 +207,9 @@ on connects remove:
 
 The handler body would have access to the relation instance via `self`. Full specification is deferred.
 
-## Programmatic API
+## Use Inside Handlers and Functions
 
-Runtime creation and removal of relations via statement forms inside handlers and functions is a planned goal:
-
-```lamp
-add connects room1 d room2
-remove connects room1 d _
-```
-
-This will be the mechanism for conditional or dynamic relation manipulation. Syntax is provisional.
+Assertion, `remove`, and `disconnect` are ordinary statements and may appear inside event handlers, change handlers, and function bodies, not just at the top level. No separate runtime API surface is needed in the language — the same statement forms cover both static (top-level) and dynamic (in-handler) graph construction.
 
 ## Reserved Words
 
@@ -210,57 +220,58 @@ The following words must be added to the Lamp reserved words list in `specs.md`:
 - `disconnect` — removes a named relation instance
 - `bidi` — asserts a bidirectional relation instance
 
+`syntax` is **not** added to this list; it is a contextual keyword recognized only inside a `relation` body (see Declaring a Relation Type).
+
 ## Lamplighter Runtime
 
 Relation instances need runtime support beyond the existing `createObject` / `setField` model:
 
-- A relation store indexed by (relation type, node) so that outgoing and incoming edges can be retrieved efficiently.
-- `lamplighter.defineRelation(name, fields, syntaxTemplate?)` — registers a relation type and sets up its `all` accessor.
-- `lamplighter.addRelation(typeName, fields, instanceName?)` — creates a relation instance, enforcing deduplication. Returns the (possibly existing) instance.
-- `lamplighter.removeRelation(typeName, fields)` — removes all matching instances; `null` in a slot matches any value.
-- `lamplighter.queryRelation(typeName, fields)` — returns matching instances; `null` in a slot matches any value.
+- A relation store indexed by (relation type, node) so that outgoing and incoming edges can be retrieved efficiently. A `bidi` instance occupies two index entries (forward and inverse) that reference the same instance object.
+- A dedicated wildcard sentinel (distinct from `null`/`none`) used in query and removal field-mappings to mean "match any value." `none`/`null` in a slot continues to mean "match an unset field."
+- `lamplighter.defineRelation(name, fields, syntaxTemplate?)` — registers a relation type, including a type handle so that `TYPE.all` resolves for the relation type.
+- `lamplighter.addRelation(typeName, fields, options?)` — creates a relation instance, enforcing deduplication; `options` carries the optional instance name and the `bidi` flag. Returns the (possibly pre-existing or upgraded) instance.
+- `lamplighter.removeRelation(typeName, fields)` — removes all matching instances (whole instances, including both index entries of a `bidi`) and unregisters any names they held; the wildcard sentinel in a slot matches any value.
+- `lamplighter.queryRelation(typeName, fields)` — returns matching instances; the wildcard sentinel in a slot matches any value; matches against either index entry of a `bidi` instance.
 - `lamplighter.getRelation(name)` — retrieves a named instance.
 
-Relation instances are registered as named objects when they have a name, so that `getObject` works for named instances. They are also registered in the relation type's `all` list regardless of whether they are named.
+Named relation instances are registered as objects so that `getObject` works for them. Every instance, named or not, is added to its relation type's `all` list.
 
 ## Implementation Phases
 
 ### Phase 1 — Relation type declarations
-- Parse `relation TYPE_NAME:` with field declarations and optional `syntax` field.
+- Parse `relation TYPE_NAME:` with field declarations and optional `syntax` field (`syntax` recognized as a contextual keyword in this position).
 - Add `relation` to the AST and pre-scan; add `relation` to the reserved words list.
-- Emit `lamplighter.defineRelation(name, fields, syntaxTemplate?)`.
-- Set up `TYPE.all` for relation types in Lamplighter.
+- Emit `lamplighter.defineRelation(name, fields, syntaxTemplate?)`, including type-handle registration so `TYPE.all` resolves.
 - No instantiation yet; just the type registry.
 
 ### Phase 2 — Anonymous assertion (block form)
 - Parse block-form relation assertion at the top level and inside handlers.
 - Emit `lamplighter.addRelation(...)`.
-- Add the relation store, deduplication check, and `addRelation` to Lamplighter.
+- Add the relation store, the wildcard sentinel, the deduplication check, and `addRelation` to Lamplighter.
 
 ### Phase 3 — Custom syntax assertion
-- During pre-scan, collect syntax templates.
-- In the parser, dispatch statement lines that match a template to the relation assertion path.
+- During pre-scan, collect syntax templates; enforce the "template begins with a literal" rule and leading-literal disambiguation.
+- In the parser, dispatch statement lines whose leading literal matches a template.
 - Handle reserved keyword tokens in literal template positions.
 - Extend emitter accordingly.
 
 ### Phase 4 — Named instances and additional fields
-- Parse `connects NAME ...` with an optional body.
-- Emit a call that creates the instance, registers it by name, and adds it to the relation store.
+- Parse `connects NAME ...` (name after the leading literal) with an optional body; distinguish named vs anonymous by arity.
+- Emit a call that creates the instance, registers it by name, and adds it to the relation store and the type's `all` list.
 
 ### Phase 5 — Bidirectional modifier
-- Design and implement functions on types (prerequisite).
-- Define `direction.inverse` field on the `direction` type.
-- Parse `bidi connects ...`.
-- Emit a single relation instance with a symmetric flag; resolve traversal via the `inverse` function.
-- Add `bidi` to the reserved words list.
+- Design and implement functions on types and a relation constructor expression (prerequisites; see Open Questions).
+- Define the `direction.inverse` field on the `direction` type.
+- Parse `bidi connects ...`; add `bidi` to the reserved words list.
+- On assertion, compute the inverse mapping and register the single instance under both forward and inverse index entries; implement in-place upgrade of an existing one-way instance.
 
 ### Phase 6 — Boolean query syntax
-- Recognize the template syntax in expression position.
+- Recognize the template syntax in expression position, including the `_` wildcard sentinel.
 - Emit `lamplighter.queryRelation(...).length > 0`.
 
 ### Phase 7 — Remove / disconnect
 - Parse `remove TEMPLATE` and `disconnect NAME`.
-- Emit `lamplighter.removeRelation(...)` and `lamplighter.removeRelationByName(...)`.
+- Emit `lamplighter.removeRelation(...)` and `lamplighter.removeRelationByName(...)`, removing whole instances and unregistering names.
 - Add `remove` and `disconnect` to the reserved words list.
 
 ### Phase 8 — Partial queries and specificity integration
@@ -274,6 +285,18 @@ Relation instances are registered as named objects when they have a name, so tha
 
 ## Open Questions
 
-- **Functions on types**: The inverse function design (and by extension Phase 5) depends on settling what "functions on a type" means in Lamp — declaration syntax, dispatch, and how the instance is passed. This is a prerequisite for bidirectional relations and likely has uses elsewhere.
-- **Custom equality functions**: The default deduplication criterion (field identity for objects, value equality for primitives) covers most cases. Future extension: allow a relation type to declare an `equals` function for domain-specific equality (e.g. a relation that considers two instances the same if only certain fields match).
-- **Relations of relations**: Relation instances are objects, so they are valid as field values in other relation types. No special handling needed.
+- **Functions on types**: The inverse operation (and thus Phase 5) depends on settling what "functions on a type" means in Lamp — declaration syntax, how the instance is passed, and dispatch. Likely useful beyond relations. The `function connects inverse(connects self)` form shown above is illustrative only.
+- **Relation constructor expression**: Phase 5 also needs a side-effect-free way to *construct* a relation field-mapping value (for the inverse operation to return) that is syntactically distinct from the assertion statement. The provisional `connects(field = value, ...)` form needs to be designed and reconciled with the rest of the expression grammar.
+- **Custom equality functions**: The default deduplication criterion (field identity for objects, value equality for primitives) covers most cases. Future extension: allow a relation type to declare an `equals` function for domain-specific equality.
+- **Relation inheritance**: Whether relation types can inherit from one another (`relation TYPE < PARENT`) is not yet decided. Treated as out of scope until a concrete need arises.
+
+## Resolved (previously open)
+
+- **Parser dispatch soundness** — resolved by requiring every template to begin with a literal token (see Syntax Templates).
+- **Wildcard vs `none` collision** — resolved by using a dedicated wildcard sentinel distinct from `null`/`none`.
+- **Bidirectional query path** — resolved by dual-indexing a single instance under forward and inverse mappings.
+- **Bidi vs. deduplication identity** — resolved by the upgrade/no-op rules under Bidirectional Relations.
+- **Value-based remove vs. the name registry** — resolved: removal drops whole instances and unregisters any names they held.
+- **Redundant programmatic `add`** — resolved: assertion/`remove`/`disconnect` statements work inside handlers, so no separate API form is needed.
+- **`connects.all`** — resolved: `defineRelation` registers a type handle so relation types participate in `TYPE.all`.
+- **Relations of relations** — relation instances are objects, so they are valid as field values in other relation types; no special handling needed.
