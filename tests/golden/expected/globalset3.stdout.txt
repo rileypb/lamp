@@ -1,0 +1,3 @@
+Compile error: tests/fixtures/globalset3.lamp:7: type error: assignment to undeclared name "undeclared"
+  7 |     undeclared = 10
+    |     ^

@@ -1,0 +1,7 @@
+game Test_1:
+    author "Test Author"
+    version 1
+    release dev
+
+on startup:
+    undeclared = 10

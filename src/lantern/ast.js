@@ -22,8 +22,8 @@ function createEventHandler(eventName, body) {
     return { kind: "EventHandler", eventName, body };
 }
 
-function createLetStatement(name, expr) {
-    return { kind: "LetStatement", name, expr };
+function createLetStatement(name, expr, filePath, lineNumber) {
+    return { kind: "LetStatement", name, expr, filePath, lineNumber };
 }
 
 function createPrintStatement(expr) {
@@ -122,8 +122,8 @@ function createBreakStatement() {
     return { kind: "BreakStatement" };
 }
 
-function createForStatement(varName, start, finish, step, body) {
-    return { kind: "ForStatement", varName, start, finish, step, body };
+function createForStatement(varName, start, finish, step, body, filePath, lineNumber) {
+    return { kind: "ForStatement", varName, start, finish, step, body, filePath, lineNumber };
 }
 
 function createChangeHandler(typeName, fieldName, body) {

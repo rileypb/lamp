@@ -1,0 +1,10 @@
+game Test_1:
+    author "Test Author"
+    version 1
+    release dev
+
+global int score = 0
+
+on startup:
+    let score = 10
+    print score

@@ -6,6 +6,7 @@ function checkProgram(programAst, options = {}) {
     const kindSchema = buildKindSchema(programAst.nodes);
     const globalTypes = buildGlobalTypeSchema(programAst.nodes);
     const functionSchema = buildFunctionSchema(programAst.nodes);
+    const globalNames = new Set(globalTypes.keys());
 
     checkNativeVsLampConflicts(programAst.nodes);
     checkNativeFunctions(programAst.nodes, nativeFunctionNames);
@@ -17,14 +18,19 @@ function checkProgram(programAst, options = {}) {
         } else if (node.kind === "GlobalAssign") {
             checkGlobalAssign(node, globalTypes, typeSchema, kindSchema);
         } else if (node.kind === "EventHandler") {
-            checkStatements(node.body, typeSchema, kindSchema, new Map(), functionSchema);
+            checkStatements(node.body, typeSchema, kindSchema, new Map(), functionSchema, null, globalNames);
         } else if (node.kind === "ChangeHandler") {
             const localTypes = new Map([["self", node.typeName]]);
-            checkStatements(node.body, typeSchema, kindSchema, localTypes, functionSchema);
+            checkStatements(node.body, typeSchema, kindSchema, localTypes, functionSchema, null, globalNames);
         } else if (node.kind === "FunctionDecl") {
+            for (const p of node.params) {
+                if (globalNames.has(p.name)) {
+                    throw typeError(node.filePath, node.lineNumber, `parameter "${p.name}" shadows global "${p.name}"`);
+                }
+            }
             const localTypes = new Map(node.params.map((p) => [p.name, p.typeName]));
             const expectedReturn = node.returnType === "void" ? null : node.returnType;
-            checkStatements(node.body, typeSchema, kindSchema, localTypes, functionSchema, expectedReturn);
+            checkStatements(node.body, typeSchema, kindSchema, localTypes, functionSchema, expectedReturn, globalNames);
         }
     }
 }
@@ -222,26 +228,36 @@ function checkObjectDecl(node, typeSchema, kindSchema) {
     }
 }
 
-function checkStatements(statements, typeSchema, kindSchema, localTypes, functionSchema = new Map(), expectedReturnType = null) {
+function checkStatements(statements, typeSchema, kindSchema, localTypes, functionSchema = new Map(), expectedReturnType = null, globalNames = new Set()) {
     for (const stmt of statements) {
         if (stmt.kind === "LetStatement") {
+            if (globalNames.has(stmt.name)) {
+                throw typeError(stmt.filePath, stmt.lineNumber, `local "${stmt.name}" shadows global "${stmt.name}"`);
+            }
             const varType = inferExprType(stmt.expr, typeSchema, kindSchema, localTypes, functionSchema);
             if (varType) {
                 localTypes.set(stmt.name, varType);
             }
         } else if (stmt.kind === "AssignStatement") {
+            const head = stmt.targetChain[0];
+            if (stmt.targetChain.length === 1 && !localTypes.has(head) && !globalNames.has(head)) {
+                throw typeError(stmt.filePath, stmt.lineNumber, `assignment to undeclared name "${head}"`);
+            }
             checkAssignStatement(stmt, typeSchema, kindSchema, localTypes);
         } else if (stmt.kind === "IfStatement") {
-            checkStatements(stmt.thenBody, typeSchema, kindSchema, new Map(localTypes), functionSchema, expectedReturnType);
+            checkStatements(stmt.thenBody, typeSchema, kindSchema, new Map(localTypes), functionSchema, expectedReturnType, globalNames);
             if (stmt.elseBody) {
-                checkStatements(stmt.elseBody, typeSchema, kindSchema, new Map(localTypes), functionSchema, expectedReturnType);
+                checkStatements(stmt.elseBody, typeSchema, kindSchema, new Map(localTypes), functionSchema, expectedReturnType, globalNames);
             }
         } else if (stmt.kind === "WhileStatement") {
-            checkStatements(stmt.body, typeSchema, kindSchema, new Map(localTypes), functionSchema, expectedReturnType);
+            checkStatements(stmt.body, typeSchema, kindSchema, new Map(localTypes), functionSchema, expectedReturnType, globalNames);
         } else if (stmt.kind === "ForStatement") {
+            if (globalNames.has(stmt.varName)) {
+                throw typeError(stmt.filePath, stmt.lineNumber, `for loop variable "${stmt.varName}" shadows global "${stmt.varName}"`);
+            }
             const bodyTypes = new Map(localTypes);
             bodyTypes.set(stmt.varName, "int");
-            checkStatements(stmt.body, typeSchema, kindSchema, bodyTypes, functionSchema, expectedReturnType);
+            checkStatements(stmt.body, typeSchema, kindSchema, bodyTypes, functionSchema, expectedReturnType, globalNames);
         } else if (stmt.kind === "CallStatement") {
             checkCallStatement(stmt, typeSchema, kindSchema, localTypes, functionSchema);
         } else if (stmt.kind === "ReturnStatement") {

@@ -1,0 +1,3 @@
+Compile error: tests/fixtures/globalset2.lamp:9: type error: local "score" shadows global "score"
+  9 |     let score = 10
+    |     ^

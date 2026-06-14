@@ -399,13 +399,14 @@ function createParser(tokens, filePath, globalNames, functionNames = new Set()) 
     }
 
     function parseLet(localNames) {
+        const keyword = peek();
         expectKeyword("let");
         const name = plainName("variable name");
         expect("EQUALS");
         const expr = parseExpression(0, localNames);
         expectNewline();
         localNames.add(name);
-        return ast.createLetStatement(name, expr);
+        return ast.createLetStatement(name, expr, filePath, keyword.line);
     }
 
     function parsePrint(localNames) {
@@ -455,6 +456,7 @@ function createParser(tokens, filePath, globalNames, functionNames = new Set()) 
     }
 
     function parseFor(localNames) {
+        const keyword = peek();
         expectKeyword("for");
         const varName = plainName("loop variable");
         expect("EQUALS");
@@ -473,7 +475,7 @@ function createParser(tokens, filePath, globalNames, functionNames = new Set()) 
         const bodyLocals = new Set(localNames);
         bodyLocals.add(varName);
         const body = parseBlock(bodyLocals);
-        return ast.createForStatement(varName, start, finish, step, body);
+        return ast.createForStatement(varName, start, finish, step, body, filePath, keyword.line);
     }
 
     function parseAssign(localNames) {
