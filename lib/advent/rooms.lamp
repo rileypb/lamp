@@ -1,0 +1,6 @@
+
+
+on person.holder change:
+	print player.holder
+	print
+	print player.holder.description

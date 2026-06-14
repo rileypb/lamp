@@ -103,6 +103,7 @@ function createParser(tokens, filePath, globalNames, functionNames = new Set()) 
                 case "on": return parseOnHandler();
                 case "lib": return parseLibImport();
                 case "function": return parseFunctionDecl();
+                case "native": return parseNativeFunctionDecl();
                 default: throw err(`Unexpected '${token.value}' at top level`);
             }
         }
@@ -281,6 +282,25 @@ function createParser(tokens, filePath, globalNames, functionNames = new Set()) 
         const name = plainName("library name");
         expectNewline();
         return ast.createLibImport(name);
+    }
+
+    function parseNativeFunctionDecl() {
+        const keyword = expectKeyword("native");
+        expectKeyword("function");
+        const returnType = plainName("return type");
+        const name = plainName("function name");
+        expect("LPAREN", "Expected '(' after function name");
+        const params = [];
+        if (!at("RPAREN")) {
+            params.push(parseFunctionParam());
+            while (at("COMMA")) {
+                next();
+                params.push(parseFunctionParam());
+            }
+        }
+        expect("RPAREN", "Expected ')' to close parameter list");
+        expectNewline();
+        return ast.createNativeFunctionDecl(name, returnType, params, filePath, keyword.line);
     }
 
     function parseFunctionDecl() {

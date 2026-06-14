@@ -1,0 +1,15 @@
+game Game_1:
+    author "Test Author"
+    version 1
+    release dev
+
+lib nativetest
+
+function int apply(int n, function fn):
+    return fn(n)
+
+on startup:
+    print add(3, 4)
+    print double(5)
+    print apply(6, double)
+    print greet("lamp")

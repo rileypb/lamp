@@ -33,7 +33,9 @@ function runCompilation() {
     const runtimeModulePath = path.join(projectRoot, "src", "lamplighter");
     const runtimeRequirePath = toNodeRequirePath(path.relative(path.dirname(outputFile), runtimeModulePath));
 
-    const sourceFiles = gatherSourceFiles(libSysDir, inputFile, projectRoot);
+    const libDirs = gatherLibDirs(libSysDir, inputFile, projectRoot);
+    const sourceFiles = gatherLampFiles(libDirs, inputFile);
+    const { nativeJsContents, nativeFunctionNames } = gatherNativeJs(libDirs);
     const allNodes = [];
 
     const globalNames = new Set();
@@ -60,9 +62,9 @@ function runCompilation() {
     }
 
     const mergedProgram = { kind: "Program", nodes: allNodes };
-    checkProgram(mergedProgram);
+    checkProgram(mergedProgram, { nativeFunctionNames });
 
-    const outputJs = emitProgram(mergedProgram, { runtimeRequirePath });
+    const outputJs = emitProgram(mergedProgram, { runtimeRequirePath, nativeJsContents });
 
     fs.mkdirSync(path.dirname(outputFile), { recursive: true });
     fs.writeFileSync(outputFile, outputJs, "utf8");
@@ -107,30 +109,49 @@ function parseDiagnostic(message) {
     };
 }
 
-function gatherSourceFiles(libSysDir, userFile, projectRoot) {
-    const sysFiles = fs.readdirSync(libSysDir)
-        .filter((entry) => entry.endsWith(".lamp"))
-        .sort()
-        .map((entry) => path.join(libSysDir, entry));
-
+function gatherLibDirs(libSysDir, userFile, projectRoot) {
+    const dirs = [libSysDir];
     const userSource = fs.readFileSync(userFile, "utf8");
     const libImports = extractLibImports(userSource, userFile);
     const userFileDir = path.dirname(userFile);
-
-    const libFiles = [];
     for (const { name, filePath, lineNumber } of libImports) {
         const libDir = resolveLibDir(name, projectRoot, userFileDir);
         if (!libDir) {
             throw new Error(`${filePath}:${lineNumber}: library not found: ${name}`);
         }
-        const files = fs.readdirSync(libDir)
+        dirs.push(libDir);
+    }
+    return dirs;
+}
+
+function gatherLampFiles(libDirs, userFile) {
+    const [sysDir, ...importedDirs] = libDirs;
+    const sysFiles = fs.readdirSync(sysDir)
+        .filter((entry) => entry.endsWith(".lamp"))
+        .sort()
+        .map((entry) => path.join(sysDir, entry));
+    const libFiles = importedDirs.flatMap((dir) =>
+        fs.readdirSync(dir)
             .filter((entry) => entry.endsWith(".lamp"))
             .sort()
-            .map((entry) => path.join(libDir, entry));
-        libFiles.push(...files);
-    }
-
+            .map((entry) => path.join(dir, entry)),
+    );
     return [...sysFiles, ...libFiles, userFile];
+}
+
+function gatherNativeJs(libDirs) {
+    const nativeJsContents = [];
+    const nativeFunctionNames = new Set();
+    for (const dir of libDirs) {
+        const indexPath = path.join(dir, "index.js");
+        if (!fs.existsSync(indexPath)) continue;
+        const content = fs.readFileSync(indexPath, "utf8");
+        nativeJsContents.push(content);
+        for (const match of content.matchAll(/\bfunction\s+([A-Za-z_][A-Za-z0-9_]*)\s*\(/g)) {
+            nativeFunctionNames.add(match[1]);
+        }
+    }
+    return { nativeJsContents, nativeFunctionNames };
 }
 
 function extractLibImports(sourceText, filePath) {
@@ -166,7 +187,7 @@ function extractFunctionNames(sourceText) {
     const names = new Set();
     for (const line of sourceText.split(/\r?\n/)) {
         const code = line.replace(/#.*$/, "").trim();
-        const match = code.match(/^function\s+[A-Za-z_][A-Za-z0-9_]*\s+([A-Za-z_][A-Za-z0-9_]*)\s*\(/);
+        const match = code.match(/^(?:native\s+)?function\s+[A-Za-z_][A-Za-z0-9_]*\s+([A-Za-z_][A-Za-z0-9_]*)\s*\(/);
         if (match) {
             names.add(match[1]);
         }

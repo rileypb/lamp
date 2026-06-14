@@ -1,11 +1,13 @@
 const PRIMITIVE_TYPES = new Set(["string", "int", "bool", "real"]);
 
-function checkProgram(programAst) {
+function checkProgram(programAst, options = {}) {
+    const nativeFunctionNames = options.nativeFunctionNames || new Set();
     const typeSchema = buildTypeSchema(programAst.nodes);
     const kindSchema = buildKindSchema(programAst.nodes);
     const globalTypes = buildGlobalTypeSchema(programAst.nodes);
     const functionSchema = buildFunctionSchema(programAst.nodes);
 
+    checkNativeFunctions(programAst.nodes, nativeFunctionNames);
     checkFunctionOverloads(programAst.nodes, typeSchema, kindSchema, functionSchema);
 
     for (const node of programAst.nodes) {
@@ -22,6 +24,15 @@ function checkProgram(programAst) {
             const localTypes = new Map(node.params.map((p) => [p.name, p.typeName]));
             const expectedReturn = node.returnType === "void" ? null : node.returnType;
             checkStatements(node.body, typeSchema, kindSchema, localTypes, functionSchema, expectedReturn);
+        }
+    }
+}
+
+function checkNativeFunctions(nodes, nativeFunctionNames) {
+    for (const node of nodes) {
+        if (node.kind !== "NativeFunctionDecl") continue;
+        if (!nativeFunctionNames.has(node.name)) {
+            throw new Error(`${node.filePath}:${node.lineNumber}: type error: native function "${node.name}" has no JavaScript implementation`);
         }
     }
 }
@@ -108,7 +119,7 @@ function serializeWhenExpr(expr) {
 function buildFunctionSchema(nodes) {
     const functionSchema = new Map();
     for (const node of nodes) {
-        if (node.kind === "FunctionDecl") {
+        if (node.kind === "FunctionDecl" || node.kind === "NativeFunctionDecl") {
             functionSchema.set(node.name, { params: node.params, returnType: node.returnType });
         }
     }

@@ -1,0 +1,9 @@
+game Game_1:
+    author "Test Author"
+    version 1
+    release dev
+
+lib nativetest
+
+on startup:
+    print greet("world")

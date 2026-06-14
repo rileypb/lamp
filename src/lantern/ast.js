@@ -154,6 +154,10 @@ function createFunctionDecl(name, returnType, params, whenExpr, body, filePath, 
     return { kind: "FunctionDecl", name, returnType, params, whenExpr, body, filePath, lineNumber };
 }
 
+function createNativeFunctionDecl(name, returnType, params, filePath, lineNumber) {
+    return { kind: "NativeFunctionDecl", name, returnType, params, filePath, lineNumber };
+}
+
 function createAndExpr(left, right) {
     return { kind: "AndExpr", left, right };
 }
@@ -222,6 +226,7 @@ module.exports = {
     createForStatement,
     createChangeHandler,
     createFunctionDecl,
+    createNativeFunctionDecl,
     createCallStatement,
     createCallExpr,
     createReturnStatement,

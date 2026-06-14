@@ -35,6 +35,7 @@ const KEYWORDS = new Set([
     "and",
     "or",
     "not",
+    "native",
 ]);
 
 const SINGLE_CHAR_TOKENS = {

@@ -36,6 +36,16 @@ This includes all `.lamp` files from the resolved library directory in the compi
 
 **Resolution order**: Lantern searches for `LIBNAME` by looking first in the project-level `lib/` directory (`lib/LIBNAME/`), then in a `lib/` directory adjacent to the user file (`<user-file-dir>/lib/LIBNAME/`). The first match wins. If neither location exists, Lantern reports a compile error: `file:line: library not found: LIBNAME`.
 
+#### Native libraries
+
+A library directory may contain an `index.js` file alongside its `.lamp` files. If present, Lantern reads `index.js` and inlines its content verbatim into the generated JavaScript, immediately after `lamplighter.bootstrapBuiltins()`. This allows a library to provide JavaScript helper functions that Lamp code can call.
+
+**Constraint**: `index.js` must be self-contained — it may not `require()` sibling files. All supporting code must live in the single `index.js` file.
+
+The `lib/sys/` directory may also provide a native `index.js` using the same mechanism. Native JS from `lib/sys/` is included before any imported-library JS.
+
+Functions defined in `index.js` are declared to Lamp via `native function` (see Native functions below).
+
 #### Known limitations (v0)
 
 - Kind values are currently represented at runtime as strings.
@@ -132,7 +142,7 @@ Local variables (introduced by `let`) and loop variables (introduced by `for`) a
 
 Free text that contains spaces or punctuation is written as a double-quoted string literal, not a bare identifier (for example, `author "Phil Riley"`).
 
-The following words are **reserved** and may not be used as a name (object, type, kind, global, field, event, or local): `type`, `kind`, `global`, `on`, `for`, `while`, `if`, `else`, `let`, `print`, `error`, `dispatch`, `break`, `lib`, `to`, `step`, `change`, `function`, `return`, `when`, `and`, `or`, `not`. A reservation applies only to a whole identifier: a reserved word appearing *inside* a longer identifier is unrestricted, so `move_to_room` (which denotes the name `move to room`) is a valid identifier even though `to` is reserved.
+The following words are **reserved** and may not be used as a name (object, type, kind, global, field, event, or local): `type`, `kind`, `global`, `on`, `for`, `while`, `if`, `else`, `let`, `print`, `error`, `dispatch`, `break`, `lib`, `to`, `step`, `change`, `function`, `native`, `return`, `when`, `and`, `or`, `not`. A reservation applies only to a whole identifier: a reserved word appearing *inside* a longer identifier is unrestricted, so `move_to_room` (which denotes the name `move to room`) is a valid identifier even though `to` is reserved.
 
 ### Objects and types
 
@@ -430,6 +440,26 @@ A function reference is written as a bare identifier (the function name, without
 
 Function references are currently untyped beyond the `function` tag — the static checker does not validate that the referenced function's signature matches the parameter's expected signature.
 
+#### Native functions
+
+A library `.lamp` file may declare a function whose implementation is provided by the library's `index.js` rather than a Lamp body:
+
+```lamp
+native function RETURN_TYPE NAME(PARAM_TYPE PARAM_NAME, ...)
+```
+
+A native function declaration carries the full signature (return type, name, and parameter list) but no body. The Lamp type system treats it identically to a regular function — callers can pass arguments, receive a return value, and the static checker validates argument count and types.
+
+```lamp
+native function string greet(string name)
+native function int compute(int x, int y)
+```
+
+**Constraints**:
+- A native function declaration must appear in a `.lamp` file inside a library directory whose `index.js` defines a top-level JavaScript function with the same name. If no such implementation exists, Lantern reports a compile error.
+- Lantern detects native implementations by scanning `index.js` for `function NAME(` patterns. Arrow functions and other non-`function`-keyword forms are not detected and should not be used for native implementations.
+- `native function` does not support `when` guards — conditional overloads are for Lamp-bodied functions only.
+
 #### Conditional overloads
 
 A function may have multiple definitions, each with an optional `when` guard:
@@ -703,11 +733,11 @@ apply(5, double)
 
 Lantern compiles in three passes:
 
-1. **Pre-scan** (`index.js`): scan all source files with a single regex per line to collect declared global names and declared function names. Produces a `Set<string>` of global names and a `Set<string>` of function names. Both sets are needed so the parser can distinguish globals, function references, and enum-label string literals in expression context.
+1. **Pre-scan** (`index.js`): scan all source files with a single regex per line to collect declared global names and declared function names. Also scans each library directory for `index.js`; if present, reads it and extracts top-level function names (via `function NAME(` regex). Produces a `Set<string>` of global names, a `Set<string>` of function names, and the raw native JS content strings to inline.
 2. **Parse** (`parser_rd.js`): parse each file into an AST using the collected global and function names so that bare identifiers in expressions are resolved correctly.
 3. **Check** (`checker.js`) + **emit** (`emitter.js`): semantic check then emit standalone Node.js JavaScript.
 
-The emitted program runs in this order: kinds → kind constants → types → type constants → objects (primitive/kind fields only) → object-typed field assignments → global declarations → global assignments → function definitions → event handler registrations → `run()`. Globals and object-typed field assignments are placed after all `createObject` calls so that any `lamplighter.getObject(...)` reference resolves against an already-registered instance regardless of declaration order. Function definitions are emitted before event handler registrations so they are in scope when handlers run.
+The emitted program runs in this order: runtime bootstrap → native JS (inlined from `index.js` files) → kinds → kind constants → types → type constants → objects (primitive/kind fields only) → object-typed field assignments → global declarations → global assignments → function definitions → event handler registrations → `run()`. Globals and object-typed field assignments are placed after all `createObject` calls so that any `lamplighter.getObject(...)` reference resolves against an already-registered instance regardless of declaration order. Function definitions are emitted before event handler registrations so they are in scope when handlers run.
 
 ### Parser design
 
@@ -749,3 +779,4 @@ Lantern performs a semantic checking pass before emission.
 - Function parameters and the loop variable in `for` are typed as locals within their enclosing body. Function parameters take the declared parameter type; the loop variable has type `int`.
 - `function`-typed parameters and `FunctionRefExpr` values are accepted without deeper signature checking — the static checker does not currently validate that a passed function's parameter list or return type matches what the receiving parameter expects.
 - Conditional overloads (`when` clauses) are validated: all overloads of a function must share the same signature; at most one may be unconditional; `when` conditions may not contain function calls or function references; `when` conditions must produce a `bool` value. Syntactically identical `when` conditions on the same function produce a warning.
+- Native function declarations are validated against the collected native JavaScript: if a `native function` declaration names a function that does not appear (as a `function NAME(` pattern) in any `index.js` from the compiled library set, Lantern reports a compile error.

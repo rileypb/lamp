@@ -1,0 +1,9 @@
+game Game_1:
+    author "Test Author"
+    version 1
+    release dev
+
+native function int compute(int x)
+
+on startup:
+    print compute(5)
