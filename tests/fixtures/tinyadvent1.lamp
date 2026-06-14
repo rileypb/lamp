@@ -10,7 +10,9 @@ room foyer:
     description "A test room."
 
 on startup:
-    let words = read4()
+    let input = readline()
+    let words = split(input)
+    print input
     print words
     print words[0]
     print words[1]

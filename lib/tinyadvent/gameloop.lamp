@@ -1,2 +1,3 @@
 native function list<string> read4()
 native function string readline()
+native function list<string> split(string input)
