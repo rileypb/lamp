@@ -287,7 +287,8 @@ The following words must be added to the Lamp reserved words list in `specs.md`:
 
 - A relation store indexed by (relation type, node) for efficient edge retrieval, replacing the linear scan above. A `bidi` instance occupies two index entries (forward and inverse) referencing the same instance object. *(Phase 6.)*
 - A dedicated wildcard sentinel (distinct from `null`/`none`) used in query and removal field-mappings to mean "match any value." `none`/`null` in a slot continues to mean "match an unset field." Not added yet — it has no consumer until querying. *(Phase 6/7.)*
-- `lamplighter.removeRelation(typeName, fields)` — removes all matching instances (whole instances, including both index entries of a `bidi`) and unregisters any names they held. *(Phase 7.)*
+- `lamplighter.removeRelation(typeName, fields)` — removes all matching instances (whole instances, including both index entries of a `bidi`) and unregisters any names they held. `ANY` in a slot matches any value; unspecified slots default to `ANY` in the emitter. *(Phase 7. ✅ done)*
+- `lamplighter.removeRelationByName(name)` — removes the named relation instance and unregisters its name. Runtime error if the name is not found or refers to a non-relation object. *(Phase 7. ✅ done)*
 - `lamplighter.queryRelation(typeName, fields)` — returns matching instances; the wildcard sentinel matches any value; matches against either index entry of a `bidi` instance. *(Phase 6.)*
 - `lamplighter.getRelation(name)` — retrieves a named instance. *(Phase 4.)*
 - `addRelation` options: the `bidi` flag and in-place upgrade of an existing one-way instance. *(Phase 5.)*
@@ -381,12 +382,20 @@ As-built notes:
 - **`?` is a new token**; `all`/`first`/`only` are contextual qualifiers recognized only immediately after `?` (so `.first`/`.all` on lists are untouched).
 - **Reverse-oriented views are now implemented** (the deferred Phase 5/6 item) — required so a value query reads the correct endpoint for a `bidi` match.
 - **No node-indexed store still** — `queryRelation` linear-scans and computes the inverse on the fly.
-- **Discovered gap (not relations):** passing a bare object name as a *function argument* (`go(north)`) emits the string `"north"` instead of resolving the object, because call arguments aren't checked against parameter types. The navigation fixture avoids routing objects through function params; this general function-argument gap is noted in Known Issues.
+- **Discovered + fixed (not relations):** passing a bare object name as a *function argument* (`go(north)`) previously emitted the string `"north"`. The emitter now resolves object-typed call arguments via `getObject`, mirroring object field values, so the `go(direction)` navigation pattern works (see `relation18`).
 
-### Phase 7 — Remove / disconnect
+### Phase 7 — Remove / disconnect ✅ done
 - Parse `remove TEMPLATE` and `disconnect NAME`.
 - Emit `lamplighter.removeRelation(...)` and `lamplighter.removeRelationByName(...)`, removing whole instances and unregistering names.
 - Add `remove` and `disconnect` to the reserved words list.
+
+As-built notes:
+- **Two surface forms**: `remove TEMPLATE` (field-value match, wildcards allowed) and `disconnect NAME` (name registry lookup). Both work at top level and inside handlers/functions.
+- **Block form for `remove`**: `remove RELATION_NAME:` with an indented body of `FIELD_NAME VALUE_OR_WILDCARD` lines — same fallback as assertions, for relations without a syntax template.
+- **Wildcard slots in `remove`**: `_` compiles to `lamplighter.ANY`, same sentinel as query wildcards. Unspecified fields (in block form) default to `ANY` in the emitted query object so they match any value.
+- **`bidi` removal is whole-instance**: `removeRelation` matches a `bidi` instance via either its forward fields or its mechanical inverse (same as `queryRelation`). One match removes the entire instance — both index entries disappear.
+- **`disconnect` validates relation membership**: `removeRelationByName` throws a runtime error if the name is not registered or refers to a non-relation object (not in `relationRegistry`).
+- **No checker changes**: consistent with prior phases; field-name validation against the relation schema is still not checked at compile time.
 
 ### Phase 8 — Partial queries and specificity integration
 - Allow `_` in query slots in both `if` expressions and `when` clauses.
@@ -409,7 +418,7 @@ As-built notes:
 
 ## Known Issues
 
-- **Object names as function arguments** (pre-existing, not relation-specific): passing a bare object name to a function (`go(north)`) emits the string `"north"` rather than resolving the object, because call arguments are not checked against the function's declared parameter types (object-typed fields *are* resolved via that check elsewhere). Surfaced while writing a relation navigation fixture; the fixture works around it. Fix would resolve object-typed call arguments to `getObject` the way object field values are.
+(none currently)
 - **Additional instance fields** (deferred from Phase 4): the `connects NAME ...:` body of extra typed fields (`bool locked = false`). Needs decisions on (1) whether extra fields participate in deduplication or dedup stays endpoint-only, (2) whether the anonymous-instance print summary includes them, and (3) how fields absent from the relation schema are typed, checked, and queried.
 - **Mutation through a reverse-oriented view**: a query matching a `bidi` instance via its inverse index entry returns a view with endpoints oriented to the query, not the stored object. Reading is fine; writing a field through that view is the open wart. Intended guidance is to mutate via the canonical (named) instance or a forward match; whether reverse views should proxy writes back to the underlying instance is unresolved.
 

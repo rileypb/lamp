@@ -22,6 +22,14 @@ function createRelationQuery(relationName, fields, outputField, outputMode, file
     return { kind: "RelationQuery", relationName, fields, outputField, outputMode, filePath, lineNumber };
 }
 
+function createRelationRemove(relationName, fields, filePath, lineNumber) {
+    return { kind: "RelationRemove", relationName, fields, filePath, lineNumber };
+}
+
+function createDisconnectStatement(instanceName, filePath, lineNumber) {
+    return { kind: "DisconnectStatement", instanceName, filePath, lineNumber };
+}
+
 function createWildcardExpr() {
     return { kind: "WildcardExpr" };
 }
@@ -218,6 +226,8 @@ module.exports = {
     createRelationDecl,
     createRelationAssert,
     createRelationQuery,
+    createRelationRemove,
+    createDisconnectStatement,
     createWildcardExpr,
     createOutputSlot,
     createGlobalDecl,

@@ -146,6 +146,44 @@ function queryRelation(typeName, query) {
     return results;
 }
 
+// Removes all instances matching `query` (using ANY as wildcard). For `bidi`
+// instances, a match via the mechanical inverse also triggers removal of the
+// underlying instance (both index entries go away together).
+function removeRelation(typeName, query) {
+    if (!relationRegistry.has(typeName)) {
+        throw new Error(`Cannot remove unknown relation: ${typeName}`);
+    }
+    const keys = Object.keys(relationRegistry.get(typeName).fields);
+    const matches = (mapping) => keys.every((key) => query[key] === ANY || mapping[key] === query[key]);
+    const instances = instanceRegistry.get(typeName) || [];
+    const toRemove = new Set();
+    for (const instance of instances) {
+        if (matches(instance) || (instance.bidi && matches(relationInverse(typeName, instance)))) {
+            toRemove.add(instance);
+        }
+    }
+    for (const instance of toRemove) {
+        const idx = instances.indexOf(instance);
+        if (idx !== -1) instances.splice(idx, 1);
+        if (instance.name) {
+            nameRegistry.delete(instance.name);
+        }
+    }
+}
+
+// Removes the relation instance registered under `name`. Runtime error if no
+// such instance exists or if the name refers to a non-relation object.
+function removeRelationByName(name) {
+    const instance = nameRegistry.get(name);
+    if (!instance || !relationRegistry.has(instance.type)) {
+        throw new Error(`No relation instance named '${name}'`);
+    }
+    const instances = instanceRegistry.get(instance.type) || [];
+    const idx = instances.indexOf(instance);
+    if (idx !== -1) instances.splice(idx, 1);
+    nameRegistry.delete(name);
+}
+
 // Value query: returns the `outputField` of matching (oriented) edges.
 //   "all"   -> a list of the values
 //   "first" -> the first value, or none if no match
@@ -425,6 +463,8 @@ module.exports = {
     defineType,
     defineRelation,
     addRelation,
+    removeRelation,
+    removeRelationByName,
     queryRelation,
     queryRelationValue,
     ANY,

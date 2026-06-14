@@ -1,0 +1,4 @@
+You're in the hall.
+You're in the study.
+You're in the hall.
+You can't go that way.

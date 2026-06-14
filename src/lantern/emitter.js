@@ -33,12 +33,13 @@ function wrapIfNeeded(expr, parentPrec, globalNames, { rightOperand = false, lef
     return needsParens ? `(${emitExpression(expr, globalNames)})` : emitExpression(expr, globalNames);
 }
 
-// Relation field schemas (name -> { fieldName: typeName }) and the set of kind
-// names, set once at the start of emitProgram. emitRelationAssert reads these
-// from both top-level and statement-position call sites, so they are kept here
-// rather than threaded through every statement-emitting function.
+// Set once at the start of emitProgram and read from statement/expression
+// emitters, so they aren't threaded through every emitting function: relation
+// field schemas (name -> { fieldName: typeName }), the set of kind names, and
+// function parameter types (name -> [typeName]).
 let relationFieldSchemas = new Map();
-let relationKindNames = new Set();
+let emitKindNames = new Set();
+let functionParamTypes = new Map();
 
 function emitProgram(programAst, options = {}) {
     const runtimeRequirePath = options.runtimeRequirePath || "../lamplighter";
@@ -54,7 +55,13 @@ function emitProgram(programAst, options = {}) {
 
     const kindNames = new Set(kindNodes.map((n) => n.name));
 
-    relationKindNames = kindNames;
+    emitKindNames = kindNames;
+    functionParamTypes = new Map();
+    for (const node of programAst.nodes) {
+        if (node.kind === "FunctionDecl" || node.kind === "NativeFunctionDecl") {
+            functionParamTypes.set(node.name, node.params.map((p) => p.typeName));
+        }
+    }
     relationFieldSchemas = new Map();
     for (const relationNode of relationNodes) {
         const schema = {};
@@ -158,6 +165,20 @@ function emitProgram(programAst, options = {}) {
     }
 
     if (relationAssertNodes.length > 0) {
+        lines.push("");
+    }
+
+    const topLevelRemoveNodes = programAst.nodes.filter(
+        (node) => node.kind === "RelationRemove" || node.kind === "DisconnectStatement"
+    );
+    for (const removeNode of topLevelRemoveNodes) {
+        lines.push(
+            removeNode.kind === "RelationRemove"
+                ? emitRelationRemove(removeNode)
+                : emitDisconnect(removeNode)
+        );
+    }
+    if (topLevelRemoveNodes.length > 0) {
         lines.push("");
     }
 
@@ -298,7 +319,7 @@ function emitRelationAssert(node) {
         const isObjectTyped = field.value.kind === "StringLiteral"
             && fieldType !== undefined
             && !PRIMITIVE_TYPES.has(fieldType)
-            && !relationKindNames.has(fieldType);
+            && !emitKindNames.has(fieldType);
         const valueExpr = isObjectTyped
             ? `lamplighter.getObject(${JSON.stringify(field.value.value)})`
             : emitValue(field.value);
@@ -309,6 +330,55 @@ function emitRelationAssert(node) {
     if (node.bidi) opts.push("bidi: true");
     const optionsArg = opts.length > 0 ? `, { ${opts.join(", ")} }` : "";
     return `lamplighter.addRelation(${JSON.stringify(node.relationName)}, { ${pairs.join(", ")} }${optionsArg});`;
+}
+
+function emitRelationRemove(node, globalNames = new Set()) {
+    const schema = relationFieldSchemas.get(node.relationName) || {};
+    const specifiedFields = new Map(node.fields.map((f) => [f.fieldName, f.value]));
+    const pairs = Object.keys(schema).map((fieldName) => {
+        const value = specifiedFields.get(fieldName);
+        let valueExpr;
+        if (!value || value.kind === "WildcardExpr") {
+            valueExpr = "lamplighter.ANY";
+        } else if (
+            value.kind === "StringLiteral"
+            && !PRIMITIVE_TYPES.has(schema[fieldName])
+            && !emitKindNames.has(schema[fieldName])
+        ) {
+            valueExpr = `lamplighter.getObject(${JSON.stringify(value.value)})`;
+        } else {
+            valueExpr = emitExpression(value, globalNames);
+        }
+        return `${JSON.stringify(fieldName)}: ${valueExpr}`;
+    });
+    return `lamplighter.removeRelation(${JSON.stringify(node.relationName)}, { ${pairs.join(", ")} });`;
+}
+
+function emitDisconnect(node) {
+    return `lamplighter.removeRelationByName(${JSON.stringify(node.instanceName)});`;
+}
+
+// Emits a call's argument list. A bare object name parses to a StringLiteral
+// (indistinguishable from a quoted string in the AST), so — as with object field
+// values — when the parameter is object-typed it is resolved via getObject.
+function emitCallArgs(functionName, args, globalNames) {
+    const paramTypes = functionParamTypes.get(functionName) || [];
+    return args
+        .map((arg, i) => {
+            const paramType = paramTypes[i];
+            if (
+                arg.kind === "StringLiteral"
+                && paramType !== undefined
+                && paramType !== "function"
+                && !PRIMITIVE_TYPES.has(paramType)
+                && !emitKindNames.has(paramType)
+                && !paramType.startsWith("list<")
+            ) {
+                return `lamplighter.getObject(${JSON.stringify(arg.value)})`;
+            }
+            return emitExpression(arg, globalNames);
+        })
+        .join(", ");
 }
 
 function emitRelationQuery(node, globalNames) {
@@ -322,7 +392,7 @@ function emitRelationQuery(node, globalNames) {
             field.value.kind === "StringLiteral"
             && fieldType !== undefined
             && !PRIMITIVE_TYPES.has(fieldType)
-            && !relationKindNames.has(fieldType)
+            && !emitKindNames.has(fieldType)
         ) {
             valueExpr = `lamplighter.getObject(${JSON.stringify(field.value.value)})`;
         } else {
@@ -515,8 +585,14 @@ function emitStatementLines(statement, indentLevel, globalNames = new Set()) {
     if (statement.kind === "RelationAssert") {
         return [`${indent}${emitRelationAssert(statement)}`];
     }
+    if (statement.kind === "RelationRemove") {
+        return [`${indent}${emitRelationRemove(statement, globalNames)}`];
+    }
+    if (statement.kind === "DisconnectStatement") {
+        return [`${indent}${emitDisconnect(statement)}`];
+    }
     if (statement.kind === "CallStatement") {
-        const argExprs = statement.args.map((a) => emitExpression(a, globalNames)).join(", ");
+        const argExprs = emitCallArgs(statement.name, statement.args, globalNames);
         return [`${indent}${statement.name}(${argExprs});`];
     }
     if (statement.kind === "ReturnStatement") {
@@ -585,8 +661,7 @@ function emitExpression(expr, globalNames = new Set()) {
         return expr.fieldChain.length === 0 ? base : `${base}.${expr.fieldChain.join(".")}`;
     }
     if (expr.kind === "CallExpr") {
-        const argExprs = expr.args.map((a) => emitExpression(a, globalNames)).join(", ");
-        return `${expr.name}(${argExprs})`;
+        return `${expr.name}(${emitCallArgs(expr.name, expr.args, globalNames)})`;
     }
     if (expr.kind === "FunctionRefExpr") {
         return expr.name;

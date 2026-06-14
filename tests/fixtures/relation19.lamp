@@ -1,0 +1,37 @@
+game Relation_19:
+    author "Test Author"
+    version 1
+    release dev
+
+type room:
+    string description
+
+type direction:
+    direction inverse
+
+relation connects:
+    room source
+    direction dir inverted
+    room target
+    syntax "connects [source] [dir] [target]"
+
+direction north:
+    inverse south
+direction south:
+    inverse north
+
+room foyer:
+    description "You're in the foyer."
+room hall:
+    description "You're in the hall."
+
+connects foyer north hall
+
+on startup:
+    if connects foyer north hall:
+        print "connected"
+    remove connects foyer north hall
+    if connects foyer north hall:
+        print "still connected"
+    else:
+        print "disconnected"

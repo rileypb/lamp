@@ -100,6 +100,8 @@ function createParser(tokens, filePath, globalNames, functionNames = new Set(), 
                 case "type": return parseTypeDecl();
                 case "relation": return parseRelationDecl();
                 case "bidi": return parseBidiAssert();
+                case "remove": return parseRemoveStatement(new Set());
+                case "disconnect": return parseDisconnectStatement();
                 case "kind": return parseKindDecl();
                 case "global": return parseGlobalDecl();
                 case "on": return parseOnHandler();
@@ -218,6 +220,95 @@ function createParser(tokens, filePath, globalNames, functionNames = new Set(), 
         }
         node.bidi = true;
         return node;
+    }
+
+    // `remove RELATION ...` — remove all matching instances. Dispatches to
+    // block form or custom-syntax form, same as assertion. Slots may be `_`.
+    function parseRemoveStatement(localNames) {
+        const keyword = expectKeyword("remove");
+        const token = peek();
+        if (token.type !== "IDENT") {
+            throw err("Expected a relation name after 'remove'", token.line);
+        }
+        if (relationNames.has(token.value) && peek(1).type === "COLON") {
+            return parseBlockFormRemove(keyword.line, localNames);
+        }
+        if (relationTemplates.has(token.value)) {
+            return parseCustomSyntaxRemove(relationTemplates.get(token.value), keyword.line, localNames);
+        }
+        throw err(`'${token.value}' is not a relation`, token.line);
+    }
+
+    // Block-form remove: `remove RELATION_NAME:` + indented body of field/value lines.
+    // Slot values may be `_` wildcard.
+    function parseBlockFormRemove(keywordLine, localNames) {
+        const nameToken = peek();
+        const relationName = plainName("relation name");
+        expect("COLON", "Expected ':' after relation name in remove");
+        expectNewline();
+        expect("INDENT", "Expected an indented block");
+        const fields = [];
+        while (!at("DEDENT")) {
+            const slotToken = peek();
+            const fieldName = plainName("field name");
+            const value = parseRelationRemoveSlot(localNames);
+            expectNewline();
+            fields.push(ast.createFieldAssign(fieldName, value, filePath, slotToken.line));
+        }
+        next();
+        return ast.createRelationRemove(relationName, fields, filePath, keywordLine);
+    }
+
+    // Custom-syntax remove driven by the relation's `syntax` template. Literals
+    // must match verbatim; slot positions may be `_` wildcard or a simple value.
+    function parseCustomSyntaxRemove(template, keywordLine, localNames) {
+        next(); // consume leading literal (matched by dispatch)
+        const fields = [];
+        for (let i = 1; i < template.parts.length; i += 1) {
+            const part = template.parts[i];
+            if (part.kind === "literal") {
+                const token = peek();
+                if ((token.type === "IDENT" || token.type === "KEYWORD") && token.value === part.text) {
+                    next();
+                } else {
+                    throw err(`Expected '${part.text}' in ${template.relationName} remove`, token.line);
+                }
+            } else {
+                const slotToken = peek();
+                const value = parseRelationRemoveSlot(localNames);
+                fields.push(ast.createFieldAssign(part.field, value, filePath, slotToken.line));
+            }
+        }
+        expectNewline();
+        return ast.createRelationRemove(template.relationName, fields, filePath, keywordLine);
+    }
+
+    // A slot value in a `remove` statement: `_` wildcard, or a variable/global/
+    // literal/property-access (same atoms as a query slot, no `?` output marker).
+    function parseRelationRemoveSlot(localNames) {
+        if (at("IDENT") && peek().value === "_") {
+            next();
+            return ast.createWildcardExpr();
+        }
+        const token = next();
+        if (token.type === "NUMBER") return ast.createNumberLiteral(token.value);
+        if (token.type === "STRING") return ast.createStringLiteral(token.value);
+        if (token.type === "IDENT") {
+            const expr = parseIdentExpr(token, localNames);
+            if (expr.kind === "CallExpr") {
+                throw err("function calls are not allowed in a remove slot", token.line);
+            }
+            return expr;
+        }
+        throw err(`Expected a value or '_' in remove slot`, token.line);
+    }
+
+    // `disconnect NAME` — remove a named relation instance by name.
+    function parseDisconnectStatement() {
+        const keyword = expectKeyword("disconnect");
+        const name = coercedName("instance name");
+        expectNewline();
+        return ast.createDisconnectStatement(name, filePath, keyword.line);
     }
 
     // Block-form anonymous assertion: `RELATION_NAME:` followed by an indented
@@ -556,6 +647,8 @@ function createParser(tokens, filePath, globalNames, functionNames = new Set(), 
                 case "error": return parseErrorStatement(localNames);
                 case "return": return parseReturn(localNames);
                 case "bidi": return parseBidiAssert();
+                case "remove": return parseRemoveStatement(localNames);
+                case "disconnect": return parseDisconnectStatement();
                 case "break":
                     next();
                     expectNewline();

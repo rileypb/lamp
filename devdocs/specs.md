@@ -96,8 +96,12 @@ Lantern-generated JavaScript targets the following Lamplighter API surface:
     - Returns the matching edges as **oriented** field-mappings (the instance for a direct match; its mechanical inverse for a `bidi` instance matched in reverse). A slot holding the `ANY` wildcard sentinel matches any value; other slots match by identity (objects) or value (primitives).
 - `queryRelationValue(typeName, query, outputField, mode)`
     - Extracts `outputField` from the matching oriented edges. `mode` is `"all"` (returns a list), `"first"` (first value or `none`), or `"only"` (the single value, `none` if none, runtime error if more than one).
+- `removeRelation(typeName, query)`
+    - Removes all instances matching `query` (using `ANY` as wildcard). For `bidi` instances, a match via the mechanical inverse also removes the entire underlying instance (both index entries). Unregisters any name the removed instance held.
+- `removeRelationByName(name)`
+    - Removes the named relation instance and unregisters its name. Runtime error if the name is not found or refers to a non-relation object.
 - `ANY`
-    - The wildcard sentinel used in query slots, distinct from `null`/`none`.
+    - The wildcard sentinel used in query and remove slots, distinct from `null`/`none`.
 - `onEvent(eventName, handler)`
     - Registers an event handler callback.
 - `registerChangeHandler(typeName, fieldName, handler)`
@@ -156,7 +160,7 @@ Local variables (introduced by `let`) and loop variables (introduced by `for`) a
 
 Free text that contains spaces or punctuation is written as a double-quoted string literal, not a bare identifier (for example, `author "Phil Riley"`).
 
-The following words are **reserved** and may not be used as a name (object, type, kind, global, field, event, or local): `type`, `kind`, `global`, `on`, `for`, `while`, `if`, `else`, `let`, `print`, `error`, `dispatch`, `break`, `lib`, `to`, `step`, `change`, `function`, `native`, `return`, `when`, `and`, `or`, `not`, `relation`, `bidi`. (`syntax`, `source`, `target`, and `inverted` are contextual keywords recognized only inside a `relation` body and are not globally reserved.) A reservation applies only to a whole identifier: a reserved word appearing *inside* a longer identifier is unrestricted, so `move_to_room` (which denotes the name `move to room`) is a valid identifier even though `to` is reserved.
+The following words are **reserved** and may not be used as a name (object, type, kind, global, field, event, or local): `type`, `kind`, `global`, `on`, `for`, `while`, `if`, `else`, `let`, `print`, `error`, `dispatch`, `break`, `lib`, `to`, `step`, `change`, `function`, `native`, `return`, `when`, `and`, `or`, `not`, `relation`, `bidi`, `remove`, `disconnect`. (`syntax`, `source`, `target`, and `inverted` are contextual keywords recognized only inside a `relation` body and are not globally reserved.) A reservation applies only to a whole identifier: a reserved word appearing *inside* a longer identifier is unrestricted, so `move_to_room` (which denotes the name `move to room`) is a valid identifier even though `to` is reserved.
 
 ### Objects and types
 
@@ -433,7 +437,7 @@ greet("Hello", "World")
 fn(n)
 ```
 
-Arguments are full expressions and may include literals, variables, arithmetic, other function calls, and function references. The static checker verifies that the argument count matches the declaration and that argument types are compatible with parameter types where inferable.
+Arguments are full expressions and may include literals, variables, arithmetic, other function calls, and function references. The static checker verifies that the argument count matches the declaration and that argument types are compatible with parameter types where inferable. An argument that is a bare object name (which parses as a string) is resolved to the referenced object when the corresponding parameter is object-typed, mirroring object-typed field values.
 
 #### Function references
 
@@ -614,6 +618,36 @@ let way  = connects foyer ? hall          # list<direction> from foyer to hall
 - `?only` → the single value; `none` if no match, and a runtime error if more than one matches.
 
 `T` is the output slot's declared field type. A value query against a `bidi` relation returns the inverse-oriented value, so `connects hall south ?only` (with `bidi connects foyer north hall`) yields `foyer`. (`all`, `first`, and `only` are contextual qualifiers recognized only immediately after `?`.)
+
+#### Removing relation instances
+
+Two removal forms are supported:
+
+**Template-match remove** — removes all instances whose field values satisfy the template. Slots may be `_` (wildcard, matches any value):
+
+```lamp
+remove connects foyer north hall   # remove this specific edge
+remove connects foyer _ _          # remove all edges from foyer
+```
+
+For a `bidi` instance, a match via either its forward fields or its mechanical inverse triggers removal of the entire instance (both directions disappear).
+
+**Block form** (for relations without a syntax template):
+
+```lamp
+remove connects:
+    source foyer
+    dir _
+    target hall
+```
+
+**Disconnect by name** — removes a named relation instance:
+
+```lamp
+disconnect north_door
+```
+
+A runtime error if no relation instance is registered under that name. `remove` and `disconnect` may appear at the top level or inside event handlers, change handlers, and function bodies.
 
 #### Printing relation instances
 

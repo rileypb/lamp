@@ -38,6 +38,8 @@ const KEYWORDS = new Set([
     "native",
     "relation",
     "bidi",
+    "remove",
+    "disconnect",
 ]);
 
 const SINGLE_CHAR_TOKENS = {
