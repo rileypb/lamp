@@ -19,3 +19,5 @@ type box < item, container:
 	bool closed
 
 type person < physical
+
+type direction

@@ -4,3 +4,14 @@ global string input = none
 
 global list<string> words = none
 
+# directions
+direction north
+direction northeast
+direction east
+direction southeast
+direction south
+direction southwest
+direction west
+direction northwest
+direction up
+direction down
