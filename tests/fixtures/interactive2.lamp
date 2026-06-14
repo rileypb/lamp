@@ -1,0 +1,10 @@
+game Test_2:
+	author "Test Author"
+	version 1
+	release dev
+
+on startup:
+	let line = readline()
+	let parts = split(line)
+	print line
+	print parts
