@@ -183,6 +183,8 @@ The example above requires a function parameter (`d`) inside a `when` condition,
 
 ## Print Behavior
 
+*Implemented (Phase 2).*
+
 Named relation instances print their name, consistent with all other named objects.
 
 Anonymous relation instances print as their type name followed by a parenthesized field summary:
@@ -191,7 +193,7 @@ Anonymous relation instances print as their type name followed by a parenthesize
 connects(foyer, north, hall)
 ```
 
-Fields are listed in declaration order; object-valued fields print as their name.
+Fields are listed in declaration order; object-valued fields print as their name. This was brought forward into Phase 2 (ahead of named instances) because relation instances are otherwise unobservable, which made anonymous assertion untestable.
 
 ## Change Handlers
 
@@ -224,30 +226,47 @@ The following words must be added to the Lamp reserved words list in `specs.md`:
 
 ## Lamplighter Runtime
 
-Relation instances need runtime support beyond the existing `createObject` / `setField` model:
+### Implemented so far (Phases 1–2)
 
-- A relation store indexed by (relation type, node) so that outgoing and incoming edges can be retrieved efficiently. A `bidi` instance occupies two index entries (forward and inverse) that reference the same instance object.
-- A dedicated wildcard sentinel (distinct from `null`/`none`) used in query and removal field-mappings to mean "match any value." `none`/`null` in a slot continues to mean "match an unset field."
-- `lamplighter.defineRelation(name, fields, syntaxTemplate?)` — registers a relation type, including a type handle so that `TYPE.all` resolves for the relation type.
-- `lamplighter.addRelation(typeName, fields, options?)` — creates a relation instance, enforcing deduplication; `options` carries the optional instance name and the `bidi` flag. Returns the (possibly pre-existing or upgraded) instance.
-- `lamplighter.removeRelation(typeName, fields)` — removes all matching instances (whole instances, including both index entries of a `bidi`) and unregisters any names they held; the wildcard sentinel in a slot matches any value.
-- `lamplighter.queryRelation(typeName, fields)` — returns matching instances; the wildcard sentinel in a slot matches any value; matches against either index entry of a `bidi` instance.
-- `lamplighter.getRelation(name)` — retrieves a named instance.
+- `lamplighter.defineRelation(name, fields, syntaxTemplate?)` — registers a relation type. Internally it calls `defineType(name, [], fields)` so the relation reuses the existing type/instance machinery (including the `TYPE.all` accessor), then records the field schema and syntax template in a separate `relationRegistry` for later phases.
+- `lamplighter.addRelation(typeName, fields, options?)` — creates an anonymous relation instance, enforcing deduplication (object fields by identity, value fields by `===`); a duplicate assertion returns the existing instance. The instance is pushed onto the relation type's instance list, so `TYPE.all` includes it. `options.name` is accepted but not yet exercised (named instances are Phase 4).
+- **Storage**: relation instances currently live in the ordinary type instance registry (the same store `createObject` uses). Deduplication and `.all` scan that per-type list linearly. There is no dedicated node-indexed store yet (see below).
+- **Print**: `formatValue` renders a named relation instance as its name and an anonymous one as `type(field, ...)` (declaration-order field summary).
 
-Named relation instances are registered as objects so that `getObject` works for them. Every instance, named or not, is added to its relation type's `all` list.
+### Planned (later phases)
+
+- A relation store indexed by (relation type, node) for efficient edge retrieval, replacing the linear scan above. A `bidi` instance occupies two index entries (forward and inverse) referencing the same instance object. *(Phase 6.)*
+- A dedicated wildcard sentinel (distinct from `null`/`none`) used in query and removal field-mappings to mean "match any value." `none`/`null` in a slot continues to mean "match an unset field." Not added yet — it has no consumer until querying. *(Phase 6/7.)*
+- `lamplighter.removeRelation(typeName, fields)` — removes all matching instances (whole instances, including both index entries of a `bidi`) and unregisters any names they held. *(Phase 7.)*
+- `lamplighter.queryRelation(typeName, fields)` — returns matching instances; the wildcard sentinel matches any value; matches against either index entry of a `bidi` instance. *(Phase 6.)*
+- `lamplighter.getRelation(name)` — retrieves a named instance. *(Phase 4.)*
+- `addRelation` options: the `bidi` flag and in-place upgrade of an existing one-way instance. *(Phase 5.)*
+
+Named relation instances will be registered as objects so that `getObject` works for them. Every instance, named or not, is added to its relation type's `all` list.
 
 ## Implementation Phases
 
-### Phase 1 — Relation type declarations
+### Phase 1 — Relation type declarations ✅ done
 - Parse `relation TYPE_NAME:` with field declarations and optional `syntax` field (`syntax` recognized as a contextual keyword in this position).
-- Add `relation` to the AST and pre-scan; add `relation` to the reserved words list.
-- Emit `lamplighter.defineRelation(name, fields, syntaxTemplate?)`, including type-handle registration so `TYPE.all` resolves.
+- Add `relation` to the AST and to the reserved words list.
+- Emit `lamplighter.defineRelation(name, fields, syntaxTemplate?)` plus a `const NAME = lamplighter.type(NAME)` handle so `TYPE.all` resolves.
 - No instantiation yet; just the type registry.
 
-### Phase 2 — Anonymous assertion (block form)
-- Parse block-form relation assertion at the top level and inside handlers.
-- Emit `lamplighter.addRelation(...)`.
-- Add the relation store, the wildcard sentinel, the deduplication check, and `addRelation` to Lamplighter.
+As-built notes:
+- **Pre-scan was *not* changed in Phase 1.** Relation names are not referenced from expressions or statements at the declaration stage, so nothing needed collecting yet. Pre-scan collection of relation names landed in Phase 2, where dispatch requires it.
+- **No checker changes.** `print` statements are not type-checked and no checkable position references relations, so the semantic checker was left untouched. Relation-aware inference is deferred to the query phase.
+
+### Phase 2 — Anonymous assertion (block form) ✅ done
+- Parse block-form relation assertion at the top level and inside handlers/functions (reuses the object-body parser).
+- Pre-scan relation names (in `lantern/index.js`) and thread the set to the parser so `RELATION_NAME:` dispatches to assertion rather than an object declaration.
+- Emit `lamplighter.addRelation(typeName, fields)`, resolving object-typed slot values to `getObject(...)`.
+- Add `addRelation` + the deduplication check to Lamplighter.
+
+As-built notes:
+- **No dedicated relation store.** Instances are kept in the existing type instance registry; dedup and `.all` scan that list. The node-indexed store is deferred to Phase 6 (it is a query optimization with no consumer yet).
+- **Wildcard sentinel deferred** to Phase 6/7 for the same reason.
+- **Print Behavior implemented here** (see Print Behavior) to make assertions observable.
+- **No checker validation** of assertion field names against the relation schema yet (a misspelled slot name passes silently). To be added with query type-checking.
 
 ### Phase 3 — Custom syntax assertion
 - During pre-scan, collect syntax templates; enforce the "template begins with a literal" rule and leading-literal disambiguation.
@@ -289,6 +308,10 @@ Named relation instances are registered as objects so that `getObject` works for
 - **Relation constructor expression**: Phase 5 also needs a side-effect-free way to *construct* a relation field-mapping value (for the inverse operation to return) that is syntactically distinct from the assertion statement. The provisional `connects(field = value, ...)` form needs to be designed and reconciled with the rest of the expression grammar.
 - **Custom equality functions**: The default deduplication criterion (field identity for objects, value equality for primitives) covers most cases. Future extension: allow a relation type to declare an `equals` function for domain-specific equality.
 - **Relation inheritance**: Whether relation types can inherit from one another (`relation TYPE < PARENT`) is not yet decided. Treated as out of scope until a concrete need arises.
+
+## Known Issues
+
+- **Empty-list printing** (pre-existing, not relation-specific): `print connects.all` on a relation with zero instances renders `[object Object]` instead of an empty string. The cause is in `lamplighter.isListValue`, which treats `first === undefined` as "not a list"; an empty list has an undefined `first`. Relations surface this readily via empty `.all`, but the bug affects every empty `list<T>`. Fix is out of scope for the relations work but should be addressed before relying on empty-`.all` output.
 
 ## Resolved (previously open)
 

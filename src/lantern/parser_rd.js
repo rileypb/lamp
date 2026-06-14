@@ -22,12 +22,12 @@ function getInfixBP(token) {
     return BP[token.type];
 }
 
-function parseSource(sourceText, filePath, globalNames = new Set(), functionNames = new Set()) {
+function parseSource(sourceText, filePath, globalNames = new Set(), functionNames = new Set(), relationNames = new Set()) {
     const tokens = tokenize(sourceText, filePath);
-    return createParser(tokens, filePath, globalNames, functionNames).parseProgram();
+    return createParser(tokens, filePath, globalNames, functionNames, relationNames).parseProgram();
 }
 
-function createParser(tokens, filePath, globalNames, functionNames = new Set()) {
+function createParser(tokens, filePath, globalNames, functionNames = new Set(), relationNames = new Set()) {
     let pos = 0;
 
     const peek = (offset = 0) => tokens[pos + offset];
@@ -109,6 +109,7 @@ function createParser(tokens, filePath, globalNames, functionNames = new Set()) 
             }
         }
         if (token.type === "IDENT") {
+            if (relationNames.has(token.value) && peek(1).type === "COLON") return parseRelationAssert();
             return peek(1).type === "EQUALS" ? parseGlobalAssign() : parseObjectDecl();
         }
         throw err(`Unexpected token at top level: ${token.type}`);
@@ -181,6 +182,17 @@ function createParser(tokens, filePath, globalNames, functionNames = new Set()) 
         }
         next();
         return { fields, syntax };
+    }
+
+    // Block-form anonymous assertion: `RELATION_NAME:` followed by an indented
+    // body of `FIELD_NAME VALUE` lines (same shape as an object body).
+    function parseRelationAssert() {
+        const nameToken = peek();
+        const relationName = plainName("relation name");
+        expect("COLON", "Expected ':' after relation name");
+        expectNewline();
+        const fields = parseObjectBody();
+        return ast.createRelationAssert(relationName, fields, filePath, nameToken.line);
     }
 
     function parseFieldType() {
@@ -402,6 +414,7 @@ function createParser(tokens, filePath, globalNames, functionNames = new Set()) 
             }
         }
         if (token.type === "IDENT") {
+            if (relationNames.has(token.value) && peek(1).type === "COLON") return parseRelationAssert();
             if (peek(1).type === "LPAREN") return parseCallStatement(localNames);
             return parseAssign(localNames);
         }

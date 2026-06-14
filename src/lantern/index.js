@@ -40,6 +40,7 @@ function runCompilation() {
 
     const globalNames = new Set();
     const functionNames = new Set();
+    const relationNames = new Set();
     for (const sourceFile of sourceFiles) {
         const source = fs.readFileSync(sourceFile, "utf8");
         for (const name of extractGlobalNames(source)) {
@@ -48,11 +49,14 @@ function runCompilation() {
         for (const name of extractFunctionNames(source)) {
             functionNames.add(name);
         }
+        for (const name of extractRelationNames(source)) {
+            relationNames.add(name);
+        }
     }
 
     for (const sourceFile of sourceFiles) {
         const source = fs.readFileSync(sourceFile, "utf8");
-        const ast = parseSource(source, sourceFile, globalNames, functionNames);
+        const ast = parseSource(source, sourceFile, globalNames, functionNames, relationNames);
         allNodes.push(...ast.nodes);
     }
 
@@ -200,6 +204,18 @@ function extractGlobalNames(sourceText) {
     for (const line of sourceText.split(/\r?\n/)) {
         const code = line.replace(/#.*$/, "").trim();
         const match = code.match(/^global\s+[A-Za-z_][A-Za-z0-9_<>]*\s+([A-Za-z_][A-Za-z0-9_]*)\s*=/);
+        if (match) {
+            names.add(match[1]);
+        }
+    }
+    return names;
+}
+
+function extractRelationNames(sourceText) {
+    const names = new Set();
+    for (const line of sourceText.split(/\r?\n/)) {
+        const code = line.replace(/#.*$/, "").trim();
+        const match = code.match(/^relation\s+([A-Za-z_][A-Za-z0-9_]*)\s*:/);
         if (match) {
             names.add(match[1]);
         }

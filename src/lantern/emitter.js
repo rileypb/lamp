@@ -33,6 +33,13 @@ function wrapIfNeeded(expr, parentPrec, globalNames, { rightOperand = false, lef
     return needsParens ? `(${emitExpression(expr, globalNames)})` : emitExpression(expr, globalNames);
 }
 
+// Relation field schemas (name -> { fieldName: typeName }) and the set of kind
+// names, set once at the start of emitProgram. emitRelationAssert reads these
+// from both top-level and statement-position call sites, so they are kept here
+// rather than threaded through every statement-emitting function.
+let relationFieldSchemas = new Map();
+let relationKindNames = new Set();
+
 function emitProgram(programAst, options = {}) {
     const runtimeRequirePath = options.runtimeRequirePath || "../lamplighter";
     const nativeJsContents = options.nativeJsContents || [];
@@ -46,6 +53,16 @@ function emitProgram(programAst, options = {}) {
     const functionNodes = programAst.nodes.filter((node) => node.kind === "FunctionDecl");
 
     const kindNames = new Set(kindNodes.map((n) => n.name));
+
+    relationKindNames = kindNames;
+    relationFieldSchemas = new Map();
+    for (const relationNode of relationNodes) {
+        const schema = {};
+        for (const field of relationNode.fields) {
+            schema[field.fieldName] = field.typeName;
+        }
+        relationFieldSchemas.set(relationNode.name, schema);
+    }
 
     const lines = [];
     lines.push("#!/usr/bin/env node");
@@ -132,6 +149,15 @@ function emitProgram(programAst, options = {}) {
     }
 
     if (objectNodes.length > 0) {
+        lines.push("");
+    }
+
+    const relationAssertNodes = programAst.nodes.filter((node) => node.kind === "RelationAssert");
+    for (const assertNode of relationAssertNodes) {
+        lines.push(emitRelationAssert(assertNode));
+    }
+
+    if (relationAssertNodes.length > 0) {
         lines.push("");
     }
 
@@ -263,6 +289,22 @@ function emitRelationDecl(node) {
     }
     const syntaxArg = node.syntax === null ? "null" : JSON.stringify(node.syntax);
     return `lamplighter.defineRelation(${JSON.stringify(node.name)}, ${JSON.stringify(fields)}, ${syntaxArg});`;
+}
+
+function emitRelationAssert(node) {
+    const schema = relationFieldSchemas.get(node.relationName) || {};
+    const pairs = node.fields.map((field) => {
+        const fieldType = schema[field.fieldName];
+        const isObjectTyped = field.value.kind === "StringLiteral"
+            && fieldType !== undefined
+            && !PRIMITIVE_TYPES.has(fieldType)
+            && !relationKindNames.has(fieldType);
+        const valueExpr = isObjectTyped
+            ? `lamplighter.getObject(${JSON.stringify(field.value.value)})`
+            : emitValue(field.value);
+        return `${JSON.stringify(field.fieldName)}: ${valueExpr}`;
+    });
+    return `lamplighter.addRelation(${JSON.stringify(node.relationName)}, { ${pairs.join(", ")} });`;
 }
 
 function emitObjectDecl(node, mergedTypes = new Map(), kindNames = new Set()) {
@@ -439,6 +481,9 @@ function emitStatementLines(statement, indentLevel, globalNames = new Set()) {
         lines.push(...emitStatementList(statement.body, indentLevel + 1, globalNames));
         lines.push(`${indent}}`);
         return lines;
+    }
+    if (statement.kind === "RelationAssert") {
+        return [`${indent}${emitRelationAssert(statement)}`];
     }
     if (statement.kind === "CallStatement") {
         const argExprs = statement.args.map((a) => emitExpression(a, globalNames)).join(", ");

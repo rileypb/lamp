@@ -14,6 +14,10 @@ function createRelationDecl(name, fields, syntax, filePath, lineNumber) {
     return { kind: "RelationDecl", name, fields, syntax, filePath, lineNumber };
 }
 
+function createRelationAssert(relationName, fields, filePath, lineNumber) {
+    return { kind: "RelationAssert", relationName, fields, filePath, lineNumber };
+}
+
 function createGlobalDecl(name, typeName, value, filePath, lineNumber) {
     return { kind: "GlobalDecl", name, typeName, value, filePath, lineNumber };
 }
@@ -199,6 +203,7 @@ module.exports = {
     createTypeDecl,
     createObjectDecl,
     createRelationDecl,
+    createRelationAssert,
     createGlobalDecl,
     createGlobalAssign,
     createKindDecl,

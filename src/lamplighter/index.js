@@ -61,6 +61,44 @@ function defineRelation(name, fields, syntaxTemplate = null) {
     relationRegistry.set(name, { name, fields: { ...fields }, syntax: syntaxTemplate });
 }
 
+// Asserts a relation instance. Deduplicates by field values (object fields by
+// identity, value fields by ===), returning the existing instance on a match so
+// that asserting the same edge twice is a no-op. Instances live in the type's
+// instance list so that `TYPE.all` includes them.
+function addRelation(typeName, fields, options = {}) {
+    if (!relationRegistry.has(typeName)) {
+        throw new Error(`Cannot assert unknown relation: ${typeName}`);
+    }
+
+    const existing = findMatchingRelation(typeName, fields);
+    if (existing) {
+        return existing;
+    }
+
+    const instance = {
+        name: options.name ?? null,
+        type: typeName,
+        ...fields,
+    };
+
+    instanceRegistry.get(typeName).push(instance);
+    if (options.name) {
+        nameRegistry.set(options.name, instance);
+    }
+    return instance;
+}
+
+function findMatchingRelation(typeName, fields) {
+    const instances = instanceRegistry.get(typeName) || [];
+    const fieldNames = Object.keys(fields);
+    for (const instance of instances) {
+        if (fieldNames.every((fieldName) => instance[fieldName] === fields[fieldName])) {
+            return instance;
+        }
+    }
+    return null;
+}
+
 function createObject(typeName, objectName, fieldValues) {
     if (!typeRegistry.has(typeName)) {
         throw new Error(`Cannot create object of unknown type: ${typeName}`);
@@ -188,7 +226,16 @@ function formatValue(value) {
     if (value && typeof value === "object" && typeof value.name === "string") {
         return value.name;
     }
+    if (value && typeof value === "object" && relationRegistry.has(value.type)) {
+        return formatRelationValue(value);
+    }
     return value;
+}
+
+function formatRelationValue(instance) {
+    const fieldNames = Object.keys(relationRegistry.get(instance.type).fields);
+    const parts = fieldNames.map((fieldName) => String(formatValue(instance[fieldName])));
+    return `${instance.type}(${parts.join(", ")})`;
 }
 
 function isListValue(value) {
@@ -294,6 +341,7 @@ module.exports = {
     bootstrapBuiltins,
     defineType,
     defineRelation,
+    addRelation,
     createObject,
     getObject,
     defineGlobal,
