@@ -3,27 +3,7 @@ game Relation_20:
     version 1
     release dev
 
-type room:
-    string description
-
-type direction:
-    direction inverse
-
-relation connects:
-    room source
-    direction dir inverted
-    room target
-    syntax "connects [source] [dir] [target]"
-
-direction north:
-    inverse south
-direction south:
-    inverse north
-
-room foyer:
-    description "You're in the foyer."
-room hall:
-    description "You're in the hall."
+lib relations
 
 connects north_door foyer north hall
 

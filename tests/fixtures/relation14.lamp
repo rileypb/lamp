@@ -3,24 +3,9 @@ game Relation_14:
     version 1
     release dev
 
-type room
-type direction:
-    direction inverse
+lib relations
 
 global room here = hall
-
-room foyer
-room hall
-direction north:
-    inverse south
-direction south:
-    inverse north
-
-relation connects:
-    room source
-    direction dir inverted
-    room target
-    syntax "connects [source] [dir] [target]"
 
 bidi connects foyer north hall
 

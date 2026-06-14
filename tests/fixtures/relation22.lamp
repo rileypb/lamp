@@ -3,27 +3,7 @@ game Relation_22:
     version 1
     release dev
 
-type room
-type direction:
-    direction inverse
-
-room foyer
-room hall
-room study
-direction north:
-    inverse south
-direction south:
-    inverse north
-direction east:
-    inverse west
-direction west:
-    inverse east
-
-relation connects:
-    room source
-    direction dir inverted
-    room target
-    syntax "connects [source] [dir] [target]"
+lib relations
 
 # specificity 0 (fallback)
 function void check():
