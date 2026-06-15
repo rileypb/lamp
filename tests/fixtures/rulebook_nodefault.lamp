@@ -1,0 +1,12 @@
+# A rulebook must declare a `default` value.
+
+game G:
+	author "x"
+	version 1
+
+rulebook int two(int n):
+	when n > 0:
+		stop 2
+
+on startup:
+	print follow two(1)

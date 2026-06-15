@@ -1,0 +1,35 @@
+# Exercises the general rulebook surface: typed result, ordered rules with
+# parameter-referencing guards, stop-with-value, default fall-through, and
+# `follow` invocation in expression position.
+
+game Rulebook_Demo:
+	author "Test Author"
+	version 1
+
+type animal:
+	bool tame
+
+animal cat:
+	tame true
+
+animal wolf:
+	tame false
+
+rulebook string sign(int n):
+	default "zero"
+	when n > 0:
+		stop "positive"
+	when n < 0:
+		stop "negative"
+
+rulebook string describe(animal a):
+	default "wild"
+	when a.tame:
+		stop "friendly"
+
+on startup:
+	print follow sign(7)
+	print follow sign(-2)
+	print follow sign(0)
+	print follow describe(cat)
+	print follow describe(wolf)

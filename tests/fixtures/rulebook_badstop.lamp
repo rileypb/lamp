@@ -1,0 +1,13 @@
+# A `stop` value must match the rulebook's declared result type.
+
+game G:
+	author "x"
+	version 1
+
+rulebook string sign(int n):
+	default "zero"
+	when n > 0:
+		stop 5
+
+on startup:
+	print follow sign(1)

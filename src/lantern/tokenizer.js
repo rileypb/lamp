@@ -40,6 +40,9 @@ const KEYWORDS = new Set([
     "bidi",
     "remove",
     "disconnect",
+    "rulebook",
+    "stop",
+    "follow",
 ]);
 
 const SINGLE_CHAR_TOKENS = {

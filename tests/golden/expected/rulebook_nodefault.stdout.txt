@@ -1,0 +1,3 @@
+Compile error: tests/fixtures/rulebook_nodefault.lamp:7: rulebook requires a 'default' value
+  7 | rulebook int two(int n):
+    | ^

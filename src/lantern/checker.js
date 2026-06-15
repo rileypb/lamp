@@ -5,6 +5,11 @@ const PRIMITIVE_TYPES = new Set(["string", "int", "bool", "real"]);
 // slot. Module-scoped to avoid threading it through every inference call.
 let relationSchema = new Map();
 
+// Rulebook signatures (name -> { params, returnType }), set at the start of
+// checkProgram so inferExprType can type a `follow` expression by the rulebook's
+// result type. Module-scoped, mirroring relationSchema.
+let rulebookSchema = new Map();
+
 function buildRelationSchema(nodes) {
     const schema = new Map();
     for (const node of nodes) {
@@ -14,9 +19,19 @@ function buildRelationSchema(nodes) {
     return schema;
 }
 
+function buildRulebookSchema(nodes) {
+    const schema = new Map();
+    for (const node of nodes) {
+        if (node.kind !== "RulebookDecl") continue;
+        schema.set(node.name, { params: node.params, returnType: node.resultType });
+    }
+    return schema;
+}
+
 function checkProgram(programAst, options = {}) {
     const nativeFunctionNames = options.nativeFunctionNames || new Set();
     relationSchema = buildRelationSchema(programAst.nodes);
+    rulebookSchema = buildRulebookSchema(programAst.nodes);
     const typeSchema = buildTypeSchema(programAst.nodes);
     const kindSchema = buildKindSchema(programAst.nodes);
     const globalTypes = buildGlobalTypeSchema(programAst.nodes);
@@ -50,7 +65,40 @@ function checkProgram(programAst, options = {}) {
             const localTypes = new Map(node.params.map((p) => [p.name, p.typeName]));
             const expectedReturn = node.returnType === "void" ? null : node.returnType;
             checkStatements(node.body, typeSchema, kindSchema, localTypes, functionSchema, expectedReturn, globalNames);
+        } else if (node.kind === "RulebookDecl") {
+            checkRulebookDecl(node, typeSchema, kindSchema, functionSchema, globalNames);
         }
+    }
+}
+
+function checkRulebookDecl(node, typeSchema, kindSchema, functionSchema, globalNames) {
+    for (const p of node.params) {
+        if (globalNames.has(p.name)) {
+            throw typeError(node.filePath, node.lineNumber, `parameter "${p.name}" shadows global "${p.name}"`);
+        }
+    }
+    const paramTypes = new Map(node.params.map((p) => [p.name, p.typeName]));
+
+    checkValueCompatibility(
+        node.defaultExpr,
+        node.resultType,
+        typeSchema,
+        kindSchema,
+        node.filePath,
+        node.lineNumber,
+        `default of rulebook "${node.name}"`,
+        paramTypes,
+        functionSchema,
+    );
+
+    // Each rule's guard must be boolean; its body may `stop` a value, which is
+    // checked against the result type (expectedReturnType) by checkStatements.
+    for (const rule of node.rules) {
+        const guardType = inferExprType(rule.whenExpr, typeSchema, kindSchema, paramTypes, functionSchema);
+        if (guardType !== null && guardType !== "bool") {
+            throw typeError(node.filePath, node.lineNumber, `rule guard in rulebook "${node.name}" must be boolean`);
+        }
+        checkStatements(rule.body, typeSchema, kindSchema, new Map(paramTypes), functionSchema, node.resultType, globalNames);
     }
 }
 
@@ -301,6 +349,8 @@ function checkStatements(statements, typeSchema, kindSchema, localTypes, functio
             checkStatements(stmt.body, typeSchema, kindSchema, bodyTypes, functionSchema, expectedReturnType, globalNames);
         } else if (stmt.kind === "CallStatement") {
             checkCallStatement(stmt, typeSchema, kindSchema, localTypes, functionSchema);
+        } else if (stmt.kind === "FollowStatement") {
+            checkFollowCall(stmt, typeSchema, kindSchema, localTypes, functionSchema);
         } else if (stmt.kind === "ReturnStatement") {
             if (stmt.expr !== null && expectedReturnType !== null) {
                 checkValueCompatibility(
@@ -315,7 +365,48 @@ function checkStatements(statements, typeSchema, kindSchema, localTypes, functio
                     functionSchema,
                 );
             }
+        } else if (stmt.kind === "StopStatement") {
+            if (stmt.expr !== null && expectedReturnType !== null) {
+                checkValueCompatibility(
+                    stmt.expr,
+                    expectedReturnType,
+                    typeSchema,
+                    kindSchema,
+                    stmt.filePath,
+                    stmt.lineNumber,
+                    "stop value",
+                    localTypes,
+                    functionSchema,
+                );
+            }
         }
+    }
+}
+
+function checkFollowCall(stmt, typeSchema, kindSchema, localTypes, functionSchema) {
+    const rb = rulebookSchema.get(stmt.name);
+    if (!rb) {
+        throw typeError(stmt.filePath, stmt.lineNumber, `unknown rulebook "${stmt.name}"`);
+    }
+    if (stmt.args.length !== rb.params.length) {
+        throw typeError(
+            stmt.filePath,
+            stmt.lineNumber,
+            `rulebook "${stmt.name}" expects ${rb.params.length} argument(s), got ${stmt.args.length}`,
+        );
+    }
+    for (let i = 0; i < rb.params.length; i++) {
+        checkValueCompatibility(
+            stmt.args[i],
+            rb.params[i].typeName,
+            typeSchema,
+            kindSchema,
+            stmt.filePath,
+            stmt.lineNumber,
+            `argument ${i + 1} of "${stmt.name}"`,
+            localTypes,
+            functionSchema,
+        );
     }
 }
 
@@ -461,6 +552,10 @@ function inferExprType(expr, typeSchema, kindSchema, localTypes, functionSchema 
     }
     if (expr.kind === "FunctionRefExpr") {
         return "function";
+    }
+    if (expr.kind === "FollowExpr") {
+        const rb = rulebookSchema.get(expr.name);
+        return rb ? rb.returnType : null;
     }
     if (expr.kind === "IndexExpr") {
         const targetType = inferExprType(expr.target, typeSchema, kindSchema, localTypes, functionSchema);

@@ -2,7 +2,7 @@
 // names, property-access chains, function calls) and never need extra parens.
 const SAFE_ATOM = new Set([
     "StringLiteral", "NumberLiteral", "BooleanLiteral", "NoneLiteral",
-    "VariableExpr", "PropertyAccess", "GlobalExpr", "ParenNameExpr", "Concat", "DivideExpr", "CallExpr", "FunctionRefExpr", "IndexExpr",
+    "VariableExpr", "PropertyAccess", "GlobalExpr", "ParenNameExpr", "Concat", "DivideExpr", "CallExpr", "FunctionRefExpr", "FollowExpr", "IndexExpr",
 ]);
 
 // JS operator precedence for the binary/unary expression kinds we emit.
@@ -57,7 +57,7 @@ function emitProgram(programAst, options = {}) {
     emitKindNames = kindNames;
     functionParamTypes = new Map();
     for (const node of programAst.nodes) {
-        if (node.kind === "FunctionDecl" || node.kind === "NativeFunctionDecl") {
+        if (node.kind === "FunctionDecl" || node.kind === "NativeFunctionDecl" || node.kind === "RulebookDecl") {
             functionParamTypes.set(node.name, node.params.map((p) => p.typeName));
         }
     }
@@ -212,6 +212,12 @@ function emitProgram(programAst, options = {}) {
 
     for (const [name, overloads] of functionGroups) {
         lines.push(emitFunctionGroup(name, overloads, globalNames));
+        lines.push("");
+    }
+
+    for (const node of programAst.nodes) {
+        if (node.kind !== "RulebookDecl") continue;
+        lines.push(emitRulebookDecl(node, globalNames));
         lines.push("");
     }
 
@@ -510,6 +516,24 @@ function emitFunctionGroup(name, overloads, globalNames) {
     return lines.join("\n");
 }
 
+// A rulebook compiles to a plain (hoisted) JS function: each rule is an
+// `if (guard) { ...body... }` whose `stop EXPR` emits a `return EXPR`. A body
+// that does not stop falls through to the next rule; once all rules are
+// exhausted the default value is returned. `follow NAME(args)` is emitted as an
+// ordinary call, so no runtime support is required.
+function emitRulebookDecl(node, globalNames = new Set()) {
+    const paramList = node.params.map((p) => p.name).join(", ");
+    const lines = [`function ${node.name}(${paramList}) {`];
+    for (const rule of node.rules) {
+        lines.push(`    if (${emitExpression(rule.whenExpr, globalNames)}) {`);
+        lines.push(...emitStatementList(rule.body, 2, globalNames));
+        lines.push(`    }`);
+    }
+    lines.push(`    return ${emitExpression(node.defaultExpr, globalNames)};`);
+    lines.push("}");
+    return lines.join("\n");
+}
+
 function emitEventHandler(node, globalNames = new Set()) {
     const bodyLines = emitStatementList(node.body, 1, globalNames);
     return [
@@ -628,6 +652,14 @@ function emitStatementLines(statement, indentLevel, globalNames = new Set()) {
         if (statement.expr === null) return [`${indent}return;`];
         return [`${indent}return ${emitExpression(statement.expr, globalNames)};`];
     }
+    if (statement.kind === "StopStatement") {
+        if (statement.expr === null) return [`${indent}return;`];
+        return [`${indent}return ${emitExpression(statement.expr, globalNames)};`];
+    }
+    if (statement.kind === "FollowStatement") {
+        const argExprs = emitCallArgs(statement.name, statement.args, globalNames);
+        return [`${indent}${statement.name}(${argExprs});`];
+    }
     throw new Error(`Unsupported statement kind: ${statement.kind}`);
 }
 
@@ -694,6 +726,9 @@ function emitExpression(expr, globalNames = new Set()) {
     }
     if (expr.kind === "FunctionRefExpr") {
         return expr.name;
+    }
+    if (expr.kind === "FollowExpr") {
+        return `${expr.name}(${emitCallArgs(expr.name, expr.args, globalNames)})`;
     }
     if (expr.kind === "AndExpr") {
         return `(${emitExpression(expr.left, globalNames)} && ${emitExpression(expr.right, globalNames)})`;

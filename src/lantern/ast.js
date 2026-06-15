@@ -227,6 +227,25 @@ function createFunctionRefExpr(name) {
     return { kind: "FunctionRefExpr", name };
 }
 
+// A rulebook: a typed, ordered, short-circuiting pipeline. `rules` is an ordered
+// list of { whenExpr, body }; `defaultExpr` is the value yielded when no rule
+// stops. See devdocs/specs.md, Rulebooks.
+function createRulebookDecl(name, resultType, params, rules, defaultExpr, filePath, lineNumber) {
+    return { kind: "RulebookDecl", name, resultType, params, rules, defaultExpr, filePath, lineNumber };
+}
+
+function createStopStatement(expr, filePath, lineNumber) {
+    return { kind: "StopStatement", expr, filePath, lineNumber };
+}
+
+function createFollowStatement(name, args, filePath, lineNumber) {
+    return { kind: "FollowStatement", name, args, filePath, lineNumber };
+}
+
+function createFollowExpr(name, args) {
+    return { kind: "FollowExpr", name, args };
+}
+
 module.exports = {
     createProgram,
     createTypeDecl,
@@ -281,6 +300,10 @@ module.exports = {
     createCallExpr,
     createReturnStatement,
     createFunctionRefExpr,
+    createRulebookDecl,
+    createStopStatement,
+    createFollowStatement,
+    createFollowExpr,
     createAndExpr,
     createOrExpr,
     createNotExpr,

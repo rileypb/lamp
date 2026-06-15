@@ -108,6 +108,7 @@ function createParser(tokens, filePath, globalNames, functionNames = new Set(), 
                 case "lib": return parseLibImport();
                 case "function": return parseFunctionDecl();
                 case "native": return parseNativeFunctionDecl();
+                case "rulebook": return parseRulebookDecl();
                 default: throw err(`Unexpected '${token.value}' at top level`);
             }
         }
@@ -625,6 +626,65 @@ function createParser(tokens, filePath, globalNames, functionNames = new Set(), 
         return { typeName, name };
     }
 
+    function parseRulebookDecl() {
+        const keyword = expectKeyword("rulebook");
+        const resultType = parseFieldType();
+        const name = plainName("rulebook name");
+        expect("LPAREN", "Expected '(' after rulebook name");
+        const params = [];
+        if (!at("RPAREN")) {
+            params.push(parseFunctionParam());
+            while (at("COMMA")) {
+                next();
+                params.push(parseFunctionParam());
+            }
+        }
+        expect("RPAREN", "Expected ')' to close parameter list");
+        expect("COLON", "Expected ':' after rulebook header");
+        expectNewline();
+        const paramLocals = new Set(params.map((p) => p.name));
+        const { rules, defaultExpr } = parseRulebookBody(paramLocals, keyword.line);
+        return ast.createRulebookDecl(name, resultType, params, rules, defaultExpr, filePath, keyword.line);
+    }
+
+    // A rulebook body holds a single required `default EXPR` line (a contextual
+    // keyword, not globally reserved) and zero or more `when COND:` rules. Rules
+    // run in declaration order; `default` may appear anywhere among them.
+    function parseRulebookBody(paramLocals, declLine) {
+        expect("INDENT", "Expected an indented rulebook body");
+        const rules = [];
+        let defaultExpr = null;
+        while (!at("DEDENT")) {
+            if (at("EOF")) {
+                throw err("Unexpected end of input inside rulebook body");
+            }
+            if (peek().type === "IDENT" && peek().value === "default") {
+                if (defaultExpr !== null) {
+                    throw err("a rulebook may declare 'default' only once");
+                }
+                next();
+                defaultExpr = parseExpression(0, paramLocals);
+                expectNewline();
+                continue;
+            }
+            if (atKeyword("when")) {
+                next();
+                const whenExpr = parseExpression(0, paramLocals);
+                expect("COLON", "Expected ':' after rule guard");
+                expectNewline();
+                const body = parseBlock(new Set(paramLocals));
+                rules.push({ whenExpr, body });
+                continue;
+            }
+            throw err("Expected 'default' or a 'when' rule inside rulebook body");
+        }
+        next();
+        if (defaultExpr === null) {
+            throw syntaxError(filePath, declLine, "rulebook requires a 'default' value");
+        }
+        return { rules, defaultExpr };
+    }
+
     function parseBlock(localNames) {
         expect("INDENT", "Expected an indented block");
         const statements = [];
@@ -653,6 +713,8 @@ function createParser(tokens, filePath, globalNames, functionNames = new Set(), 
                 case "bidi": return parseBidiAssert();
                 case "remove": return parseRemoveStatement(localNames);
                 case "disconnect": return parseDisconnectStatement();
+                case "stop": return parseStop(localNames);
+                case "follow": return parseFollowStatement(localNames);
                 case "break":
                     next();
                     expectNewline();
@@ -692,6 +754,37 @@ function createParser(tokens, filePath, globalNames, functionNames = new Set(), 
         const expr = at("NEWLINE") ? null : parseExpression(0, localNames);
         expectNewline();
         return ast.createReturnStatement(expr);
+    }
+
+    function parseStop(localNames) {
+        const keyword = expectKeyword("stop");
+        const expr = at("NEWLINE") ? null : parseExpression(0, localNames);
+        expectNewline();
+        return ast.createStopStatement(expr, filePath, keyword.line);
+    }
+
+    function parseFollowStatement(localNames) {
+        const keyword = expectKeyword("follow");
+        const { name, args } = parseFollowTail(localNames);
+        expectNewline();
+        return ast.createFollowStatement(name, args, filePath, keyword.line);
+    }
+
+    // Parses the `NAME(args)` that follows the `follow` keyword, in both
+    // statement and expression position.
+    function parseFollowTail(localNames) {
+        const name = plainName("rulebook name");
+        expect("LPAREN", "Expected '(' after rulebook name");
+        const args = [];
+        if (!at("RPAREN")) {
+            args.push(parseExpression(0, localNames));
+            while (at("COMMA")) {
+                next();
+                args.push(parseExpression(0, localNames));
+            }
+        }
+        expect("RPAREN", "Expected ')'");
+        return { name, args };
     }
 
     function parseLet(localNames) {
@@ -831,6 +924,10 @@ function createParser(tokens, filePath, globalNames, functionNames = new Set(), 
         // so `-x^2` parses as `-(x^2)` and `-x*2` as `(-x)*2`.
         if (token.type === "MINUS") return ast.createNegateExpr(parseExpression(25, localNames));
         if (token.type === "KEYWORD" && token.value === "not") return ast.createNotExpr(parseExpression(3, localNames));
+        if (token.type === "KEYWORD" && token.value === "follow") {
+            const { name, args } = parseFollowTail(localNames);
+            return ast.createFollowExpr(name, args);
+        }
         if (token.type === "LPAREN") {
             const expr = parseExpression(0, localNames);
             expect("RPAREN", "Expected ')' to close expression");

@@ -1,0 +1,3 @@
+Compile error: tests/fixtures/rulebook_badstop.lamp:10: type error: stop value expects string, got int
+  10 | 		stop 5
+    |   ^
