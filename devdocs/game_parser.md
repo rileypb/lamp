@@ -430,10 +430,12 @@ The parser needs capabilities the current language (`devdocs/specs.md`) and
 runtime do not yet provide. Each is listed with the lightest option that
 unblocks it.
 
-1. **Element-wise iteration over lists.** Scope, vocabulary matching, and
-   multi-object actions all iterate object collections; today `for` only counts
-   integers. *Options:* add `for X in LIST:` to the language (preferred,
-   broadly useful) **or** provide native iteration helpers as a stopgap.
+1. **Element-wise iteration over lists.** *Done.* `for X in LIST:` is now in the
+   language (the counted and for-each forms share the `for` keyword, disambiguated
+   by the `=`/`in` token after the loop var). It iterates any `list<T>` —
+   `TYPE.all`, list-typed fields, `split(...)` — binding the loop var to element
+   type `T`. Scope, vocabulary matching, and multi-object actions can now walk
+   object collections directly. See `devdocs/specs.md` (For-each loop).
 2. **Rulebook control flow (`stop`).** Phase rules (before/instead/check/after)
    must be able to halt the pipeline. *Options:* a native rulebook driver the
    parser library ships (lower risk), **or** a `stop`-aware ordered dispatch in

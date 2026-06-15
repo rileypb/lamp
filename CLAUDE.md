@@ -58,6 +58,8 @@ When starting a new subsystem:
 - Define inputs and outputs.
 - List assumptions and non-goals.
 
+At the end of each user query, update TODO.md with any next steps you may recommend, and eliminate or reprioritize any that are presently in TODO.md. If TODO.md grows to more than 10 items, remove the lowest-priority items until it is 10 items long.
+
 ## Code Style Baseline
 
 For JavaScript and Node.js code:

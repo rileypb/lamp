@@ -405,6 +405,22 @@ function checkStatements(statements, typeSchema, kindSchema, localTypes, functio
             const bodyTypes = new Map(localTypes);
             bodyTypes.set(stmt.varName, "int");
             checkStatements(stmt.body, typeSchema, kindSchema, bodyTypes, functionSchema, expectedReturnType, globalNames);
+        } else if (stmt.kind === "ForEachStatement") {
+            if (globalNames.has(stmt.varName)) {
+                throw typeError(stmt.filePath, stmt.lineNumber, `for loop variable "${stmt.varName}" shadows global "${stmt.varName}"`);
+            }
+            const listType = inferExprType(stmt.listExpr, typeSchema, kindSchema, localTypes, functionSchema);
+            let elementType = null;
+            if (listType !== null) {
+                const listMatch = listType.match(/^list<(.+)>$/);
+                if (!listMatch) {
+                    throw typeError(stmt.filePath, stmt.lineNumber, `for ... in expects a list, but got "${listType}"`);
+                }
+                elementType = listMatch[1];
+            }
+            const bodyTypes = new Map(localTypes);
+            bodyTypes.set(stmt.varName, elementType);
+            checkStatements(stmt.body, typeSchema, kindSchema, bodyTypes, functionSchema, expectedReturnType, globalNames);
         } else if (stmt.kind === "CallStatement") {
             checkCallStatement(stmt, typeSchema, kindSchema, localTypes, functionSchema);
         } else if (stmt.kind === "FollowStatement") {
@@ -556,6 +572,8 @@ function directSubExprs(stmt) {
             return [stmt.condition];
         case "ForStatement":
             return [stmt.start, stmt.finish, stmt.step];
+        case "ForEachStatement":
+            return [stmt.listExpr];
         case "CallStatement":
         case "FollowStatement":
             return stmt.args;

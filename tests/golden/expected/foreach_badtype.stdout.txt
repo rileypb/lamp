@@ -1,0 +1,3 @@
+Compile error: tests/fixtures/foreach_badtype.lamp:11: type error: for ... in expects a list, but got "string"
+  11 | 	for x in "not a list":
+    |  ^

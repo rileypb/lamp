@@ -938,6 +938,16 @@ function createParser(tokens, filePath, globalNames, functionNames = new Set(), 
         const keyword = peek();
         expectKeyword("for");
         const varName = plainName("loop variable");
+        if (atKeyword("in")) {
+            next();
+            const listExpr = parseExpression(0, localNames);
+            expect("COLON", "Expected ':' after for header");
+            expectNewline();
+            const bodyLocals = new Set(localNames);
+            bodyLocals.add(varName);
+            const body = parseBlock(bodyLocals);
+            return ast.createForEachStatement(varName, listExpr, body, filePath, keyword.line);
+        }
         expect("EQUALS");
         const start = parseExpression(0, localNames);
         expectKeyword("to");

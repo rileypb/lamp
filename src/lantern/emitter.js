@@ -673,6 +673,14 @@ function emitStatementLines(statement, indentLevel, globalNames = new Set()) {
         lines.push(`${indent}}`);
         return lines;
     }
+    if (statement.kind === "ForEachStatement") {
+        const listExpr = emitExpression(statement.listExpr, globalNames);
+        const v = statement.varName;
+        const lines = [`${indent}for (const ${v} of lamplighter.listItems(${listExpr})) {`];
+        lines.push(...emitStatementList(statement.body, indentLevel + 1, globalNames));
+        lines.push(`${indent}}`);
+        return lines;
+    }
     if (statement.kind === "WhileStatement") {
         const lines = [`${indent}while (${emitExpression(statement.condition, globalNames)}) {`];
         lines.push(...emitStatementList(statement.body, indentLevel + 1, globalNames));

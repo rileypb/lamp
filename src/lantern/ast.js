@@ -155,6 +155,10 @@ function createForStatement(varName, start, finish, step, body, filePath, lineNu
     return { kind: "ForStatement", varName, start, finish, step, body, filePath, lineNumber };
 }
 
+function createForEachStatement(varName, listExpr, body, filePath, lineNumber) {
+    return { kind: "ForEachStatement", varName, listExpr, body, filePath, lineNumber };
+}
+
 function createChangeHandler(typeName, fieldName, body) {
     return { kind: "ChangeHandler", typeName, fieldName, body };
 }
@@ -311,6 +315,7 @@ module.exports = {
     createPowerExpr,
     createBreakStatement,
     createForStatement,
+    createForEachStatement,
     createChangeHandler,
     createRelationAddHandler,
     createRelationRemoveHandler,

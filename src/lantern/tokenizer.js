@@ -17,6 +17,7 @@ const KEYWORDS = new Set([
     "global",
     "on",
     "for",
+    "in",
     "while",
     "if",
     "else",

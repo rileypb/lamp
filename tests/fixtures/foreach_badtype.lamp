@@ -1,0 +1,12 @@
+# `for ... in` over a non-list value is a compile error.
+
+lib test
+
+game Solo:
+	author "A"
+	version 1
+	release dev
+
+on startup:
+	for x in "not a list":
+		print x

@@ -1,0 +1,27 @@
+# Exercises `for X in LIST:` collection iteration:
+#   - over a type's `.all` list, with element field access
+#   - over a `split()` string list
+#   - over an empty/none list (iterates zero times)
+
+lib test
+
+game Alpha:
+	author "Author A"
+	version 1
+	release dev
+
+game Beta:
+	author "Author B"
+	version 2
+	release dev
+
+on startup:
+	for g in game.all:
+		print g.name
+		print g.author
+	for word in split("the quick brown fox"):
+		print word
+	let total = 0
+	for n in split("a b c"):
+		total = total + 1
+	print total

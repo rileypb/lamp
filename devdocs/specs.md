@@ -160,7 +160,7 @@ Local variables (introduced by `let`) and loop variables (introduced by `for`) a
 
 Free text that contains spaces or punctuation is written as a double-quoted string literal, not a bare identifier (for example, `author "Phil Riley"`).
 
-The following words are **reserved** and may not be used as a name (object, type, kind, global, field, event, or local): `type`, `kind`, `global`, `on`, `for`, `while`, `if`, `else`, `let`, `print`, `error`, `dispatch`, `break`, `lib`, `to`, `step`, `change`, `function`, `native`, `return`, `when`, `and`, `or`, `not`, `relation`, `bidi`, `remove`, `disconnect`, `rulebook`, `stop`, `follow`, `action`, `try`. (`syntax`, `source`, `target`, and `inverted` are contextual keywords recognized only inside a `relation` body; `default` is a contextual keyword recognized only inside a `rulebook` body; the band words `before`, `instead`, `check`, `do`, `after`, and `report` are contextual keywords recognized only as the leading token of a phase rule for a declared action; none of these are globally reserved.) A reservation applies only to a whole identifier: a reserved word appearing *inside* a longer identifier is unrestricted, so `move_to_room` (which denotes the name `move to room`) is a valid identifier even though `to` is reserved.
+The following words are **reserved** and may not be used as a name (object, type, kind, global, field, event, or local): `type`, `kind`, `global`, `on`, `for`, `in`, `while`, `if`, `else`, `let`, `print`, `error`, `dispatch`, `break`, `lib`, `to`, `step`, `change`, `function`, `native`, `return`, `when`, `and`, `or`, `not`, `relation`, `bidi`, `remove`, `disconnect`, `rulebook`, `stop`, `follow`, `action`, `try`. (`syntax`, `source`, `target`, and `inverted` are contextual keywords recognized only inside a `relation` body; `default` is a contextual keyword recognized only inside a `rulebook` body; the band words `before`, `instead`, `check`, `do`, `after`, and `report` are contextual keywords recognized only as the leading token of a phase rule for a declared action; none of these are globally reserved.) A reservation applies only to a whole identifier: a reserved word appearing *inside* a longer identifier is unrestricted, so `move_to_room` (which denotes the name `move to room`) is a valid identifier even though `to` is reserved.
 
 ### Objects and types
 
@@ -955,6 +955,16 @@ for VAR = START to FINISH step STEP:
 ```
 
 `VAR` is a new local variable scoped to the loop body. `to` implies counting upward; the loop condition is `VAR <= FINISH`.
+
+- **For-each loop** — iterates over the elements of a list, in order:
+
+```lamp
+for VAR in LIST_EXPRESSION:
+    STATEMENT
+    ...
+```
+
+`LIST_EXPRESSION` must have a `list<T>` type (for example `room.all`, an object's `list<T>` field, or a function returning a list such as `split(...)`); `VAR` is a new local of element type `T` scoped to the loop body. Iterating `none` runs the body zero times. A non-list expression is a compile error. The leading-token disambiguation between the counted and for-each forms is the token after `VAR`: `=` selects the counted loop, `in` selects the for-each loop.
 
 - **Break** — exits the innermost enclosing `while` or `for` loop:
 

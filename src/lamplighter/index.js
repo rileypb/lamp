@@ -574,6 +574,21 @@ function makeList(items) {
     };
 }
 
+// Normalizes any list-valued expression to a plain array for `for ... in`
+// iteration. `none` iterates as empty; raw arrays pass through.
+function listItems(value) {
+    if (value == null) {
+        return [];
+    }
+    if (isListValue(value)) {
+        return value.items;
+    }
+    if (Array.isArray(value)) {
+        return value;
+    }
+    throw new Error("for ... in expected a list");
+}
+
 function getInstancesForTypeAndSubtypes(typeName) {
     const results = [];
     for (const [registeredTypeName, instances] of instanceRegistry.entries()) {
@@ -678,4 +693,5 @@ module.exports = {
     readLine,
     error,
     makeList,
+    listItems,
 };
