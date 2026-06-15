@@ -637,14 +637,50 @@ function createParser(tokens, filePath, globalNames, functionNames = new Set(), 
         const keyword = expectKeyword("action");
         const name = plainName("action name");
         let slots = [];
+        let templates = [];
         if (at("COLON")) {
             next();
             expectNewline();
-            slots = parseTypeBody();
+            ({ slots, templates } = parseActionBody());
         } else {
             expectNewline();
         }
-        return ast.createActionDecl(name, slots, filePath, keyword.line);
+        return ast.createActionDecl(name, slots, templates, filePath, keyword.line);
+    }
+
+    // An action body holds slot field declarations and an optional `syntax:`
+    // block of quoted surface templates. `syntax` is a contextual keyword here.
+    function parseActionBody() {
+        expect("INDENT", "Expected an indented action body");
+        const slots = [];
+        let templates = [];
+        while (!at("DEDENT")) {
+            if (peek().type === "IDENT" && peek().value === "syntax" && peek(1).type === "COLON") {
+                next();
+                next();
+                expectNewline();
+                templates = parseSyntaxBlock();
+                continue;
+            }
+            const fieldType = parseFieldType();
+            const fieldName = plainName("slot name");
+            expectNewline();
+            slots.push(ast.createFieldDecl(fieldType, fieldName));
+        }
+        next();
+        return { slots, templates };
+    }
+
+    function parseSyntaxBlock() {
+        expect("INDENT", "Expected an indented syntax block");
+        const templates = [];
+        while (!at("DEDENT")) {
+            const template = expect("STRING", "Expected a quoted syntax template");
+            expectNewline();
+            templates.push(template.value);
+        }
+        next();
+        return templates;
     }
 
     // A leading-band phase rule: `BAND ACTION [when COND]:` followed by a block.

@@ -84,6 +84,20 @@ function checkProgram(programAst, options = {}) {
             checkRulebookDecl(node, typeSchema, kindSchema, functionSchema, globalNames);
         } else if (node.kind === "PhaseRule") {
             checkPhaseRule(node, typeSchema, kindSchema, functionSchema, globalNames);
+        } else if (node.kind === "ActionDecl") {
+            checkActionDecl(node);
+        }
+    }
+}
+
+// Each `[slot]` in an action's syntax templates must name a declared slot.
+function checkActionDecl(node) {
+    const slotNames = new Set(node.slots.map((s) => s.fieldName));
+    for (const template of (node.templates || [])) {
+        for (const match of template.matchAll(/\[([A-Za-z_][A-Za-z0-9_]*)\]/g)) {
+            if (!slotNames.has(match[1])) {
+                throw typeError(node.filePath, node.lineNumber, `syntax template of action "${node.name}" references unknown slot "${match[1]}"`);
+            }
         }
     }
 }

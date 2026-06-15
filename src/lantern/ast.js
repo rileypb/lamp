@@ -239,9 +239,11 @@ function createStopStatement(expr, filePath, lineNumber) {
 }
 
 // An action type: a subtype of the built-in `action` type whose fields are its
-// named slots. The six-band rulebook for it is built from PhaseRule nodes.
-function createActionDecl(name, slots, filePath, lineNumber) {
-    return { kind: "ActionDecl", name, slots, filePath, lineNumber };
+// named slots. `templates` are the `syntax` surface forms (raw strings) the Game
+// Parser matches player input against. The six-band rulebook is built from
+// PhaseRule nodes.
+function createActionDecl(name, slots, templates, filePath, lineNumber) {
+    return { kind: "ActionDecl", name, slots, templates, filePath, lineNumber };
 }
 
 // One rule in an action's rulebook, attached to a band (before/instead/check/

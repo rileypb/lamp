@@ -1,0 +1,68 @@
+# Game Parser v0 end-to-end: typed commands -> grammar match -> noun resolution
+# against scope -> action rulebook. Self-contained world model.
+
+game Parser_Demo:
+	author "Test Author"
+	version 1
+
+type physical
+type container < physical
+type room < container:
+	string description
+type item < physical:
+	container holder
+type person < physical:
+	container holder
+
+person yourself
+
+room Kitchen:
+	description "A small kitchen."
+
+item apple:
+	holder Kitchen
+
+item knife:
+	holder Kitchen
+
+global person player = yourself
+
+action look:
+	syntax:
+		"look"
+
+action take:
+	item taken
+	syntax:
+		"take [taken]"
+		"get [taken]"
+
+action drop:
+	item taken
+	syntax:
+		"drop [taken]"
+
+do look:
+	print self.actor.holder.description
+
+check take:
+	if self.taken.holder == player:
+		print "You already have that."
+		stop failed
+
+do take:
+	self.taken.holder = player
+	print "Taken."
+
+do drop:
+	self.taken.holder = player.holder
+	print "Dropped."
+
+on startup:
+	player.holder = Kitchen
+	print player.holder.description
+	while true:
+		let line = readline()
+		if line == "quit":
+			break
+		run_command(line)

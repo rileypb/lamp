@@ -251,6 +251,12 @@ function emitProgram(programAst, options = {}) {
         lines.push(emitPhaseRule(node, globalNames));
     }
 
+    for (const actionNode of actionNodes) {
+        for (const template of (actionNode.templates || [])) {
+            lines.push(`lamplighter.registerGrammar(${JSON.stringify(actionNode.name)}, ${JSON.stringify(template)});`);
+        }
+    }
+
     for (const node of relationAddHandlerNodes) {
         lines.push(emitRelationAddHandler(node, globalNames));
     }

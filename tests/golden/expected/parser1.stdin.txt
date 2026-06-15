@@ -1,0 +1,7 @@
+look
+take apple
+take apple
+drop apple
+take fork
+xyzzy
+quit

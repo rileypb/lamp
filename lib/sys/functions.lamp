@@ -1,2 +1,5 @@
 native function string readline()
 native function list<string> split(string input)
+
+# parse one line of player input and run the matched action (see devdocs/game_parser.md)
+native function void run_command(string line)

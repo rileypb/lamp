@@ -347,6 +347,102 @@ function runAction(actionName, instance) {
     return "succeeded";
 }
 
+// --- Game Parser (v0) -------------------------------------------------------
+// A grammar entry maps an action to one parsed surface template. Templates are
+// literal tokens plus `[slot]` markers; see devdocs/game_parser.md.
+const grammarRegistry = [];
+
+function parseGrammarTemplate(template) {
+    return template.trim().split(/\s+/).filter(Boolean).map((part) => {
+        const slot = part.match(/^\[([A-Za-z_][A-Za-z0-9_]*)\]$/);
+        return slot ? { kind: "slot", field: slot[1] } : { kind: "literal", text: part.toLowerCase() };
+    });
+}
+
+function registerGrammar(actionName, template) {
+    grammarRegistry.push({ actionName, parts: parseGrammarTemplate(template) });
+}
+
+// Matches a token list against one template's parts. Literals must match
+// verbatim; a slot captures the run of tokens up to the next literal (or the
+// end). Returns a field -> token-span map, or null if the template does not
+// match the whole input.
+function matchGrammar(parts, tokens) {
+    const slots = {};
+    let ti = 0;
+    for (let pi = 0; pi < parts.length; pi += 1) {
+        const part = parts[pi];
+        if (part.kind === "literal") {
+            if (tokens[ti] !== part.text) return null;
+            ti += 1;
+        } else {
+            const nextLiteral = parts[pi + 1] && parts[pi + 1].kind === "literal" ? parts[pi + 1].text : null;
+            const span = [];
+            while (ti < tokens.length && tokens[ti] !== nextLiteral) {
+                span.push(tokens[ti]);
+                ti += 1;
+            }
+            if (span.length === 0) return null;
+            slots[part.field] = span;
+        }
+    }
+    return ti === tokens.length ? slots : null;
+}
+
+// The objects the actor can currently refer to: contents of the actor's location
+// and the actor's own contents, via the `holder` containment field.
+function scopeOf(actor) {
+    const location = actor.holder;
+    const results = [];
+    for (const instances of instanceRegistry.values()) {
+        for (const inst of instances) {
+            if (inst.holder === location || inst.holder === actor) {
+                results.push(inst);
+            }
+        }
+    }
+    return results;
+}
+
+// First in-scope object of the slot's type whose name matches the noun span.
+function resolveNoun(span, scope, slotType) {
+    const phrase = span.join(" ");
+    for (const obj of scope) {
+        if (slotType && !isTypeOrSubtype(obj.type, slotType)) continue;
+        const name = String(obj.name).toLowerCase();
+        if (name === phrase) return obj;
+        const words = name.split(/\s+/);
+        if (span.every((token) => words.includes(token))) return obj;
+    }
+    return null;
+}
+
+// Parses one line of player input and runs the matched action. v0: first
+// matching template wins; each slot resolves to the first in-scope object of the
+// slot's type whose name matches.
+function runCommand(line, actor) {
+    const tokens = String(line).toLowerCase().trim().split(/\s+/).filter(Boolean);
+    if (tokens.length === 0) return;
+    for (const entry of grammarRegistry) {
+        const matched = matchGrammar(entry.parts, tokens);
+        if (!matched) continue;
+        const scope = scopeOf(actor);
+        const slotTypes = (typeRegistry.get(entry.actionName) || {}).fields || {};
+        const instance = { type: entry.actionName, actor };
+        for (const [field, span] of Object.entries(matched)) {
+            const obj = resolveNoun(span, scope, slotTypes[field]);
+            if (!obj) {
+                print("You can't see any such thing.");
+                return;
+            }
+            instance[field] = obj;
+        }
+        runAction(entry.actionName, instance);
+        return;
+    }
+    print("I don't understand that.");
+}
+
 function run() {
     fireEvent("startup");
 }
@@ -558,6 +654,8 @@ module.exports = {
     onEvent,
     registerActionRule,
     runAction,
+    registerGrammar,
+    runCommand,
     registerChangeHandler,
     registerRelationAddHandler,
     registerRelationRemoveHandler,
