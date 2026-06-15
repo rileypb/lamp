@@ -774,8 +774,37 @@ action take:
     item taken
 ```
 
-(The `syntax` grammar block that maps surface commands onto an action is part of
-the Game Parser and is not yet implemented.)
+An action body may also include a `syntax:` block of quoted surface templates
+that the Game Parser matches player input against. In a template, `[slot]` binds
+the matched words to that slot; every other token is a literal. (`syntax` is a
+contextual keyword inside an action body.)
+
+```lamp
+action take:
+    item taken
+    syntax:
+        "take [taken]"
+        "get [taken]"
+```
+
+#### Running commands
+
+`run_command(line)` (a built-in native function) parses one line of player input
+against the registered action templates, resolves each slot to an in-scope object
+of the slot's type, and runs the matched action. The typical game loop reads a
+line and passes it to `run_command`. Scope is the actor's location contents and
+inventory (via the `holder` field); the actor is the `player` global. This is the
+Game Parser v0 (`devdocs/game_parser.md`); adjectives, pronouns, disambiguation,
+and multiple objects are not yet handled.
+
+```lamp
+on startup:
+    while true:
+        let line = readline()
+        if line == "quit":
+            break
+        run_command(line)
+```
 
 #### Phase rules
 

@@ -1,7 +1,7 @@
 # Game Parser
 
-> Status: design proposal. Not yet implemented. This document defines the
-> intended design for the Lamp **Game Parser** — the component that turns a
+> Status: design; **v0 implemented** (see Staged roadmap). This document defines
+> the intended design for the Lamp **Game Parser** — the component that turns a
 > player's typed command into a resolved in-game action and drives it through
 > the action-processing pipeline. It is the runtime counterpart to the
 > "Game Parser" term defined in `devdocs/architecture.md`.
@@ -473,18 +473,20 @@ populating it.
 
 ## Staged roadmap
 
-- **v0 — minimal viable parser.** A hardcoded set of single-slot actions
-  (`look`, `take`, `drop`, `go`, `inventory`, `quit`) declared with `syntax`
-  templates and `do`/`report` rules. Fixed native lexer; grammar via
-  the relation `syntax` mechanism; scope = room contents + inventory (no nested
-  containers). No disambiguation (first match wins), no pronouns, no multiple
-  objects, no `when`-guarded overrides yet. Goal: replace the `tinyadvent` REPL
-  loop end-to-end.
+- **v0 — minimal viable parser. (Implemented.)** Single verb + single noun.
+  Native lexer (lowercase + split) and grammar matcher in the Lamplighter
+  runtime; actions declare a `syntax:` block of `[slot]` templates; scope = the
+  actor's location contents + inventory via `holder`; first in-scope name match
+  wins. Entry point: the native `run_command(line)` (actor = the `player`
+  global), driven by a `readline` loop. Standard responses "You can't see any
+  such thing." / "I don't understand that." Demo + golden:
+  `tests/fixtures/parser1.lamp`. No adjectives, pronouns, disambiguation, or
+  multiple objects yet.
 - **v1 — resolution depth.** Adjectives, articles, nested/transparent container
-  scope, pronouns (`it`), disambiguation prompts, standard parser error
-  messages.
-- **v2 — rulebooks.** Full before/instead/check/do/after/report sequence
-  with stop semantics; every-turn and timed rules; out-of-world actions.
+  scope, pronouns (`it`), disambiguation prompts, richer parser error messages.
+- **v2 — rulebooks.** The action-rulebook bands are implemented
+  (`devdocs/rulebooks.md`); remaining: every-turn and timed rules, and
+  out-of-world actions.
 - **v3 — Inform-parity grammar.** `[things]`/`all`/`but`, multi-object actions,
   typed tokens (`[number]`, `[text]`, `[a direction]`), `Understand` synonym
   generality, topic/conversation tokens.
