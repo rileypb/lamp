@@ -381,6 +381,12 @@ once element-wise iteration exists; until then provided as a native helper that
 walks the relation index. Scope is the canonical place authors extend ("the
 wizard can always refer to the distant tower").
 
+Non-physical slot types are resolved differently. A slot whose type is not a
+subtype of `physical` (e.g. a `direction` for `go [way]`) is not located in the
+world, so it is matched against **all** instances of the slot's type by name
+rather than against scope. Physical slot types stay scope-bound. (v0 rule in the
+runtime resolver.)
+
 Output: the action instance with its slots bound to object(s), flagged ambiguous
 if any phrase matched more than one object.
 
@@ -438,10 +444,12 @@ unblocks it.
    `word_at`) — no language change needed.
 4. **A keyed lookup / map** for the vocabulary index. *Option:* keep it entirely
    inside the native support library; expose only `objects_named(word)` to Lamp.
-5. **Standard direction/inverse data.** `connects` already supports `inverted`
-   directions, but the sample direction objects do not yet set `inverse`
-   (`lib/advent/globals.lamp`). Going via a direction depends on this being
-   populated. *Note:* this is library data, not a language change.
+5. **Standard direction/inverse data.** *Done.* `lib/advent/globals.lamp` now
+   sets each direction's `inverse` (`type direction` gained a `direction inverse`
+   field) and tags `connects.dir` as `inverted`. A `bidi connects A north B` map
+   therefore derives the reverse exit mechanically, so `go south` from B returns
+   to A with no explicit south edge. *Note:* this is library data, not a language
+   change.
 6. **Runtime construction of action instances.** The engine creates one
    action-type instance per command and binds it as `self`. Lamp has no surface
    syntax for runtime object construction and does not need one — this is a

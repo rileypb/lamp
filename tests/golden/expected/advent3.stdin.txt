@@ -1,0 +1,9 @@
+look
+take lamp
+take lamp
+take rock
+go north
+drop lamp
+go south
+go east
+quit

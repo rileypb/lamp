@@ -404,6 +404,16 @@ function scopeOf(actor) {
     return results;
 }
 
+// The candidate objects for a slot. Physical objects must be in the actor's
+// scope; non-physical objects (e.g. directions) are referable globally by name
+// within their type. A game without a `physical` type keeps everything scoped.
+function resolvePool(slotType, scope) {
+    if (slotType && typeRegistry.has("physical") && !isTypeOrSubtype(slotType, "physical")) {
+        return getInstancesForTypeAndSubtypes(slotType);
+    }
+    return scope;
+}
+
 // First in-scope object of the slot's type whose name matches the noun span.
 function resolveNoun(span, scope, slotType) {
     const phrase = span.join(" ");
@@ -430,7 +440,7 @@ function runCommand(line, actor) {
         const slotTypes = (typeRegistry.get(entry.actionName) || {}).fields || {};
         const instance = { type: entry.actionName, actor };
         for (const [field, span] of Object.entries(matched)) {
-            const obj = resolveNoun(span, scope, slotTypes[field]);
+            const obj = resolveNoun(span, resolvePool(slotTypes[field], scope), slotTypes[field]);
             if (!obj) {
                 print("You can't see any such thing.");
                 return;

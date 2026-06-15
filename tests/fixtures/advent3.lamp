@@ -1,0 +1,25 @@
+# Exercises advent's standard actions: look, take/drop (scope + scenery), and
+# go via the connects relation across a two-room map.
+
+lib advent
+
+game Test_Advent:
+	author "Test Author"
+	version 1
+	release dev
+	start West_of_House
+
+room West_of_House:
+	description "You are west of a white house."
+
+room Forest:
+	description "You are in a dark forest."
+
+bidi connects West_of_House north Forest
+
+item lamp:
+	holder West_of_House
+
+item rock:
+	scenery true
+	holder West_of_House

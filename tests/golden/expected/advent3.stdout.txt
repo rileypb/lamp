@@ -1,0 +1,15 @@
+West of House
+
+You are west of a white house.
+You are west of a white house.
+Taken.
+You're already carrying that.
+That's not something you can take.
+Forest
+
+You are in a dark forest.
+Dropped.
+West of House
+
+You are west of a white house.
+You can't go that way.

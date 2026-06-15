@@ -20,4 +20,5 @@ type box < item, container:
 
 type person < physical
 
-type direction
+type direction:
+	direction inverse

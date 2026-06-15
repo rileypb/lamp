@@ -5,20 +5,34 @@ global string input = none
 global list<string> words = none
 
 # directions
-direction north
-direction northeast
-direction east
-direction southeast
-direction south
-direction southwest
-direction west
-direction northwest
-direction up
-direction down
+#
+# Each direction's `inverse` is the opposite heading. The `connects` relation
+# tags `dir` as `inverted`, so a `bidi connects` map auto-derives the reverse
+# exit (e.g. `bidi connects A north B` makes `connects B south ?first` yield A).
+direction north:
+	inverse south
+direction northeast:
+	inverse southwest
+direction east:
+	inverse west
+direction southeast:
+	inverse northwest
+direction south:
+	inverse north
+direction southwest:
+	inverse northeast
+direction west:
+	inverse east
+direction northwest:
+	inverse southeast
+direction up:
+	inverse down
+direction down:
+	inverse up
 
 relation connects:
 	room source
-	direction dir
+	direction dir inverted
 	room target
 	syntax "connects [source] [dir] [target]"
 

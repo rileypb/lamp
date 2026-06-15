@@ -1,0 +1,71 @@
+# advent standard actions
+#
+# Rules use `self.actor` (the acting person) rather than the player global, so
+# they work for any actor. The Game Parser supplies the player as the actor.
+#
+# Band convention (see devdocs/rulebooks.md): `check` validates preconditions,
+# `do` performs the world change, `report` prints the result. Keeping them
+# separate lets a game override reporting without touching the world change.
+
+action look:
+	syntax:
+		"look"
+		"l"
+
+# look changes nothing; its whole effect is to describe, so it lives in report.
+report look:
+	print self.actor.holder.description
+
+action take:
+	item taken
+	syntax:
+		"take [taken]"
+		"get [taken]"
+
+check take:
+	if self.taken.holder == self.actor:
+		print "You're already carrying that."
+		stop failed
+
+check take:
+	if self.taken.scenery:
+		print "That's not something you can take."
+		stop failed
+
+do take:
+	self.taken.holder = self.actor
+
+report take:
+	print "Taken."
+
+action drop:
+	item dropped
+	syntax:
+		"drop [dropped]"
+
+check drop:
+	if not (self.dropped.holder == self.actor):
+		print "You aren't carrying that."
+		stop failed
+
+do drop:
+	self.dropped.holder = self.actor.holder
+
+report drop:
+	print "Dropped."
+
+action go:
+	direction way
+	syntax:
+		"go [way]"
+
+check go:
+	if not connects self.actor.holder self.way _:
+		print "You can't go that way."
+		stop failed
+
+do go:
+	self.actor.holder = connects self.actor.holder self.way ?first
+
+# go needs no report: moving the actor fires the `person.holder change` handler,
+# which describes the room on arrival.
