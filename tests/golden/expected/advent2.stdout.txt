@@ -1,0 +1,4 @@
+foyer
+
+A test room.
+I don't understand that.

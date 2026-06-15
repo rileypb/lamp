@@ -1,4 +1,0 @@
-foyer
-
-A test room.
-hello

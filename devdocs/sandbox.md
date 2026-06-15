@@ -242,7 +242,7 @@ cheapest environment (no browser header constraints) before web piles on.
 
 The rejected alternative (output-only first) would have proved the boundary
 without the input channel, but could not run the interactive fixtures
-(`interactive1`, `interactive2`, `tinyadvent1`), leaving them on the legacy path.
+(`interactive1`, `interactive2`, `advent2`), leaving them on the legacy path.
 
 This forces one decision previously deferred: **input stops being a native
 `fs.readSync` and becomes a brokered host capability.** The `interactivetest`

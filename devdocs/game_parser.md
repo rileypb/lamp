@@ -416,7 +416,7 @@ order and honors `stop` — native at first (see Required support).
 After a successful action (that took time), run **every-turn** rules, advance
 the clock, fire timed/daemon events, and re-prompt. Out-of-world actions
 (`quit`, `score`) skip the clock. This replaces the placeholder
-`while true: input = readline()` loop in `lib/tinyadvent/startup.lamp`.
+`while true: input = readline()` loop in `lib/advent/startup.lamp`.
 
 ## Required language/runtime support
 
@@ -440,7 +440,7 @@ unblocks it.
    inside the native support library; expose only `objects_named(word)` to Lamp.
 5. **Standard direction/inverse data.** `connects` already supports `inverted`
    directions, but the sample direction objects do not yet set `inverse`
-   (`lib/tinyadvent/globals.lamp`). Going via a direction depends on this being
+   (`lib/advent/globals.lamp`). Going via a direction depends on this being
    populated. *Note:* this is library data, not a language change.
 6. **Runtime construction of action instances.** The engine creates one
    action-type instance per command and binds it as `self`. Lamp has no surface
@@ -514,7 +514,7 @@ populating it.
 
 ## Assumptions
 
-- The world model stays as in `lib/tinyadvent`/`lib/advent`: containment via
+- The world model stays as in `lib/advent`: containment via
   `item.holder` (a `container`), room graph via the `connects` relation, a
   `player` global. The parser builds on these rather than introducing a parallel
   model.

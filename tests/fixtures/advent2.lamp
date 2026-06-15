@@ -4,15 +4,8 @@ game Test_1:
     release dev
     start foyer
 
-lib tinyadvent
+lib advent
 
 room foyer:
     description "A test room."
-
-connects foyer north hall
-
-room hall: 
-    description "A hallway."
-
-connects hall south foyer
 
