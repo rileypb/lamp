@@ -171,6 +171,26 @@ A dev-only sandbox (terminal CLI host + `worker_threads` adapter, web and
 Electron deferred) is the first deliverable. Its scope is shaped by how player
 input works today.
 
+### Status
+
+Built (in `src/lamplighter/sandbox/` and `src/lamplighter/play.js`, run via
+`npm run play`):
+
+- The `worker_threads` game worker with a restricted `vm` context: the runtime is
+  injected as the only `require` target; `process`, `Buffer`, `fetch`, and timers
+  are withheld. Native code reaching for `require("fs")` fails at the boundary.
+- The stdio host relays `print` to stdout and bridged `console` to stderr.
+- Synchronous player input as a brokered capability: the host owns stdin, the
+  worker blocks on `SharedArrayBuffer` + `Atomics.wait`. `readline` in
+  `lib/sys/index.js` now delegates to `lamplighter.readLine()` rather than calling
+  `fs.readSync` directly.
+- The sandbox launcher is the only supported run path. `npm run exe` and the
+  golden runner both compile and then launch through the stdio host;
+  `lamplighter.readLine()` throws if no input channel is installed, so running a
+  generated file directly with `node` is no longer supported.
+- The emitter produces a body-only module (no shebang, no runtime require); the
+  launcher injects `lamplighter` as a context global.
+
 ### Input is currently a raw-capability native function
 
 Player input is not part of Lamplighter. It is supplied by a native library that
@@ -257,17 +277,20 @@ adapter, and headers on top.
 
 ## Compiler / Runtime Changes Implied
 
-- Lantern stops inlining native `index.js` into the emitted module. The launcher
-  loads native source into the sandbox's restricted context at startup and
-  registers functions by name; emitted call sites resolve against those
-  registered names already in scope inside the worker. For Tier 1 the emitter
-  changes little beyond no longer inlining.
+- Native `index.js` is still inlined into the emitted module (Tier 1): one
+  restricted context holds both the compiled game and native code, so the
+  capability boundary comes from the context, not from separating native out.
+  (Separating native into its own context is a Tier 2 concern only.)
+- The emitter produces a **body-only module** — no `#!` shebang and no
+  `require("…/lamplighter")` line. The launcher injects `lamplighter` as a context
+  global, which inlined native code and the compiled game reference as a free
+  variable. A bare `require` of anything else (notably `require("fs")`) is denied
+  by the context's `require` shim.
 - The static checker is unaffected: it continues to read `native function`
-  signatures from `.lamp` files for type checking. Only the *delivery* of the
-  implementation moves.
+  signatures from `.lamp` files for type checking.
 - Lamplighter's `print` and player-input paths route through the transport's
   channels instead of `console.log` / terminal readline directly; the terminal
-  CLI becomes one host implementation of the transport.
+  CLI is one host implementation of the transport.
 
 ## Assumptions
 

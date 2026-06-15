@@ -4,6 +4,7 @@ const { execFileSync } = require("child_process");
 
 const projectRoot = path.resolve(__dirname, "../..");
 const lanternCli = path.join(projectRoot, "src", "lantern", "index.js");
+const playCli = path.join(projectRoot, "src", "lamplighter", "play.js");
 const testRoots = [
     path.join(projectRoot, "sample"),
     path.join(projectRoot, "tests", "fixtures"),
@@ -112,7 +113,7 @@ function compileCase(inputPath, outputPath, expectCompileFailure) {
 
 function runGenerated(generatedPath, expectRuntimeFailure = false, stdinContent = null) {
     try {
-        return execFileSync("node", [generatedPath], {
+        return execFileSync("node", [playCli, generatedPath], {
             cwd: projectRoot,
             stdio: "pipe",
             encoding: "utf8",

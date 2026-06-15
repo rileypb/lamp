@@ -30,9 +30,6 @@ function runCompilation() {
     const outputFile = outputFileArg
         ? path.resolve(outputFileArg)
         : path.join(path.dirname(inputFile), `${path.basename(inputFile, ".lamp")}.generated.js`);
-    const runtimeModulePath = path.join(projectRoot, "src", "lamplighter");
-    const runtimeRequirePath = toNodeRequirePath(path.relative(path.dirname(outputFile), runtimeModulePath));
-
     const libDirs = gatherLibDirs(libSysDir, inputFile, projectRoot);
     const sourceFiles = gatherLampFiles(libDirs, inputFile);
     const { nativeJsContents, nativeFunctionNames } = gatherNativeJs(libDirs);
@@ -72,7 +69,7 @@ function runCompilation() {
     const mergedProgram = { kind: "Program", nodes: deduplicateFunctions(allNodes) };
     checkProgram(mergedProgram, { nativeFunctionNames });
 
-    const outputJs = emitProgram(mergedProgram, { runtimeRequirePath, nativeJsContents });
+    const outputJs = emitProgram(mergedProgram, { nativeJsContents });
 
     fs.mkdirSync(path.dirname(outputFile), { recursive: true });
     fs.writeFileSync(outputFile, outputJs, "utf8");
@@ -288,14 +285,6 @@ function deduplicateFunctions(nodes) {
         const key = `${node.name}\0${condKey}`;
         return seen.get(key) === i;
     });
-}
-
-function toNodeRequirePath(relativePath) {
-    const normalized = relativePath.split(path.sep).join("/");
-    if (normalized.startsWith(".")) {
-        return normalized;
-    }
-    return `./${normalized}`;
 }
 
 main();

@@ -8,6 +8,7 @@
   "scripts": {
     "compile": "node src/lantern/index.js",
     "exe": "node src/lantern/exe.js",
+    "play": "node src/lamplighter/play.js",
     "test": "node tests/golden/run-golden.js",
     "test:tokenizer": "node tests/tokenizer/run-tokenizer.js",
     "test:parser": "node tests/parser/run-parser.js"

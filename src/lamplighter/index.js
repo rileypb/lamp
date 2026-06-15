@@ -351,6 +351,23 @@ function setPrint(nextPrintImpl) {
     printImpl = nextPrintImpl;
 }
 
+// Player input is a brokered host capability. The host owns stdin and the worker
+// installs an input channel via setInputChannel; readLine blocks on that channel.
+// A game run outside the sandbox has no channel and cannot read input — the
+// sandbox launcher is the only supported run path. See devdocs/sandbox.md.
+let requestLineImpl = null;
+
+function setInputChannel(requestLine) {
+    requestLineImpl = requestLine;
+}
+
+function readLine() {
+    if (!requestLineImpl) {
+        throw new Error("no input channel installed; run the game through the sandbox launcher");
+    }
+    return requestLineImpl();
+}
+
 function error(message) {
     throw new Error(String(message));
 }
@@ -514,6 +531,8 @@ module.exports = {
     run,
     print,
     setPrint,
+    setInputChannel,
+    readLine,
     error,
     makeList,
 };
