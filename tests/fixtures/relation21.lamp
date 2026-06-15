@@ -5,10 +5,10 @@ game Relation_21:
 
 lib relations
 
-connects foyer north hall
-connects foyer east study
+connects foyer north to hall
+connects foyer east to study
 
 on startup:
     print connects.all
-    remove connects foyer _ _
+    remove connects foyer _ to _
     print connects.all

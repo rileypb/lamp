@@ -5,9 +5,9 @@ game Relation_11:
 
 lib relations
 
-connects foyer north hall
-bidi connects foyer north hall
-connects hall south foyer
+connects foyer north to hall
+bidi connects foyer north to hall
+connects hall south to foyer
 
 on startup:
     print connects.all

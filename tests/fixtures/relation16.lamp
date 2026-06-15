@@ -5,14 +5,14 @@ game Relation_16:
 
 lib relations
 
-bidi connects foyer north hall
-bidi connects hall east study
+bidi connects foyer north to hall
+bidi connects hall east to study
 
 on startup:
-    let dest = connects foyer north ?only
+    let dest = connects foyer north to ?only
     print dest.description
-    let back = connects hall south ?only
+    let back = connects hall south to ?only
     print back.description
-    let nowhere = connects study north ?only
+    let nowhere = connects study north to ?only
     if nowhere == none:
         print "You can't go north from the study."

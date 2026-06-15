@@ -113,7 +113,8 @@ function createParser(tokens, filePath, globalNames, functionNames = new Set(), 
         }
         if (token.type === "IDENT") {
             if (relationNames.has(token.value) && peek(1).type === "COLON") return parseRelationAssert();
-            if (relationTemplates.has(token.value)) return parseCustomSyntaxAssert(relationTemplates.get(token.value));
+            if (relationTemplates.has(token.value)) return parseCustomSyntaxAssert(relationTemplates.get(token.value), null);
+            if (peek(1).type === "IDENT" && relationTemplates.has(peek(1).value)) return parseNamedCustomSyntaxAssert();
             return peek(1).type === "EQUALS" ? parseGlobalAssign() : parseObjectDecl();
         }
         throw err(`Unexpected token at top level: ${token.type}`);
@@ -214,7 +215,7 @@ function createParser(tokens, filePath, globalNames, functionNames = new Set(), 
         if (relationNames.has(token.value) && peek(1).type === "COLON") {
             node = parseRelationAssert();
         } else if (relationTemplates.has(token.value)) {
-            node = parseCustomSyntaxAssert(relationTemplates.get(token.value));
+            node = parseCustomSyntaxAssert(relationTemplates.get(token.value), null);
         } else {
             throw err(`'${token.value}' is not a relation`, token.line);
         }
@@ -322,36 +323,25 @@ function createParser(tokens, filePath, globalNames, functionNames = new Set(), 
         return ast.createRelationAssert(relationName, fields, null, filePath, nameToken.line);
     }
 
-    // Counts tokens on the current logical line (until NEWLINE/COLON), used to
-    // tell a named custom-syntax assertion (one extra leading identifier) from
-    // an anonymous one by arity.
-    function countLineTokens() {
-        let count = 0;
-        let i = pos;
-        while (tokens[i] && tokens[i].type !== "NEWLINE" && tokens[i].type !== "COLON" && tokens[i].type !== "EOF") {
-            count += 1;
-            i += 1;
-        }
-        return count;
+    // `NAME connects foyer north hall` — instance name comes first, then the
+    // custom-syntax template. The name token has already been peeked; consume it,
+    // then delegate to parseCustomSyntaxAssert with the name pre-provided.
+    function parseNamedCustomSyntaxAssert(localNames) {
+        const nameToken = peek();
+        const instanceName = coercedName("relation instance name");
+        const template = relationTemplates.get(peek().value);
+        return parseCustomSyntaxAssert(template, instanceName, nameToken.line);
     }
 
     // Custom-syntax assertion driven by a relation's `syntax` template. Literal
     // parts must match verbatim (IDENT or KEYWORD tokens both allowed, so a
     // reserved word like `to` may appear as a literal); slot parts consume one
     // simple value. Produces the same RelationAssert node as the block form.
-    function parseCustomSyntaxAssert(template) {
+    function parseCustomSyntaxAssert(template, instanceName, headLine) {
         const headToken = peek();
-        const expected = template.parts.length;
-        const actual = countLineTokens();
+        if (headLine === undefined) headLine = headToken.line;
 
         next(); // leading literal (matched by dispatch)
-
-        let instanceName = null;
-        if (actual === expected + 1) {
-            instanceName = coercedName("relation instance name");
-        } else if (actual !== expected) {
-            throw err(`wrong number of values in ${template.relationName} assertion`, headToken.line);
-        }
 
         const fields = [];
         for (let i = 1; i < template.parts.length; i += 1) {
@@ -370,7 +360,7 @@ function createParser(tokens, filePath, globalNames, functionNames = new Set(), 
             }
         }
         expectNewline();
-        return ast.createRelationAssert(template.relationName, fields, instanceName, filePath, headToken.line);
+        return ast.createRelationAssert(template.relationName, fields, instanceName, filePath, headLine);
     }
 
     // A relation query in expression position. The leading literal has already
@@ -672,7 +662,8 @@ function createParser(tokens, filePath, globalNames, functionNames = new Set(), 
         }
         if (token.type === "IDENT") {
             if (relationNames.has(token.value) && peek(1).type === "COLON") return parseRelationAssert();
-            if (relationTemplates.has(token.value)) return parseCustomSyntaxAssert(relationTemplates.get(token.value));
+            if (relationTemplates.has(token.value)) return parseCustomSyntaxAssert(relationTemplates.get(token.value), null);
+            if (peek(1).type === "IDENT" && relationTemplates.has(peek(1).value)) return parseNamedCustomSyntaxAssert(localNames);
             if (peek(1).type === "LPAREN") return parseCallStatement(localNames);
             return parseAssign(localNames);
         }

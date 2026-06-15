@@ -10,19 +10,19 @@ function void check():
     print "none"
 
 # specificity 1: one bound slot
-function void check() when connects foyer _ _:
+function void check() when connects foyer _ to _:
     print "foyer has exit"
 
 # specificity 3: three bound slots, wins over specificity 1
-function void check() when connects foyer north hall:
+function void check() when connects foyer north to hall:
     print "foyer connects north to hall"
 
 on startup:
     check()
-    connects foyer north hall
+    connects foyer north to hall
     check()
-    remove connects foyer north _
-    connects foyer east study
+    remove connects foyer north to _
+    connects foyer east to study
     check()
-    remove connects _ _ _
+    remove connects _ _ to _
     check()

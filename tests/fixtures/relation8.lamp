@@ -16,7 +16,7 @@ relation connects:
     room target
     syntax "connects [source] [dir] [target]"
 
-connects north_door foyer north hall
+north_door connects foyer north hall
 
 on startup:
     print connects.all

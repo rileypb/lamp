@@ -5,13 +5,13 @@ game Relation_19:
 
 lib relations
 
-connects foyer north hall
+connects foyer north to hall
 
 on startup:
-    if connects foyer north hall:
+    if connects foyer north to hall:
         print "connected"
-    remove connects foyer north hall
-    if connects foyer north hall:
+    remove connects foyer north to hall
+    if connects foyer north to hall:
         print "still connected"
     else:
         print "disconnected"

@@ -12,7 +12,7 @@ on connects remove:
     print "removed edge"
 
 on startup:
-    connects foyer north hall
-    connects foyer east study
-    remove connects foyer north _
-    remove connects _ _ _
+    connects foyer north to hall
+    connects foyer east to study
+    remove connects foyer north to _
+    remove connects _ _ to _

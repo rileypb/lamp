@@ -579,13 +579,13 @@ connects foyer north hall
 
 In a template, `[FIELD_NAME]` marks a slot filled by the value at that position; every other token is a literal that must appear verbatim. A literal token may be a reserved word (for example, `to` in `"links [source] to [target]"`). A template must begin with a literal token (conventionally the relation type name); this leading literal is how the parser recognizes a custom-syntax line. Two relation templates may not share a leading literal.
 
-A custom-syntax assertion may name the instance by placing a name immediately after the leading literal, before the first slot value:
+A custom-syntax assertion may name the instance by placing a name before the leading literal:
 
 ```lamp
-connects north_door foyer north hall
+north_door connects foyer north hall
 ```
 
-The name is coerced like an object name (`north_door` → `north door`) and registered for lookup by `getObject`. The parser distinguishes the named form by arity (one extra leading identifier). A named assertion that deduplicates against an existing unnamed instance applies the name to that instance.
+The name is coerced like an object name (`north_door` → `north door`) and registered for lookup by `getObject`. A named assertion that deduplicates against an existing unnamed instance applies the name to that instance.
 
 #### Querying relation instances
 

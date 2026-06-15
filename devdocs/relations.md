@@ -88,17 +88,17 @@ The instance exists and is reachable via the connected objects, but has no stand
 ### Named instance
 
 ```lamp
-connects north_door foyer north hall
+north_door connects foyer north hall
 ```
 
-The name appears immediately after the leading literal, before the first slot value. The instance can then be referred to by `north_door` elsewhere (to add fields, disconnect it by name, etc.). The parser distinguishes the named form by arity: a template with N slots takes N values when anonymous and N+1 leading identifiers when named.
+The instance name comes before the leading literal of the template. The instance can then be referred to by `north_door` elsewhere (to add fields, disconnect it by name, etc.).
 
 ### With additional fields
 
 Named instances can be declared with a body, just like any object:
 
 ```lamp
-connects north_door foyer north hall:
+north_door connects foyer north hall:
     bool locked = false
 ```
 

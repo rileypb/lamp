@@ -8,7 +8,7 @@ relation connects:
     room source
     direction dir inverted
     room target
-    syntax "connects [source] [dir] [target]"
+    syntax "connects [source] [dir] to [target]"
 
 direction north:
     inverse south

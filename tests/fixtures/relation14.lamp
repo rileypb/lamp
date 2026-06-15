@@ -7,10 +7,10 @@ lib relations
 
 global room here = hall
 
-bidi connects foyer north hall
+bidi connects foyer north to hall
 
 on startup:
-    if connects hall south foyer:
+    if connects hall south to foyer:
         print "reverse edge found"
-    if connects here _ _:
+    if connects here _ to _:
         print "here has an exit"

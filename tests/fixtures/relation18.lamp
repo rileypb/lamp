@@ -7,11 +7,11 @@ lib relations
 
 global room here = foyer
 
-bidi connects foyer north hall
-bidi connects hall east study
+bidi connects foyer north to hall
+bidi connects hall east to study
 
 function void go(direction d):
-    let dest = connects here d ?only
+    let dest = connects here d to ?only
     if dest == none:
         print "You can't go that way."
     else:
