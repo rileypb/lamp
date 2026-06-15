@@ -26,6 +26,8 @@ Lamplighter is the JavaScript runtime library that executes the compiled game pr
 
 The Lamplighter runtime includes a small command line tool that can execute the compiled game in a terminal environment, as well as an API that can be used by Lighthouse to create bundled applications for distribution.
 
+For the design of the component that turns player commands into in-game actions — its pipeline stages, how grammar and rules map onto Lamp constructs, and the language support it requires — see `devdocs/game_parser.md`.
+
 ## Lighthouse
 
 Lighthouse is the bundler that takes the compiled game and the Lamplighter runtime and packages them into a single executable. It can produce either a standalone Electron application or a web application that can be distributed to players. Lighthouse ensures that all necessary dependencies are included and optimizes the final output for performance and size.

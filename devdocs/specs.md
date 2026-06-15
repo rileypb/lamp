@@ -160,7 +160,7 @@ Local variables (introduced by `let`) and loop variables (introduced by `for`) a
 
 Free text that contains spaces or punctuation is written as a double-quoted string literal, not a bare identifier (for example, `author "Phil Riley"`).
 
-The following words are **reserved** and may not be used as a name (object, type, kind, global, field, event, or local): `type`, `kind`, `global`, `on`, `for`, `while`, `if`, `else`, `let`, `print`, `error`, `dispatch`, `break`, `lib`, `to`, `step`, `change`, `function`, `native`, `return`, `when`, `and`, `or`, `not`, `relation`, `bidi`, `remove`, `disconnect`. (`syntax`, `source`, `target`, and `inverted` are contextual keywords recognized only inside a `relation` body and are not globally reserved.) A reservation applies only to a whole identifier: a reserved word appearing *inside* a longer identifier is unrestricted, so `move_to_room` (which denotes the name `move to room`) is a valid identifier even though `to` is reserved.
+The following words are **reserved** and may not be used as a name (object, type, kind, global, field, event, or local): `type`, `kind`, `global`, `on`, `for`, `while`, `if`, `else`, `let`, `print`, `error`, `dispatch`, `break`, `lib`, `to`, `step`, `change`, `function`, `native`, `return`, `when`, `and`, `or`, `not`, `relation`, `bidi`, `remove`, `disconnect`, `rulebook`, `stop`, `follow`. (`syntax`, `source`, `target`, and `inverted` are contextual keywords recognized only inside a `relation` body; `default` is a contextual keyword recognized only inside a `rulebook` body; none of these are globally reserved.) A reservation applies only to a whole identifier: a reserved word appearing *inside* a longer identifier is unrestricted, so `move_to_room` (which denotes the name `move to room`) is a valid identifier even though `to` is reserved.
 
 ### Objects and types
 
@@ -657,6 +657,101 @@ A relation instance with a name prints as its name. An anonymous instance prints
 connects(foyer, north, hall)
 ```
 
+### Rulebooks
+
+> Initial surface (general rulebooks). Design-locked but not yet implemented. The
+> design rationale and the deferred action-band layer live in
+> `devdocs/rulebooks.md`.
+
+A **rulebook** is an ordered, typed, short-circuiting decision pipeline: an
+ordered set of guarded **rules** that runs until one rule decides the result. A
+rulebook is invoked with `follow` and yields a single value of its declared
+result type.
+
+#### Rulebook declarations
+
+```lamp
+rulebook RESULT_TYPE NAME(PARAM_TYPE PARAM_NAME, ...):
+    default DEFAULT_EXPR
+    when CONDITION:
+        STATEMENT
+        ...
+    ...
+```
+
+`rulebook` declares a named rulebook with a result type, an optional parameter
+list (same form as function parameters), a required `default`, and one or more
+rules. `RESULT_TYPE` may be any primitive type, kind name, or object type.
+
+```lamp
+rulebook bool reachable(physical thing):
+    default false
+    when thing.holder == player:
+        stop true
+    when thing.holder == player.holder:
+        stop true
+```
+
+- `default DEFAULT_EXPR` gives the value the rulebook yields when no rule stops.
+  It is required; its type is checked against `RESULT_TYPE`. (`default` is a
+  contextual keyword, recognized only inside a rulebook body.)
+- Each `when CONDITION:` introduces a **rule**: a guard plus an indented body.
+  The body is a block following the same rules as a function body.
+
+#### Rule evaluation
+
+Following a rulebook runs its rules in **declaration order**. For each rule whose
+`CONDITION` is true, the body runs; if the body reaches `stop EXPRESSION`, the
+rulebook stops and yields `EXPRESSION`. If the body completes without `stop`,
+evaluation falls through to the next rule. If no rule stops, the rulebook yields
+its `default`.
+
+- Rule order is exactly declaration order. Rulebooks do **not** use specificity
+  (unlike conditional function overloads): guards decide applicability, order
+  decides sequence, and `stop` decides which rule's value wins.
+- A rule `CONDITION` is an ordinary `bool` expression evaluated in the rule's
+  scope (parameters and globals). Unlike a `when` guard on a conditional overload,
+  a rule guard **may** reference the rulebook's parameters.
+
+#### `stop`
+
+```lamp
+stop EXPRESSION
+```
+
+`stop` ends the enclosing rulebook immediately, yielding `EXPRESSION` as its
+result. It is valid only inside a rulebook rule body, and `EXPRESSION` is checked
+against the rulebook's result type. A rule body that completes without `stop`
+falls through to the next rule.
+
+#### Following a rulebook
+
+```lamp
+follow NAME(ARGUMENT, ...)
+```
+
+`follow` invokes a rulebook and produces its result value. It may appear anywhere
+an expression is valid, or as a standalone statement (running the rulebook for
+its effects and discarding the result):
+
+```lamp
+let r = follow reachable(brass_lamp)
+if not follow reachable(self.taken):
+    print "You can't reach that."
+```
+
+The leading `follow` keyword marks the call as a rulebook invocation, so it is
+never confused with a function call and the parser does not need to know rulebook
+names to recognize the form. Argument count and types are checked against the
+declared parameters, as for function calls.
+
+#### Deferred (not in this surface)
+
+Designed in `devdocs/rulebooks.md` but intentionally outside the initial surface:
+the built-in per-action rulebook and its `before`/`instead`/`check`/`do`/`after`/
+`report` bands; named rules; cross-file rule addition; group/`order` ordering
+constraints; `void` rulebooks; and any runtime mutation of rulebooks.
+
 ### Name resolution and scope
 
 A **local context** is the body of an event handler, change handler, or function. Within a local context, names are drawn from two disjoint namespaces:
@@ -772,6 +867,18 @@ dispatch EVENT_NAME
 ```
 
 `EVENT_NAME` is a single identifier. Any number of `on EVENT_NAME:` handlers may exist; all are called in registration order.
+
+- **Follow** — invokes a rulebook (see Rulebooks). As a standalone statement it runs the rulebook and discards the result:
+
+```lamp
+follow NAME(ARGUMENT, ...)
+```
+
+- **Stop** — ends the enclosing rulebook, yielding a value. Valid only inside a rulebook rule body:
+
+```lamp
+stop EXPRESSION
+```
 
 ### Expressions
 
@@ -924,6 +1031,12 @@ apply(5, double)
 ```
 
 - **Bare identifiers** in expressions are resolved in this order: local variable (introduced by `let`), declared global, declared function (producing a function reference), then string literal. The string-literal fallback supports enum-label comparisons such as `== final`.
+
+- **Follow expression** — `follow NAME(args)` invokes a rulebook and produces its result value (see Rulebooks):
+
+```lamp
+follow reachable(brass_lamp)
+```
 
 ## Implementation notes
 
