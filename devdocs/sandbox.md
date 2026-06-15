@@ -97,6 +97,45 @@ channels:
 Output and lifecycle are asynchronous messages; input uses the shared buffer so
 Lamp's synchronous semantics are preserved without any language change.
 
+## Host Environments
+
+Each environment that runs a game is a pairing of two layers, which must not be
+conflated:
+
+1. **Host shell** — the surrounding UI: it renders output as text nodes,
+   captures player input, and services capability-broker requests. It contains no
+   game logic.
+2. **Game-worker transport adapter** — the worker side of the boundary, part of
+   Lamplighter: either a Node `worker_threads` Worker or a browser `Worker`. It
+   carries the channel set defined above.
+
+There are three environments, but only two host-shell codebases:
+
+| Environment | Host shell        | Worker adapter            | Synchronous input             |
+| ----------- | ----------------- | ------------------------- | ----------------------------- |
+| Dev CLI     | thin stdio        | `worker_threads`          | shared buffer, no header gate |
+| Web         | HTML/CSS/JS       | browser `Worker`          | shared buffer, needs COOP/COEP |
+| Electron    | HTML/CSS/JS       | browser `Worker` (Chromium) | shared buffer, headers controlled by app |
+
+- **One shell, two packagings.** The web and Electron host shells are the same
+  HTML/CSS/JS shell, because Electron's renderer is Chromium. They differ only in
+  packaging (static bundle vs. Electron app) and in what the capability broker is
+  allowed to grant: Electron can back a "save to disk" capability with real `fs`,
+  while a web build offers only `localStorage` or a download. The broker
+  *protocol* is identical; only its *backing* differs.
+- **Electron uses the browser-`Worker` adapter.** Electron exposes both Node and
+  Chromium, so it could use either adapter. It must use the browser `Worker` path
+  so its boundary behavior matches the web build; otherwise Electron silently
+  diverges from what web players experience.
+- **Shared-memory input only constrains the browser-`Worker` environments.** The
+  dev CLI's `worker_threads` adapter gets `SharedArrayBuffer` without any header
+  requirement, so development cannot surface a COOP/COEP misconfiguration.
+  Capability parity (the point of the dev sandbox) still holds; only that one
+  header constraint is invisible in development.
+
+All shells stay deliberately thin — render, capture, broker, nothing more. All
+game logic lives in the worker.
+
 ## Development / Packaging Parity
 
 The guiding rule: **the sandboxed launcher is the only blessed way to run a
@@ -125,6 +164,96 @@ Mechanism:
 
 This relies only on platform built-ins — `worker_threads`, `vm`,
 `SharedArrayBuffer`, `Atomics` — and introduces no new npm dependency.
+
+## Dev-First Implementation
+
+A dev-only sandbox (terminal CLI host + `worker_threads` adapter, web and
+Electron deferred) is the first deliverable. Its scope is shaped by how player
+input works today.
+
+### Input is currently a raw-capability native function
+
+Player input is not part of Lamplighter. It is supplied by a native library that
+reads standard input synchronously:
+
+```js
+// tests/fixtures/lib/interactivetest/index.js
+function readline() {
+    const fs = require("fs");
+    const buf = Buffer.alloc(1);
+    const n = fs.readSync(0, buf, 0, 1);  // blocking read of fd 0
+    ...
+}
+```
+
+Lamp calls it synchronously inside a handler (`let line = readline()` in
+`tests/fixtures/interactive1.lamp`). The golden runner feeds stdin via
+`execFileSync(..., { input })`.
+
+This is exactly the capability set the sandbox denies — `require` and `fs` —
+so it is a concrete demonstration of why input must become a **brokered host
+capability** rather than raw native I/O. Under the sandbox, the game runs in the
+worker, the host keeps stdin, and `readline` must be a Lamplighter-provided
+function that obtains a line from the host.
+
+### Synchronous input across the worker boundary
+
+`readline` is synchronous from the game's point of view, today and inherently
+(parser IF blocks for a command). Once the game is in the worker, a synchronous
+`readline` must cross worker → host: the worker blocks on `Atomics.wait` while
+the host performs the blocking stdin read and fills a shared buffer.
+
+The cross-origin-isolation constraint on `SharedArrayBuffer` (`COOP`/`COEP`) is
+**browser-only**. Node `worker_threads` gets shared memory with no headers, so
+the input channel is fully buildable in dev without that constraint. COOP/COEP
+re-enters only when the browser `Worker` adapter is built.
+
+### Scope (Path B — chosen)
+
+The input channel is built as part of the dev sandbox:
+
+- Add the `SharedArrayBuffer` + `Atomics` worker → host synchronous read.
+- **Retire the native `readline` in favor of a Lamplighter-provided `readline`**
+  — the first real capability broker.
+
+This is more up-front work than an output-only first cut, but the sandbox can run
+real (interactive) games, and the synchronous-input machinery is built in the
+cheapest environment (no browser header constraints) before web piles on.
+
+The rejected alternative (output-only first) would have proved the boundary
+without the input channel, but could not run the interactive fixtures
+(`interactive1`, `interactive2`, `tinyadvent1`), leaving them on the legacy path.
+
+This forces one decision previously deferred: **input stops being a native
+`fs.readSync` and becomes a brokered host capability.** The `interactivetest`
+fixture (and any real input primitive) must be rewritten against the new
+`readline`; that rewrite is the template for every later privileged capability.
+
+### Ownership: Lamplighter vs. Lighthouse
+
+The dev run path is **not** a Lighthouse responsibility. Lighthouse's job is
+producing a distributable artifact (Electron app, static web bundle with its HTML
+shell and `COOP`/`COEP` headers). The dev path produces nothing shippable — it
+compiles, spawns a worker, loads runtime + game into the restricted context, and
+wires the stdio host. It is a launcher, not a packager.
+
+The ownership line is drawn at the transport seam, and it is what makes the
+dev-parity guarantee real rather than aspirational:
+
+- **Lamplighter owns** (shared by every host): the transport interface and
+  channel protocol; the **worker bootstrap** — restricted `vm` context,
+  capability allowlist, and the `SharedArrayBuffer` + `Atomics` input bridge; and
+  the **terminal/stdio host** that is the dev run path.
+- **Lighthouse owns** (distribution only): the HTML shell, browser `Worker`
+  adapter packaging, `COOP`/`COEP` header configuration, and Electron wrapping. It
+  *imports* Lamplighter's bootstrap rather than reimplementing it.
+
+If Lighthouse grew its own copy of the bootstrap or capability list, a web build
+could allow or deny something the dev sandbox did not — the exact surprise this
+design exists to prevent. Everything built for Path B (worker bootstrap,
+restricted context, stdio host, `readline` broker, SAB input bridge) lands in
+Lamplighter and is reused unchanged by Lighthouse, which adds only the shell,
+adapter, and headers on top.
 
 ## Compiler / Runtime Changes Implied
 
