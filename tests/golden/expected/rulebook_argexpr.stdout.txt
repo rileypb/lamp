@@ -1,0 +1,3 @@
+Compile error: tests/fixtures/rulebook_argexpr.lamp:11: type error: rulebook "two" expects 1 argument(s), got 2
+  11 | 	print follow two(1, 2)
+    |  ^

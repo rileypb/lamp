@@ -215,8 +215,8 @@ function createCallStatement(name, args, filePath, lineNumber) {
     return { kind: "CallStatement", name, args, filePath, lineNumber };
 }
 
-function createCallExpr(name, args) {
-    return { kind: "CallExpr", name, args };
+function createCallExpr(name, args, filePath, lineNumber) {
+    return { kind: "CallExpr", name, args, filePath, lineNumber };
 }
 
 function createReturnStatement(expr) {
@@ -242,8 +242,8 @@ function createFollowStatement(name, args, filePath, lineNumber) {
     return { kind: "FollowStatement", name, args, filePath, lineNumber };
 }
 
-function createFollowExpr(name, args) {
-    return { kind: "FollowExpr", name, args };
+function createFollowExpr(name, args, filePath, lineNumber) {
+    return { kind: "FollowExpr", name, args, filePath, lineNumber };
 }
 
 module.exports = {

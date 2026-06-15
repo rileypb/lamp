@@ -1,0 +1,11 @@
+# A `follow` in expression position is argument-checked like a follow statement.
+
+game G:
+	author "x"
+	version 1
+
+rulebook int two(int n):
+	default 0
+
+on startup:
+	print follow two(1, 2)

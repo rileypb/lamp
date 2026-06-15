@@ -79,6 +79,7 @@ function checkRulebookDecl(node, typeSchema, kindSchema, functionSchema, globalN
     }
     const paramTypes = new Map(node.params.map((p) => [p.name, p.typeName]));
 
+    checkExprCalls(node.defaultExpr, typeSchema, kindSchema, paramTypes, functionSchema);
     checkValueCompatibility(
         node.defaultExpr,
         node.resultType,
@@ -94,6 +95,7 @@ function checkRulebookDecl(node, typeSchema, kindSchema, functionSchema, globalN
     // Each rule's guard must be boolean; its body may `stop` a value, which is
     // checked against the result type (expectedReturnType) by checkStatements.
     for (const rule of node.rules) {
+        checkExprCalls(rule.whenExpr, typeSchema, kindSchema, paramTypes, functionSchema);
         const guardType = inferExprType(rule.whenExpr, typeSchema, kindSchema, paramTypes, functionSchema);
         if (guardType !== null && guardType !== "bool") {
             throw typeError(node.filePath, node.lineNumber, `rule guard in rulebook "${node.name}" must be boolean`);
@@ -319,6 +321,9 @@ function checkObjectDecl(node, typeSchema, kindSchema) {
 
 function checkStatements(statements, typeSchema, kindSchema, localTypes, functionSchema = new Map(), expectedReturnType = null, globalNames = new Set()) {
     for (const stmt of statements) {
+        for (const subExpr of directSubExprs(stmt)) {
+            checkExprCalls(subExpr, typeSchema, kindSchema, localTypes, functionSchema);
+        }
         if (stmt.kind === "LetStatement") {
             if (globalNames.has(stmt.name)) {
                 throw typeError(stmt.filePath, stmt.lineNumber, `local "${stmt.name}" shadows global "${stmt.name}"`);
@@ -383,55 +388,100 @@ function checkStatements(statements, typeSchema, kindSchema, localTypes, functio
     }
 }
 
-function checkFollowCall(stmt, typeSchema, kindSchema, localTypes, functionSchema) {
-    const rb = rulebookSchema.get(stmt.name);
-    if (!rb) {
-        throw typeError(stmt.filePath, stmt.lineNumber, `unknown rulebook "${stmt.name}"`);
-    }
-    if (stmt.args.length !== rb.params.length) {
+// Shared argument-count and per-argument-type check for a function call or a
+// rulebook `follow`. `kindLabel` ("function"/"rulebook") shapes the message.
+function checkCallArgs(name, args, sig, kindLabel, filePath, lineNumber, typeSchema, kindSchema, localTypes, functionSchema) {
+    if (args.length !== sig.params.length) {
         throw typeError(
-            stmt.filePath,
-            stmt.lineNumber,
-            `rulebook "${stmt.name}" expects ${rb.params.length} argument(s), got ${stmt.args.length}`,
+            filePath,
+            lineNumber,
+            `${kindLabel} "${name}" expects ${sig.params.length} argument(s), got ${args.length}`,
         );
     }
-    for (let i = 0; i < rb.params.length; i++) {
+    for (let i = 0; i < sig.params.length; i++) {
         checkValueCompatibility(
-            stmt.args[i],
-            rb.params[i].typeName,
+            args[i],
+            sig.params[i].typeName,
             typeSchema,
             kindSchema,
-            stmt.filePath,
-            stmt.lineNumber,
-            `argument ${i + 1} of "${stmt.name}"`,
+            filePath,
+            lineNumber,
+            `argument ${i + 1} of "${name}"`,
             localTypes,
             functionSchema,
         );
     }
 }
 
+function checkFollowCall(stmt, typeSchema, kindSchema, localTypes, functionSchema) {
+    const rb = rulebookSchema.get(stmt.name);
+    if (!rb) {
+        throw typeError(stmt.filePath, stmt.lineNumber, `unknown rulebook "${stmt.name}"`);
+    }
+    checkCallArgs(stmt.name, stmt.args, rb, "rulebook", stmt.filePath, stmt.lineNumber, typeSchema, kindSchema, localTypes, functionSchema);
+}
+
 function checkCallStatement(stmt, typeSchema, kindSchema, localTypes, functionSchema) {
     const fn = functionSchema.get(stmt.name);
     if (!fn) return;
-    if (stmt.args.length !== fn.params.length) {
-        throw typeError(
-            stmt.filePath,
-            stmt.lineNumber,
-            `function "${stmt.name}" expects ${fn.params.length} argument(s), got ${stmt.args.length}`,
-        );
+    checkCallArgs(stmt.name, stmt.args, fn, "function", stmt.filePath, stmt.lineNumber, typeSchema, kindSchema, localTypes, functionSchema);
+}
+
+// Recursively validates every call/follow embedded in an expression — the
+// expression-position counterpart to the statement-level checks above, so
+// `print follow f(1, 2)` and `x == g(a)` are checked the same as `f(...)` and
+// `follow f(...)` statements. Unknown function names stay lenient (natives,
+// forward refs); an unknown rulebook is an error, matching follow-statement
+// behavior.
+function checkExprCalls(expr, typeSchema, kindSchema, localTypes, functionSchema) {
+    if (!expr || typeof expr !== "object") return;
+    if (expr.kind === "CallExpr") {
+        const fn = functionSchema.get(expr.name);
+        if (fn) {
+            checkCallArgs(expr.name, expr.args, fn, "function", expr.filePath, expr.lineNumber, typeSchema, kindSchema, localTypes, functionSchema);
+        }
+    } else if (expr.kind === "FollowExpr") {
+        const rb = rulebookSchema.get(expr.name);
+        if (!rb) {
+            throw typeError(expr.filePath, expr.lineNumber, `unknown rulebook "${expr.name}"`);
+        }
+        checkCallArgs(expr.name, expr.args, rb, "rulebook", expr.filePath, expr.lineNumber, typeSchema, kindSchema, localTypes, functionSchema);
     }
-    for (let i = 0; i < fn.params.length; i++) {
-        checkValueCompatibility(
-            stmt.args[i],
-            fn.params[i].typeName,
-            typeSchema,
-            kindSchema,
-            stmt.filePath,
-            stmt.lineNumber,
-            `argument ${i + 1} of "${stmt.name}"`,
-            localTypes,
-            functionSchema,
-        );
+    for (const key of ["left", "right", "expr", "target", "index"]) {
+        if (expr[key]) checkExprCalls(expr[key], typeSchema, kindSchema, localTypes, functionSchema);
+    }
+    if (Array.isArray(expr.args)) {
+        for (const arg of expr.args) checkExprCalls(arg, typeSchema, kindSchema, localTypes, functionSchema);
+    }
+    if (Array.isArray(expr.fields)) {
+        for (const field of expr.fields) {
+            if (field && field.value) checkExprCalls(field.value, typeSchema, kindSchema, localTypes, functionSchema);
+        }
+    }
+}
+
+// The immediate expression children of a statement (not its nested statement
+// blocks, which checkStatements recurses into separately).
+function directSubExprs(stmt) {
+    switch (stmt.kind) {
+        case "LetStatement":
+        case "PrintStatement":
+        case "AssignStatement":
+        case "ErrorStatement":
+            return [stmt.expr];
+        case "ReturnStatement":
+        case "StopStatement":
+            return stmt.expr ? [stmt.expr] : [];
+        case "IfStatement":
+        case "WhileStatement":
+            return [stmt.condition];
+        case "ForStatement":
+            return [stmt.start, stmt.finish, stmt.step];
+        case "CallStatement":
+        case "FollowStatement":
+            return stmt.args;
+        default:
+            return [];
     }
 }
 

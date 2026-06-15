@@ -926,7 +926,7 @@ function createParser(tokens, filePath, globalNames, functionNames = new Set(), 
         if (token.type === "KEYWORD" && token.value === "not") return ast.createNotExpr(parseExpression(3, localNames));
         if (token.type === "KEYWORD" && token.value === "follow") {
             const { name, args } = parseFollowTail(localNames);
-            return ast.createFollowExpr(name, args);
+            return ast.createFollowExpr(name, args, filePath, token.line);
         }
         if (token.type === "LPAREN") {
             const expr = parseExpression(0, localNames);
@@ -974,7 +974,7 @@ function createParser(tokens, filePath, globalNames, functionNames = new Set(), 
                 }
             }
             expect("RPAREN", "Expected ')'");
-            return ast.createCallExpr(raw, args);
+            return ast.createCallExpr(raw, args, filePath, token.line);
         }
 
         const fields = [];

@@ -1,0 +1,11 @@
+# A function call in expression position is argument-checked like a call statement.
+
+game G:
+	author "x"
+	version 1
+
+function int add(int a, int b):
+	return a + b
+
+on startup:
+	print add(1)
