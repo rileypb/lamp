@@ -1,0 +1,3 @@
+Compile error: tests/fixtures/action_badslot.lamp:14: type error: action "take" has no slot "grabbed"
+  14 | 		grabbed yourself
+    |   ^

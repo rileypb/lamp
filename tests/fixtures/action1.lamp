@@ -1,0 +1,49 @@
+# Exercises the action-rulebook layer: an action with a typed slot, the
+# instead/check/do/report bands with `stop failed`/fall-through, and `try`
+# invocation constructing instances.
+
+game Action_Demo:
+	author "Test Author"
+	version 1
+
+type item:
+	bool scenery
+	bool sacred
+
+item lamp:
+	scenery false
+	sacred false
+
+item statue:
+	scenery true
+	sacred false
+
+item idol:
+	scenery false
+	sacred true
+
+action take:
+	item taken
+
+instead take when self.taken.sacred:
+	print "You dare not touch the idol."
+	stop failed
+
+check take:
+	if self.taken.scenery:
+		print "That's hardly portable."
+		stop failed
+
+do take:
+	print "Taken."
+
+report take:
+	print "(You pocket it.)"
+
+on startup:
+	try take:
+		taken lamp
+	try take:
+		taken statue
+	try take:
+		taken idol

@@ -160,7 +160,7 @@ Local variables (introduced by `let`) and loop variables (introduced by `for`) a
 
 Free text that contains spaces or punctuation is written as a double-quoted string literal, not a bare identifier (for example, `author "Phil Riley"`).
 
-The following words are **reserved** and may not be used as a name (object, type, kind, global, field, event, or local): `type`, `kind`, `global`, `on`, `for`, `while`, `if`, `else`, `let`, `print`, `error`, `dispatch`, `break`, `lib`, `to`, `step`, `change`, `function`, `native`, `return`, `when`, `and`, `or`, `not`, `relation`, `bidi`, `remove`, `disconnect`, `rulebook`, `stop`, `follow`. (`syntax`, `source`, `target`, and `inverted` are contextual keywords recognized only inside a `relation` body; `default` is a contextual keyword recognized only inside a `rulebook` body; none of these are globally reserved.) A reservation applies only to a whole identifier: a reserved word appearing *inside* a longer identifier is unrestricted, so `move_to_room` (which denotes the name `move to room`) is a valid identifier even though `to` is reserved.
+The following words are **reserved** and may not be used as a name (object, type, kind, global, field, event, or local): `type`, `kind`, `global`, `on`, `for`, `while`, `if`, `else`, `let`, `print`, `error`, `dispatch`, `break`, `lib`, `to`, `step`, `change`, `function`, `native`, `return`, `when`, `and`, `or`, `not`, `relation`, `bidi`, `remove`, `disconnect`, `rulebook`, `stop`, `follow`, `action`, `try`. (`syntax`, `source`, `target`, and `inverted` are contextual keywords recognized only inside a `relation` body; `default` is a contextual keyword recognized only inside a `rulebook` body; the band words `before`, `instead`, `check`, `do`, `after`, and `report` are contextual keywords recognized only as the leading token of a phase rule for a declared action; none of these are globally reserved.) A reservation applies only to a whole identifier: a reserved word appearing *inside* a longer identifier is unrestricted, so `move_to_room` (which denotes the name `move to room`) is a valid identifier even though `to` is reserved.
 
 ### Objects and types
 
@@ -748,9 +748,82 @@ declared parameters, as for function calls.
 #### Deferred (not in this surface)
 
 Designed in `devdocs/rulebooks.md` but intentionally outside the initial surface:
-the built-in per-action rulebook and its `before`/`instead`/`check`/`do`/`after`/
-`report` bands; named rules; cross-file rule addition; group/`order` ordering
-constraints; `void` rulebooks; and any runtime mutation of rulebooks.
+named rules; cross-file rule addition; group/`order` ordering constraints;
+`void` rulebooks; and any runtime mutation of rulebooks.
+
+### Action rulebooks
+
+An **action** is the built-in application of a rulebook: a typed object whose
+fields are its named **slots**, with a fixed six-band rulebook attached. See
+`devdocs/rulebooks.md` and `devdocs/game_parser.md` for the design.
+
+#### Action declarations
+
+```lamp
+action NAME:
+    SLOT_TYPE SLOT_NAME
+    ...
+```
+
+`action` declares an action type — a subtype of the built-in `action` type —
+whose body lists its slots as field declarations (same form as a type body). An
+action with no slots omits the `:` and body.
+
+```lamp
+action take:
+    item taken
+```
+
+(The `syntax` grammar block that maps surface commands onto an action is part of
+the Game Parser and is not yet implemented.)
+
+#### Phase rules
+
+Behavior is attached with **phase rules** — a leading band keyword, the action
+name, an optional `when` guard, and a block. The six bands run in order:
+**before → instead → check → do → after → report**. Inside the body, `self` is
+the action instance.
+
+```lamp
+instead take when self.taken.sacred:
+    print "You dare not touch the idol."
+    stop failed
+
+check take:
+    if self.taken.scenery:
+        print "That's hardly portable."
+        stop failed
+
+do take:
+    print "Taken."
+
+report take:
+    print "(You pocket it.)"
+```
+
+The action runs its rules band by band. A rule body that reaches `stop OUTCOME`
+ends the whole action with that `outcome` (`succeeded` or `failed`); a body that
+falls through continues to the next rule, and the next band. If no rule stops,
+the action `succeeded`. (`stop` in a phase rule carries an `outcome` value; the
+band words are contextual keywords, valid only as the leading token of a phase
+rule for a declared action.)
+
+#### Running an action
+
+```lamp
+try ACTION:
+    SLOT_NAME VALUE
+    ...
+```
+
+`try` constructs an action instance with the given slot values and runs it
+through the bands. It is a statement; slot values follow the same rules as object
+field values (a literal or a bare object reference).
+
+```lamp
+try take:
+    taken lamp
+```
 
 ### Name resolution and scope
 

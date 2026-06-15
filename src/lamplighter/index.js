@@ -8,6 +8,9 @@ const changeHandlerRegistry = new Map();
 const relationAddHandlerRegistry = new Map();
 const relationRemoveHandlerRegistry = new Map();
 const relationRegistry = new Map();
+// actionName -> { before: [], instead: [], check: [], do: [], after: [], report: [] }
+const actionRuleRegistry = new Map();
+const ACTION_BANDS = ["before", "instead", "check", "do", "after", "report"];
 
 // Wildcard sentinel for relation queries: matches any value in a slot. Distinct
 // from null/none (which match only an unset field).
@@ -32,6 +35,9 @@ function bootstrapBuiltins() {
     defineType("bool", ["object"], {});
     defineType("real", ["object"], {});
     defineType("list", ["object"], {});
+    // Built-in parent of every `action` declaration. Bootstrapped here (not as a
+    // `type action` in lib/sys) because `action` is a reserved keyword.
+    defineType("action", ["object"], {});
 
     builtinsInitialized = true;
 }
@@ -314,6 +320,33 @@ function onEvent(eventName, handler) {
     eventRegistry.get(eventName).push(handler);
 }
 
+function registerActionRule(actionName, band, rule) {
+    if (!actionRuleRegistry.has(actionName)) {
+        actionRuleRegistry.set(actionName, { before: [], instead: [], check: [], do: [], after: [], report: [] });
+    }
+    actionRuleRegistry.get(actionName)[band].push(rule);
+}
+
+// Runs an action instance through its rulebook bands in fixed order. A rule that
+// returns a value (a `stop`) ends the action with that outcome; a rule that
+// returns undefined (falls through) continues to the next rule. With no stop the
+// action succeeds. See devdocs/rulebooks.md.
+function runAction(actionName, instance) {
+    const bands = actionRuleRegistry.get(actionName);
+    if (!bands) {
+        return "succeeded";
+    }
+    for (const band of ACTION_BANDS) {
+        for (const rule of bands[band]) {
+            const outcome = rule(instance);
+            if (outcome !== undefined) {
+                return outcome;
+            }
+        }
+    }
+    return "succeeded";
+}
+
 function run() {
     fireEvent("startup");
 }
@@ -523,6 +556,8 @@ module.exports = {
     concat,
     divide,
     onEvent,
+    registerActionRule,
+    runAction,
     registerChangeHandler,
     registerRelationAddHandler,
     registerRelationRemoveHandler,

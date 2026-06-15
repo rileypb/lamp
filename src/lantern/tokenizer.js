@@ -43,6 +43,8 @@ const KEYWORDS = new Set([
     "rulebook",
     "stop",
     "follow",
+    "action",
+    "try",
 ]);
 
 const SINGLE_CHAR_TOKENS = {

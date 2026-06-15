@@ -10,6 +10,11 @@ let relationSchema = new Map();
 // result type. Module-scoped, mirroring relationSchema.
 let rulebookSchema = new Map();
 
+// Action slot schemas (actionName -> Map(slotName -> typeName)), set at the start
+// of checkProgram for `try` and phase-rule validation. Module-scoped, mirroring
+// relationSchema/rulebookSchema.
+let actionSchema = new Map();
+
 function buildRelationSchema(nodes) {
     const schema = new Map();
     for (const node of nodes) {
@@ -28,10 +33,20 @@ function buildRulebookSchema(nodes) {
     return schema;
 }
 
+function buildActionSchema(nodes) {
+    const schema = new Map();
+    for (const node of nodes) {
+        if (node.kind !== "ActionDecl") continue;
+        schema.set(node.name, new Map(node.slots.map((s) => [s.fieldName, s.typeName])));
+    }
+    return schema;
+}
+
 function checkProgram(programAst, options = {}) {
     const nativeFunctionNames = options.nativeFunctionNames || new Set();
     relationSchema = buildRelationSchema(programAst.nodes);
     rulebookSchema = buildRulebookSchema(programAst.nodes);
+    actionSchema = buildActionSchema(programAst.nodes);
     const typeSchema = buildTypeSchema(programAst.nodes);
     const kindSchema = buildKindSchema(programAst.nodes);
     const globalTypes = buildGlobalTypeSchema(programAst.nodes);
@@ -67,8 +82,27 @@ function checkProgram(programAst, options = {}) {
             checkStatements(node.body, typeSchema, kindSchema, localTypes, functionSchema, expectedReturn, globalNames);
         } else if (node.kind === "RulebookDecl") {
             checkRulebookDecl(node, typeSchema, kindSchema, functionSchema, globalNames);
+        } else if (node.kind === "PhaseRule") {
+            checkPhaseRule(node, typeSchema, kindSchema, functionSchema, globalNames);
         }
     }
+}
+
+// A phase rule's body runs with `self` bound to the action instance; a `stop`
+// value is checked against the `outcome` kind (succeeded/failed).
+function checkPhaseRule(node, typeSchema, kindSchema, functionSchema, globalNames) {
+    if (!actionSchema.has(node.actionName)) {
+        throw typeError(node.filePath, node.lineNumber, `unknown action "${node.actionName}"`);
+    }
+    const localTypes = new Map([["self", node.actionName]]);
+    if (node.whenExpr) {
+        checkExprCalls(node.whenExpr, typeSchema, kindSchema, localTypes, functionSchema);
+        const guardType = inferExprType(node.whenExpr, typeSchema, kindSchema, localTypes, functionSchema);
+        if (guardType !== null && guardType !== "bool") {
+            throw typeError(node.filePath, node.lineNumber, `guard of ${node.band} rule for "${node.actionName}" must be boolean`);
+        }
+    }
+    checkStatements(node.body, typeSchema, kindSchema, localTypes, functionSchema, "outcome", globalNames);
 }
 
 function checkRulebookDecl(node, typeSchema, kindSchema, functionSchema, globalNames) {
@@ -224,7 +258,12 @@ function buildTypeSchema(nodes) {
     const typeFields = new Map();
     const typeParents = new Map();
 
-    for (const node of nodes) {
+    for (const rawNode of nodes) {
+        // An action declaration is a type whose parent is `action` and whose
+        // fields are its slots, so field-chain resolution (self.taken) works.
+        const node = rawNode.kind === "ActionDecl"
+            ? { kind: "TypeDecl", name: rawNode.name, parents: ["action"], fields: rawNode.slots, filePath: rawNode.filePath, lineNumber: rawNode.lineNumber }
+            : rawNode;
         if (node.kind !== "TypeDecl") {
             continue;
         }
@@ -356,6 +395,8 @@ function checkStatements(statements, typeSchema, kindSchema, localTypes, functio
             checkCallStatement(stmt, typeSchema, kindSchema, localTypes, functionSchema);
         } else if (stmt.kind === "FollowStatement") {
             checkFollowCall(stmt, typeSchema, kindSchema, localTypes, functionSchema);
+        } else if (stmt.kind === "TryStatement") {
+            checkTryStatement(stmt, typeSchema, kindSchema, localTypes, functionSchema);
         } else if (stmt.kind === "ReturnStatement") {
             if (stmt.expr !== null && expectedReturnType !== null) {
                 checkValueCompatibility(
@@ -425,6 +466,30 @@ function checkCallStatement(stmt, typeSchema, kindSchema, localTypes, functionSc
     const fn = functionSchema.get(stmt.name);
     if (!fn) return;
     checkCallArgs(stmt.name, stmt.args, fn, "function", stmt.filePath, stmt.lineNumber, typeSchema, kindSchema, localTypes, functionSchema);
+}
+
+function checkTryStatement(stmt, typeSchema, kindSchema, localTypes, functionSchema) {
+    const slots = actionSchema.get(stmt.actionName);
+    if (!slots) {
+        throw typeError(stmt.filePath, stmt.lineNumber, `unknown action "${stmt.actionName}"`);
+    }
+    for (const field of stmt.fields) {
+        const slotType = slots.get(field.fieldName);
+        if (!slotType) {
+            throw typeError(field.filePath, field.lineNumber, `action "${stmt.actionName}" has no slot "${field.fieldName}"`);
+        }
+        checkValueCompatibility(
+            field.value,
+            slotType,
+            typeSchema,
+            kindSchema,
+            field.filePath,
+            field.lineNumber,
+            `slot "${field.fieldName}"`,
+            localTypes,
+            functionSchema,
+        );
+    }
 }
 
 // Recursively validates every call/follow embedded in an expression — the

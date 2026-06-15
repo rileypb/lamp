@@ -40,6 +40,7 @@ function wrapIfNeeded(expr, parentPrec, globalNames, { rightOperand = false, lef
 let relationFieldSchemas = new Map();
 let emitKindNames = new Set();
 let functionParamTypes = new Map();
+let actionSlotTypes = new Map();
 
 function emitProgram(programAst, options = {}) {
     const nativeJsContents = options.nativeJsContents || [];
@@ -68,6 +69,11 @@ function emitProgram(programAst, options = {}) {
             schema[field.fieldName] = field.typeName;
         }
         relationFieldSchemas.set(relationNode.name, schema);
+    }
+    const actionNodes = programAst.nodes.filter((node) => node.kind === "ActionDecl");
+    actionSlotTypes = new Map();
+    for (const actionNode of actionNodes) {
+        actionSlotTypes.set(actionNode.name, new Map(actionNode.slots.map((s) => [s.fieldName, s.typeName])));
     }
 
     // Body-only module: no shebang and no runtime require. The sandbox launcher
@@ -111,6 +117,17 @@ function emitProgram(programAst, options = {}) {
         } else {
             mergedTypes.get(typeNode.name).fields.push(...typeNode.fields);
         }
+    }
+
+    // An action declaration emits as a type whose parent is the built-in `action`
+    // type and whose fields are its slots.
+    for (const actionNode of actionNodes) {
+        mergedTypes.set(actionNode.name, {
+            kind: "TypeDecl",
+            name: actionNode.name,
+            parents: ["action"],
+            fields: [...actionNode.slots],
+        });
     }
 
     for (const typeNode of mergedTypes.values()) {
@@ -227,6 +244,11 @@ function emitProgram(programAst, options = {}) {
 
     for (const changeNode of changeHandlerNodes) {
         lines.push(emitChangeHandler(changeNode, globalNames));
+    }
+
+    for (const node of programAst.nodes) {
+        if (node.kind !== "PhaseRule") continue;
+        lines.push(emitPhaseRule(node, globalNames));
     }
 
     for (const node of relationAddHandlerNodes) {
@@ -543,6 +565,22 @@ function emitEventHandler(node, globalNames = new Set()) {
     ].join("\n");
 }
 
+// A phase rule registers a function into the action's rulebook band. The
+// function receives the action instance as `self`; a `stop EXPR` emits as
+// `return EXPR`, and the driver treats any returned value as a stop-with-outcome
+// while a fall-through (undefined) continues to the next rule.
+function emitPhaseRule(node, globalNames = new Set()) {
+    const lines = [
+        `lamplighter.registerActionRule(${JSON.stringify(node.actionName)}, ${JSON.stringify(node.band)}, (self) => {`,
+    ];
+    if (node.whenExpr) {
+        lines.push(`    if (!(${emitExpression(node.whenExpr, globalNames)})) return;`);
+    }
+    lines.push(...emitStatementList(node.body, 1, globalNames));
+    lines.push("});");
+    return lines.join("\n");
+}
+
 function emitChangeHandler(node, globalNames = new Set()) {
     const bodyLines = emitStatementList(node.body, 1, globalNames);
     return [
@@ -659,6 +697,22 @@ function emitStatementLines(statement, indentLevel, globalNames = new Set()) {
     if (statement.kind === "FollowStatement") {
         const argExprs = emitCallArgs(statement.name, statement.args, globalNames);
         return [`${indent}${statement.name}(${argExprs});`];
+    }
+    if (statement.kind === "TryStatement") {
+        const slotTypes = actionSlotTypes.get(statement.actionName) || new Map();
+        const pairs = statement.fields.map((field) => {
+            const slotType = slotTypes.get(field.fieldName);
+            const isObject = field.value.kind === "StringLiteral"
+                && slotType !== undefined
+                && !PRIMITIVE_TYPES.has(slotType)
+                && !emitKindNames.has(slotType);
+            const valueExpr = isObject
+                ? `lamplighter.getObject(${JSON.stringify(field.value.value)})`
+                : emitValue(field.value);
+            return `${JSON.stringify(field.fieldName)}: ${valueExpr}`;
+        });
+        const instance = `{ "type": ${JSON.stringify(statement.actionName)}${pairs.length ? ", " + pairs.join(", ") : ""} }`;
+        return [`${indent}lamplighter.runAction(${JSON.stringify(statement.actionName)}, ${instance});`];
     }
     throw new Error(`Unsupported statement kind: ${statement.kind}`);
 }

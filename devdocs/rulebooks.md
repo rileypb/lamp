@@ -309,13 +309,19 @@ for now they remain separate to avoid forcing one model onto two purposes.
 
 ## Staged roadmap
 
-- **v0 — action bands only.** Per-action rulebook with the six bands, source-order
-  rules, `stop succeeded`/`stop failed`, `when` guards. No general author-declared
-  rulebooks, no rule names, no cross-file ordering. Enough to drive the v0 parser.
-- **v1 — general rulebooks + identity.** Author-declared rulebooks with arbitrary
-  result types and defaults; named rules; `refuse` sugar.
-- **v2 — ecosystem ordering.** Bands beyond the action set, group tags and `order`
-  constraints, compile-time topo-sort with the unspecified-order warning.
+- **Implemented — general rulebooks.** `rulebook T NAME(params):` with `default`
+  and `when` rules, `stop EXPR`, `follow NAME(args)` invocation. Each rulebook
+  compiles to a hoisted JS function; no runtime driver needed.
+- **Implemented — action bands.** `action NAME:` with typed slots, the six
+  phase-rule bands (`before/instead/check/do/after/report`) with `when` guards
+  and `stop succeeded`/`stop failed`, `try ACTION:` invocation, the built-in
+  `outcome` kind, and a small native action driver (`runAction`). Source-order
+  rules within a band; no cross-file ordering yet. The implicit `actor` slot and
+  the `syntax` grammar block are deferred to the Game Parser.
+- **Next — identity & ergonomics.** Named rules; `refuse` sugar; the implicit
+  `actor` slot defaulting to the player; `void` rulebooks.
+- **Later — ecosystem ordering.** Bands beyond the action set, group tags and
+  `order` constraints, compile-time topo-sort with the unspecified-order warning.
 
 ## Assumptions
 

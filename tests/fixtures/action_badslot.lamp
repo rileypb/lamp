@@ -1,0 +1,16 @@
+# A `try` may only set slots the action declares.
+
+game G:
+	author "x"
+	version 1
+
+type item
+
+action take:
+	item taken
+
+on startup:
+	try take:
+		grabbed yourself
+
+person yourself

@@ -22,12 +22,14 @@ function getInfixBP(token) {
     return BP[token.type];
 }
 
-function parseSource(sourceText, filePath, globalNames = new Set(), functionNames = new Set(), relationNames = new Set(), relationTemplates = new Map()) {
+const PHASE_WORDS = new Set(["before", "instead", "check", "do", "after", "report"]);
+
+function parseSource(sourceText, filePath, globalNames = new Set(), functionNames = new Set(), relationNames = new Set(), relationTemplates = new Map(), actionNames = new Set()) {
     const tokens = tokenize(sourceText, filePath);
-    return createParser(tokens, filePath, globalNames, functionNames, relationNames, relationTemplates).parseProgram();
+    return createParser(tokens, filePath, globalNames, functionNames, relationNames, relationTemplates, actionNames).parseProgram();
 }
 
-function createParser(tokens, filePath, globalNames, functionNames = new Set(), relationNames = new Set(), relationTemplates = new Map()) {
+function createParser(tokens, filePath, globalNames, functionNames = new Set(), relationNames = new Set(), relationTemplates = new Map(), actionNames = new Set()) {
     let pos = 0;
 
     const peek = (offset = 0) => tokens[pos + offset];
@@ -109,10 +111,12 @@ function createParser(tokens, filePath, globalNames, functionNames = new Set(), 
                 case "function": return parseFunctionDecl();
                 case "native": return parseNativeFunctionDecl();
                 case "rulebook": return parseRulebookDecl();
+                case "action": return parseActionDecl();
                 default: throw err(`Unexpected '${token.value}' at top level`);
             }
         }
         if (token.type === "IDENT") {
+            if (PHASE_WORDS.has(token.value) && peek(1).type === "IDENT" && actionNames.has(peek(1).value)) return parsePhaseRule();
             if (relationNames.has(token.value) && peek(1).type === "COLON") return parseRelationAssert();
             if (relationTemplates.has(token.value)) return parseCustomSyntaxAssert(relationTemplates.get(token.value), null);
             if (peek(1).type === "IDENT" && relationTemplates.has(peek(1).value)) return parseNamedCustomSyntaxAssert();
@@ -626,6 +630,39 @@ function createParser(tokens, filePath, globalNames, functionNames = new Set(), 
         return { typeName, name };
     }
 
+    // `action NAME:` declares an action type whose body is its named slots
+    // (field declarations, like a type body). The `syntax` grammar block is
+    // deferred (see devdocs/game_parser.md).
+    function parseActionDecl() {
+        const keyword = expectKeyword("action");
+        const name = plainName("action name");
+        let slots = [];
+        if (at("COLON")) {
+            next();
+            expectNewline();
+            slots = parseTypeBody();
+        } else {
+            expectNewline();
+        }
+        return ast.createActionDecl(name, slots, filePath, keyword.line);
+    }
+
+    // A leading-band phase rule: `BAND ACTION [when COND]:` followed by a block.
+    // `self` is the action instance throughout the body.
+    function parsePhaseRule() {
+        const bandToken = next();
+        const actionName = plainName("action name");
+        let whenExpr = null;
+        if (atKeyword("when")) {
+            next();
+            whenExpr = parseExpression(0, new Set(["self"]));
+        }
+        expect("COLON", "Expected ':' after phase rule header");
+        expectNewline();
+        const body = parseBlock(new Set(["self"]));
+        return ast.createPhaseRule(bandToken.value, actionName, whenExpr, body, filePath, bandToken.line);
+    }
+
     function parseRulebookDecl() {
         const keyword = expectKeyword("rulebook");
         const resultType = parseFieldType();
@@ -715,6 +752,7 @@ function createParser(tokens, filePath, globalNames, functionNames = new Set(), 
                 case "disconnect": return parseDisconnectStatement();
                 case "stop": return parseStop(localNames);
                 case "follow": return parseFollowStatement(localNames);
+                case "try": return parseTryStatement();
                 case "break":
                     next();
                     expectNewline();
@@ -754,6 +792,22 @@ function createParser(tokens, filePath, globalNames, functionNames = new Set(), 
         const expr = at("NEWLINE") ? null : parseExpression(0, localNames);
         expectNewline();
         return ast.createReturnStatement(expr);
+    }
+
+    // `try ACTION:` with an indented block of `slot value` lines constructs an
+    // action instance and runs it through its rulebook bands.
+    function parseTryStatement() {
+        const keyword = expectKeyword("try");
+        const actionName = plainName("action name");
+        let fields = [];
+        if (at("COLON")) {
+            next();
+            expectNewline();
+            fields = parseObjectBody();
+        } else {
+            expectNewline();
+        }
+        return ast.createTryStatement(actionName, fields, filePath, keyword.line);
     }
 
     function parseStop(localNames) {

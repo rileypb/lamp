@@ -1,0 +1,3 @@
+Compile error: tests/fixtures/action_badstop.lamp:13: type error: stop value expects kind "outcome", got "int"
+  13 | 	stop 5
+    |  ^

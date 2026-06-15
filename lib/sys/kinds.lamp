@@ -8,3 +8,6 @@ kind color = enum(red, green, blue)
 # every kind has an output function for printing a value of that kind. The enum kind's output function is built-in.
 
 kind reltype = enum(dev, beta, final)
+
+# the result of an action's rulebook: succeeded or failed (see devdocs/rulebooks.md)
+kind outcome = enum(succeeded, failed)

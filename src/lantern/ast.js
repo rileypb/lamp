@@ -238,6 +238,24 @@ function createStopStatement(expr, filePath, lineNumber) {
     return { kind: "StopStatement", expr, filePath, lineNumber };
 }
 
+// An action type: a subtype of the built-in `action` type whose fields are its
+// named slots. The six-band rulebook for it is built from PhaseRule nodes.
+function createActionDecl(name, slots, filePath, lineNumber) {
+    return { kind: "ActionDecl", name, slots, filePath, lineNumber };
+}
+
+// One rule in an action's rulebook, attached to a band (before/instead/check/
+// do/after/report). `self` inside the body is the action instance.
+function createPhaseRule(band, actionName, whenExpr, body, filePath, lineNumber) {
+    return { kind: "PhaseRule", band, actionName, whenExpr, body, filePath, lineNumber };
+}
+
+// Imperatively run an action: construct an instance with the given slot values
+// and drive it through its rulebook bands.
+function createTryStatement(actionName, fields, filePath, lineNumber) {
+    return { kind: "TryStatement", actionName, fields, filePath, lineNumber };
+}
+
 function createFollowStatement(name, args, filePath, lineNumber) {
     return { kind: "FollowStatement", name, args, filePath, lineNumber };
 }
@@ -304,6 +322,9 @@ module.exports = {
     createStopStatement,
     createFollowStatement,
     createFollowExpr,
+    createActionDecl,
+    createPhaseRule,
+    createTryStatement,
     createAndExpr,
     createOrExpr,
     createNotExpr,

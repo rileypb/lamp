@@ -38,6 +38,7 @@ function runCompilation() {
     const globalNames = new Set();
     const functionNames = new Set();
     const relationNames = new Set();
+    const actionNames = new Set();
     const rawTemplates = [];
     for (const sourceFile of sourceFiles) {
         const source = fs.readFileSync(sourceFile, "utf8");
@@ -50,6 +51,9 @@ function runCompilation() {
         for (const name of extractRelationNames(source)) {
             relationNames.add(name);
         }
+        for (const name of extractActionNames(source)) {
+            actionNames.add(name);
+        }
         rawTemplates.push(...extractRelationTemplates(source));
     }
 
@@ -57,7 +61,7 @@ function runCompilation() {
 
     for (const sourceFile of sourceFiles) {
         const source = fs.readFileSync(sourceFile, "utf8");
-        const ast = parseSource(source, sourceFile, globalNames, functionNames, relationNames, relationTemplates);
+        const ast = parseSource(source, sourceFile, globalNames, functionNames, relationNames, relationTemplates, actionNames);
         allNodes.push(...ast.nodes);
     }
 
@@ -217,6 +221,21 @@ function extractRelationNames(sourceText) {
     for (const line of sourceText.split(/\r?\n/)) {
         const code = line.replace(/#.*$/, "").trim();
         const match = code.match(/^relation\s+([A-Za-z_][A-Za-z0-9_]*)\s*:/);
+        if (match) {
+            names.add(match[1]);
+        }
+    }
+    return names;
+}
+
+// Action names are collected ahead of parsing so the parser can recognize a
+// leading-band phase rule (`check take:`) — otherwise indistinguishable from an
+// object declaration (`room kitchen:`) by token shape alone.
+function extractActionNames(sourceText) {
+    const names = new Set();
+    for (const line of sourceText.split(/\r?\n/)) {
+        const code = line.replace(/#.*$/, "").trim();
+        const match = code.match(/^action\s+([A-Za-z_][A-Za-z0-9_]*)\s*:?/);
         if (match) {
             names.add(match[1]);
         }

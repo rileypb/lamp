@@ -1,0 +1,19 @@
+# A phase rule's `stop` value must be an `outcome` (succeeded/failed).
+
+game G:
+	author "x"
+	version 1
+
+type item
+
+action take:
+	item taken
+
+do take:
+	stop 5
+
+on startup:
+	try take:
+		taken yourself
+
+person yourself
