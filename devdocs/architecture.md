@@ -30,6 +30,8 @@ The Lamplighter runtime includes a small command line tool that can execute the 
 
 Lighthouse is the bundler that takes the compiled game and the Lamplighter runtime and packages them into a single executable. It can produce either a standalone Electron application or a web application that can be distributed to players. Lighthouse ensures that all necessary dependencies are included and optimizes the final output for performance and size.
 
+For the intended execution and isolation model of packaged games — how native library JavaScript is sandboxed and how development and packaged behavior are kept identical — see `devdocs/sandbox.md`.
+
 ## Terms
 
 - **Lamp**: The language used to write interactive fiction games.
