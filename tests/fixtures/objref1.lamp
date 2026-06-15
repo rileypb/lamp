@@ -1,0 +1,28 @@
+# A bare single-word object name in a comparison resolves to the object, so
+# identity comparison works (previously it became the string "statue").
+
+game ObjRef_Demo:
+	author "Test Author"
+	version 1
+
+type item
+
+item lamp
+
+item statue
+
+action take:
+	item taken
+
+instead take when self.taken == statue:
+	print "Too heavy to lift."
+	stop failed
+
+do take:
+	print "Taken."
+
+on startup:
+	try take:
+		taken lamp
+	try take:
+		taken statue

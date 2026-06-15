@@ -1103,7 +1103,7 @@ let f = double
 apply(5, double)
 ```
 
-- **Bare identifiers** in expressions are resolved in this order: local variable (introduced by `let`), declared global, declared function (producing a function reference), then string literal. The string-literal fallback supports enum-label comparisons such as `== final`.
+- **Bare identifiers** in expressions are resolved in this order: local variable (introduced by `let`), declared global, declared function (producing a function reference), declared object (producing an object reference), then string literal. The object-reference step lets a bare single-word object name compare by identity (`x == statue`); the string-literal fallback supports enum-label comparisons such as `== final`. (A multi-word object name already resolves to an object reference via the underscore convention.)
 
 - **Follow expression** — `follow NAME(args)` invokes a rulebook and produces its result value (see Rulebooks):
 
@@ -1146,7 +1146,7 @@ The parser (`parser_rd.js`) is a full-file recursive-descent parser over a token
 | unary `-` | 25 |
 | `^` | 30 (right-associative) |
 
-Identifier disambiguation in expression position (`parseIdentExpr`) resolves in this order: `true`/`false`/`none` literals → function call (IDENT followed by `LPAREN`) → property-access chain (IDENT followed by `.`) → local variable → global → function reference → string literal (enum-label fallback).
+Identifier disambiguation in expression position (`parseIdentExpr`) resolves in this order: `true`/`false`/`none` literals → function call (IDENT followed by `LPAREN`) → property-access chain (IDENT followed by `.`) → local variable → global → function reference → declared object reference → string literal (enum-label fallback). Object names are collected in a pre-scan pass (like globals and functions) so a bare single-word object name resolves to the object rather than a string.
 
 ### Static checking
 

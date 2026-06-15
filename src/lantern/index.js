@@ -5,6 +5,11 @@ const path = require("path");
 const { parseSource } = require("./parser_rd");
 const { emitProgram } = require("./emitter");
 const { checkProgram, serializeWhenExpr } = require("./checker");
+const { KEYWORDS, coerceName } = require("./tokenizer");
+
+// Contextual band words that lead a phase rule (`check take:`); excluded from the
+// object-name prescan so a phase rule is never mistaken for an object declaration.
+const BAND_WORDS = new Set(["before", "instead", "check", "do", "after", "report"]);
 
 function main() {
     try {
@@ -39,6 +44,7 @@ function runCompilation() {
     const functionNames = new Set();
     const relationNames = new Set();
     const actionNames = new Set();
+    const objectNames = new Set();
     const rawTemplates = [];
     for (const sourceFile of sourceFiles) {
         const source = fs.readFileSync(sourceFile, "utf8");
@@ -54,6 +60,9 @@ function runCompilation() {
         for (const name of extractActionNames(source)) {
             actionNames.add(name);
         }
+        for (const name of extractObjectNames(source)) {
+            objectNames.add(name);
+        }
         rawTemplates.push(...extractRelationTemplates(source));
     }
 
@@ -61,7 +70,7 @@ function runCompilation() {
 
     for (const sourceFile of sourceFiles) {
         const source = fs.readFileSync(sourceFile, "utf8");
-        const ast = parseSource(source, sourceFile, globalNames, functionNames, relationNames, relationTemplates, actionNames);
+        const ast = parseSource(source, sourceFile, globalNames, functionNames, relationNames, relationTemplates, actionNames, objectNames);
         allNodes.push(...ast.nodes);
     }
 
@@ -224,6 +233,27 @@ function extractRelationNames(sourceText) {
         if (match) {
             names.add(match[1]);
         }
+    }
+    return names;
+}
+
+// Object names are collected ahead of parsing so a bare single-word object
+// reference in an expression (`self.taken == statue`) resolves to the object
+// rather than the enum-label string fallback. Matches only top-level (unindented)
+// `TYPE NAME` declarations — exactly two identifier tokens, optional trailing
+// `:`, no `=`, and a non-keyword/non-band leading token — which excludes field
+// assignments (indented), relation asserts (3+ tokens), and every keyword-led
+// declaration.
+function extractObjectNames(sourceText) {
+    const names = new Set();
+    for (const rawLine of sourceText.split(/\r?\n/)) {
+        if (/^\s/.test(rawLine)) continue;
+        const code = rawLine.replace(/#.*$/, "");
+        if (code.includes("=")) continue;
+        const match = code.match(/^([A-Za-z_][A-Za-z0-9_\\-]*)\s+([A-Za-z_][A-Za-z0-9_\\-]*)\s*:?\s*$/);
+        if (!match) continue;
+        if (KEYWORDS.has(match[1]) || BAND_WORDS.has(match[1])) continue;
+        names.add(coerceName(match[2]));
     }
     return names;
 }

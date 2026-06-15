@@ -24,12 +24,12 @@ function getInfixBP(token) {
 
 const PHASE_WORDS = new Set(["before", "instead", "check", "do", "after", "report"]);
 
-function parseSource(sourceText, filePath, globalNames = new Set(), functionNames = new Set(), relationNames = new Set(), relationTemplates = new Map(), actionNames = new Set()) {
+function parseSource(sourceText, filePath, globalNames = new Set(), functionNames = new Set(), relationNames = new Set(), relationTemplates = new Map(), actionNames = new Set(), objectNames = new Set()) {
     const tokens = tokenize(sourceText, filePath);
-    return createParser(tokens, filePath, globalNames, functionNames, relationNames, relationTemplates, actionNames).parseProgram();
+    return createParser(tokens, filePath, globalNames, functionNames, relationNames, relationTemplates, actionNames, objectNames).parseProgram();
 }
 
-function createParser(tokens, filePath, globalNames, functionNames = new Set(), relationNames = new Set(), relationTemplates = new Map(), actionNames = new Set()) {
+function createParser(tokens, filePath, globalNames, functionNames = new Set(), relationNames = new Set(), relationTemplates = new Map(), actionNames = new Set(), objectNames = new Set()) {
     let pos = 0;
 
     const peek = (offset = 0) => tokens[pos + offset];
@@ -1042,6 +1042,10 @@ function createParser(tokens, filePath, globalNames, functionNames = new Set(), 
             if (globalNames.has(raw)) return ast.createGlobalExpr(coerceName(raw));
             if (functionNames.has(raw)) return ast.createFunctionRefExpr(raw);
             const coerced = coerceName(raw);
+            // A bare name that is a declared object resolves to that object (so
+            // `x == statue` compares object identity); other JS-safe bare names
+            // fall back to a string literal (the enum-label path).
+            if (objectNames.has(coerced)) return ast.createParenNameExpr(coerced, []);
             return JS_IDENT.test(coerced)
                 ? ast.createStringLiteral(coerced)
                 : ast.createParenNameExpr(coerced, []);
