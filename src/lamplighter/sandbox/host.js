@@ -51,10 +51,22 @@ function playFile(generatedPath, { out = process.stdout, err = process.stderr } 
         worker.on("message", (msg) => {
             if (msg.type === "print") {
                 out.write(`${msg.value}\n`);
+            } else if (msg.type === "write") {
+                out.write(msg.value);
             } else if (msg.type === "log") {
                 err.write(`${msg.value}\n`);
             } else if (msg.type === "readline") {
                 const bytes = encoder.encode(readStdinLine());
+                const len = Math.min(bytes.length, dataCapacity);
+                data.set(bytes.subarray(0, len), 0);
+                Atomics.store(ctrl, 1, len);
+                Atomics.store(ctrl, 0, 1);
+                Atomics.notify(ctrl, 0);
+            } else if (msg.type === "prompt_readline") {
+                out.write(msg.prompt);
+                const line = readStdinLine();
+                if (!process.stdin.isTTY) out.write(`${line}\n`);
+                const bytes = encoder.encode(line);
                 const len = Math.min(bytes.length, dataCapacity);
                 data.set(bytes.subarray(0, len), 0);
                 Atomics.store(ctrl, 1, len);

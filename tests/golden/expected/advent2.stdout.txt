@@ -5,3 +5,4 @@ A test room.
 > hello
 I don't understand that.
 
+> quit

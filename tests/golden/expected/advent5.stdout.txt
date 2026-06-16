@@ -14,3 +14,4 @@ Taken.
 You are carrying:
   clay lamp
 
+> quit

@@ -43,3 +43,4 @@ You are carrying nothing.
 > go east
 You can't go that way.
 
+> quit

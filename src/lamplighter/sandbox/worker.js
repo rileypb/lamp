@@ -23,14 +23,24 @@ function installInputChannel(inputBuffer) {
     const data = new Uint8Array(inputBuffer, 8);
     const decoder = new TextDecoder();
 
-    lamplighter.setInputChannel(() => {
-        Atomics.store(ctrl, 0, 0);
-        parentPort.postMessage({ type: "readline" });
+    function blockForLine() {
         Atomics.wait(ctrl, 0, 0);
         const len = Atomics.load(ctrl, 1);
         const copy = new Uint8Array(len);
         copy.set(data.subarray(0, len));
         return decoder.decode(copy);
+    }
+
+    lamplighter.setInputChannel(() => {
+        Atomics.store(ctrl, 0, 0);
+        parentPort.postMessage({ type: "readline" });
+        return blockForLine();
+    });
+
+    lamplighter.setPromptChannel((prompt) => {
+        Atomics.store(ctrl, 0, 0);
+        parentPort.postMessage({ type: "prompt_readline", prompt });
+        return blockForLine();
     });
 }
 
@@ -39,6 +49,7 @@ function main() {
     const code = fs.readFileSync(generatedPath, "utf8");
 
     lamplighter.setPrint((value) => parentPort.postMessage({ type: "print", value: String(value) }));
+    lamplighter.setWrite((value) => parentPort.postMessage({ type: "write", value: String(value) }));
 
     installInputChannel(workerData.inputBuffer);
 

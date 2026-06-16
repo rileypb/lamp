@@ -20,6 +20,10 @@ let printImpl = (value) => {
     console.log(String(value));
 };
 
+let writeImpl = (value) => {
+    process.stdout.write(String(value));
+};
+
 let builtinsInitialized = false;
 
 function bootstrapBuiltins() {
@@ -608,14 +612,27 @@ function setPrint(nextPrintImpl) {
     printImpl = nextPrintImpl;
 }
 
+function write(value) {
+    writeImpl(String(value));
+}
+
+function setWrite(nextWriteImpl) {
+    writeImpl = nextWriteImpl;
+}
+
 // Player input is a brokered host capability. The host owns stdin and the worker
 // installs an input channel via setInputChannel; readLine blocks on that channel.
 // A game run outside the sandbox has no channel and cannot read input — the
 // sandbox launcher is the only supported run path. See devdocs/sandbox.md.
 let requestLineImpl = null;
+let promptLineImpl = null;
 
 function setInputChannel(requestLine) {
     requestLineImpl = requestLine;
+}
+
+function setPromptChannel(requestPromptLine) {
+    promptLineImpl = requestPromptLine;
 }
 
 function readLine() {
@@ -623,6 +640,16 @@ function readLine() {
         throw new Error("no input channel installed; run the game through the sandbox launcher");
     }
     return requestLineImpl();
+}
+
+// Like readLine but also writes `promptText` to the output before blocking,
+// and echoes the input line in piped/non-TTY mode. Use this instead of
+// write()+readLine() for interactive prompts.
+function promptLine(promptText) {
+    if (!promptLineImpl) {
+        throw new Error("no prompt channel installed; run the game through the sandbox launcher");
+    }
+    return promptLineImpl(promptText);
 }
 
 function error(message) {
@@ -807,6 +834,10 @@ module.exports = {
     run,
     print,
     setPrint,
+    write,
+    setWrite,
+    setPromptChannel,
+    promptLine,
     setInputChannel,
     readLine,
     error,

@@ -21,3 +21,4 @@ Taken.
 You are carrying:
   golden key
 
+> quit

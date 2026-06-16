@@ -3,9 +3,8 @@ on startup:
 	dispatch started
 	while true:
 		print
-		input = readline()
+		input = prompt("> ")
 		if input == "quit":
 			break
-		print "> " + input
 		run_command(input)
 

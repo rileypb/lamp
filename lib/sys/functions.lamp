@@ -1,4 +1,6 @@
 native function string readline()
+native function string prompt(string s)
+native function void write(string s)
 native function list<string> split(string input)
 native function string to_lower(string input)
 
