@@ -539,8 +539,9 @@ for now they remain separate to avoid forcing one model onto two purposes.
 4. **Compile-time assembly.** Lantern collects all rules for each rulebook across
    the compiled file set, topologically sorts by constraints, errors on cycles,
    and warns on observable-but-unspecified order.
-5. **Built-in `outcome` kind** (`enum(succeeded, failed)`) and a queryable action
-   outcome for the turn cycle.
+5. **Built-in `outcome` kind** (`enum(succeeded, failed)`). An action's outcome is
+   readable with `let x = try ACTION[: …]`; a turn-cycle hook for the
+   player-command path is still owed to the Game Parser.
 6. **A rulebook driver** (native at first; see `devdocs/game_parser.md`,
    Engine architecture) that runs an ordered rule list, evaluates guards, and
    honours `stop`.
@@ -552,8 +553,9 @@ for now they remain separate to avoid forcing one model onto two purposes.
   compiles to a hoisted JS function; no runtime driver needed.
 - **Implemented — action bands.** `action NAME:` with typed slots, the six
   phase-rule bands (`before/instead/check/do/after/report`) with `when` guards
-  and `stop succeeded`/`stop failed`, `try ACTION:` invocation, the built-in
-  `outcome` kind, and a small native action driver (`runAction`). Source-order
+  and `stop succeeded`/`stop failed`, `try ACTION:` invocation (statement form, or
+  `let x = try ACTION` to capture the `outcome`), the built-in `outcome` kind, and
+  a small native action driver (`runAction`). Source-order
   rules within a band, with a coarse author-before-library tier (see *Cross-rule
   override suppression*); finer group/anchor ordering is not built. The implicit
   `actor` slot and the `syntax` grammar block are deferred to the Game Parser.
@@ -616,13 +618,12 @@ for now they remain separate to avoid forcing one model onto two purposes.
   library rules. Bare `stop` in a non-void value rulebook yields the declared
   `default`. Remaining: whether named-rule *replacement* is also needed for cases
   coarse author-before-library ordering can't express.
-- **Reading an action's outcome.** A general rulebook's result is readable via
-  `follow` in expression position, but `try ACTION:` is statement-only and
-  discards the `outcome` (`runAction`'s return is dropped). So author code cannot
-  branch on whether an action succeeded — the outcome only drives the engine
-  (`report` vs `report failed`). Surface it via `try` in expression position, a
-  queryable last-action-outcome, or both? (Listed under *Required language/runtime
-  support* item 5 but not built.)
+- **Reading an action's outcome** — *implemented* via `let x = try ACTION[: …]`,
+  which captures the rulebook's `outcome` so author code can branch
+  (`if x == failed: …`). The statement form `try ACTION:` still discards the
+  outcome. Chosen over a queryable last-action-outcome to keep value flow explicit
+  (no transient global state). Not yet surfaced: a turn-cycle hook for the
+  player-command path (a command's outcome), which the Game Parser will need.
 - **Turn cost.** Does a band need to declare whether the action "took a turn,"
   or is that derived from the outcome and owned by the turn cycle
   (`devdocs/game_parser.md`)?

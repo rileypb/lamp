@@ -845,6 +845,14 @@ function createParser(tokens, filePath, globalNames, functionNames = new Set(), 
     // action instance and runs it through its rulebook bands.
     function parseTryStatement() {
         const keyword = expectKeyword("try");
+        const { actionName, fields } = parseTryTail();
+        return ast.createTryStatement(actionName, fields, filePath, keyword.line);
+    }
+
+    // Parses the action name and optional `:`-block after the `try` keyword,
+    // consuming the trailing newline (and block). Shared by the statement form
+    // and the `let x = try ...` expression form.
+    function parseTryTail() {
         const actionName = plainName("action name");
         let fields = [];
         if (at("COLON")) {
@@ -854,7 +862,7 @@ function createParser(tokens, filePath, globalNames, functionNames = new Set(), 
         } else {
             expectNewline();
         }
-        return ast.createTryStatement(actionName, fields, filePath, keyword.line);
+        return { actionName, fields };
     }
 
     function parseStop(localNames) {
@@ -896,6 +904,15 @@ function createParser(tokens, filePath, globalNames, functionNames = new Set(), 
         expectKeyword("let");
         const name = plainName("variable name");
         expect("EQUALS");
+        // `let x = try ACTION[: block]` captures the action's outcome. The try
+        // tail consumes its own newline/block, so don't expect a newline after.
+        if (atKeyword("try")) {
+            const tryKeyword = next();
+            const { actionName, fields } = parseTryTail();
+            localNames.add(name);
+            const tryExpr = ast.createTryExpr(actionName, fields, filePath, tryKeyword.line);
+            return ast.createLetStatement(name, tryExpr, filePath, keyword.line);
+        }
         const expr = parseExpression(0, localNames);
         expectNewline();
         localNames.add(name);

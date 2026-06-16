@@ -5,17 +5,12 @@ Top recommended next steps, roughly in priority order. Each item notes *why*,
 prerequisite lists in `devdocs/game_parser.md`, `devdocs/rulebooks.md`, and
 `devdocs/relations.md`.
 
-## 1. Make action outcomes readable
-`try ACTION:` is statement-only and discards the `outcome`; author code can't
-branch on success/failure. (General rulebook results are already readable via
-`follow` in expression position.) Surface it — e.g. `try` in expression position
-yielding `outcome`, or a queryable last-action-outcome. See `devdocs/rulebooks.md`
-Open questions and *Required language/runtime support* item 5.
-
-## 2. Parser v2 — every-turn & timed rules
+## 1. Parser v2 — every-turn & timed rules
 Action-rulebook bands are implemented; what remains for v2 is a turn clock:
 every-turn rules and timed/scheduled events, plus out-of-world actions
-(`save`/`undo`/`again` — currently out of scope).
+(`save`/`undo`/`again` — currently out of scope). Also surface the outcome of a
+player command (the `run_command` path discards `runAction`'s result, unlike
+`let x = try`) so turn rules can see whether the command succeeded.
 - **Where:** rulebook driver in `src/lamplighter/index.js`, `run_command` loop.
 - **See:** `devdocs/rulebooks.md` roadmap, `devdocs/game_parser.md` v2.
 

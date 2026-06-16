@@ -738,22 +738,29 @@ function emitStatementLines(statement, indentLevel, globalNames = new Set()) {
         return [`${indent}${statement.name}(${argExprs});`];
     }
     if (statement.kind === "TryStatement") {
-        const slotTypes = actionSlotTypes.get(statement.actionName) || new Map();
-        const pairs = statement.fields.map((field) => {
-            const slotType = slotTypes.get(field.fieldName);
-            const isObject = field.value.kind === "StringLiteral"
-                && slotType !== undefined
-                && !PRIMITIVE_TYPES.has(slotType)
-                && !emitKindNames.has(slotType);
-            const valueExpr = isObject
-                ? `lamplighter.getObject(${JSON.stringify(field.value.value)})`
-                : emitValue(field.value);
-            return `${JSON.stringify(field.fieldName)}: ${valueExpr}`;
-        });
-        const instance = `{ "type": ${JSON.stringify(statement.actionName)}${pairs.length ? ", " + pairs.join(", ") : ""} }`;
-        return [`${indent}lamplighter.runAction(${JSON.stringify(statement.actionName)}, ${instance});`];
+        return [`${indent}${emitTryCall(statement, globalNames)};`];
     }
     throw new Error(`Unsupported statement kind: ${statement.kind}`);
+}
+
+// Emits the `runAction(name, instance)` call for a `try`, shared by the
+// statement form (outcome discarded) and the `let x = try` expression form
+// (outcome captured).
+function emitTryCall(node, globalNames = new Set()) {
+    const slotTypes = actionSlotTypes.get(node.actionName) || new Map();
+    const pairs = node.fields.map((field) => {
+        const slotType = slotTypes.get(field.fieldName);
+        const isObject = field.value.kind === "StringLiteral"
+            && slotType !== undefined
+            && !PRIMITIVE_TYPES.has(slotType)
+            && !emitKindNames.has(slotType);
+        const valueExpr = isObject
+            ? `lamplighter.getObject(${JSON.stringify(field.value.value)})`
+            : emitValue(field.value);
+        return `${JSON.stringify(field.fieldName)}: ${valueExpr}`;
+    });
+    const instance = `{ "type": ${JSON.stringify(node.actionName)}${pairs.length ? ", " + pairs.join(", ") : ""} }`;
+    return `lamplighter.runAction(${JSON.stringify(node.actionName)}, ${instance})`;
 }
 
 function emitExpression(expr, globalNames = new Set()) {
@@ -822,6 +829,9 @@ function emitExpression(expr, globalNames = new Set()) {
     }
     if (expr.kind === "FollowExpr") {
         return `${expr.name}(${emitCallArgs(expr.name, expr.args, globalNames)})`;
+    }
+    if (expr.kind === "TryExpr") {
+        return emitTryCall(expr, globalNames);
     }
     if (expr.kind === "AndExpr") {
         return `(${emitExpression(expr.left, globalNames)} && ${emitExpression(expr.right, globalNames)})`;

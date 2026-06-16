@@ -566,6 +566,8 @@ function checkExprCalls(expr, typeSchema, kindSchema, localTypes, functionSchema
             throw typeError(expr.filePath, expr.lineNumber, `unknown rulebook "${expr.name}"`);
         }
         checkCallArgs(expr.name, expr.args, rb, "rulebook", expr.filePath, expr.lineNumber, typeSchema, kindSchema, localTypes, functionSchema);
+    } else if (expr.kind === "TryExpr") {
+        checkTryStatement(expr, typeSchema, kindSchema, localTypes, functionSchema);
     }
     for (const key of ["left", "right", "expr", "target", "index"]) {
         if (expr[key]) checkExprCalls(expr[key], typeSchema, kindSchema, localTypes, functionSchema);
@@ -728,6 +730,9 @@ function inferExprType(expr, typeSchema, kindSchema, localTypes, functionSchema 
     if (expr.kind === "FollowExpr") {
         const rb = rulebookSchema.get(expr.name);
         return rb ? rb.returnType : null;
+    }
+    if (expr.kind === "TryExpr") {
+        return "outcome";
     }
     if (expr.kind === "IndexExpr") {
         const targetType = inferExprType(expr.target, typeSchema, kindSchema, localTypes, functionSchema);

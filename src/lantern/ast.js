@@ -262,6 +262,12 @@ function createTryStatement(actionName, fields, filePath, lineNumber) {
     return { kind: "TryStatement", actionName, fields, filePath, lineNumber };
 }
 
+// Expression form of `try`: runs the action and yields its `outcome`. Produced
+// when a `try` appears as the value of a `let`.
+function createTryExpr(actionName, fields, filePath, lineNumber) {
+    return { kind: "TryExpr", actionName, fields, filePath, lineNumber };
+}
+
 function createFollowStatement(name, args, filePath, lineNumber) {
     return { kind: "FollowStatement", name, args, filePath, lineNumber };
 }
@@ -332,6 +338,7 @@ module.exports = {
     createActionDecl,
     createPhaseRule,
     createTryStatement,
+    createTryExpr,
     createAndExpr,
     createOrExpr,
     createNotExpr,

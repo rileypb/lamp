@@ -1,0 +1,34 @@
+# Exercises reading an action's outcome: `let r = try ACTION:` captures the
+# rulebook's `outcome` (succeeded/failed) so author code can branch on it.
+
+game Action_Outcome:
+	author "Test Author"
+	version 1
+
+type item:
+	bool scenery
+
+item lamp:
+	scenery false
+item rock:
+	scenery true
+
+action take:
+	item taken
+
+check take:
+	if self.taken.scenery:
+		stop failed
+
+do take:
+	print "Taken."
+
+on startup:
+	let got = try take:
+		taken lamp
+	if got == succeeded:
+		print "(the lamp came free)"
+	let blocked = try take:
+		taken rock
+	if blocked == failed:
+		print "(the rock would not budge)"
