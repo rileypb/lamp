@@ -15,6 +15,10 @@ Current implementation direction:
 - JavaScript
 - Node.js command-line tooling
 
+## Reference Material
+
+- **`lurkinghorror.txt`** — A transcript of a real Infocom IF game (The Lurking Horror). Use it as a reference for how real IF games look and act: room descriptions, parser responses, inventory formatting, failure messages, and player-facing tone. When designing or evaluating output format, player messages, or action behavior in Lamp, consult this file to align with established IF conventions.
+
 ## Source of Truth
 
 When working in this repo, prioritize these files in order for intended behavior and design decisions:

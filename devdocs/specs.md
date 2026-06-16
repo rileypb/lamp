@@ -7,10 +7,14 @@
 - Lantern is a command-line tool.
 - Lantern takes a .lamp source file as input and produces a JavaScript file as output.
 - The output JavaScript file is a representation of the game that can be executed with the Lamplighter runtime.
-- `npm run compile INPUT.lamp OUTPUT.js` — compile a source file
-- `npm run exe -- INPUT.lamp` — compile and immediately run a source file (output goes to `build/`)
+- `npm run compile INPUT.lamp OUTPUT.js` — compile a source file (emits a body-only module)
+- `npm run play -- INPUT.lamp` — compile and run a source file through the sandbox launcher
+- `npm run exe -- INPUT.lamp` — alias for `npm run play`
 - `npm test` — run the golden test suite
-- `lib/sys/` is the system library. Every invocation of Lantern automatically parses all `.lamp` files in `lib/sys/` — no explicit import is required.
+- `lib/sys/` is the system library. Every invocation of Lantern automatically parses all `.lamp` files in `lib/sys/` — no explicit import is required. The sys library's `index.js` provides native implementations for the following built-in functions available to all Lamp programs:
+    - `readline() → string` — reads one line of player input, blocking until the player submits. Input is brokered through the sandbox's input channel; `readline` is not available outside the sandbox.
+    - `split(string) → list<string>` — splits a string on whitespace and returns the words as a list.
+    - `run_command(string) → void` — parses one line of player input against registered action templates, resolves slot objects in scope, and runs the matched action. Uses the `player` global as the actor.
 - Other subdirectories of `lib/` (e.g. `lib/test/`, `lib/advent/`) are optional libraries that must be imported explicitly with `lib LIBNAME`.
 - `.lamp` files placed directly in `lib/` (not inside a named subdirectory) are not parsed and are not available for import.
 
@@ -20,8 +24,7 @@
 - The parsed game must define at least one object of type `game`.
 - If no `game` object is present, Lantern reports `error: no game object defined.` to **stderr** and exits with a nonzero status.
 - On compile failure, Lantern reports diagnostics to **stderr** in the form `Compile error: <file>:<line>: <detail>` and includes the source line with a caret marker.
-- The emitted file is directly runnable from the command line.
-- The emitted file requires the Lamplighter library and executes through it.
+- The emitted file is a **body-only module** — no shebang and no `require()`. It is not runnable directly with `node`. The sandbox launcher (see `devdocs/sandbox.md`) injects `lamplighter` as a context global into a restricted `worker_threads` worker and is the only supported run path.
 - Lighthouse integration is out of scope for this iteration.
 
 #### Library imports
@@ -49,9 +52,10 @@ Functions defined in `index.js` are declared to Lamp via `native function` (see 
 #### Known limitations (v0)
 
 - Kind values are currently represented at runtime as strings.
-- Runtime execution currently fires only the `startup` event from `run()`.
+- Runtime execution currently fires only the `startup` event from `run()`. Every-turn and timed rules are not yet implemented.
 - Expressions whose types cannot be inferred (globals, object name references, `list<T>` field assignments) are not rejected — unknown type is treated as compatible with any field type.
 - Object-typed fields and globals are not statically type-checked (the checker returns unknown type for object references and `none`).
+- The emitted file is body-only and runs only through the sandbox launcher (`npm run play`). Executing a generated file directly with `node` is not supported and will throw if player input is attempted.
 
 ### Lamplighter
 
@@ -128,6 +132,30 @@ Lantern-generated JavaScript targets the following Lamplighter API surface:
     - Returns the current value of a named global.
 - `error(message)`
     - Stops execution by throwing a runtime error.
+- `concat(left, right)`
+    - If both arguments are numbers, returns their numeric sum. Otherwise formats each via `formatValue` (objects → name string, lists → joined string) and returns the string concatenation. Used by the emitter for all `+` expressions.
+- `divide(a, b)`
+    - Divides `a` by `b`. Returns `NaN` rather than throwing when `b` is zero.
+- `makeList(items)`
+    - Wraps a plain JS array in a Lamp list value `{ items, get first() }`. `.first` returns the first element or `null` for an empty list. Used by `type(...).all`, `queryRelationValue`, and native functions that return lists.
+- `listItems(value)`
+    - Normalizes any list-valued expression to a plain JS array for `for … in` iteration. `null`/`none` iterates as empty; raw arrays pass through. Throws if given a non-list non-null value.
+- `registerActionRule(actionName, band, ruleFn)`
+    - Registers a phase-rule function into the named action's rulebook band. `band` is one of `"before"`, `"instead"`, `"check"`, `"do"`, `"after"`, `"report"`. Used by the emitter for phase rule declarations.
+- `runAction(actionName, instance)`
+    - Runs an action instance through its six bands in order. A rule function that returns a value stops the action; a rule function that returns `undefined` falls through. Returns `"succeeded"` if no rule stops.
+- `registerGrammar(actionName, template)`
+    - Registers a surface template string for an action with the Game Parser. Used by the emitter for each syntax line in an action declaration.
+- `runCommand(line, actor)`
+    - Parses `line` against registered grammar templates, resolves each slot to an in-scope object of the slot's declared type, and runs the matched action. `actor` supplies the scope (actor's location contents and inventory). Prints `"I don't understand that."` on no match; `"You can't see any such thing."` on a failed slot resolve. The Lamp-level `run_command` native function calls this with `lamplighter.getGlobal("player")` as the actor.
+- `registerRelationAddHandler(relationName, handler)`
+    - Registers a handler called whenever a new instance of the named relation is asserted. The handler receives the new instance as its argument (`self`). Used by the emitter for `on RELATION add:` blocks.
+- `registerRelationRemoveHandler(relationName, handler)`
+    - Registers a handler called whenever an instance of the named relation is removed. The handler receives the removed instance as its argument (`self`). Used by the emitter for `on RELATION remove:` blocks.
+- `setInputChannel(requestLine)`
+    - Installs the input callback used by `readLine()`. Called by the sandbox launcher to wire the worker's blocking-input bridge before the game starts.
+- `readLine()`
+    - Requests one line of player input via the installed input channel. Throws if no channel has been installed (i.e., outside the sandbox).
 
 ## Non-Functional Specifications
 
@@ -385,6 +413,30 @@ on person.holder change:
 Change handlers fire for the declared type and any subtype. Multiple handlers for the same field are all called in registration order.
 
 Field assignments inside handler bodies (and all event handler bodies) use the `setField` runtime call rather than direct property assignment, so changes are always observed.
+
+#### Relation add/remove handlers
+
+```lamp
+on RELATION_NAME add:
+    STATEMENT
+    ...
+
+on RELATION_NAME remove:
+    STATEMENT
+    ...
+```
+
+Defines a handler that runs whenever an instance of the named relation type is asserted (`add`) or removed (`remove`). Inside the body, `self` is the relation instance being added or removed.
+
+```lamp
+on connects add:
+    print "A new connection was made."
+
+on connects remove:
+    print "A connection was removed."
+```
+
+Multiple handlers for the same relation are all called in registration order.
 
 ### Functions
 
@@ -658,10 +710,6 @@ connects(foyer, north, hall)
 ```
 
 ### Rulebooks
-
-> Initial surface (general rulebooks). Design-locked but not yet implemented. The
-> design rationale and the deferred action-band layer live in
-> `devdocs/rulebooks.md`.
 
 A **rulebook** is an ordered, typed, short-circuiting decision pipeline: an
 ordered set of guarded **rules** that runs until one rule decides the result. A
@@ -1144,6 +1192,15 @@ apply(5, double)
 
 - **Bare identifiers** in expressions are resolved in this order: local variable (introduced by `let`), declared global, declared function (producing a function reference), declared object (producing an object reference), then string literal. The object-reference step lets a bare single-word object name compare by identity (`x == statue`); the string-literal fallback supports enum-label comparisons such as `== final`. (A multi-word object name already resolves to an object reference via the underscore convention.)
 
+- **List indexing** — `LIST_EXPRESSION[INDEX]` retrieves the element at a zero-based integer index:
+
+```lamp
+let words = split(line)
+let first_word = words[0]
+```
+
+Indexing into an out-of-bounds position returns `undefined` (no runtime error).
+
 - **Follow expression** — `follow NAME(args)` invokes a rulebook and produces its result value (see Rulebooks):
 
 ```lamp
@@ -1160,7 +1217,7 @@ Lantern compiles in three passes:
 2. **Parse** (`parser_rd.js`): parse each file into an AST using the collected global and function names so that bare identifiers in expressions are resolved correctly.
 3. **Check** (`checker.js`) + **emit** (`emitter.js`): semantic check then emit standalone Node.js JavaScript.
 
-The emitted program runs in this order: runtime bootstrap → native JS (inlined from `index.js` files) → kinds → kind constants → types → type constants → objects (primitive/kind fields only) → object-typed field assignments → global declarations → global assignments → function definitions → event handler registrations → `run()`. Globals and object-typed field assignments are placed after all `createObject` calls so that any `lamplighter.getObject(...)` reference resolves against an already-registered instance regardless of declaration order. Function definitions are emitted before event handler registrations so they are in scope when handlers run.
+The emitted program is a body-only module that assumes `lamplighter` is already available as a context global (injected by the sandbox launcher). It runs in this order: `bootstrapBuiltins()` → native JS (inlined from `index.js` files) → kinds → kind constants → types → type constants → objects (primitive/kind fields only) → object-typed field assignments → top-level relation assertions/removes → global declarations → global assignments → function definitions → rulebook definitions → event handler registrations → change handler registrations → phase rule registrations → grammar registrations → relation add/remove handler registrations → `run()`. Globals and object-typed field assignments are placed after all `createObject` calls so that any `lamplighter.getObject(...)` reference resolves against an already-registered instance regardless of declaration order. Function definitions are emitted before event handler registrations so they are in scope when handlers run.
 
 ### Parser design
 
