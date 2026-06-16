@@ -1,17 +1,34 @@
 West of House
 
 You are west of a white house.
+
+> look
 West of House
 
 You are west of a white house.
+
+> take lamp
 Taken.
+
+> take lamp
 You're already carrying that.
+
+> take rock
 That's not something you can take.
+
+> go north
 Forest
 
 You are in a dark forest.
+
+> drop lamp
 Dropped.
+
+> go south
 West of House
 
 You are west of a white house.
+
+> go east
 You can't go that way.
+

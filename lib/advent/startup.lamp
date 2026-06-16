@@ -2,8 +2,10 @@ on startup:
 	player.holder = game.all.first.start
 	dispatch started
 	while true:
+		print
 		input = readline()
 		if input == "quit":
 			break
+		print "> " + input
 		run_command(input)
 
