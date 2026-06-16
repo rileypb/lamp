@@ -4,6 +4,12 @@ global string input = none
 
 global list<string> words = none
 
+# article enum values
+article count
+article definite
+article proper
+article plural
+
 # directions
 #
 # Each direction's `inverse` is the opposite heading. The `connects` relation

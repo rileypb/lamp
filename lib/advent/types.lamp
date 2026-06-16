@@ -1,9 +1,16 @@
 #advent types
 
+type thing:
+	string printed_name
+	string understand
+
+type article
+
 type game:
 	room start
 
-type physical
+type physical < thing:
+	article article
 
 type container < physical
 
@@ -21,5 +28,5 @@ type box < item, container:
 type person < physical:
 	container holder
 
-type direction:
+type direction < thing:
 	direction inverse

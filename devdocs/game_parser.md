@@ -399,7 +399,7 @@ how the object is prefixed in generated text:
 |---|---|---|
 | `count` (default) | `a`/`an` | "a rock", "an apple" |
 | `definite` | `the` | "the Bhagavad Gita" |
-| `person` | *(none)* | "Elvis Presley" |
+| `proper` | *(none)* | "Elvis Presley" |
 | `plural` | `some` or bare | "some rocks" |
 
 ```lamp
