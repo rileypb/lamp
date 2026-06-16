@@ -5,15 +5,20 @@ Top recommended next steps, roughly in priority order. Each item notes *why*,
 prerequisite lists in `devdocs/game_parser.md`, `devdocs/rulebooks.md`, and
 `devdocs/relations.md`.
 
-## 1. Parser v1 — resolution depth
-From the game_parser v1 roadmap. Current resolver is "first in-scope name match
-wins" — can't distinguish "brass lamp" from "lamp". Add, incrementally:
-- articles (`the`/`a` dropped), adjectives, `it` pronoun;
-- disambiguation prompt when >1 match;
-- richer "you can't see that" / "which do you mean" messages.
-- **Where:** the resolver in `src/lamplighter/index.js` (`resolveNoun`).
-- **Supporting prereq:** string helpers (`to_lower`, `starts_with`, `word_at`)
-  — game_parser prerequisite #3; decide native-helper vs language.
+## 1. Parser v1 — vocabulary model & resolution depth
+Design is settled (see `devdocs/game_parser.md`, Vocabulary model). Implement:
+- Add `thing` base type to `lib/advent/types.lamp`; move `direction < thing`;
+  add `printed name`, `understand` fields on `thing`; add `article` enum and
+  field on `physical`.
+- Build vocabulary index in native JS: on startup, register each object's
+  identifier tokens + `understand` tokens; expose `objects_for_tokens(tokens)`
+  to the resolver.
+- Update `resolveNoun` in `src/lamplighter/index.js`: strip articles, token-bag
+  match against vocabulary index, return candidates (not first-match).
+- Disambiguation prompt when >1 candidate ("Which do you mean, the X or the Y?")
+- Richer failure messages ("You can't see any such thing.").
+- **Supporting prereq:** string helpers (`to_lower`, `split`) — use existing
+  `split()` from `lib/sys/`; add `to_lower` as a native helper.
 
 ## 2. Centralize standard responses (overridable messages)
 Action responses ("Taken.", "You can't go that way.") are hardcoded string

@@ -137,10 +137,14 @@ The design targets these Inform 7/10 parser capabilities, grouped by stage:
 - Token kinds: `[something]` (any in-scope object), `[things]` (multiple),
   typed slots (`[a direction]`, `[a number]`, `[text]`), and `[anything]`
   (object outside scope, for meta/debug verbs).
-- `Understand "..." as ...` for object names, synonyms, and adjectives.
-- Noun phrases with articles, adjective stacks, and multi-object lists
-  (`all`, `take all but the sword`, `the red and the blue ball`).
-- Pronouns (`it`, `them`, `him`, `her`) bound to the last-referenced object(s).
+- Per-object vocabulary via `understand "word/synonym/alias"`: slash-separated
+  tokens declaring the words a player may use to name the object. No separate
+  adjective concept — all synonyms are tokens in the same bag.
+- `printed name` and `article` fields (see Vocabulary model below).
+- Noun phrases with articles and multi-object lists
+  (`all`, `take all but the sword`) — multi-object forms are v3.
+- Pronouns (`it`, `them`, `him`, `her`) bound to the last-referenced object(s)
+  — deferred to v2.
 
 **Scope & resolution**
 - Scope: the set of objects the player can currently refer to (room contents,
@@ -352,26 +356,100 @@ questions.
 
 ### Stage 3 — Noun resolution
 
-Each object contributes **vocabulary**: nouns (its name words) and adjectives.
-Proposed declaration, again leaning on relations/fields:
+#### Vocabulary model
+
+Each object contributes **vocabulary** — the set of tokens the player may use
+to name it. Three distinct properties together define how an object is named:
+
+**Identifier tokens (automatic).** The object's Lamp identifier, with
+underscores replaced by spaces and then split into tokens, is always included
+in the vocabulary. `brass_lamp` → `{brass, lamp}` automatically; no declaration
+needed. This is the only automatic contribution — the printed name is *not*
+auto-included.
+
+**Understood tokens (`understand` field).** Additional tokens declared in the
+object body using a slash-separated string:
 
 ```lamp
 item brass_lamp:
-    understand "lamp lantern"        # extra nouns
-    adjectives "brass shiny"
+    understand "lantern/golden"
 ```
 
-A native **vocabulary index** maps each word to the set of objects that word can
-name, built once at startup (and refreshed when names change). Resolution of a
-noun phrase:
+Vocabulary for `brass_lamp` is then `{brass, lamp, lantern, golden}`. A player
+typing "brass lantern", "golden lamp", or just "lantern" can all refer to it.
 
-1. Drop leading articles (`the`, `a`, `an`).
-2. Collect adjectives, then the head noun.
-3. Candidate set = objects in **scope** whose vocabulary matches the noun and
-   all adjectives.
+**Printed name (`printed name` field).** Controls how the game *displays* the
+object — in room descriptions, inventory, and generated messages. Defaults to
+the identifier with underscores → spaces. Override:
+
+```lamp
+item brass_lamp:
+    printed name "old brass lamp"
+    understand "lantern/golden"
+```
+
+The printed name `"old brass lamp"` is displayed to the player but its tokens
+(`old`, `brass`, `lamp`) are **not** added to understand automatically. If you
+want the player to be able to type "old", add it to `understand` explicitly.
+
+**Article (`article` field).** An enum (defined in the library) that governs
+how the object is prefixed in generated text:
+
+| Value | Prefix | Example output |
+|---|---|---|
+| `count` (default) | `a`/`an` | "a rock", "an apple" |
+| `definite` | `the` | "the Bhagavad Gita" |
+| `person` | *(none)* | "Elvis Presley" |
+| `plural` | `some` or bare | "some rocks" |
+
+```lamp
+item bhagavad_gita:
+    article definite
+```
+
+Article auto-detection (`a` vs `an`) is applied when `article` is `count`,
+based on the printed name's first letter.
+
+**Type hierarchy.** The vocabulary fields live on a `thing` base type in the
+library. `thing` is the common root for everything a player can name in a
+command:
+
+```
+thing  (printed name, understand)
+├── physical < thing  (article; has a location in the world)
+│   ├── container < physical
+│   │   └── room < container
+│   ├── item < physical
+│   │   └── box < item, container
+│   └── person < physical
+└── direction < thing  (nameable but not physical; no article field)
+```
+
+`article` sits on `physical`, not `thing`, because directions are named but not
+articled ("go north", not "go a north"). `game` and `action` are outside `thing`
+— the game singleton and action instances are not player-nameable.
+
+**Deferred.** Pronouns (`it`/`him`/`her`/`them`) and mass nouns (uncountable,
+e.g. "water") are out of scope for v1. Multi-word understand phrases (e.g. an
+object recognized only by the exact phrase "brass lamp", not by "lamp" alone)
+are a noted future extension — the current token-bag model does not support
+them.
+
+#### Resolution steps
+
+A native **vocabulary index** maps each token to the set of objects that token
+can name, built once at startup (and refreshed if vocabulary changes). Resolution
+of a noun phrase:
+
+1. Drop leading articles (`the`, `a`, `an`, `some`).
+2. Remaining tokens form the player's phrase token set.
+3. Candidate set = objects in **scope** whose vocabulary contains **all** of the
+   player's phrase tokens (token-bag match). An object whose vocabulary is a
+   superset of the phrase tokens is a candidate; one missing any token is not.
 4. `all` / `everything` expands to all matching in-scope objects (minus
    `... but ...` exclusions). Conjunctions (`X and Y`) produce multiple nouns.
-5. Pronouns resolve against the saved "last referenced" object(s).
+   (Multi-object forms are v3.)
+5. Pronouns resolve against the saved "last referenced" object(s). (Deferred to v2.)
 
 **Scope** is computed by a `scope_of(person)` function: start from the actor's
 location, add the room's contents, the actor's possessions, and recursively the
@@ -511,9 +589,10 @@ populating it.
 2. **Grammar:** matches the `insert` template `"put [taken] in [destination]"` →
    action type `insert`, `[taken]` span = `brass lamp`, `[destination]` span =
    `basket`.
-3. **Resolve:** `[taken]` → drop `the`, adjective `brass`, noun `lamp` → in
-   scope: `brass_lamp`. `[destination]` → `basket` (a `box`). Bind slots
-   `taken = brass_lamp`, `destination = basket`.
+3. **Resolve:** `[taken]` → drop `the`, phrase tokens `{brass, lamp}` → in
+   scope: `brass_lamp` vocabulary `{brass, lamp}` contains both → match.
+   `[destination]` → tokens `{basket}` → matches `basket` (a `box`). Bind
+   slots `taken = brass_lamp`, `destination = basket`.
 4. **Disambiguate:** both unambiguous; skip.
 5. **Act:** construct an `insert` instance (`taken=brass_lamp,
    destination=basket, actor=player`). before(no-op) → instead(none) → check
@@ -567,3 +646,18 @@ populating it.
 - **Where does the standard parser live** — populate the empty `lib/vanilla/`,
   or a new `lib/parse/`? (Requires user direction; both `lib/` dirs are
   author-owned.)
+- **Pronouns (deferred to v2).** `it`/`him`/`her`/`them` bound to the
+  last-referenced object(s). Requires gender/pronoun declarations on objects
+  (a `pronoun` field on `thing`, probably `"he"`/`"she"`/`"they"`/`"it"`)
+  and plurality (`plural` boolean). Singular-they (non-binary persons) and
+  custom pronouns are noted as further extensions.
+- **Mass nouns (deferred).** Uncountable items like "water" that use `some` but
+  are grammatically singular. Whether `mass` is a separate `article` enum value
+  or handled differently depends on whether generated-text output for `mass`
+  differs from `plural`. Deferred until generated-text rules are designed.
+- **Multi-word understand phrases (deferred).** Currently, `understand` declares
+  individual tokens — the player can combine them freely. An author cannot yet
+  express "only match if the player types exactly 'brass lamp' together". A
+  future extension might allow quoted phrases within the understand field (e.g.
+  `understand "brass lamp"/"lantern"` where `"brass lamp"` is an exact two-token
+  phrase, not independent tokens). Deferred to v3.

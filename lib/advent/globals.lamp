@@ -11,24 +11,34 @@ global list<string> words = none
 # exit (e.g. `bidi connects A north B` makes `connects B south ?first` yield A).
 direction north:
 	inverse south
+	understand "n"
 direction northeast:
 	inverse southwest
+	understand "ne"
 direction east:
 	inverse west
+	understand "e"
 direction southeast:
 	inverse northwest
+	understand "se"
 direction south:
 	inverse north
+	understand "s"
 direction southwest:
 	inverse northeast
+	understand "sw"
 direction west:
 	inverse east
+	understand "w"
 direction northwest:
 	inverse southeast
+	understand "nw"
 direction up:
 	inverse down
+	understand "u"
 direction down:
 	inverse up
+	understand "d"
 
 relation connects:
 	room source
