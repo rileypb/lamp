@@ -15,6 +15,7 @@ action look:
 # look changes nothing; its whole effect is to describe, so it lives in report.
 report look:
 	describe_room(self.actor.holder)
+	list_room_contents(self.actor.holder)
 
 action take:
 	item taken
@@ -37,6 +38,22 @@ do take:
 
 report take:
 	print "Taken."
+
+action inventory:
+	syntax:
+		"inventory"
+		"i"
+
+report inventory:
+	let found = false
+	for x in item.all:
+		if x.holder == self.actor:
+			if not found:
+				print "You are carrying:"
+				found = true
+			print "  " + x
+	if not found:
+		print "You are carrying nothing."
 
 action drop:
 	item dropped

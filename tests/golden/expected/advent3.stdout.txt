@@ -2,13 +2,21 @@ West of House
 
 You are west of a white house.
 
+You see a lamp here.
+
 > look
 West of House
 
 You are west of a white house.
 
+You see a lamp here.
+
 > take lamp
 Taken.
+
+> i
+You are carrying:
+  lamp
 
 > take lamp
 You're already carrying that.
@@ -28,6 +36,9 @@ Dropped.
 West of House
 
 You are west of a white house.
+
+> i
+You are carrying nothing.
 
 > go east
 You can't go that way.

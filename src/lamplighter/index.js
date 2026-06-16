@@ -569,7 +569,7 @@ function makeList(items) {
     return {
         items,
         get first() {
-            return items[0];
+            return items.length > 0 ? items[0] : null;
         },
     };
 }

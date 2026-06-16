@@ -1,9 +1,11 @@
 look
 take lamp
+i
 take lamp
 take rock
 go north
 drop lamp
 go south
+i
 go east
 quit

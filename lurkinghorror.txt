@@ -1,0 +1,2825 @@
+
+
+Transcript: The Lurking Horror
+Start of a transcript of THE LURKING HORROR.
+THE LURKING HORROR
+An Interactive Horror
+Copyright (c) 1987 by Infocom, Inc. All rights reserved.
+THE LURKING HORROR is a trademark of Infocom, Inc.
+Release 221 / Serial number 870918
+
+>talk to hacker
+Hmmm … the hacker waits for you to say something.
+
+>hacker, hi
+“Greetingage.” He turns back to his hacking.
+
+>ask hacker about hacking
+I don’t know the word “hacking.”
+
+>examine pc
+This is a beyond-state-of-the-art personal computer. It has a 1024 by 1024 pixel color monitor, a mouse, an attached hard disk, and a local area network connection. Fortunately, one of its features is a prominent HELP key. It is currently turned off.
+
+>turn on pc
+The computer powers up, goes through a remarkably fast self-check, and greets you, requesting “LOGIN PLEASE:”. The only sound you hear is a very low hum.
+
+>login
+What do you want to login?
+
+>log in to computer
+I don’t know the word “log.”
+
+>type username
+The computer responds “PASSWORD PLEASE:”
+
+>type password
+What do you want to type passwo?
+
+>ask hacker about password
+There seems to be a noun missing in that sentence.
+
+>type 872325412
+The computer responds “INVALID LOGIN” and then “LOGIN PLEASE:”.
+
+>type 872325412
+The computer responds “PASSWORD PLEASE:”
+
+>type uhlersoth
+The computer responds “Good evening. You’re here awfully late.” It displays a list of pending tasks, one of which is in blinking red letters, with large arrows pointing to it. The task reads “Classics Paper,” some particularly ominous words next to it say “DUE TOMORROW!” and more reassuringly, a menu box next to that reads “Edit Classics Paper.”
+
+>edit classics paper
+The menu box is replaced by the YAK text editor and menu boxes listing the titles of your files. The one for your paper is highlighted in a rather urgent-looking shade of red.
+
+>press help key
+You push the friendly-looking HELP key. A spritely little box appears on the screen, which reads: “Please click the box representing the file you wish to edit or view. I notice that one file is marked as urgent, so you should probably click its box.”
+
+>click urgent box
+You click the box for your paper, and the box grows reassuringly until it fills most of the screen. Unfortunately, the text that fills it bears no resemblance to your paper. The title is the same, but after that, there is something different, very different.
+
+>read paper
+The paper appears to be a facsimile overlaid with occasional typescript. The text is mostly in a sort of “Olde English” you’ve never seen before. What you read is a combination of incomprehensible gibberish, latinate pseudowords, debased Hebrew and Arabic scripts, and an occasional disquieting phrase in English.
+
+As you look at it more closely, you find it hard to focus on the screen, but impossible to look away. Your finger strays toward the “MORE” box…
+
+>save
+Okay.
+
+>press more
+You touch the MORE box, and a new page appears.
+
+The second page is much like the first, but around the edges, not when you look at it straight, it’s almost readable. There is something about a “summoning,” or a “visitor.”
+
+>summon visitor
+I don’t know the word “summon.”
+
+>press more
+You touch the MORE box, and a new page appears.
+
+The third page is in the same script as the first, but laid out like a poem. There are woodcut illustrations which are queasily disturbing.
+
+There is a translation, or notes for one, typed between the lines of the poem:
+
+“He returns, he is called back (?)
+The loyal ones (acolytes?) make a sacrifice
+Those who survive will meet him (be absorbed? eaten?)
+They will live, yet die
+Forever will be (is?) nothing to them (to him?)
+
+“His place (lair? burrow?) must be prepared
+His food (offerings?) must be prepared
+Call him forth (invite him?) with great power
+Only an acceptable (tasteful?) sacrifice will call him forth
+He will be grateful (satiated?)”
+
+The rest is even more fragmentary.
+
+>press more
+You touch the MORE box, and a new page appears.
+
+The fourth page is a photograph. You try to recoil from the screen, but cannot. Fascinated and repelled at the same time, you wonder: is that a mouth, and what is in it?
+
+>examine photograph
+I don’t know the word “photograph.”
+
+>x photo
+I don’t know the word “photo.”
+
+>x page
+Instead, you find your finger moving towards the MORE box, and you touch it. The screen feels oddly cold.
+
+You faint, and when you awaken…
+
+[Use $SOUND to toggle sound usage on and off.]
+
+Place
+This is a place. Things move about on a broken, rocky surface. Harsh sounds split the air. Something sticky grabs at your feet. There is no color, everything is drained of brightness, dull and lifeless. A path descends into a shallow bowl of black basalt.
+
+>d
+Basalt Bowl
+You are at the bottom of a deeply cut, smooth basalt bowl. Dimly seen shapes crowd you on all sides. Ahead, in the focus of the movement, is a rock platform.
+
+>forward
+I don’t know the word “forward.”
+
+>x shapes
+I don’t know the word “shapes.”
+
+>x platform
+The platform is made of the same rocks as the surrounding terrain. In fact, you can’t tell whether it is natural or constructed.
+
+The crowd around you begins to sway and groan. They are expecting something. You are drawn forward by the noise.
+
+At Platform
+You stand before a low rock platform, more like an afterthought of piled rocks or a glacial moraine than a work of artifice. You are pushed against the pile by the crowd around you.
+
+One small stone stands out in the pile, smooth, shiny, and glowing with a blazing light.
+
+>x stone
+It’s a smooth, shiny piece of what might be obsidian. Scratched on it is a symbol.
+
+>x symbol
+The symbol, on close examination, appears to have been carved into the smooth stone, perhaps with a claw. The symbol is like nothing you’ve ever seen, and yet somehow you know it has meaning.
+
+>take stone
+Taken.
+
+Suddenly, the dimness becomes darkness, and the crowd around you explodes with excitement. You are jostled and shoved from all sides. A low keening begins, building into a deafening, almost mechanical chant. The darkness before you compacts and deepens.
+
+>eat stone
+The food here is terrible, but this is ridiculous!
+
+The darkness before you, now visible, is a creature. It towers over the now-silent crowd. The thing jerks this way and that, spraying a foul ichor. Its palps twitch expectantly, then pound impatiently against the rock. You can feel the smooth stone vibrating in your hand.
+
+>show stone to creature
+The thing is uninterested.
+
+The thing now turns, sensing the presence of the stone. It quests almost blindly for it, then those surrounding you thrust you forward. The thing stoops, its mandibles grasping you. You are lifted towards its gaping maw. The stench and the sounds issuing from it are overwhelming, and you fall unconscious.
+
+You are awakened by the thump of your head hitting the terminal in front of you. Falling asleep over term papers! It must have been a nightmare. Embarrassed, you glance around. Yes, the hacker is looking in your direction. He must have heard the thump.
+
+Terminal Room, on the chair
+
+A really whiz-bang pc is right inside the door.
+
+Sitting at a terminal is a hacker whom you recognize.
+
+>i
+You are carrying a smooth stone and an assignment.
+
+The hacker wanders over, trying to look nonchalant as he takes over your chair. “Losing, huh?” he asks wittily. He glances at your terminal, which displays a pattern of snow and unusual characters. He appears somewhat excited.
+
+>x terminal
+This is a beyond-state-of-the-art personal computer. It has a 1024 by 1024 pixel color monitor, a mouse, an attached hard disk, and a local area network connection. Fortunately, one of its features is a prominent HELP key. On the screen you see a menu box.
+
+The hacker, mumbling under his breath, begins a flurry of activity. First the screen returns to something nearly normal, then windows begin popping up like toadstools after a rain. The screen looks a lot like the top of his terminal table (or the bottom of a trash can).
+
+>read assignment
+Laser printed on creamy bond paper, the assignment is due tomorrow. It’s from your freshman course in “The Classics in the Modern Idiom,” better known as “21.014.” It reads, in part: “Twenty pages on modern analogues of Xenophon’s ‘Anabasis.’” You’re not sure whether this refers to the movie “The Warriors” or “Alien,” but this is the last assignment you need to complete in this course this term. You wonder, yet again, why a technical school requires you to endure this sort of stuff.
+
+The hacker types furiously, and the screen displays what to you looks like an explosion in a teletype factory. After a while he says. “Chomping file system. Your directory has gone seriously west. I fixed it.” He checks the screen. “It was mixed up on the file server with some files from the Department of Alchemy.” He grunts. “People’s names for their nodes are getting weird. This one is called ‘Lovecraft.’” He pauses. “Your paper is gone, though. Sorry. Maybe they could help you down there.”
+
+>cry
+I don’t know the word “cry.”
+
+>x hacker
+The hacker is sitting at your terminal, typing furiously. Every so often, he pauses briefly and twirls a lock of his hair. He is also humming under his breath. The hacker is dressed in blue jeans, an old work shirt, and what might once have been running shoes. Hanging from his belt is an enormous ring of keys. He is in need of a bath.
+
+The hacker wanders back to his terminal and returns to his hacking.
+
+>show stone to hacker
+“Odd-looking thing. Are you a rock-jock?”
+
+>take keys
+“Hey! No snarfage, loser!” You determine that this means, “Stop!”
+
+>ask hacker about keys
+“I’ve accumulated a few keys over the years. I’m a licensed locksmith, which helps. I can get into any room at Tech.” He pulls the keyring out on its chain, and shows off a key you hadn’t noticed before. “This is a master key,” he says.
+
+>ask hacker for master key
+“Fat chance! This is a master key! What have you done for me lately?”
+
+>save
+Okay.
+
+>punch hacker
+I don’t know the word “punch.”
+
+>ask hacker about department of alchemy
+You can’t see any department of alchemy here.
+
+The hacker turns to you and says, “I don’t know where I can get something to eat, what with all the snow.”
+
+>feed hacker
+(to the hacker)
+You aren’t holding the hacker.
+
+>feed assignment to hacker
+“No thanks, keep it for now.”
+
+>l
+Terminal Room
+This is a large room crammed with computer terminals, small computers, and printers. An exit leads south. Banners, posters, and signs festoon the walls. Most of the tables are covered with waste paper, old pizza boxes, and empty Coke cans. There are usually a lot of people here, but tonight it’s almost deserted.
+
+Nearby is one of those ugly molded plastic chairs.
+
+A really whiz-bang pc is right inside the door.
+
+Sitting at a terminal is a hacker whom you recognize.
+
+The hacker turns to you and says, “I’d hate to leave, with the machines so empty. On the other hand, I’m seriously starving.”
+
+>
+I beg your pardon?
+
+>x pizza boxes
+I don’t know the word “pizza.”
+
+>read banners
+How do you do that with a banners?
+
+>s
+Second Floor
+This is the second floor of the Computer Center. An elevator and call buttons are on the south side of the hallway. A large, noisy room is to the north. Stairs also lead up and down, for the energetic. To the west a corridor leads into a smaller room.
+
+>w
+Kitchen
+This is a filthy kitchen. The exit is to the east. On the wall near a counter are a refrigerator and a microwave.
+
+Sitting on the kitchen counter is a package of Funny Bones.
+
+>x funny bones
+This is a package of Funny Bones, a snack food made with peanut butter and chocolate cake.
+
+>take funny bones
+Taken.
+
+>open fridge
+Opening the refrigerator reveals a two liter bottle of Classic Coke and a cardboard carton.
+
+>take all
+two liter bottle of Classic Coke: Taken.
+cardboard carton: Taken.
+
+>x carton
+This is a cardboard carton with an incomprehensible symbol scrawled on the top.
+
+>x symbol
+It doesn’t look like Chinese, English, or any other language you know. The symbol looks oddly familiar.
+
+>open it
+Opening the cardboard carton reveals Chinese food.
+
+>put carton in microwave
+Inspection reveals that the microwave oven isn’t open.
+
+>open microwave
+The microwave oven is now open.
+
+>put carton in microwave
+Done.
+
+>close fridge
+Closed.
+
+>close microwave
+Okay, the microwave oven is now closed.
+
+>x microwave
+The microwave oven hangs over the kitchen counter. It has more complicated controls than your pc. There is an LED readout above the controls. The microwave is off and it’s closed.
+
+>x led readout
+The display is currently displaying the current time and the word “off.”
+
+>x controls
+There are controls labelled 0 to 9, WM, LO, MED, HI, START, CLEAR, and STOP. The timer display now reads 0:00.
+
+>save
+Okay.
+
+>press hi
+The bottom of the display now reads “high.”
+
+>press start
+Nothing happens, as there’s no time set on it yet.
+
+>press 1
+The timer display now reads 0:01.
+
+>press 0
+The timer display now reads 0:10.
+
+>press 0
+The timer display now reads 1:00.
+
+>press start
+The microwave starts up. The timer begins counting down.
+
+The microwave stops. The timer display now reads 0:00.
+
+>open microwave
+The microwave oven is now open.
+
+>x carton
+This is a cardboard carton with an incomprehensible symbol scrawled on the top.
+
+>touch carton
+Fiddling with the cardboard carton has no effect.
+
+>open carton
+The cardboard carton is already open.
+
+>x chinese food
+This is a carton of cold Szechuan shrimp. Lovely red peppers poke out of the sauce.
+
+>close microwave
+Okay, the microwave oven is now closed.
+
+>press hi
+The bottom of the display now reads “high.”
+
+>press 3
+The timer display now reads 0:03.
+
+>press 0
+The timer display now reads 0:30.
+
+>press 0
+The timer display now reads 3:00.
+
+>press start
+The microwave starts up. The timer begins counting down.
+
+The timer display now reads 2:00.
+
+>wait
+Time passes…
+
+The timer display now reads 1:00.
+
+>wait
+Time passes…
+
+The microwave stops. The timer display now reads 0:00.
+
+>open microwave
+The microwave oven is now open.
+
+>x food
+Which food do you mean, the Chinese food or the package of Funny Bones?
+
+>x chinese food
+This is a carton of hot Szechuan shrimp. Lovely red peppers poke out of the sauce.
+
+>take carton
+Taken.
+
+>l
+Kitchen
+This is a filthy kitchen. The exit is to the east. On the wall near a counter are a refrigerator and a microwave.
+
+>e
+Second Floor
+
+>n
+Terminal Room
+
+Nearby is one of those ugly molded plastic chairs.
+
+A really whiz-bang pc is right inside the door.
+
+Sitting at a terminal is a hacker whom you recognize.
+
+>give chinese food to hacker
+“Yuck! This isn’t warm enough!” He thrusts it back into your hands.
+
+>x chinese food
+This is a carton of warm Szechuan shrimp. Lovely red peppers poke out of the sauce.
+
+>s
+Second Floor
+
+>e
+You can’t go that way.
+
+>w
+Kitchen
+
+>open microwave
+The microwave oven is already open.
+
+>put carton in microwave
+Done.
+
+>close microwave
+Okay, the microwave oven is now closed.
+
+>press hi
+The bottom of the display now reads “high.”
+
+>press 5
+The timer display now reads 0:05.
+
+>press 0
+The timer display now reads 0:50.
+
+>press 0
+The timer display now reads 5:00.
+
+>press start
+The microwave starts up. The timer begins counting down.
+
+The timer display now reads 4:00.
+
+>wait
+Time passes…
+
+The timer display now reads 3:00.
+
+>wait
+Time passes…
+
+The timer display now reads 2:00.
+
+>wait
+Time passes…
+
+The timer display now reads 1:00.
+
+>wait
+Time passes…
+
+The microwave stops. The timer display now reads 0:00.
+
+>open microwave
+The microwave oven is now open.
+
+>take container
+You can’t see any container here.
+
+>take carton
+Taken.
+
+>close carton
+Closed.
+
+>e
+Second Floor
+
+>n
+Terminal Room
+
+Nearby is one of those ugly molded plastic chairs.
+
+A really whiz-bang pc is right inside the door.
+
+Sitting at a terminal is a hacker whom you recognize.
+
+>give carton to hacker
+“Ouch! This is ridiculous! You’ve overcooked it. Look at those poor shrimp! It’s ruined, chomper!” He throws it away.
+
+>reload
+I don’t know the word “reload.”
+
+>restore
+Okay.
+
+>l
+Kitchen
+This is a filthy kitchen. The exit is to the east. On the wall near a counter are a refrigerator and a microwave.
+
+The microwave oven contains a cardboard carton. The cardboard carton contains Chinese food.
+
+>close oven
+It’s already closed.
+
+>open oven
+The microwave oven is now open.
+
+>close carton
+Closed.
+
+>close oven
+Okay, the microwave oven is now closed.
+
+>press hi
+The bottom of the display now reads “high.”
+
+>press 4:00
+Why don’t you try setting the timer to that?
+
+>set timer to 4:20
+The timer display now reads 4:20.
+
+>press start
+The microwave starts up. The timer begins counting down.
+
+The timer display now reads 3:20.
+
+>wait
+Time passes…
+
+The timer display now reads 2:20.
+
+>w
+You can’t go that way.
+
+The timer display now reads 1:20.
+
+>wait
+Time passes…
+
+The timer display now reads 0:20.
+
+>wait
+Time passes…
+
+The microwave stops. The timer display now reads 0:00.
+
+>open microwave
+The microwave oven is now open.
+
+>take container
+You can’t see any container here.
+
+>take carton
+Taken.
+
+>e
+Second Floor
+
+>n
+Terminal Room
+
+Nearby is one of those ugly molded plastic chairs.
+
+A really whiz-bang pc is right inside the door.
+
+Sitting at a terminal is a hacker whom you recognize.
+
+>give carton to hacker
+“Ah! Serious food!” He plunges into the food with all the delicacy and table manners of a shark at a feeding frenzy. Soon a satisfied expression appears on his face. “Now, what was it you were wanting?” he asks.
+
+>ask hacker for master key
+“Well, I suppose I could loan you the master key for a while. Just don’t get into trouble, okay? I’ll find you later, when I’m done with all this, and get it back.” He hands you the key.
+
+>i
+You are carrying a master key, a two liter bottle of Classic Coke, a package of Funny Bones, a smooth stone and an assignment.
+
+>take all
+chair: Taken.
+pc: Your load is too heavy.
+
+>drop chair
+Dropped.
+
+>take pc
+You take it, turning it off and unplugging it first.
+
+>drop pc
+Dropped.
+
+>take chair
+Taken.
+
+>l
+Terminal Room
+This is a large room crammed with computer terminals, small computers, and printers. An exit leads south. Banners, posters, and signs festoon the walls. Most of the tables are covered with waste paper, old pizza boxes, and empty Coke cans. There are usually a lot of people here, but tonight it’s almost deserted.
+
+Sitting at a terminal is a hacker whom you recognize.
+
+There is a pc here.
+
+>verbose
+Verbose descriptions.
+
+Terminal Room
+This is a large room crammed with computer terminals, small computers, and printers. An exit leads south. Banners, posters, and signs festoon the walls. Most of the tables are covered with waste paper, old pizza boxes, and empty Coke cans. There are usually a lot of people here, but tonight it’s almost deserted.
+
+Sitting at a terminal is a hacker whom you recognize.
+
+There is a pc here.
+
+>i
+You are carrying a chair, a master key, a two liter bottle of Classic Coke, a package of Funny Bones, a smooth stone and an assignment.
+
+>s
+The hacker prevents you. “You can’t walk off with that! It’s Tech property!”
+
+>drop chair
+Dropped.
+
+>s
+Second Floor
+This is the second floor of the Computer Center. An elevator and call buttons are on the south side of the hallway. A large, noisy room is to the north. Stairs also lead up and down, for the energetic. To the west a corridor leads into a smaller room.
+
+>hello
+Cheery, aren’t you?
+
+>push call button
+Which call button do you mean, the up-arrow or the down-arrow?
+
+>push up
+The up-arrow begins to glow.
+
+You hear the elevator begin moving.
+
+>cool
+I don’t know the word “cool.”
+
+>;cool
+I don’t know the word “;cool.”
+
+>say “cool”
+Talking to yourself is a sign of impending mental collapse.
+
+The up-arrow blinks off.
+
+>wait
+Time passes…
+
+The elevator doors slide open.
+
+>s
+Elevator
+This is a battered, rather dirty elevator. The fake wood walls are scratched and marred with graffiti. The elevator doors are open. To the right of the doors is an area with floor buttons (B and 1 through 3), an open button, a close button, a stop switch, and an alarm button. Below these is an access panel which is closed.
+
+>open panel
+Opening the access panel reveals a flashlight.
+
+The elevator doors slide closed.
+
+>take flashlight
+Taken.
+
+>push 3
+The button for the third floor begins to glow.
+
+>wait
+Time passes…
+
+The elevator begins to move upward.
+
+>x me
+You are wide awake, and are in good health.
+
+The elevator slows and comes to a stop. The button for the third floor blinks off.
+
+>wait
+Time passes…
+
+The elevator doors slide open.
+
+>n
+Third Floor
+This is the third floor of the Computer Center. An elevator and call button are on the south side of the hallway. Stairs also lead down, for the energetic. To the north is a glass wall beyond which you can see a computer room crammed with computer equipment. A stairway leads up.
+
+The elevator doors are open.
+
+>n
+There is a glass wall in the way.
+
+The elevator doors slide closed.
+
+>look through glass
+You see nothing special about it.
+
+>x equipment
+You see nothing special about it.
+
+>u
+You push through the door to the roof. You enter the freezing, biting cold of the blizzard.
+
+Roof
+This is the roof of the Computer Center. A door leads to the stairway. The roof is covered with tarred pea gravel and drifted snow. The wind howls around your ears. To the south and southeast you can dimly see the looming shapes of the Great Dome and the Brown Building.
+
+>x brown building
+I don’t know the word “brown.”
+
+>take snow
+That would never work!
+
+Bitter, bone-cracking cold assaults you continuously. The temperature and the blizzard conditions are both horrible.
+
+>d
+You push your way into the welcoming warmth inside.
+
+Third Floor
+This is the third floor of the Computer Center. An elevator and call button are on the south side of the hallway. Stairs also lead down, for the energetic. To the north is a glass wall beyond which you can see a computer room crammed with computer equipment. A stairway leads up.
+
+>d
+Second Floor
+This is the second floor of the Computer Center. An elevator and call buttons are on the south side of the hallway. A large, noisy room is to the north. Stairs also lead up and down, for the energetic. To the west a corridor leads into a smaller room.
+
+>d
+Computer Center
+This is the lobby of the Computer Center. An elevator and call buttons are to the south. Stairs also lead up and down, for the energetic. To the north is Smith Street.
+
+>d
+Basement
+Bare concrete walls line a wide corridor leading east and west. An elevator and call button are to the south. Stairs also lead up, for the energetic. From floor to ceiling run wire channels and steam pipes.
+
+>x pipes
+You see nothing special about the steam pipes.
+
+>x channels
+From floor to ceiling run wire channels and steam pipes.
+
+>w
+Aero Basement
+This basement level room is made of smooth, damp-seeming concrete. Fluorescent lights cast harsh shadows. To the west is a stairway, and to the east the basement area continues.
+
+Slouching nearby is an urchin. He’s a youngish teenager wearing a ski hat, running shoes, and a bulky, suspiciously bumpy, threadbare parka. He’s jumpy, and looks suspiciously at you.
+
+There is a forklift here.
+
+>show stone to urchin
+He makes an unconvincing show of disinterest.
+
+>ask urchin about stone
+He doesn’t reply. He seems very nervous about talking to you.
+
+The urchin looks around nervously, obviously thinking of flight, but decides against it.
+
+>x urchin
+This is an urchin. He’s a youngish teenager wearing a ski hat, running shoes, and a bulky, suspiciously bumpy, threadbare parka. He’s jumpy, and looks suspiciously at you.
+
+>save
+Okay.
+
+>take parka
+“Hey! Keep off, sucker! You can’t scare me!”
+
+>scare him
+How do you propose to do that?
+
+>boo urchin
+I don’t know the word “boo.”
+
+>say “BOO”
+You must address the urchin directly.
+
+>urchin, boo
+I don’t know the word “boo.”
+
+>x forklift
+This is a rusty old forklift. It looks like you could control it fairly easily, though.
+
+>get on forklift
+You are now in the forklift.
+
+>operate forklift
+I don’t know the word “operate.”
+
+>turn on forklift
+The forklift sputters to life.
+
+>use forklift on urchin
+I don’t know the word “use.”
+
+>life urchin
+There was no verb in that sentence!
+
+>lift urchin
+You can’t reach the urchin from within the forklift.
+
+>w
+The forklift won’t fit into the stairwell.
+
+>e
+Basement, on the forklift
+Bare concrete walls line a wide corridor leading east and west. An elevator and call button are to the south. Stairs also lead up, for the energetic. From floor to ceiling run wire channels and steam pipes.
+
+The urchin saunters nonchalantly into the room, notices you, and beats a hasty retreat.
+
+>e
+Temporary Basement, on the forklift
+During the Second World War, some temporary buildings were built to house war-related research. Naturally, these buildings, though flimsy and ugly, are still around. This is the basement of one of them. The basement extends west, a stairway leads up, and a large passage is to the east.
+
+There is a pair of electrician’s gloves and a crowbar here.
+
+>take all
+pair of electrician’s gloves: You can’t reach the pair of electrician’s gloves from within the forklift.
+crowbar: You can’t reach the crowbar from within the forklift.
+
+>exit forklift
+You are now on your feet.
+
+>take all
+pair of electrician’s gloves: Taken.
+crowbar: Taken.
+
+>x gloves
+This is a pair of electrician’s rubber gloves. They look well used but serviceable.
+
+>x crowbar
+You see nothing special about the crowbar.
+
+>put on gloves
+You put on the gloves. They’re a little big, but not really such a bad fit at all.
+
+>turn off forklift
+You’ll have to get in it first.
+
+>get on forklift
+You are now in the forklift.
+
+>turn off forklift
+The forklift coughs once, and dies.
+
+>get of forklift
+You used the word “of” in a way that I don’t understand.
+
+>get off forklift
+You are now on your feet.
+
+>e
+It is pitch black.
+
+>turn on flashlight
+The flashlight clicks on.
+
+Dead Storage
+This is a storage room. It contains an incredible assemblage of discarded junk. Some of it is so old and mouldering that you can’t be sure where one bit of junk stops and the next begins. It’s piled to the ceiling on ancient, rotting pallets; you can’t even see the east wall.
+
+>x pallets
+Looking more closely only emphasizes how completely entropy has taken over this room.
+
+>search junk
+You find many worthless items of hardware, old discarded memos and papers, but nothing of any use or value.
+
+>w
+Temporary Basement
+During the Second World War, some temporary buildings were built to house war-related research. Naturally, these buildings, though flimsy and ugly, are still around. This is the basement of one of them. The basement extends west, a stairway leads up, and a large passage is to the east.
+
+There is a forklift here.
+
+>get on forklift
+You are now in the forklift.
+
+>turn on forklift
+The forklift sputters to life.
+
+>e
+Dead Storage, on the forklift
+This is a storage room. It contains an incredible assemblage of discarded junk. Some of it is so old and mouldering that you can’t be sure where one bit of junk stops and the next begins. It’s piled to the ceiling on ancient, rotting pallets; you can’t even see the east wall.
+
+>move pallets
+You have a little trouble using the forklift, but it’s not really all that hard. You start clearing junk, moving it around and trying to create a passage.
+
+>g
+You continue moving junk, becoming more proficient with the forklift.
+
+>g
+You continue moving junk, becoming more proficient with the forklift.
+
+>g
+You’ve built a fairly narrow (about one forklift wide) path through the junk. You can see an opening into a further storage room beyond this one.
+
+>e
+Ancient Storage, on the forklift
+What’s deader than dead storage? That’s what’s in this room. Most of the contents have collapsed or rusted back to the primordial ooze. There is mold growing on some of the unidentifiable piles. Stagnant puddles of water pollute the floor. You can now believe how old some of these foundations are said to be.
+
+There is a closed, disused-looking manhole here.
+
+>turn off forklift
+The forklift coughs once, and dies.
+
+>get off forklift
+You are now on your feet.
+
+>x manhole
+It’s a steel ring set in the floor. It’s probably a manhole.
+
+>open manhole
+The only way would seem to be to remove the manhole cover.
+
+>remove cover with crowbar
+You lever the manhole cover aside, and crusted dirt falls into a dark, partly obstructed hole below.
+
+>save
+Okay.
+
+>x hole
+It’s a manhole. It’s very dark inside, but you can see that crude brick handholds provide a slippery path down. Cool air rises out of the hole.
+
+>d
+You push your way through cobwebs, damp fungus, and other obstructions.
+
+Brick Tunnel
+This is an ancient tunnel constructed of roughly mortared bricks and stones. A slippery and almost invisible set of handholds leads up. The tunnel continues a long way north and south from here.
+
+>s
+You make your way along the long tunnel.
+
+Cinderblock Tunnel
+This is a tunnel whose walls are cinderblock, with a concrete floor and ceiling. A metal ladder leads up to a closed metal plate in the ceiling, and the tunnel continues north, where the cinderblock walls become brick.
+
+>u
+The trapdoor isn’t open.
+
+>open trapdoor
+It lifts a few inches, but then hits something and goes no further.
+
+>look through trapdoor
+Pushing the plate up as far as you can, you can see part of a workroom or lab of some kind.
+
+>open trapdoor with crowbar
+It lifts a few inches, but then hits something and goes no further.
+
+>i
+You are carrying a crowbar, a flashlight (providing light), a master key, a two liter bottle of Classic Coke, a package of Funny Bones, a smooth stone and an assignment. You are wearing a pair of electrician’s gloves.
+
+>n
+You make your way along the long tunnel.
+
+Brick Tunnel
+This is an ancient tunnel constructed of roughly mortared bricks and stones. A slippery and almost invisible set of handholds leads up. The tunnel continues a long way north and south from here.
+
+>n
+You make your way along the long tunnel.
+
+Renovated Cave
+You are in a huge, cave-like construction. A path leads down to a floor partly covered with rough concrete. The walls and ceiling are high and reinforced with beams of wood, iron, and steel. In the center of the floor you can see a large, flat slab of granite. The only exit is behind you to the south.
+
+>x slab
+The slab is roughly circular, made of indifferently dressed New England granite, and about three feet high.
+
+>open slab
+How do you do that with a slab of granite?
+
+>lay on slab
+You aren’t holding the slab of granite.
+
+>stand on slab
+That would be a waste of time.
+
+>d
+Before the Altar
+You are at the bottom of the cave. The huge slab of granite in the center is a sort of altar. It is carved with strange and disturbing symbols, the largest of which looks very familiar. Some of the symbols are obscured by rusty red stains. Nearby is an iron plate set in the concrete of the floor.
+
+Lying to one side of the altar stone is a sharp, thin-bladed knife.
+
+>x knife
+This small knife is clean, sharp, and has a long, thin blade and a wooden handle. Only the tip of the blade appears at all dull or used.
+
+>take knife
+Taken.
+
+>x tip
+I don’t know the word “tip.”
+
+>x symbols
+Which symbols do you mean, the incised symbol or the carved symbol?
+
+>incised
+The symbol appears to be the oldest thing carved on the altar. It is beautifully incised in the rocks. Its age is apparent from its wear and the overlay of newer carvings and scratchings over it. The symbol looks oddly familiar.
+
+>put stone on altar
+Done.
+
+>x carved symbol
+The symbol, on close examination, appears to have been carved into the smooth stone, perhaps with a claw. The symbol seems just as odd as before.
+
+>x grate
+I don’t know the word “grate.”
+
+>x plate
+The plate is iron, about two feet square, and looks like it could be slid open. A curious feature of the plate is that it has upward projecting dents in it which appear to have been punched from below.
+
+>save
+Okay.
+
+>take stone
+Taken.
+
+>open plate
+You slide open the panel, revealing a dark pit below. Immediately, there is a response from below.
+
+A low, guttural, groaning and snarling issues from the opening.
+
+>x hole
+The plate is iron, about two feet square, and open. A curious feature of the plate is that it has upward projecting dents in it which appear to have been punched from below.
+
+A low, guttural, groaning and snarling issues from the opening.
+
+>look down hole
+You see nothing special about the iron plate.
+
+A low, guttural, groaning and snarling issues from the opening.
+
+>d
+You can’t go that way.
+
+A low, guttural, groaning and snarling issues from the opening.
+
+>enter hole
+You hit your head against the iron plate as you attempt this feat.
+
+A low, guttural, groaning and snarling issues from the opening.
+
+>drop funny bones in hole
+Sounds of ghoulish excitement issue from the opening.
+
+A low, guttural, groaning and snarling issues from the opening.
+
+>i
+You are carrying a smooth stone, a knife, a crowbar, a flashlight (providing light), a master key, a two liter bottle of Classic Coke and an assignment. You are wearing a pair of electrician’s gloves.
+
+A low, guttural, groaning and snarling issues from the opening.
+
+>undo
+I don’t know the word “undo.”
+
+>restore
+Okay.
+
+>look in hole
+The iron plate is closed.
+
+>take stone
+Taken.
+
+>trace symbol
+I don’t know the word “trace.”
+
+>compare symbols
+You can only compare two things.
+
+>compare carved and incised
+Allowing for the different media in which the symbols are executed, they are identical.
+
+>l
+Before the Altar
+You are at the bottom of the cave. The huge slab of granite in the center is a sort of altar. It is carved with strange and disturbing symbols, the largest of which looks very familiar. Some of the symbols are obscured by rusty red stains. Nearby is an iron plate set in the concrete of the floor.
+
+>x stains
+I don’t know the word “stains.”
+
+>exit
+Please use compass directions instead.
+
+>s
+You can’t go that way.
+
+>up
+Renovated Cave
+You are in a huge, cave-like construction. A path leads down to a floor partly covered with rough concrete. The walls and ceiling are high and reinforced with beams of wood, iron, and steel. In the center of the floor you can see a large, flat slab of granite. The only exit is behind you to the south.
+
+>s
+Brick Tunnel
+This is an ancient tunnel constructed of roughly mortared bricks and stones. A slippery and almost invisible set of handholds leads up. The tunnel continues a long way north and south from here.
+
+>u
+Ancient Storage
+What’s deader than dead storage? That’s what’s in this room. Most of the contents have collapsed or rusted back to the primordial ooze. There is mold growing on some of the unidentifiable piles. Stagnant puddles of water pollute the floor. You can now believe how old some of these foundations are said to be.
+
+In one corner of the room a manhole cover is partly buried in the dirt and crud.
+
+There is an open manhole here.
+
+There is a forklift here.
+
+>verbose
+Verbose descriptions.
+
+Ancient Storage
+What’s deader than dead storage? That’s what’s in this room. Most of the contents have collapsed or rusted back to the primordial ooze. There is mold growing on some of the unidentifiable piles. Stagnant puddles of water pollute the floor. You can now believe how old some of these foundations are said to be.
+
+In one corner of the room a manhole cover is partly buried in the dirt and crud.
+
+There is an open manhole here.
+
+There is a forklift here.
+
+>w
+Dead Storage
+This is a storage room. It contains an incredible assemblage of discarded junk. Some of it is so old and mouldering that you can’t be sure where one bit of junk stops and the next begins. It’s piled to the ceiling on ancient, rotting pallets. A narrow path winds eastward through the junk.
+
+>w
+Temporary Basement
+During the Second World War, some temporary buildings were built to house war-related research. Naturally, these buildings, though flimsy and ugly, are still around. This is the basement of one of them. The basement extends west, a stairway leads up, and a large passage is to the east.
+
+Slouching nearby is an urchin.
+
+>show funny bones to urchin
+He makes an unconvincing show of disinterest.
+
+>show coke to urchin
+He makes an unconvincing show of disinterest.
+
+>ask urchin about parka
+He doesn’t reply. He seems very nervous about talking to you.
+
+>save
+Okay.
+
+>give funny bones to urchin
+“My momma said never take nothin’ from no stranger.” He takes the package of Funny Bones anyway, disposing of it in record time. “On the other hand, I’m hungry,” he remarks.
+
+>ask urchin about parka
+He doesn’t reply. He seems very nervous about talking to you.
+
+>show knife to urchin
+He makes an unconvincing show of disinterest.
+
+>give coke to urchin
+“My momma said never take nothin’ from no stranger.”
+
+>x urchin
+This is an urchin. He’s a youngish teenager wearing a ski hat, running shoes, and a bulky, suspiciously bumpy, threadbare parka. He’s jumpy, and looks suspiciously at you.
+
+>x parka
+It bulges in odd places.
+
+The urchin looks around nervously, obviously thinking of flight, but decides against it.
+
+>x bulges
+I don’t know the word “bulges.”
+
+>u
+Temporary Lab
+This is a laboratory of some sort. It takes up most of the building on this level, all the interior walls having been knocked down. (One reason these temporary buildings are still here is their flexibility: no one cares if they get more or less destroyed.) A stairway leads down, and a door leads north.
+
+There is a metal flask here.
+
+>x flask
+This is a large metal flask, about the size of a water cooler bottle. The metal flask is closed.
+
+>open flask
+You open the flask, and a cold, white mist boils out.
+
+>close flask
+You screw the flask closed.
+
+>take flask
+Taken.
+
+The mist dissipates.
+
+>n
+You enter the freezing, biting cold of the blizzard.
+
+Smith Street
+Smith Street runs west towards the computer center here. To the south is a dilapidated grey wooden building. The street is an impassable sea of blowing and drifting snow.
+
+>w
+Smith Street
+Smith Street runs east and west along the north side of the main campus area. At the moment, it is an arctic wasteland of howling wind and drifting snow. On the other side of the street, barely visible, are the lidless eyes of streetlights. The street hasn’t been plowed, or if it has been, it did no good.
+
+Bitter, bone-cracking cold assaults you continuously. The temperature and the blizzard conditions are both horrible.
+
+>w
+Impenetrable snow drifts block the street.
+
+>s
+You push your way into the welcoming warmth inside.
+
+Computer Center
+This is the lobby of the Computer Center. An elevator and call buttons are to the south. Stairs also lead up and down, for the energetic. To the north is Smith Street.
+
+>d
+Basement
+Bare concrete walls line a wide corridor leading east and west. An elevator and call button are to the south. Stairs also lead up, for the energetic. From floor to ceiling run wire channels and steam pipes.
+
+You are beginning to tire.
+
+The urchin saunters nonchalantly into the room, notices you, and beats a hasty retreat.
+
+>turn off flashlight
+The flashlight clicks off.
+
+>drink coke
+Delicious! Contains caffeine, one of the four basic food groups. Too bad they make it with fructose these days, instead of sucrose. You feel much more alert and awake now.
+
+>i
+You are carrying a metal flask, a smooth stone, a knife, a crowbar, a flashlight, a master key, a two liter bottle of Classic Coke and an assignment. You are wearing a pair of electrician’s gloves.
+
+>d
+You can’t go that way.
+
+>w
+Aero Basement
+This basement level room is made of smooth, damp-seeming concrete. Fluorescent lights cast harsh shadows. To the west is a stairway, and to the east the basement area continues.
+
+>w
+Stairway
+A dimly lit stairway leads up and down from here. A corridor continues east.
+
+>d
+Subbasement
+This is the subbasement of the Aeronautical Engineering Building. A stairway leads up. A narrow crack in the northwest corner of the room opens into a larger space.
+
+>x crack
+You used the word “crack” in a way that I don’t understand.
+
+>nw
+It’s too tight a fit carrying the metal flask.
+
+>drop flask
+Dropped.
+
+>nw
+Tomb
+This is a tiny, narrow, ill-fitting room. It appears to have been a left over space from the joining of two preexisting buildings. It is roughly coffin shaped. The walls are covered by decades of overlaid graffiti, but there is one which is painted in huge fluorescent letters that were apparently impossible for later artists to completely deface. On the floor is a rusty access hatch locked with a huge padlock.
+
+>read letters
+It reads “The Tomb of the Unknown Tool.”
+
+>unlock padlock with key
+The lock, though rusty and unwilling, opens, releasing the hatch.
+
+>open hatch
+The hatch is heavy, and its hinges are rusty, but you pull and strain and it opens with a scream of metal. Revealed below is a rusty ladder leading down. Warm, fetid air coils up out of the hole. There is a burned out (no, smashed) utility light set in the wall a few feet down.
+
+>turn on flashlight
+The flashlight clicks on.
+
+>d
+Steam Tunnel
+This dank and grimy tunnel is largely filled with an imperfectly insulated steam pipe. The tunnel is uncomfortably hot and damp. You have gone from the arctic to the tropics. The concrete tunnel has odd molds and fungi growing on its walls and ceiling, and the floor is squishy. Torn clots of insulation litter the floor. Along the ceiling runs a thick tangle of coaxial cable. The tunnel heads east and west. A rusty metal ladder leads up.
+
+You can hear, in the distance, a chittering, scratching sound.
+
+>save
+Okay.
+
+>listen
+You hear the chittering of rats.
+
+The sound is louder. It sounds like small animals. Is it rats?
+
+>yes
+That was a rhetorical question.
+
+The sound continues. It’s almost certainly rats.
+
+>am I good or what?
+I don’t know the word “good.”
+
+>e
+Steam Tunnel
+This dank and grimy tunnel is largely filled with an imperfectly insulated steam pipe. The tunnel is uncomfortably hot and damp. A thick bundle of coaxial cable runs east to west along the ceiling. There is a pressure release valve on the steam pipe here.
+
+The rat sounds are growing louder, but you still can’t see any rats.
+
+>x valve
+It looks pretty rusty, but appears to be in working order. It’s closed.
+
+The rat sounds are growing louder, but you still can’t see any rats.
+
+>open valve
+It’s too rusty. You pull and strain, but nothing happens.
+
+A troop of rats appears out of the darkness. The rats are momentarily startled by your presence, but soon the bolder ones begin to approach. There are more rats here than you have ever seen.
+
+>open valve with crowbar
+The valve, with a horrible scream of tortured metal, gives a little, and a small trickle of steam issues forth. This further agitates the rats.
+
+The rats attack! Slimy, snarling, and hungry, they swarm over your feet, biting at your legs and clinging desperately to your feet.
+
+>again
+The valve screeches open. A jet spray of live steam issues from it, filling the tunnel in front of you. The rats are caught in the full force of the blast. Horrible squeals can be heard from the midst of the steam cloud, and scalded rats charge past you, all interest in anything but flight forgotten. One of their number remains, dead.
+
+>take dead rat
+As you take the dead rat, it moves, but then you realize that it’s only lice and fleas bailing out.
+
+>close valve with crowbar
+The valve closes, more easily than it opened.
+
+>x rat
+This rat appears to have been stepped on. A small trickle of blood has clotted around its mouth. Branded into its neck is a strange symbol.
+
+>x symbol
+The symbol, on close examination, appears to have been scarred into the hide of the rat. There is no hair growing on it, and although it looks like scar tissue, the color is wrong — a sort of purplish green. The symbol looks oddly familiar.
+
+>compare scarred symbol to carved symbol
+I don’t know the word “scarred.”
+
+>compare rat to stone
+That would be a waste of time.
+
+>compare symbol to symbol
+Allowing for the different media in which the symbols are executed, they are identical.
+
+>l
+Steam Tunnel
+This dank and grimy tunnel is largely filled with an imperfectly insulated steam pipe. The tunnel is uncomfortably hot and damp. A thick bundle of coaxial cable runs east to west along the ceiling. There is a pressure release valve on the steam pipe here.
+
+>x cable
+The cable runs overhead in a fat bundle. It looks like the kind you’ve seen connecting nodes of the local net. This clump is pretty grotty looking, festooned with damp cobwebs, and stained with something that dripped from the ceiling.
+
+>e
+Steam Tunnel
+The steam tunnel is narrow here, and its construction is more archaic. It’s now mostly brick, although the floor is concrete. The steam pipe and coaxial cable continue along their appointed paths. The tunnel is damp and even a little muddy.
+
+>x mud
+I don’t know the word “mud.”
+
+>e
+Steam Tunnel
+The steam pipe and coaxial cable turn upwards and disappear into the ceiling here. The tunnel itself comes to an end in a grimy, damp, and dripping triad of crumbling brick walls. The south wall looks particularly decrepit.
+
+>x south wall
+The brick wall is in terrible shape. It’s aged and crumbling, with grooves between bricks where the mortar has fallen out.
+
+>break wall with crowbar
+It doesn’t do much but loosen a brick in the wall.
+
+>g
+It doesn’t do much but loosen a brick in the wall.
+
+>pry brick with crowbar
+The wall grudgingly yields to your efforts. A brick, less well mortared than its fellows, pulls out of the wall.
+
+>x brick
+Which brick do you mean, the broken brick or the new brick?
+
+>new
+It’s a new brick. It appears to be of relatively recent vintage.
+
+>x broken brick
+It’s a crumbling, broken brick. Little bits of mortar still cling to it.
+
+>get all
+broken brick: Taken.
+new brick: You can’t get a good grip on the new brick with your fingers.
+
+>press new brick
+Pushing the new brick has no effect.
+
+>pry new brick with crowbar
+The wall grudgingly yields to your efforts. A brick, less well mortared than its fellows, drops to the floor on the other side, making a hole through the wall. You can see a rusty steel reinforcing rod in the hole.
+
+>x rod
+It’s rusty, obviously didn’t help the wall all that much, and runs up and down through the hole you have made.
+
+>look through hole
+There is an open space, a small room containing some machinery. You can’t see too well, though.
+
+>s
+You are trying to walk through a brick wall.
+
+>reach into hole
+You reach in and touch the reinforcing rod.
+
+>pull rod
+It’s pretty solidly mortared in.
+
+>pry rod with crowbar
+It’s pretty solidly mortared in.
+
+>i
+You are carrying a broken brick, a dead rat, a smooth stone, a knife, a crowbar, a flashlight (providing light), a master key, a two liter bottle of Classic Coke and an assignment. You are wearing a pair of electrician’s gloves.
+
+>get new brick
+You can’t see any new brick here.
+
+>u
+You can’t go that way.
+
+>shine flashlight in hole
+I don’t know the word “shine.”
+
+>get cables
+I don’t know the word “cables.”
+
+>x cables
+I don’t know the word “cables.”
+
+>x cable
+The cable runs overhead in a fat bundle. It looks like the kind you’ve seen connecting nodes of the local net. This clump is pretty grotty looking, festooned with damp cobwebs, and stained with something that dripped from the ceiling.
+
+>get cable
+You can’t take that!
+
+>climb
+What do you want to climb?
+
+>cable
+You leap, grab the damp and moldy bundle of cable, and hang suspended off the floor.
+
+>climb pipe
+That would be a waste of time.
+
+Your grip on the cable, never too secure, loosens, and you drop to the floor.
+
+>pour coke on rod
+You pour the Coke on the reinforcing rod, wasting it.
+
+>i
+You are carrying a broken brick, a dead rat, a smooth stone, a knife, a crowbar, a flashlight (providing light), a master key, a two liter bottle of Classic Coke and an assignment. You are wearing a pair of electrician’s gloves.
+
+>w
+Steam Tunnel
+The steam tunnel is narrow here, and its construction is more archaic. It’s now mostly brick, although the floor is concrete. The steam pipe and coaxial cable continue along their appointed paths. The tunnel is damp and even a little muddy.
+
+>w
+Steam Tunnel
+This dank and grimy tunnel is largely filled with an imperfectly insulated steam pipe. The tunnel is uncomfortably hot and damp. A thick bundle of coaxial cable runs east to west along the ceiling. There is a pressure release valve on the steam pipe here.
+
+>w
+Steam Tunnel
+This dank and grimy tunnel is largely filled with an imperfectly insulated steam pipe. The tunnel is uncomfortably hot and damp. You have gone from the arctic to the tropics. The concrete tunnel has odd molds and fungi growing on its walls and ceiling, and the floor is squishy. Torn clots of insulation litter the floor. Along the ceiling runs a thick tangle of coaxial cable. The tunnel heads east and west. A rusty metal ladder leads up.
+
+>w
+Steam Tunnel
+This dank and grimy tunnel is largely filled with an imperfectly insulated steam pipe. The tunnel is uncomfortably hot and damp. A bundle of coaxial cable runs along the ceiling, festooned with damp mold and cobwebs. The tunnel continues west.
+
+>w
+Tunnel Entrance
+The tunnel continues west from here, becoming narrow, muddy, and forbidding. The walls no longer seem to be as finished as they were. The steam pipe and coaxial cable disappear into the ceiling at this point. The temperature has dropped considerably, as well.
+
+>w
+Muddy Tunnel
+The tunnel you came through continues down, barely large enough to enter. It is made of sticky gelatinous mud that’s been pushed by something into a semblance of a passage.
+
+>d
+Large Chamber
+This is a wide spot in the tunnel, just as wet and muddy as elsewhere. The walls are slimy as well. Numerous slots or indentations about two feet wide and a foot high open here and there. Thin, wire or ropelike growths emerge from a hole further down and enter each of the slots. There is background noise here, almost loud enough to hear clearly.
+
+A small, furtive motion attracts your attention to the slots.
+
+>x slots
+The slots are narrow burrows apparently dug by hand out of the mud of the chamber walls. Most of the slots have a thin wire or rope heading into them. You begin to be quite certain that there is something moving inside the slot you are looking at.
+
+There is motion in the slots. In fact, there is motion in almost all of them.
+
+>listen
+The noise, as you listen more carefully, resolves itself into voices. They are chanting, but the words are unknown to you.
+
+Slowly, painfully, things emerge from the slots. They are pale, thin creatures with red mouths and staring eyes. Mold grows in their hair and wirelike streamers wrap their heads and join a bundle on the floor. You realize that these are urchins.
+
+>cut wire with knife
+The knife drives the wire into the mud, but doesn’t cut it.
+
+>x urchins
+These are not normal looking urchins. Their clothes are muddy and tattered. They are barefoot in midwinter, and covered with mud. Around their heads are draped the ropy growths that you’ve been noticing in this area. Although their eyes are open, they stare catatonically.
+
+>enter slot
+You squeeze your way into one of the slots. The mud coats you with a cold, slimy coat which makes it barely possible to breathe. You slide out with all the speed you can muster.
+
+>i
+You are carrying a broken brick, a dead rat, a smooth stone, a knife, a crowbar, a flashlight (providing light), a master key, a two liter bottle of Classic Coke and an assignment. You are wearing a pair of electrician’s gloves.
+
+>d
+The urchins lurch, almost as one, into your way, grabbing at you feebly but effectively. Their pale, limp hands can’t grab you, but they can stop you. There is no way past.
+
+>l
+Large Chamber
+This is a wide spot in the tunnel, just as wet and muddy as elsewhere. The walls are slimy as well. Numerous slots or indentations about two feet wide and a foot high open here and there. Thin, wire or ropelike growths emerge from a hole further down and envelop the head of each urchin. The urchins are saying or chanting something repetitive and monotonal, almost machinelike.
+
+There are urchins here.
+
+>listen
+The strange chant never stops. They don’t move their lips to make it. It resonates deep within their chests.
+
+>u
+Muddy Tunnel
+The tunnel you came through continues down, barely large enough to enter. It is made of sticky gelatinous mud that’s been pushed by something into a semblance of a passage.
+
+>d
+Large Chamber
+This is a wide spot in the tunnel, just as wet and muddy as elsewhere. The walls are slimy as well. Numerous slots or indentations about two feet wide and a foot high open here and there. Thin, wire or ropelike growths emerge from a hole further down and envelop the head of each urchin. The urchins are saying or chanting something repetitive and monotonal, almost machinelike.
+
+There are urchins here.
+
+>i
+You are carrying a broken brick, a dead rat, a smooth stone, a knife, a crowbar, a flashlight (providing light), a master key, a two liter bottle of Classic Coke and an assignment. You are wearing a pair of electrician’s gloves.
+
+>give rat to urchins
+They ignore your offer, caught up in something only they can sense.
+
+>show stone to urchins
+They ignore your offer, caught up in something only they can sense.
+
+>x wires
+These are thin, fibrous, ropy growths. They look very tough.
+
+>get wires
+You can’t be serious.
+
+>pull wires
+You can’t move the wire.
+
+>cut wire
+What do you want to cut the wire with?
+
+>knife
+The knife drives the wire into the mud, but doesn’t cut it.
+
+>hit urchin
+They ignore you.
+
+>hit urchin with brick
+They ignore you.
+
+>u
+Muddy Tunnel
+The tunnel you came through continues down, barely large enough to enter. It is made of sticky gelatinous mud that’s been pushed by something into a semblance of a passage.
+
+>e
+Tunnel Entrance
+The tunnel continues west from here, becoming narrow, muddy, and forbidding. The walls no longer seem to be as finished as they were. The steam pipe and coaxial cable disappear into the ceiling at this point. The temperature has dropped considerably, as well.
+
+>e
+Steam Tunnel
+This dank and grimy tunnel is largely filled with an imperfectly insulated steam pipe. The tunnel is uncomfortably hot and damp. A bundle of coaxial cable runs along the ceiling, festooned with damp mold and cobwebs. The tunnel continues west.
+
+>e
+Steam Tunnel
+This dank and grimy tunnel is largely filled with an imperfectly insulated steam pipe. The tunnel is uncomfortably hot and damp. You have gone from the arctic to the tropics. The concrete tunnel has odd molds and fungi growing on its walls and ceiling, and the floor is squishy. Torn clots of insulation litter the floor. Along the ceiling runs a thick tangle of coaxial cable. The tunnel heads east and west. A rusty metal ladder leads up.
+
+>u
+Tomb
+This is a tiny, narrow, ill-fitting room. It appears to have been a left over space from the joining of two preexisting buildings. It is roughly coffin shaped. The walls are covered by decades of overlaid graffiti, but there is one which is painted in huge fluorescent letters that were apparently impossible for later artists to completely deface. On the floor is a rusty access hatch which is open.
+
+There is a padlock here.
+
+>get padlock
+Taken.
+
+>x padlock
+The padlock has been spray painted many times by graffiti artists. It’s currently fluorescent purple. In spite of the many coats of paint, the lock manages to be rusty and, in fact, almost slimy-looking. The padlock is unlocked.
+
+>se
+Subbasement
+This is the subbasement of the Aeronautical Engineering Building. A stairway leads up. A narrow crack in the northwest corner of the room opens into a larger space.
+
+There is a metal flask here.
+
+>get flask
+You’re holding too many things and can’t quite get them all arranged to take it as well.
+
+>i
+You are carrying a padlock, a broken brick, a dead rat, a smooth stone, a knife, a crowbar, a flashlight (providing light), a master key, a two liter bottle of Classic Coke and an assignment. You are wearing a pair of electrician’s gloves.
+
+>l
+Subbasement
+This is the subbasement of the Aeronautical Engineering Building. A stairway leads up. A narrow crack in the northwest corner of the room opens into a larger space.
+
+There is a metal flask here.
+
+>u
+Stairway
+A dimly lit stairway leads up and down from here. A corridor continues east.
+
+>u
+Aero Lobby
+This is the lobby of the Aeronautical Engineering Building. Stairs lead down and a corridor heads south towards the main building.
+
+>s
+Infinite Corridor
+The so-called infinite corridor runs from east to west in the main campus building. This is the west end. Side corridors lead north and south, and a set of doors leads west into the howling blizzard.
+
+There is a plastic container here.
+
+There is a largish machine being operated down the hall to the east.
+
+>x container
+It’s a plain plastic container with something written on it. The plastic container is closed.
+
+>read container
+“Frobozz Magic Floor Wax (and Dessert Topping)”
+
+>get container
+You’re holding too many things and can’t quite get them all arranged to take it as well.
+
+>i
+You are carrying a padlock, a broken brick, a dead rat, a smooth stone, a knife, a crowbar, a flashlight (providing light), a master key, a two liter bottle of Classic Coke and an assignment. You are wearing a pair of electrician’s gloves.
+
+>drop rat
+Dropped.
+
+>get container
+Taken.
+
+>turn off flashlight
+The flashlight clicks off.
+
+>drop assignment
+Dropped.
+
+>get rat
+Taken.
+
+>e
+Infinite Corridor
+The so-called infinite corridor runs from east to west in the main campus building. The corridor extends both ways from here. Many closed and locked offices are to the north and south.
+
+There is a largish machine being operated down the hall to the east.
+
+>n
+The offices are all closed, locked, and dark.
+
+>s
+The offices are all closed, locked, and dark.
+
+>e
+Infinite Corridor
+The so-called infinite corridor runs from east to west in the main campus building. The corridor extends both ways from here. A stairway leads up, and a door leads out to the Great Court.
+
+A maintenance man is here, riding a floor waxer.
+
+There is a wall socket on one wall, and a heavy-duty power cord is plugged into it. The cord leads to a large floor waxer.
+
+>xwaxer
+I don’t know the word “xwaxer.”
+
+>x waxer
+It’s a large floor waxer, big enough to ride in, and in fact there is a maintenance man riding it. It actually looks sort of like a small bulldozer. A power cord connects it to the wall.
+
+The floor waxer waxes away to the east.
+
+>unplug cord
+You pull at the power cord, but it won’t come loose!
+
+>e
+Infinite Corridor
+The so-called infinite corridor runs from east to west in the main campus building. The corridor extends both ways from here. Many closed and locked offices are to the north and south.
+
+A maintenance man is here, riding a floor waxer.
+
+There is a glass-fronted emergency cabinet here.
+
+>give container to maintenance man
+He doesn’t react.
+
+>x cabinet
+It’s one of those little cabinets you see in institutional buildings that usually contains a fire hose and a fire axe. This one seems to only have an axe. It has a transparent window. There is writing on the cabinet.
+
+>read cabinet
+“In case of emergency, break glass.”
+
+The floor waxer waxes away to the east.
+
+>break glass
+Wearing the heavy gloves, you confidently smash the glass with a blow of your hands!
+
+>get ax
+You’re holding too many things and can’t quite get them all arranged to take it as well.
+
+>i
+You are carrying a dead rat, a plastic container, a padlock, a broken brick, a smooth stone, a knife, a crowbar, a flashlight, a master key and a two liter bottle of Classic Coke. You are wearing a pair of electrician’s gloves.
+
+>drop padlock
+Dropped.
+
+>get ax
+Taken.
+
+The floor waxer, approaching from the east, is now here.
+
+>w
+Infinite Corridor
+The so-called infinite corridor runs from east to west in the main campus building. The corridor extends both ways from here. A stairway leads up, and a door leads out to the Great Court.
+
+There is a wall socket on one wall, and a heavy-duty power cord is plugged into it. The cord leads away to the east.
+
+There is a largish machine being operated down the hall to the east.
+
+>w
+Infinite Corridor
+The so-called infinite corridor runs from east to west in the main campus building. The corridor extends both ways from here. Many closed and locked offices are to the north and south.
+
+There is a largish machine being operated down the hall to the east.
+
+>w
+Infinite Corridor
+The so-called infinite corridor runs from east to west in the main campus building. This is the west end. Side corridors lead north and south, and a set of doors leads west into the howling blizzard.
+
+There is an assignment here.
+
+There is a largish machine being operated down the hall to the east.
+
+>d
+You can’t go that way.
+
+>n
+Aero Lobby
+This is the lobby of the Aeronautical Engineering Building. Stairs lead down and a corridor heads south towards the main building.
+
+>d
+Stairway
+A dimly lit stairway leads up and down from here. A corridor continues east.
+
+>d
+Subbasement
+This is the subbasement of the Aeronautical Engineering Building. A stairway leads up. A narrow crack in the northwest corner of the room opens into a larger space.
+
+There is a metal flask here.
+
+>nw
+It’s too tight a fit carrying the fire axe.
+
+>drop all
+fire axe: Dropped.
+dead rat: Dropped.
+plastic container: Dropped.
+broken brick: Dropped.
+smooth stone: Dropped.
+knife: Dropped.
+crowbar: Dropped.
+flashlight: Dropped.
+master key: Dropped.
+two liter bottle of Classic Coke: Dropped.
+
+>get ax
+Taken.
+
+>get flashlight
+Taken.
+
+>nw
+It’s too tight a fit carrying the fire axe.
+
+>get all
+two liter bottle of Classic Coke: Taken.
+master key: Taken.
+crowbar: Taken.
+knife: Taken.
+smooth stone: Taken.
+broken brick: Taken.
+plastic container: Taken.
+dead rat: Taken.
+metal flask: You’re holding too many things and can’t quite get them all arranged to take it as well.
+
+>wear gloves
+You already are.
+
+>i
+You are carrying a dead rat, a plastic container, a broken brick, a smooth stone, a knife, a crowbar, a master key, a two liter bottle of Classic Coke, a flashlight and a fire axe. You are wearing a pair of electrician’s gloves.
+
+>drop rt
+I don’t know the word “rt.”
+
+>drop rat
+Dropped.
+
+>drop brick
+Dropped.
+
+>u
+Stairway
+A dimly lit stairway leads up and down from here. A corridor continues east.
+
+>u
+Aero Lobby
+This is the lobby of the Aeronautical Engineering Building. Stairs lead down and a corridor heads south towards the main building.
+
+>s
+Infinite Corridor
+The so-called infinite corridor runs from east to west in the main campus building. This is the west end. Side corridors lead north and south, and a set of doors leads west into the howling blizzard.
+
+A maintenance man is here, riding a floor waxer.
+
+There is an assignment here.
+
+The floor waxer waxes away to the east.
+
+>e
+Infinite Corridor
+The so-called infinite corridor runs from east to west in the main campus building. The corridor extends both ways from here. Many closed and locked offices are to the north and south.
+
+A maintenance man is here, riding a floor waxer.
+
+>n
+The offices are all closed, locked, and dark.
+
+>open door
+The offices are inaccessible.
+
+>e
+In a deft maneuver, the maintenance man steers the floor waxer into your path, blocking your advance.
+
+>x maintenance man
+He looks tired, bored, almost zombie-like.
+
+The floor waxer waxes away to the east.
+
+>e
+Infinite Corridor
+The so-called infinite corridor runs from east to west in the main campus building. The corridor extends both ways from here. A stairway leads up, and a door leads out to the Great Court.
+
+A maintenance man is here, riding a floor waxer.
+
+There is a wall socket on one wall, and a heavy-duty power cord is plugged into it. The cord leads to a large floor waxer.
+
+>save
+Okay.
+
+>cut cord with ax
+The axe crashes against the floor, and the power cord severs! The whine of the floor waxer slows, and the maintenance man jerks to alertness.
+
+>e
+The maintenance man, growling foul-sounding imprecations, descends from the floor waxer and blocks your way.
+
+The maintenance man stares with maniacal intensity at your throat.
+
+>axe man
+There was no verb in that sentence!
+
+>cut man with axe
+The fire axe chops into his chest, where it sticks. Ed Ames would be proud. The force of the blow staggers him a bit. He looks down at the axe with a certain perplexity, then pulls it free, the wound making a sickening sucking sound.
+
+The maintenance man stares with maniacal intensity at your throat.
+
+>g
+You aren’t holding the fire axe.
+
+>get axe
+Taken.
+
+The maintenance man stares with maniacal intensity at your throat.
+
+>cut man with axe
+The fire axe chops into his chest, where it sticks. Ed Ames would be proud. The force of the blow staggers him a bit. He looks down at the axe with a certain perplexity, then pulls it free, the wound making a sickening sucking sound.
+
+The maintenance man stares with maniacal intensity at your throat.
+
+>get axe
+Taken.
+
+The maintenance man stares with maniacal intensity at your throat. He grabs you by the throat and lifts you off the ground with one hand. The hand feels very cold. Just as you expire, you realize you have never seen him blink.
+
+    **** You have died ****
+
+At first, you think “Maybe it was all just a bad dream,” but no such luck. It appears to be for real. That’s too bad, although something gnawing on your toes thinks it’s pretty wonderful, or at least fairly tasty.
+
+Your score is 30 of a possible 100, in 352 moves. Graded on the curve, you are in the class of Senior.
+
+Would you like to restart the game from the beginning, restore a saved game position, or end this session of the game?
+(Type RESTART, RESTORE, or QUIT):
+>restore
+Okay.
+
+>say hi
+You can’t see any hi here.
+
+>🙁
+I don’t know the word “:(.”
+
+>l
+Infinite Corridor
+The so-called infinite corridor runs from east to west in the main campus building. The corridor extends both ways from here. A stairway leads up, and a door leads out to the Great Court.
+
+A maintenance man is here, riding a floor waxer.
+
+There is a wall socket on one wall, and a heavy-duty power cord is plugged into it. The cord leads to a large floor waxer.
+
+>cut zombie with knife
+I don’t know the word “zombie.”
+
+>cut maintenance with knife
+The knife can’t reach him in the floor waxer!
+
+>pour floor wax on ground
+You can’t see any floor wax here.
+
+The floor waxer waxes away to the east.
+
+>open container
+You pull off the seal and open the container, revealing a smelly, viscous liquid.
+
+>pour liquid
+It pours out and spreads like ants at a picnic. The floor is now covered from wall to wall with slippery floor wax.
+
+>cut cord with ax
+The axe crashes against the floor, and the power cord severs! The whine of the floor waxer slows, and the maintenance man jerks to alertness.
+
+>z
+Time passes…
+
+The maintenance man, growling foul-sounding imprecations, descends from the floor waxer and heads towards you.
+
+>z
+Time passes…
+
+The maintenance man lurches toward you with surprising speed. Just as he is about to grab you he slips on the wax. His hand whips by, inches from your throat, and he drops to the floor, screaming in frustration.
+
+>cut maintenance with knife
+The knife is pushed contemptuously aside, barely slowing his advance.
+
+The maintenance man continues slipping, falling, standing, and so on. He reminds you of a badly made windup toy.
+
+>cut maintenance with ax
+The fire axe misses by a mile as the maintenance man slips again!
+
+The maintenance man continues slipping, falling, standing, and so on. He reminds you of a badly made windup toy.
+
+>e
+You slip and slide on the wax. It’s like walking on wet ice. You can barely keep upright, but it’s worse for the maintenance man. His gait is so jerky that each time he takes a step he falls! His persistence is impressive, but you slip (literally) by before he can grab you.
+
+Infinite Corridor
+The so-called infinite corridor runs from east to west in the main campus building. The corridor extends both ways from here. Many closed and locked offices are to the north and south.
+
+A disabled floor waxer looms nearby.
+
+There is a formerly glass-fronted emergency cabinet here.
+
+There is a padlock here.
+
+The maintenance man continues slipping, falling, standing, and so on. He reminds you of a badly made windup toy.
+
+>x waxer
+It’s a large floor waxer, big enough to ride in. It actually looks sort of like a small bulldozer. The severed remnant of the power cord graces one end.
+
+The maintenance man continues slipping, falling, standing, and so on. He reminds you of a badly made windup toy.
+
+>get in waxer
+You are now in the floor waxer.
+
+The maintenance man appears to shorten and almost dissolve. There is a great commotion, as though he is undergoing a convulsion of some sort, and then he appears to explode into a crowd of small squealing creatures. These, seeing you, scuttle off in the opposite direction and disappear.
+
+>l
+Infinite Corridor, on the floor waxer
+The so-called infinite corridor runs from east to west in the main campus building. The corridor extends both ways from here. Many closed and locked offices are to the north and south.
+
+There is a formerly glass-fronted emergency cabinet here.
+
+There is a padlock here.
+
+>down
+You are now on your feet.
+
+>e
+Infinite Corridor
+The so-called infinite corridor runs from east to west in the main campus building. This is the east end. The corridor branches north and south here.
+
+There is a largish machine down the hall to the west.
+
+>s
+Chemistry Building
+This corridor is lined with closed, dark offices. At the south end of the corridor is a door with a light shining behind it. There is something written on the door.
+
+>read door
+Painted on the door, in calligraphy indistinguishable from any other door at Tech, is the phrase “Department of Alchemy.” You always used to wonder what was behind that door.
+
+>open door
+It’s locked.
+
+>open door with key
+It’s locked.
+
+>unlock door with key
+The key fits perfectly in the lock, but the lock doesn’t turn. The master key doesn’t work on this lock.
+
+>open door with ax
+You can’t see any ax here.
+
+>i
+You are carrying a plastic container, a smooth stone, a knife, a crowbar, a master key, a two liter bottle of Classic Coke and a flashlight. You are wearing a pair of electrician’s gloves.
+
+The door opens partway, revealing a professorial man in a white lab coat. He smiles. “Good evening! I don’t get many visitors this late. You’re not one of my students, are you?” He ushers you into the room without waiting for an answer, closing the door behind you.
+
+Department of Alchemy
+This office is clinically clean, shiny, and modern. It looks like something out of a science fiction movie. A closed door to the north leads back into the corridor and an archway opens to the south.
+
+Taped to the wall to the right of the archway is a sign-up sheet.
+
+The professor is here.
+
+>read sheet
+This appears to be a sign-up sheet for the lab. Strangely, although few daytime segments are used, almost all of the nighttime ones are. Most seem to have been taken by two different people, the professor and another, presumably one of his graduate students. The name of the graduate student is oddly familiar.
+
+The professor gazes at you in a bored and distracted way.
+
+>compare name to symbol
+I don’t know the word “name.”
+
+>read name
+I don’t know the word “name.”
+
+>read student
+How do you do that with a missing students?
+
+The professor continues to gaze at you in a bored and distracted way.
+
+>x professor
+The man looks like a professor. He’s wearing a white lab coat, rather stained with chemicals, and a G.U.E. Tech class ring. He watches you with an ambiguously predatory air.
+
+The professor continues to gaze at you in a bored and distracted way.
+
+>x ring
+He thrusts his hand into his pocket.
+
+Suddenly, you remember why the graduate student’s name was familiar. He was a missing student, until his body was found smashed and broken at the base of the tallest building on campus.
+
+The professor continues to gaze at you with malign intent.
+
+>ask professor about missing students
+“I don’t know anything about them. Tech is high-pressure. Some people can’t take it.”
+
+The professor continues to gaze at you with malign intent.
+
+>ask professor about ring
+“Just a trinket.”
+
+The professor continues to gaze at you with malign intent.
+
+>ask professor about paper
+“I don’t like your insinuations.”
+
+The professor continues to gaze at you with malign intent.
+
+>ask professor about symbol
+The professor is uninterested.
+
+The professor continues to gaze at you with malign intent.
+
+>ask professor about assignment
+The professor is uninterested.
+
+The professor continues to gaze at you with malign intent.
+
+>ask professor about stone
+The professor is uninterested.
+
+The professor continues to gaze at you with malign intent.
+
+>show stone to professor
+“Very interesting! I’ll take that!”
+
+The professor continues to gaze at you with malign intent.
+
+>i
+You are carrying a plastic container, a knife, a crowbar, a master key, a two liter bottle of Classic Coke and a flashlight. You are wearing a pair of electrician’s gloves.
+
+The professor continues to gaze at you with malign intent.
+
+>take stone from professor
+“You’ll get it. All in good time.”
+
+The professor continues to gaze at you with malign intent.
+
+>s
+The professor stops you, not too gently. “Sorry,” he says, although he doesn’t sound too sorry. “There are very delicate experiments going on in the lab. You might hurt something.” All you can see before he guides you away from the archway is a great deal of odd apparatus and equipment.
+
+The professor continues to gaze at you with malign intent.
+
+>n
+The Alchemy Department door is closed.
+
+The professor continues to gaze at you with malign intent.
+
+>open door
+Okay, the Alchemy Department door is now open.
+
+The professor continues to gaze at you with malign intent.
+
+>n
+The door closes behind you.
+
+Chemistry Building
+This corridor is lined with closed, dark offices. At the south end of the corridor is a door with a light shining behind it. There is something written on the door.
+
+>n
+Infinite Corridor
+The so-called infinite corridor runs from east to west in the main campus building. This is the east end. The corridor branches north and south here.
+
+There is a largish machine down the hall to the west.
+
+>n
+Fruits and Nuts
+This is the central corridor of the Nutrition Building. The main building is south, and a stairway leads down.
+
+>d
+Cluttered Passage
+This cluttered passage leads southeast. It is full of apparently discarded electronic equipment, old rusty file cabinets, and other detritus. A stairway also leads up.
+
+>se
+Brown Basement
+This is a cluttered basement below the Brown Building. Discarded equipment nearly blocks an already narrow hallway that terminates in a stairway leading up. The passage itself continues northwest.
+
+There is a pair of rubber boots here.
+
+>wear boots
+(Taking the pair of rubber boots first)
+Snug, but okay.
+
+>nw
+Cluttered Passage
+This cluttered passage leads southeast. It is full of apparently discarded electronic equipment, old rusty file cabinets, and other detritus. A stairway also leads up.
+
+>search detritus
+There is nothing there.
+
+>se
+Brown Basement
+This is a cluttered basement below the Brown Building. Discarded equipment nearly blocks an already narrow hallway that terminates in a stairway leading up. The passage itself continues northwest.
+
+>up
+Brown Building
+This is the lobby of the Brown Building, an eighteen-story skyscraper which houses the Meteorology Department and other outposts of the Earth Sciences. The elevator is out of order, but a long stairway leads up to the roof, and another leads down to the basement. A revolving door leads out into the night.
+
+>up
+Top Floor
+This is the top of the stairway. A door leads out to the roof here, and you can hear the wind blowing beyond. There is a sign on the door.
+
+>read sign
+It says “NO ADMITTANCE!” In smaller, hand-written letters below, it says “This means you!” and below that in different handwriting, it says “Who, me?”
+
+>yes
+That was a rhetorical question.
+
+>open door
+It’s locked.
+
+>unlock door with key
+The door is now unlocked.
+
+>open door
+You push the door open, revealing a windswept, snow-covered roof. Frigid wind whips snow into your face.
+
+>out
+You enter the freezing, biting cold of the blizzard.
+
+Skyscraper Roof
+A low parapet surrounds a small roof here. The air conditioning cooling tower and the small protrusion containing the stairs are dwarfed by a semitransparent dome which towers above you. The blowing snow obscures all detail of the city across the river to the south.
+
+>x dome
+The dome is large and semitransparent. It’s made of some sort of milky-colored plastic. It dominates the roof. You can climb up to the entrance via a short ladder.
+
+Bitter, bone-cracking cold assaults you continuously. The temperature and the blizzard conditions are both horrible.
+
+>u
+You push your way into the welcoming warmth inside.
+
+Inside Dome
+You are inside a large domed area. The dome contains equipment that makes it clear it is a weather observation station. For some reason, it also contains a small peach tree. Wind whistles outside, and snow blasts against the semitransparent material of the dome.
+
+>x tree
+It’s a small peach tree planted in a very large tub of earth. It appears healthy, although as it is wintertime, the tree has no leaves.
+
+>x dirt
+The tub is full of dirt and “condo chips” (those pine bark chips that are spread around condos and shopping centers by the ton). The dirt has been disturbed recently.
+
+>dig
+What do you want to dig in?
+
+>dig in dirt
+You root around in the dirt for a while, when you encounter something hard. Further exploration reveals it to be a dried, chewed looking human hand.
+
+>x hand
+The hand is very old. It’s dry and very light, mummified in fact. There are stains, scars, and dried blood on it. There is a tattoo on the back of it. The hand appears to have been severed by the application of very sharp teeth, perhaps an animal’s.
+
+>x tattoo
+The tattoo is old and faded. It was done in red ink and is very artistically drawn. The symbol looks oddly familiar.
+
+>take hand
+Taken.
+
+Something smashes against the glass of the dome! You turn and see a dark shape clinging to the outside of the structure.
+
+>save
+Okay.
+
+>x shape
+You can’t tell much from here. It’s large and dark, but the dome obscures all detail.
+
+The dark shape moves. Above the howl of the wind you hear a high-pitched keening noise.
+
+>l
+Inside Dome
+You are inside a large domed area. The dome contains equipment that makes it clear it is a weather observation station. For some reason, it also contains a small peach tree. Wind whistles outside, and snow blasts against the semitransparent material of the dome.
+
+The shape drops out of view.
+
+>listen
+You hear nothing unsettling.
+
+You hear, on the ladder outside, hard claws painfully climbing towards the dome entrance.
+
+>i
+You are carrying a human hand, a plastic container, a knife, a crowbar, a master key, a two liter bottle of Classic Coke and a flashlight. You are wearing a pair of rubber boots and a pair of electrician’s gloves.
+
+The creature enters the dome, screaming viciously at you, its claws reaching out to grasp and rend.
+
+>hit creature with crowbar
+Hissing and screeching, the creature fends off your attack. Its head jerks from side to side, watching you.
+
+In a snake-like strike, the creature attacks! Its toothy jaws close on your hand! Not your hand, but the mummified hand you dug out of the tub! With a disgusting gobbling noise, the flier swallows the hand, and then, using its wings to push itself away, it scuttles out into the cold and away.
+
+>i
+You are carrying a plastic container, a knife, a crowbar, a master key, a two liter bottle of Classic Coke and a flashlight. You are wearing a pair of rubber boots and a pair of electrician’s gloves.
+
+>l
+Inside Dome
+You are inside a large domed area. The dome contains equipment that makes it clear it is a weather observation station. For some reason, it also contains a small peach tree. Wind whistles outside, and snow blasts against the semitransparent material of the dome.
+
+>x equipment
+You see nothing special about it.
+
+>d
+You enter the freezing, biting cold of the blizzard.
+
+Skyscraper Roof
+A low parapet surrounds a small roof here. The air conditioning cooling tower and the small protrusion containing the stairs are dwarfed by a semitransparent dome which towers above you. The blowing snow obscures all detail of the city across the river to the south.
+
+>d
+You can’t go that way.
+
+Bitter, bone-cracking cold assaults you continuously. The temperature and the blizzard conditions are both horrible.
+
+>in
+You push your way into the welcoming warmth inside.
+
+Top Floor
+This is the top of the stairway. A door leads out to the roof here, and you can hear the wind blowing beyond. There is a sign on the door.
+
+>d
+Brown Building
+This is the lobby of the Brown Building, an eighteen-story skyscraper which houses the Meteorology Department and other outposts of the Earth Sciences. The elevator is out of order, but a long stairway leads up to the roof, and another leads down to the basement. A revolving door leads out into the night.
+
+>out
+You enter the freezing, biting cold of the blizzard.
+
+Small Courtyard
+This courtyard is a triumph of modern architecture. It is spare, cold, angular, overwhelming in size, and bears a striking resemblance to a wind tunnel whenever the breeze picks up. Right now this is true of the whole campus, though. A huge mass lurks nearby, and an almost featureless skyscraper is to the north.
+
+You are beginning to tire.
+
+>drink coke
+The bottle is empty.
+
+Bitter, bone-cracking cold assaults you continuously. The temperature and the blizzard conditions are both horrible.
+
+>x mass
+You see nothing special about it.
+
+>l
+Small Courtyard
+This courtyard is a triumph of modern architecture. It is spare, cold, angular, overwhelming in size, and bears a striking resemblance to a wind tunnel whenever the breeze picks up. Right now this is true of the whole campus, though. A huge mass lurks nearby, and an almost featureless skyscraper is to the north.
+
+>n
+You push your way into the welcoming warmth inside.
+
+Brown Building
+This is the lobby of the Brown Building, an eighteen-story skyscraper which houses the Meteorology Department and other outposts of the Earth Sciences. The elevator is out of order, but a long stairway leads up to the roof, and another leads down to the basement. A revolving door leads out into the night.
+
+>d
+Brown Basement
+This is a cluttered basement below the Brown Building. Discarded equipment nearly blocks an already narrow hallway that terminates in a stairway leading up. The passage itself continues northwest.
+
+>u
+Brown Building
+This is the lobby of the Brown Building, an eighteen-story skyscraper which houses the Meteorology Department and other outposts of the Earth Sciences. The elevator is out of order, but a long stairway leads up to the roof, and another leads down to the basement. A revolving door leads out into the night.
+
+>e
+You can’t go that way.
+
+>d
+Brown Basement
+This is a cluttered basement below the Brown Building. Discarded equipment nearly blocks an already narrow hallway that terminates in a stairway leading up. The passage itself continues northwest.
+
+>nw
+Cluttered Passage
+This cluttered passage leads southeast. It is full of apparently discarded electronic equipment, old rusty file cabinets, and other detritus. A stairway also leads up.
+
+>u
+Fruits and Nuts
+This is the central corridor of the Nutrition Building. The main building is south, and a stairway leads down.
+
+>s
+Infinite Corridor
+The so-called infinite corridor runs from east to west in the main campus building. This is the east end. The corridor branches north and south here.
+
+There is a largish machine down the hall to the west.
+
+>w
+Infinite Corridor
+The so-called infinite corridor runs from east to west in the main campus building. The corridor extends both ways from here. Many closed and locked offices are to the north and south.
+
+A disabled floor waxer looms nearby.
+
+There is a formerly glass-fronted emergency cabinet here.
+
+There is a padlock here.
+
+>w
+Infinite Corridor
+The so-called infinite corridor runs from east to west in the main campus building. The corridor extends both ways from here. A stairway leads up, and a door leads out to the Great Court.
+
+The floor here is covered with slippery, messy floor wax.
+
+There is a wall socket on one wall, and a heavy-duty power cord is plugged into it. The cord terminates in a severed stump.
+
+There is a fire axe here.
+
+There is a largish machine down the hall to the east.
+
+>take ax
+Taken.
+
+>up
+You slip and slide on the wax. It’s like walking on wet ice. You can barely keep upright, but you manage to lose your balance in just the right way to keep going.
+
+Great Dome
+Here a walkway circles the base of a huge ornate dome. Below is the Infinite Corridor. From stories of Tech Exploring trips, you recall that there is supposed to be a ladder here. On the other hand, there is a shiny rope-like thing hanging near where the ladder used to be, and leading upward.
+
+>x rope
+The strand is wet and glistening. It extends upward into the dome, leading to a narrow catwalk.
+
+>up
+There is no stairway.
+
+>climb rope
+The wet stuff on the strand sticks to the gloves, but doesn’t otherwise affect you. You have a little trouble climbing up to the catwalk, but grab the rail just before your strength gives out. You heave yourself up onto the catwalk.
+
+You stand up on the catwalk, catching your breath for a moment. Your eyes stray along the strand you climbed. It trails along the catwalk, where it joins something large and squishy squatting at the far side. A single, bright-blue eye opens in the squishy mass, and the tentacle (for that’s what it is) retracts. The mass almost flows through the spaces in the catwalk railing and drops to the floor fifteen feet below. Before you can react, it’s gone.
+
+Top of Dome
+Inside the great dome, near the top, a metal catwalk is precariously perched. There is no way further up, but a small metal door is set in the side of the dome.
+
+Where the pulpy mass was squatting, a wooden ladder lies on the catwalk.
+
+>lower ladder
+You lower the ladder to the walkway below. It’s just the right length to climb down.
+
+>open door
+You open the door, and freezing air, blowing snow, and howling wind enter and whip around you.
+
+>out
+You enter the freezing, biting cold of the blizzard.
+
+Roof of Great Dome
+You are perched precariously on the roof of the Great Dome. A set of narrow indentations in the dome provides a dangerous route to the very tip-top of the dome.
+
+>save
+Okay.
+
+>up
+You scramble up icy surface of the dome, almost slipping a few times, but finally you make it to the top.
+
+On the Great Dome
+This is the very top of the Great Dome, a favorite place for Tech fraternities to install cows, Volkswagen Beetles, giant birthday candles, and other bizarre objects. The top is flat, round, and about five feet in diameter. It’s very windy, which has kept the snow from accumulating here. The only way off is down.
+
+In the exact center of the flat area is a bronze plug.
+
+Bitter, bone-cracking cold assaults you continuously. The temperature and the blizzard conditions are both horrible.
+
+>x plug
+This is a cylindrical bronze plug about two inches in diameter. It is set in the center of the flat part of the dome.
+
+>take plug
+You pry the plug out of its socket, revealing a cylindrical hole about the same diameter but somewhat deeper. There is a piece of paper in the hole.
+
+>get paper
+Taken.
+
+You are feeling tired.
+
+>read it
+You unroll the piece of paper and read the shaky handwriting:
+
+“I can no longer face what I’ve been doing. I can’t sleep, I start at the slightest noise, and even dulling my senses with alcohol or drugs is no longer enough. I refuse to participate in what he is doing any more. Either he is insane, or I am insane, or (and this is what I fear most) the universe itself is insane. I have only one final warning: I am the only suicide, but I will not be the final death.”
+
+The name signed to it is that of the Alchemy Department graduate student.
+
+You can feel the cold worming its way through your layers of clothing and biting into your flesh.
+
+>d
+Roof of Great Dome
+You are perched precariously on the roof of the Great Dome. A set of narrow indentations in the dome provides a dangerous route to the very tip-top of the dome.
+
+>d
+You can’t go that way.
+
+>in
+You push your way into the welcoming warmth inside.
+
+Top of Dome
+Inside the great dome, near the top, a metal catwalk is precariously perched. There is no way further up, but a small metal door is set in the side of the dome. Frigid wind and snow blow through the open door.
+
+A wooden ladder leads down from here.
+
+>close door
+You close the door, shutting out the blizzard.
+
+>d
+You scramble down the ladder.
+
+Great Dome
+Here a walkway circles the base of a huge ornate dome. Below is the Infinite Corridor.
+
+A wooden ladder leads up from here.
+
+>d
+Infinite Corridor
+The so-called infinite corridor runs from east to west in the main campus building. The corridor extends both ways from here. A stairway leads up, and a door leads out to the Great Court.
+
+The floor here is covered with slippery, messy floor wax.
+
+There is a wall socket on one wall, and a heavy-duty power cord is plugged into it. The cord terminates in a severed stump.
+
+There is a largish machine down the hall to the east.
+
+>i
+You are carrying a piece of paper, a bronze plug, a fire axe, a plastic container, a knife, a crowbar, a master key, a two liter bottle of Classic Coke and a flashlight. You are wearing a pair of rubber boots and a pair of electrician’s gloves.
+
+>x plug
+This is a cylindrical bronze plug about two inches in diameter and one inch high.
+
+>e
+You slip and slide on the wax. It’s like walking on wet ice. You can barely keep upright, but you manage to lose your balance in just the right way to keep going.
+
+Infinite Corridor
+The so-called infinite corridor runs from east to west in the main campus building. The corridor extends both ways from here. Many closed and locked offices are to the north and south.
+
+A disabled floor waxer looms nearby.
+
+There is a formerly glass-fronted emergency cabinet here.
+
+There is a padlock here.
+
+>e
+Infinite Corridor
+The so-called infinite corridor runs from east to west in the main campus building. This is the east end. The corridor branches north and south here.
+
+There is a largish machine down the hall to the west.
+
+>e
+You can’t go that way.
+
+>s
+Chemistry Building
+This corridor is lined with closed, dark offices. At the south end of the corridor is a door with a light shining behind it. There is something written on the door.
+
+>s
+The Alchemy Department door is closed.
+
+>knock on door
+You knock on the door. The hollow sound reverberates down the hall. You sort of wish you had knocked more softly.
+
+>open door
+It’s locked.
+
+>knock softly
+I don’t know the word “softly.”
+
+>unlock door with key
+The key fits perfectly in the lock, but the lock doesn’t turn. The master key doesn’t work on this lock.
+
+The door opens partway, revealing a professorial man in a white lab coat. He smiles. “Back for another visit, are you?” He ushers you into the room without waiting for an answer, closing the door behind you.
+
+Department of Alchemy
+This office is clinically clean, shiny, and modern. It looks like something out of a science fiction movie. A closed door to the north leads back into the corridor and an archway opens to the south.
+
+Taped to the wall to the right of the archway is a sign-up sheet.
+
+The professor is here.
+
+>show note to professor
+He reads it carefully. “What drivel! This just confirms my suspicions. He had clearly gone over the edge. Drug use, drinking, insanity. It’s only too bad that I didn’t realize what was happening. I might have helped him.”
+
+The professor continues to gaze at you with a distinctly predatory air.
+
+>show assignment to professor
+You can’t see any assignment here.
+
+The professor continues to gaze at you with a distinctly predatory air.
+
+>s
+“Ah! You’d like to see the lab?” the professor asks in a rather unctuous tone. “Come right in!” He ushers you through the archway into the lab, following quickly behind you and turning on the lights.
+
+Lab
+The lab is an ultramodern, fully equipped chemistry lab. Unfortunately, or perhaps fortunately, you aren’t a chemistry major, so the equipment might as well be magical.
+
+The professor is here.
+
+There is a lab bench and an Alchemy Department computer here. Sitting on the lab bench is a vat. The vat contains a tarry liquid.
+
+The professor guides you to the center of the lab, where a strange pentagonal symbol is chalked on the floor. He cuts one of the chalk lines with a small knife you had not previously noticed, pushes you into the center of the chalked symbol, and redraws the line, muttering softly and rhythmically as he does so. “There, that’s done. Don’t move from there, it’ll only make things worse for you.” He makes some odd gestures at the archway and then goes over to the lab bench.
+
+>save
+Okay.
+
+>cut chalk line with knife
+You cut the outer lines of the pentagram. It no longer completely encloses you. The professor sees what you’ve done out of the corner of his eye. He quickly slides over and redraws the pentagram. This time he performs a thorough search, removing all your possessions, tut-tutting all the while.
+
+The professor is preparing something at the lab bench. “Alchemy is my chosen field, and I’ve gotten ridiculed for it. It’s like chemistry, except that chemists don’t recognize that some natural laws are enforced by persons, not physics. Some of them will grant power, or knowledge, but they must be placated, or even bribed. They’re not of this earth, not demons or devils, and they aren’t always friendly. To me it’s just an unpleasant necessity on the path to power. When I’m done, they won’t laugh anymore!”
+
+>i
+You are empty-handed.
+
+The professor enters another pentagram, and begins a highly choreographed ritual. “This may seem a little silly to you, but the symbology is what’s important. Certain alignments, certain aspects. In a few moments, it won’t matter anyway,” he remarks. “There is very little room for error here, so be calm.” He chants, he brandishes strange instruments, moves about inside the pentagram, and occasionally points to you. It becomes clear exactly what he meant by the word “bribe.”
+
+>exit pentagram
+Your feet approach the chalk line, and then stop. You can’t push your way out.
+
+The chant grows more complex, with rhythms and cadences that make you want to stop your ears. The room appears to be getting darker.
+
+>yell
+The scream echoes back to you, subtly changed.
+
+A thick black mist begins to form in the room. Parts are darker, and parts lighter, and the dark parts form a disturbing shape. The professor chants and calls more loudly now, and you realize the calls are being answered.
+
+>x lab
+You see nothing special about the laboratory.
+
+The room is now freezing cold, though the windows are shuttered and tightly curtained. Low, bone-rattling vibrations shake the room in cadence with the chant. The black mist is growing thicker. The professor chants more rapidly, producing strange guttural sounds, scarcely human.
+
+You are getting more and more tired.
+
+>sleep
+You’ve been up for a long time, and it was turning into an all-nighter. You can use the rest. You stretch out as best you can. You toss and turn fitfully, sleeping only in snatches.
+
+You dream of standing on the roof of the Brown Building, looking down at the ground. You lose your balance…
+
+Your dream ends, and another begins. Something clawed and fanged grabs you, and you try to wake, but you already are!
+
+    **** You have died ****
+
+At first, you think “Maybe it was all just a bad dream,” but no such luck. It appears to be for real. That’s too bad, although something gnawing on your toes thinks it’s pretty wonderful, or at least fairly tasty.
+
+Your score is 50 of a possible 100, in 475 moves. Graded on the curve, you are in the class of Post-doc Student.
+
+Would you like to restart the game from the beginning, restore a saved game position, or end this session of the game?
+(Type RESTART, RESTORE, or QUIT):
+>restore
+Failed.
+(Type RESTART, RESTORE, or QUIT):
+>restore
+Okay.
+
+>wait
+Time passes…
+
+The professor is preparing something at the lab bench. “Alchemy is my chosen field, and I’ve gotten ridiculed for it. It’s like chemistry, except that chemists don’t recognize that some natural laws are enforced by persons, not physics. Some of them will grant power, or knowledge, but they must be placated, or even bribed. They’re not of this earth, not demons or devils, and they aren’t always friendly. To me it’s just an unpleasant necessity on the path to power. When I’m done, they won’t laugh anymore!”
+
+>i
+You are carrying a bronze plug, a fire axe, a plastic container, a knife, a crowbar, a master key, a two liter bottle of Classic Coke and a flashlight. You are wearing a pair of rubber boots and a pair of electrician’s gloves.
+
+The professor enters another pentagram, and begins a highly choreographed ritual. “This may seem a little silly to you, but the symbology is what’s important. Certain alignments, certain aspects. In a few moments, it won’t matter anyway,” he remarks. “There is very little room for error here, so be calm.” He chants, he brandishes strange instruments, moves about inside the pentagram, and occasionally points to you. It becomes clear exactly what he meant by the word “bribe.”
+
+>cut pentagram with knife
+You cut the outer lines of the pentagram. It no longer completely encloses you. The professor sees what you’ve done out of the corner of his eye. He stares, horrified. “Stop, don’t move!” he says between verses of the chant. The chant takes on a pleading tone.
+
+The chant grows more complex, the professor having difficulty with the almost unpronounceable words, with rhythms and cadences that make you want to stop your ears. The room appears to be getting darker.
+
+>exit pentagram
+You push your way through a soft spot just over the scuff marks, and are outside the pentagram. The air is thick and close.
+
+A thick black mist begins to form in the room. Parts are darker, and parts lighter, and the dark parts form a disturbing shape. The professor chants and calls more loudly now, clearly terrified of what may happen, and you realize the calls are being answered.
+
+>save
+Okay.
+
+>wait
+Time passes…
+
+The room is now freezing cold, though the windows are shuttered and tightly curtained. Low, bone-rattling vibrations shake the room in cadence with the chant. The black mist is growing thicker. The professor is alternately looking at you and at the mist.
+
+You are getting more and more tired.
+
+>g
+Time passes…
+
+The black mist swirls wildly around the room, and a deep bass voice gibbers out of thin air. “No!” screams the professor, and jumps toward you out of his own pentagram. He realizes what he has done, and tries to reenter, but the mist grabs at him.
+
+>w
+You can’t go that way.
+
+A thing like a tentacle with a demonic face wraps slowly around you. The room recedes into a great distance as you are pulled away. Before you die, you see what the tentacle is a part of.
+
+    **** You have died ****
+
+At first, you think “Maybe it was all just a bad dream,” but no such luck. It appears to be for real. That’s too bad, although something gnawing on your fingertips thinks it’s pretty wonderful, or at least fairly tasty.
+
+Your score is 50 of a possible 100, in 476 moves. Graded on the curve, you are in the class of Post-doc Student.
+
+Would you like to restart the game from the beginning, restore a saved game position, or end this session of the game?
+(Type RESTART, RESTORE, or QUIT):
+>restore
+Okay.
+
+>wait
+Time passes…
+
+The room is now freezing cold, though the windows are shuttered and tightly curtained. Low, bone-rattling vibrations shake the room in cadence with the chant. The black mist is growing thicker. The professor is alternately looking at you and at the mist.
+
+You are getting more and more tired.
+
+>exit pentagram
+Not likely!
+
+The black mist swirls wildly around the room, and a deep bass voice gibbers out of thin air. “No!” screams the professor, and jumps toward you out of his own pentagram. He realizes what he has done, and tries to reenter, but the mist grabs at him.
+
+>enter pentagram
+You get into the pentagram, being careful not to further scuff the chalk.
+
+A thing like a tentacle with a demonic face wraps slowly around you. The room recedes into a great distance as you are pulled away. Before you die, you see what the tentacle is a part of.
+
+    **** You have died ****
+
+At first, you think “Maybe it was all just a bad dream,” but no such luck. It appears to be for real. That’s too bad, although something gnawing on your toes thinks it’s pretty wonderful, or at least fairly tasty.
+
+Your score is 50 of a possible 100, in 476 moves. Graded on the curve, you are in the class of Post-doc Student.
+
+Would you like to restart the game from the beginning, restore a saved game position, or end this session of the game?
+(Type RESTART, RESTORE, or QUIT):
+>restore
+Okay.
+
+>n
+You find the archway barred by a force you can’t push through.
+
+The room is now freezing cold, though the windows are shuttered and tightly curtained. Low, bone-rattling vibrations shake the room in cadence with the chant. The black mist is growing thicker. The professor is alternately looking at you and at the mist.
+
+You are getting more and more tired.
+
+>n
+You find the archway barred by a force you can’t push through.
+
+The black mist swirls wildly around the room, and a deep bass voice gibbers out of thin air. “No!” screams the professor, and jumps toward you out of his own pentagram. He realizes what he has done, and tries to reenter, but the mist grabs at him.
+
+>x bench
+The bench is a chemistry lab bench. It has a marble top, and casters at each corner. Various equipment litters the bench, none of which you recognize, but the lab bench also contains a vat.
+
+A thing like a tentacle with a demonic face wraps slowly around you. The room recedes into a great distance as you are pulled away. Before you die, you see what the tentacle is a part of.
+
+    **** You have died ****
+
+At first, you think “Maybe it was all just a bad dream,” but no such luck. It appears to be for real. That’s too bad, although something gnawing on your tongue thinks it’s pretty wonderful, or at least fairly tasty.
+
+Your score is 50 of a possible 100, in 476 moves. Graded on the curve, you are in the class of Post-doc Student.
+
+Would you like to restart the game from the beginning, restore a saved game position, or end this session of the game?
+(Type RESTART, RESTORE, or QUIT):
+>restore
+Okay.
+
+>x vat
+This is a large (a couple of liters, at least) glass or pyrex vat. It has a label stuck to it. The vat contains a tarry liquid.
+
+The room is now freezing cold, though the windows are shuttered and tightly curtained. Low, bone-rattling vibrations shake the room in cadence with the chant. The black mist is growing thicker. The professor is alternately looking at you and at the mist.
+
+You are getting more and more tired.
+
+>read label
+Which label do you mean, the vat or the plastic container?
+
+>vat
+The text is a long chemical-sounding name typed on a label affixed to the container. Below is written in pencil “Elixir of Life.”
+
+The black mist swirls wildly around the room, and a deep bass voice gibbers out of thin air. “No!” screams the professor, and jumps toward you out of his own pentagram. He realizes what he has done, and tries to reenter, but the mist grabs at him.
+
+>drink liquid
+It would be like drinking road tar.
+
+A thing like a tentacle with a demonic face wraps slowly around you. The room recedes into a great distance as you are pulled away. Before you die, you see what the tentacle is a part of.
+
+    **** You have died ****
+
+At first, you think “Maybe it was all just a bad dream,” but no such luck. It appears to be for real. That’s too bad, although something gnawing on your ears thinks it’s pretty wonderful, or at least fairly tasty.
+
+Your score is 50 of a possible 100, in 476 moves. Graded on the curve, you are in the class of Post-doc Student.
+
+Would you like to restart the game from the beginning, restore a saved game position, or end this session of the game?
+(Type RESTART, RESTORE, or QUIT):
+>restore
+Okay.
+
+>wait
+Time passes…
+
+The room is now freezing cold, though the windows are shuttered and tightly curtained. Low, bone-rattling vibrations shake the room in cadence with the chant. The black mist is growing thicker. The professor is alternately looking at you and at the mist.
+
+You are getting more and more tired.
+
+>wait
+Time passes…
+
+The black mist swirls wildly around the room, and a deep bass voice gibbers out of thin air. “No!” screams the professor, and jumps toward you out of his own pentagram. He realizes what he has done, and tries to reenter, but the mist grabs at him.
+
+>enter professor’s pentagram
+That sentence isn’t one I recognize.
+
+>enter his pentagram
+I don’t know the word “his.”
+
+>push bench
+It’s heavy, but it moves, revealing a hinged metal trapdoor beneath.
+
+A thing like a tentacle with a demonic face wraps slowly around you. The room recedes into a great distance as you are pulled away. Before you die, you see what the tentacle is a part of.
+
+    **** You have died ****
+
+At first, you think “Maybe it was all just a bad dream,” but no such luck. It appears to be for real. That’s too bad, although something gnawing on your ears thinks it’s pretty wonderful, or at least fairly tasty.
+
+Your score is 50 of a possible 100, in 476 moves. Graded on the curve, you are in the class of Post-doc Student.
+
+Would you like to restart the game from the beginning, restore a saved game position, or end this session of the game?
+(Type RESTART, RESTORE, or QUIT):
+>restore
+Okay.
+
+>push bench
+It’s heavy, but it moves, revealing a hinged metal trapdoor beneath.
+
+The room is now freezing cold, though the windows are shuttered and tightly curtained. Low, bone-rattling vibrations shake the room in cadence with the chant. The black mist is growing thicker. The professor is alternately looking at you and at the mist.
+
+You are getting more and more tired.
+
+>open trapdoor
+It swings open easily.
+
+The black mist swirls wildly around the room, and a deep bass voice gibbers out of thin air. “No!” screams the professor, and jumps toward you out of his own pentagram. He realizes what he has done, and tries to reenter, but the mist grabs at him.
+
+>d
+Cinderblock Tunnel
+This is a tunnel whose walls are cinderblock, with a concrete floor and ceiling. A metal ladder leads up to an open metal plate in the ceiling, and the tunnel continues north, where the cinderblock walls become brick.
+
+From above, you hear a thunderous noise, a maniacal scream, and then the sound of equipment smashing. The trapdoor slams shut, but around it pours a blinding flash of light. Finally you hear an almost inaudible whimper, then nothing. The light fades, leaving you in the dark.
+
+>save
+Okay.
+
+>turn on light
+The flashlight clicks on.
+
+Cinderblock Tunnel
+This is a tunnel whose walls are cinderblock, with a concrete floor and ceiling. A metal ladder leads up to a closed metal plate in the ceiling, and the tunnel continues north, where the cinderblock walls become brick.
+
+>up
+The trapdoor isn’t open.
+
+>open trapdoor
+It pushes open easily.
+
+>up
+Lab
+The lab is a shambles. It looks like something red and sticky has been spread over the walls, ceiling, and floor. Much of the equipment, particularly that near the center of the room, has been destroyed. There is an open metal plate in the floor.
+
+There is a brass hyrax, a smooth stone, a piece of paper, a lab bench and an Alchemy Department computer here. Sitting on the lab bench is a vat. The vat contains a tarry liquid.
+
+>take all
+brass hyrax: You’re holding too many things and can’t quite get them all arranged to take it as well.
+smooth stone: You’re holding too many things and can’t quite get them all arranged to take it as well.
+piece of paper: You’re holding too many things and can’t quite get them all arranged to take it as well.
+vat: You’re holding too many things and can’t quite get them all arranged to take it as well.
+tarry liquid: You can’t take it, it’s a liquid.
+
+>wear hyrax
+You aren’t holding the brass hyrax.
+
+>take it
+You’re holding too many things and can’t quite get them all arranged to take it as well.
+
+>i
+You are carrying a bronze plug, a fire axe, a plastic container, a knife, a crowbar, a master key, a two liter bottle of Classic Coke and a flashlight (providing light). You are wearing a pair of rubber boots and a pair of electrician’s gloves.
+
+>drop plug
+Dropped.
+
+>take hyrax
+You’re holding too many things and can’t quite get them all arranged to take it as well.
+
+>drop bottle
+Dropped.
+
+>take hyrax
+Taken.
+
+>wear it
+The brass hyrax won’t go on over the gloves.
+
+>take off gloves. wear hyrax. put on gloves.
+You’re no longer wearing the pair of electrician’s gloves.
+
+It fits surprisingly well.
+
+You put on the gloves. They’re a little big, but not really such a bad fit at all.
+
+>take stone
+Taken.
+
+>l
+Lab
+The lab is a shambles. It looks like something red and sticky has been spread over the walls, ceiling, and floor. Much of the equipment, particularly that near the center of the room, has been destroyed. There is an open metal plate in the floor.
+
+There is a two liter bottle of Classic Coke, a bronze plug, a piece of paper, a lab bench and an Alchemy Department computer here. Sitting on the lab bench is a vat. The vat contains a tarry liquid.
+
+>turn on computer
+You turn the machine on, it performs a quick self-check, and then displays a message on the screen: “Unable to boot because: No disk inserted. Please insert a dismountable disk.”
+
+>l
+Lab
+The lab is a shambles. It looks like something red and sticky has been spread over the walls, ceiling, and floor. Much of the equipment, particularly that near the center of the room, has been destroyed. There is an open metal plate in the floor.
+
+There is a two liter bottle of Classic Coke, a bronze plug, a piece of paper, a lab bench and an Alchemy Department computer here. Sitting on the lab bench is a vat. The vat contains a tarry liquid.
+
+>n
+Department of Alchemy
+This office is clinically clean, shiny, and modern. It looks like something out of a science fiction movie. A closed door to the north leads back into the corridor and an archway opens to the south.
+
+Taped to the wall to the right of the archway is a sign-up sheet.
+
+>n
+The Alchemy Department door is closed.
+
+>open door
+Okay, the Alchemy Department door is now open.
+
+>
+
+Designed very hastily with WordPress
