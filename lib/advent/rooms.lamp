@@ -1,6 +1,7 @@
-
+function void describe_room(room r):
+	print r
+	print
+	print r.description
 
 on person.holder change:
-	print player.holder
-	print
-	print player.holder.description
+	describe_room(player.holder)

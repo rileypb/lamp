@@ -18,7 +18,8 @@ type box < item, container:
 	bool closable
 	bool closed
 
-type person < physical
+type person < physical:
+	container holder
 
 type direction:
 	direction inverse

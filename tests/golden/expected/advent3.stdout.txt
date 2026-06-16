@@ -1,6 +1,8 @@
 West of House
 
 You are west of a white house.
+West of House
+
 You are west of a white house.
 Taken.
 You're already carrying that.
