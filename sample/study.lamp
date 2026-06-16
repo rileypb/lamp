@@ -1,0 +1,325 @@
+# ============================================================================
+# Sample: rulebooks, actions, reasons, and relations  --  "The Locked Study"
+#
+# A single worked mini-game that exercises the rulebook machinery end to end:
+# a general rulebook invoked with `follow`, the built-in action rulebook with
+# all six bands, typed failure reasons with a `report failed` band, and two
+# relations (one spatial, one not) driving the action logic.
+#
+# STATUS. Bands before/instead/check/do/after/report, `when` guards,
+# `stop succeeded`/`stop failed`, `try`, general `rulebook`/`follow`, and
+# relations are IMPLEMENTED. Failure reasons (`stop failed REASON`, the implicit
+# `reason` slot) and the `report failed` band are PROPOSED -- see
+# devdocs/rulebooks.md, "Failure reasons and the `report failed` band". Sections
+# using the proposed surface are flagged inline; the file as a whole will not
+# compile until that surface lands.
+#
+# Authoritative grammar: devdocs/specs.md. Rulebook model: devdocs/rulebooks.md.
+# Relations: devdocs/relations.md.
+# ============================================================================
+
+
+# ----------------------------------------------------------------------------
+# 1. The world
+#
+# Self-contained (no `lib`), so every type is visible. Two rooms, a locked door,
+# a key, and a heavy statue to refuse. `actor` is supplied implicitly and
+# defaults to the player (rulebooks.md roadmap, "Next"); rules below use
+# `self.actor`.
+# ----------------------------------------------------------------------------
+
+game Locked_Study:
+    author "Sample Author"
+    version 1
+    release dev
+    start foyer
+
+type room:
+    string description
+
+type direction:
+    direction inverse
+
+type person:
+    room holder
+
+type item:
+    bool scenery
+    bool heavy
+    room holder
+
+type key < item
+type door < item:
+    bool locked
+
+room foyer:
+    description "A bare foyer. A door leads north to the study."
+room study:
+    description "The study, walls lined with books."
+
+direction north:
+    inverse south
+direction south:
+    inverse north
+
+person player:
+    holder foyer
+
+key brass_key:
+    holder foyer
+
+door oak_door:
+    locked true
+    holder foyer
+
+item statue:
+    scenery true
+    heavy true
+    holder foyer
+
+
+# ----------------------------------------------------------------------------
+# 2. Relations
+#
+# Two relations carry world structure. Stating a relation as a bare line ASSERTS
+# an instance; the same head with `_`/`?` QUERIES it.
+#
+# Spatial -- `connects` (bidirectional, inverted). `dir` is tagged `inverted`,
+# so one `bidi` assertion also yields the reverse edge via each direction's
+# `inverse`.
+# ----------------------------------------------------------------------------
+
+relation connects:
+    room source
+    direction dir inverted
+    room target
+    syntax "connects [source] [dir] to [target]"
+
+bidi connects foyer north to study
+
+# Query forms (illustrative -- see devdocs/relations.md):
+#   connects foyer north to study      # assert / true-test
+#   connects foyer _ to _              # "does foyer have any exit?" (wildcards)
+#   connects foyer north to ?first     # bind the target: yields study
+#   connects study south to foyer      # the auto-derived reverse edge
+
+# Non-spatial -- `unlocks` pairs a key with the door it opens; the `unlock`
+# action consults it. Relations are not just maps.
+
+relation unlocks:
+    key the_key
+    door the_door
+    syntax "unlocks [the_key] [the_door]"
+
+unlocks brass_key oak_door
+
+
+# ----------------------------------------------------------------------------
+# 3. A general rulebook (`rulebook` + `follow`)
+#
+# A standalone decision pipeline: typed result, ordered guarded rules, a
+# `default`, short-circuit via `stop EXPR`. `take` calls it with `follow` so the
+# "is this liftable?" policy lives in one overridable place, not inline.
+#   follow liftable(statue)    -> false
+#   follow liftable(brass_key) -> true
+# ----------------------------------------------------------------------------
+
+rulebook bool liftable(item i):
+    default true
+    when i.scenery:
+        stop false
+    when i.heavy:
+        stop false
+
+
+# ----------------------------------------------------------------------------
+# 4. Failure reasons  (PROPOSED)
+#
+# Reasons are an open `type` (extensible across files, like `direction`), not a
+# closed `enum` -- a game can add its own without reopening anything.
+# ----------------------------------------------------------------------------
+
+type stop_reason
+stop_reason cant_lift
+stop_reason already_held
+stop_reason door_locked
+stop_reason no_such_exit
+
+
+# ----------------------------------------------------------------------------
+# 5. The action rulebook -- all six bands
+#
+# `before` runs setup, `instead` replaces behaviour for a special case, `check`
+# validates (now NAMING a reason instead of printing -- PROPOSED), `do` performs
+# the change, `after` reacts, `report` prints success. Outcome is uniform: any
+# `stop failed`/`stop succeeded` ends the whole action.
+# ----------------------------------------------------------------------------
+
+action take:
+    item taken
+    syntax:
+        "take [taken]"
+        "get [taken]"
+
+before take:
+    print "(reaching out...)"
+
+instead take when self.taken == oak_door:
+    print "The door stays where it is."
+    stop failed
+
+# check rules raise typed reasons instead of printing  (PROPOSED)
+check take:
+    if self.taken.holder == self.actor:
+        stop failed already_held
+
+check take when not follow liftable(self.taken):
+    stop failed cant_lift
+
+do take:
+    self.taken.holder = self.actor
+
+after take:
+    print "(a faint click as it leaves the shelf)"
+
+report take:
+    print "Taken."
+
+# Rendering failures -- the `report failed` band  (PROPOSED). One place that
+# turns each reason into text. Condition (in `check`) and message (here) are now
+# separate, so either can be overridden alone.
+report failed take:
+    if self.reason == already_held:
+        print "You're already carrying that."
+        stop
+    if self.reason == cant_lift:
+        print "That's not something you can pick up."
+        stop
+
+
+# ----------------------------------------------------------------------------
+# 6. A second action using a relation -- `unlock`; and `go` consulting both
+# ----------------------------------------------------------------------------
+
+action unlock:
+    door target
+    key with
+    syntax:
+        "unlock [target] with [with]"
+
+check unlock:
+    if not self.target.locked:
+        stop failed door_locked
+check unlock when not unlocks self.with self.target:
+    print "That key doesn't fit."   # inline print still fine where no reuse is wanted
+    stop failed
+
+do unlock:
+    self.target.locked = false
+
+report unlock:
+    print "The lock turns and the door swings open."
+
+action go:
+    direction way
+    syntax "go [way]"
+
+check go when not connects self.actor.holder self.way to _:
+    stop failed no_such_exit
+
+check go:
+    if oak_door.locked and self.way == north:
+        print "The study door is locked."
+        stop failed
+
+do go:
+    self.actor.holder = connects self.actor.holder self.way to ?first
+
+
+# ----------------------------------------------------------------------------
+# 7. Author overrides -- why the split pays off  (PROPOSED, illustrative)
+#
+# A downstream game retheming JUST the refusal text adds its own
+# `report failed take`; it runs BEFORE the library's, prints, and stops -- the
+# `check` conditions are never restated:
+#
+#   report failed take:
+#       if self.reason == cant_lift:
+#           print "Your fingers won't budge it."
+#           stop
+#       # every other reason falls through to the library default
+#
+# Because a band is a RULE, not data, the override can be CONTEXT-DEPENDENT --
+# impossible with a global message variable:
+#
+#   report failed take:
+#       if self.reason == cant_lift and self.taken == statue:
+#           print "The statue is bolted to the floor."
+#           stop
+#
+# A game may invent a brand-new reason without touching the library, since
+# `stop_reason` is an open type:
+#
+#   stop_reason too_holy
+#   check take when self.taken == relic:
+#       stop failed too_holy
+#   report failed take:
+#       if self.reason == too_holy:
+#           print "You dare not lay hands on the relic."
+#           stop
+# ----------------------------------------------------------------------------
+
+
+# ----------------------------------------------------------------------------
+# 8. Driving it -- `try`
+#
+# `try ACTION:` builds an action instance, assigns its slots, runs the rulebook.
+#
+# Expected transcript:
+#   A bare foyer. A door leads north to the study.
+#   (reaching out...)
+#   That's not something you can pick up.
+#   (reaching out...)
+#   Taken.
+#   (a faint click as it leaves the shelf)
+#   The lock turns and the door swings open.
+#   The study, walls lined with books.
+# ----------------------------------------------------------------------------
+
+on startup:
+    print foyer.description
+
+    try take:
+        taken statue        # check raises cant_lift -> report failed prints
+    try take:
+        taken brass_key     # succeeds: before, do, after, report
+
+    try unlock:
+        target oak_door
+        with brass_key      # unlocks relation matches -> opens
+
+    try go:
+        way north           # exit exists and door now unlocked -> moves
+    print study.description
+
+
+# ----------------------------------------------------------------------------
+# What this demonstrates
+#   General rulebook, default, guarded rules, `stop EXPR`, `follow`  (sec 3) -- implemented
+#   Action bands before/instead/check/do/after/report             (sec 5) -- implemented
+#   `when` guards, stop succeeded/failed, uniform outcome          (sec 5-6) -- implemented
+#   `try` building instances                                       (sec 8) -- implemented
+#   Spatial relation: bidi, inverted, wildcard/bind queries        (sec 2) -- implemented
+#   Non-spatial relation driving action logic                      (sec 2,6) -- implemented
+#   Open-`type` failure reasons (`stop failed REASON`)             (sec 4-6) -- PROPOSED
+#   `report failed` band; static + context-dependent override      (sec 5,7) -- PROPOSED
+#   Author-defined reason without library edits                    (sec 7) -- PROPOSED
+#
+# Notes & caveats
+#   - Reason names are bare globals (open-type values), so two reasons cannot
+#     share a name across actions -- the namespacing limitation tracked in
+#     devdocs/rulebooks.md, Open questions; not a property of this example.
+#   - Inline `print` + `stop failed` still works (see `unlock`) wherever a
+#     one-off message needs no reuse; reasons are for the STANDARD responses a
+#     library wants to keep overridable.
+# ----------------------------------------------------------------------------

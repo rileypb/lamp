@@ -5,29 +5,28 @@ Top recommended next steps, roughly in priority order. Each item notes *why*,
 prerequisite lists in `devdocs/game_parser.md`, `devdocs/rulebooks.md`, and
 `devdocs/relations.md`.
 
-## 1. Parser v1 — vocabulary model & resolution depth
-Design is settled (see `devdocs/game_parser.md`, Vocabulary model). Implement:
-- Add `thing` base type to `lib/advent/types.lamp`; move `direction < thing`;
-  add `printed name`, `understand` fields on `thing`; add `article` enum and
-  field on `physical`.
-- Build vocabulary index in native JS: on startup, register each object's
-  identifier tokens + `understand` tokens; expose `objects_for_tokens(tokens)`
-  to the resolver.
-- Update `resolveNoun` in `src/lamplighter/index.js`: strip articles, token-bag
-  match against vocabulary index, return candidates (not first-match).
-- Disambiguation prompt when >1 candidate ("Which do you mean, the X or the Y?")
-- Richer failure messages ("You can't see any such thing.").
-- **Supporting prereq:** string helpers (`to_lower`, `split`) — use existing
-  `split()` from `lib/sys/`; add `to_lower` as a native helper.
+## 1. Overridable standard responses — failure reasons & `report failed`
+Design settled and written up in `devdocs/rulebooks.md` (*Failure reasons and the
+`report failed` band*). Rejected message-table/global-variable approaches (can't
+express context; map loses compile-time key checking). Instead: `check` names a
+typed reason and stops; a `report failed` band renders text; both success and
+failure text live in overridable rules — no globals. Implement in sequence:
+1. **Parser + checker** (`src/lantern/`): `stop failed REASON` (optional reason
+   arg); `report failed ACTION` band; implicit `stop_reason reason` slot on
+   action instances.
+2. **Runtime driver** (`src/lamplighter/index.js`): on failed outcome, set
+   `self.reason` and dispatch the `report failed` band; success keeps `report`.
+3. **Library** (`lib/advent/`): add `stop_reason` as an open `type` + instances
+   (extensible, like `direction`); convert `check` rules to raise reasons; add
+   `report failed` rules with default text. *(lib/ edit.)*
+4. **Tests:** golden fixture overriding a failure message + one context-dependent
+   failure; regenerate expected output. Cross-check against the worked
+   transcript in `sample/study.lamp` (section 8) and unflag its PROPOSED
+   sections once the surface compiles.
+- **Open (deferred):** namespaced reasons (`stop_reason.cant_take`); what
+  `report failed` prints for an unset reason.
 
-## 2. Centralize standard responses (overridable messages)
-Action responses ("Taken.", "You can't go that way.") are hardcoded string
-literals in `do`/`report`/`check` rules. The whole point of the `report`/`check`
-split is override-without-edit; a responses indirection (e.g. a small rulebook
-or a message table) makes a game retheme output without touching world logic.
-- **Where:** `lib/advent/actions.lamp`; possibly a new `responses` rulebook.
-
-## 3. Parser v2 — every-turn & timed rules
+## 2. Parser v2 — every-turn & timed rules
 Action-rulebook bands are implemented; what remains for v2 is a turn clock:
 every-turn rules and timed/scheduled events, plus out-of-world actions
 (`save`/`undo`/`again` — currently out of scope).

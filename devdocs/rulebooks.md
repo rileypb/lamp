@@ -118,6 +118,13 @@ Optional sugar `refuse "..."` may expand to exactly `print "..."` + `stop
 failed`, but the primitive stays clean — `stop` never carries a string-as-message
 (the overloading this design exists to avoid).
 
+> **Planned refinement.** Printing refusal text *inside* the deciding rule glues
+> the condition to the message, so retheming the message means restating the
+> condition. The *Failure reasons and the `report failed` band* section below
+> separates the two — `check` names a typed reason, a reporting band renders it —
+> without weakening this principle: a reason is a typed value, not a string on
+> `stop`.
+
 ### Applicability via `when`, not specificity
 
 A rule may carry a `when` guard; it is applicable only when the guard is true.
@@ -222,7 +229,10 @@ ambiguity flagged in design discussion. The whole action is *one* rulebook; the
 bands are organisational, not separate stop-scopes:
 
 - Any rule's `stop failed` ends the entire action with `failed`; nothing further
-  runs. The failing rule is responsible for having printed the reason.
+  runs. The failing rule is responsible for having printed the reason. (Under the
+  planned reason model — see *Failure reasons and the `report failed` band* — the
+  failing rule instead *names* a typed reason and a `report failed` band prints
+  it.)
 - Any rule's `stop succeeded` ends the entire action with `succeeded`, skipping
   all later bands (including `report`) — used by an `instead` rule that has fully
   handled and reported the case itself.
@@ -272,6 +282,172 @@ report never run; action outcome `failed`.
 through) → `do` moves the lamp (falls through) → `report` prints "Taken." →
 pipeline ends, outcome `succeeded`.
 
+## Failure reasons and the `report failed` band
+
+> Status: proposed (Next). Refines how refusal *text* is produced without
+> changing the outcome model. The action bands described above are implemented;
+> this section specifies the planned evolution of the `check`/refusal path.
+
+### Problem
+
+In the implemented model a `check` rule both *decides* a refusal and *prints* its
+text inline:
+
+```lamp
+check take:
+    if self.taken.scenery:
+        print "That's not something you can take."
+        stop failed
+```
+
+Condition and message are glued together. An author who wants to retheme only the
+message must restate the condition in a higher-priority `check` rule — duplicated
+logic that drifts out of sync with the library. Routing refusal text through
+overridable rules (the point of the band system) requires separating the two.
+
+Note this is a refusal-text problem specifically. *Context-dependent* responses —
+text that varies by object, actor, or world state — are already handled by the
+rulebook itself: an author adds a higher-priority rule that computes the text and
+stops. The mechanism below is for the **standard, condition-keyed** refusal text
+the library ships, so that it too becomes overridable without duplicating the
+condition. Modelling such text as overridable *data* (global message variables or
+a string-keyed map) was rejected: it cannot express context-dependence and pushes
+authors toward mutating globals before each print — and a string-keyed map also
+sacrifices the compile-time key checking enums give.
+
+### Design: typed reasons, text in a reporting band
+
+Split the two axes the way the rest of the model already splits continuation from
+result:
+
+- A `check` rule names *why* it refused — a typed **reason** — and stops. It
+  prints nothing.
+- A dedicated **`report failed` band** renders the reason to text. It is the
+  failure-path mirror of `report`, overridable exactly like any other rule.
+
+This stays faithful to **"messages are not outcomes"**: `stop` still carries only
+the `outcome` value; the reason is a separate typed value, not a string on
+`stop`. Text is still merely printed — it has only moved from the deciding rule
+to a reporting rule.
+
+#### Reasons are an open `type`, not a closed `enum`
+
+Lamp names a fixed set of values two ways (`lib/sys/kinds.lamp`): a **closed**
+`kind X = enum(a, b, c)` (exhaustive, instantiated as labels — e.g. `outcome`),
+and an **open** `type X` with bare instance declarations (extensible — e.g.
+`article`, `direction`). Reasons use the **open** form:
+
+```lamp
+type stop_reason
+stop_reason already_held
+stop_reason cant_take
+stop_reason not_held
+stop_reason cant_go
+```
+
+Extensibility is the deciding factor. A game routinely refuses an action for a
+reason the library never anticipated; with an open type the game declares another
+value in its own file — `stop_reason too_heavy` — and uses it in its own
+`check`/`report failed` rules, with no change to the library. A closed `enum`
+would have to be *reopened* to add a member, which Lamp does not support (and
+which would muddy exhaustiveness elsewhere). `outcome` stays a closed enum
+precisely because it must never grow a third case; reasons are the opposite.
+
+This still gives compile-time checking: `stop failed cant_taek` fails to resolve
+the value, exactly as a misspelled enum label would. The cost is that reason
+values are bare globals — two reasons cannot share a name — the same namespacing
+limitation `article`/`direction` already have; see Open questions.
+
+#### `stop failed REASON` threads the reason via a slot
+
+Each action instance gains an implicit `stop_reason reason` slot (alongside the
+implicit `actor` slot). `stop failed REASON` is sugar for
+
+```
+self.reason = REASON
+stop failed
+```
+
+so `stop`'s value type stays `outcome` — the reason rides on the action instance,
+not on `stop`. With no reason given, `stop failed` leaves `reason` unset (a
+generic refusal that `report failed` can render with a catch-all).
+
+#### The driver dispatches reporting by outcome
+
+The six-band pipeline runs as today and yields an `outcome`. Reporting is then
+dispatched on that outcome:
+
+- `succeeded` → the `report` band (as today, in-pipeline).
+- `failed` → the new `report failed` band, with `self.reason` available.
+
+For success the `report` band still runs in-pipeline as the implemented model
+describes; `report failed` runs as a post-outcome pass because `stop failed` ends
+the pipeline immediately. That asymmetry is an implementation detail of the
+driver, not of the authoring surface — an author writes two mirror bands.
+
+### Worked example
+
+Library:
+
+```lamp
+type stop_reason
+stop_reason already_held
+stop_reason cant_take
+
+check take:
+    if self.taken.holder == self.actor:
+        stop failed already_held
+
+check take:
+    if self.taken.scenery:
+        stop failed cant_take
+
+do take:
+    self.taken.holder = self.actor
+
+report take:
+    print "Taken."
+
+report failed take:
+    if self.reason == already_held:
+        print "You're already carrying that."
+        stop
+    if self.reason == cant_take:
+        print "That's not something you can take."
+        stop
+```
+
+Author retheme of one failure — no condition restated, no global mutated:
+
+```lamp
+report failed take:
+    if self.reason == cant_take:
+        print "Your hands pass right through it."
+        stop
+    # other reasons fall through to the library default
+```
+
+Context-dependent failure — expressible because the band is a rule, not data:
+
+```lamp
+report failed take:
+    if self.reason == cant_take and self.taken == sun:
+        print "The sun is rather too far away to pick up."
+        stop
+```
+
+Both compose through ordinary band ordering: author rules run before library
+rules; the first `stop` wins; otherwise control falls through to the library
+default.
+
+### Relationship to `refuse` sugar
+
+The `refuse "..."` sugar sketched earlier (print + `stop failed`) is superseded
+on the action path: refusal text now lives in `report failed`, so a check rule
+refuses with `stop failed REASON`. A thinner `refuse REASON` sugar (= `stop
+failed REASON`) may stand in its place; the string-carrying form is dropped, as
+it would reintroduce the message-on-stop overloading the model rejects.
+
 ## Relationship to events and conditional overloads
 
 Lamp will then have three dispatch mechanisms; they are distinct **by purpose**
@@ -318,8 +494,12 @@ for now they remain separate to avoid forcing one model onto two purposes.
   `outcome` kind, and a small native action driver (`runAction`). Source-order
   rules within a band; no cross-file ordering yet. The implicit `actor` slot and
   the `syntax` grammar block are deferred to the Game Parser.
-- **Next — identity & ergonomics.** Named rules; `refuse` sugar; the implicit
-  `actor` slot defaulting to the player; `void` rulebooks.
+- **Next — failure reasons & reporting.** The `stop_reason` enum, the implicit
+  `reason` slot, `stop failed REASON`, and the `report failed` band with
+  outcome-dispatched reporting (see *Failure reasons and the `report failed`
+  band*). Converts `check` refusals from inline prints to reason + reporting.
+- **Next — identity & ergonomics.** Named rules; `refuse REASON` sugar; the
+  implicit `actor` slot defaulting to the player; `void` rulebooks.
 - **Later — ecosystem ordering.** Bands beyond the action set, group tags and
   `order` constraints, compile-time topo-sort with the unspecified-order warning.
 
@@ -346,6 +526,16 @@ for now they remain separate to avoid forcing one model onto two purposes.
 - **`check` stopping with `succeeded`** — allow a check rule to force-pass
   remaining checks (`stop succeeded`), or restrict `check` to `failed`/fall
   through only?
+- **Namespaced reasons.** `stop_reason` is an open `type`, so its values are bare
+  globals (like `article`/`direction`) and cannot share a name across reasons.
+  A general fix would be scoped values (`stop_reason.cant_take`), which would also
+  retire the bare-global collision problem these declarations have today
+  (`article person` colliding with `type person`). Defer until a second reason
+  set actually needs a duplicate name. Note this is independent of *reopening* —
+  an open type is already extensible across files; namespacing is only about name
+  collisions.
+- **Generic / unset reason.** What does `report failed` print when `stop failed`
+  carried no reason — a required catch-all rule, or a built-in default line?
 - **Turn cost.** Does a band need to declare whether the action "took a turn,"
   or is that derived from the outcome and owned by the turn cycle
   (`devdocs/game_parser.md`)?
