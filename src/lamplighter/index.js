@@ -457,38 +457,114 @@ function objectsForTokens(tokens) {
     return candidates ? [...candidates] : [];
 }
 
-// First in-scope object of the slot's type whose vocabulary matches the noun span.
-function resolveNoun(span, scope, slotType) {
+// All in-scope objects of the slot's type whose vocabulary matches the noun span.
+function resolveCandidates(span, scope, slotType) {
     const stripped = span.filter((t) => !ARTICLES.has(t));
     const phraseTokens = stripped.length > 0 ? stripped : span;
     const scopeSet = new Set(scope);
-    const candidates = objectsForTokens(phraseTokens).filter(
+    return objectsForTokens(phraseTokens).filter(
         (obj) => scopeSet.has(obj) && (!slotType || isTypeOrSubtype(obj.type, slotType)),
     );
-    return candidates[0] || null;
 }
 
-// Parses one line of player input and runs the matched action. v0: first
-// matching template wins; each slot resolves to the first in-scope object of the
-// slot's type whose vocabulary matches.
+// The vocabulary token set for a single object: identifier tokens + understand tokens.
+function objectVocab(obj) {
+    const vocab = new Set();
+    for (const t of String(obj.name).toLowerCase().split(/[_\s]+/).filter(Boolean)) vocab.add(t);
+    if (obj.understand) {
+        for (const t of String(obj.understand).toLowerCase().split("/").map((s) => s.trim()).filter(Boolean)) vocab.add(t);
+    }
+    return vocab;
+}
+
+function objectDisplayName(obj) {
+    if (obj.printed_name) return String(obj.printed_name);
+    return String(obj.name).replace(/_/g, " ");
+}
+
+function printDisambiguationPrompt(candidates) {
+    const names = candidates.map((obj) => "the " + objectDisplayName(obj));
+    if (names.length === 2) {
+        print(`Which do you mean: ${names[0]} or ${names[1]}?`);
+    } else {
+        const last = names[names.length - 1];
+        print(`Which do you mean: ${names.slice(0, -1).join(", ")}, or ${last}?`);
+    }
+}
+
+// Pending disambiguation: set when a slot matches multiple candidates.
+// Cleared on the next runCommand call whether or not the answer resolves it.
+let pendingDisambiguation = null;
+
+// Resolve [field, span] slot pairs onto `instance`. Returns true when all
+// slots are filled; false if a slot fails (message already printed) or
+// disambiguation is needed (pendingDisambiguation is set).
+function resolveSlots(slots, instance, scope, slotTypes) {
+    for (let i = 0; i < slots.length; i++) {
+        const [field, span] = slots[i];
+        const candidates = resolveCandidates(span, resolvePool(slotTypes[field], scope), slotTypes[field]);
+        if (candidates.length === 0) {
+            print("You can't see any such thing.");
+            return false;
+        }
+        if (candidates.length === 1) {
+            instance[field] = candidates[0];
+        } else {
+            printDisambiguationPrompt(candidates);
+            pendingDisambiguation = {
+                actionName: instance.type,
+                instance,
+                field,
+                candidates,
+                remainingSlots: slots.slice(i + 1),
+                scope,
+                slotTypes,
+            };
+            return false;
+        }
+    }
+    return true;
+}
+
+// Parses one line of player input and runs the matched action. If a pending
+// disambiguation exists, tries to resolve it first; if the input doesn't match
+// any candidate it is discarded and treated as a fresh command.
 function runCommand(line, actor) {
     const tokens = String(line).toLowerCase().trim().split(/\s+/).filter(Boolean);
     if (tokens.length === 0) return;
+
+    if (pendingDisambiguation) {
+        const { actionName, instance, field, candidates, remainingSlots, scope, slotTypes } = pendingDisambiguation;
+        const stripped = tokens.filter((t) => !ARTICLES.has(t));
+        const phraseTokens = stripped.length > 0 ? stripped : tokens;
+        const narrowed = candidates.filter((obj) => phraseTokens.every((t) => objectVocab(obj).has(t)));
+        if (narrowed.length === 1) {
+            pendingDisambiguation = null;
+            instance[field] = narrowed[0];
+            if (resolveSlots(remainingSlots, instance, scope, slotTypes)) {
+                runAction(actionName, instance);
+            }
+            return;
+        }
+        if (narrowed.length > 1) {
+            // Still ambiguous — re-prompt with the narrowed set.
+            printDisambiguationPrompt(narrowed);
+            pendingDisambiguation = { ...pendingDisambiguation, candidates: narrowed };
+            return;
+        }
+        // 0 matches — treat input as a fresh command.
+        pendingDisambiguation = null;
+    }
+
     for (const entry of grammarRegistry) {
         const matched = matchGrammar(entry.parts, tokens);
         if (!matched) continue;
         const scope = scopeOf(actor);
         const slotTypes = (typeRegistry.get(entry.actionName) || {}).fields || {};
         const instance = { type: entry.actionName, actor };
-        for (const [field, span] of Object.entries(matched)) {
-            const obj = resolveNoun(span, resolvePool(slotTypes[field], scope), slotTypes[field]);
-            if (!obj) {
-                print("You can't see any such thing.");
-                return;
-            }
-            instance[field] = obj;
+        if (resolveSlots(Object.entries(matched), instance, scope, slotTypes)) {
+            runAction(entry.actionName, instance);
         }
-        runAction(entry.actionName, instance);
         return;
     }
     print("I don't understand that.");

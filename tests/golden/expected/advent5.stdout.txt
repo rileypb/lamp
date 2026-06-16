@@ -1,0 +1,16 @@
+Foyer
+
+A foyer.
+
+You see a brass lamp and a clay lamp here.
+
+> take lamp
+Which do you mean: the brass lamp or the clay lamp?
+
+> clay
+Taken.
+
+> i
+You are carrying:
+  clay lamp
+

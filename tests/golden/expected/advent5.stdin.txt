@@ -1,0 +1,4 @@
+take lamp
+clay
+i
+quit

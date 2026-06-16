@@ -1,0 +1,21 @@
+# Exercises disambiguation: two items share a vocabulary token; player is
+# prompted and answers via the normal command loop to narrow the choice.
+
+lib advent
+
+game Test_Disambig:
+	author "Test Author"
+	version 1
+	release dev
+	start Foyer
+
+room Foyer:
+	description "A foyer."
+
+item brass_lamp:
+	holder Foyer
+	understand "lamp/brass"
+
+item clay_lamp:
+	holder Foyer
+	understand "lamp/clay"
