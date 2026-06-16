@@ -118,8 +118,8 @@ Optional sugar `refuse "..."` may expand to exactly `print "..."` + `stop
 failed`, but the primitive stays clean — `stop` never carries a string-as-message
 (the overloading this design exists to avoid).
 
-> **Planned refinement.** Printing refusal text *inside* the deciding rule glues
-> the condition to the message, so retheming the message means restating the
+> **Refinement (implemented).** Printing refusal text *inside* the deciding rule
+> glues the condition to the message, so retheming the message means restating the
 > condition. The *Failure reasons and the `report failed` band* section below
 > separates the two — `check` names a typed reason, a reporting band renders it —
 > without weakening this principle: a reason is a typed value, not a string on
@@ -228,11 +228,10 @@ available.
 ambiguity flagged in design discussion. The whole action is *one* rulebook; the
 bands are organisational, not separate stop-scopes:
 
-- Any rule's `stop failed` ends the entire action with `failed`; nothing further
-  runs. The failing rule is responsible for having printed the reason. (Under the
-  planned reason model — see *Failure reasons and the `report failed` band* — the
-  failing rule instead *names* a typed reason and a `report failed` band prints
-  it.)
+- Any rule's `stop failed` ends the entire action with `failed`; the `report
+  failed` band then runs to print the reason. (See *Failure reasons and the
+  `report failed` band*: the failing rule *names* a typed reason rather than
+  printing inline.)
 - Any rule's `stop succeeded` ends the entire action with `succeeded`, skipping
   all later bands (including `report`) — used by an `instead` rule that has fully
   handled and reported the case itself.
@@ -284,9 +283,13 @@ pipeline ends, outcome `succeeded`.
 
 ## Failure reasons and the `report failed` band
 
-> Status: proposed (Next). Refines how refusal *text* is produced without
-> changing the outcome model. The action bands described above are implemented;
-> this section specifies the planned evolution of the `check`/refusal path.
+> Status: implemented, with one deferred piece. Typed reasons (`stop failed
+> REASON`), the implicit `reason` slot, and the `report failed` band all work and
+> are exercised by `sample/study.lamp` and `tests/fixtures/advent6.lamp`. The
+> deferred piece is **cross-rule override suppression** — a downstream
+> `report failed` rule shadowing the library's — which awaits the rule
+> ordering/identity work (see Roadmap and the override note below). Today the
+> band is **fire-all**: every `report failed` rule for the action runs.
 
 ### Problem
 
@@ -360,8 +363,10 @@ limitation `article`/`direction` already have; see Open questions.
 
 #### `stop failed REASON` threads the reason via a slot
 
-Each action instance gains an implicit `stop_reason reason` slot (alongside the
-implicit `actor` slot). `stop failed REASON` is sugar for
+When the program defines the magic `stop_reason` type, each action instance gains
+an implicit `reason` slot of that type (the same way `outcome` is the magic
+phase-rule result kind; programs without reasons are unaffected). `stop failed
+REASON` is sugar for
 
 ```
 self.reason = REASON
@@ -370,7 +375,7 @@ stop failed
 
 so `stop`'s value type stays `outcome` — the reason rides on the action instance,
 not on `stop`. With no reason given, `stop failed` leaves `reason` unset (a
-generic refusal that `report failed` can render with a catch-all).
+generic refusal that a `report failed` rule can render with a catch-all branch).
 
 #### The driver dispatches reporting by outcome
 
@@ -383,7 +388,9 @@ dispatched on that outcome:
 For success the `report` band still runs in-pipeline as the implemented model
 describes; `report failed` runs as a post-outcome pass because `stop failed` ends
 the pipeline immediately. That asymmetry is an implementation detail of the
-driver, not of the authoring surface — an author writes two mirror bands.
+driver, not of the authoring surface — an author writes two mirror bands. Like
+`report`, `report failed` is **fire-all** today: every matching rule runs (see
+the deferred suppression note below).
 
 ### Worked example
 
@@ -417,24 +424,43 @@ report failed take:
         stop
 ```
 
-Author retheme of one failure — no condition restated, no global mutated:
-
-```lamp
-report failed take:
-    if self.reason == cant_take:
-        print "Your hands pass right through it."
-        stop
-    # other reasons fall through to the library default
-```
-
-Context-dependent failure — expressible because the band is a rule, not data:
+**Context-dependent failure** — expressible because the band is a rule, not data.
+Branch on the situation *before* the generic case, within a single rule:
 
 ```lamp
 report failed take:
     if self.reason == cant_take and self.taken == sun:
         print "The sun is rather too far away to pick up."
         stop
+    if self.reason == cant_take:
+        print "That's not something you can take."
+        stop
 ```
+
+**Game-defined reason** — a game adds a reason and renders it in its own
+`report failed` rule, with no library edit (the library's rule handles its own
+reasons, the game's handles `too_sacred`). This is `tests/fixtures/advent6.lamp`:
+
+```lamp
+stop_reason too_sacred
+
+check take when self.taken == idol:
+    stop failed too_sacred
+
+report failed take:
+    if self.reason == too_sacred:
+        print "The idol is too sacred to disturb."
+        stop
+```
+
+> **Deferred — cross-rule override suppression.** Retheming an *existing*
+> library reason by adding a *separate* `report failed` rule that shadows the
+> library's does **not** work yet: the band is fire-all, so both rules run and
+> print twice. A game can't simply add `report failed take:` for `cant_take` to
+> override the library's text. Suppression (an author rule running first and
+> halting the band) needs the rule ordering/identity work on the Roadmap. Until
+> then, retheme an existing reason by editing the library's `report failed` text,
+> or branch context within the library's own rule as above.
 
 Both compose through ordinary band ordering: author rules run before library
 rules; the first `stop` wins; otherwise control falls through to the library
@@ -494,12 +520,15 @@ for now they remain separate to avoid forcing one model onto two purposes.
   `outcome` kind, and a small native action driver (`runAction`). Source-order
   rules within a band; no cross-file ordering yet. The implicit `actor` slot and
   the `syntax` grammar block are deferred to the Game Parser.
-- **Next — failure reasons & reporting.** The `stop_reason` enum, the implicit
-  `reason` slot, `stop failed REASON`, and the `report failed` band with
-  outcome-dispatched reporting (see *Failure reasons and the `report failed`
-  band*). Converts `check` refusals from inline prints to reason + reporting.
-- **Next — identity & ergonomics.** Named rules; `refuse REASON` sugar; the
-  implicit `actor` slot defaulting to the player; `void` rulebooks.
+- **Implemented — failure reasons & reporting.** The open `stop_reason` type, the
+  implicit `reason` slot, `stop failed REASON`, and the fire-all `report failed`
+  band with outcome-dispatched reporting (see *Failure reasons and the `report
+  failed` band*). Converts `check` refusals from inline prints to reason +
+  reporting; advent's standard actions and `tests/fixtures/advent6.lamp` use it.
+- **Next — identity & ergonomics.** Named rules; cross-rule override suppression
+  for `report`/`report failed` (so a downstream rule shadows the library's);
+  `refuse REASON` sugar; the implicit `actor` slot defaulting to the player;
+  `void` rulebooks.
 - **Later — ecosystem ordering.** Bands beyond the action set, group tags and
   `order` constraints, compile-time topo-sort with the unspecified-order warning.
 
@@ -534,8 +563,16 @@ for now they remain separate to avoid forcing one model onto two purposes.
   set actually needs a duplicate name. Note this is independent of *reopening* —
   an open type is already extensible across files; namespacing is only about name
   collisions.
-- **Generic / unset reason.** What does `report failed` print when `stop failed`
-  carried no reason — a required catch-all rule, or a built-in default line?
+- **Generic / unset reason.** Today a `stop failed` with no reason leaves
+  `self.reason` unset, so a reason-keyed `report failed` rule prints nothing —
+  silent failure. Should the engine require a catch-all branch, emit a built-in
+  default line, or warn at compile time when an action can fail with no
+  `report failed` coverage?
+- **Override suppression for report bands.** `report` and `report failed` are
+  fire-all, so a downstream rule cannot suppress the library's text by shadowing
+  it (both print). Resolving this is tied to rule identity/ordering — likely a
+  rule that stops the *band* (distinct from bare `stop`, which only early-exits
+  its own rule body today).
 - **Turn cost.** Does a band need to declare whether the action "took a turn,"
   or is that derived from the outcome and owned by the turn cycle
   (`devdocs/game_parser.md`)?

@@ -1,0 +1,32 @@
+# Exercises game-authored failure reasons: a game defines its own stop_reason and
+# `report failed` rule for `take` without editing the advent library. The custom
+# refusal renders alongside the library's standard ones (library handles its
+# reasons, the game handles its own).
+
+lib advent
+
+game Test_Reasons:
+	author "Test Author"
+	version 1
+	release dev
+	start Shrine
+
+room Shrine:
+	description "A quiet shrine."
+
+item coin:
+	holder Shrine
+
+item idol:
+	holder Shrine
+
+# A new reason, declared in the game — the open `stop_reason` type is extensible.
+stop_reason too_sacred
+
+check take when self.taken == idol:
+	stop failed too_sacred
+
+report failed take:
+	if self.reason == too_sacred:
+		print "The idol is too sacred to disturb."
+		stop

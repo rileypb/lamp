@@ -238,8 +238,8 @@ function createRulebookDecl(name, resultType, params, rules, defaultExpr, filePa
     return { kind: "RulebookDecl", name, resultType, params, rules, defaultExpr, filePath, lineNumber };
 }
 
-function createStopStatement(expr, filePath, lineNumber) {
-    return { kind: "StopStatement", expr, filePath, lineNumber };
+function createStopStatement(expr, reason, filePath, lineNumber) {
+    return { kind: "StopStatement", expr, reason, filePath, lineNumber };
 }
 
 // An action type: a subtype of the built-in `action` type whose fields are its

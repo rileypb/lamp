@@ -10,6 +10,12 @@ article definite
 article proper
 article plural
 
+# failure reasons (see actions.lamp check / report failed rules)
+stop_reason already_carrying
+stop_reason cant_take_that
+stop_reason not_carrying
+stop_reason cant_go_that_way
+
 # directions
 #
 # Each direction's `inverse` is the opposite heading. The `connects` relation

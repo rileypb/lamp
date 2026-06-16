@@ -6,6 +6,10 @@ type thing:
 
 type article
 
+# Failure reasons raised by `check` rules and rendered by `report failed` rules
+# (see devdocs/rulebooks.md). An open type so games can add their own reasons.
+type stop_reason
+
 type game:
 	room start
 

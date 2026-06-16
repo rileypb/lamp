@@ -326,7 +326,7 @@ function onEvent(eventName, handler) {
 
 function registerActionRule(actionName, band, rule) {
     if (!actionRuleRegistry.has(actionName)) {
-        actionRuleRegistry.set(actionName, { before: [], instead: [], check: [], do: [], after: [], report: [] });
+        actionRuleRegistry.set(actionName, { before: [], instead: [], check: [], do: [], after: [], report: [], report_failed: [] });
     }
     actionRuleRegistry.get(actionName)[band].push(rule);
 }
@@ -334,21 +334,29 @@ function registerActionRule(actionName, band, rule) {
 // Runs an action instance through its rulebook bands in fixed order. A rule that
 // returns a value (a `stop`) ends the action with that outcome; a rule that
 // returns undefined (falls through) continues to the next rule. With no stop the
-// action succeeds. See devdocs/rulebooks.md.
+// action succeeds. On a `failed` outcome the `report_failed` band then runs to
+// render the failure (self.reason is available). See devdocs/rulebooks.md.
 function runAction(actionName, instance) {
     const bands = actionRuleRegistry.get(actionName);
     if (!bands) {
         return "succeeded";
     }
-    for (const band of ACTION_BANDS) {
+    let outcome = "succeeded";
+    outer: for (const band of ACTION_BANDS) {
         for (const rule of bands[band]) {
-            const outcome = rule(instance);
-            if (outcome !== undefined) {
-                return outcome;
+            const result = rule(instance);
+            if (result !== undefined) {
+                outcome = result;
+                break outer;
             }
         }
     }
-    return "succeeded";
+    if (outcome === "failed") {
+        for (const rule of bands.report_failed) {
+            rule(instance);
+        }
+    }
+    return outcome;
 }
 
 // --- Game Parser (v0) -------------------------------------------------------

@@ -6,13 +6,13 @@
 # all six bands, typed failure reasons with a `report failed` band, and two
 # relations (one spatial, one not) driving the action logic.
 #
-# STATUS. Bands before/instead/check/do/after/report, `when` guards,
-# `stop succeeded`/`stop failed`, `try`, general `rulebook`/`follow`, and
-# relations are IMPLEMENTED. Failure reasons (`stop failed REASON`, the implicit
-# `reason` slot) and the `report failed` band are PROPOSED -- see
-# devdocs/rulebooks.md, "Failure reasons and the `report failed` band". Sections
-# using the proposed surface are flagged inline; the file as a whole will not
-# compile until that surface lands.
+# STATUS. This file compiles and runs; its transcript (section 8) is a golden
+# test. Bands before/instead/check/do/after/report, `when` guards,
+# `stop succeeded`/`stop failed`, `try`, general `rulebook`/`follow`, relations,
+# typed failure reasons (`stop failed REASON`, the implicit `reason` slot), and
+# the `report failed` band are all IMPLEMENTED. The one still-PROPOSED piece is
+# cross-rule override SUPPRESSION (a downstream `report failed` rule shadowing the
+# library's) -- see section 7 and devdocs/rulebooks.md.
 #
 # Authoritative grammar: devdocs/specs.md. Rulebook model: devdocs/rulebooks.md.
 # Relations: devdocs/relations.md.
@@ -23,9 +23,9 @@
 # 1. The world
 #
 # Self-contained (no `lib`), so every type is visible. Two rooms, a locked door,
-# a key, and a heavy statue to refuse. `actor` is supplied implicitly and
-# defaults to the player (rulebooks.md roadmap, "Next"); rules below use
-# `self.actor`.
+# a key, and a heavy statue to refuse. Rules reference the global `player`
+# directly; the implicit `actor` slot (which the Game Parser supplies, letting
+# library rules say `self.actor`) is deferred -- see rulebooks.md roadmap.
 # ----------------------------------------------------------------------------
 
 game Locked_Study:
@@ -107,9 +107,9 @@ bidi connects foyer north to study
 # action consults it. Relations are not just maps.
 
 relation unlocks:
-    key the_key
-    door the_door
-    syntax "unlocks [the_key] [the_door]"
+    key source
+    door target
+    syntax "unlocks [source] [target]"
 
 unlocks brass_key oak_door
 
@@ -133,7 +133,7 @@ rulebook bool liftable(item i):
 
 
 # ----------------------------------------------------------------------------
-# 4. Failure reasons  (PROPOSED)
+# 4. Failure reasons
 #
 # Reasons are an open `type` (extensible across files, like `direction`), not a
 # closed `enum` -- a game can add its own without reopening anything.
@@ -150,8 +150,8 @@ stop_reason no_such_exit
 # 5. The action rulebook -- all six bands
 #
 # `before` runs setup, `instead` replaces behaviour for a special case, `check`
-# validates (now NAMING a reason instead of printing -- PROPOSED), `do` performs
-# the change, `after` reacts, `report` prints success. Outcome is uniform: any
+# validates (NAMING a reason instead of printing), `do` performs the change,
+# `after` reacts, `report` prints success. Outcome is uniform: any
 # `stop failed`/`stop succeeded` ends the whole action.
 # ----------------------------------------------------------------------------
 
@@ -168,16 +168,16 @@ instead take when self.taken == oak_door:
     print "The door stays where it is."
     stop failed
 
-# check rules raise typed reasons instead of printing  (PROPOSED)
+# check rules raise typed reasons instead of printing
 check take:
-    if self.taken.holder == self.actor:
+    if self.taken.holder == player:
         stop failed already_held
 
 check take when not follow liftable(self.taken):
     stop failed cant_lift
 
 do take:
-    self.taken.holder = self.actor
+    self.taken.holder = player
 
 after take:
     print "(a faint click as it leaves the shelf)"
@@ -185,9 +185,10 @@ after take:
 report take:
     print "Taken."
 
-# Rendering failures -- the `report failed` band  (PROPOSED). One place that
-# turns each reason into text. Condition (in `check`) and message (here) are now
-# separate, so either can be overridden alone.
+# Rendering failures -- the `report failed` band. One place that turns each
+# reason into text. Condition (in `check`) and message (here) are now separate,
+# so either can be overridden alone. Dispatch here is by `if`-chain within a
+# single rule; bare `stop` early-exits the rule once a reason matches.
 report failed take:
     if self.reason == already_held:
         print "You're already carrying that."
@@ -222,9 +223,10 @@ report unlock:
 
 action go:
     direction way
-    syntax "go [way]"
+    syntax:
+        "go [way]"
 
-check go when not connects self.actor.holder self.way to _:
+check go when not connects player.holder self.way to _:
     stop failed no_such_exit
 
 check go:
@@ -233,32 +235,15 @@ check go:
         stop failed
 
 do go:
-    self.actor.holder = connects self.actor.holder self.way to ?first
+    player.holder = connects player.holder self.way to ?first
 
 
 # ----------------------------------------------------------------------------
-# 7. Author overrides -- why the split pays off  (PROPOSED, illustrative)
-#
-# A downstream game retheming JUST the refusal text adds its own
-# `report failed take`; it runs BEFORE the library's, prints, and stops -- the
-# `check` conditions are never restated:
-#
-#   report failed take:
-#       if self.reason == cant_lift:
-#           print "Your fingers won't budge it."
-#           stop
-#       # every other reason falls through to the library default
-#
-# Because a band is a RULE, not data, the override can be CONTEXT-DEPENDENT --
-# impossible with a global message variable:
-#
-#   report failed take:
-#       if self.reason == cant_lift and self.taken == statue:
-#           print "The statue is bolted to the floor."
-#           stop
+# 7. Author overrides -- why the split pays off  (illustrative)
 #
 # A game may invent a brand-new reason without touching the library, since
-# `stop_reason` is an open type:
+# `stop_reason` is an open type -- this WORKS today (raise it in a check, render
+# it in report failed):
 #
 #   stop_reason too_holy
 #   check take when self.taken == relic:
@@ -266,6 +251,29 @@ do go:
 #   report failed take:
 #       if self.reason == too_holy:
 #           print "You dare not lay hands on the relic."
+#           stop
+#
+# Retheming an EXISTING library message by adding a second `report failed take`
+# that shadows the library's -- e.g.:
+#
+#   report failed take:
+#       if self.reason == cant_lift:
+#           print "Your fingers won't budge it."
+#           stop
+#
+# -- is still PROPOSED. Today the `report failed` band is fire-all, so the
+# library's rule would also print (double text). Cross-rule suppression (author
+# rule runs first and stops the band) needs the rule-ordering/identity work on
+# the rulebooks.md roadmap. Until then, retheme by editing the library's reason
+# text, or branch CONTEXT inside one rule (a band is a RULE, not data, so this is
+# expressible at all -- unlike a global message variable):
+#
+#   report failed take:
+#       if self.reason == cant_lift and self.taken == statue:
+#           print "The statue is bolted to the floor."
+#           stop
+#       if self.reason == cant_lift:
+#           print "That's not something you can pick up."
 #           stop
 # ----------------------------------------------------------------------------
 
@@ -275,13 +283,14 @@ do go:
 #
 # `try ACTION:` builds an action instance, assigns its slots, runs the rulebook.
 #
-# Expected transcript:
+# Expected transcript (`after` runs before `report`, so the click precedes
+# "Taken."):
 #   A bare foyer. A door leads north to the study.
 #   (reaching out...)
 #   That's not something you can pick up.
 #   (reaching out...)
-#   Taken.
 #   (a faint click as it leaves the shelf)
+#   Taken.
 #   The lock turns and the door swings open.
 #   The study, walls lined with books.
 # ----------------------------------------------------------------------------
@@ -311,9 +320,10 @@ on startup:
 #   `try` building instances                                       (sec 8) -- implemented
 #   Spatial relation: bidi, inverted, wildcard/bind queries        (sec 2) -- implemented
 #   Non-spatial relation driving action logic                      (sec 2,6) -- implemented
-#   Open-`type` failure reasons (`stop failed REASON`)             (sec 4-6) -- PROPOSED
-#   `report failed` band; static + context-dependent override      (sec 5,7) -- PROPOSED
-#   Author-defined reason without library edits                    (sec 7) -- PROPOSED
+#   Open-`type` failure reasons (`stop failed REASON`)             (sec 4-6) -- implemented
+#   `report failed` band (single-rule reason dispatch)             (sec 5) -- implemented
+#   Author-defined reason without library edits                    (sec 7) -- implemented
+#   Cross-rule override suppression (author rule shadows library)  (sec 7) -- PROPOSED
 #
 # Notes & caveats
 #   - Reason names are bare globals (open-type values), so two reasons cannot

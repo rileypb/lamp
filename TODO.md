@@ -5,26 +5,15 @@ Top recommended next steps, roughly in priority order. Each item notes *why*,
 prerequisite lists in `devdocs/game_parser.md`, `devdocs/rulebooks.md`, and
 `devdocs/relations.md`.
 
-## 1. Overridable standard responses — failure reasons & `report failed`
-Design settled and written up in `devdocs/rulebooks.md` (*Failure reasons and the
-`report failed` band*). Rejected message-table/global-variable approaches (can't
-express context; map loses compile-time key checking). Instead: `check` names a
-typed reason and stops; a `report failed` band renders text; both success and
-failure text live in overridable rules — no globals. Implement in sequence:
-1. **Parser + checker** (`src/lantern/`): `stop failed REASON` (optional reason
-   arg); `report failed ACTION` band; implicit `stop_reason reason` slot on
-   action instances.
-2. **Runtime driver** (`src/lamplighter/index.js`): on failed outcome, set
-   `self.reason` and dispatch the `report failed` band; success keeps `report`.
-3. **Library** (`lib/advent/`): add `stop_reason` as an open `type` + instances
-   (extensible, like `direction`); convert `check` rules to raise reasons; add
-   `report failed` rules with default text. *(lib/ edit.)*
-4. **Tests:** golden fixture overriding a failure message + one context-dependent
-   failure; regenerate expected output. Cross-check against the worked
-   transcript in `sample/study.lamp` (section 8) and unflag its PROPOSED
-   sections once the surface compiles.
-- **Open (deferred):** namespaced reasons (`stop_reason.cant_take`); what
-  `report failed` prints for an unset reason.
+## 1. Cross-rule override suppression for `report` / `report failed`
+Failure reasons + the `report failed` band are now implemented (see
+`devdocs/rulebooks.md`); both report bands are **fire-all**, so a downstream rule
+cannot retheme a library message by shadowing it — both print. Add a way for an
+author rule to run first and halt the band (distinct from bare `stop`, which only
+early-exits its own rule body). Ties into rule identity/ordering.
+- **Where:** `runAction` in `src/lamplighter/index.js`; rule-ordering surface.
+- **See:** `devdocs/rulebooks.md` Open questions (override suppression; unset
+  reason — silent failure today).
 
 ## 2. Parser v2 — every-turn & timed rules
 Action-rulebook bands are implemented; what remains for v2 is a turn clock:

@@ -117,6 +117,9 @@ function createParser(tokens, filePath, globalNames, functionNames = new Set(), 
         }
         if (token.type === "IDENT") {
             if (PHASE_WORDS.has(token.value) && peek(1).type === "IDENT" && actionNames.has(peek(1).value)) return parsePhaseRule();
+            // `report failed ACTION:` — the failure-reporting band.
+            if (token.value === "report" && peek(1).type === "IDENT" && peek(1).value === "failed"
+                && peek(2).type === "IDENT" && actionNames.has(peek(2).value)) return parsePhaseRule();
             if (relationNames.has(token.value) && peek(1).type === "COLON") return parseRelationAssert();
             if (relationTemplates.has(token.value)) return parseCustomSyntaxAssert(relationTemplates.get(token.value), null);
             if (peek(1).type === "IDENT" && relationTemplates.has(peek(1).value)) return parseNamedCustomSyntaxAssert();
@@ -687,6 +690,14 @@ function createParser(tokens, filePath, globalNames, functionNames = new Set(), 
     // `self` is the action instance throughout the body.
     function parsePhaseRule() {
         const bandToken = next();
+        let band = bandToken.value;
+        // `report failed ACTION` selects the failure-reporting band; the `failed`
+        // modifier distinguishes it from the success `report` band.
+        if (band === "report" && at("IDENT") && peek().value === "failed"
+            && peek(1).type === "IDENT" && actionNames.has(peek(1).value)) {
+            next();
+            band = "report_failed";
+        }
         const actionName = plainName("action name");
         let whenExpr = null;
         if (atKeyword("when")) {
@@ -696,7 +707,7 @@ function createParser(tokens, filePath, globalNames, functionNames = new Set(), 
         expect("COLON", "Expected ':' after phase rule header");
         expectNewline();
         const body = parseBlock(new Set(["self"]));
-        return ast.createPhaseRule(bandToken.value, actionName, whenExpr, body, filePath, bandToken.line);
+        return ast.createPhaseRule(band, actionName, whenExpr, body, filePath, bandToken.line);
     }
 
     function parseRulebookDecl() {
@@ -849,8 +860,11 @@ function createParser(tokens, filePath, globalNames, functionNames = new Set(), 
     function parseStop(localNames) {
         const keyword = expectKeyword("stop");
         const expr = at("NEWLINE") ? null : parseExpression(0, localNames);
+        // `stop failed REASON` — an optional second expression naming a
+        // stop_reason; threaded onto the action instance's `reason` slot.
+        const reason = (expr !== null && !at("NEWLINE")) ? parseExpression(0, localNames) : null;
         expectNewline();
-        return ast.createStopStatement(expr, filePath, keyword.line);
+        return ast.createStopStatement(expr, reason, filePath, keyword.line);
     }
 
     function parseFollowStatement(localNames) {

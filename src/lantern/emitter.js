@@ -706,6 +706,12 @@ function emitStatementLines(statement, indentLevel, globalNames = new Set()) {
     }
     if (statement.kind === "StopStatement") {
         if (statement.expr === null) return [`${indent}return;`];
+        if (statement.reason) {
+            return [
+                `${indent}self.reason = ${emitExpression(statement.reason, globalNames)};`,
+                `${indent}return ${emitExpression(statement.expr, globalNames)};`,
+            ];
+        }
         return [`${indent}return ${emitExpression(statement.expr, globalNames)};`];
     }
     if (statement.kind === "FollowStatement") {

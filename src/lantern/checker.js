@@ -53,6 +53,18 @@ function checkProgram(programAst, options = {}) {
     const functionSchema = buildFunctionSchema(programAst.nodes);
     const globalNames = new Set(globalTypes.keys());
 
+    // Implicit `reason` slot: when the program defines the magic `stop_reason`
+    // type (as `outcome` is the magic phase-rule result kind), every action gains
+    // a `reason` slot of that type so `stop failed REASON` and `self.reason` in
+    // `report failed` rules type-check. Conditional so programs without reasons
+    // are unaffected.
+    if (typeSchema.typeFields.has("stop_reason")) {
+        for (const [actionName, slots] of actionSchema) {
+            slots.set("reason", "stop_reason");
+            typeSchema.typeFields.get(actionName).set("reason", "stop_reason");
+        }
+    }
+
     checkNativeVsLampConflicts(programAst.nodes);
     checkNativeFunctions(programAst.nodes, nativeFunctionNames);
     checkFunctionOverloads(programAst.nodes, typeSchema, kindSchema, functionSchema);
@@ -451,6 +463,19 @@ function checkStatements(statements, typeSchema, kindSchema, localTypes, functio
                     stmt.filePath,
                     stmt.lineNumber,
                     "stop value",
+                    localTypes,
+                    functionSchema,
+                );
+            }
+            if (stmt.reason !== null) {
+                checkValueCompatibility(
+                    stmt.reason,
+                    "stop_reason",
+                    typeSchema,
+                    kindSchema,
+                    stmt.filePath,
+                    stmt.lineNumber,
+                    "stop reason",
                     localTypes,
                     functionSchema,
                 );

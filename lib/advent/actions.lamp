@@ -25,19 +25,27 @@ action take:
 
 check take:
 	if self.taken.holder == self.actor:
-		print "You're already carrying that."
-		stop failed
+		stop failed already_carrying
 
 check take:
 	if self.taken.scenery:
-		print "That's not something you can take."
-		stop failed
+		stop failed cant_take_that
 
 do take:
 	self.taken.holder = self.actor
 
 report take:
 	print "Taken."
+
+# Failure text lives here, keyed by reason, so a game can retheme a refusal
+# without restating the `check` condition (see devdocs/rulebooks.md).
+report failed take:
+	if self.reason == already_carrying:
+		print "You're already carrying that."
+		stop
+	if self.reason == cant_take_that:
+		print "That's not something you can take."
+		stop
 
 action inventory:
 	syntax:
@@ -62,14 +70,18 @@ action drop:
 
 check drop:
 	if not (self.dropped.holder == self.actor):
-		print "You aren't carrying that."
-		stop failed
+		stop failed not_carrying
 
 do drop:
 	self.dropped.holder = self.actor.holder
 
 report drop:
 	print "Dropped."
+
+report failed drop:
+	if self.reason == not_carrying:
+		print "You aren't carrying that."
+		stop
 
 action go:
 	direction way
@@ -78,11 +90,15 @@ action go:
 
 check go:
 	if not connects self.actor.holder self.way _:
-		print "You can't go that way."
-		stop failed
+		stop failed cant_go_that_way
 
 do go:
 	self.actor.holder = connects self.actor.holder self.way ?first
+
+report failed go:
+	if self.reason == cant_go_that_way:
+		print "You can't go that way."
+		stop
 
 # go needs no report: moving the actor fires the `person.holder change` handler,
 # which describes the room on arrival.

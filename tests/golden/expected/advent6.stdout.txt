@@ -1,0 +1,16 @@
+Shrine
+
+A quiet shrine.
+
+You see a coin and a idol here.
+
+> take coin
+Taken.
+
+> take idol
+The idol is too sacred to disturb.
+
+> drop coin
+Dropped.
+
+> quit

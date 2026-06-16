@@ -1,0 +1,4 @@
+take coin
+take idol
+drop coin
+quit
