@@ -1,0 +1,21 @@
+# Exercises vocabulary index: item with `understand` synonyms resolved by
+# alternate words the player types, including multi-token matches.
+
+lib advent
+
+game Test_Vocab:
+	author "Test Author"
+	version 1
+	release dev
+	start Lab
+
+room Lab:
+	description "A small lab."
+
+item brass_lamp:
+	holder Lab
+	understand "lantern/brass/lamp"
+
+item golden_key:
+	holder Lab
+	understand "key/golden"

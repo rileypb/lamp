@@ -1,0 +1,6 @@
+take lantern
+i
+drop brass lamp
+take key
+i
+quit

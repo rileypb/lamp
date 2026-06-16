@@ -1,0 +1,23 @@
+Lab
+
+A small lab.
+
+You see a brass lamp and a golden key here.
+
+> take lantern
+Taken.
+
+> i
+You are carrying:
+  brass lamp
+
+> drop brass lamp
+Dropped.
+
+> take key
+Taken.
+
+> i
+You are carrying:
+  golden key
+

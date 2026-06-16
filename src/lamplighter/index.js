@@ -414,22 +414,63 @@ function resolvePool(slotType, scope) {
     return scope;
 }
 
-// First in-scope object of the slot's type whose name matches the noun span.
-function resolveNoun(span, scope, slotType) {
-    const phrase = span.join(" ");
-    for (const obj of scope) {
-        if (slotType && !isTypeOrSubtype(obj.type, slotType)) continue;
-        const name = String(obj.name).toLowerCase();
-        if (name === phrase) return obj;
-        const words = name.split(/\s+/);
-        if (span.every((token) => words.includes(token))) return obj;
+// token → Set<object>. Populated by buildVocabIndex() at run() time.
+let vocabIndex = new Map();
+
+const ARTICLES = new Set(["a", "an", "the", "some"]);
+
+function buildVocabIndex() {
+    vocabIndex = new Map();
+    for (const instances of instanceRegistry.values()) {
+        for (const obj of instances) {
+            const tokens = new Set();
+            for (const t of String(obj.name).toLowerCase().split(/[_\s]+/).filter(Boolean)) {
+                tokens.add(t);
+            }
+            if (obj.understand) {
+                for (const t of String(obj.understand).toLowerCase().split("/").map((s) => s.trim()).filter(Boolean)) {
+                    tokens.add(t);
+                }
+            }
+            for (const token of tokens) {
+                if (!vocabIndex.has(token)) vocabIndex.set(token, new Set());
+                vocabIndex.get(token).add(obj);
+            }
+        }
     }
-    return null;
+}
+
+// Objects whose vocabulary is a superset of every token in `tokens`.
+function objectsForTokens(tokens) {
+    if (tokens.length === 0) return [];
+    let candidates = null;
+    for (const token of tokens) {
+        const matches = vocabIndex.get(token) || new Set();
+        if (candidates === null) {
+            candidates = new Set(matches);
+        } else {
+            for (const obj of candidates) {
+                if (!matches.has(obj)) candidates.delete(obj);
+            }
+        }
+    }
+    return candidates ? [...candidates] : [];
+}
+
+// First in-scope object of the slot's type whose vocabulary matches the noun span.
+function resolveNoun(span, scope, slotType) {
+    const stripped = span.filter((t) => !ARTICLES.has(t));
+    const phraseTokens = stripped.length > 0 ? stripped : span;
+    const scopeSet = new Set(scope);
+    const candidates = objectsForTokens(phraseTokens).filter(
+        (obj) => scopeSet.has(obj) && (!slotType || isTypeOrSubtype(obj.type, slotType)),
+    );
+    return candidates[0] || null;
 }
 
 // Parses one line of player input and runs the matched action. v0: first
 // matching template wins; each slot resolves to the first in-scope object of the
-// slot's type whose name matches.
+// slot's type whose vocabulary matches.
 function runCommand(line, actor) {
     const tokens = String(line).toLowerCase().trim().split(/\s+/).filter(Boolean);
     if (tokens.length === 0) return;
@@ -454,6 +495,7 @@ function runCommand(line, actor) {
 }
 
 function run() {
+    buildVocabIndex();
     fireEvent("startup");
 }
 
