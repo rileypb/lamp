@@ -1,0 +1,127 @@
+# ============================================================================
+# Sample: "The Locked Study", on the advent library
+#
+# The advent-lib counterpart to sample/study.lamp. Instead of declaring its own
+# world types, actions, and turn loop, this version imports `advent` and only
+# adds what's specific to the game. It is a *playable* game: advent supplies the
+# `on startup` prompt loop, so commands come from the player (the golden test
+# feeds them on stdin), not from a hand-written `try` script.
+#
+# What advent already provides (so this file doesn't): the `room`/`item`/
+# `person`/`direction` types, the `connects` relation, the `stop_reason` type and
+# its standard reasons, the `look`/`take`/`drop`/`go`/`inventory` actions with
+# their `check` reasons and `report failed` text, and the startup loop.
+#
+# What this file adds, and the rulebook feature it shows:
+#   - game-defined reasons (`too_sacred`) + a `report failed take` rule  -> reasons are extensible
+#   - a `before` and an `after` rule on `take`                            -> bands beyond check/do/report
+#   - an `instead` rule                                                   -> replacing behaviour
+#   - a custom `unlocks` relation + `unlock` action gating `go`           -> a relation driving logic
+#   - a general `rulebook` read with `follow` in a report message         -> typed result via follow
+#
+# See devdocs/rulebooks.md and devdocs/relations.md.
+# ============================================================================
+
+lib advent
+
+game Locked_Study:
+    author "Sample Author"
+    version 1
+    release dev
+    start foyer
+
+room foyer:
+    description "A bare foyer. A door leads north to the study."
+room study:
+    description "The study, walls lined with books."
+
+bidi connects foyer north study
+
+# A lockable door needs a `locked` field advent's `item` doesn't have, so the
+# game declares a subtype. advent's actions and `item.all` are subtype-inclusive,
+# so a `door` behaves as an `item` everywhere.
+type door < item:
+    bool locked
+
+item brass_key:
+    holder foyer
+item statue:
+    scenery true
+    holder foyer
+item idol:
+    holder foyer
+door oak_door:
+    locked true
+    holder foyer
+
+# Game-defined reasons — advent's `stop_reason` is an open type, so no library
+# edit is needed to add these.
+stop_reason too_sacred
+stop_reason door_locked
+
+# A non-spatial relation pairing a key with the door it opens.
+relation unlocks:
+    item source
+    door target
+    syntax "unlocks [source] [target]"
+
+unlocks brass_key oak_door
+
+# A general rulebook, read with `follow` inside a report message below.
+rulebook string door_state(door d):
+    default "shut"
+    when d.locked:
+        stop "locked"
+
+# --- extra bands on the standard `take` action ------------------------------
+
+before take when self.taken == idol:
+    print "(you hesitate)"
+
+instead take when self.taken == oak_door:
+    print "The oak door is firmly set in its frame."
+    stop failed
+
+check take when self.taken == idol:
+    stop failed too_sacred
+
+after take when self.taken == brass_key:
+    print "The key is cold to the touch."
+
+# Renders the game's own reason; advent's report-failed rules handle theirs.
+report failed take:
+    if self.reason == too_sacred:
+        print "The idol is too sacred to disturb."
+        stop
+
+# --- a custom action driven by the `unlocks` relation -----------------------
+
+action unlock:
+    door target
+    item with
+    syntax:
+        "unlock [target] with [with]"
+
+check unlock:
+    if not self.target.locked:
+        print "It's already unlocked."
+        stop failed
+check unlock when not unlocks self.with self.target:
+    print "That doesn't fit the lock."
+    stop failed
+
+do unlock:
+    self.target.locked = false
+
+report unlock:
+    print "The lock turns; the door swings open."
+
+# --- gate `go` north on the door, with a reason rendered via `follow` --------
+
+check go when oak_door.locked and self.way == north:
+    stop failed door_locked
+
+report failed go:
+    if self.reason == door_locked:
+        print "The way north is " + follow door_state(oak_door) + "."
+        stop

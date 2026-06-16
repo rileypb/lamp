@@ -453,18 +453,62 @@ report failed take:
         stop
 ```
 
-> **Deferred — cross-rule override suppression.** Retheming an *existing*
-> library reason by adding a *separate* `report failed` rule that shadows the
-> library's does **not** work yet: the band is fire-all, so both rules run and
-> print twice. A game can't simply add `report failed take:` for `cant_take` to
-> override the library's text. Suppression (an author rule running first and
-> halting the band) needs the rule ordering/identity work on the Roadmap. Until
-> then, retheme an existing reason by editing the library's `report failed` text,
-> or branch context within the library's own rule as above.
+> **Not yet — cross-rule override suppression.** Retheming an *existing* library
+> reason by adding a *separate* `report failed` rule that shadows the library's
+> does **not** work yet: the band is fire-all, so both rules run and print twice.
+> A game can't simply add `report failed take:` for `cant_take` to override the
+> library's text. Until the *Cross-rule override suppression* work below lands,
+> retheme an existing reason by editing the library's `report failed` text, or
+> branch context within the library's own rule as above.
 
-Both compose through ordinary band ordering: author rules run before library
-rules; the first `stop` wins; otherwise control falls through to the library
-default.
+Today the report bands are fire-all and rules run in source/registration order
+(library rules typically register before a game's). The override story below is
+what makes "author rule runs first, prints, and halts the band" real.
+
+### Cross-rule override suppression (chosen direction for TODO #1)
+
+The remaining gap: a downstream rule cannot suppress a library rule's output in a
+fire-all band (`report`, `report_failed`) — both fire. Three approaches were
+weighed.
+
+**Chosen: bare `stop` halts the band + author-before-library ordering.** This is
+the smallest change and it closes a spec/impl mismatch rather than adding a
+concept. The model already says bare `stop` *ends the rulebook / halts remaining
+rules* (see *The unified model*), but the implementation emits `return;` →
+`undefined`, which the driver treats as **fall through** — so bare `stop` today
+only early-exits its own rule body, it does not halt the band. Fixing that (emit
+a halt **sentinel** distinct from fall-through, and have the driver stop the band
+on it) gives suppression directly: an author's `report failed take` rule, ordered
+before the library's, prints and `stop`s, and the library's rule never runs. This
+**preserves the continuation/result orthogonality** the rest of this document is
+built on — bare `stop` is pure continuation and carries no outcome.
+
+Two pieces of work:
+
+1. **Bare-`stop`-halt.** Distinguish a bare-`stop` return from a fall-through
+   return so the driver halts the band. The value it yields is **decided**: in a
+   report band the settled `outcome` is kept (the band is post-decision); in a
+   non-void value rulebook, bare `stop` resolves to the rulebook's declared
+   `default` (today it incorrectly yields `undefined` — a latent bug to fix).
+2. **Ordering.** Author rules before library rules within a band — the
+   cross-file ordering already staged under *Ordering* (bands/group tags). Until
+   that exists, suppression is unreliable even with a working halt.
+
+**Rejected: a three-valued `outcome` (`succeeded`/`failed`/`undecided`).** A
+principled model (it is Inform's succeed/fail/no-decision), but it **re-merges
+continuation with result** — the value would decide whether the rulebook
+continues — which is exactly the conflation *One mechanism, not two* rejects. It
+is also an awkward fit for print bands, where "halt this band" would have to be
+written as an outcome value (`stop succeeded`/`stop failed`). Adopt only as a
+deliberate reversal of the orthogonality principle, not to patch this gap.
+
+**Deferred but complementary: named-rule replacement (B).** Letting a rule
+*replace* a named library rule is surgical for overrides and fits *Rule identity*
+(Named rules). The coupling it introduces (referencing a library rule by name) is
+acceptable — even desirable — for a library's *standard responses*, which are
+meant to be overridable, à la Inform's named responses. Layer it on after the
+halt+ordering work for cases ordering alone cannot express (e.g. replacing one
+rule out of several without depending on registration order).
 
 ### Relationship to `refuse` sugar
 
@@ -568,11 +612,18 @@ for now they remain separate to avoid forcing one model onto two purposes.
   silent failure. Should the engine require a catch-all branch, emit a built-in
   default line, or warn at compile time when an action can fail with no
   `report failed` coverage?
-- **Override suppression for report bands.** `report` and `report failed` are
-  fire-all, so a downstream rule cannot suppress the library's text by shadowing
-  it (both print). Resolving this is tied to rule identity/ordering — likely a
-  rule that stops the *band* (distinct from bare `stop`, which only early-exits
-  its own rule body today).
+- **Override suppression for report bands** — *direction chosen* (see *Cross-rule
+  override suppression*): make bare `stop` halt the band (fixing the spec/impl
+  mismatch) and add author-before-library ordering. Remaining sub-questions:
+  exactly what value a bare `stop` yields in a non-void value rulebook (proposed:
+  the `default`), and whether named-rule replacement is also needed.
+- **Reading an action's outcome.** A general rulebook's result is readable via
+  `follow` in expression position, but `try ACTION:` is statement-only and
+  discards the `outcome` (`runAction`'s return is dropped). So author code cannot
+  branch on whether an action succeeded — the outcome only drives the engine
+  (`report` vs `report failed`). Surface it via `try` in expression position, a
+  queryable last-action-outcome, or both? (Listed under *Required language/runtime
+  support* item 5 but not built.)
 - **Turn cost.** Does a band need to declare whether the action "took a turn,"
   or is that derived from the outcome and owned by the turn cycle
   (`devdocs/game_parser.md`)?

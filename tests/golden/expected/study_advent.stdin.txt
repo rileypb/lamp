@@ -1,0 +1,10 @@
+look
+take statue
+take idol
+take door
+take key
+go north
+unlock door with key
+go north
+i
+quit

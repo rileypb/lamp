@@ -1,0 +1,43 @@
+foyer
+
+A bare foyer. A door leads north to the study.
+
+You see a brass key, a idol and a oak door here.
+
+> look
+foyer
+
+A bare foyer. A door leads north to the study.
+
+You see a brass key, a idol and a oak door here.
+
+> take statue
+That's not something you can take.
+
+> take idol
+(you hesitate)
+The idol is too sacred to disturb.
+
+> take door
+The oak door is firmly set in its frame.
+
+> take key
+The key is cold to the touch.
+Taken.
+
+> go north
+The way north is locked.
+
+> unlock door with key
+The lock turns; the door swings open.
+
+> go north
+study
+
+The study, walls lined with books.
+
+> i
+You are carrying:
+  brass key
+
+> quit
