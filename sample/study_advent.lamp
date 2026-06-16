@@ -19,6 +19,12 @@
 #   - a custom `unlocks` relation + `unlock` action gating `go`           -> a relation driving logic
 #   - a general `rulebook` read with `follow` in a report message         -> typed result via follow
 #
+# Override suppression. The section at the bottom overrides advent's own success
+# ("Taken.") and failure text by adding game-side report rules that print and
+# bare-`stop` to suppress the library's. This works: author rules run before
+# library rules and a bare `stop` halts the band (see devdocs/rulebooks.md,
+# "Cross-rule override suppression").
+#
 # See devdocs/rulebooks.md and devdocs/relations.md.
 # ============================================================================
 
@@ -124,4 +130,26 @@ check go when oak_door.locked and self.way == north:
 report failed go:
     if self.reason == door_locked:
         print "The way north is " + follow door_state(oak_door) + "."
+        stop
+
+# ============================================================================
+# Cross-rule override suppression
+#
+# These rules retheme advent's *own* standard messages by shadowing its report
+# rules: the game's rule runs first (author before library), prints, and bare
+# `stop`s to halt the band so advent's text never appears. See
+# devdocs/rulebooks.md, "Cross-rule override suppression".
+# ============================================================================
+
+# Override the standard success line "Taken." with game flavor.
+report take:
+    print "You tuck it carefully away."
+    stop
+
+# Retheme advent's `cant_take_that` refusal ("That's not something you can
+# take.") without restating the scenery condition — advent still raises the
+# reason; only the text changes here.
+report failed take:
+    if self.reason == cant_take_that:
+        print "That stays right where it is."
         stop

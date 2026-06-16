@@ -1,0 +1,13 @@
+Cell
+
+A small stone cell.
+
+You see a pebble here.
+
+> take pebble
+You palm it.
+
+> take altar
+It won't come loose.
+
+> quit

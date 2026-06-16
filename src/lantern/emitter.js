@@ -41,6 +41,13 @@ let relationFieldSchemas = new Map();
 let emitKindNames = new Set();
 let functionParamTypes = new Map();
 let actionSlotTypes = new Map();
+// Absolute path of the author's game file; phase rules from it sort ahead of
+// library rules (order 0 vs 1). See devdocs/rulebooks.md.
+let mainFilePath = null;
+// JS to emit for a bare `stop`, which depends on the enclosing construct: in a
+// phase rule it halts the band (`return lamplighter.HALT;`); in a rulebook it
+// yields the declared default; elsewhere it is a plain `return;`.
+let currentBareStop = "return;";
 
 function emitProgram(programAst, options = {}) {
     const nativeJsContents = options.nativeJsContents || [];
@@ -56,6 +63,8 @@ function emitProgram(programAst, options = {}) {
     const kindNames = new Set(kindNodes.map((n) => n.name));
 
     emitKindNames = kindNames;
+    mainFilePath = options.mainFilePath || null;
+    currentBareStop = "return;";
     functionParamTypes = new Map();
     for (const node of programAst.nodes) {
         if (node.kind === "FunctionDecl" || node.kind === "NativeFunctionDecl" || node.kind === "RulebookDecl") {
@@ -551,14 +560,18 @@ function emitFunctionGroup(name, overloads, globalNames) {
 // ordinary call, so no runtime support is required.
 function emitRulebookDecl(node, globalNames = new Set()) {
     const paramList = node.params.map((p) => p.name).join(", ");
+    const defaultExpr = emitExpression(node.defaultExpr, globalNames);
+    const prevBareStop = currentBareStop;
+    currentBareStop = `return ${defaultExpr};`;
     const lines = [`function ${node.name}(${paramList}) {`];
     for (const rule of node.rules) {
         lines.push(`    if (${emitExpression(rule.whenExpr, globalNames)}) {`);
         lines.push(...emitStatementList(rule.body, 2, globalNames));
         lines.push(`    }`);
     }
-    lines.push(`    return ${emitExpression(node.defaultExpr, globalNames)};`);
+    lines.push(`    return ${defaultExpr};`);
     lines.push("}");
+    currentBareStop = prevBareStop;
     return lines.join("\n");
 }
 
@@ -573,9 +586,14 @@ function emitEventHandler(node, globalNames = new Set()) {
 
 // A phase rule registers a function into the action's rulebook band. The
 // function receives the action instance as `self`; a `stop EXPR` emits as
-// `return EXPR`, and the driver treats any returned value as a stop-with-outcome
-// while a fall-through (undefined) continues to the next rule.
+// `return EXPR` (stop with that outcome), a bare `stop` as `return
+// lamplighter.HALT` (halt the band), and a fall-through (undefined) continues to
+// the next rule. The trailing order arg (0 author, 1 library) sorts author rules
+// first so they can suppress library ones.
 function emitPhaseRule(node, globalNames = new Set()) {
+    const order = node.filePath === mainFilePath ? 0 : 1;
+    const prevBareStop = currentBareStop;
+    currentBareStop = "return lamplighter.HALT;";
     const lines = [
         `lamplighter.registerActionRule(${JSON.stringify(node.actionName)}, ${JSON.stringify(node.band)}, (self) => {`,
     ];
@@ -583,7 +601,8 @@ function emitPhaseRule(node, globalNames = new Set()) {
         lines.push(`    if (!(${emitExpression(node.whenExpr, globalNames)})) return;`);
     }
     lines.push(...emitStatementList(node.body, 1, globalNames));
-    lines.push("});");
+    lines.push(`}, ${order});`);
+    currentBareStop = prevBareStop;
     return lines.join("\n");
 }
 
@@ -705,7 +724,7 @@ function emitStatementLines(statement, indentLevel, globalNames = new Set()) {
         return [`${indent}return ${emitExpression(statement.expr, globalNames)};`];
     }
     if (statement.kind === "StopStatement") {
-        if (statement.expr === null) return [`${indent}return;`];
+        if (statement.expr === null) return [`${indent}${currentBareStop}`];
         if (statement.reason) {
             return [
                 `${indent}self.reason = ${emitExpression(statement.reason, globalNames)};`,

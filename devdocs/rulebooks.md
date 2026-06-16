@@ -283,13 +283,13 @@ pipeline ends, outcome `succeeded`.
 
 ## Failure reasons and the `report failed` band
 
-> Status: implemented, with one deferred piece. Typed reasons (`stop failed
-> REASON`), the implicit `reason` slot, and the `report failed` band all work and
-> are exercised by `sample/study.lamp` and `tests/fixtures/advent6.lamp`. The
-> deferred piece is **cross-rule override suppression** — a downstream
-> `report failed` rule shadowing the library's — which awaits the rule
-> ordering/identity work (see Roadmap and the override note below). Today the
-> band is **fire-all**: every `report failed` rule for the action runs.
+> Status: implemented. Typed reasons (`stop failed REASON`), the implicit
+> `reason` slot, the `report failed` band, and **cross-rule override
+> suppression** (an author rule shadowing a library one) all work — exercised by
+> `sample/study.lamp`, `sample/study_advent.lamp`, and
+> `tests/fixtures/advent6.lamp`/`advent7.lamp`. Within a band, author rules run
+> before library rules and a bare `stop` halts the band (see *Cross-rule override
+> suppression*).
 
 ### Problem
 
@@ -388,9 +388,9 @@ dispatched on that outcome:
 For success the `report` band still runs in-pipeline as the implemented model
 describes; `report failed` runs as a post-outcome pass because `stop failed` ends
 the pipeline immediately. That asymmetry is an implementation detail of the
-driver, not of the authoring surface — an author writes two mirror bands. Like
-`report`, `report failed` is **fire-all** today: every matching rule runs (see
-the deferred suppression note below).
+driver, not of the authoring surface — an author writes two mirror bands. In both
+report bands, rules run author-before-library and a bare `stop` halts the band
+(see *Cross-rule override suppression*).
 
 ### Worked example
 
@@ -453,62 +453,54 @@ report failed take:
         stop
 ```
 
-> **Not yet — cross-rule override suppression.** Retheming an *existing* library
-> reason by adding a *separate* `report failed` rule that shadows the library's
-> does **not** work yet: the band is fire-all, so both rules run and print twice.
-> A game can't simply add `report failed take:` for `cant_take` to override the
-> library's text. Until the *Cross-rule override suppression* work below lands,
-> retheme an existing reason by editing the library's `report failed` text, or
-> branch context within the library's own rule as above.
+Retheming an *existing* library reason by adding a *separate* `report failed`
+rule that shadows the library's **works**: author rules run before library rules
+within a band, and the author rule prints and bare-`stop`s to halt the band, so
+the library's rule never runs. (Before this, the band was fire-all and both rules
+printed.)
 
-Today the report bands are fire-all and rules run in source/registration order
-(library rules typically register before a game's). The override story below is
-what makes "author rule runs first, prints, and halts the band" real.
+```lamp
+# in the game — overrides advent's "That's not something you can take."
+report failed take:
+    if self.reason == cant_take_that:
+        print "It won't come loose."
+        stop          # halts the band; advent's rule is suppressed
+```
 
-### Cross-rule override suppression (chosen direction for TODO #1)
+### Cross-rule override suppression
 
-The remaining gap: a downstream rule cannot suppress a library rule's output in a
-fire-all band (`report`, `report_failed`) — both fire. Three approaches were
-weighed.
+A downstream rule can suppress a library rule's output in a `report` /
+`report_failed` band. Two mechanisms combine:
 
-**Chosen: bare `stop` halts the band + author-before-library ordering.** This is
-the smallest change and it closes a spec/impl mismatch rather than adding a
-concept. The model already says bare `stop` *ends the rulebook / halts remaining
-rules* (see *The unified model*), but the implementation emits `return;` →
-`undefined`, which the driver treats as **fall through** — so bare `stop` today
-only early-exits its own rule body, it does not halt the band. Fixing that (emit
-a halt **sentinel** distinct from fall-through, and have the driver stop the band
-on it) gives suppression directly: an author's `report failed take` rule, ordered
-before the library's, prints and `stop`s, and the library's rule never runs. This
-**preserves the continuation/result orthogonality** the rest of this document is
-built on — bare `stop` is pure continuation and carries no outcome.
+1. **Bare-`stop`-halt.** A bare `stop` halts the band (it no longer merely
+   early-exits its own rule body). The runtime distinguishes three rule results:
+   an outcome value (`stop EXPR`) ends the pipeline with that outcome; the `HALT`
+   sentinel (bare `stop`) halts the band keeping the current outcome; `undefined`
+   (fall through) continues to the next rule. The value a bare `stop` yields is
+   **decided**: in a report band the settled `outcome` is kept (the band is
+   post-decision); in a non-void value rulebook it resolves to the rulebook's
+   declared `default`. This **preserves the continuation/result orthogonality**
+   the rest of this document is built on — bare `stop` is pure continuation and
+   carries no outcome. (It also fixed a spec/impl mismatch: bare `stop` is
+   specified to halt remaining rules, but previously emitted `return;` →
+   `undefined`, i.e. fall through.)
+2. **Author-before-library ordering.** Within a band, rules from the author's
+   game file run before rules from imported libraries; source order is preserved
+   within each tier. So an author rule gets first chance to print and halt.
 
-Two pieces of work:
-
-1. **Bare-`stop`-halt.** Distinguish a bare-`stop` return from a fall-through
-   return so the driver halts the band. The value it yields is **decided**: in a
-   report band the settled `outcome` is kept (the band is post-decision); in a
-   non-void value rulebook, bare `stop` resolves to the rulebook's declared
-   `default` (today it incorrectly yields `undefined` — a latent bug to fix).
-2. **Ordering.** Author rules before library rules within a band — the
-   cross-file ordering already staged under *Ordering* (bands/group tags). Until
-   that exists, suppression is unreliable even with a working halt.
+This was chosen over two alternatives:
 
 **Rejected: a three-valued `outcome` (`succeeded`/`failed`/`undecided`).** A
 principled model (it is Inform's succeed/fail/no-decision), but it **re-merges
 continuation with result** — the value would decide whether the rulebook
 continues — which is exactly the conflation *One mechanism, not two* rejects. It
 is also an awkward fit for print bands, where "halt this band" would have to be
-written as an outcome value (`stop succeeded`/`stop failed`). Adopt only as a
-deliberate reversal of the orthogonality principle, not to patch this gap.
+written as an outcome value (`stop succeeded`/`stop failed`).
 
-**Deferred but complementary: named-rule replacement (B).** Letting a rule
-*replace* a named library rule is surgical for overrides and fits *Rule identity*
-(Named rules). The coupling it introduces (referencing a library rule by name) is
-acceptable — even desirable — for a library's *standard responses*, which are
-meant to be overridable, à la Inform's named responses. Layer it on after the
-halt+ordering work for cases ordering alone cannot express (e.g. replacing one
-rule out of several without depending on registration order).
+**Deferred but complementary: named-rule replacement.** Letting a rule *replace*
+a named library rule is surgical for overrides and fits *Rule identity* (Named
+rules). Worth adding later for cases ordering alone cannot express (e.g. replacing
+one rule out of several without depending on registration order).
 
 ### Relationship to `refuse` sugar
 
@@ -562,17 +554,24 @@ for now they remain separate to avoid forcing one model onto two purposes.
   phase-rule bands (`before/instead/check/do/after/report`) with `when` guards
   and `stop succeeded`/`stop failed`, `try ACTION:` invocation, the built-in
   `outcome` kind, and a small native action driver (`runAction`). Source-order
-  rules within a band; no cross-file ordering yet. The implicit `actor` slot and
-  the `syntax` grammar block are deferred to the Game Parser.
+  rules within a band, with a coarse author-before-library tier (see *Cross-rule
+  override suppression*); finer group/anchor ordering is not built. The implicit
+  `actor` slot and the `syntax` grammar block are deferred to the Game Parser.
 - **Implemented — failure reasons & reporting.** The open `stop_reason` type, the
-  implicit `reason` slot, `stop failed REASON`, and the fire-all `report failed`
-  band with outcome-dispatched reporting (see *Failure reasons and the `report
-  failed` band*). Converts `check` refusals from inline prints to reason +
-  reporting; advent's standard actions and `tests/fixtures/advent6.lamp` use it.
-- **Next — identity & ergonomics.** Named rules; cross-rule override suppression
-  for `report`/`report failed` (so a downstream rule shadows the library's);
-  `refuse REASON` sugar; the implicit `actor` slot defaulting to the player;
-  `void` rulebooks.
+  implicit `reason` slot, `stop failed REASON`, and the `report failed` band with
+  outcome-dispatched reporting (see *Failure reasons and the `report failed`
+  band*). Converts `check` refusals from inline prints to reason + reporting;
+  advent's standard actions and `tests/fixtures/advent6.lamp` use it.
+- **Implemented — cross-rule override suppression.** Bare `stop` halts the band
+  (the `HALT` sentinel, distinct from fall-through; bare `stop` in a value
+  rulebook yields the declared `default`) and author rules run before library
+  rules within a band, so a game rule can print and suppress a library one (see
+  *Cross-rule override suppression*). `tests/fixtures/advent7.lamp` and
+  `sample/study_advent.lamp` exercise it.
+- **Next — identity & ergonomics.** Named rules; named-rule *replacement*
+  (suppression beyond what author-before-library ordering can express); `refuse
+  REASON` sugar; the implicit `actor` slot defaulting to the player; `void`
+  rulebooks.
 - **Later — ecosystem ordering.** Bands beyond the action set, group tags and
   `order` constraints, compile-time topo-sort with the unspecified-order warning.
 
@@ -612,11 +611,11 @@ for now they remain separate to avoid forcing one model onto two purposes.
   silent failure. Should the engine require a catch-all branch, emit a built-in
   default line, or warn at compile time when an action can fail with no
   `report failed` coverage?
-- **Override suppression for report bands** — *direction chosen* (see *Cross-rule
-  override suppression*): make bare `stop` halt the band (fixing the spec/impl
-  mismatch) and add author-before-library ordering. Remaining sub-questions:
-  exactly what value a bare `stop` yields in a non-void value rulebook (proposed:
-  the `default`), and whether named-rule replacement is also needed.
+- **Override suppression for report bands** — *implemented* (see *Cross-rule
+  override suppression*): bare `stop` halts the band and author rules run before
+  library rules. Bare `stop` in a non-void value rulebook yields the declared
+  `default`. Remaining: whether named-rule *replacement* is also needed for cases
+  coarse author-before-library ordering can't express.
 - **Reading an action's outcome.** A general rulebook's result is readable via
   `follow` in expression position, but `try ACTION:` is statement-only and
   discards the `outcome` (`runAction`'s return is dropped). So author code cannot

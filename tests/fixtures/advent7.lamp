@@ -1,0 +1,31 @@
+# Exercises cross-rule override suppression (devdocs/rulebooks.md): an author
+# report rule runs before the library's, prints, and a bare `stop` halts the
+# band so advent's standard text is suppressed (not double-printed). Covers both
+# the success `report` band ("Taken.") and a `report failed` reason retheme.
+
+lib advent
+
+game Test_Override:
+	author "Test Author"
+	version 1
+	release dev
+	start Cell
+
+room Cell:
+	description "A small stone cell."
+
+item pebble:
+	holder Cell
+item altar:
+	scenery true
+	holder Cell
+
+# Author overrides: each prints and bare-`stop`s to suppress advent's line.
+report take:
+	print "You palm it."
+	stop
+
+report failed take:
+	if self.reason == cant_take_that:
+		print "It won't come loose."
+		stop

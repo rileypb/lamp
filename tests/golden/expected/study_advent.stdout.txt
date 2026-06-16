@@ -12,7 +12,7 @@ A bare foyer. A door leads north to the study.
 You see a brass key, a idol and a oak door here.
 
 > take statue
-That's not something you can take.
+That stays right where it is.
 
 > take idol
 (you hesitate)
@@ -23,7 +23,7 @@ The oak door is firmly set in its frame.
 
 > take key
 The key is cold to the touch.
-Taken.
+You tuck it carefully away.
 
 > go north
 The way north is locked.

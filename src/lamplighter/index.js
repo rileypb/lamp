@@ -8,9 +8,17 @@ const changeHandlerRegistry = new Map();
 const relationAddHandlerRegistry = new Map();
 const relationRemoveHandlerRegistry = new Map();
 const relationRegistry = new Map();
-// actionName -> { before: [], instead: [], check: [], do: [], after: [], report: [] }
+// actionName -> { before: [], instead: [], check: [], do: [], after: [], report: [], report_failed: [] }
+// Each band holds { rule, order } entries; `order` (0 author, 1 library) sorts
+// author rules ahead of library rules so an author rule can run first and halt
+// the band. See devdocs/rulebooks.md, "Cross-rule override suppression".
 const actionRuleRegistry = new Map();
 const ACTION_BANDS = ["before", "instead", "check", "do", "after", "report"];
+
+// Sentinel returned by a bare `stop`: halt the band/pipeline without deciding an
+// outcome (distinct from `undefined`, which falls through to the next rule, and
+// from an outcome value, which stops and decides). See devdocs/rulebooks.md.
+const HALT = Symbol("halt");
 
 // Wildcard sentinel for relation queries: matches any value in a slot. Distinct
 // from null/none (which match only an unset field).
@@ -324,18 +332,27 @@ function onEvent(eventName, handler) {
     eventRegistry.get(eventName).push(handler);
 }
 
-function registerActionRule(actionName, band, rule) {
+function registerActionRule(actionName, band, rule, order = 1) {
     if (!actionRuleRegistry.has(actionName)) {
         actionRuleRegistry.set(actionName, { before: [], instead: [], check: [], do: [], after: [], report: [], report_failed: [] });
     }
-    actionRuleRegistry.get(actionName)[band].push(rule);
+    actionRuleRegistry.get(actionName)[band].push({ rule, order });
 }
 
-// Runs an action instance through its rulebook bands in fixed order. A rule that
-// returns a value (a `stop`) ends the action with that outcome; a rule that
-// returns undefined (falls through) continues to the next rule. With no stop the
-// action succeeds. On a `failed` outcome the `report_failed` band then runs to
-// render the failure (self.reason is available). See devdocs/rulebooks.md.
+// Author rules (order 0) before library rules (order 1); stable so source order
+// is preserved within a tier.
+function orderedRules(entries) {
+    return [...entries].sort((a, b) => a.order - b.order);
+}
+
+// Runs an action instance through its rulebook bands in fixed order. A rule
+// returns one of: an outcome value (a `stop EXPR`) — end the pipeline with that
+// outcome; `HALT` (a bare `stop`) — halt the band/pipeline keeping the current
+// outcome; or `undefined` (fall through) — continue to the next rule. With no
+// stop the action succeeds. On a `failed` outcome the `report_failed` band then
+// runs to render the failure (self.reason is available); a bare `stop` there
+// halts it, letting an author rule suppress a library one. See
+// devdocs/rulebooks.md.
 function runAction(actionName, instance) {
     const bands = actionRuleRegistry.get(actionName);
     if (!bands) {
@@ -343,8 +360,11 @@ function runAction(actionName, instance) {
     }
     let outcome = "succeeded";
     outer: for (const band of ACTION_BANDS) {
-        for (const rule of bands[band]) {
+        for (const { rule } of orderedRules(bands[band])) {
             const result = rule(instance);
+            if (result === HALT) {
+                break outer;
+            }
             if (result !== undefined) {
                 outcome = result;
                 break outer;
@@ -352,8 +372,11 @@ function runAction(actionName, instance) {
         }
     }
     if (outcome === "failed") {
-        for (const rule of bands.report_failed) {
-            rule(instance);
+        for (const { rule } of orderedRules(bands.report_failed)) {
+            const result = rule(instance);
+            if (result === HALT || result !== undefined) {
+                break;
+            }
         }
     }
     return outcome;
@@ -832,6 +855,7 @@ module.exports = {
     onEvent,
     registerActionRule,
     runAction,
+    HALT,
     registerGrammar,
     runCommand,
     registerChangeHandler,

@@ -82,7 +82,7 @@ function runCompilation() {
     const mergedProgram = { kind: "Program", nodes: deduplicateFunctions(allNodes) };
     checkProgram(mergedProgram, { nativeFunctionNames });
 
-    const outputJs = emitProgram(mergedProgram, { nativeJsContents });
+    const outputJs = emitProgram(mergedProgram, { nativeJsContents, mainFilePath: inputFile });
 
     fs.mkdirSync(path.dirname(outputFile), { recursive: true });
     fs.writeFileSync(outputFile, outputJs, "utf8");

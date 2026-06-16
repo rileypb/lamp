@@ -1,0 +1,3 @@
+take pebble
+take altar
+quit
