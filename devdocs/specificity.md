@@ -5,6 +5,7 @@ When Lamp determines which rule to apply, it uses a system of specificity to dec
 The specificity of a when clause is initially defined as 0.
 
 - Each atomic boolean condition (comparison, literal, etc.) is assigned a value of 1 point.
+- A relation query (e.g. `connects foyer north hall`) contributes one point per **non-wildcard** slot. A fully-wildcarded query (`connects _ _ _`) contributes 0 points; `connects foyer _ hall` contributes 2.
 - The value of two anded conditions is the sum of their individual points.
 - The value of two ored conditions is the maximum of their individual points.
 - A negated condition (`not`) has the same specificity as its inner condition — specificity is unchanged by negation.

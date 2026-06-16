@@ -544,6 +544,7 @@ When a function is called, Lamp evaluates which definition applies by selecting 
 
 Specificity rules (see `devdocs/specificity.md` for full detail):
 - Each atomic condition contributes 1 point.
+- A relation query contributes one point per non-wildcard slot: `connects foyer north hall` scores 3; `connects foyer _ _` scores 1; `connects _ _ _` scores 0.
 - `COND_A and COND_B` has specificity equal to the sum of its parts.
 - `COND_A or COND_B` has specificity equal to the maximum of its parts.
 - `not COND` has the same specificity as `COND`.
@@ -565,7 +566,7 @@ function int damage(int base) when hero_buffed == true and boss_fight == true:
 **Constraints** (enforced at compile time):
 - All overloads of a function must share the same parameter count, parameter names, parameter types, and return type.
 - At most one overload may be unconditional. Multiple unconditional definitions are an error.
-- `when` conditions may only reference globals and object properties — not parameters, local variables, or function calls.
+- `when` conditions may reference globals, object properties, and relation queries — not parameters, local variables, or function calls.
 
 ### Relations
 
@@ -1258,7 +1259,7 @@ Lantern performs a semantic checking pass before emission.
 - `return EXPRESSION` inside a function body is checked against the function's declared return type when the expression type can be inferred.
 - Function parameters and the loop variable in `for` are typed as locals within their enclosing body. Function parameters take the declared parameter type; the loop variable has type `int`.
 - `function`-typed parameters and `FunctionRefExpr` values are accepted without deeper signature checking — the static checker does not currently validate that a passed function's parameter list or return type matches what the receiving parameter expects.
-- Conditional overloads (`when` clauses) are validated: all overloads of a function must share the same signature; at most one may be unconditional; `when` conditions may not contain function calls or function references; `when` conditions must produce a `bool` value. Syntactically identical `when` conditions on the same function produce a warning.
+- Conditional overloads (`when` clauses) are validated: all overloads of a function must share the same signature; at most one may be unconditional; `when` conditions may not contain function calls or function references (relation queries are allowed); `when` conditions must produce a `bool` value. Syntactically identical `when` conditions on the same function produce a warning.
 - Native function declarations are validated against the collected native JavaScript: if a `native function` declaration names a function that does not appear (as a `function NAME(` pattern) in any `index.js` from the compiled library set, Lantern reports a compile error.
 - The no-shadowing rule is enforced: a `let` binding, function parameter, or `for` loop variable whose name matches a declared global is a compile error.
 - Assignment to a bare name that is neither a `let`-bound local in scope nor a declared global is a compile error.
