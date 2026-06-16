@@ -35,6 +35,11 @@ every-turn rules and timed/scheduled events, plus out-of-world actions
 - **See:** `devdocs/rulebooks.md` roadmap, `devdocs/game_parser.md` v2.
 
 ## Smaller / opportunistic
+- **Bare-direction movement.** Players expect `northeast` (or `n`, `ne`) to
+  move without typing `go`. Implement as additional `syntax:` lines on the `go`
+  action (one per direction/abbreviation), or as a parser pre-pass that expands
+  a lone direction word to `go [direction]`. No new language features needed.
+  **Where:** `lib/advent/actions.lamp` syntax block and/or `src/lamplighter/index.js`.
 - Add a **one-way** connection to a test map (plain `connects`, no `bidi`) to
   lock in that asymmetric exits stay asymmetric.
 - Confirm `list<T>` field types parse end-to-end (open question in
