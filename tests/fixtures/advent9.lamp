@@ -1,0 +1,14 @@
+lib advent
+
+game Dark_Test:
+	author "Test Author"
+	start cellar
+
+room cellar:
+	description "A damp stone cellar."
+	lighted false
+
+room hall:
+	description "A lamplit hallway."
+
+bidi connects cellar north hall

@@ -1,0 +1,16 @@
+Darkness
+It is pitch dark, and you can't see a thing.
+
+> look
+Darkness
+It is pitch dark, and you can't see a thing.
+
+> go north
+hall
+A lamplit hallway.
+
+> go south
+Darkness
+It is pitch dark, and you can't see a thing.
+
+> quit

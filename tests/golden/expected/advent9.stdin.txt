@@ -1,0 +1,4 @@
+look
+go north
+go south
+quit

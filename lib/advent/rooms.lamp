@@ -3,9 +3,13 @@ native function list<string> contents_of(room r)
 # All of the printing for room description is in here, including
 # listing contents, and whatever else we may want to add.
 function void describe_room(room r):
-	print r
-	print r.description
-	list_room_contents(r)
+	if r.lighted:
+		print r
+		print r.description
+		list_room_contents(r)
+	else:
+		print "Darkness"
+		print "It is pitch dark, and you can't see a thing."
 
 function void list_room_contents(room r):
 	let contents = contents_of(r)
