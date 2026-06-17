@@ -78,7 +78,14 @@ check drop:
 		stop failed not_carrying
 
 do drop:
-	remove wears self.actor self.dropped
+	if wears self.actor self.dropped:
+		if (self.actor == player):
+			print "(first taking off " + self.dropped + ")"
+		try doff:
+			clothing self.dropped
+			actor self.actor
+		if wears self.actor self.dropped:
+			stop failed
 	self.dropped.holder = self.actor.holder
 
 report drop:
@@ -128,6 +135,30 @@ report failed wear:
 		stop
 	if self.reason == already_worn:
 		print "You're already wearing that."
+		stop
+
+action doff:
+	item clothing
+	syntax:
+		"remove [clothing]"
+		"take off [clothing]"
+
+check doff:
+	if not (wears self.actor self.clothing):
+		stop failed not_worn
+
+do doff:
+	remove wears self.actor self.clothing
+
+report doff:
+	if self.actor == player:
+		print "You take off " + self.clothing + "."
+	else:
+		print self.actor + " takes off " + self.clothing + "."
+
+report failed doff:
+	if self.reason == not_worn:
+		print "You're not wearing that."
 		stop
 
 action go:

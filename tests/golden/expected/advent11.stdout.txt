@@ -6,6 +6,10 @@ You see a hat here.
 > npc act
 npc takes hat.
 npc puts on coat.
+npc takes off coat.
+npc puts on coat.
+npc takes off coat.
+npc drops coat.
 npc drops hat.
 
 > quit

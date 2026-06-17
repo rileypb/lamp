@@ -2,6 +2,10 @@ wear book
 wear hat
 i
 wear hat
+remove book
+remove hat
+i
+wear hat
 drop hat
 i
 quit

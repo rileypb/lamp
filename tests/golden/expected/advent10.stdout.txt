@@ -18,7 +18,22 @@ You are carrying:
 > wear hat
 You're already wearing that.
 
+> remove book
+You're not wearing that.
+
+> remove hat
+You take off hat.
+
+> i
+You are carrying:
+  hat
+
+> wear hat
+You put on hat.
+
 > drop hat
+(first taking off hat)
+You take off hat.
 Dropped.
 
 > i

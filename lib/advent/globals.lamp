@@ -17,6 +17,7 @@ stop_reason not_carrying
 stop_reason cant_go_that_way
 stop_reason not_wearable
 stop_reason already_worn
+stop_reason not_worn
 
 # directions
 #

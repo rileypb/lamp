@@ -29,6 +29,15 @@ do npc_act:
 	try wear:
 		clothing coat
 		actor npc
+	try doff:
+		clothing coat
+		actor npc
+	try wear:
+		clothing coat
+		actor npc
+	try drop:
+		dropped coat
+		actor npc
 	try drop:
 		dropped hat
 		actor npc
