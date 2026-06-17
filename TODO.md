@@ -16,7 +16,7 @@ player command (the `run_command` path discards `runAction`'s result, unlike
 
 ## Smaller / opportunistic
 - **`wearable` on cloak in sample.** `lib/advent/globals.lamp` now has the `wears` relation and `wear`/`doff` actions, but `sample/cloak.lamp`'s cloak item lacks `wearable true`. Add when sample edits are requested.
-- **Document `wearable`/`wear`/`doff`/`wears` in devdocs/specs.md.** The fields and actions were added to lib/advent but not yet described in the spec.
+- **`wearable` on cloak in sample.** The `wear`/`doff` actions are now in lib/advent, but `sample/cloak.lamp`'s cloak item lacks `wearable true`. Add when sample edits are requested.
 - Add a **one-way** connection to a test map (plain `connects`, no `bidi`) to
   lock in that asymmetric exits stay asymmetric.
 - **Named-rule replacement.** Override suppression now works via bare-`stop` +

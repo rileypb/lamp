@@ -89,8 +89,8 @@ Lantern-generated JavaScript targets the following Lamplighter API surface:
     - Returns a type handle.
     - Type handle exposes `all`, which includes instances of the type and all subtypes.
     - `all.first` returns the first element in that list.
-- `defineRelation(name, fields, syntaxTemplate?, invertedFields?)`
-    - Registers a relation type. Internally registers it as a type (so `name.all` and the instance registry work) and records the field schema, optional syntax template, and the list of `inverted`-tagged field names.
+- `defineRelation(name, fields, syntaxTemplate?, invertedFields?, sourceField?, targetField?)`
+    - Registers a relation type. Internally registers it as a type (so `name.all` and the instance registry work) and records the field schema, optional syntax template, the list of `inverted`-tagged field names, and the canonical source and target field names (used by `relationInverse` to derive the mechanical inverse).
 - `addRelation(typeName, fields, options?)`
     - Creates a relation instance from a field-value mapping.
     - Deduplicates by field values (object fields by identity, value fields by equality); asserting an identical instance returns the existing one. For a `bidi` instance, an assertion that matches its mechanical inverse also deduplicates against it.
@@ -891,6 +891,32 @@ the action `succeeded`. (`stop` in a phase rule carries an `outcome` value; the
 band words are contextual keywords, valid only as the leading token of a phase
 rule for a declared action.)
 
+`stop failed` may carry an optional stop reason:
+
+```lamp
+stop failed REASON
+```
+
+`REASON` is any object of a `stop_reason` type (an open type whose instances are
+declared like ordinary objects: `stop_reason not_carrying`). When a `stop failed
+REASON` halts the action, the reason is stored in `self.reason` on the action
+instance and is available to the `report failed` band.
+
+A seventh band, **`report failed`**, runs only when the action outcome is
+`failed`. It is declared like any other band:
+
+```lamp
+report failed take:
+    if self.reason == not_carrying:
+        print "You're not carrying that."
+        stop
+```
+
+`self.reason` holds the stop reason passed to `stop failed`, or `none` if no
+reason was given. A bare `stop` inside a `report failed` body suppresses further
+`report failed` rules (identical to `stop` behavior in other bands). If no
+`report failed` rule fires, the failed action produces no output.
+
 #### Running an action
 
 ```lamp
@@ -900,12 +926,35 @@ try ACTION:
 ```
 
 `try` constructs an action instance with the given slot values and runs it
-through the bands. It is a statement; slot values follow the same rules as object
-field values (a literal or a bare object reference).
+through the bands. Slot values may be literals, bare object references, or
+property-access expressions (e.g. `self.actor`, `self.clothing`).
+
+`try` used as a **statement** runs the action and discards the outcome:
 
 ```lamp
 try take:
     taken lamp
+```
+
+`try` used as an **expression** produces the action's outcome — either the
+string `"succeeded"` or `"failed"` — and may be bound with `let`:
+
+```lamp
+let result = try take:
+    taken self.clothing
+if not (result == succeeded):
+    stop failed
+```
+
+**`actor` override**: every action instance carries an implicit `actor` field set
+by the game loop. Inside an action body, a nested `try` block may specify `actor`
+explicitly to run the inner action on behalf of a different actor, even when
+`actor` is not declared as a slot on the inner action:
+
+```lamp
+try take:
+    taken self.clothing
+    actor self.actor
 ```
 
 ### Name resolution and scope
@@ -1268,6 +1317,67 @@ Lantern performs a semantic checking pass before emission.
 - Native function declarations are validated against the collected native JavaScript: if a `native function` declaration names a function that does not appear (as a `function NAME(` pattern) in any `index.js` from the compiled library set, Lantern reports a compile error.
 - The no-shadowing rule is enforced: a `let` binding, function parameter, or `for` loop variable whose name matches a declared global is a compile error.
 - Assignment to a bare name that is neither a `let`-bound local in scope nor a declared global is a compile error.
+
+## lib/advent
+
+`lib advent` is the standard Inform-style IF library. A file that begins with
+`lib advent` gets the full suite of types, relations, globals, and actions
+described below.
+
+### Types
+
+| Type | Parent | Key fields |
+|---|---|---|
+| `thing` | — | `string printed_name`, `string understand` |
+| `physical` | `thing` | `article article` |
+| `room` | `container` | `string description`, `bool lighted` (default `true`) |
+| `item` | `physical` | `bool scenery`, `bool wearable`, `container holder` |
+| `box` | `item, container` | `bool closable`, `bool closed` |
+| `person` | `physical` | `container holder` |
+| `direction` | `thing` | `direction inverse`, `string understand` |
+
+`article` is an enum kind with values `count`, `definite`, `proper`, `plural`.
+`stop_reason` is an open object type; lib/advent declares the reasons listed
+below, and game files may declare more.
+
+### Globals and constants
+
+- `global person player = yourself` — the player character; `yourself` is a
+  built-in `person` object.
+- `global string input` — the raw input line each turn.
+- `global list<string> words` — the input split into words.
+- Directions: `north`, `northeast`, `east`, `southeast`, `south`, `southwest`,
+  `west`, `northwest`, `up`, `down` — each with an `inverse` and an `understand`
+  alias (e.g. `"n"`, `"ne"`).
+
+### Relations
+
+- **`connects`** — room connectivity. `from room source`, `direction dir
+  inverted`, `to room target`. Custom syntax: `connects [source] [dir]
+  [target]`. Assert with `bidi` for two-way exits.
+- **`wears`** — worn items. `from person wearer`, `to item worn`. Custom syntax:
+  `wears [wearer] [worn]`. The `wear` action asserts this; `doff` retracts it.
+
+### Stop reasons
+
+`already_carrying`, `cant_take_that`, `not_carrying`, `cant_go_that_way`,
+`not_wearable`, `already_worn`, `not_worn`.
+
+### Actions
+
+| Action | Slots | Player syntax | Notes |
+|---|---|---|---|
+| `look` | — | `look`, `l` | Describes the current room. |
+| `take` | `item taken` | `take [taken]`, `get [taken]` | Moves item to actor. |
+| `drop` | `item dropped` | `drop [dropped]` | Moves item to actor's location; implicitly calls `doff` if item is worn (printing `(first taking off X)` for the player). |
+| `inventory` | — | `inventory`, `i` | Lists carried items; marks worn items with `(worn)`. |
+| `wear` | `item clothing` | `wear [clothing]` | Asserts `wears actor clothing`; implicitly calls `take` if item is not yet carried (printing `(first taking X)` for the player). |
+| `doff` | `item clothing` | `remove [clothing]`, `take off [clothing]` | Retracts `wears actor clothing`. (Named `doff` internally because `remove` is a reserved keyword.) |
+| `go` | `direction way` | `go [way]`, `[way]` | Moves actor along a `connects` edge. |
+
+All report rules are actor-aware: player actions produce second-person text
+(`"Taken."`, `"Dropped."`, etc.); NPC actions produce third-person text
+(`"npc takes hat."`, `"npc drops hat."`, etc.).
 
 ## Open Questions
 
