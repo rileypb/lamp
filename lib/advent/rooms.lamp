@@ -5,7 +5,7 @@ native function list<string> contents_of(room r)
 function void describe_room(room r):
 	print r
 	print r.description
-	list_room_contents(self.actor.holder)
+	list_room_contents(r)
 
 function void list_room_contents(room r):
 	let contents = contents_of(r)

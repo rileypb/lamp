@@ -20,6 +20,7 @@ type container < physical
 
 type room < container:
 	string description
+	bool lighted = true
 
 type item < physical:
 	bool scenery

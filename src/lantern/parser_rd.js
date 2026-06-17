@@ -157,8 +157,13 @@ function createParser(tokens, filePath, globalNames, functionNames = new Set(), 
         while (!at("DEDENT")) {
             const fieldType = parseFieldType();
             const fieldName = plainName("field name");
+            let defaultValue = null;
+            if (at("EQUALS")) {
+                next();
+                defaultValue = parseSimpleValue();
+            }
             expectNewline();
-            fields.push(ast.createFieldDecl(fieldType, fieldName));
+            fields.push(ast.createFieldDecl(fieldType, fieldName, defaultValue));
         }
         next();
         return fields;

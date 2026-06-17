@@ -71,8 +71,8 @@ function createIfStatement(condition, thenBody, elseBody) {
     return { kind: "IfStatement", condition, thenBody, elseBody };
 }
 
-function createFieldDecl(typeName, fieldName) {
-    return { kind: "FieldDecl", typeName, fieldName };
+function createFieldDecl(typeName, fieldName, defaultValue = null) {
+    return { kind: "FieldDecl", typeName, fieldName, defaultValue };
 }
 
 function createFieldAssign(fieldName, value, filePath, lineNumber) {

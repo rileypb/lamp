@@ -54,7 +54,18 @@ function bootstrapBuiltins() {
     builtinsInitialized = true;
 }
 
-function defineType(name, parents, fields) {
+function collectDefaults(typeName) {
+    const typeInfo = typeRegistry.get(typeName);
+    if (!typeInfo) return {};
+    const result = {};
+    for (const parent of typeInfo.parents) {
+        Object.assign(result, collectDefaults(parent));
+    }
+    Object.assign(result, typeInfo.defaults);
+    return result;
+}
+
+function defineType(name, parents, fields, defaults = {}) {
     if (typeRegistry.has(name)) {
         throw new Error(`Type already defined: ${name}`);
     }
@@ -70,6 +81,7 @@ function defineType(name, parents, fields) {
         name,
         parents: normalizedParents,
         fields: { ...fields },
+        defaults: { ...defaults },
     });
 
     if (!instanceRegistry.has(name)) {
@@ -258,6 +270,7 @@ function createObject(typeName, objectName, fieldValues) {
     const instance = {
         name: objectName,
         type: typeName,
+        ...collectDefaults(typeName),
         ...fieldValues,
     };
 

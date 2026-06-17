@@ -349,11 +349,15 @@ function emitKindExpr(expr) {
 
 function emitTypeDecl(node) {
     const fields = {};
+    const defaults = {};
     for (const field of node.fields) {
         fields[field.fieldName] = field.typeName;
+        if (field.defaultValue !== null) {
+            defaults[field.fieldName] = field.defaultValue.value;
+        }
     }
-
-    return `lamplighter.defineType(${JSON.stringify(node.name)}, ${JSON.stringify(node.parents || [])}, ${JSON.stringify(fields)});`;
+    const defaultsArg = Object.keys(defaults).length > 0 ? `, ${JSON.stringify(defaults)}` : "";
+    return `lamplighter.defineType(${JSON.stringify(node.name)}, ${JSON.stringify(node.parents || [])}, ${JSON.stringify(fields)}${defaultsArg});`;
 }
 
 function emitRelationDecl(node) {

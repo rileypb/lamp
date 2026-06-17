@@ -316,6 +316,16 @@ function buildTypeSchema(nodes) {
                     `type "${node.name}" reopens but field "${f.fieldName}" is already declared`,
                 );
             }
+            if (f.defaultValue !== null) {
+                const defaultType = inferLiteralType(f.defaultValue);
+                if (defaultType !== null && defaultType !== f.typeName) {
+                    throw typeError(
+                        node.filePath,
+                        node.lineNumber,
+                        `default value for "${node.name}.${f.fieldName}" has type "${defaultType}" but field is declared "${f.typeName}"`,
+                    );
+                }
+            }
             existingFields.set(f.fieldName, f.typeName);
         }
     }
