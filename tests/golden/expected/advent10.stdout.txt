@@ -1,0 +1,25 @@
+hall
+A plain hall.
+
+You see a hat and a book here.
+
+> wear book
+That's not something you can wear.
+
+> wear hat
+You put on hat.
+
+> i
+You are carrying:
+  hat (worn)
+
+> wear hat
+You're already wearing that.
+
+> drop hat
+Dropped.
+
+> i
+You are carrying nothing.
+
+> quit

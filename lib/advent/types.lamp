@@ -24,6 +24,7 @@ type room < container:
 
 type item < physical:
 	bool scenery
+	bool wearable
 	container holder
 
 type box < item, container:

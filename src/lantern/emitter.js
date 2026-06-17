@@ -369,7 +369,7 @@ function emitRelationDecl(node) {
     return `lamplighter.defineRelation(${JSON.stringify(node.name)}, ${JSON.stringify(fields)}, ${syntaxArg}, ${JSON.stringify(node.invertedFields || [])}, ${JSON.stringify(node.sourceField)}, ${JSON.stringify(node.targetField)});`;
 }
 
-function emitRelationAssert(node) {
+function emitRelationAssert(node, globalNames = new Set()) {
     const schema = relationFieldSchemas.get(node.relationName) || {};
     const pairs = node.fields.map((field) => {
         const fieldType = schema[field.fieldName];
@@ -379,7 +379,7 @@ function emitRelationAssert(node) {
             && !emitKindNames.has(fieldType);
         const valueExpr = isObjectTyped
             ? `lamplighter.getObject(${JSON.stringify(field.value.value)})`
-            : emitValue(field.value);
+            : emitExpression(field.value, globalNames);
         return `${JSON.stringify(field.fieldName)}: ${valueExpr}`;
     });
     const opts = [];
@@ -711,7 +711,7 @@ function emitStatementLines(statement, indentLevel, globalNames = new Set()) {
         return lines;
     }
     if (statement.kind === "RelationAssert") {
-        return [`${indent}${emitRelationAssert(statement)}`];
+        return [`${indent}${emitRelationAssert(statement, globalNames)}`];
     }
     if (statement.kind === "RelationRemove") {
         return [`${indent}${emitRelationRemove(statement, globalNames)}`];

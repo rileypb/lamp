@@ -1,0 +1,7 @@
+wear book
+wear hat
+i
+wear hat
+drop hat
+i
+quit

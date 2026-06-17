@@ -1,0 +1,15 @@
+lib advent
+
+game Wear_Test:
+    author "Test Author"
+    start hall
+
+room hall:
+    description "A plain hall."
+
+item hat:
+    wearable true
+    holder hall
+
+item book:
+    holder hall

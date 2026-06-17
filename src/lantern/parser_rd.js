@@ -359,8 +359,10 @@ function createParser(tokens, filePath, globalNames, functionNames = new Set(), 
     // Custom-syntax assertion driven by a relation's `syntax` template. Literal
     // parts must match verbatim (IDENT or KEYWORD tokens both allowed, so a
     // reserved word like `to` may appear as a literal); slot parts consume one
-    // simple value. Produces the same RelationAssert node as the block form.
-    function parseCustomSyntaxAssert(template, instanceName, headLine) {
+    // value. When localNames is provided (statement body context), slot values
+    // may be property-access chains such as `self.actor`; at top level they are
+    // plain object names. Produces the same RelationAssert node as the block form.
+    function parseCustomSyntaxAssert(template, instanceName, headLine, localNames = null) {
         const headToken = peek();
         if (headLine === undefined) headLine = headToken.line;
 
@@ -378,7 +380,15 @@ function createParser(tokens, filePath, globalNames, functionNames = new Set(), 
                 }
             } else {
                 const valueToken = peek();
-                const value = parseSimpleValue();
+                let value;
+                if (localNames !== null && valueToken.type === "IDENT"
+                        && valueToken.value !== "true" && valueToken.value !== "false"
+                        && valueToken.value !== "none") {
+                    next();
+                    value = parseIdentExpr(valueToken, localNames);
+                } else {
+                    value = parseSimpleValue();
+                }
                 fields.push(ast.createFieldAssign(part.field, value, filePath, valueToken.line));
             }
         }
@@ -824,7 +834,7 @@ function createParser(tokens, filePath, globalNames, functionNames = new Set(), 
         }
         if (token.type === "IDENT") {
             if (relationNames.has(token.value) && peek(1).type === "COLON") return parseRelationAssert();
-            if (relationTemplates.has(token.value)) return parseCustomSyntaxAssert(relationTemplates.get(token.value), null);
+            if (relationTemplates.has(token.value)) return parseCustomSyntaxAssert(relationTemplates.get(token.value), null, undefined, localNames);
             if (peek(1).type === "IDENT" && relationTemplates.has(peek(1).value)) return parseNamedCustomSyntaxAssert(localNames);
             if (peek(1).type === "LPAREN") return parseCallStatement(localNames);
             return parseAssign(localNames);

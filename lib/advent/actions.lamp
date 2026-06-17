@@ -75,6 +75,7 @@ check drop:
 		stop failed not_carrying
 
 do drop:
+	remove wears self.actor self.dropped
 	self.dropped.holder = self.actor.holder
 
 report drop:
@@ -83,6 +84,34 @@ report drop:
 report failed drop:
 	if self.reason == not_carrying:
 		print "You aren't carrying that."
+		stop
+
+action wear:
+	item clothing
+	syntax:
+		"wear [clothing]"
+
+check wear:
+	if not self.clothing.wearable:
+		stop failed not_wearable
+
+check wear:
+	if wears self.actor self.clothing:
+		stop failed already_worn
+
+do wear:
+	self.clothing.holder = self.actor
+	wears self.actor self.clothing
+
+report wear:
+	print "You put on " + self.clothing + "."
+
+report failed wear:
+	if self.reason == not_wearable:
+		print "That's not something you can wear."
+		stop
+	if self.reason == already_worn:
+		print "You're already wearing that."
 		stop
 
 action go:
