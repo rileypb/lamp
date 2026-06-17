@@ -1,0 +1,6 @@
+west
+hang cloak on hook
+east
+south
+read sawdust
+quit

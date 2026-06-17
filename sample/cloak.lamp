@@ -1,0 +1,195 @@
+# ============================================================================
+# Cloak of Darkness
+# Originally by Roger Firth and Sonja Keränen.
+# Ported to Lamp.
+#
+# Spec: https://www.ifwiki.org/Cloak_of_Darkness
+# Local copy: sample/cloak.md
+#
+# Missing Lamp features (see end of file for notes):
+#   1. No game-end from rules — player must type `quit` after reading the message.
+#   2. No `wearing` concept — the cloak is in inventory, not modeled as worn.
+#   3. No generic "before every action" rule — dark-bar interception is listed
+#      per action; any undeclared action slips through without a warning.
+# ============================================================================
+
+lib advent
+
+game Cloak_of_Darkness:
+    author "Roger Firth and Sonja Keränen"
+    start foyer
+
+# ========== Rooms ==========
+
+room foyer:
+    description "You are standing in a spacious hall, splendidly decorated in red and gold, with glittering chandeliers overhead. Doorways lead south and west; a door to the north is barred."
+
+room bar:
+    description "The bar, much rougher than you'd have guessed after the opulence of the foyer to the north, is completely empty. There seems to be some sort of message scrawled in the sawdust on the floor."
+    lighted false
+
+room cloakroom:
+    description "The walls of this small room were clearly once lined with hooks, though now only one remains. The exit is a door to the east."
+
+bidi connects foyer south bar
+bidi connects foyer west cloakroom
+
+# ========== Items ==========
+
+item hook:
+    scenery true
+    holder cloakroom
+
+# The cloak starts in the player's inventory (modeled as "worn").
+item cloak:
+    holder yourself
+
+item sawdust:
+    scenery true
+    holder bar
+
+# ========== Dark-bar disturbance counter ==========
+
+global int disturbance = 0
+
+# ========== Dynamic bar lighting ==========
+#
+# The bar is dark when the cloak is with the player inside the bar.
+# We update bar.lighted just before a `go` action moves the player in,
+# so describe_room sees the correct state.
+
+before go:
+    let dest = connects self.actor.holder self.way ?first
+    if dest == bar:
+        bar.lighted = not (cloak.holder == player)
+
+# The `hang` and `drop` actions can also change cloak location in the cloakroom.
+# After either, refresh bar lighting in case the player later returns.
+
+after hang when self.carried == cloak:
+    bar.lighted = not (cloak.holder == player)
+
+after drop when self.dropped == cloak:
+    bar.lighted = not (cloak.holder == player)
+
+# ========== North exit from foyer is blocked ==========
+
+instead go when self.way == north and self.actor.holder == foyer:
+    print "That way leads out into the night, and the door is barred. You can't leave yet."
+    stop failed
+
+# ========== Dark-bar interception ==========
+#
+# Any action other than going north while in a dark bar disturbs the sawdust.
+# Because Lamp has no "before every action" rule, each standard action is listed
+# individually. Novel game-defined actions would not be caught.
+
+instead take when self.actor.holder == bar and not bar.lighted:
+    print "Blundering around in the dark isn't a good idea!"
+    disturbance = disturbance + 1
+    stop failed
+
+instead drop when self.actor.holder == bar and not bar.lighted:
+    print "Blundering around in the dark isn't a good idea!"
+    disturbance = disturbance + 1
+    stop failed
+
+instead inventory when self.actor.holder == bar and not bar.lighted:
+    print "Blundering around in the dark isn't a good idea!"
+    disturbance = disturbance + 1
+    stop failed
+
+instead examine when self.actor.holder == bar and not bar.lighted:
+    print "Blundering around in the dark isn't a good idea!"
+    disturbance = disturbance + 1
+    stop failed
+
+instead read when self.actor.holder == bar and not bar.lighted:
+    print "Blundering around in the dark isn't a good idea!"
+    disturbance = disturbance + 1
+    stop failed
+
+instead hang when self.actor.holder == bar and not bar.lighted:
+    print "Blundering around in the dark isn't a good idea!"
+    disturbance = disturbance + 1
+    stop failed
+
+# Going any direction other than north while dark also disturbs things.
+instead go when self.actor.holder == bar and not bar.lighted and not (self.way == north):
+    print "Blundering around in the dark isn't a good idea!"
+    disturbance = disturbance + 1
+    stop failed
+
+# `look` still shows the darkness text (describe_room handles that), but it
+# counts as disturbing the bar.
+before look when self.actor.holder == bar and not bar.lighted:
+    disturbance = disturbance + 1
+
+# ========== Custom actions ==========
+
+# --- examine ---
+action examine:
+    item target
+    syntax:
+        "examine [target]"
+        "x [target]"
+
+report examine when self.target == cloak:
+    print "A handsome cloak, of velvet trimmed with satin, and slightly splattered with..."
+    print "ichor? The satin lining shines with a deep, blue-black sheen."
+
+report examine when self.target == hook:
+    print "It's a small brass hook, screwed into the wall."
+
+report examine when self.target == sawdust:
+    print "The sawdust on the floor has been disturbed. Something is written there."
+
+report failed examine:
+    print "There is nothing special about that."
+    stop
+
+# --- hang [item] on [hook] ---
+action hang:
+    item carried
+    item peg
+    syntax:
+        "hang [carried] on [peg]"
+        "put [carried] on [peg]"
+
+check hang:
+    if not (self.carried.holder == self.actor):
+        stop failed not_carrying
+
+check hang:
+    if not (self.peg == hook):
+        print "That's not something you can hang things on."
+        stop failed
+
+do hang:
+    self.carried.holder = self.peg
+
+report hang:
+    print "You hang the cloak neatly on the hook."
+
+# --- read ---
+action read:
+    item target
+    syntax:
+        "read [target]"
+
+check read:
+    if not (self.target == sawdust):
+        print "There's nothing to read there."
+        stop failed
+
+report read when self.target == sawdust:
+    if disturbance == 0:
+        print "The message, neatly marked in the sawdust, reads..."
+        print ""
+        print "    *** You have won ***"
+    else:
+        print "The message, hurriedly scrawled in the sawdust, reads..."
+        print ""
+        print "    *** You have lost ***"
+    print ""
+    print "(Type 'quit' to end the game.)"
