@@ -101,12 +101,13 @@ check wear:
 
 do wear:
 	if not (self.clothing.holder == self.actor):
+		if (self.actor == player):
+			print "(first taking " + self.clothing + ")"
 		let result = try take:
 			taken self.clothing
 			actor self.actor
-		if not (result == succeeded):
+		if not (self.clothing.holder == self.actor):
 			stop failed
-		print "(first taking " + self.clothing + ")"
 	wears self.actor self.clothing
 
 report wear:
