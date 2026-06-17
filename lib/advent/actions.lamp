@@ -100,7 +100,13 @@ check wear:
 		stop failed already_worn
 
 do wear:
-	self.clothing.holder = self.actor
+	if not (self.clothing.holder == self.actor):
+		let result = try take:
+			taken self.clothing
+			actor self.actor
+		if not (result == succeeded):
+			stop failed
+		print "(first taking " + self.clothing + ")"
 	wears self.actor self.clothing
 
 report wear:

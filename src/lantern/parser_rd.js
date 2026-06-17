@@ -500,6 +500,32 @@ function createParser(tokens, filePath, globalNames, functionNames = new Set(), 
         return fields;
     }
 
+    // Like parseObjectBody but accepts property-access chains (e.g. `self.actor`)
+    // in value positions when localNames is provided. Used for `try` blocks and
+    // block-form relation assertions inside action bodies.
+    function parseExprBody(localNames) {
+        expect("INDENT", "Expected an indented block");
+        const fields = [];
+        while (!at("DEDENT")) {
+            const nameToken = peek();
+            const fieldName = plainName("field name");
+            const valueToken = peek();
+            let value;
+            if (valueToken.type === "IDENT"
+                    && valueToken.value !== "true" && valueToken.value !== "false"
+                    && valueToken.value !== "none") {
+                const token = next();
+                value = parseIdentExpr(token, localNames);
+            } else {
+                value = parseSimpleValue();
+            }
+            expectNewline();
+            fields.push(ast.createFieldAssign(fieldName, value, filePath, nameToken.line));
+        }
+        next();
+        return fields;
+    }
+
     // Object-field and global values are literals or a bare object reference,
     // never full expressions (mirrors the legacy parseSimpleValue).
     function parseSimpleValue() {
@@ -824,7 +850,7 @@ function createParser(tokens, filePath, globalNames, functionNames = new Set(), 
                 case "disconnect": return parseDisconnectStatement();
                 case "stop": return parseStop(localNames);
                 case "follow": return parseFollowStatement(localNames);
-                case "try": return parseTryStatement();
+                case "try": return parseTryStatement(localNames);
                 case "break":
                     next();
                     expectNewline();
@@ -868,22 +894,22 @@ function createParser(tokens, filePath, globalNames, functionNames = new Set(), 
 
     // `try ACTION:` with an indented block of `slot value` lines constructs an
     // action instance and runs it through its rulebook bands.
-    function parseTryStatement() {
+    function parseTryStatement(localNames = null) {
         const keyword = expectKeyword("try");
-        const { actionName, fields } = parseTryTail();
+        const { actionName, fields } = parseTryTail(localNames);
         return ast.createTryStatement(actionName, fields, filePath, keyword.line);
     }
 
     // Parses the action name and optional `:`-block after the `try` keyword,
     // consuming the trailing newline (and block). Shared by the statement form
     // and the `let x = try ...` expression form.
-    function parseTryTail() {
+    function parseTryTail(localNames = null) {
         const actionName = plainName("action name");
         let fields = [];
         if (at("COLON")) {
             next();
             expectNewline();
-            fields = parseObjectBody();
+            fields = localNames !== null ? parseExprBody(localNames) : parseObjectBody();
         } else {
             expectNewline();
         }
@@ -933,7 +959,7 @@ function createParser(tokens, filePath, globalNames, functionNames = new Set(), 
         // tail consumes its own newline/block, so don't expect a newline after.
         if (atKeyword("try")) {
             const tryKeyword = next();
-            const { actionName, fields } = parseTryTail();
+            const { actionName, fields } = parseTryTail(localNames);
             localNames.add(name);
             const tryExpr = ast.createTryExpr(actionName, fields, filePath, tryKeyword.line);
             return ast.createLetStatement(name, tryExpr, filePath, keyword.line);

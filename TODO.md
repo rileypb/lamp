@@ -15,6 +15,9 @@ player command (the `run_command` path discards `runAction`'s result, unlike
 - **See:** `devdocs/rulebooks.md` roadmap, `devdocs/game_parser.md` v2.
 
 ## Smaller / opportunistic
+- **`remove` (take off) action.** Counterpart to `wear` — retract `wears` relation and print "You take off X." Not yet implemented in `lib/advent/actions.lamp`.
+- **`wearable` on cloak in sample.** `lib/advent/globals.lamp` now has the `wears` relation and `wear` action, but `sample/cloak.lamp`'s cloak item lacks `wearable true`. Add when sample edits are requested.
+- **Document `wearable`/`wear`/`wears` in devdocs/specs.md.** The fields and action were added to lib/advent but not yet described in the spec.
 - Add a **one-way** connection to a test map (plain `connects`, no `bidi`) to
   lock in that asymmetric exits stay asymmetric.
 - **Named-rule replacement.** Override suppression now works via bare-`stop` +

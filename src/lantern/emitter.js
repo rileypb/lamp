@@ -760,7 +760,7 @@ function emitTryCall(node, globalNames = new Set()) {
             && !emitKindNames.has(slotType);
         const valueExpr = isObject
             ? `lamplighter.getObject(${JSON.stringify(field.value.value)})`
-            : emitValue(field.value);
+            : emitExpression(field.value, globalNames);
         return `${JSON.stringify(field.fieldName)}: ${valueExpr}`;
     });
     const instance = `{ "type": ${JSON.stringify(node.actionName)}${pairs.length ? ", " + pairs.join(", ") : ""} }`;

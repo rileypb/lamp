@@ -541,6 +541,9 @@ function checkTryStatement(stmt, typeSchema, kindSchema, localTypes, functionSch
     for (const field of stmt.fields) {
         const slotType = slots.get(field.fieldName);
         if (!slotType) {
+            // `actor` is an implicit field on every action instance (set by run_command),
+            // so it can be overridden in a try block without being declared as a slot.
+            if (field.fieldName === "actor") continue;
             throw typeError(field.filePath, field.lineNumber, `action "${stmt.actionName}" has no slot "${field.fieldName}"`);
         }
         checkValueCompatibility(
