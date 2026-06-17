@@ -90,9 +90,9 @@ item statue:
 # ----------------------------------------------------------------------------
 
 relation connects:
-    room source
+    from room source
     direction dir inverted
-    room target
+    to room target
     syntax "connects [source] [dir] to [target]"
 
 bidi connects foyer north to study
@@ -107,8 +107,8 @@ bidi connects foyer north to study
 # action consults it. Relations are not just maps.
 
 relation unlocks:
-    key source
-    door target
+    from key source
+    to door target
     syntax "unlocks [source] [target]"
 
 unlocks brass_key oak_door

@@ -92,13 +92,15 @@ function defineType(name, parents, fields, defaults = {}) {
 // A relation type is registered as an ordinary type (so `TYPE.all` and the
 // instance registry work) plus a relation-specific record carrying the field
 // schema and optional syntax template for later phases (assertion, querying).
-function defineRelation(name, fields, syntaxTemplate = null, invertedFields = []) {
+function defineRelation(name, fields, syntaxTemplate = null, invertedFields = [], sourceField = "source", targetField = "target") {
     defineType(name, [], fields);
     relationRegistry.set(name, {
         name,
         fields: { ...fields },
         syntax: syntaxTemplate,
         invertedFields: [...invertedFields],
+        sourceField,
+        targetField,
     });
 }
 
@@ -244,17 +246,19 @@ function queryRelationValue(typeName, query, outputField, mode) {
     return values.length === 1 ? values[0] : null;
 }
 
-// The mechanical inverse mapping: swap source/target, replace each `inverted`
-// field with its value's own inverse, copy everything else.
+// The mechanical inverse mapping: swap source/target endpoints, replace each
+// `inverted` field with its value's own inverse, copy everything else.
 function relationInverse(typeName, src) {
     const rel = relationRegistry.get(typeName);
     const inverted = new Set(rel.invertedFields || []);
+    const sf = rel.sourceField;
+    const tf = rel.targetField;
     const out = {};
     for (const key of Object.keys(rel.fields)) {
-        if (key === "source") {
-            out.target = src.source;
-        } else if (key === "target") {
-            out.source = src.target;
+        if (key === sf) {
+            out[tf] = src[sf];
+        } else if (key === tf) {
+            out[sf] = src[tf];
         } else {
             out[key] = inverted.has(key) ? (src[key] == null ? null : src[key].inverse) : src[key];
         }

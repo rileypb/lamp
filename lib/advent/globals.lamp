@@ -53,13 +53,13 @@ direction down:
 	understand "d"
 
 relation connects:
-	room source
+	from room source
 	direction dir inverted
-	room target
+	to room target
 	syntax "connects [source] [dir] [target]"
 
 relation wears:
-	person source
-	item target
-	syntax "wears [source] [target]"
+	from person wearer
+	to item worn
+	syntax "wears [wearer] [worn]"
 

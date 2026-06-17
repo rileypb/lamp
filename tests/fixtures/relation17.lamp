@@ -13,9 +13,9 @@ direction north
 direction east
 
 relation connects:
-    room source
+    from room source
     direction dir
-    room target
+    to room target
     syntax "connects [source] [dir] [target]"
 
 connects foyer north hall

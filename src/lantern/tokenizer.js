@@ -27,6 +27,7 @@ const KEYWORDS = new Set([
     "dispatch",
     "break",
     "lib",
+    "from",
     "to",
     "step",
     "change",

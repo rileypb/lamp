@@ -67,8 +67,8 @@ stop_reason door_locked
 
 # A non-spatial relation pairing a key with the door it opens.
 relation unlocks:
-    item source
-    door target
+    from item source
+    to door target
     syntax "unlocks [source] [target]"
 
 unlocks brass_key oak_door

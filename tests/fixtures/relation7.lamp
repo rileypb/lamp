@@ -9,8 +9,8 @@ room foyer
 room hall
 
 relation links:
-    room source
-    room target
+    from room source
+    to room target
     syntax "links [source] to [target]"
 
 links foyer to hall

@@ -366,7 +366,7 @@ function emitRelationDecl(node) {
         fields[field.fieldName] = field.typeName;
     }
     const syntaxArg = node.syntax === null ? "null" : JSON.stringify(node.syntax);
-    return `lamplighter.defineRelation(${JSON.stringify(node.name)}, ${JSON.stringify(fields)}, ${syntaxArg}, ${JSON.stringify(node.invertedFields || [])});`;
+    return `lamplighter.defineRelation(${JSON.stringify(node.name)}, ${JSON.stringify(fields)}, ${syntaxArg}, ${JSON.stringify(node.invertedFields || [])}, ${JSON.stringify(node.sourceField)}, ${JSON.stringify(node.targetField)});`;
 }
 
 function emitRelationAssert(node) {

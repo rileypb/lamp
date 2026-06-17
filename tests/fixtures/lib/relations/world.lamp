@@ -5,9 +5,9 @@ type direction:
     direction inverse
 
 relation connects:
-    room source
+    from room source
     direction dir inverted
-    room target
+    to room target
     syntax "connects [source] [dir] to [target]"
 
 direction north:
