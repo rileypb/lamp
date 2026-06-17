@@ -1,5 +1,7 @@
+i
 west
 hang cloak on hook
+i
 east
 south
 read sawdust

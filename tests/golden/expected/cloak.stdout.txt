@@ -1,12 +1,19 @@
 foyer
 You are standing in a spacious hall, splendidly decorated in red and gold, with glittering chandeliers overhead. Doorways lead south and west; a door to the north is barred.
 
+> i
+You are carrying:
+  cloak (worn)
+
 > west
 cloakroom
 The walls of this small room were clearly once lined with hooks, though now only one remains. The exit is a door to the east.
 
 > hang cloak on hook
 You hang the cloak neatly on the hook.
+
+> i
+You are carrying nothing.
 
 > east
 foyer

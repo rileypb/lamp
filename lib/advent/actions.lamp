@@ -58,7 +58,10 @@ report inventory:
 			if not found:
 				print "You are carrying:"
 				found = true
-			print "  " + x
+			if wears self.actor x:
+				print "  " + x + " (worn)"
+			else:
+				print "  " + x
 	if not found:
 		print "You are carrying nothing."
 

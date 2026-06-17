@@ -58,3 +58,8 @@ relation connects:
 	room target
 	syntax "connects [source] [dir] [target]"
 
+relation wears:
+	person source
+	item target
+	syntax "wears [source] [target]"
+

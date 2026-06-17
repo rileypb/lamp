@@ -40,9 +40,11 @@ item hook:
     scenery true
     holder cloakroom
 
-# The cloak starts in the player's inventory (modeled as "worn").
+# The cloak starts in the player's inventory, worn.
 item cloak:
     holder yourself
+
+wears yourself cloak
 
 item sawdust:
     scenery true
@@ -67,9 +69,11 @@ before go:
 # After either, refresh bar lighting in case the player later returns.
 
 after hang when self.carried == cloak:
+    remove wears yourself cloak
     bar.lighted = not (cloak.holder == player)
 
 after drop when self.dropped == cloak:
+    remove wears yourself cloak
     bar.lighted = not (cloak.holder == player)
 
 # ========== North exit from foyer is blocked ==========
