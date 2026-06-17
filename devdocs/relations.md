@@ -17,14 +17,14 @@ Relations are typed, directed edges in the Lamp object graph. Every object (room
 
 ```lamp
 relation TYPE_NAME:
-    ENDPOINT_TYPE source
-    ENDPOINT_TYPE target
+    from ENDPOINT_TYPE SOURCE_FIELD_NAME
+    to ENDPOINT_TYPE TARGET_FIELD_NAME
     FIELD_TYPE FIELD_NAME [inverted]
     ...
     syntax "TEMPLATE"
 ```
 
-Fields declare the schema of the relation. Field types follow the same rules as type fields: any primitive type, kind name, or object type name. By convention, field names that read like roles or prepositions (`source`, `target`, `via`) improve the natural-language feel of the syntax template.
+Fields declare the schema of the relation. Field types follow the same rules as type fields: any primitive type, kind name, or object type name. Field names are arbitrary identifiers — choose names that read naturally in the syntax template and in handler `self.FIELD` access.
 
 The `syntax` field is optional. If omitted, the block form is used for all assertions and queries.
 
@@ -32,33 +32,40 @@ The `syntax` field is optional. If omitted, the block form is used for all asser
 
 ### Endpoints and orientation
 
-Every relation is a directed binary edge and must declare exactly one `source` and one `target`. These are **role keywords** in the field-name position; they fix the relation's canonical orientation, `source → target`. The two endpoints may have any types and need not match.
+Every relation is a directed binary edge. Exactly one field must be prefixed `from` (the source endpoint) and exactly one must be prefixed `to` (the target endpoint). These keywords fix the relation's canonical orientation, `from → to`. The two endpoints may have any types and need not match; the field names are user-chosen.
 
-Additional **labelled fields** may follow, each optionally tagged `inverted`:
+`from` and `to` are **globally reserved keywords** (in the tokenizer keyword set). They cannot be used as object names, field names, or variable names.
+
+Additional **labelled fields** with no `from`/`to` prefix may follow, each optionally tagged `inverted`:
 
 - `inverted` — when the edge is reversed (see Bidirectional Relations), this field is replaced by its own inverse. Its type must itself declare an `inverse` field of that same type (so `direction dir inverted` requires the `direction` type to have a `direction inverse` field, e.g. `north.inverse = south`).
 - *(untagged)* — copied unchanged when reversing.
 
 ```lamp
 relation connects:
-    room source
+    from room source
     direction dir inverted
-    room target
+    to room target
     syntax "connects [source] [dir] [target]"
 ```
 
-`source`, `target`, and `inverted` are contextual keywords recognized only inside a `relation` body.
+`inverted` and `syntax` are contextual keywords recognized only inside a `relation` body.
 
-Canonical orientation matters even for relations that are never made bidirectional. It is what lets a future reasoning layer relate one relation to another — e.g. "if `father(a, b)` then `older_than(a, b)`" — by knowing which endpoint is head and which is tail. An asymmetric relation like `father` declares `source`/`target` for exactly this reason; its reverse is a *different* relation (`child`), so it is not a `bidi` candidate.
+Canonical orientation matters even for relations that are never made bidirectional. It is what lets a future reasoning layer relate one relation to another — e.g. "if `father(a, b)` then `older_than(a, b)`" — by knowing which endpoint is head and which is tail. An asymmetric relation like `father` uses `from`/`to` for exactly this reason; its reverse is a *different* relation (`child`), so it is not a `bidi` candidate.
 
 ### Example
 
 ```lamp
 relation connects:
-    room source
+    from room source
     direction dir
-    room target
+    to room target
     syntax "connects [source] [dir] [target]"
+
+relation wears:
+    from person wearer
+    to item worn
+    syntax "wears [wearer] [worn]"
 ```
 
 ### Syntax Templates
@@ -140,11 +147,11 @@ A query matches the instance if **either** index entry matches. There is still e
 
 The reverse mapping is derived **mechanically** from the canonical orientation and field roles. Given an instance `e`, the inverse mapping is:
 
-- swap the endpoints — `source = e.target`, `target = e.source`;
+- swap the endpoints — the `from` field gets `e`'s `to` value, and vice versa;
 - each `inverted` field takes its value's inverse — `dir = e.dir.inverse`;
 - every other labelled field is copied — `locked = e.locked`.
 
-This covers the room-connection case (swap endpoints, invert the direction) and symmetric relations (no `inverted` fields) without any user-written code. Because every relation already has exactly one `source` and one `target`, there is nothing to designate for the swap. The checker validates only that each `inverted` field's type exposes an `inverse` field of its own type.
+This covers the room-connection case (swap endpoints, invert the direction) and symmetric relations (no `inverted` fields) without any user-written code. The runtime looks up `sourceField` and `targetField` in the relation registry to know which field names to swap, so field names need not be `source`/`target`. The checker validates only that each `inverted` field's type exposes an `inverse` field of its own type.
 
 ### Custom inverse (future escape hatch)
 
@@ -265,20 +272,22 @@ Assertion, `remove`, and `disconnect` are ordinary statements and may appear ins
 
 ## Reserved Words
 
-The following words must be added to the Lamp reserved words list in `specs.md`:
+The following words are in the Lamp reserved words list in `specs.md`:
 
 - `relation` — introduces a relation type declaration
+- `from` — marks the source endpoint field in a relation body
+- `to` — marks the target endpoint field in a relation body (also used in `for` range loops)
 - `remove` — removes a matching relation instance
 - `disconnect` — removes a named relation instance
 - `bidi` — asserts a bidirectional relation instance
 
-`syntax` is **not** added to this list; it is a contextual keyword recognized only inside a `relation` body (see Declaring a Relation Type).
+`syntax` and `inverted` are **not** globally reserved; they are contextual keywords recognized only inside a `relation` body (see Declaring a Relation Type).
 
 ## Lamplighter Runtime
 
 ### Implemented so far (Phases 1–2)
 
-- `lamplighter.defineRelation(name, fields, syntaxTemplate?)` — registers a relation type. Internally it calls `defineType(name, [], fields)` so the relation reuses the existing type/instance machinery (including the `TYPE.all` accessor), then records the field schema and syntax template in a separate `relationRegistry` for later phases.
+- `lamplighter.defineRelation(name, fields, syntaxTemplate, invertedFields, sourceField, targetField)` — registers a relation type. Internally it calls `defineType(name, [], fields)` so the relation reuses the existing type/instance machinery (including the `TYPE.all` accessor), then records the field schema, syntax template, and endpoint field names in a separate `relationRegistry` for later phases. `sourceField` and `targetField` name which declared fields serve as the `from`/`to` endpoints; they are used by `relationInverse` to perform the mechanical swap.
 - `lamplighter.addRelation(typeName, fields, options?)` — creates an anonymous relation instance, enforcing deduplication (object fields by identity, value fields by `===`); a duplicate assertion returns the existing instance. The instance is pushed onto the relation type's instance list, so `TYPE.all` includes it. `options.name` is accepted but not yet exercised (named instances are Phase 4).
 - **Storage**: relation instances currently live in the ordinary type instance registry (the same store `createObject` uses). Deduplication and `.all` scan that per-type list linearly. There is no dedicated node-indexed store yet (see below).
 - **Print**: `formatValue` renders a named relation instance as its name and an anonymous one as `type(field, ...)` (declaration-order field summary).
@@ -351,11 +360,11 @@ Deferred — **additional instance fields** (the `connects NAME ...: \n bool loc
 - A `bidi` assertion registers one instance; the reverse edge deduplicates against it, and a `bidi` over an existing one-way instance upgrades it in place.
 
 As-built notes:
-- **`source`/`target`/`inverted` are contextual keywords** (not tokenizer keywords) recognized only in a relation body; `bidi` *is* a real reserved keyword (it leads an assertion and must dispatch). The exactly-one-`source`/`target` rule is enforced in the parser; the checker validates that each `inverted` field's type declares an `inverse` field of that same type.
+- **`from`/`to` are tokenizer keywords** (globally reserved); `bidi` is also a real reserved keyword. `inverted` and `syntax` remain contextual (recognized only in a relation body). The exactly-one-`from`/one-`to` rule is enforced in the parser; the checker validates that each `inverted` field's type declares an `inverse` field of that same type.
+- **Endpoint field names are user-chosen.** The `from`-prefixed field is the source endpoint and the `to`-prefixed field is the target endpoint; they can have any names (e.g. `wearer`/`worn`, `source`/`target`, `origin`/`destination`). The AST stores `sourceField` and `targetField` by name; the runtime's `relationInverse` reads them from the relation registry instead of hardcoding `"source"`/`"target"`.
 - **No separate node-indexed store yet.** `bidi` dedup/match is done by computing the mechanical inverse on the fly during the existing linear `findMatchingRelation` scan (an instance matches if its own fields match *or*, when `bidi`, its computed inverse matches). The dedicated dual-index store is deferred to Phase 6, where queries make fast lookup worthwhile; behavior is identical, only the cost differs.
 - **Reverse-oriented query views are deferred to Phase 6** (there are no queries yet). What Phase 5 makes observable is the dedup behavior: asserting the reverse one-way edge after a `bidi` is a no-op, so `connects.all` shows a single instance (vs. two for two independent one-way asserts).
 - **`direction.inverse` is ordinary data** — declared `direction inverse` on the `direction` type and set via object bodies (`direction north: \n inverse south`); no new assignment syntax was needed.
-- **Migrated** `relation2` from `a`/`b` to `source`/`target` for the new mandatory-endpoints rule.
 
 Out of scope (still deferred): functions on types, the relation constructor expression, non-mechanical custom inverses, and cross-relation reasoning over canonical orientation (e.g. `father` ⇒ `older_than`).
 
@@ -444,8 +453,8 @@ As-built notes:
 - **Parser dispatch soundness** — resolved by requiring every template to begin with a literal token (see Syntax Templates).
 - **Wildcard vs `none` collision** — resolved by using a dedicated wildcard sentinel distinct from `null`/`none`.
 - **Bidirectional model (one instance vs. two edges vs. passage object)** — resolved in favor of **one instance** (dual-indexed). It honors the "`bidi` is one relation" requirement and gives shared state, single-step removal, honest counting, and once-firing change handlers for free; the costs (forward-biased stored fields, reverse-oriented query views) are implementation-internal. The two-edge and passage-object alternatives were rejected: two independent edges break shared mutable state (the door case), and a separate passage object adds authoring weight for what `bidi` should make effortless.
-- **Canonical orientation** — resolved: every relation is a directed binary edge declaring exactly one `source` and one `target` (role keywords). This fixes head/tail for all relations, supersedes the earlier bidi-only `endpoint` tag, and is the prerequisite for future cross-relation reasoning.
-- **How the inverse is specified** — resolved with mechanical inversion: swap `source`/`target` and self-invert `inverted`-tagged fields. Avoids functions on types and a constructor expression for the common case; a custom-inverse escape hatch is deferred (see Open Questions).
+- **Canonical orientation** — resolved: every relation is a directed binary edge; exactly one field is prefixed `from` (source endpoint) and one is prefixed `to` (target endpoint). Field names are user-chosen. `from` and `to` are globally reserved keywords. This fixes head/tail for all relations, supersedes the earlier bidi-only `endpoint` tag, and is the prerequisite for future cross-relation reasoning.
+- **How the inverse is specified** — resolved with mechanical inversion: swap the `from`/`to` endpoints and self-invert `inverted`-tagged fields. The runtime reads `sourceField`/`targetField` from the relation registry rather than hardcoding `"source"`/`"target"`. Avoids functions on types and a constructor expression for the common case; a custom-inverse escape hatch is deferred (see Open Questions).
 - **Bidirectional query path** — resolved by dual-indexing a single instance under forward and inverse mappings.
 - **Bidi vs. deduplication identity** — resolved by the upgrade/no-op rules under Bidirectional Relations.
 - **Value-based remove vs. the name registry** — resolved: removal drops whole instances and unregisters any names they held.

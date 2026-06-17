@@ -188,7 +188,7 @@ Local variables (introduced by `let`) and loop variables (introduced by `for`) a
 
 Free text that contains spaces or punctuation is written as a double-quoted string literal, not a bare identifier (for example, `author "Phil Riley"`).
 
-The following words are **reserved** and may not be used as a name (object, type, kind, global, field, event, or local): `type`, `kind`, `global`, `on`, `for`, `in`, `while`, `if`, `else`, `let`, `print`, `error`, `dispatch`, `break`, `lib`, `to`, `step`, `change`, `function`, `native`, `return`, `when`, `and`, `or`, `not`, `relation`, `bidi`, `remove`, `disconnect`, `rulebook`, `stop`, `follow`, `action`, `try`. (`syntax`, `source`, `target`, and `inverted` are contextual keywords recognized only inside a `relation` body; `default` is a contextual keyword recognized only inside a `rulebook` body; the band words `before`, `instead`, `check`, `do`, `after`, and `report` are contextual keywords recognized only as the leading token of a phase rule for a declared action; none of these are globally reserved.) A reservation applies only to a whole identifier: a reserved word appearing *inside* a longer identifier is unrestricted, so `move_to_room` (which denotes the name `move to room`) is a valid identifier even though `to` is reserved.
+The following words are **reserved** and may not be used as a name (object, type, kind, global, field, event, or local): `type`, `kind`, `global`, `on`, `for`, `in`, `while`, `if`, `else`, `let`, `print`, `error`, `dispatch`, `break`, `lib`, `from`, `to`, `step`, `change`, `function`, `native`, `return`, `when`, `and`, `or`, `not`, `relation`, `bidi`, `remove`, `disconnect`, `rulebook`, `stop`, `follow`, `action`, `try`. (`syntax` and `inverted` are contextual keywords recognized only inside a `relation` body; `default` is a contextual keyword recognized only inside a `rulebook` body; the band words `before`, `instead`, `check`, `do`, `after`, and `report` are contextual keywords recognized only as the leading token of a phase rule for a declared action; none of these are globally reserved.) A reservation applies only to a whole identifier: a reserved word appearing *inside* a longer identifier is unrestricted, so `move_to_room` (which denotes the name `move to room`) is a valid identifier even though `to` is reserved.
 
 ### Objects and types
 
@@ -578,23 +578,28 @@ The full relation design and roadmap live in `devdocs/relations.md`. This sectio
 
 ```lamp
 relation TYPE_NAME:
-    ENDPOINT_TYPE source
-    ENDPOINT_TYPE target
+    from ENDPOINT_TYPE SOURCE_FIELD_NAME
+    to ENDPOINT_TYPE TARGET_FIELD_NAME
     FIELD_TYPE FIELD_NAME [inverted]
     ...
     syntax "TEMPLATE"
 ```
 
-`relation` declares a relation type — a directed **binary** edge. Every relation must declare exactly one `source` and one `target`; these are role keywords (in the field-name position) that fix the relation's canonical orientation, `source → target`. The two endpoints may have any types. Any number of additional labelled fields may follow (`FIELD_TYPE FIELD_NAME`), each optionally tagged `inverted`. The optional `syntax` line gives a custom assertion template (see below).
+`relation` declares a relation type — a directed **binary** edge. Every relation must have exactly one `from`-prefixed field (the source endpoint) and one `to`-prefixed field (the target endpoint). These prefixes fix the relation's canonical orientation; the field names themselves are user-chosen. Any number of additional labelled fields may follow (`FIELD_TYPE FIELD_NAME`), each optionally tagged `inverted`. The optional `syntax` line gives a custom assertion template (see below).
 
-`syntax`, `source`, `target`, and `inverted` are contextual keywords: they are special only inside a `relation` body and are otherwise ordinary identifiers.
+`from` and `to` are **globally reserved keywords** and cannot be used as object names, field names, or variables. `syntax` and `inverted` are contextual keywords: they are special only inside a `relation` body and are otherwise ordinary identifiers.
 
 ```lamp
 relation connects:
-    room source
+    from room source
     direction dir inverted
-    room target
+    to room target
     syntax "connects [source] [dir] [target]"
+
+relation wears:
+    from person wearer
+    to item worn
+    syntax "wears [wearer] [worn]"
 ```
 
 A relation type participates in the universal `all` field: `connects.all` is the list of all instances of that relation.
@@ -609,7 +614,7 @@ The `bidi` modifier asserts a relation that is traversable from either endpoint 
 bidi connects foyer north hall
 ```
 
-The reverse direction is the relation's **mechanical inverse**: swap `source` and `target`, replace each `inverted` field with its value's own inverse, and copy the rest. An `inverted` field's type must declare an `inverse` field of that same type (so `direction dir inverted` requires `direction` to have a `direction inverse` field, with values like `north.inverse = south`). Asserting the reverse edge of a `bidi` instance deduplicates against it, and `bidi` over an existing one-way instance upgrades it in place.
+The reverse direction is the relation's **mechanical inverse**: swap the `from` and `to` endpoint fields, replace each `inverted` field with its value's own inverse, and copy the rest. An `inverted` field's type must declare an `inverse` field of that same type (so `direction dir inverted` requires `direction` to have a `direction inverse` field, with values like `north.inverse = south`). Asserting the reverse edge of a `bidi` instance deduplicates against it, and `bidi` over an existing one-way instance upgrades it in place.
 
 #### Asserting relation instances
 
