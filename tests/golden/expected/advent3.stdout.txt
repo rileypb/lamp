@@ -1,12 +1,10 @@
 West of House
-
 You are west of a white house.
 
 You see a lamp here.
 
 > look
 West of House
-
 You are west of a white house.
 
 You see a lamp here.
@@ -26,7 +24,6 @@ That's not something you can take.
 
 > go north
 Forest
-
 You are in a dark forest.
 
 > drop lamp
@@ -34,7 +31,6 @@ Dropped.
 
 > go south
 West of House
-
 You are west of a white house.
 
 > i

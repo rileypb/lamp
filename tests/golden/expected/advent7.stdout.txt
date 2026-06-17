@@ -1,5 +1,4 @@
 Cell
-
 A small stone cell.
 
 You see a pebble here.

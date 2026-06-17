@@ -2,7 +2,6 @@ native function list<string> contents_of(room r)
 
 function void describe_room(room r):
 	print r
-	print
 	print r.description
 
 function void list_room_contents(room r):

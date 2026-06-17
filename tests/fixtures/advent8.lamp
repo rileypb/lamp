@@ -1,0 +1,20 @@
+# Exercises bare-direction movement: the `go` action's "[way]" syntax lets a lone
+# direction word (or its abbreviation) move the player without typing `go`.
+# Covers a full direction word, an abbreviation, the explicit `go` form, and a
+# direction with no exit.
+
+lib advent
+
+game Test_Bare_Direction:
+	author "Test Author"
+	version 1
+	release dev
+	start West_of_House
+
+room West_of_House:
+	description "You are west of a white house."
+
+room Forest:
+	description "You are in a dark forest."
+
+bidi connects West_of_House north Forest

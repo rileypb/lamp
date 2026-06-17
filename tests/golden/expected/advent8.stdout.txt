@@ -1,0 +1,19 @@
+West of House
+You are west of a white house.
+
+> north
+Forest
+You are in a dark forest.
+
+> s
+West of House
+You are west of a white house.
+
+> go north
+Forest
+You are in a dark forest.
+
+> east
+You can't go that way.
+
+> quit

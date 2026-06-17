@@ -1,5 +1,4 @@
 Foyer
-
 A foyer.
 
 You see a brass lamp and a clay lamp here.

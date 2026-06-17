@@ -349,6 +349,21 @@ the raw token spans for each slot. Multiple candidates (e.g. `put X in Y` vs. a
 one-slot `put`) are ranked; Inform prefers the line that consumes the most input
 and leaves the fewest words unaccounted for.
 
+**Match-and-resolve with backtracking (v0).** Grammar match and noun resolution
+(Stage 3) are interleaved: candidates are tried in registration order, and a
+candidate whose structure matches but whose nouns fail to resolve is *not* the
+end of parsing — the engine backtracks and tries the next candidate. This lets
+overlapping syntaxes coexist: `go [way]` and `go to [room]` both structurally
+match `go to library`, and if the first fails to resolve `to library` as a
+direction the second still gets its chance. Only when every candidate fails does
+the parser report. The failure message distinguishes two cases: a candidate with
+a literal verb that matched but whose noun was absent → `You can't see any such
+thing.` (the command was understood, the thing isn't in scope); no such
+candidate (e.g. a bare word matching only a pure-`[slot]` line like the
+bare-direction `[way]`, or nothing at all) → `I don't understand that.`
+(Specificity-based ranking à la Inform is still an Open question; today it is
+registration order plus this backtracking.)
+
 The remaining authoring-surface choice — whether `syntax` blocks desugar onto the
 relation template mechanism or a first-class construct, and whether templates
 need alternation (`in/into`) and optional tokens — is tracked under Open

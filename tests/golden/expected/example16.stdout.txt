@@ -1,5 +1,4 @@
 Your Tent
-
 This is your tent.
 
 > quit

@@ -1,5 +1,4 @@
 Lab
-
 A small lab.
 
 You see a brass lamp and a golden key here.

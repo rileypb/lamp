@@ -1,12 +1,10 @@
 foyer
-
 A bare foyer. A door leads north to the study.
 
 You see a brass key, a idol and a oak door here.
 
 > look
 foyer
-
 A bare foyer. A door leads north to the study.
 
 You see a brass key, a idol and a oak door here.
@@ -33,7 +31,6 @@ The lock turns; the door swings open.
 
 > go north
 study
-
 The study, walls lined with books.
 
 > i

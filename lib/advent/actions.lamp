@@ -87,6 +87,7 @@ action go:
 	direction way
 	syntax:
 		"go [way]"
+		"[way]"
 
 check go:
 	if not connects self.actor.holder self.way _:

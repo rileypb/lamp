@@ -1,5 +1,4 @@
 Shrine
-
 A quiet shrine.
 
 You see a coin and a idol here.

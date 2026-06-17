@@ -531,16 +531,21 @@ function printDisambiguationPrompt(candidates) {
 // Cleared on the next runCommand call whether or not the answer resolves it.
 let pendingDisambiguation = null;
 
-// Resolve [field, span] slot pairs onto `instance`. Returns true when all
-// slots are filled; false if a slot fails (message already printed) or
-// disambiguation is needed (pendingDisambiguation is set).
+// Resolve [field, span] slot pairs onto `instance`. Returns one of:
+//   "ok"          — every slot filled with a single candidate.
+//   "ambiguous"   — a slot matched multiple candidates; a disambiguation prompt
+//                   was shown and pendingDisambiguation set (terminal — a match
+//                   awaiting clarification, not a failure).
+//   "unresolved"  — a slot had no candidate. No message is printed: the caller
+//                   decides whether to backtrack to another grammar or report
+//                   the failure, so overlapping syntaxes (e.g. `go [way]` vs
+//                   `go to [room]`) can each get a chance to match.
 function resolveSlots(slots, instance, scope, slotTypes) {
     for (let i = 0; i < slots.length; i++) {
         const [field, span] = slots[i];
         const candidates = resolveCandidates(span, resolvePool(slotTypes[field], scope), slotTypes[field]);
         if (candidates.length === 0) {
-            print("You can't see any such thing.");
-            return false;
+            return "unresolved";
         }
         if (candidates.length === 1) {
             instance[field] = candidates[0];
@@ -555,10 +560,10 @@ function resolveSlots(slots, instance, scope, slotTypes) {
                 scope,
                 slotTypes,
             };
-            return false;
+            return "ambiguous";
         }
     }
-    return true;
+    return "ok";
 }
 
 // Parses one line of player input and runs the matched action. If a pending
@@ -576,8 +581,12 @@ function runCommand(line, actor) {
         if (narrowed.length === 1) {
             pendingDisambiguation = null;
             instance[field] = narrowed[0];
-            if (resolveSlots(remainingSlots, instance, scope, slotTypes)) {
+            const status = resolveSlots(remainingSlots, instance, scope, slotTypes);
+            if (status === "ok") {
                 runAction(actionName, instance);
+            } else if (status === "unresolved") {
+                // Already committed to this action — no backtracking here.
+                print("You can't see any such thing.");
             }
             return;
         }
@@ -591,18 +600,38 @@ function runCommand(line, actor) {
         pendingDisambiguation = null;
     }
 
+    // Try each grammar whose structure matches. A grammar that matches
+    // structurally but whose nouns don't resolve ("unresolved") is not the end
+    // of the road — we backtrack and try the next, so overlapping syntaxes can
+    // coexist (e.g. `go [way]` vs `go to [room]`). Only after every candidate
+    // fails do we report.
+    //
+    // The message distinguishes two failures: a grammar with a literal verb that
+    // matched but whose noun was missing → "You can't see any such thing." (we
+    // understood the command, the thing isn't here); anything else, including a
+    // bare pure-slot grammar like `[way]` matching an unknown word → "I don't
+    // understand that." (no recognized command). So `take xyzzy` differs from a
+    // lone `xyzzy`.
+    let sawVerbMatch = false;
     for (const entry of grammarRegistry) {
         const matched = matchGrammar(entry.parts, tokens);
         if (!matched) continue;
         const scope = scopeOf(actor);
         const slotTypes = (typeRegistry.get(entry.actionName) || {}).fields || {};
         const instance = { type: entry.actionName, actor };
-        if (resolveSlots(Object.entries(matched), instance, scope, slotTypes)) {
+        const status = resolveSlots(Object.entries(matched), instance, scope, slotTypes);
+        if (status === "ok") {
             runAction(entry.actionName, instance);
+            return;
         }
-        return;
+        if (status === "ambiguous") {
+            return;
+        }
+        if (entry.parts.some((part) => part.kind === "literal")) {
+            sawVerbMatch = true;
+        }
     }
-    print("I don't understand that.");
+    print(sawVerbMatch ? "You can't see any such thing." : "I don't understand that.");
 }
 
 function run() {
