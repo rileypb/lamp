@@ -1,0 +1,11 @@
+hall
+A hall.
+
+You see a hat here.
+
+> npc act
+npc takes hat.
+npc puts on coat.
+npc drops hat.
+
+> quit

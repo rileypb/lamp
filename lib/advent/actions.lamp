@@ -34,7 +34,10 @@ do take:
 	self.taken.holder = self.actor
 
 report take:
-	print "Taken."
+	if self.actor == player:
+		print "Taken."
+	else:
+		print self.actor + " takes " + self.taken + "."
 
 # Failure text lives here, keyed by reason, so a game can retheme a refusal
 # without restating the `check` condition (see devdocs/rulebooks.md).
@@ -79,7 +82,10 @@ do drop:
 	self.dropped.holder = self.actor.holder
 
 report drop:
-	print "Dropped."
+	if self.actor == player:
+		print "Dropped."
+	else:
+		print self.actor + " drops " + self.dropped + "."
 
 report failed drop:
 	if self.reason == not_carrying:
@@ -103,7 +109,7 @@ do wear:
 	if not (self.clothing.holder == self.actor):
 		if (self.actor == player):
 			print "(first taking " + self.clothing + ")"
-		let result = try take:
+		try take:
 			taken self.clothing
 			actor self.actor
 		if not (self.clothing.holder == self.actor):
@@ -111,7 +117,10 @@ do wear:
 	wears self.actor self.clothing
 
 report wear:
-	print "You put on " + self.clothing + "."
+	if self.actor == player:
+		print "You put on " + self.clothing + "."
+	else:
+		print self.actor + " puts on " + self.clothing + "."
 
 report failed wear:
 	if self.reason == not_wearable:

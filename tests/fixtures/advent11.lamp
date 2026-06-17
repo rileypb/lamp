@@ -1,0 +1,34 @@
+lib advent
+
+game NPC_Test:
+	author "Test Author"
+	start hall
+
+room hall:
+	description "A hall."
+
+person npc:
+	holder hall
+
+item hat:
+	wearable true
+	holder hall
+
+item coat:
+	wearable true
+	holder npc
+
+action npc_act:
+	syntax:
+		"npc act"
+
+do npc_act:
+	try take:
+		taken hat
+		actor npc
+	try wear:
+		clothing coat
+		actor npc
+	try drop:
+		dropped hat
+		actor npc
