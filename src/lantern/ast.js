@@ -258,14 +258,14 @@ function createPhaseRule(band, actionName, whenExpr, body, filePath, lineNumber)
 
 // Imperatively run an action: construct an instance with the given slot values
 // and drive it through its rulebook bands.
-function createTryStatement(actionName, fields, filePath, lineNumber) {
-    return { kind: "TryStatement", actionName, fields, filePath, lineNumber };
+function createTryStatement(actionName, fields, filePath, lineNumber, silent = false) {
+    return { kind: "TryStatement", actionName, fields, filePath, lineNumber, silent };
 }
 
 // Expression form of `try`: runs the action and yields its `outcome`. Produced
 // when a `try` appears as the value of a `let`.
-function createTryExpr(actionName, fields, filePath, lineNumber) {
-    return { kind: "TryExpr", actionName, fields, filePath, lineNumber };
+function createTryExpr(actionName, fields, filePath, lineNumber, silent = false) {
+    return { kind: "TryExpr", actionName, fields, filePath, lineNumber, silent };
 }
 
 function createFollowStatement(name, args, filePath, lineNumber) {

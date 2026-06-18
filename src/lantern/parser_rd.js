@@ -859,6 +859,10 @@ function createParser(tokens, filePath, globalNames, functionNames = new Set(), 
             }
         }
         if (token.type === "IDENT") {
+            if (token.value === "silently" && peek(1).type === "KEYWORD" && peek(1).value === "try") {
+                next(); // consume "silently"
+                return parseTryStatement(localNames, true);
+            }
             if (relationNames.has(token.value) && peek(1).type === "COLON") return parseRelationAssert();
             if (relationTemplates.has(token.value)) return parseCustomSyntaxAssert(relationTemplates.get(token.value), null, undefined, localNames);
             if (peek(1).type === "IDENT" && relationTemplates.has(peek(1).value)) return parseNamedCustomSyntaxAssert(localNames);
@@ -894,10 +898,10 @@ function createParser(tokens, filePath, globalNames, functionNames = new Set(), 
 
     // `try ACTION:` with an indented block of `slot value` lines constructs an
     // action instance and runs it through its rulebook bands.
-    function parseTryStatement(localNames = null) {
+    function parseTryStatement(localNames = null, silent = false) {
         const keyword = expectKeyword("try");
         const { actionName, fields } = parseTryTail(localNames);
-        return ast.createTryStatement(actionName, fields, filePath, keyword.line);
+        return ast.createTryStatement(actionName, fields, filePath, keyword.line, silent);
     }
 
     // Parses the action name and optional `:`-block after the `try` keyword,
@@ -957,11 +961,14 @@ function createParser(tokens, filePath, globalNames, functionNames = new Set(), 
         expect("EQUALS");
         // `let x = try ACTION[: block]` captures the action's outcome. The try
         // tail consumes its own newline/block, so don't expect a newline after.
-        if (atKeyword("try")) {
+        const silentTry = peek().type === "IDENT" && peek().value === "silently"
+            && peek(1).type === "KEYWORD" && peek(1).value === "try";
+        if (atKeyword("try") || silentTry) {
+            if (silentTry) next(); // consume "silently"
             const tryKeyword = next();
             const { actionName, fields } = parseTryTail(localNames);
             localNames.add(name);
-            const tryExpr = ast.createTryExpr(actionName, fields, filePath, tryKeyword.line);
+            const tryExpr = ast.createTryExpr(actionName, fields, filePath, tryKeyword.line, silentTry);
             return ast.createLetStatement(name, tryExpr, filePath, keyword.line);
         }
         const expr = parseExpression(0, localNames);

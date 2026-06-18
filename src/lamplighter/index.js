@@ -370,13 +370,14 @@ function orderedRules(entries) {
 // runs to render the failure (self.reason is available); a bare `stop` there
 // halts it, letting an author rule suppress a library one. See
 // devdocs/rulebooks.md.
-function runAction(actionName, instance) {
+function runAction(actionName, instance, opts = {}) {
     const bands = actionRuleRegistry.get(actionName);
     if (!bands) {
         return "succeeded";
     }
     let outcome = "succeeded";
     outer: for (const band of ACTION_BANDS) {
+        if (opts.silent && band === "report") break outer;
         for (const { rule } of orderedRules(bands[band])) {
             const result = rule(instance);
             if (result === HALT) {
@@ -388,7 +389,7 @@ function runAction(actionName, instance) {
             }
         }
     }
-    if (outcome === "failed") {
+    if (outcome === "failed" && !opts.silent) {
         for (const { rule } of orderedRules(bands.report_failed)) {
             const result = rule(instance);
             if (result === HALT || result !== undefined) {

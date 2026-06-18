@@ -183,7 +183,7 @@ do hang:
     if wears self.actor self.carried:
         if (self.actor == player):
             print "(first taking off " + self.carried + ")"
-        try doff:
+        silently try doff:
             clothing self.carried
             actor self.actor
         if wears self.actor self.carried:

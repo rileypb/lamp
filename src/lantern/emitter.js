@@ -764,7 +764,8 @@ function emitTryCall(node, globalNames = new Set()) {
         return `${JSON.stringify(field.fieldName)}: ${valueExpr}`;
     });
     const instance = `{ "type": ${JSON.stringify(node.actionName)}${pairs.length ? ", " + pairs.join(", ") : ""} }`;
-    return `lamplighter.runAction(${JSON.stringify(node.actionName)}, ${instance})`;
+    const opts = node.silent ? `, { silent: true }` : ``;
+    return `lamplighter.runAction(${JSON.stringify(node.actionName)}, ${instance}${opts})`;
 }
 
 function emitExpression(expr, globalNames = new Set()) {
