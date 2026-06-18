@@ -22,7 +22,7 @@ game Cloak_of_Darkness:
 # ========== Rooms ==========
 
 room foyer:
-    description "You are standing in a spacious hall, splendidly decorated in red and gold, with glittering chandeliers overhead. Doorways lead south and west; a door to the north is barred."
+    description "You are standing in a spacious hall, splendidly decorated in red and gold, with glittering chandeliers overhead. The entrance from the street is to the north, and there are doorways south and west."
 
 room bar:
     description "The bar, much rougher than you'd have guessed after the opulence of the foyer to the north, is completely empty. There seems to be some sort of message scrawled in the sawdust on the floor."
@@ -76,10 +76,20 @@ after drop when self.dropped == cloak:
     remove wears yourself cloak
     bar.lighted = not (cloak.holder == player)
 
+# ========== Cloak may only be left in the cloakroom ==========
+
+instead drop when self.dropped == cloak and not (self.actor.holder == cloakroom):
+    print "This isn't the best place to leave a smart cloak lying around."
+    stop failed
+
+instead hang when self.carried == cloak and not (self.actor.holder == cloakroom):
+    print "This isn't the best place to leave a smart cloak lying around."
+    stop failed
+
 # ========== North exit from foyer is blocked ==========
 
 instead go when self.way == north and self.actor.holder == foyer:
-    print "That way leads out into the night, and the door is barred. You can't leave yet."
+    print "You've only just arrived, and besides, the weather outside seems to be getting worse."
     stop failed
 
 # ========== Dark-bar interception ==========
@@ -89,32 +99,32 @@ instead go when self.way == north and self.actor.holder == foyer:
 # individually. Novel game-defined actions would not be caught.
 
 instead take when self.actor.holder == bar and not bar.lighted:
-    print "Blundering around in the dark isn't a good idea!"
+    print "In the dark? You could easily disturb something."
     disturbance = disturbance + 1
     stop failed
 
 instead drop when self.actor.holder == bar and not bar.lighted:
-    print "Blundering around in the dark isn't a good idea!"
+    print "In the dark? You could easily disturb something."
     disturbance = disturbance + 1
     stop failed
 
 instead inventory when self.actor.holder == bar and not bar.lighted:
-    print "Blundering around in the dark isn't a good idea!"
+    print "In the dark? You could easily disturb something."
     disturbance = disturbance + 1
     stop failed
 
 instead examine when self.actor.holder == bar and not bar.lighted:
-    print "Blundering around in the dark isn't a good idea!"
+    print "In the dark? You could easily disturb something."
     disturbance = disturbance + 1
     stop failed
 
 instead read when self.actor.holder == bar and not bar.lighted:
-    print "Blundering around in the dark isn't a good idea!"
+    print "In the dark? You could easily disturb something."
     disturbance = disturbance + 1
     stop failed
 
 instead hang when self.actor.holder == bar and not bar.lighted:
-    print "Blundering around in the dark isn't a good idea!"
+    print "In the dark? You could easily disturb something."
     disturbance = disturbance + 1
     stop failed
 
@@ -139,11 +149,11 @@ action examine:
         "x [target]"
 
 report examine when self.target == cloak:
-    print "A handsome cloak, of velvet trimmed with satin, and slightly splattered with..."
-    print "ichor? The satin lining shines with a deep, blue-black sheen."
+    print "A handsome cloak, of velvet trimmed with satin, and slightly splattered with raindrops."
+    print "Its blackness is so deep that it almost seems to suck light from the room."
 
 report examine when self.target == hook:
-    print "It's a small brass hook, screwed into the wall."
+    print "It's just a small brass hook, screwed to the wall."
 
 report examine when self.target == sawdust:
     print "The sawdust on the floor has been disturbed. Something is written there."
@@ -192,7 +202,8 @@ report read when self.target == sawdust:
         print ""
         print "    *** You have won ***"
     else:
-        print "The message, hurriedly scrawled in the sawdust, reads..."
+        print "The message has been carelessly trampled, making it difficult to read."
+        print "You can just distinguish the words..."
         print ""
         print "    *** You have lost ***"
     print ""

@@ -1,5 +1,5 @@
 foyer
-You are standing in a spacious hall, splendidly decorated in red and gold, with glittering chandeliers overhead. Doorways lead south and west; a door to the north is barred.
+You are standing in a spacious hall, splendidly decorated in red and gold, with glittering chandeliers overhead. The entrance from the street is to the north, and there are doorways south and west.
 
 > i
 You are carrying:
@@ -17,7 +17,7 @@ You are carrying nothing.
 
 > east
 foyer
-You are standing in a spacious hall, splendidly decorated in red and gold, with glittering chandeliers overhead. Doorways lead south and west; a door to the north is barred.
+You are standing in a spacious hall, splendidly decorated in red and gold, with glittering chandeliers overhead. The entrance from the street is to the north, and there are doorways south and west.
 
 > south
 bar
