@@ -15,8 +15,8 @@ player command (the `run_command` path discards `runAction`'s result, unlike
 - **See:** `devdocs/rulebooks.md` roadmap, `devdocs/game_parser.md` v2.
 
 ## Smaller / opportunistic
-- **`wearable` on cloak in sample.** `lib/advent/globals.lamp` now has the `wears` relation and `wear`/`doff` actions, but `sample/cloak.lamp`'s cloak item lacks `wearable true`. Add when sample edits are requested.
 - **`wearable` on cloak in sample.** The `wear`/`doff` actions are now in lib/advent, but `sample/cloak.lamp`'s cloak item lacks `wearable true`. Add when sample edits are requested.
+- **Extend `checkedGetObject` to expression contexts.** Object-name comparisons in `when` conditions and `if` expressions (e.g. `self.dropped == cloak`) are not validated at compile time; a typo silently becomes a string label that never matches.
 - Add a **one-way** connection to a test map (plain `connects`, no `bidi`) to
   lock in that asymmetric exits stay asymmetric.
 - **Named-rule replacement.** Override suppression now works via bare-`stop` +
