@@ -14,12 +14,12 @@ type game:
 	room start
 
 type physical < thing:
+	string description
 	article article
 
 type container < physical
 
 type room < container:
-	string description
 	bool lighted = true
 
 type item < physical:

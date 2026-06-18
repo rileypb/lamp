@@ -19,3 +19,6 @@ function void list_room_contents(room r):
 
 on person.holder change:
 	describe_room(player.holder)
+
+function bool in_darkness(person p):
+	return not p.holder.lighted

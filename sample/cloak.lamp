@@ -17,38 +17,41 @@ lib advent
 
 game Cloak_of_Darkness:
     author "Roger Firth"
-    start foyer
+    start Foyer
 
 # ========== Rooms ==========
 
-room foyer:
+room Foyer:
     description "You are standing in a spacious hall, splendidly decorated in red and gold, with glittering chandeliers overhead. The entrance from the street is to the north, and there are doorways south and west."
 
-room bar:
+room Bar:
     description "The bar, much rougher than you'd have guessed after the opulence of the foyer to the north, is completely empty. There seems to be some sort of message scrawled in the sawdust on the floor."
     lighted false
 
-room cloakroom:
+room Cloakroom:
     description "The walls of this small room were clearly once lined with hooks, though now only one remains. The exit is a door to the east."
 
-bidi connects foyer south bar
-bidi connects foyer west cloakroom
+bidi connects Foyer south Bar
+bidi connects Foyer west Cloakroom
 
 # ========== Items ==========
 
 item hook:
+	description "It's just a small brass hook, screwed to the wall."
     scenery true
-    holder cloakroom
+    holder Cloakroom
 
 # The cloak starts in the player's inventory, worn.
 item velvet_cloak:
+	description "A handsome cloak, of velvet trimmed with satin, and slightly splattered with raindrops. Its blackness is so deep that it almost seems to suck light from the room."
+	wearable true
     holder yourself
 
 wears yourself velvet_cloak
 
 item sawdust:
     scenery true
-    holder bar
+    holder Bar
 
 # ========== Dark-bar disturbance counter ==========
 
@@ -65,7 +68,7 @@ before go:
     if dest == bar:
         bar.lighted = not (velvet_cloak.holder == player)
 
-# The `hang` and `drop` actions can also change cloak location in the cloakroom.
+# The `hang` and `drop` actions can also change cloak location in the Cloakroom.
 # After either, refresh bar lighting in case the player later returns.
 
 after hang when self.carried == velvet_cloak:
@@ -75,14 +78,14 @@ after drop when self.dropped == velvet_cloak:
     bar.lighted = not (velvet_cloak.holder == player)
 
 # ========== Cloak may only be left in the cloakroom ==========
-
-instead drop when self.dropped == velvet_cloak and not (self.actor.holder == cloakroom):
+#
+instead drop when self.dropped == velvet_cloak and not (self.actor.holder == Cloakroom):
     print "This isn't the best place to leave a smart cloak lying around."
     stop failed
 
 # ========== North exit from foyer is blocked ==========
 
-instead go when self.way == north and self.actor.holder == foyer:
+instead go when self.way == north and self.actor.holder == Foyer:
     print "You've only just arrived, and besides, the weather outside seems to be getting worse."
     stop failed
 
@@ -92,69 +95,51 @@ instead go when self.way == north and self.actor.holder == foyer:
 # Because Lamp has no "before every action" rule, each standard action is listed
 # individually. Novel game-defined actions would not be caught.
 
-instead take when self.actor.holder == bar and not bar.lighted:
+instead take when self.actor.holder == Bar and in_darkness(self.actor):
     print "In the dark? You could easily disturb something."
     disturbance = disturbance + 1
     stop failed
 
-instead drop when self.actor.holder == bar and not bar.lighted:
+instead drop when self.actor.holder == Bar and in_darkness(self.actor):
     print "In the dark? You could easily disturb something."
     disturbance = disturbance + 1
     stop failed
 
-instead inventory when self.actor.holder == bar and not bar.lighted:
+instead inventory when self.actor.holder == Bar and in_darkness(self.actor):
     print "In the dark? You could easily disturb something."
     disturbance = disturbance + 1
     stop failed
 
-instead examine when self.actor.holder == bar and not bar.lighted:
+instead examine when self.actor.holder == Bar and in_darkness(self.actor):
     print "In the dark? You could easily disturb something."
     disturbance = disturbance + 1
     stop failed
 
-instead read when self.actor.holder == bar and not bar.lighted:
+instead read when self.actor.holder == Bar and in_darkness(self.actor):
     print "In the dark? You could easily disturb something."
     disturbance = disturbance + 1
     stop failed
 
-instead hang when self.actor.holder == bar and not bar.lighted:
+instead hang when self.actor.holder == Bar and in_darkness(self.actor):
     print "In the dark? You could easily disturb something."
     disturbance = disturbance + 1
     stop failed
 
 # Going any direction other than north while dark also disturbs things.
-instead go when self.actor.holder == bar and not bar.lighted and not (self.way == north):
+instead go when self.actor.holder == bar and in_darkness(self.actor) and not (self.way == north):
     print "Blundering around in the dark isn't a good idea!"
     disturbance = disturbance + 1
     stop failed
 
 # `look` still shows the darkness text (describe_room handles that), but it
 # counts as disturbing the bar.
-before look when self.actor.holder == bar and not bar.lighted:
+before look when self.actor.holder == bar and in_darkness(self.actor):
     disturbance = disturbance + 1
 
 # ========== Custom actions ==========
 
-# --- examine ---
-action examine:
-    item target
-    syntax:
-        "examine [target]"
-        "x [target]"
-
-report examine when self.target == velvet_cloak:
-    print "A handsome cloak, of velvet trimmed with satin, and slightly splattered with raindrops."
-    print "Its blackness is so deep that it almost seems to suck light from the room."
-
-report examine when self.target == hook:
-    print "It's just a small brass hook, screwed to the wall."
-
 report examine when self.target == sawdust:
     print "The sawdust on the floor has been disturbed. Something is written there."
-
-report failed examine:
-    print "There is nothing special about that."
-    stop
 
 # --- hang [item] on [hook] ---
 action hang:
