@@ -15,5 +15,9 @@ const tmpFile = path.join(buildDir, `${path.basename(inputFile, ".lamp")}.genera
 const lanternCli = path.join(__dirname, "index.js");
 const playCli = path.join(__dirname, "..", "lamplighter", "play.js");
 
-execFileSync("node", [lanternCli, inputFile, tmpFile], { stdio: "inherit" });
+try {
+    execFileSync("node", [lanternCli, inputFile, tmpFile], { stdio: "inherit" });
+} catch (_) {
+    process.exit(1);
+}
 execFileSync("node", [playCli, tmpFile], { stdio: "inherit" });

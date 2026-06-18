@@ -41,6 +41,7 @@ let relationFieldSchemas = new Map();
 let emitKindNames = new Set();
 let functionParamTypes = new Map();
 let actionSlotTypes = new Map();
+let knownObjectNames = new Set();
 // Absolute path of the author's game file; phase rules from it sort ahead of
 // library rules (order 0 vs 1). See devdocs/rulebooks.md.
 let mainFilePath = null;
@@ -62,6 +63,7 @@ function emitProgram(programAst, options = {}) {
 
     const kindNames = new Set(kindNodes.map((n) => n.name));
 
+    knownObjectNames = new Set(objectNodes.map((n) => n.objectName));
     emitKindNames = kindNames;
     mainFilePath = options.mainFilePath || null;
     currentBareStop = "return;";
@@ -314,6 +316,15 @@ function objectRef(objectName) {
         : `lamplighter.getObject(${JSON.stringify(objectName)})`;
 }
 
+// Emits getObject for a string-literal object reference, with a compile-time
+// check that the name is a declared object.
+function checkedGetObject(name, filePath, lineNumber) {
+    if (!knownObjectNames.has(name)) {
+        throw new Error(`${filePath}:${lineNumber}: unknown object "${name}"`);
+    }
+    return `lamplighter.getObject(${JSON.stringify(name)})`;
+}
+
 function emitGlobalDecl(node, kindNames = new Set()) {
     let valueExpr;
     if (node.value.kind === "NoneLiteral") {
@@ -324,7 +335,7 @@ function emitGlobalDecl(node, kindNames = new Set()) {
         && !kindNames.has(node.typeName)
     ) {
         // Bare identifier value for an object-typed global — treat as object name reference
-        valueExpr = `lamplighter.getObject(${JSON.stringify(node.value.value)})`;
+        valueExpr = checkedGetObject(node.value.value, node.filePath, node.lineNumber);
     } else {
         valueExpr = emitValue(node.value);
     }
@@ -378,7 +389,7 @@ function emitRelationAssert(node, globalNames = new Set()) {
             && !PRIMITIVE_TYPES.has(fieldType)
             && !emitKindNames.has(fieldType);
         const valueExpr = isObjectTyped
-            ? `lamplighter.getObject(${JSON.stringify(field.value.value)})`
+            ? checkedGetObject(field.value.value, field.filePath, field.lineNumber)
             : emitExpression(field.value, globalNames);
         return `${JSON.stringify(field.fieldName)}: ${valueExpr}`;
     });
@@ -484,7 +495,7 @@ function emitObjectDecl(node, mergedTypes = new Map(), kindNames = new Set()) {
 function emitObjectFieldInits(node, mergedTypes, kindNames) {
     return node.fields
         .filter((field) => isObjectTypedField(field, node.typeName, mergedTypes, kindNames))
-        .map((field) => `${objectRef(node.objectName)}.${field.fieldName} = lamplighter.getObject(${JSON.stringify(field.value.value)});`);
+        .map((field) => `${objectRef(node.objectName)}.${field.fieldName} = ${checkedGetObject(field.value.value, field.filePath, field.lineNumber)};`);
 }
 
 function emitValue(valueNode) {
@@ -759,7 +770,7 @@ function emitTryCall(node, globalNames = new Set()) {
             && !PRIMITIVE_TYPES.has(slotType)
             && !emitKindNames.has(slotType);
         const valueExpr = isObject
-            ? `lamplighter.getObject(${JSON.stringify(field.value.value)})`
+            ? checkedGetObject(field.value.value, field.filePath, field.lineNumber)
             : emitExpression(field.value, globalNames);
         return `${JSON.stringify(field.fieldName)}: ${valueExpr}`;
     });

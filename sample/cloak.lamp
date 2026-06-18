@@ -41,10 +41,10 @@ item hook:
     holder cloakroom
 
 # The cloak starts in the player's inventory, worn.
-item cloak:
+item velvet_cloak:
     holder yourself
 
-wears yourself cloak
+wears yourself velvet_cloak
 
 item sawdust:
     scenery true
@@ -63,26 +63,20 @@ global int disturbance = 0
 before go:
     let dest = connects self.actor.holder self.way ?first
     if dest == bar:
-        bar.lighted = not (cloak.holder == player)
+        bar.lighted = not (velvet_cloak.holder == player)
 
 # The `hang` and `drop` actions can also change cloak location in the cloakroom.
 # After either, refresh bar lighting in case the player later returns.
 
-after hang when self.carried == cloak:
-    remove wears yourself cloak
-    bar.lighted = not (cloak.holder == player)
+after hang when self.carried == velvet_cloak:
+    bar.lighted = not (velvet_cloak.holder == player)
 
-after drop when self.dropped == cloak:
-    remove wears yourself cloak
-    bar.lighted = not (cloak.holder == player)
+after drop when self.dropped == velvet_cloak:
+    bar.lighted = not (velvet_cloak.holder == player)
 
 # ========== Cloak may only be left in the cloakroom ==========
 
 instead drop when self.dropped == cloak and not (self.actor.holder == cloakroom):
-    print "This isn't the best place to leave a smart cloak lying around."
-    stop failed
-
-instead hang when self.carried == cloak and not (self.actor.holder == cloakroom):
     print "This isn't the best place to leave a smart cloak lying around."
     stop failed
 
