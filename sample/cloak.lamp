@@ -16,7 +16,7 @@
 lib advent
 
 game Cloak_of_Darkness:
-    author "Roger Firth and Sonja Keränen"
+    author "Roger Firth"
     start foyer
 
 # ========== Rooms ==========
@@ -180,6 +180,14 @@ check hang:
         stop failed
 
 do hang:
+    if wears self.actor self.carried:
+        if (self.actor == player):
+            print "(first taking off " + self.carried + ")"
+        try doff:
+            clothing self.carried
+            actor self.actor
+        if wears self.actor self.carried:
+            stop failed
     self.carried.holder = self.peg
 
 report hang:
