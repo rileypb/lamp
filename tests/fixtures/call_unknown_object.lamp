@@ -1,0 +1,17 @@
+lib advent
+
+# Passing a bare name to an object-typed parameter resolves it as an object
+# reference; an undeclared name is now a compile error (previously a silent
+# runtime failure), reported at the call site.
+
+game Call_Unknown:
+    start hall
+
+room hall:
+    description "A hall."
+
+function void show(item x):
+    print x
+
+on startup:
+    show(nonexistent)

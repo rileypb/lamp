@@ -1,0 +1,3 @@
+Compile error: tests/fixtures/call_unknown_object.lamp:17: unknown object "nonexistent"
+  17 |     show(nonexistent)
+    |     ^

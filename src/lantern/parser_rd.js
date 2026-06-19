@@ -1238,7 +1238,7 @@ function createParser(tokens, filePath, globalNames, functionNames = new Set(), 
         if (op.type === "STAR") return ast.createMultiplyExpr(left, parseExpression(BP.STAR, localNames));
         if (op.type === "SLASH") return ast.createDivideExpr(left, parseExpression(BP.SLASH, localNames));
         if (op.type === "CARET") return ast.createPowerExpr(left, parseExpression(BP.CARET - 1, localNames));
-        if (op.type === "EQEQ") return ast.createEqualsExpr(left, parseExpression(BP.EQEQ, localNames));
+        if (op.type === "EQEQ") return ast.createEqualsExpr(left, parseExpression(BP.EQEQ, localNames), filePath, op.line);
         if (op.type === "LT") return ast.createLessThanExpr(left, parseExpression(BP.LT, localNames));
         if (op.type === "GT") return ast.createLessThanExpr(parseExpression(BP.GT, localNames), left);
         if (op.type === "LTE") return ast.createLessOrEqualExpr(left, parseExpression(BP.LTE, localNames));

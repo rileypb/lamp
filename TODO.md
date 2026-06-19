@@ -25,13 +25,17 @@ still uses a regex — low risk, left as-is. **(arch issue A)**
 library-provided scope/antecedent hooks) so `lib/sys` is self-contained and a
 non-advent library is possible. **(arch issue C)**
 
-### AR3. Distinguish object references from string literals in the AST
-A bare name and a quoted string share one `StringLiteral` node; the emitter
-re-derives object-vs-string from expected type at seven sites with duplicated
-logic, and validation is inconsistent (`checkedGetObject` vs bare `getObject`).
-Resolve once in the parser/checker into an `ObjectRef` node; centralize dispatch
-and compile-time unknown-object checking (covers object-name typos in `when`/`if`
-comparisons, currently unvalidated). **(arch issue D)**
+### AR3. Distinguish object references from string literals — DONE (2026-06-19)
+The seven duplicated object-vs-string predicates collapsed to one
+(`valueIsObjectRef` + `emitObjectOrValue` in `src/lantern/emitter.js`); validation
+is uniform `checkedGetObject`, so unknown objects in call args / relation queries
+/ relation removes are now compile errors (`call_unknown_object` fixture). The
+checker also flags bare-name typos compared against an object-typed expression
+(`checkObjectNameComparison`; `compare_unknown_object` fixture). Output for valid
+programs is byte-identical. Chosen approach: emitter-centralized dispatch rather
+than a distinct `ObjectRef` AST node — same outcomes, far lower risk. Residual:
+typos on the `ParenNameExpr`/global side of a comparison aren't inferred, so
+aren't caught. **(arch issue D)**
 
 ### AR4. Decode string escapes — DONE (2026-06-19)
 `unescapeString` in `src/lantern/tokenizer.js` resolves `\\`, `\"`, `\n`, `\t`,

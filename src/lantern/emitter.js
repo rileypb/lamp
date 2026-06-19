@@ -234,11 +234,11 @@ function emitProgram(programAst, options = {}) {
     }
 
     for (const objectNode of objectNodes) {
-        lines.push(emitObjectDecl(objectNode, mergedTypes, kindNames));
+        lines.push(emitObjectDecl(objectNode, mergedTypes));
     }
 
     // Set object-typed fields after all objects exist so forward references work
-    const objectFieldInits = objectNodes.flatMap((n) => emitObjectFieldInits(n, mergedTypes, kindNames));
+    const objectFieldInits = objectNodes.flatMap((n) => emitObjectFieldInits(n, mergedTypes));
     for (const init of objectFieldInits) {
         lines.push(init);
     }
@@ -271,7 +271,7 @@ function emitProgram(programAst, options = {}) {
     }
 
     for (const globalDeclNode of globalDeclNodes) {
-        lines.push(emitGlobalDecl(globalDeclNode, kindNames));
+        lines.push(emitGlobalDecl(globalDeclNode));
     }
 
     if (globalDeclNodes.length > 0) {
@@ -376,10 +376,9 @@ function resolveFieldType(typeName, fieldName, mergedTypes) {
     return search(typeName);
 }
 
-function isObjectTypedField(field, typeName, mergedTypes, kindNames) {
-    if (field.value.kind !== "StringLiteral") return false;
+function isObjectTypedField(field, typeName, mergedTypes) {
     const fieldType = resolveFieldType(typeName, field.fieldName, mergedTypes);
-    return fieldType !== null && !PRIMITIVE_TYPES.has(fieldType) && !kindNames.has(fieldType);
+    return fieldType !== null && valueIsObjectRef(field.value, fieldType);
 }
 
 function objectRef(objectName) {
@@ -397,20 +396,32 @@ function checkedGetObject(name, filePath, lineNumber) {
     return `lamplighter.getObject(${emitName(name)})`;
 }
 
-function emitGlobalDecl(node, kindNames = new Set()) {
-    let valueExpr;
-    if (node.value.kind === "NoneLiteral") {
-        valueExpr = "null";
-    } else if (
-        node.value.kind === "StringLiteral"
-        && !PRIMITIVE_TYPES.has(node.typeName)
-        && !kindNames.has(node.typeName)
-    ) {
-        // Bare identifier value for an object-typed global — treat as object name reference
-        valueExpr = checkedGetObject(node.value.value, node.filePath, node.lineNumber);
-    } else {
-        valueExpr = emitValue(node.value);
+// A bare object name and a quoted string both parse to a StringLiteral; they are
+// told apart by the declared type at the use site. A StringLiteral standing in a
+// position whose declared type is an *object* type (not a primitive, kind, list,
+// or function) is an object reference. This predicate is the single source of
+// that decision — see devdocs/architecture.md ("Known Architectural Issues" → D).
+function valueIsObjectRef(valueNode, declaredType) {
+    return valueNode.kind === "StringLiteral"
+        && declaredType !== undefined
+        && declaredType !== "function"
+        && !PRIMITIVE_TYPES.has(declaredType)
+        && !emitKindNames.has(declaredType)
+        && !declaredType.startsWith("list<");
+}
+
+// Emits a value appearing in a typed position (field, argument, slot, return).
+// Resolves a bare object name to a validated getObject; everything else emits as
+// an ordinary expression. The one place the object-vs-string dispatch lives.
+function emitObjectOrValue(valueNode, declaredType, filePath, lineNumber, globalNames) {
+    if (valueIsObjectRef(valueNode, declaredType)) {
+        return checkedGetObject(valueNode.value, filePath, lineNumber);
     }
+    return emitExpression(valueNode, globalNames);
+}
+
+function emitGlobalDecl(node) {
+    const valueExpr = emitObjectOrValue(node.value, node.typeName, node.filePath, node.lineNumber, new Set());
     return `lamplighter.defineGlobal(${emitName(node.name)}, ${valueExpr});`;
 }
 
@@ -457,14 +468,7 @@ function emitRelationDecl(node) {
 function emitRelationAssert(node, globalNames = new Set()) {
     const schema = relationFieldSchemas.get(node.relationName) || {};
     const pairs = node.fields.map((field) => {
-        const fieldType = schema[field.fieldName];
-        const isObjectTyped = field.value.kind === "StringLiteral"
-            && fieldType !== undefined
-            && !PRIMITIVE_TYPES.has(fieldType)
-            && !emitKindNames.has(fieldType);
-        const valueExpr = isObjectTyped
-            ? checkedGetObject(field.value.value, field.filePath, field.lineNumber)
-            : emitExpression(field.value, globalNames);
+        const valueExpr = emitObjectOrValue(field.value, schema[field.fieldName], field.filePath, field.lineNumber, globalNames);
         return `${JSON.stringify(field.fieldName)}: ${valueExpr}`;
     });
     const opts = [];
@@ -476,21 +480,12 @@ function emitRelationAssert(node, globalNames = new Set()) {
 
 function emitRelationRemove(node, globalNames = new Set()) {
     const schema = relationFieldSchemas.get(node.relationName) || {};
-    const specifiedFields = new Map(node.fields.map((f) => [f.fieldName, f.value]));
+    const specified = new Map(node.fields.map((f) => [f.fieldName, f]));
     const pairs = Object.keys(schema).map((fieldName) => {
-        const value = specifiedFields.get(fieldName);
-        let valueExpr;
-        if (!value || value.kind === "WildcardExpr") {
-            valueExpr = "lamplighter.ANY";
-        } else if (
-            value.kind === "StringLiteral"
-            && !PRIMITIVE_TYPES.has(schema[fieldName])
-            && !emitKindNames.has(schema[fieldName])
-        ) {
-            valueExpr = `lamplighter.getObject(${emitName(value.value)})`;
-        } else {
-            valueExpr = emitExpression(value, globalNames);
-        }
+        const field = specified.get(fieldName);
+        const valueExpr = (!field || field.value.kind === "WildcardExpr")
+            ? "lamplighter.ANY"
+            : emitObjectOrValue(field.value, schema[fieldName], field.filePath, field.lineNumber, globalNames);
         return `${JSON.stringify(fieldName)}: ${valueExpr}`;
     });
     return `lamplighter.removeRelation(${emitName(node.relationName)}, { ${pairs.join(", ")} });`;
@@ -503,43 +498,19 @@ function emitDisconnect(node) {
 // Emits a call's argument list. A bare object name parses to a StringLiteral
 // (indistinguishable from a quoted string in the AST), so — as with object field
 // values — when the parameter is object-typed it is resolved via getObject.
-function emitCallArgs(functionName, args, globalNames) {
+function emitCallArgs(functionName, args, globalNames, filePath, lineNumber) {
     const paramTypes = functionParamTypes.get(functionName) || [];
     return args
-        .map((arg, i) => {
-            const paramType = paramTypes[i];
-            if (
-                arg.kind === "StringLiteral"
-                && paramType !== undefined
-                && paramType !== "function"
-                && !PRIMITIVE_TYPES.has(paramType)
-                && !emitKindNames.has(paramType)
-                && !paramType.startsWith("list<")
-            ) {
-                return `lamplighter.getObject(${emitName(arg.value)})`;
-            }
-            return emitExpression(arg, globalNames);
-        })
+        .map((arg, i) => emitObjectOrValue(arg, paramTypes[i], filePath, lineNumber, globalNames))
         .join(", ");
 }
 
 function emitRelationQuery(node, globalNames) {
     const schema = relationFieldSchemas.get(node.relationName) || {};
     const pairs = node.fields.map((field) => {
-        const fieldType = schema[field.fieldName];
-        let valueExpr;
-        if (field.value.kind === "WildcardExpr") {
-            valueExpr = "lamplighter.ANY";
-        } else if (
-            field.value.kind === "StringLiteral"
-            && fieldType !== undefined
-            && !PRIMITIVE_TYPES.has(fieldType)
-            && !emitKindNames.has(fieldType)
-        ) {
-            valueExpr = `lamplighter.getObject(${emitName(field.value.value)})`;
-        } else {
-            valueExpr = emitExpression(field.value, globalNames);
-        }
+        const valueExpr = field.value.kind === "WildcardExpr"
+            ? "lamplighter.ANY"
+            : emitObjectOrValue(field.value, schema[field.fieldName], node.filePath, node.lineNumber, globalNames);
         return `${JSON.stringify(field.fieldName)}: ${valueExpr}`;
     });
     const mapping = `{ ${pairs.join(", ")} }`;
@@ -549,10 +520,10 @@ function emitRelationQuery(node, globalNames) {
     return `lamplighter.queryRelationValue(${emitName(node.relationName)}, ${mapping}, ${JSON.stringify(node.outputField)}, ${JSON.stringify(node.outputMode)})`;
 }
 
-function emitObjectDecl(node, mergedTypes = new Map(), kindNames = new Set()) {
+function emitObjectDecl(node, mergedTypes = new Map()) {
     const fields = {};
     for (const field of node.fields) {
-        if (!isObjectTypedField(field, node.typeName, mergedTypes, kindNames)) {
+        if (!isObjectTypedField(field, node.typeName, mergedTypes)) {
             fields[field.fieldName] = emitValue(field.value);
         }
     }
@@ -566,9 +537,9 @@ function emitObjectDecl(node, mergedTypes = new Map(), kindNames = new Set()) {
     return `${call};`;
 }
 
-function emitObjectFieldInits(node, mergedTypes, kindNames) {
+function emitObjectFieldInits(node, mergedTypes) {
     return node.fields
-        .filter((field) => isObjectTypedField(field, node.typeName, mergedTypes, kindNames))
+        .filter((field) => isObjectTypedField(field, node.typeName, mergedTypes))
         .map((field) => `${objectRef(node.objectName)}.${field.fieldName} = ${checkedGetObject(field.value.value, field.filePath, field.lineNumber)};`);
 }
 
@@ -871,7 +842,7 @@ function emitStatementLines(statement, indentLevel, globalNames = new Set()) {
         return [`${indent}${emitDisconnect(statement)}`];
     }
     if (statement.kind === "CallStatement") {
-        const argExprs = emitCallArgs(statement.name, statement.args, globalNames);
+        const argExprs = emitCallArgs(statement.name, statement.args, globalNames, statement.filePath, statement.lineNumber);
         return [`${indent}${statement.name}(${argExprs});`];
     }
     if (statement.kind === "ReturnStatement") {
@@ -889,7 +860,7 @@ function emitStatementLines(statement, indentLevel, globalNames = new Set()) {
         return [`${indent}return ${emitExpression(statement.expr, globalNames)};`];
     }
     if (statement.kind === "FollowStatement") {
-        const argExprs = emitCallArgs(statement.name, statement.args, globalNames);
+        const argExprs = emitCallArgs(statement.name, statement.args, globalNames, statement.filePath, statement.lineNumber);
         return [`${indent}${statement.name}(${argExprs});`];
     }
     if (statement.kind === "TryStatement") {
@@ -904,14 +875,7 @@ function emitStatementLines(statement, indentLevel, globalNames = new Set()) {
 function emitTryCall(node, globalNames = new Set()) {
     const slotTypes = actionSlotTypes.get(node.actionName) || new Map();
     const pairs = node.fields.map((field) => {
-        const slotType = slotTypes.get(field.fieldName);
-        const isObject = field.value.kind === "StringLiteral"
-            && slotType !== undefined
-            && !PRIMITIVE_TYPES.has(slotType)
-            && !emitKindNames.has(slotType);
-        const valueExpr = isObject
-            ? checkedGetObject(field.value.value, field.filePath, field.lineNumber)
-            : emitExpression(field.value, globalNames);
+        const valueExpr = emitObjectOrValue(field.value, slotTypes.get(field.fieldName), field.filePath, field.lineNumber, globalNames);
         return `${JSON.stringify(field.fieldName)}: ${valueExpr}`;
     });
     const instance = `{ "type": ${emitName(node.actionName)}, "action": ${emitName(node.actionName)}${pairs.length ? ", " + pairs.join(", ") : ""} }`;
@@ -978,13 +942,13 @@ function emitExpression(expr, globalNames = new Set()) {
         return expr.fieldChain.length === 0 ? base : `${base}.${expr.fieldChain.join(".")}`;
     }
     if (expr.kind === "CallExpr") {
-        return `${expr.name}(${emitCallArgs(expr.name, expr.args, globalNames)})`;
+        return `${expr.name}(${emitCallArgs(expr.name, expr.args, globalNames, expr.filePath, expr.lineNumber)})`;
     }
     if (expr.kind === "FunctionRefExpr") {
         return expr.name;
     }
     if (expr.kind === "FollowExpr") {
-        return `${expr.name}(${emitCallArgs(expr.name, expr.args, globalNames)})`;
+        return `${expr.name}(${emitCallArgs(expr.name, expr.args, globalNames, expr.filePath, expr.lineNumber)})`;
     }
     if (expr.kind === "TryExpr") {
         return emitTryCall(expr, globalNames);

@@ -1,0 +1,3 @@
+Compile error: tests/fixtures/compare_unknown_object.lamp:19: type error: unknown object "nonexistent" compared with a value of type "item"
+  19 |     if self.target == nonexistent:
+    |     ^

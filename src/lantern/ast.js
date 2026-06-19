@@ -107,8 +107,8 @@ function createConcat(left, right) {
     return { kind: "Concat", left, right };
 }
 
-function createEqualsExpr(left, right) {
-    return { kind: "EqualsExpr", left, right };
+function createEqualsExpr(left, right, filePath, lineNumber) {
+    return { kind: "EqualsExpr", left, right, filePath, lineNumber };
 }
 
 function createKindDecl(name, kindExpr) {

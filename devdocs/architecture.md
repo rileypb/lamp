@@ -87,17 +87,34 @@ parser/scope/loop without inheriting these assumptions. Either formalize the
 contract (a documented "world model interface" the runtime requires) or push the
 scope/antecedent logic down into library-provided hooks.
 
-### D. The AST conflates bare object names with string literals
+### D. The AST conflates bare object names with string literals — RESOLVED (2026-06-19)
 A bare identifier used as a value parses to the same `StringLiteral` node as a
-quoted string. The emitter then re-derives "is this an object reference?" from
-the expected type at **seven** separate sites (`emitRelationAssert`,
-`emitCallArgs`, `emitObjectDecl`, `emitTryCall`, `emitRelationQuery`,
-`emitGlobalDecl`, `emitRelationRemove`), each duplicating the
-`!PRIMITIVE && !kind && ...` test. Validation is also inconsistent: some sites
-call `checkedGetObject` (compile-time "unknown object" error) while others emit a
-bare `lamplighter.getObject(...)` that only fails at runtime. A resolved
-`ObjectRef` vs `StringLiteral` distinction (decided once in the parser/checker)
-would centralize both the dispatch and the validation.
+quoted string; the object-vs-string decision is made from the expected type at
+the use site. That decision was duplicated across seven emitter sites with an
+inconsistent `getObject` vs `checkedGetObject` split.
+
+Now the predicate lives in one place — `valueIsObjectRef(valueNode, declaredType)`
+— and one dispatch helper, `emitObjectOrValue(...)`, is used by all seven sites
+(`emitGlobalDecl`, `emitRelationAssert`, `emitRelationQuery`, `emitRelationRemove`,
+`emitTryCall`, `emitCallArgs`, and the object-decl field split via
+`isObjectTypedField`). Validation is uniform: every object-typed value goes
+through `checkedGetObject`, so unknown objects in call arguments, relation
+queries, and relation removes are now compile errors (previously silent runtime
+failures) reported at the call/use site. The checker additionally flags the
+expression case the emitter can't see: a bare name compared (`==`) against an
+object-typed expression that isn't a declared object (`checkObjectNameComparison`)
+— catching `self.dropped == cloack`-style typos. Covered by golden fixtures
+`call_unknown_object` and `compare_unknown_object`; output for all valid programs
+is byte-identical (verified by the encode corpus and generated-JS comparisons).
+
+Implementation note: the dispatch was centralized in the emitter (one predicate +
+one helper) rather than by introducing a distinct `ObjectRef` AST node and
+rewriting it in the parser/checker. That achieves the same outcomes — no
+duplication, uniform compile-time validation — with byte-identical output and
+without a compiler-wide node-kind change. A residual limitation: a typo on the
+*object* side of a comparison whose other side is a bare object reference
+(`ParenNameExpr`) or a global (both infer to no type) is not caught; only the
+common field/local/return-typed side is.
 
 ### E. String escapes are not processed — RESOLVED (2026-06-19)
 The tokenizer now resolves escapes when it builds a STRING token's value

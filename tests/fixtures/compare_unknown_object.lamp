@@ -1,0 +1,20 @@
+lib advent
+
+# A bare name compared against an object-typed expression must be a declared
+# object. A typo falls back to a string literal that can never match, so the
+# checker reports it instead of silently compiling an always-false comparison.
+
+game Compare_Unknown:
+    start hall
+
+room hall:
+    description "A hall."
+
+action poke:
+    direct item target
+    syntax:
+        "poke [target]"
+
+check poke:
+    if self.target == nonexistent:
+        print "ouch"

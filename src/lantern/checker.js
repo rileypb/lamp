@@ -692,8 +692,33 @@ function checkTryStatement(stmt, typeSchema, kindSchema, localTypes, functionSch
 // `follow f(...)` statements. Unknown function names stay lenient (natives,
 // forward refs); an unknown rulebook is an error, matching follow-statement
 // behavior.
+// `typeName` names a declared object type (something with instances), as opposed
+// to a primitive or a kind/enum.
+function isDeclaredObjectType(typeName, typeSchema, kindSchema) {
+    return typeof typeName === "string"
+        && typeSchema.typeFields.has(typeName)
+        && !PRIMITIVE_TYPES.has(typeName)
+        && !kindSchema.has(typeName);
+}
+
+// A bare name compared (`==`) against an object-typed expression that is not a
+// declared object is a typo: the parser fell back to a string literal that can
+// never equal an object, so the comparison is silently always false. Flag it.
+function checkObjectNameComparison(expr, typeSchema, kindSchema, localTypes, functionSchema) {
+    for (const [nameSide, otherSide] of [[expr.left, expr.right], [expr.right, expr.left]]) {
+        if (nameSide.kind !== "StringLiteral") continue;
+        const otherType = inferExprType(otherSide, typeSchema, kindSchema, localTypes, functionSchema);
+        if (isDeclaredObjectType(otherType, typeSchema, kindSchema)) {
+            throw typeError(expr.filePath, expr.lineNumber, `unknown object "${nameSide.value}" compared with a value of type "${otherType}"`);
+        }
+    }
+}
+
 function checkExprCalls(expr, typeSchema, kindSchema, localTypes, functionSchema) {
     if (!expr || typeof expr !== "object") return;
+    if (expr.kind === "EqualsExpr") {
+        checkObjectNameComparison(expr, typeSchema, kindSchema, localTypes, functionSchema);
+    }
     if (expr.kind === "CallExpr") {
         const fn = functionSchema.get(expr.name);
         if (fn) {
