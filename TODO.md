@@ -5,14 +5,14 @@ Top recommended next steps, roughly in priority order. Each item notes *why*,
 prerequisite lists in `devdocs/game_parser.md`, `devdocs/rulebooks.md`, and
 `devdocs/relations.md`.
 
-## 1. Lighthouse web bundle — polish shell/UX details
-Web v1 is **built, smoke-tested, and verified live in a browser** (full loop
-plays through; see `devdocs/lighthouse.md`). Remaining: a handful of minor
-shell/UX details noticed in the first live run — to be enumerated, then fixed in
-`src/lighthouse/web/{shell.js,shell.css,index.html}`. Separately, the only
-automation gap is a *headless* browser test for CI (Playwright/Puppeteer = heavy
-dep; decide if worth it). **Blocked by:** the specific details to fix.
-**Where:** `src/lighthouse/web/`.
+## 1. Lighthouse web bundle — remaining polish + CI test
+Web v1 is **built, smoke-tested, and verified live in a browser**. Fixed: the
+duplicate prompt — input is now inline at the transcript tail, right after the
+last output, with the game's own `> ` as the single prompt (see
+`devdocs/lighthouse.md`). Remaining: any further shell/UX nits as they surface,
+and the one automation gap — a *headless* browser test for CI
+(Playwright/Puppeteer = heavy dep; decide if worth it). **Blocked by:** nothing
+pending. **Where:** `src/lighthouse/web/`.
 
 ## 2. RESTART support for the end-of-story sequence
 The end-of-story mechanism (`story` global, `end_story_rules`, the post-game loop

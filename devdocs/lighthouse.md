@@ -104,11 +104,16 @@ Built in `src/lighthouse/web/` as the bundle's template assets:
 - `shell.js` — the main-thread host. Constructs the `SharedArrayBuffer`, spawns
   `game.worker.js`, posts `init`, relays `print`/`write` as **text nodes only**
   (never `innerHTML`), routes `log` to the console, and services
-  `readline`/`prompt_readline` by capturing one line asynchronously, echoing it,
-  and filling the buffer (`Atomics.store` + `Atomics.notify`). It never blocks —
-  the worker blocks on `Atomics.wait` while the main thread stays responsive. If
-  the page is not cross-origin isolated it refuses to start with a notice rather
-  than failing on `SharedArrayBuffer` construction.
+  `readline`/`prompt_readline` by capturing one line asynchronously (Enter to
+  submit), echoing it, and filling the buffer (`Atomics.store` +
+  `Atomics.notify`). It never blocks — the worker blocks on `Atomics.wait` while
+  the main thread stays responsive. If the page is not cross-origin isolated it
+  refuses to start with a notice rather than failing on `SharedArrayBuffer`
+  construction.
+- **Inline input.** The input field is the permanent tail element of
+  `#transcript`; output is inserted *before* it, so the caret always sits inline
+  right after the last output. The game's own prompt (e.g. `prompt("> ")`) is the
+  single prompt — there is no separate bottom-pinned prompt.
 - The shell contains no game logic — render, capture input, broker, nothing more.
 
 ## Assumptions

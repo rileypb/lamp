@@ -19,15 +19,16 @@
     const WORKER_URL = "./game.worker.js";
 
     const transcript = document.getElementById("transcript");
-    const form = document.getElementById("input-form");
     const inputLine = document.getElementById("input-line");
 
     const encoder = new TextEncoder();
 
+    // The input element is the permanent tail of the transcript; all output is
+    // inserted before it so the input always sits inline after the last output.
     // Output renders as text nodes only — never innerHTML — even though the text
     // is the author's own. Defense in depth, per the sandbox output channel rule.
     function appendText(value) {
-        transcript.appendChild(document.createTextNode(value));
+        transcript.insertBefore(document.createTextNode(value), inputLine);
         scrollToBottom();
     }
 
@@ -35,7 +36,7 @@
         const span = document.createElement("span");
         span.className = className;
         span.textContent = value;
-        transcript.appendChild(span);
+        transcript.insertBefore(span, inputLine);
         scrollToBottom();
     }
 
@@ -100,7 +101,7 @@
                 requestInput();
                 break;
             case "prompt_readline":
-                appendText(msg.prompt);
+                appendClassed(msg.prompt, "prompt-text");
                 requestInput();
                 break;
             case "done":
@@ -118,17 +119,24 @@
         endGame(event.message || "worker error");
     });
 
-    form.addEventListener("submit", (event) => {
+    inputLine.addEventListener("keydown", (event) => {
+        if (event.key !== "Enter") return;
         event.preventDefault();
         if (!awaitingInput) return;
         const line = inputLine.value;
         awaitingInput = false;
         inputLine.value = "";
         inputLine.disabled = true;
-        // Echo the player's command into the transcript, as a parser game shows
-        // the typed line above its response.
+        // Echo the player's command onto the prompt line, then a newline, as a
+        // parser game records the typed command above its response.
         appendClassed(`${line}\n`, "player-echo");
         deliverLine(line);
+    });
+
+    // Clicking anywhere in the transcript focuses the input while it is awaited,
+    // so the player does not have to aim for the inline field.
+    transcript.addEventListener("click", () => {
+        if (awaitingInput && window.getSelection().isCollapsed) inputLine.focus();
     });
 
     function endGame(errorMessage) {

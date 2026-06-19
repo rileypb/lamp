@@ -38,6 +38,10 @@ html, body {
     word-break: break-word;
 }
 
+.prompt-text {
+    color: var(--accent);
+}
+
 .player-echo {
     color: var(--accent);
 }
@@ -51,27 +55,19 @@ html, body {
     color: #e06c5a;
 }
 
-#input-form {
-    display: flex;
-    align-items: baseline;
-    gap: 0.5ch;
-    flex: 0 0 auto;
-    padding-top: 0.5rem;
-}
-
-#prompt {
-    color: var(--accent);
-}
-
+/* Inline so it flows directly after the prompt text on the same line; a generous
+   fixed width keeps long commands on one line (the field scrolls horizontally
+   past it). */
 #input-line {
-    flex: 1 1 auto;
+    display: inline-block;
+    width: 40ch;
+    max-width: 100%;
     background: transparent;
     border: none;
-    color: inherit;
+    color: var(--accent);
+    caret-color: var(--accent);
     font: inherit;
     outline: none;
-}
-
-#input-line:disabled {
-    color: var(--dim);
+    padding: 0;
+    vertical-align: baseline;
 }

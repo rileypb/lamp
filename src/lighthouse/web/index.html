@@ -32,13 +32,12 @@
          input at a time, and brokers it to the game worker. Contains no game
          logic. See devdocs/sandbox.md and devdocs/lighthouse.md. -->
     <main id="screen">
-        <div id="transcript" aria-live="polite"></div>
-        <form id="input-form" autocomplete="off">
-            <span id="prompt" aria-hidden="true">&gt;</span>
-            <input id="input-line" type="text" name="command"
-                   aria-label="Enter a command" autocapitalize="off"
-                   autocorrect="off" spellcheck="false" disabled>
-        </form>
+        <!-- The input lives at the tail of the transcript; output is inserted
+             before it, so the input always sits inline right after the last
+             output (no separate bottom-pinned prompt). -->
+        <div id="transcript" aria-live="polite"><input id="input-line" type="text"
+            aria-label="Enter a command" autocomplete="off" autocapitalize="off"
+            autocorrect="off" spellcheck="false" disabled></div>
     </main>
     <!-- The service worker that synthesizes COOP/COEP is added in step (d). Until
          then the page is not cross-origin isolated and the shell shows a notice
