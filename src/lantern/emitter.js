@@ -46,6 +46,9 @@ let knownObjectNames = new Set();
 // used to resolve a multi-action rule's selector. See devdocs/rulebooks.md.
 let allActionNames = [];
 let actionTagMembers = new Map();
+// Rulebook name -> ordered parameter names, so a `rule RULEBOOK:` contribution
+// emits a rule function with the rulebook's parameters in scope.
+let rulebookParamNames = new Map();
 // Absolute path of the author's game file; phase rules from it sort ahead of
 // library rules (order 0 vs 1). See devdocs/rulebooks.md.
 let mainFilePath = null;
@@ -72,9 +75,13 @@ function emitProgram(programAst, options = {}) {
     mainFilePath = options.mainFilePath || null;
     currentBareStop = "return;";
     functionParamTypes = new Map();
+    rulebookParamNames = new Map();
     for (const node of programAst.nodes) {
         if (node.kind === "FunctionDecl" || node.kind === "NativeFunctionDecl" || node.kind === "RulebookDecl") {
             functionParamTypes.set(node.name, node.params.map((p) => p.typeName));
+        }
+        if (node.kind === "RulebookDecl") {
+            rulebookParamNames.set(node.name, node.params.map((p) => p.name));
         }
     }
     relationFieldSchemas = new Map();
@@ -270,6 +277,11 @@ function emitProgram(programAst, options = {}) {
     for (const node of programAst.nodes) {
         if (node.kind !== "PhaseRule") continue;
         lines.push(emitPhaseRule(node, globalNames));
+    }
+
+    for (const node of programAst.nodes) {
+        if (node.kind !== "RulebookRule") continue;
+        lines.push(emitRulebookRule(node, globalNames));
     }
 
     for (const actionNode of actionNodes) {
@@ -579,23 +591,48 @@ function emitFunctionGroup(name, overloads, globalNames) {
 }
 
 // A rulebook compiles to a plain (hoisted) JS function: each rule is an
-// `if (guard) { ...body... }` whose `stop EXPR` emits a `return EXPR`. A body
-// that does not stop falls through to the next rule; once all rules are
-// exhausted the default value is returned. `follow NAME(args)` is emitted as an
-// ordinary call, so no runtime support is required.
+// A named rulebook compiles to (1) a `registerRulebookRule` call per `when` rule
+// in its declaration block, and (2) a dispatcher function that runs the registry
+// (`runRulebook`) and falls back to the default. Routing every rule through the
+// registry lets a game file contribute rules to a library rulebook via
+// `rule RULEBOOK:` (see emitRulebookRule). `stop EXPR` in a rule emits a `return
+// EXPR` (stop with that value); a bare `stop` emits `return HALT` (fall back to
+// the default). `follow NAME(args)` is an ordinary call to the dispatcher.
 function emitRulebookDecl(node, globalNames = new Set()) {
-    const paramList = node.params.map((p) => p.name).join(", ");
-    const defaultExpr = emitExpression(node.defaultExpr, globalNames);
-    const prevBareStop = currentBareStop;
-    currentBareStop = `return ${defaultExpr};`;
-    const lines = [`function ${node.name}(${paramList}) {`];
+    const order = node.filePath === mainFilePath ? 0 : 1;
+    const paramNames = node.params.map((p) => p.name);
+    const lines = [];
     for (const rule of node.rules) {
-        lines.push(`    if (${emitExpression(rule.whenExpr, globalNames)}) {`);
-        lines.push(...emitStatementList(rule.body, 2, globalNames));
-        lines.push(`    }`);
+        lines.push(emitRulebookRuleFn(node.name, paramNames, rule.whenExpr, rule.body, order, globalNames));
     }
+    const defaultExpr = emitExpression(node.defaultExpr, globalNames);
+    lines.push(`function ${node.name}(${paramNames.join(", ")}) {`);
+    lines.push(`    const __r = lamplighter.runRulebook(${JSON.stringify(node.name)}, [${paramNames.join(", ")}]);`);
+    lines.push(`    if (__r.stopped) return __r.value;`);
     lines.push(`    return ${defaultExpr};`);
     lines.push("}");
+    return lines.join("\n");
+}
+
+// A `rule RULEBOOK [when COND]:` contribution from any file. Author-file rules
+// register at order 0 (ahead of the library declaration's order-1 rules).
+function emitRulebookRule(node, globalNames = new Set()) {
+    const order = node.filePath === mainFilePath ? 0 : 1;
+    const paramNames = rulebookParamNames.get(node.rulebookName) || [];
+    return emitRulebookRuleFn(node.rulebookName, paramNames, node.whenExpr, node.body, order, globalNames);
+}
+
+// Shared emit for a single rulebook rule (declaration or contribution): a
+// `registerRulebookRule` call wrapping the guard + body as a rule function.
+function emitRulebookRuleFn(rulebookName, paramNames, whenExpr, body, order, globalNames) {
+    const prevBareStop = currentBareStop;
+    currentBareStop = "return lamplighter.HALT;";
+    const lines = [`lamplighter.registerRulebookRule(${JSON.stringify(rulebookName)}, (${paramNames.join(", ")}) => {`];
+    if (whenExpr) {
+        lines.push(`    if (!(${emitExpression(whenExpr, globalNames)})) return;`);
+    }
+    lines.push(...emitStatementList(body, 1, globalNames));
+    lines.push(`}, ${order});`);
     currentBareStop = prevBareStop;
     return lines.join("\n");
 }

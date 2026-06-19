@@ -258,6 +258,12 @@ function createPhaseRule(band, actionName, whenExpr, body, filePath, lineNumber,
     return { kind: "PhaseRule", band, actionName, whenExpr, body, filePath, lineNumber, selector };
 }
 
+// A rule contributed to an existing named rulebook from anywhere (`rule RULEBOOK
+// [when COND]:`). The rulebook's parameters are in scope in the guard and body.
+function createRulebookRule(rulebookName, whenExpr, body, filePath, lineNumber) {
+    return { kind: "RulebookRule", rulebookName, whenExpr, body, filePath, lineNumber };
+}
+
 // Action-selector AST: a boolean tree over atoms (action names / tags / `any`).
 // Resolved to a concrete action-name set at check/emit time.
 function createSelAtom(name, filePath, lineNumber) {
@@ -357,6 +363,7 @@ module.exports = {
     createFollowExpr,
     createActionDecl,
     createPhaseRule,
+    createRulebookRule,
     createSelAtom,
     createSelAny,
     createSelNot,

@@ -67,3 +67,5 @@ relation wears:
 	to item worn
 	syntax "wears [wearer] [worn]"
 
+rulebook bool startup_rules():
+	default true

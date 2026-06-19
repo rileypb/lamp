@@ -46,6 +46,7 @@ function runCompilation() {
     const actionNames = new Set();
     const objectNames = new Set();
     const tagNames = new Set();
+    const rulebookParams = new Map();
     const rawTemplates = [];
     for (const sourceFile of sourceFiles) {
         const source = fs.readFileSync(sourceFile, "utf8");
@@ -67,6 +68,9 @@ function runCompilation() {
         for (const name of extractActionTags(source)) {
             tagNames.add(name);
         }
+        for (const [name, params] of extractRulebookParams(source)) {
+            rulebookParams.set(name, params);
+        }
         rawTemplates.push(...extractRelationTemplates(source));
     }
 
@@ -74,7 +78,7 @@ function runCompilation() {
 
     for (const sourceFile of sourceFiles) {
         const source = fs.readFileSync(sourceFile, "utf8");
-        const ast = parseSource(source, sourceFile, globalNames, functionNames, relationNames, relationTemplates, actionNames, objectNames, tagNames);
+        const ast = parseSource(source, sourceFile, globalNames, functionNames, relationNames, relationTemplates, actionNames, objectNames, tagNames, rulebookParams);
         allNodes.push(...ast.nodes);
     }
 
@@ -291,6 +295,25 @@ function extractActionTags(sourceText) {
         }
     }
     return names;
+}
+
+// Rulebook names and their parameter names are collected ahead of parsing so the
+// parser can recognize a `rule RULEBOOK:` contribution and bind the rulebook's
+// parameters as locals in the contributed rule's guard and body.
+function extractRulebookParams(sourceText) {
+    const result = new Map();
+    for (const line of sourceText.split(/\r?\n/)) {
+        const code = line.replace(/#.*$/, "").trim();
+        const match = code.match(/^rulebook\s+\S+\s+([A-Za-z_][A-Za-z0-9_]*)\s*\(([^)]*)\)/);
+        if (!match) continue;
+        const params = match[2]
+            .split(",")
+            .map((part) => part.trim())
+            .filter(Boolean)
+            .map((part) => part.split(/\s+/).pop());
+        result.set(match[1], params);
+    }
+    return result;
 }
 
 // A `syntax "..."` line associates with the most recent `relation NAME:` — the

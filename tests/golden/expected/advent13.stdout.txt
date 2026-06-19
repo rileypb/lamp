@@ -1,0 +1,9 @@
+The lamp flickers to life.
+
+room1
+A small room.
+
+> knock
+The door admits you.
+
+> quit

@@ -24,12 +24,12 @@ function getInfixBP(token) {
 
 const PHASE_WORDS = new Set(["before", "instead", "check", "do", "after", "report"]);
 
-function parseSource(sourceText, filePath, globalNames = new Set(), functionNames = new Set(), relationNames = new Set(), relationTemplates = new Map(), actionNames = new Set(), objectNames = new Set(), tagNames = new Set()) {
+function parseSource(sourceText, filePath, globalNames = new Set(), functionNames = new Set(), relationNames = new Set(), relationTemplates = new Map(), actionNames = new Set(), objectNames = new Set(), tagNames = new Set(), rulebookParams = new Map()) {
     const tokens = tokenize(sourceText, filePath);
-    return createParser(tokens, filePath, globalNames, functionNames, relationNames, relationTemplates, actionNames, objectNames, tagNames).parseProgram();
+    return createParser(tokens, filePath, globalNames, functionNames, relationNames, relationTemplates, actionNames, objectNames, tagNames, rulebookParams).parseProgram();
 }
 
-function createParser(tokens, filePath, globalNames, functionNames = new Set(), relationNames = new Set(), relationTemplates = new Map(), actionNames = new Set(), objectNames = new Set(), tagNames = new Set()) {
+function createParser(tokens, filePath, globalNames, functionNames = new Set(), relationNames = new Set(), relationTemplates = new Map(), actionNames = new Set(), objectNames = new Set(), tagNames = new Set(), rulebookParams = new Map()) {
     let pos = 0;
 
     const peek = (offset = 0) => tokens[pos + offset];
@@ -128,6 +128,7 @@ function createParser(tokens, filePath, globalNames, functionNames = new Set(), 
             }
         }
         if (token.type === "IDENT") {
+            if (token.value === "rule" && peek(1).type === "IDENT" && rulebookParams.has(peek(1).value)) return parseRulebookRule();
             if (PHASE_WORDS.has(token.value) && selectorStartsAt(1)) return parsePhaseRule();
             // `report failed SELECTOR:` — the failure-reporting band.
             if (token.value === "report" && peek(1).type === "IDENT" && peek(1).value === "failed"
@@ -833,6 +834,23 @@ function createParser(tokens, filePath, globalNames, functionNames = new Set(), 
             return ast.createSelAny(filePath, token.line);
         }
         return ast.createSelAtom(name, filePath, token.line);
+    }
+
+    // A `rule RULEBOOK [when COND]:` contribution: adds one rule to an existing
+    // named rulebook from any file. The rulebook's parameters are in scope.
+    function parseRulebookRule() {
+        const keyword = next();
+        const rulebookName = plainName("rulebook name");
+        const paramLocals = new Set(rulebookParams.get(rulebookName) || []);
+        let whenExpr = null;
+        if (atKeyword("when")) {
+            next();
+            whenExpr = parseExpression(0, paramLocals);
+        }
+        expect("COLON", "Expected ':' after rule header");
+        expectNewline();
+        const body = parseBlock(paramLocals);
+        return ast.createRulebookRule(rulebookName, whenExpr, body, filePath, keyword.line);
     }
 
     function parseRulebookDecl() {

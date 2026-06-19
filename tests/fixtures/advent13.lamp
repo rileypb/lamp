@@ -1,0 +1,35 @@
+lib advent
+
+# Exercises rulebook rule contributions: adding a rule to the library
+# `startup_rules` rulebook, and extending a local parameterized rulebook with a
+# guarded `stop` rule invoked via `follow`.
+
+game Rulebook_Test:
+	author "Tester"
+	start room1
+
+room room1:
+	description "A small room."
+
+# Contribute an opening line to the library startup rulebook.
+rule startup_rules:
+	print "The lamp flickers to life."
+	print ""
+
+# A local rulebook with a default, extended by a separate rule below.
+rulebook bool admits(person who):
+	default false
+
+rule admits when who == player:
+	stop true
+
+action knock:
+	syntax:
+		"knock"
+
+report knock:
+	let ok = follow admits(player)
+	if ok:
+		print "The door admits you."
+	else:
+		print "The door stays shut."

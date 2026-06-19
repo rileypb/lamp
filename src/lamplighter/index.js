@@ -15,6 +15,11 @@ const relationRegistry = new Map();
 const actionRuleRegistry = new Map();
 const ACTION_BANDS = ["before", "instead", "check", "do", "after", "report"];
 
+// Rules contributed to a named (user-defined) rulebook, keyed by rulebook name.
+// Like actions, rulebook rules are registry-backed so a game file can add rules
+// to a library rulebook; the emitted dispatcher consults this via runRulebook.
+const rulebookRuleRegistry = new Map();
+
 // Sentinel returned by a bare `stop`: halt the band/pipeline without deciding an
 // outcome (distinct from `undefined`, which falls through to the next rule, and
 // from an outcome value, which stops and decides). See devdocs/rulebooks.md.
@@ -360,6 +365,32 @@ function registerActionRule(actionName, band, rule, order = 1) {
 // is preserved within a tier.
 function orderedRules(entries) {
     return [...entries].sort((a, b) => a.order - b.order);
+}
+
+function registerRulebookRule(name, rule, order = 1) {
+    if (!rulebookRuleRegistry.has(name)) {
+        rulebookRuleRegistry.set(name, []);
+    }
+    rulebookRuleRegistry.get(name).push({ rule, order });
+}
+
+// Runs a named rulebook's registered rules in order, each called with the
+// rulebook's argument values. A rule returns an outcome value (`stop EXPR`) to
+// stop with that value, `HALT` (a bare `stop`) to stop and fall back to the
+// default, or `undefined` to continue. The emitted dispatcher supplies the
+// default (it may depend on the args), so this reports only what happened:
+// `{ stopped, value }`, with `stopped` false when every rule fell through.
+function runRulebook(name, args) {
+    for (const { rule } of orderedRules(rulebookRuleRegistry.get(name) || [])) {
+        const result = rule(...args);
+        if (result === HALT) {
+            return { stopped: false };
+        }
+        if (result !== undefined) {
+            return { stopped: true, value: result };
+        }
+    }
+    return { stopped: false };
 }
 
 // Runs an action instance through its rulebook bands in fixed order. A rule
@@ -902,6 +933,8 @@ module.exports = {
     onEvent,
     registerActionRule,
     runAction,
+    registerRulebookRule,
+    runRulebook,
     HALT,
     registerGrammar,
     runCommand,

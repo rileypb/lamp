@@ -111,6 +111,8 @@ function checkProgram(programAst, options = {}) {
             checkStatements(node.body, typeSchema, kindSchema, localTypes, functionSchema, expectedReturn, globalNames);
         } else if (node.kind === "RulebookDecl") {
             checkRulebookDecl(node, typeSchema, kindSchema, functionSchema, globalNames);
+        } else if (node.kind === "RulebookRule") {
+            checkRulebookRule(node, typeSchema, kindSchema, functionSchema, globalNames);
         } else if (node.kind === "PhaseRule") {
             checkPhaseRule(node, typeSchema, kindSchema, functionSchema, globalNames);
         } else if (node.kind === "ActionDecl") {
@@ -261,6 +263,25 @@ function checkRulebookDecl(node, typeSchema, kindSchema, functionSchema, globalN
         }
         checkStatements(rule.body, typeSchema, kindSchema, new Map(paramTypes), functionSchema, node.resultType, globalNames);
     }
+}
+
+// A `rule RULEBOOK [when]:` contribution: the rulebook must exist; the guard must
+// be boolean and the body's `stop` values must match the rulebook's result type.
+// The rulebook's parameters are in scope.
+function checkRulebookRule(node, typeSchema, kindSchema, functionSchema, globalNames) {
+    const schema = rulebookSchema.get(node.rulebookName);
+    if (!schema) {
+        throw typeError(node.filePath, node.lineNumber, `unknown rulebook "${node.rulebookName}"`);
+    }
+    const paramTypes = new Map(schema.params.map((p) => [p.name, p.typeName]));
+    if (node.whenExpr) {
+        checkExprCalls(node.whenExpr, typeSchema, kindSchema, paramTypes, functionSchema);
+        const guardType = inferExprType(node.whenExpr, typeSchema, kindSchema, paramTypes, functionSchema);
+        if (guardType !== null && guardType !== "bool") {
+            throw typeError(node.filePath, node.lineNumber, `rule guard for rulebook "${node.rulebookName}" must be boolean`);
+        }
+    }
+    checkStatements(node.body, typeSchema, kindSchema, new Map(paramTypes), functionSchema, schema.returnType, globalNames);
 }
 
 function checkRelationDecls(nodes, typeSchema) {

@@ -364,6 +364,44 @@ is a compile error (catching selector typos). A tag typo on the *action* side
 silently drops that action from the group; pre-declared tags would close that
 gap and can be added later if it bites.
 
+## Contributing rules to a named rulebook
+
+> Status: implemented. Exercised by `tests/fixtures/advent13.lamp`; used by
+> `sample/cloak.lamp` to add its intro text to the library `startup_rules`
+> rulebook.
+
+A `rulebook` declaration fixes the rulebook's *signature* (name, parameters,
+result type) and its `default`, but its rules need not all live in the
+declaration block. Any file may add a rule to an existing rulebook with the
+leading form:
+
+```lamp
+rule RULEBOOK [when COND]:
+    …body…
+```
+
+This is the named-rulebook analogue of a band rule (`BAND ACTION:`): the
+rulebook's parameters are in scope in the guard and body, `stop EXPR` stops the
+rulebook with that value, and a bare `stop` falls back to the `default`. The
+canonical use is a library rulebook a game extends — e.g. advent's
+`startup_rules`, where a game contributes its opening text:
+
+```lamp
+rule startup_rules:
+    print "Hurrying through the rainswept November night…"
+```
+
+Like band rules, contributions from the **author** file run before a library
+declaration's own rules (order 0 vs 1); within a tier, source order holds.
+
+Implementation: every rulebook rule — whether written in the declaration block or
+contributed via `rule` — registers into a runtime registry
+(`registerRulebookRule`). The rulebook name compiles to a dispatcher function that
+runs the registry (`runRulebook`) and falls back to the default, so `follow
+RULEBOOK(args)` is unchanged. This is the one concession to the *Static assembly*
+rule above: rules are contributed from anywhere, but the contribution set is still
+fixed at compile time — there is no runtime insertion or removal.
+
 ## Failure reasons and the `report failed` band
 
 > Status: implemented. Typed reasons (`stop failed REASON`), the implicit
