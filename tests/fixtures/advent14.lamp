@@ -1,0 +1,24 @@
+lib advent
+
+# Exercises the end-of-story mechanism: a command sets `story`, the loop runs
+# end_story_rules and then accepts only QUIT. Also shows an author rule overriding
+# the default end_story_rules banner (author rule runs before the library rule and
+# stops it).
+
+game End_Test:
+	author "Tester"
+	start room1
+
+room room1:
+	description "A small room."
+
+action lose_now:
+	syntax:
+		"lose"
+
+report lose_now:
+	story = lost
+
+rule end_story_rules when story == lost:
+	print "*** Game over, friend. ***"
+	stop true

@@ -1464,6 +1464,8 @@ below, and game files may declare more.
   built-in `person` object.
 - `global string input` — the raw input line each turn.
 - `global list<string> words` — the input split into words.
+- `global story_state story = ongoing` — story-end state (`ongoing`/`won`/`lost`);
+  see *Ending the story*.
 - Directions: `north`, `northeast`, `east`, `southeast`, `south`, `southwest`,
   `west`, `northwest`, `up`, `down` — each with an `inverse` and an `understand`
   alias (e.g. `"n"`, `"ne"`).
@@ -1483,6 +1485,41 @@ The banner is **gated on `tagline`**: a game opts in by setting it; games that
 leave it blank (the `""` default) get no banner. The base `game` type
 (`lib/sys/types.lamp`) defaults the banner fields — `tagline = ""`,
 `version = 0`, `release = dev` — so a game need only set the ones it cares about.
+
+### Ending the story
+
+advent tracks story state in `global story_state story = ongoing`, where
+`story_state` is `enum(ongoing, won, lost)`. Game code ends the story by setting
+it from a rule, e.g. in a `report` band:
+
+```lamp
+report read when self.target == sawdust:
+    print "The message, neatly marked in the sawdust, reads..."
+    story = won
+```
+
+The command loop runs while `story == ongoing`; once a command leaves it
+`ongoing`, the loop exits, **follows the `end_story_rules` rulebook** to print the
+ending message, and then accepts only `quit`:
+
+```
+*** You have won ***
+
+Please type QUIT to exit.
+```
+
+`end_story_rules` is an ordinary rulebook (`bool`, default `true`) with library
+rules for `won` and `lost`; a game customizes the ending text by contributing its
+own rule, which runs before the library rule and stops it:
+
+```lamp
+rule end_story_rules when story == lost:
+    print "*** Game over, friend. ***"
+    stop true
+```
+
+RESTART is not yet supported (the runtime has no state reset), so only `quit`
+ends the session.
 
 ### Relations
 

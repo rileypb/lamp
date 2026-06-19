@@ -5,7 +5,17 @@ Top recommended next steps, roughly in priority order. Each item notes *why*,
 prerequisite lists in `devdocs/game_parser.md`, `devdocs/rulebooks.md`, and
 `devdocs/relations.md`.
 
-## 1. Parser v2 — every-turn & timed rules
+## 1. RESTART support for the end-of-story sequence
+The end-of-story mechanism (`story` global, `end_story_rules`, the post-game loop
+in `lib/advent/startup.lamp`) is in place but only offers QUIT — there is no state
+reset, so RESTART was deferred. Implement it by having the sandbox **host
+re-spawn the worker** on a `restart` signal (clean fresh state), which needs: a
+`restart` native + message type, host handling in `playFile` (terminate + respawn,
+guarding the `exit` handler), and re-enabling RESTART in the end sequence.
+Alternative (messier): a runtime-wide `reset()` + re-run. **Where:**
+`src/lamplighter/sandbox/host.js` + `worker.js`, `lib/advent/startup.lamp`.
+
+## 2. Parser v2 — every-turn & timed rules
 Action-rulebook bands are implemented; what remains for v2 is a turn clock:
 every-turn rules and timed/scheduled events, plus out-of-world actions
 (`save`/`undo`/`again` — currently out of scope). Also surface the outcome of a

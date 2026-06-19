@@ -5,9 +5,6 @@
 #
 # Spec: https://www.ifwiki.org/Cloak_of_Darkness
 # Local copy: sample/cloak.md
-#
-# Missing Lamp features:
-#   1. No game-end from rules — player must type `quit` after reading the message.
 # ============================================================================
 
 lib advent
@@ -171,12 +168,8 @@ check read:
 report read when self.target == sawdust:
     if disturbance == 0:
         print "The message, neatly marked in the sawdust, reads..."
-        print ""
-        print "    *** You have won ***"
+        story = won
     else:
         print "The message has been carelessly trampled, making it difficult to read."
         print "You can just distinguish the words..."
-        print ""
-        print "    *** You have lost ***"
-    print ""
-    print "(Type 'quit' to end the game.)"
+        story = lost

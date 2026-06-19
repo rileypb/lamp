@@ -4,6 +4,13 @@ global string input = none
 
 global list<string> words = none
 
+# story-end state. `ongoing` during play; game code ends the story by setting
+# `story` to `won` or `lost` (e.g. in a report rule). The game loop watches this
+# and, once it leaves `ongoing`, follows `end_story_rules` and stops accepting
+# commands.
+kind story_state = enum(ongoing, won, lost)
+global story_state story = ongoing
+
 # article enum values
 article count
 article definite
@@ -69,3 +76,16 @@ relation wears:
 
 rulebook bool startup_rules():
 	default true
+
+# end_story_rules: prints the end-of-game message once `story` leaves `ongoing`.
+# The game loop follows it after the ending command. Games may contribute rules
+# (e.g. `rule end_story_rules when story == won:`) to customize or replace the
+# default text.
+rulebook bool end_story_rules():
+	default true
+	when story == won:
+		print "*** You have won ***"
+		stop true
+	when story == lost:
+		print "*** You have lost ***"
+		stop true

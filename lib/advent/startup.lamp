@@ -10,10 +10,23 @@ on startup:
 	follow startup_rules()
 	player.holder = game.all.first.start
 	dispatch started
-	while true:
+	# Command loop. Exits when the player quits or a command ends the story (sets
+	# `story` away from `ongoing`).
+	while story == ongoing:
 		print
 		input = prompt("> ")
 		if input == "quit":
 			break
 		run_command(input)
+	# End-of-story sequence: print the win/lose banner, then accept only QUIT.
+	# (RESTART is not yet supported.)
+	if not (story == ongoing):
+		print
+		follow end_story_rules()
+		print
+		print "Please type QUIT to exit."
+		while true:
+			input = prompt("> ")
+			if input == "quit":
+				break
 
