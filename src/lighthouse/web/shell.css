@@ -1,0 +1,77 @@
+/* Host shell styling. Deliberately minimal: a scrolling transcript over a single
+   input line, classic parser-IF terminal feel. The shell renders game output as
+   text nodes into #transcript (white-space preserved for IF column/indent
+   formatting); it never sets innerHTML from game text. */
+
+:root {
+    --bg: #1a1a1a;
+    --fg: #e6e6e6;
+    --dim: #8a8a8a;
+    --accent: #cda434;
+}
+
+* {
+    box-sizing: border-box;
+}
+
+html, body {
+    margin: 0;
+    height: 100%;
+    background: var(--bg);
+    color: var(--fg);
+    font: 16px/1.5 "SFMono-Regular", "Consolas", "Liberation Mono", Menlo, monospace;
+}
+
+#screen {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    max-width: 80ch;
+    margin: 0 auto;
+    padding: 1rem;
+}
+
+#transcript {
+    flex: 1 1 auto;
+    overflow-y: auto;
+    white-space: pre-wrap;
+    word-break: break-word;
+}
+
+.player-echo {
+    color: var(--accent);
+}
+
+.shell-notice {
+    color: var(--dim);
+    font-style: italic;
+}
+
+.shell-error {
+    color: #e06c5a;
+}
+
+#input-form {
+    display: flex;
+    align-items: baseline;
+    gap: 0.5ch;
+    flex: 0 0 auto;
+    padding-top: 0.5rem;
+}
+
+#prompt {
+    color: var(--accent);
+}
+
+#input-line {
+    flex: 1 1 auto;
+    background: transparent;
+    border: none;
+    color: inherit;
+    font: inherit;
+    outline: none;
+}
+
+#input-line:disabled {
+    color: var(--dim);
+}

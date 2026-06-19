@@ -11,15 +11,18 @@ COOP/COEP, esbuild bundler [approved new devDependency], output+input-only
 capabilities, directory-bundle artifact). Remaining steps, in order:
 (a) ✅ **browser `Worker` bootstrap** — `src/lamplighter/sandbox/worker-browser.js`
 (strips network globals, drives the transport seam over `postMessage` + SAB,
-exports `runGame(factory)`; starts on the host `init` message). (b) build the
-**HTML/CSS/JS shell** (text-node output, input line, async input → SAB fill +
-`Atomics.notify`, console relay) — the main-thread host that posts `init`,
-relays `print`/`write`/`log`, and services `readline`/`prompt_readline`; (c) add
-the **esbuild build step** that wraps the body-only game as
-`(lamplighter, require, console) => {…}`, passes it to `runGame`, and bundles it
-with the runtime into one worker script; (d) ship the **COOP/COEP service
-worker** + decide first-load reload strategy. **Blocked by:** none — next is (b).
-**Where:** new `src/lighthouse/`, imports `src/lamplighter/`.
+exports `runGame(factory)`; starts on the host `init` message). (b) ✅
+**HTML/CSS/JS shell** — `src/lighthouse/web/{index.html,shell.css,shell.js}`:
+main-thread host that builds the SAB, spawns `game.worker.js`, posts `init`,
+relays `print`/`write` as text nodes + `log` to console, and services
+`readline`/`prompt_readline` async (echo + SAB fill + `Atomics.notify`); refuses
+to start if not cross-origin isolated. (c) add the **esbuild build step** that
+wraps the body-only game as `(lamplighter, require, console) => {…}`, passes it
+to `runGame`, and bundles it with the runtime + `worker-browser.js` into one
+`game.worker.js`; also emits the directory bundle (copies the shell assets).
+(d) ship the **COOP/COEP service worker** + decide first-load reload strategy.
+**Blocked by:** none — next is (c), the first piece that needs the esbuild
+devDependency. **Where:** new `src/lighthouse/`, imports `src/lamplighter/`.
 
 ## 2. RESTART support for the end-of-story sequence
 The end-of-story mechanism (`story` global, `end_story_rules`, the post-game loop

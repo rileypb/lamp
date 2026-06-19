@@ -71,10 +71,21 @@ game logic and the capability boundary remain in Lamplighter's worker.
    captures input, services the capability broker), the worker bundle, and the
    COOP/COEP service worker.
 
-## Shell (defaults, not yet ratified as decisions)
+## Shell
 
-- Minimal scrolling transcript + single input line. Output is rendered as **text
-  nodes only** (`textContent`/`createTextNode`), never HTML, per sandbox.md.
+Built in `src/lighthouse/web/` as the bundle's template assets:
+
+- `index.html` — scrolling transcript + a single input line.
+- `shell.css` — minimal parser-IF terminal styling; `white-space: pre-wrap` so IF
+  column/indent formatting survives.
+- `shell.js` — the main-thread host. Constructs the `SharedArrayBuffer`, spawns
+  `game.worker.js`, posts `init`, relays `print`/`write` as **text nodes only**
+  (never `innerHTML`), routes `log` to the console, and services
+  `readline`/`prompt_readline` by capturing one line asynchronously, echoing it,
+  and filling the buffer (`Atomics.store` + `Atomics.notify`). It never blocks —
+  the worker blocks on `Atomics.wait` while the main thread stays responsive. If
+  the page is not cross-origin isolated it refuses to start with a notice rather
+  than failing on `SharedArrayBuffer` construction.
 - The shell contains no game logic — render, capture input, broker, nothing more.
 
 ## Assumptions
