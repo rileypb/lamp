@@ -1,0 +1,3 @@
+Compile error: tests/fixtures/function_dup.lamp:15: duplicate definition of function "score"
+  15 | function int score():
+    | ^

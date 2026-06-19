@@ -16,7 +16,8 @@
     "test:encode": "node tests/encode/run-encode.js",
     "test:tokenizer": "node tests/tokenizer/run-tokenizer.js",
     "test:parser": "node tests/parser/run-parser.js",
-    "test:prescan": "node tests/prescan/run-prescan.js"
+    "test:prescan": "node tests/prescan/run-prescan.js",
+    "test:liborder": "node tests/liborder/run-liborder.js"
   },
   "devDependencies": {
     "esbuild": "^0.28.1"

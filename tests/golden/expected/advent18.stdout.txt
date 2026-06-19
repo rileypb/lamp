@@ -1,0 +1,4 @@
+hall
+A plain hall.
+
+> QUIT

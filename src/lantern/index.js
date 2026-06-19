@@ -5,6 +5,7 @@ const path = require("path");
 const { tokenize } = require("./tokenizer");
 const { prescanDeclarations } = require("./prescan");
 const { parseTokens } = require("./parser_rd");
+const { orderedLampFiles } = require("./liborder");
 const { emitProgram } = require("./emitter");
 const { checkProgram, serializeWhenExpr } = require("./checker");
 
@@ -143,15 +144,9 @@ function gatherLibDirs(libSysDir, userFile, projectRoot) {
 
 function gatherLampFiles(libDirs, userFile) {
     const [sysDir, ...importedDirs] = libDirs;
-    const sysFiles = fs.readdirSync(sysDir)
-        .filter((entry) => entry.endsWith(".lamp"))
-        .sort()
-        .map((entry) => path.join(sysDir, entry));
+    const sysFiles = orderedLampFiles(sysDir).map((entry) => path.join(sysDir, entry));
     const libFiles = importedDirs.flatMap((dir) =>
-        fs.readdirSync(dir)
-            .filter((entry) => entry.endsWith(".lamp"))
-            .sort()
-            .map((entry) => path.join(dir, entry)),
+        orderedLampFiles(dir).map((entry) => path.join(dir, entry)),
     );
     return [...sysFiles, ...libFiles, userFile];
 }
@@ -226,20 +221,38 @@ function buildRelationTemplateDispatch(rawTemplates) {
     return dispatch;
 }
 
+// Collapses functions that share a name *and* `when` condition to a single
+// definition, keeping the last (so an author file, parsed last, overrides a
+// library function — the intended override path). Two such definitions in the
+// *same* file are a mistake, not an override, and raise a compile error.
 function deduplicateFunctions(nodes) {
-    const seen = new Map();
-    for (let i = 0; i < nodes.length; i++) {
-        const node = nodes[i];
-        if (node.kind !== "FunctionDecl") continue;
+    const groups = new Map();
+    nodes.forEach((node, index) => {
+        if (node.kind !== "FunctionDecl") return;
         const condKey = node.whenExpr === null ? null : serializeWhenExpr(node.whenExpr);
         const key = `${node.name}\0${condKey}`;
-        seen.set(key, i);
+        if (!groups.has(key)) groups.set(key, []);
+        groups.get(key).push({ node, index });
+    });
+
+    const keepIndex = new Map();
+    for (const [key, group] of groups) {
+        const seenFiles = new Set();
+        for (const { node } of group) {
+            if (seenFiles.has(node.filePath)) {
+                const detail = node.whenExpr ? ` with the same 'when' condition` : "";
+                throw new Error(`${node.filePath}:${node.lineNumber}: duplicate definition of function "${node.name}"${detail}`);
+            }
+            seenFiles.add(node.filePath);
+        }
+        keepIndex.set(key, group[group.length - 1].index);
     }
-    return nodes.filter((node, i) => {
+
+    return nodes.filter((node, index) => {
         if (node.kind !== "FunctionDecl") return true;
         const condKey = node.whenExpr === null ? null : serializeWhenExpr(node.whenExpr);
         const key = `${node.name}\0${condKey}`;
-        return seen.get(key) === i;
+        return keepIndex.get(key) === index;
     });
 }
 

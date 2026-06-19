@@ -2,8 +2,6 @@ global person player = yourself
 
 global string input = none
 
-global list<string> words = none
-
 # story-end state. `ongoing` during play; game code ends the story by setting
 # `story` to `won` or `lost` (e.g. in a report rule). The game loop watches this
 # and, once it leaves `ongoing`, follows `end_story_rules` and stops accepting

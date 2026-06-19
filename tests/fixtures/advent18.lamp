@@ -1,0 +1,10 @@
+lib advent
+
+# Regression: QUIT is case-insensitive. Uppercase "QUIT" exits the command loop
+# rather than being treated as an unknown command.
+
+game Quit_Case_Test:
+    start hall
+
+room hall:
+    description "A plain hall."

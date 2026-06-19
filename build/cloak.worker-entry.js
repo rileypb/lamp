@@ -177,7 +177,6 @@ lamplighter.defineGlobal("USE OXFORD COMMA", false);
 lamplighter.defineGlobal("PI", 3.141592653);
 lamplighter.defineGlobal("player", lamplighter.getObject("yourself"));
 lamplighter.defineGlobal("input", null);
-lamplighter.defineGlobal("words", null);
 lamplighter.defineGlobal("story", "ongoing");
 lamplighter.defineGlobal("disturbance", 0);
 
@@ -241,7 +240,7 @@ lamplighter.onEvent("startup", () => {
     while (lamplighter.getGlobal("story") === "ongoing") {
         lamplighter.print("");
         lamplighter.setGlobal("input", prompt("> "));
-        if (lamplighter.getGlobal("input") === "quit") {
+        if (to_lower(lamplighter.getGlobal("input")) === "quit") {
             break;
         }
         run_command(lamplighter.getGlobal("input"));
@@ -253,7 +252,7 @@ lamplighter.onEvent("startup", () => {
         lamplighter.print("Please type QUIT to exit.");
         while (true) {
             lamplighter.setGlobal("input", prompt("> "));
-            if (lamplighter.getGlobal("input") === "quit") {
+            if (to_lower(lamplighter.getGlobal("input")) === "quit") {
                 break;
             }
         }

@@ -15,7 +15,7 @@ on startup:
 	while story == ongoing:
 		print
 		input = prompt("> ")
-		if input == "quit":
+		if to_lower(input) == "quit":
 			break
 		run_command(input)
 	# End-of-story sequence: print the win/lose banner, then accept only QUIT.
@@ -27,6 +27,6 @@ on startup:
 		print "Please type QUIT to exit."
 		while true:
 			input = prompt("> ")
-			if input == "quit":
+			if to_lower(input) == "quit":
 				break
 

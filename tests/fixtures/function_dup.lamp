@@ -1,0 +1,16 @@
+lib advent
+
+# Two functions with the same name and no `when` condition in one file is a
+# mistake (cross-file repeats are the library-override path). Compile error.
+
+game Dup:
+    start hall
+
+room hall:
+    description "A hall."
+
+function int score():
+    return 1
+
+function int score():
+    return 2
