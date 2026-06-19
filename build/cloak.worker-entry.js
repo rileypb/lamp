@@ -28,10 +28,18 @@ function run_command(line) {
     lamplighter.runCommand(line, lamplighter.getGlobal("player"));
 }
 
+function with_article(x) {
+    const name = x.printed_name ? String(x.printed_name) : String(x.name).replace(/_/g, " ");
+    const art = x.article ? x.article.name : null;
+    if (art === "definite") return "the " + name;
+    if (art === "proper" || art === "plural") return name;
+    return (/^[aeiou]/i.test(name) ? "an " : "a ") + name;
+}
+
 function contents_of(r) {
     const all = lamplighter.listItems(lamplighter.type("item").all);
     const visible = all.filter((x) => x.holder === r && !x.scenery);
-    return lamplighter.makeList(visible.map((x) => lamplighter.concat("a ", x)));
+    return lamplighter.makeList(visible.map(with_article));
 }
 
 lamplighter.defineKind("color", lamplighter.enum("red", "green", "blue"));
@@ -277,9 +285,9 @@ lamplighter.registerActionRule("inventory", "report", (self) => {
                 found = true;
             }
             if ((lamplighter.queryRelation("wears", { "wearer": self.actor, "worn": x }).length > 0)) {
-                lamplighter.print(lamplighter.concat(lamplighter.concat("  ", x), " (worn)"));
+                lamplighter.print(lamplighter.concat(lamplighter.concat("  ", with_article(x)), " (worn)"));
             } else {
-                lamplighter.print(lamplighter.concat("  ", x));
+                lamplighter.print(lamplighter.concat("  ", with_article(x)));
             }
         }
     }

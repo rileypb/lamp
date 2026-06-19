@@ -8,7 +8,7 @@ Taken.
 
 > i
 You are carrying:
-  brass lamp
+  a brass lamp
 
 > drop brass lamp
 Dropped.
@@ -18,6 +18,6 @@ Taken.
 
 > i
 You are carrying:
-  golden key
+  a golden key
 
 > quit

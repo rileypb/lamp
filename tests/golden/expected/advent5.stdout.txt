@@ -11,6 +11,6 @@ Taken.
 
 > i
 You are carrying:
-  clay lamp
+  a clay lamp
 
 > quit

@@ -1,4 +1,5 @@
 native function list<string> contents_of(room r)
+native function string with_article(physical x)
 
 # All of the printing for room description is in here, including
 # listing contents, and whatever else we may want to add.

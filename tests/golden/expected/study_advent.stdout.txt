@@ -35,6 +35,6 @@ The study, walls lined with books.
 
 > i
 You are carrying:
-  brass key
+  a brass key
 
 > quit

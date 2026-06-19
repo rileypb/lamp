@@ -14,7 +14,7 @@ Taken.
 
 > i
 You are carrying:
-  lamp
+  a lamp
 
 > take lamp
 You're already carrying that.

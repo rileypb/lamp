@@ -9,7 +9,7 @@ You are standing in a spacious hall, splendidly decorated in red and gold, with 
 
 > i
 You are carrying:
-  velvet cloak (worn)
+  a velvet cloak (worn)
 
 > west
 Cloakroom

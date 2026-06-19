@@ -13,7 +13,7 @@ You put on hat.
 
 > i
 You are carrying:
-  hat (worn)
+  a hat (worn)
 
 > wear hat
 You're already wearing that.
@@ -26,7 +26,7 @@ You take off hat.
 
 > i
 You are carrying:
-  hat
+  a hat
 
 > wear hat
 You put on hat.
