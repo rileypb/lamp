@@ -94,11 +94,10 @@ Optional spoiler-hiding for distribution builds: `npm run build:web -- <game.lam
 --encode-strings` (passed through to Lantern) encodes player-facing prose so a
 casual reader cannot lift room text, messages, and endings straight out of
 `game.worker.js`. Lantern wraps prose literals — **plus object names, global
-names, and grammar/relation-syntax templates** (the player-visible command
-phrasing) at every reference site — as `lamplighter.decode("…")` over an
-XOR+base64 payload (`src/strcodec.js`); type/relation/action names and field keys
-stay plaintext (so an action's bare verb still leaks even though its full grammar
-phrasing is hidden). Encoding names is safe because `decode` runs at load, so the
+names, action names, and grammar/relation-syntax templates** (the player-visible
+command phrasing) at every reference site — as `lamplighter.decode("…")` over an
+XOR+base64 payload (`src/strcodec.js`); type and relation names and field keys
+stay plaintext. Encoding names is safe because `decode` runs at load, so the
 runtime registry keys are unchanged. It is **not** security — the decoder and key
 ship in the same bundle, so it only raises the bar against casual `view-source`
 snooping (note: strings inside native `index.js` are not encoded). Off by

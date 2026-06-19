@@ -89,6 +89,11 @@ for (const { game, leaks } of cases) {
         assert.ok(/createObject\("[a-z_]+"/.test(enc), "type names should stay plaintext");
         // Object names are no longer emitted as plaintext getObject keys.
         assert.ok(!/getObject\("[ -~]+"\)/.test(enc), "object names should be encoded, not plaintext");
+        // Action names (the puzzle verbs) are encoded at their registration sites.
+        assert.ok(
+            !/(registerGrammar|registerActionRule|runAction)\("[ -~]+"/.test(enc),
+            "action names should be encoded, not plaintext",
+        );
         for (const leak of leaks) {
             assert.ok(plain.includes(leak), `fixture should contain ${JSON.stringify(leak)} plaintext`);
             assert.ok(!enc.includes(leak), `encoded build leaked ${JSON.stringify(leak)}`);

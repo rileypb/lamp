@@ -315,7 +315,7 @@ function emitProgram(programAst, options = {}) {
             // The grammar template (the player-visible command phrasing) is the
             // strongest puzzle spoiler; encode it. Parsed at runtime from the
             // decoded string, so behavior is unchanged.
-            lines.push(`lamplighter.registerGrammar(${JSON.stringify(actionNode.name)}, ${emitStringLiteral(template)});`);
+            lines.push(`lamplighter.registerGrammar(${emitName(actionNode.name)}, ${emitStringLiteral(template)});`);
         }
     }
 
@@ -699,7 +699,7 @@ function emitPhaseRule(node, globalNames = new Set()) {
     bodyLines.push(...emitStatementList(node.body, 1, globalNames));
     const lines = [];
     for (const actionName of targets) {
-        lines.push(`lamplighter.registerActionRule(${JSON.stringify(actionName)}, ${JSON.stringify(node.band)}, (self) => {`);
+        lines.push(`lamplighter.registerActionRule(${emitName(actionName)}, ${JSON.stringify(node.band)}, (self) => {`);
         lines.push(...bodyLines);
         lines.push(`}, ${order});`);
     }
@@ -893,9 +893,9 @@ function emitTryCall(node, globalNames = new Set()) {
             : emitExpression(field.value, globalNames);
         return `${JSON.stringify(field.fieldName)}: ${valueExpr}`;
     });
-    const instance = `{ "type": ${JSON.stringify(node.actionName)}, "action": ${JSON.stringify(node.actionName)}${pairs.length ? ", " + pairs.join(", ") : ""} }`;
+    const instance = `{ "type": ${emitName(node.actionName)}, "action": ${emitName(node.actionName)}${pairs.length ? ", " + pairs.join(", ") : ""} }`;
     const opts = node.silent ? `, { silent: true }` : ``;
-    return `lamplighter.runAction(${JSON.stringify(node.actionName)}, ${instance}${opts})`;
+    return `lamplighter.runAction(${emitName(node.actionName)}, ${instance}${opts})`;
 }
 
 function emitExpression(expr, globalNames = new Set()) {
