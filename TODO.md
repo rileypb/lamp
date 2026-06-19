@@ -16,13 +16,17 @@ exports `runGame(factory)`; starts on the host `init` message). (b) ✅
 main-thread host that builds the SAB, spawns `game.worker.js`, posts `init`,
 relays `print`/`write` as text nodes + `log` to console, and services
 `readline`/`prompt_readline` async (echo + SAB fill + `Atomics.notify`); refuses
-to start if not cross-origin isolated. (c) add the **esbuild build step** that
-wraps the body-only game as `(lamplighter, require, console) => {…}`, passes it
-to `runGame`, and bundles it with the runtime + `worker-browser.js` into one
-`game.worker.js`; also emits the directory bundle (copies the shell assets).
-(d) ship the **COOP/COEP service worker** + decide first-load reload strategy.
-**Blocked by:** none — next is (c), the first piece that needs the esbuild
-devDependency. **Where:** new `src/lighthouse/`, imports `src/lamplighter/`.
+to start if not cross-origin isolated. (c) ✅ **esbuild build step** —
+`src/lighthouse/{index.js,build.js}`, `npm run build:web -- <game.lamp> [outDir]`
+(added `esbuild` devDependency): compiles via Lantern, wraps the body-only game
+as the `runGame((lamplighter, require, console) => {…})` factory, esbuild-bundles
+it with the runtime + `worker-browser.js` into one `game.worker.js`, copies the
+shell assets; verified on `sample/cloak.lamp` (0 warnings, shadowed `require`
+preserved). (d) ship the **COOP/COEP service worker** + decide first-load reload
+strategy, and wire its registration into `index.html`. **Blocked by:** none —
+next is (d), after which the bundle can actually run cross-origin-isolated.
+**Where:** `src/lighthouse/web/` (sw.js + index.html). After (d): add a
+browser-path smoke/golden test (first point the web path runs end-to-end).
 
 ## 2. RESTART support for the end-of-story sequence
 The end-of-story mechanism (`story` global, `end_story_rules`, the post-game loop

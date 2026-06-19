@@ -62,14 +62,26 @@ game logic and the capability boundary remain in Lamplighter's worker.
    worker bundle + service worker. A single inlined HTML file is rejected because
    the `Worker` and service worker both need their own script URLs.
 
-## Build Step (`lamp build`, web target)
+## Build Step (`npm run build:web -- <game.lamp> [outDir]`)
 
-1. Compile the game with Lantern (or accept already-compiled output).
-2. esbuild the browser worker bundle = Lamplighter runtime + Lamplighter's
-   browser-`Worker` adapter + the body-only game module + inlined native JS.
-3. Emit the directory bundle: `index.html`, shell JS (renders text-node output,
-   captures input, services the capability broker), the worker bundle, and the
-   COOP/COEP service worker.
+Built in `src/lighthouse/`: `index.js` (the `buildWeb` logic) and `build.js` (a
+thin CLI). Steps:
+
+1. Compile the game to a body-only module via the standard Lantern CLI (no
+   pipeline reimplementation).
+2. Wrap that module as the bootstrap's `runGame(function (lamplighter, require,
+   console) { … })` factory, binding the emitted code's free globals to the
+   controlled values. esbuild leaves the shadowed `require` (renamed to avoid its
+   own bundler require) intact, so a native lib's `require("fs")` reaches the
+   throwing shim at runtime instead of being resolved at build time.
+3. esbuild-bundle the wrapped entry + `worker-browser.js` + the runtime into one
+   `game.worker.js` (`format: iife`, `platform: browser`). The runtime has zero
+   `require`s and touches `process` only inside the default `writeImpl` (replaced
+   by `setWrite` before any game code runs), so it bundles and loads cleanly.
+4. Copy the shell assets (`index.html`, `shell.css`, `shell.js`) into the output
+   directory. (The COOP/COEP service worker is added in step (d).)
+
+Default output directory is `dist/<game-name>/`.
 
 ## Shell
 
