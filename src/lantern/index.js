@@ -2,14 +2,11 @@
 
 const fs = require("fs");
 const path = require("path");
-const { parseSource } = require("./parser_rd");
+const { tokenize } = require("./tokenizer");
+const { prescanDeclarations } = require("./prescan");
+const { parseTokens } = require("./parser_rd");
 const { emitProgram } = require("./emitter");
 const { checkProgram, serializeWhenExpr } = require("./checker");
-const { KEYWORDS, coerceName } = require("./tokenizer");
-
-// Contextual band words that lead a phase rule (`check take:`); excluded from the
-// object-name prescan so a phase rule is never mistaken for an object declaration.
-const BAND_WORDS = new Set(["before", "instead", "check", "do", "after", "report"]);
 
 function main() {
     try {
@@ -42,6 +39,13 @@ function runCompilation() {
     const { nativeJsContents, nativeFunctionNames } = gatherNativeJs(libDirs);
     const allNodes = [];
 
+    // Tokenize each file once; the token stream feeds both the declaration
+    // prescan and the parse below, so the lexer runs exactly once per file.
+    const tokenizedFiles = sourceFiles.map((sourceFile) => ({
+        sourceFile,
+        tokens: tokenize(fs.readFileSync(sourceFile, "utf8"), sourceFile),
+    }));
+
     const globalNames = new Set();
     const functionNames = new Set();
     const relationNames = new Set();
@@ -50,37 +54,22 @@ function runCompilation() {
     const tagNames = new Set();
     const rulebookParams = new Map();
     const rawTemplates = [];
-    for (const sourceFile of sourceFiles) {
-        const source = fs.readFileSync(sourceFile, "utf8");
-        for (const name of extractGlobalNames(source)) {
-            globalNames.add(name);
-        }
-        for (const name of extractFunctionNames(source)) {
-            functionNames.add(name);
-        }
-        for (const name of extractRelationNames(source)) {
-            relationNames.add(name);
-        }
-        for (const name of extractActionNames(source)) {
-            actionNames.add(name);
-        }
-        for (const name of extractObjectNames(source)) {
-            objectNames.add(name);
-        }
-        for (const name of extractActionTags(source)) {
-            tagNames.add(name);
-        }
-        for (const [name, params] of extractRulebookParams(source)) {
-            rulebookParams.set(name, params);
-        }
-        rawTemplates.push(...extractRelationTemplates(source));
+    for (const { tokens } of tokenizedFiles) {
+        const decls = prescanDeclarations(tokens);
+        for (const name of decls.globalNames) globalNames.add(name);
+        for (const name of decls.functionNames) functionNames.add(name);
+        for (const name of decls.relationNames) relationNames.add(name);
+        for (const name of decls.actionNames) actionNames.add(name);
+        for (const name of decls.objectNames) objectNames.add(name);
+        for (const name of decls.tagNames) tagNames.add(name);
+        for (const [name, params] of decls.rulebookParams) rulebookParams.set(name, params);
+        rawTemplates.push(...decls.relationTemplates);
     }
 
     const relationTemplates = buildRelationTemplateDispatch(rawTemplates);
 
-    for (const sourceFile of sourceFiles) {
-        const source = fs.readFileSync(sourceFile, "utf8");
-        const ast = parseSource(source, sourceFile, globalNames, functionNames, relationNames, relationTemplates, actionNames, objectNames, tagNames, rulebookParams);
+    for (const { sourceFile, tokens } of tokenizedFiles) {
+        const ast = parseTokens(tokens, sourceFile, globalNames, functionNames, relationNames, relationTemplates, actionNames, objectNames, tagNames, rulebookParams);
         allNodes.push(...ast.nodes);
     }
 
@@ -209,133 +198,6 @@ function resolveLibDir(libName, projectRoot, userFileDir) {
 
 function hasGameObject(nodes) {
     return nodes.some((node) => node.kind === "ObjectDecl" && node.typeName === "game");
-}
-
-function extractFunctionNames(sourceText) {
-    const names = new Set();
-    for (const line of sourceText.split(/\r?\n/)) {
-        const code = line.replace(/#.*$/, "").trim();
-        const match = code.match(/^(?:native\s+)?function\s+[A-Za-z_][A-Za-z0-9_<>]*\s+([A-Za-z_][A-Za-z0-9_]*)\s*\(/);
-        if (match) {
-            names.add(match[1]);
-        }
-    }
-    return names;
-}
-
-function extractGlobalNames(sourceText) {
-    const names = new Set();
-    for (const line of sourceText.split(/\r?\n/)) {
-        const code = line.replace(/#.*$/, "").trim();
-        const match = code.match(/^global\s+[A-Za-z_][A-Za-z0-9_<>]*\s+([A-Za-z_][A-Za-z0-9_]*)\s*=/);
-        if (match) {
-            names.add(match[1]);
-        }
-    }
-    return names;
-}
-
-function extractRelationNames(sourceText) {
-    const names = new Set();
-    for (const line of sourceText.split(/\r?\n/)) {
-        const code = line.replace(/#.*$/, "").trim();
-        const match = code.match(/^relation\s+([A-Za-z_][A-Za-z0-9_]*)\s*:/);
-        if (match) {
-            names.add(match[1]);
-        }
-    }
-    return names;
-}
-
-// Object names are collected ahead of parsing so a bare single-word object
-// reference in an expression (`self.taken == statue`) resolves to the object
-// rather than the enum-label string fallback. Matches only top-level (unindented)
-// `TYPE NAME` declarations — exactly two identifier tokens, optional trailing
-// `:`, no `=`, and a non-keyword/non-band leading token — which excludes field
-// assignments (indented), relation asserts (3+ tokens), and every keyword-led
-// declaration.
-function extractObjectNames(sourceText) {
-    const names = new Set();
-    for (const rawLine of sourceText.split(/\r?\n/)) {
-        if (/^\s/.test(rawLine)) continue;
-        const code = rawLine.replace(/#.*$/, "");
-        if (code.includes("=")) continue;
-        const match = code.match(/^([A-Za-z_][A-Za-z0-9_\\-]*)\s+([A-Za-z_][A-Za-z0-9_\\-]*)\s*:?\s*$/);
-        if (!match) continue;
-        if (KEYWORDS.has(match[1]) || BAND_WORDS.has(match[1])) continue;
-        names.add(coerceName(match[2]));
-    }
-    return names;
-}
-
-// Action names are collected ahead of parsing so the parser can recognize a
-// leading-band phase rule (`check take:`) — otherwise indistinguishable from an
-// object declaration (`room kitchen:`) by token shape alone.
-function extractActionNames(sourceText) {
-    const names = new Set();
-    for (const line of sourceText.split(/\r?\n/)) {
-        const code = line.replace(/#.*$/, "").trim();
-        const match = code.match(/^action\s+([A-Za-z_][A-Za-z0-9_]*)\s*:?/);
-        if (match) {
-            names.add(match[1]);
-        }
-    }
-    return names;
-}
-
-// Tag names are collected ahead of parsing so the parser can recognize a
-// tag-led selector (`instead manipulation:`) as a phase rule. A `tags a, b` line
-// appears only inside an action body, so a simple indented-line scan suffices.
-function extractActionTags(sourceText) {
-    const names = new Set();
-    for (const line of sourceText.split(/\r?\n/)) {
-        const match = line.replace(/#.*$/, "").match(/^\s+tags\s+(.+)$/);
-        if (!match) continue;
-        for (const raw of match[1].split(",")) {
-            const name = raw.trim();
-            if (name) names.add(name);
-        }
-    }
-    return names;
-}
-
-// Rulebook names and their parameter names are collected ahead of parsing so the
-// parser can recognize a `rule RULEBOOK:` contribution and bind the rulebook's
-// parameters as locals in the contributed rule's guard and body.
-function extractRulebookParams(sourceText) {
-    const result = new Map();
-    for (const line of sourceText.split(/\r?\n/)) {
-        const code = line.replace(/#.*$/, "").trim();
-        const match = code.match(/^rulebook\s+\S+\s+([A-Za-z_][A-Za-z0-9_]*)\s*\(([^)]*)\)/);
-        if (!match) continue;
-        const params = match[2]
-            .split(",")
-            .map((part) => part.trim())
-            .filter(Boolean)
-            .map((part) => part.split(/\s+/).pop());
-        result.set(match[1], params);
-    }
-    return result;
-}
-
-// A `syntax "..."` line associates with the most recent `relation NAME:` — the
-// only place a syntax line may legally appear, so proximity is unambiguous.
-function extractRelationTemplates(sourceText) {
-    const templates = [];
-    let currentRelation = null;
-    for (const line of sourceText.split(/\r?\n/)) {
-        const code = line.replace(/#.*$/, "").trim();
-        const relMatch = code.match(/^relation\s+([A-Za-z_][A-Za-z0-9_]*)\s*:/);
-        if (relMatch) {
-            currentRelation = relMatch[1];
-            continue;
-        }
-        const synMatch = code.match(/^syntax\s+"(.*)"$/);
-        if (synMatch && currentRelation) {
-            templates.push({ relationName: currentRelation, template: synMatch[1] });
-        }
-    }
-    return templates;
 }
 
 function parseTemplateParts(template) {

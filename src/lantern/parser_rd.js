@@ -26,6 +26,13 @@ const PHASE_WORDS = new Set(["before", "instead", "check", "do", "after", "repor
 
 function parseSource(sourceText, filePath, globalNames = new Set(), functionNames = new Set(), relationNames = new Set(), relationTemplates = new Map(), actionNames = new Set(), objectNames = new Set(), tagNames = new Set(), rulebookParams = new Map()) {
     const tokens = tokenize(sourceText, filePath);
+    return parseTokens(tokens, filePath, globalNames, functionNames, relationNames, relationTemplates, actionNames, objectNames, tagNames, rulebookParams);
+}
+
+// Parses an already-tokenized file. The driver (src/lantern/index.js) tokenizes
+// each file once, runs the token-level prescan over those tokens, then parses
+// from the same tokens — so tokenization happens exactly once per file.
+function parseTokens(tokens, filePath, globalNames = new Set(), functionNames = new Set(), relationNames = new Set(), relationTemplates = new Map(), actionNames = new Set(), objectNames = new Set(), tagNames = new Set(), rulebookParams = new Map()) {
     return createParser(tokens, filePath, globalNames, functionNames, relationNames, relationTemplates, actionNames, objectNames, tagNames, rulebookParams).parseProgram();
 }
 
@@ -1311,4 +1318,5 @@ function syntaxError(filePath, lineNumber, message) {
 
 module.exports = {
     parseSource,
+    parseTokens,
 };

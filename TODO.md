@@ -9,12 +9,14 @@ prerequisite lists in `devdocs/game_parser.md`, `devdocs/rulebooks.md`, and
 From the standing review captured in `devdocs/architecture.md` → "Known
 Architectural Issues". Listed highest-leverage first.
 
-### AR1. Replace raw-source regex prescans with a token-level pre-pass
-`src/lantern/index.js` derives eight name sets via regex over raw text and feeds
-them to `parseSource`. They use naive comment stripping (inconsistent with the
-tokenizer's string-aware `stripComment`) and re-encode grammar in regex. Tokenize
-once, run a small declaration pre-pass over tokens, then parse. Removes the
-biggest front-end fragility. **(arch issue A)**
+### AR1. Replace raw-source regex prescans with a token-level pre-pass — DONE (2026-06-19)
+`src/lantern/index.js` now tokenizes each file once, runs `prescanDeclarations`
+(`src/lantern/prescan.js`) over the tokens to build the parser's name sets, then
+parses from the same tokens via `parseTokens`. The eight `extract*` regex
+functions are gone; the lexer runs once per file and the prescan shares its
+comment/string handling. Unit-tested in `tests/prescan` (`npm run test:prescan`).
+Remaining nit: `extractLibImports` (lib resolution; scans only the user file)
+still uses a regex — low risk, left as-is. **(arch issue A)**
 
 ### AR2. Decouple Lamplighter from the advent world model
 `scopeOf`/`resolvePool`/`canBeAntecedent` hardcode `holder`/`physical`;

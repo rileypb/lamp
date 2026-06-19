@@ -259,6 +259,9 @@ lamplighter.onEvent("startup", () => {
         }
     }
 });
+lamplighter.registerChangeHandler("item", "holder", (self) => {
+    lamplighter.removeRelation("supports", { "support": lamplighter.ANY, "supported": self });
+});
 lamplighter.registerChangeHandler("person", "holder", (self) => {
     describe_room(lamplighter.getGlobal("player").holder);
 });

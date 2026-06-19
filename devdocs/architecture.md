@@ -49,19 +49,22 @@ A standing review of `src/lantern`, `src/lamplighter`, and `lib/advent`. These
 are structural/design concerns (not feature gaps), ordered by how much they are
 likely to constrain future work. Tracked as actionable items in `TODO.md`.
 
-### A. Compiler front-end does regex prescans of raw source
-`src/lantern/index.js` runs eight regex passes over raw file text
-(`extractGlobalNames`, `extractFunctionNames`, `extractRelationNames`,
-`extractActionNames`, `extractObjectNames`, `extractActionTags`,
-`extractRulebookParams`, `extractRelationTemplates`) and feeds the results into
-`parseSource(... 8 name sets ...)`. The parser cannot stand on its own — it
-depends on a prior text scan. Problems: (1) the prescans strip comments with a
-naive `replace(/#.*$/, "")`, which is **inconsistent with the tokenizer's
-string-aware `stripComment`** (a `#` inside a string literal on a
-declaration-shaped line is mis-stripped); (2) they re-implement fragments of the
-grammar in regex that must stay in sync with the real parser; (3) they are
-line-oriented and blind to multi-line constructs. Intended direction: tokenize
-once, run a lightweight token-level declaration pre-pass, then parse from tokens.
+### A. Compiler front-end does regex prescans of raw source — RESOLVED (2026-06-19)
+Previously `src/lantern/index.js` ran eight regex passes over raw file text to
+build the name sets the parser needs up front. They stripped comments with a
+naive `replace(/#.*$/, "")` (inconsistent with the tokenizer's string-aware
+`stripComment` — e.g. a `#` inside a relation `syntax` template silently dropped
+the template), re-encoded grammar fragments in regex, and were blind to
+multi-line constructs.
+
+Now `src/lantern/index.js` tokenizes each file once and runs
+`prescanDeclarations` (`src/lantern/prescan.js`) over the token stream to collect
+the same name sets, then parses from the same tokens via `parseTokens`
+(`src/lantern/parser_rd.js`). The lexer runs exactly once per file and the
+prescan shares its comment/string handling. Covered by `tests/prescan`
+(`npm run test:prescan`). Remaining minor instance: `extractLibImports` (lib
+dependency resolution, scans only the user file for `lib NAME`) still uses a
+regex; it runs before the file set is known and is intentionally left as-is.
 
 ### B. Native JS ↔ Lamp boundary is bound by regex
 `gatherNativeJs` discovers native function names with
