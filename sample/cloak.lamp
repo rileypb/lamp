@@ -14,7 +14,7 @@ lib advent
 
 game Cloak_of_Darkness:
     author "Roger Firth"
-	tagline "A Lamp port of the classic text adventure by Phil Riley"
+	tagline "A Lamp port of the classic text adventure"
 	version 0
 	release dev
     start Foyer

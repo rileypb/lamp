@@ -4,7 +4,7 @@ on startup:
 	let this_game = game.all.first
 	if not (this_game.tagline == ""):
 		print this_game.name
-		print this_game.tagline
+		print this_game.tagline + " by " + this_game.author
 		print "Version " + this_game.version + " " + this_game.release
 		print ""
 	follow startup_rules()

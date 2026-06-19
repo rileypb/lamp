@@ -1475,7 +1475,7 @@ contributions, reading it from the game object's fields:
 
 ```
 <game name>
-<game.tagline>
+<game.tagline> by <game.author>
 Version <game.version> <game.release>
 ```
 
