@@ -54,10 +54,6 @@ let rulebookParamNames = new Map();
 // Absolute path of the author's game file; phase rules from it sort ahead of
 // library rules (order 0 vs 1). See devdocs/rulebooks.md.
 let mainFilePath = null;
-// JS to emit for a bare `stop`, which depends on the enclosing construct: in a
-// phase rule it halts the band (`return lamplighter.HALT;`); in a rulebook it
-// yields the declared default; elsewhere it is a plain `return;`.
-let currentBareStop = "return;";
 // When true, player-facing string literals are emitted as lamplighter.decode("…")
 // over an encoded payload instead of a plain JS string. Set per build from the
 // --encode-strings option; structural strings (names, labels, object refs) are
@@ -116,7 +112,6 @@ function emitProgram(programAst, options = {}) {
     emitKindNames = kindNames;
     mainFilePath = options.mainFilePath || null;
     encodeStrings = options.encodeStrings === true;
-    currentBareStop = "return;";
     functionParamTypes = new Map();
     rulebookParamNames = new Map();
     for (const node of programAst.nodes) {
@@ -648,15 +643,12 @@ function emitRulebookRule(node, globalNames = new Set()) {
 // Shared emit for a single rulebook rule (declaration or contribution): a
 // `registerRulebookRule` call wrapping the guard + body as a rule function.
 function emitRulebookRuleFn(rulebookName, paramNames, whenExpr, body, order, globalNames) {
-    const prevBareStop = currentBareStop;
-    currentBareStop = "return lamplighter.HALT;";
     const lines = [`lamplighter.registerRulebookRule(${JSON.stringify(rulebookName)}, (${paramNames.join(", ")}) => {`];
     if (whenExpr) {
         lines.push(`    if (!(${emitExpression(whenExpr, globalNames)})) return;`);
     }
-    lines.push(...emitStatementList(body, 1, globalNames));
+    lines.push(...emitStatementList(body, 1, globalNames, "return lamplighter.HALT;"));
     lines.push(`}, ${order});`);
-    currentBareStop = prevBareStop;
     return lines.join("\n");
 }
 
@@ -677,8 +669,6 @@ function emitEventHandler(node, globalNames = new Set()) {
 // first so they can suppress library ones.
 function emitPhaseRule(node, globalNames = new Set()) {
     const order = node.filePath === mainFilePath ? 0 : 1;
-    const prevBareStop = currentBareStop;
-    currentBareStop = "return lamplighter.HALT;";
     // A multi-action selector expands to one registration per resolved action;
     // the guard and body emit identically for each. See devdocs/rulebooks.md.
     const targets = node.selector
@@ -688,14 +678,13 @@ function emitPhaseRule(node, globalNames = new Set()) {
     if (node.whenExpr) {
         bodyLines.push(`    if (!(${emitExpression(node.whenExpr, globalNames)})) return;`);
     }
-    bodyLines.push(...emitStatementList(node.body, 1, globalNames));
+    bodyLines.push(...emitStatementList(node.body, 1, globalNames, "return lamplighter.HALT;"));
     const lines = [];
     for (const actionName of targets) {
         lines.push(`lamplighter.registerActionRule(${emitName(actionName)}, ${JSON.stringify(node.band)}, (self) => {`);
         lines.push(...bodyLines);
         lines.push(`}, ${order});`);
     }
-    currentBareStop = prevBareStop;
     return lines.join("\n");
 }
 
@@ -759,11 +748,15 @@ function emitRelationRemoveHandler(node, globalNames = new Set()) {
     ].join("\n");
 }
 
-function emitStatementList(statements, indentLevel, globalNames = new Set()) {
-    return statements.flatMap((statement) => emitStatementLines(statement, indentLevel, globalNames));
+// `bareStop` is the JS a bare `stop` emits, which depends on the enclosing
+// construct: `return lamplighter.HALT;` inside a phase/rulebook rule, and a plain
+// `return;` elsewhere. It is threaded as a parameter (rather than module state)
+// so emission has no hidden context to save and restore.
+function emitStatementList(statements, indentLevel, globalNames = new Set(), bareStop = "return;") {
+    return statements.flatMap((statement) => emitStatementLines(statement, indentLevel, globalNames, bareStop));
 }
 
-function emitStatementLines(statement, indentLevel, globalNames = new Set()) {
+function emitStatementLines(statement, indentLevel, globalNames = new Set(), bareStop = "return;") {
     const indent = "    ".repeat(indentLevel);
 
     if (statement.kind === "LetStatement") {
@@ -794,12 +787,12 @@ function emitStatementLines(statement, indentLevel, globalNames = new Set()) {
     }
     if (statement.kind === "IfStatement") {
         const lines = [`${indent}if (${emitExpression(statement.condition, globalNames)}) {`];
-        lines.push(...emitStatementList(statement.thenBody, indentLevel + 1, globalNames));
+        lines.push(...emitStatementList(statement.thenBody, indentLevel + 1, globalNames, bareStop));
         lines.push(`${indent}}`);
 
         if (statement.elseBody) {
             lines[lines.length - 1] = `${indent}} else {`;
-            lines.push(...emitStatementList(statement.elseBody, indentLevel + 1, globalNames));
+            lines.push(...emitStatementList(statement.elseBody, indentLevel + 1, globalNames, bareStop));
             lines.push(`${indent}}`);
         }
 
@@ -814,7 +807,7 @@ function emitStatementLines(statement, indentLevel, globalNames = new Set()) {
         const step = emitExpression(statement.step, globalNames);
         const v = statement.varName;
         const lines = [`${indent}for (let ${v} = ${start}; ${v} <= ${finish}; ${v} += ${step}) {`];
-        lines.push(...emitStatementList(statement.body, indentLevel + 1, globalNames));
+        lines.push(...emitStatementList(statement.body, indentLevel + 1, globalNames, bareStop));
         lines.push(`${indent}}`);
         return lines;
     }
@@ -822,13 +815,13 @@ function emitStatementLines(statement, indentLevel, globalNames = new Set()) {
         const listExpr = emitExpression(statement.listExpr, globalNames);
         const v = statement.varName;
         const lines = [`${indent}for (const ${v} of lamplighter.listItems(${listExpr})) {`];
-        lines.push(...emitStatementList(statement.body, indentLevel + 1, globalNames));
+        lines.push(...emitStatementList(statement.body, indentLevel + 1, globalNames, bareStop));
         lines.push(`${indent}}`);
         return lines;
     }
     if (statement.kind === "WhileStatement") {
         const lines = [`${indent}while (${emitExpression(statement.condition, globalNames)}) {`];
-        lines.push(...emitStatementList(statement.body, indentLevel + 1, globalNames));
+        lines.push(...emitStatementList(statement.body, indentLevel + 1, globalNames, bareStop));
         lines.push(`${indent}}`);
         return lines;
     }
@@ -850,7 +843,7 @@ function emitStatementLines(statement, indentLevel, globalNames = new Set()) {
         return [`${indent}return ${emitExpression(statement.expr, globalNames)};`];
     }
     if (statement.kind === "StopStatement") {
-        if (statement.expr === null) return [`${indent}${currentBareStop}`];
+        if (statement.expr === null) return [`${indent}${bareStop}`];
         if (statement.reason) {
             return [
                 `${indent}self.reason = ${emitExpression(statement.reason, globalNames)};`,

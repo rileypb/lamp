@@ -157,7 +157,15 @@ iteration can skip.
   fixture `advent18`.
 - **Dead artifacts removed** (2026-06-19): `lib/advent/gameloop.lamp_hide` and
   the unused `global list<string> words` in `lib/advent/globals.lamp`.
-- **Emitter/checker keep module-level mutable state** (still open; e.g.
-  `currentBareStop`, hand-saved/restored around each rule). Not reentrant; a
-  context object threaded through the emit functions would be safer.
+- **Emitter `currentBareStop` save/restore** — RESOLVED (2026-06-19). The JS a
+  bare `stop` emits (`return lamplighter.HALT;` inside a phase/rulebook rule,
+  `return;` elsewhere) is now a `bareStop` parameter threaded through
+  `emitStatementList`/`emitStatementLines` (default `"return;"`; the two rule
+  emitters pass the HALT form), replacing the module-level `let` that was
+  hand-saved and restored around each rule. Output is byte-identical (encode
+  corpus + generated-JS golden). The remaining module-level `let`s in the emitter
+  and checker (`relationFieldSchemas`, `emitKindNames`, `mainFilePath`, etc.) are
+  set-once per `emitProgram`/`checkProgram` call and never mutated mid-pass, so
+  they are per-invocation config rather than the save/restore hazard; full
+  reentrancy (concurrent compiles in one process) would still need them bundled.
 

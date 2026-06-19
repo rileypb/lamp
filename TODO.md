@@ -57,15 +57,16 @@ Relations live in `instanceRegistry`, so `scopeOf`/`buildVocabIndex` iterate
 edges (anonymous edges get indexed under the `"null"` token). Give relations
 their own store, or tag iterations to skip them. **(arch issue F)**
 
-### AR7. Small structural fixes — MOSTLY DONE (2026-06-19)
-Done: explicit lib load order via optional `load.order` manifest
+### AR7. Small structural fixes — DONE (2026-06-19)
+Explicit lib load order via optional `load.order` manifest
 (`src/lantern/liborder.js`, `tests/liborder`); same-file duplicate-function
 compile error in `deduplicateFunctions` (`function_dup` fixture);
 case-insensitive QUIT in `lib/advent/startup.lamp` (`advent18` fixture); deleted
-dead artifacts (`gameloop.lamp_hide`, unused `words` global). **Remaining:**
-thread emitter context (`currentBareStop` is hand-saved/restored around each
-rule) instead of module-level mutable state, so the emitter is reentrant.
-**(arch issue G)**
+dead artifacts (`gameloop.lamp_hide`, unused `words` global); and the emitter's
+bare-`stop` JS is now a threaded `bareStop` parameter rather than a hand-saved
+module `let` (byte-identical output). Note: the remaining set-once module `let`s
+in emitter/checker are per-invocation config, not the save/restore hazard; full
+concurrent reentrancy would still need them bundled. **(arch issue G)**
 
 ## 1. Lighthouse web bundle — headless CI test (optional)
 Web v1 is **built, verified live, shell-polished, and hardened for distribution**.
