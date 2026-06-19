@@ -14,15 +14,6 @@ player command (the `run_command` path discards `runAction`'s result, unlike
 - **Where:** rulebook driver in `src/lamplighter/index.js`, `run_command` loop.
 - **See:** `devdocs/rulebooks.md` roadmap, `devdocs/game_parser.md` v2.
 
-## 2. Sync `devdocs/specs.md` with shipped language features
-`specs.md` is the #1 source-of-truth doc but lags recent work. Missing entirely:
-**action selectors** (`instead any except go …`, boolean over actions/tags),
-**action `tags`**, **`self.action`**, **`silently try`**, and **rulebook rule
-contributions** (`rule RULEBOOK [when]:` + the `registerRulebookRule`/`runRulebook`
-runtime). These are documented in `devdocs/rulebooks.md` but not in the language
-reference. **Where:** `devdocs/specs.md` (Language Definition + Runtime API
-contract).
-
 ## Smaller / opportunistic
 - **Extend object-name validation (`checkedGetObject`) to expression contexts.**
   Object-name comparisons in `when`/`if` expressions (e.g. `self.dropped == cloak`)

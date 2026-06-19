@@ -140,10 +140,14 @@ Lantern-generated JavaScript targets the following Lamplighter API surface:
     - Wraps a plain JS array in a Lamp list value `{ items, get first() }`. `.first` returns the first element or `null` for an empty list. Used by `type(...).all`, `queryRelationValue`, and native functions that return lists.
 - `listItems(value)`
     - Normalizes any list-valued expression to a plain JS array for `for … in` iteration. `null`/`none` iterates as empty; raw arrays pass through. Throws if given a non-list non-null value.
-- `registerActionRule(actionName, band, ruleFn)`
-    - Registers a phase-rule function into the named action's rulebook band. `band` is one of `"before"`, `"instead"`, `"check"`, `"do"`, `"after"`, `"report"`. Used by the emitter for phase rule declarations.
-- `runAction(actionName, instance)`
-    - Runs an action instance through its six bands in order. A rule function that returns a value stops the action; a rule function that returns `undefined` falls through. Returns `"succeeded"` if no rule stops.
+- `registerActionRule(actionName, band, ruleFn, order?)`
+    - Registers a phase-rule function into the named action's rulebook band. `band` is one of `"before"`, `"instead"`, `"check"`, `"do"`, `"after"`, `"report"`, or `"report_failed"`. `order` (0 author, 1 library; default 1) sorts author rules ahead of library rules. Used by the emitter for phase rule declarations; a multi-action selector rule emits one call per resolved action.
+- `runAction(actionName, instance, opts?)`
+    - Runs an action instance through its bands in order. A rule function that returns a value stops the action; `HALT` (a bare `stop`) halts the band; `undefined` falls through. On a `failed` outcome the `report_failed` band then runs. Returns `"succeeded"` if no rule stops. `opts.silent` (set by `silently try`) skips the `report` and `report_failed` bands. The `instance` carries the implicit `actor` and `action` fields alongside the declared slots.
+- `registerRulebookRule(name, ruleFn, order?)`
+    - Registers a rule function into a named rulebook's registry (used for both declaration-block rules and `rule NAME:` contributions). `order` (0 author, 1 library) sorts author contributions ahead of library rules.
+- `runRulebook(name, args)`
+    - Runs a named rulebook's registered rules in order, each called with `args` (the rulebook's argument values). Returns `{ stopped: true, value }` for the first rule that stops with a value, or `{ stopped: false }` if every rule falls through or a bare `stop` is hit. The emitted dispatcher function supplies the `default` when `stopped` is false.
 - `registerGrammar(actionName, template)`
     - Registers a surface template string for an action with the Game Parser. Used by the emitter for each syntax line in an action declaration.
 - `runCommand(line, actor)`
@@ -188,7 +192,7 @@ Local variables (introduced by `let`) and loop variables (introduced by `for`) a
 
 Free text that contains spaces or punctuation is written as a double-quoted string literal, not a bare identifier (for example, `author "Phil Riley"`).
 
-The following words are **reserved** and may not be used as a name (object, type, kind, global, field, event, or local): `type`, `kind`, `global`, `on`, `for`, `in`, `while`, `if`, `else`, `let`, `print`, `error`, `dispatch`, `break`, `lib`, `from`, `to`, `step`, `change`, `function`, `native`, `return`, `when`, `and`, `or`, `not`, `relation`, `bidi`, `remove`, `disconnect`, `rulebook`, `stop`, `follow`, `action`, `try`. (`syntax` and `inverted` are contextual keywords recognized only inside a `relation` body; `default` is a contextual keyword recognized only inside a `rulebook` body; the band words `before`, `instead`, `check`, `do`, `after`, and `report` are contextual keywords recognized only as the leading token of a phase rule for a declared action; none of these are globally reserved.) A reservation applies only to a whole identifier: a reserved word appearing *inside* a longer identifier is unrestricted, so `move_to_room` (which denotes the name `move to room`) is a valid identifier even though `to` is reserved.
+The following words are **reserved** and may not be used as a name (object, type, kind, global, field, event, or local): `type`, `kind`, `global`, `on`, `for`, `in`, `while`, `if`, `else`, `let`, `print`, `error`, `dispatch`, `break`, `lib`, `from`, `to`, `step`, `change`, `function`, `native`, `return`, `when`, `and`, `or`, `not`, `relation`, `bidi`, `remove`, `disconnect`, `rulebook`, `stop`, `follow`, `action`, `try`. (`syntax` and `inverted` are contextual keywords recognized only inside a `relation` body; `tags` is contextual only inside an `action` body; `default` is a contextual keyword recognized only inside a `rulebook` body; the band words `before`, `instead`, `check`, `do`, `after`, and `report` are contextual keywords recognized only as the leading token of a phase rule; `any` and `except` are contextual only in a phase-rule action selector; `rule` is contextual only when followed by a declared rulebook name; `silently` is contextual only immediately before `try`; none of these are globally reserved.) A reservation applies only to a whole identifier: a reserved word appearing *inside* a longer identifier is unrestricted, so `move_to_room` (which denotes the name `move to room`) is a valid identifier even though `to` is reserved.
 
 ### Objects and types
 
@@ -799,11 +803,41 @@ never confused with a function call and the parser does not need to know ruleboo
 names to recognize the form. Argument count and types are checked against the
 declared parameters, as for function calls.
 
+#### Contributing rules to a rulebook
+
+A `rulebook` declaration fixes the rulebook's signature (name, parameters, result
+type) and its `default`, but its rules need not all live in the declaration
+block. Any file may add a rule to an existing rulebook with the leading form:
+
+```lamp
+rule RULEBOOK_NAME [when CONDITION]:
+    STATEMENT
+    ...
+```
+
+`rule` is the named-rulebook analogue of a phase rule. The rulebook's parameters
+are in scope in the guard and body; `stop EXPRESSION` stops the rulebook with that
+value; a bare `stop` (or falling through) yields the `default`. The `when` guard
+is optional — a contribution without one always runs. The canonical use is a
+library rulebook a game extends, e.g. advent's `startup_rules`, to which a game
+contributes its opening text:
+
+```lamp
+rule startup_rules:
+    print "Hurrying through the rainswept November night…"
+```
+
+Like phase rules, contributions from the **author file** run before a library
+declaration's own rules (order 0 vs 1); within a tier, source order holds. `rule`
+is a contextual keyword, recognized only when immediately followed by a declared
+rulebook name (collected in the pre-scan). The contribution set is fixed at
+compile time — there is no runtime insertion or removal.
+
 #### Deferred (not in this surface)
 
 Designed in `devdocs/rulebooks.md` but intentionally outside the initial surface:
-named rules; cross-file rule addition; group/`order` ordering constraints;
-`void` rulebooks; and any runtime mutation of rulebooks.
+named rules (for replacing one specific library rule); group/`order` ordering
+constraints; `void` rulebooks; and any runtime mutation of rulebooks.
 
 ### Action rulebooks
 
@@ -917,6 +951,74 @@ reason was given. A bare `stop` inside a `report failed` body suppresses further
 `report failed` rules (identical to `stop` behavior in other bands). If no
 `report failed` rule fires, the failed action produces no output.
 
+#### Implicit slots: `actor` and `action`
+
+Beyond its declared slots, every action instance carries two implicit fields:
+
+- `self.actor` — the acting person (set by the game loop; overridable in a nested
+  `try`, see Running an action).
+- `self.action` — the name of the action being run. It compares against a bare
+  action name, so a rule that spans several actions can branch on which fired:
+  `if self.action == go: …`.
+
+#### Action tags
+
+An action may declare one or more **tags** with a `tags` line in its body
+(comma-separated; `tags` is a contextual keyword, like `syntax`):
+
+```lamp
+action take:
+    item taken
+    tags manipulation, theft
+    syntax:
+        "take [taken]"
+```
+
+Tags are not pre-declared — the set of valid tags is the union of every `tags`
+line across all actions. They exist to name a *set* of actions for a selector
+(below).
+
+#### Action selectors — rules spanning a set of actions
+
+A phase rule's action position accepts a **selector** instead of a single action
+name: a compile-time boolean expression over *atoms*, where each atom denotes the
+set of actions it names. This collapses a rule that should apply uniformly across
+many actions into one declaration.
+
+| Atom / operator | Denotes |
+|---|---|
+| `any` | every declared action (the universe) |
+| an action name (`take`) | that one action |
+| a tag name (`manipulation`) | every action carrying that tag |
+| `a and b` | intersection |
+| `a or b` | union |
+| `not a` | complement |
+| `a except b` | sugar for `a and not b` |
+| `( … )` | grouping |
+
+Precedence, lowest to highest: `or`, then `and`/`except`, then `not`/atom. There
+is **no comma sugar** (write `take or drop`, not `take, drop`); exclude several
+actions by chaining `except` or grouping.
+
+```lamp
+instead any except go except look when self.actor.holder == bar and in_darkness(self.actor):
+    print "In the dark? You could easily disturb something."
+    stop failed
+```
+
+The selector is resolved to a concrete action set **at compile time** and the
+rule is expanded to one registration per action, each carrying the same band,
+guard, body, and source position. A selector that resolves to the empty set, or
+names an atom that is neither a declared action nor a known tag, is a compile
+error. `any` and `except` are contextual keywords, recognized only in selector
+position.
+
+A multi-action rule's `self` may only reference slots that **every** targeted
+action has — in practice the universal `actor`, `action`, and (in `report
+failed`) `reason`. Referencing an action-specific slot that is not present on
+every action in the set is a compile error; write a single-action rule for
+behaviour that needs such a slot.
+
 #### Running an action
 
 ```lamp
@@ -954,6 +1056,20 @@ explicitly to run the inner action on behalf of a different actor, even when
 ```lamp
 try take:
     taken self.clothing
+    actor self.actor
+```
+
+**`silently try`**: prefixing a `try` with `silently` runs the inner action
+through the `before`/`instead`/`check`/`do`/`after` bands but **skips its
+`report` and `report failed` bands**, suppressing its player-facing output. This
+is for implicit sub-actions whose own messages would be noise — e.g. hanging a
+worn cloak silently takes it off first, without printing "You take off the
+cloak." `silently` is a contextual keyword recognized only immediately before
+`try`, in both the statement and `let x = silently try …` expression forms.
+
+```lamp
+silently try doff:
+    clothing self.carried
     actor self.actor
 ```
 
@@ -1268,11 +1384,11 @@ follow reachable(brass_lamp)
 
 Lantern compiles in three passes:
 
-1. **Pre-scan** (`index.js`): scan all source files with a single regex per line to collect declared global names and declared function names. Also scans each library directory for `index.js`; if present, reads it and extracts top-level function names (via `function NAME(` regex). Produces a `Set<string>` of global names, a `Set<string>` of function names, and the raw native JS content strings to inline.
+1. **Pre-scan** (`index.js`): scan all source files with a single regex per line to collect declared global names, function names, relation names, action names, object names, action tag names, rulebook names with their parameter names, and relation syntax templates — so the parser can resolve bare identifiers and recognize tag/selector/`rule`-contribution heads before full parsing. Also scans each library directory for `index.js`; if present, reads it and extracts top-level function names (via `function NAME(` regex) for `native function` resolution, and inlines the raw native JS content.
 2. **Parse** (`parser_rd.js`): parse each file into an AST using the collected global and function names so that bare identifiers in expressions are resolved correctly.
 3. **Check** (`checker.js`) + **emit** (`emitter.js`): semantic check then emit standalone Node.js JavaScript.
 
-The emitted program is a body-only module that assumes `lamplighter` is already available as a context global (injected by the sandbox launcher). It runs in this order: `bootstrapBuiltins()` → native JS (inlined from `index.js` files) → kinds → kind constants → types → type constants → objects (primitive/kind fields only) → object-typed field assignments → top-level relation assertions/removes → global declarations → global assignments → function definitions → rulebook definitions → event handler registrations → change handler registrations → phase rule registrations → grammar registrations → relation add/remove handler registrations → `run()`. Globals and object-typed field assignments are placed after all `createObject` calls so that any `lamplighter.getObject(...)` reference resolves against an already-registered instance regardless of declaration order. Function definitions are emitted before event handler registrations so they are in scope when handlers run.
+The emitted program is a body-only module that assumes `lamplighter` is already available as a context global (injected by the sandbox launcher). It runs in this order: `bootstrapBuiltins()` → native JS (inlined from `index.js` files) → kinds → kind constants → types → type constants → objects (primitive/kind fields only) → object-typed field assignments → top-level relation assertions/removes → global declarations → global assignments → function definitions → rulebook definitions (each a dispatcher function plus a `registerRulebookRule` call per declaration-block rule) → event handler registrations → change handler registrations → phase rule registrations (a selector rule expands to one registration per resolved action) → rulebook rule contribution registrations → grammar registrations → relation add/remove handler registrations → `run()`. Globals and object-typed field assignments are placed after all `createObject` calls so that any `lamplighter.getObject(...)` reference resolves against an already-registered instance regardless of declaration order. Function definitions are emitted before event handler registrations so they are in scope when handlers run.
 
 ### Parser design
 
@@ -1368,6 +1484,7 @@ below, and game files may declare more.
 | Action | Slots | Player syntax | Notes |
 |---|---|---|---|
 | `look` | — | `look`, `l` | Describes the current room. |
+| `examine` | `item target` | `examine [target]`, `x [target]` | Prints `self.target.description`. |
 | `take` | `item taken` | `take [taken]`, `get [taken]` | Moves item to actor. |
 | `drop` | `item dropped` | `drop [dropped]` | Moves item to actor's location; implicitly calls `doff` if item is worn (printing `(first taking off X)` for the player). |
 | `inventory` | — | `inventory`, `i` | Lists carried items; marks worn items with `(worn)`. |
