@@ -93,11 +93,15 @@ Default output directory is `dist/<game-name>/`.
 Optional spoiler-hiding for distribution builds: `npm run build:web -- <game.lamp>
 --encode-strings` (passed through to Lantern) encodes player-facing prose so a
 casual reader cannot lift room text, messages, and endings straight out of
-`game.worker.js`. Lantern wraps prose literals as `lamplighter.decode("…")` over
-an XOR+base64 payload (`src/strcodec.js`); structural names stay plaintext. It is
-**not** security — the decoder and key ship in the same bundle, so it only raises
-the bar against casual `view-source` snooping. Off by default; the build's
-default `minify` (above) handles the code itself, and the two compose. See
+`game.worker.js`. Lantern wraps prose literals — **and object names and global
+names** (at every reference site) — as `lamplighter.decode("…")` over an
+XOR+base64 payload (`src/strcodec.js`); type/relation/action names and field keys
+stay plaintext. Encoding names is safe because `decode` runs at load, so the
+runtime registry keys are unchanged. It is **not** security — the decoder and key
+ship in the same bundle, so it only raises the bar against casual `view-source`
+snooping (note: strings inside native `index.js` are not encoded). Off by
+default; the build's default `minify` (above) handles the code itself (including
+the readable `const <objectName>` bindings), and the two compose. See
 `devdocs/specs.md` → Compiler pipeline.
 
 ## Cross-origin isolation (service worker)

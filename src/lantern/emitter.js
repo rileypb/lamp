@@ -73,6 +73,15 @@ function emitStringLiteral(value) {
         : JSON.stringify(value);
 }
 
+// Object and global names are registry keys, but encoding them is still
+// behavior-preserving as long as every definition and reference site goes
+// through here: decode runs at load, so the runtime key is identical to the
+// plaintext build. Used only for object names and global names (--encode-strings
+// scope); type/relation/action names and field keys stay plaintext.
+function emitName(name) {
+    return emitStringLiteral(name);
+}
+
 function emitProgram(programAst, options = {}) {
     const nativeJsContents = options.nativeJsContents || [];
     const globalDeclNodes = programAst.nodes.filter((node) => node.kind === "GlobalDecl");
@@ -352,7 +361,7 @@ function isObjectTypedField(field, typeName, mergedTypes, kindNames) {
 function objectRef(objectName) {
     return /^[A-Za-z_][A-Za-z0-9_]*$/.test(objectName)
         ? objectName
-        : `lamplighter.getObject(${JSON.stringify(objectName)})`;
+        : `lamplighter.getObject(${emitName(objectName)})`;
 }
 
 // Emits getObject for a string-literal object reference, with a compile-time
@@ -361,7 +370,7 @@ function checkedGetObject(name, filePath, lineNumber) {
     if (!knownObjectNames.has(name)) {
         throw new Error(`${filePath}:${lineNumber}: unknown object "${name}"`);
     }
-    return `lamplighter.getObject(${JSON.stringify(name)})`;
+    return `lamplighter.getObject(${emitName(name)})`;
 }
 
 function emitGlobalDecl(node, kindNames = new Set()) {
@@ -378,11 +387,11 @@ function emitGlobalDecl(node, kindNames = new Set()) {
     } else {
         valueExpr = emitValue(node.value);
     }
-    return `lamplighter.defineGlobal(${JSON.stringify(node.name)}, ${valueExpr});`;
+    return `lamplighter.defineGlobal(${emitName(node.name)}, ${valueExpr});`;
 }
 
 function emitGlobalAssign(node) {
-    return `lamplighter.setGlobal(${JSON.stringify(node.name)}, ${emitValue(node.value)});`;
+    return `lamplighter.setGlobal(${emitName(node.name)}, ${emitValue(node.value)});`;
 }
 
 function emitKindDecl(node) {
@@ -454,7 +463,7 @@ function emitRelationRemove(node, globalNames = new Set()) {
             && !PRIMITIVE_TYPES.has(schema[fieldName])
             && !emitKindNames.has(schema[fieldName])
         ) {
-            valueExpr = `lamplighter.getObject(${JSON.stringify(value.value)})`;
+            valueExpr = `lamplighter.getObject(${emitName(value.value)})`;
         } else {
             valueExpr = emitExpression(value, globalNames);
         }
@@ -483,7 +492,7 @@ function emitCallArgs(functionName, args, globalNames) {
                 && !emitKindNames.has(paramType)
                 && !paramType.startsWith("list<")
             ) {
-                return `lamplighter.getObject(${JSON.stringify(arg.value)})`;
+                return `lamplighter.getObject(${emitName(arg.value)})`;
             }
             return emitExpression(arg, globalNames);
         })
@@ -503,7 +512,7 @@ function emitRelationQuery(node, globalNames) {
             && !PRIMITIVE_TYPES.has(fieldType)
             && !emitKindNames.has(fieldType)
         ) {
-            valueExpr = `lamplighter.getObject(${JSON.stringify(field.value.value)})`;
+            valueExpr = `lamplighter.getObject(${emitName(field.value.value)})`;
         } else {
             valueExpr = emitExpression(field.value, globalNames);
         }
@@ -525,7 +534,7 @@ function emitObjectDecl(node, mergedTypes = new Map(), kindNames = new Set()) {
     }
 
     const pairs = Object.entries(fields).map(([key, value]) => `${JSON.stringify(key)}: ${value}`);
-    const call = `lamplighter.createObject(${JSON.stringify(node.typeName)}, ${JSON.stringify(node.objectName)}, { ${pairs.join(", ")} })`;
+    const call = `lamplighter.createObject(${JSON.stringify(node.typeName)}, ${emitName(node.objectName)}, { ${pairs.join(", ")} })`;
 
     if (/^[A-Za-z_][A-Za-z0-9_]*$/.test(node.objectName)) {
         return `const ${node.objectName} = ${call};`;
@@ -772,9 +781,9 @@ function emitStatementLines(statement, indentLevel, globalNames = new Set()) {
         const [head, ...tail] = statement.targetChain;
         const valueExpr = emitExpression(statement.expr, globalNames);
         if (tail.length === 0 && globalNames.has(head)) {
-            return [`${indent}lamplighter.setGlobal(${JSON.stringify(head)}, ${valueExpr});`];
+            return [`${indent}lamplighter.setGlobal(${emitName(head)}, ${valueExpr});`];
         }
-        const headExpr = globalNames.has(head) ? `lamplighter.getGlobal(${JSON.stringify(head)})` : head;
+        const headExpr = globalNames.has(head) ? `lamplighter.getGlobal(${emitName(head)})` : head;
         if (tail.length === 0) {
             return [`${indent}${head} = ${valueExpr};`];
         }
@@ -904,7 +913,7 @@ function emitExpression(expr, globalNames = new Set()) {
     }
     if (expr.kind === "PropertyAccess") {
         const [head, ...tail] = expr.chain;
-        const headExpr = globalNames.has(head) ? `lamplighter.getGlobal(${JSON.stringify(head)})` : head;
+        const headExpr = globalNames.has(head) ? `lamplighter.getGlobal(${emitName(head)})` : head;
         return tail.length === 0 ? headExpr : `${headExpr}.${tail.join(".")}`;
     }
     if (expr.kind === "Concat") {
@@ -938,10 +947,10 @@ function emitExpression(expr, globalNames = new Set()) {
         return "null";
     }
     if (expr.kind === "GlobalExpr") {
-        return `lamplighter.getGlobal(${JSON.stringify(expr.name)})`;
+        return `lamplighter.getGlobal(${emitName(expr.name)})`;
     }
     if (expr.kind === "ParenNameExpr") {
-        const base = `lamplighter.getObject(${JSON.stringify(expr.objectName)})`;
+        const base = `lamplighter.getObject(${emitName(expr.objectName)})`;
         return expr.fieldChain.length === 0 ? base : `${base}.${expr.fieldChain.join(".")}`;
     }
     if (expr.kind === "CallExpr") {

@@ -59,12 +59,14 @@ const tmp = fs.mkdtempSync(path.join(os.tmpdir(), "lamp-encode-"));
 
 // Equivalence cases: (game path relative to root, a distinctive prose substring
 // that must be present plaintext but absent in the encoded build).
+// `leaks`: strings present plaintext in the unencoded build that must NOT appear
+// in the encoded build — a mix of prose, object names, and global names.
 const cases = [
-    { game: "sample/cloak.lamp", prose: "spacious hall" },
-    { game: "sample/study.lamp", prose: null },
+    { game: "sample/cloak.lamp", leaks: ["spacious hall", "cant go that way", "USE OXFORD COMMA"] },
+    { game: "sample/study.lamp", leaks: [] },
 ];
 
-for (const { game, prose } of cases) {
+for (const { game, leaks } of cases) {
     const name = path.basename(game, ".lamp");
     const inputPath = path.join(PROJECT_ROOT, game);
     const stdinPath = path.join(GOLDEN_EXPECTED, `${name}.stdin.txt`);
@@ -79,14 +81,17 @@ for (const { game, prose } of cases) {
         assert.strictEqual(run(encPath, stdin), run(plainPath, stdin), "encoded run output differs");
     });
 
-    test(`${name}: encoded build wraps prose and keeps names plaintext`, () => {
+    test(`${name}: encoded build hides prose + object/global names, keeps type names plaintext`, () => {
         const enc = fs.readFileSync(encPath, "utf8");
+        const plain = fs.readFileSync(plainPath, "utf8");
         assert.ok(enc.includes("lamplighter.decode("), "no decode() wrapping found");
-        assert.ok(/getObject\("[a-z_]+"\)/.test(enc), "object names should stay plaintext");
-        if (prose) {
-            const plain = fs.readFileSync(plainPath, "utf8");
-            assert.ok(plain.includes(prose), `fixture should contain prose ${JSON.stringify(prose)}`);
-            assert.ok(!enc.includes(prose), `encoded build leaked prose ${JSON.stringify(prose)}`);
+        // Type names (createObject's first argument) stay plaintext by design.
+        assert.ok(/createObject\("[a-z_]+"/.test(enc), "type names should stay plaintext");
+        // Object names are no longer emitted as plaintext getObject keys.
+        assert.ok(!/getObject\("[ -~]+"\)/.test(enc), "object names should be encoded, not plaintext");
+        for (const leak of leaks) {
+            assert.ok(plain.includes(leak), `fixture should contain ${JSON.stringify(leak)} plaintext`);
+            assert.ok(!enc.includes(leak), `encoded build leaked ${JSON.stringify(leak)}`);
         }
     });
 }
