@@ -37,8 +37,12 @@ function assertParses(code, label) {
 const outDir = fs.mkdtempSync(path.join(os.tmpdir(), "lamp-lighthouse-"));
 let result;
 
+const minOutDir = fs.mkdtempSync(path.join(os.tmpdir(), "lamp-lighthouse-min-"));
+
 try {
-    result = buildWeb(GAME, outDir);
+    // Build unminified so the structural markers below survive (minify mangles
+    // local identifiers like runGame).
+    result = buildWeb(GAME, outDir, { minify: false });
 
     test("emits all bundle files", () => {
         for (const file of ["game.worker.js", "index.html", "shell.css", "shell.js", "sw.js"]) {
@@ -66,8 +70,17 @@ try {
         assert.ok(html.includes("serviceWorker.register"), "SW registration missing");
         assert.ok(html.includes("game.worker.js") || html.includes("shell.js"), "shell entry missing");
     });
+
+    test("minified bundle parses and is smaller", () => {
+        buildWeb(GAME, minOutDir, { minify: true });
+        const min = fs.readFileSync(path.join(minOutDir, "game.worker.js"), "utf8");
+        const plain = fs.readFileSync(path.join(outDir, "game.worker.js"), "utf8");
+        assertParses(min, "game.worker.js (minified)");
+        assert.ok(min.length < plain.length, "minified bundle should be smaller than unminified");
+    });
 } finally {
     fs.rmSync(outDir, { recursive: true, force: true });
+    fs.rmSync(minOutDir, { recursive: true, force: true });
 }
 
 if (failures > 0) {

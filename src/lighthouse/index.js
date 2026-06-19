@@ -44,7 +44,7 @@ function wrapAsWorkerEntry(generatedCode) {
     ].join("\n");
 }
 
-function buildWeb(inputFile, outDir, { encodeStrings = false } = {}) {
+function buildWeb(inputFile, outDir, { encodeStrings = false, minify = true } = {}) {
     const absInput = path.resolve(inputFile);
     const absOut = path.resolve(outDir);
     const buildDir = path.join(PROJECT_ROOT, "build");
@@ -57,6 +57,10 @@ function buildWeb(inputFile, outDir, { encodeStrings = false } = {}) {
     const entryPath = path.join(buildDir, `${path.basename(absInput, ".lamp")}.worker-entry.js`);
     fs.writeFileSync(entryPath, wrapAsWorkerEntry(generatedCode), "utf8");
 
+    // minify mangles identifiers and strips whitespace/comments. It is safe with
+    // the sandbox `require` shadow (esbuild renames consistently) and leaves
+    // property names like `lamplighter.decode` intact. Off via --no-minify for
+    // readable output when debugging the bundle.
     esbuild.buildSync({
         entryPoints: [entryPath],
         outfile: path.join(absOut, "game.worker.js"),
@@ -64,6 +68,8 @@ function buildWeb(inputFile, outDir, { encodeStrings = false } = {}) {
         format: "iife",
         platform: "browser",
         target: "es2020",
+        minify,
+        legalComments: "none",
     });
 
     for (const asset of SHELL_ASSETS) {

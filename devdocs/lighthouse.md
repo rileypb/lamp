@@ -78,6 +78,11 @@ thin CLI). Steps:
    `game.worker.js` (`format: iife`, `platform: browser`). The runtime has zero
    `require`s and touches `process` only inside the default `writeImpl` (replaced
    by `setWrite` before any game code runs), so it bundles and loads cleanly.
+   Minified by default (`--no-minify` to opt out): roughly halves the bundle
+   (~66 KB → ~33 KB for cloak), mangles local identifiers, and strips comments.
+   Safe with the sandbox `require` shadow (esbuild renames consistently) and
+   leaves property names like `lamplighter.decode` intact; composes with
+   `--encode-strings`.
 4. Copy the shell assets (`index.html`, `shell.css`, `shell.js`, `sw.js`) into
    the output directory.
 
@@ -91,9 +96,9 @@ casual reader cannot lift room text, messages, and endings straight out of
 `game.worker.js`. Lantern wraps prose literals as `lamplighter.decode("…")` over
 an XOR+base64 payload (`src/strcodec.js`); structural names stay plaintext. It is
 **not** security — the decoder and key ship in the same bundle, so it only raises
-the bar against casual `view-source` snooping. Off by default; pair it with
-`minify` (deferred) for the code itself. See `devdocs/specs.md` → Compiler
-pipeline.
+the bar against casual `view-source` snooping. Off by default; the build's
+default `minify` (above) handles the code itself, and the two compose. See
+`devdocs/specs.md` → Compiler pipeline.
 
 ## Cross-origin isolation (service worker)
 
