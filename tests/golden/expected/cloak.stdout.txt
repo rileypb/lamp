@@ -19,6 +19,12 @@ The walls of this small room were clearly once lined with hooks, though now only
 (first taking off velvet cloak)
 You hang the cloak neatly on the hook.
 
+> examine cloak
+A handsome cloak, of velvet trimmed with satin, and slightly splattered with raindrops. Its blackness is so deep that it almost seems to suck light from the room.
+
+> examine it
+A handsome cloak, of velvet trimmed with satin, and slightly splattered with raindrops. Its blackness is so deep that it almost seems to suck light from the room.
+
 > i
 You are carrying nothing.
 

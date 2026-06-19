@@ -17,7 +17,7 @@ report look:
 	describe_room(self.actor.holder)
 
 action take:
-	item taken
+	direct item taken
 	syntax:
 		"take [taken]"
 		"get [taken]"
@@ -69,7 +69,7 @@ report inventory:
 		print "You are carrying nothing."
 
 action drop:
-	item dropped
+	direct item dropped
 	syntax:
 		"drop [dropped]"
 
@@ -100,7 +100,7 @@ report failed drop:
 		stop
 
 action wear:
-	item clothing
+	direct item clothing
 	syntax:
 		"wear [clothing]"
 
@@ -138,7 +138,7 @@ report failed wear:
 		stop
 
 action doff:
-	item clothing
+	direct item clothing
 	syntax:
 		"remove [clothing]"
 		"take off [clothing]"
@@ -162,7 +162,7 @@ report failed doff:
 		stop
 
 action examine:
-	item target
+	direct item target
 	syntax:
 		"examine [target]"
 		"x [target]"
@@ -199,3 +199,43 @@ report failed go:
 
 # go needs no report: moving the actor fires the `person.holder change` handler,
 # which describes the room on arrival.
+
+# Tracks items resting on a surface (e.g. a hook or shelf). Asserted by `do hang`.
+relation supports:
+	from item support
+	to item supported
+	syntax "supports [support] [supported]"
+
+action hang:
+	direct item carried
+	item peg
+	syntax:
+		"hang [carried] on [peg]"
+		"put [carried] on [peg]"
+
+check hang:
+	if not (self.carried.holder == self.actor):
+		stop failed not_carrying
+
+do hang:
+	if wears self.actor self.carried:
+		if (self.actor == player):
+			print "(first taking off " + self.carried + ")"
+		silently try doff:
+			clothing self.carried
+			actor self.actor
+		if wears self.actor self.carried:
+			stop failed
+	self.carried.holder = self.peg
+	supports self.peg self.carried
+
+report hang:
+	if self.actor == player:
+		print "You hang " + self.carried + " on " + self.peg + "."
+	else:
+		print self.actor + " hangs " + self.carried + " on " + self.peg + "."
+
+report failed hang:
+	if self.reason == not_carrying:
+		print "You aren't carrying that."
+		stop

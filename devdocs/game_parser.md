@@ -457,7 +457,26 @@ distinguished: `it` typed before any object has been referred to has no
 antecedent and reports `I don't know what "it" refers to.` instead, so the
 player learns the pronoun is empty rather than that the (nonexistent) thing is
 out of view. Directions and other non-physical referents never become the
-antecedent. `him`/`her`/`them` (which
+antecedent.
+
+**Direct-object slot (`direct` keyword).** Only the `direct`-marked slot of an
+action updates the antecedent. This is an explicit annotation on the field
+declaration:
+
+```lamp
+action hang:
+    direct item carried   # updates "it" on success
+    item peg              # never updates "it"
+    syntax:
+        "hang [carried] on [peg]"
+```
+
+Actions with no `direct` slot (e.g. `look`, `go [way]`) leave the antecedent
+unchanged, so `take lamp` then `go north` keeps `it = lamp`. At most one
+`direct` slot per action is allowed; declaring two is a compile error. The
+`canBeAntecedent` runtime gate (physical objects only) is still applied as a
+safety net, so a misdeclared `direct direction way` would not set `it` even if
+the rule were somehow violated. `him`/`her`/`them` (which
 need per-object pronoun/gender and plurality declarations) remain deferred.
 
 **Deferred.** `him`/`her`/`them` and mass nouns (uncountable,

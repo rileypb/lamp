@@ -452,6 +452,12 @@ function registerGrammar(actionName, template) {
     grammarRegistry.push({ actionName, parts: parseGrammarTemplate(template) });
 }
 
+function setDirectSlot(actionName, fieldName) {
+    const type = typeRegistry.get(actionName);
+    if (!type) throw new Error(`setDirectSlot: unknown action type "${actionName}"`);
+    type.directSlot = fieldName;
+}
+
 // Matches a token list against one template's parts. Literals must match
 // verbatim; a slot captures the run of tokens up to the next literal (or the
 // end). Returns a field -> token-span map, or null if the template does not
@@ -479,18 +485,35 @@ function matchGrammar(parts, tokens) {
 }
 
 // The objects the actor can currently refer to: contents of the actor's location
-// and the actor's own contents, via the `holder` containment field.
+// and the actor's own contents, plus anything transitively held by those objects
+// (items resting on surfaces, contents of containers, etc.), via `holder`.
 function scopeOf(actor) {
     const location = actor.holder;
-    const results = [];
+    const inScope = new Set();
+
     for (const instances of instanceRegistry.values()) {
         for (const inst of instances) {
             if (inst.holder === location || inst.holder === actor) {
-                results.push(inst);
+                inScope.add(inst);
             }
         }
     }
-    return results;
+
+    // Expand to fixpoint: if an item's holder is in scope, the item is too.
+    let changed = true;
+    while (changed) {
+        changed = false;
+        for (const instances of instanceRegistry.values()) {
+            for (const inst of instances) {
+                if (!inScope.has(inst) && inst.holder && inScope.has(inst.holder)) {
+                    inScope.add(inst);
+                    changed = true;
+                }
+            }
+        }
+    }
+
+    return [...inScope];
 }
 
 // The candidate objects for a slot. Physical objects must be in the actor's
@@ -646,6 +669,7 @@ let pendingDisambiguation = null;
 //                   the failure, so overlapping syntaxes (e.g. `go [way]` vs
 //                   `go to [room]`) can each get a chance to match.
 function resolveSlots(slots, instance, scope, slotTypes) {
+    const directSlot = (typeRegistry.get(instance.type) || {}).directSlot || null;
     for (let i = 0; i < slots.length; i++) {
         const [field, span] = slots[i];
         const candidates = resolveCandidates(span, resolvePool(slotTypes[field], scope), slotTypes[field]);
@@ -654,7 +678,7 @@ function resolveSlots(slots, instance, scope, slotTypes) {
         }
         if (candidates.length === 1) {
             instance[field] = candidates[0];
-            noteAntecedent(candidates[0]);
+            if (field === directSlot) noteAntecedent(candidates[0]);
         } else {
             printDisambiguationPrompt(candidates);
             pendingDisambiguation = {
@@ -687,7 +711,8 @@ function runCommand(line, actor) {
         if (narrowed.length === 1) {
             pendingDisambiguation = null;
             instance[field] = narrowed[0];
-            noteAntecedent(narrowed[0]);
+            const directSlotForDisambig = (typeRegistry.get(actionName) || {}).directSlot || null;
+            if (field === directSlotForDisambig) noteAntecedent(narrowed[0]);
             const status = resolveSlots(remainingSlots, instance, scope, slotTypes);
             if (status === "ok") {
                 runAction(actionName, instance);
@@ -1006,6 +1031,7 @@ module.exports = {
     runRulebook,
     HALT,
     registerGrammar,
+    setDirectSlot,
     runCommand,
     registerChangeHandler,
     registerRelationAddHandler,

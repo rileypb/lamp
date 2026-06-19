@@ -124,36 +124,14 @@ before look when self.actor.holder == Bar and in_darkness(self.actor):
 report examine when self.target == sawdust:
     print "The sawdust on the floor has been disturbed. Something is written there."
 
-# --- hang [item] on [hook] ---
-action hang:
-    item carried
-    item peg
-    syntax:
-        "hang [carried] on [peg]"
-        "put [carried] on [peg]"
-
-check hang:
-    if not (self.carried.holder == self.actor):
-        stop failed not_carrying
-
 check hang:
     if not (self.peg == hook):
         print "That's not something you can hang things on."
         stop failed
 
-do hang:
-    if wears self.actor self.carried:
-        if (self.actor == player):
-            print "(first taking off " + self.carried + ")"
-        silently try doff:
-            clothing self.carried
-            actor self.actor
-        if wears self.actor self.carried:
-            stop failed
-    self.carried.holder = self.peg
-
-report hang:
+report hang when self.carried == velvet_cloak:
     print "You hang the cloak neatly on the hook."
+    stop
 
 # --- read ---
 action read:

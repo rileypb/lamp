@@ -742,10 +742,18 @@ function createParser(tokens, filePath, globalNames, functionNames = new Set(), 
                 expectNewline();
                 continue;
             }
+            let direct = false;
+            if (at("IDENT") && peek().value === "direct") {
+                if (slots.some((s) => s.direct)) {
+                    throw err("An action may have at most one `direct` slot");
+                }
+                direct = true;
+                next();
+            }
             const fieldType = parseFieldType();
             const fieldName = plainName("slot name");
             expectNewline();
-            slots.push(ast.createFieldDecl(fieldType, fieldName));
+            slots.push(ast.createFieldDecl(fieldType, fieldName, null, direct));
         }
         next();
         return { slots, templates, tags };

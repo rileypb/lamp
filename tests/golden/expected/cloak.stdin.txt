@@ -1,6 +1,8 @@
 i
 west
 hang cloak on hook
+examine cloak
+examine it
 i
 east
 south

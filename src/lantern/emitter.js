@@ -334,6 +334,10 @@ function emitProgram(programAst, options = {}) {
             // decoded string, so behavior is unchanged.
             lines.push(`lamplighter.registerGrammar(${emitName(actionNode.name)}, ${emitStringLiteral(template)});`);
         }
+        const directSlot = actionNode.slots.find((s) => s.direct);
+        if (directSlot) {
+            lines.push(`lamplighter.setDirectSlot(${emitName(actionNode.name)}, ${JSON.stringify(directSlot.fieldName)});`);
+        }
     }
 
     for (const node of relationAddHandlerNodes) {

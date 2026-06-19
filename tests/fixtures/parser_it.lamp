@@ -31,18 +31,18 @@ item knife:
 global person player = yourself
 
 action take:
-	item taken
+	direct item taken
 	syntax:
 		"take [taken]"
 		"get [taken]"
 
 action drop:
-	item taken
+	direct item taken
 	syntax:
 		"drop [taken]"
 
 action examine:
-	item target
+	direct item target
 	syntax:
 		"examine [target]"
 		"x [target]"
