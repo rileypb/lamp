@@ -119,17 +119,21 @@ were objects. Consider a separate store for relation instances, or a tag the
 iteration can skip.
 
 ### G. Smaller structural notes
-- **Lib load order is alphabetical** (`gatherLampFiles` sorts each dir). Rule
-  precedence within the library tier depends on filenames, an implicit and
-  fragile contract layered under the explicit author(0)/library(1) ordering.
-- **Emitter/checker keep module-level mutable state** (e.g. `currentBareStop`,
-  hand-saved/restored around each rule). Not reentrant; a context object threaded
-  through the emit functions would be safer.
-- **`deduplicateFunctions` silently drops** an earlier same-signature function
-  with no diagnostic, so an accidental duplicate across lib files vanishes quietly.
-- **QUIT is case-sensitive**: the loop in `lib/advent/startup.lamp` compares
-  `input == "quit"` against the raw prompt line, but the end screen says "type
-  QUIT". Uppercase input is rejected with "I don't understand that."
-- **Dead artifacts**: `lib/advent/gameloop.lamp_hide`, the unused
-  `global list<string> words` in `lib/advent/globals.lamp`.
+- **Lib load order** — RESOLVED (2026-06-19). A library may now pin file load
+  order with an optional `load.order` manifest (`src/lantern/liborder.js`,
+  consumed by `gatherLampFiles`); listed files load first, the rest follow
+  alphabetically (the unchanged default). Drift is caught — a manifest entry for
+  a missing file is a compile error. Unit-tested in `tests/liborder`.
+- **`deduplicateFunctions` silently dropped duplicates** — RESOLVED
+  (2026-06-19). Two functions sharing a name and `when` condition in the *same
+  file* now raise a compile error (cross-file repeats remain the intended
+  library-override path). Golden fixture `function_dup`.
+- **QUIT was case-sensitive** — RESOLVED (2026-06-19). `lib/advent/startup.lamp`
+  now compares `to_lower(input) == "quit"`, so uppercase `QUIT` exits. Golden
+  fixture `advent18`.
+- **Dead artifacts removed** (2026-06-19): `lib/advent/gameloop.lamp_hide` and
+  the unused `global list<string> words` in `lib/advent/globals.lamp`.
+- **Emitter/checker keep module-level mutable state** (still open; e.g.
+  `currentBareStop`, hand-saved/restored around each rule). Not reentrant; a
+  context object threaded through the emit functions would be safer.
 
