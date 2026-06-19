@@ -44,86 +44,86 @@ const reltype = lamplighter.kind("reltype");
 const outcome = lamplighter.kind("outcome");
 const story_state = lamplighter.kind("story_state");
 
-lamplighter.defineType("game", [], {"author":"string","tagline":"string","version":"int","release":"reltype","start":"room"}, { "tagline": lamplighter.decode(""), "version": 0, "release": lamplighter.decode("KAQb") });
-lamplighter.defineType("thing", [], {"printed_name":"string","understand":"string"});
-lamplighter.defineType("article", [], {});
-lamplighter.defineType("stop_reason", [], {});
-lamplighter.defineType("physical", ["thing"], {"description":"string","article":"article"});
-lamplighter.defineType("container", ["physical"], {});
-lamplighter.defineType("room", ["container"], {"lighted":"bool"}, { "lighted": true });
-lamplighter.defineType("item", ["physical"], {"scenery":"bool","wearable":"bool","holder":"container"});
-lamplighter.defineType("box", ["item","container"], {"closable":"bool","closed":"bool"});
-lamplighter.defineType("person", ["physical"], {"holder":"container"});
-lamplighter.defineType("direction", ["thing"], {"inverse":"direction"});
-lamplighter.defineType("look", ["action"], {});
-lamplighter.defineType("take", ["action"], {"taken":"item"});
-lamplighter.defineType("inventory", ["action"], {});
-lamplighter.defineType("drop", ["action"], {"dropped":"item"});
-lamplighter.defineType("wear", ["action"], {"clothing":"item"});
-lamplighter.defineType("doff", ["action"], {"clothing":"item"});
-lamplighter.defineType("examine", ["action"], {"target":"item"});
-lamplighter.defineType("go", ["action"], {"way":"direction"});
-lamplighter.defineType("hang", ["action"], {"carried":"item","peg":"item"});
-lamplighter.defineType("read", ["action"], {"target":"item"});
+lamplighter.defineType(lamplighter.decode("KwAAFQ=="), [], { "author": lamplighter.decode("PxUfGSIG"), "tagline": lamplighter.decode("PxUfGSIG"), "version": lamplighter.decode("JQ8Z"), "release": lamplighter.decode("PgQBBDURCA=="), "start": lamplighter.decode("Pg4CHQ==") }, { "tagline": lamplighter.decode(""), "version": 0, "release": lamplighter.decode("KAQb") });
+lamplighter.defineType(lamplighter.decode("OAkEHis="), [], { "printed_name": lamplighter.decode("PxUfGSIG"), "understand": lamplighter.decode("PxUfGSIG") });
+lamplighter.defineType(lamplighter.decode("LRMZGS8NCA=="), [], {  });
+lamplighter.defineType(lamplighter.decode("PxUCABMTCBE/DgM="), [], {  });
+lamplighter.defineType(lamplighter.decode("PAkUAyUCDBw="), [lamplighter.decode("OAkEHis=")], { "description": lamplighter.decode("PxUfGSIG"), "article": lamplighter.decode("LRMZGS8NCA==") });
+lamplighter.defineType(lamplighter.decode("Lw4DBC0IAxU+"), [lamplighter.decode("PAkUAyUCDBw=")], {  });
+lamplighter.defineType(lamplighter.decode("Pg4CHQ=="), [lamplighter.decode("Lw4DBC0IAxU+")], { "lighted": lamplighter.decode("Lg4CHA==") }, { "lighted": true });
+lamplighter.defineType(lamplighter.decode("JRUIHQ=="), [lamplighter.decode("PAkUAyUCDBw=")], { "scenery": lamplighter.decode("Lg4CHA=="), "wearable": lamplighter.decode("Lg4CHA=="), "holder": lamplighter.decode("Lw4DBC0IAxU+") });
+lamplighter.defineType(lamplighter.decode("Lg4V"), [lamplighter.decode("JRUIHQ=="), lamplighter.decode("Lw4DBC0IAxU+")], { "closable": lamplighter.decode("Lg4CHA=="), "closed": lamplighter.decode("Lg4CHA==") });
+lamplighter.defineType(lamplighter.decode("PAQfAyMP"), [lamplighter.decode("PAkUAyUCDBw=")], { "holder": lamplighter.decode("Lw4DBC0IAxU+") });
+lamplighter.defineType(lamplighter.decode("KAgfFS8VBB8i"), [lamplighter.decode("OAkEHis=")], { "inverse": lamplighter.decode("KAgfFS8VBB8i") });
+lamplighter.defineType(lamplighter.decode("IA4CGw=="), [lamplighter.decode("LQIZGSMP")], {  });
+lamplighter.defineType(lamplighter.decode("OAAGFQ=="), [lamplighter.decode("LQIZGSMP")], { "taken": lamplighter.decode("JRUIHQ==") });
+lamplighter.defineType(lamplighter.decode("JQ8bFSIVAgI1"), [lamplighter.decode("LQIZGSMP")], {  });
+lamplighter.defineType(lamplighter.decode("KBMCAA=="), [lamplighter.decode("LQIZGSMP")], { "dropped": lamplighter.decode("JRUIHQ==") });
+lamplighter.defineType(lamplighter.decode("OwQMAg=="), [lamplighter.decode("LQIZGSMP")], { "clothing": lamplighter.decode("JRUIHQ==") });
+lamplighter.defineType(lamplighter.decode("KA4LFg=="), [lamplighter.decode("LQIZGSMP")], { "clothing": lamplighter.decode("JRUIHQ==") });
+lamplighter.defineType(lamplighter.decode("KRkMHSUPCA=="), [lamplighter.decode("LQIZGSMP")], { "target": lamplighter.decode("JRUIHQ==") });
+lamplighter.defineType(lamplighter.decode("Kw4="), [lamplighter.decode("LQIZGSMP")], { "way": lamplighter.decode("KAgfFS8VBB8i") });
+lamplighter.defineType(lamplighter.decode("JAADFw=="), [lamplighter.decode("LQIZGSMP")], { "carried": lamplighter.decode("JRUIHQ=="), "peg": lamplighter.decode("JRUIHQ==") });
+lamplighter.defineType(lamplighter.decode("PgQMFA=="), [lamplighter.decode("LQIZGSMP")], { "target": lamplighter.decode("JRUIHQ==") });
 
-const game = lamplighter.type("game");
-const thing = lamplighter.type("thing");
-const article = lamplighter.type("article");
-const stop_reason = lamplighter.type("stop_reason");
-const physical = lamplighter.type("physical");
-const container = lamplighter.type("container");
-const room = lamplighter.type("room");
-const item = lamplighter.type("item");
-const box = lamplighter.type("box");
-const person = lamplighter.type("person");
-const direction = lamplighter.type("direction");
-const look = lamplighter.type("look");
-const take = lamplighter.type("take");
-const inventory = lamplighter.type("inventory");
-const drop = lamplighter.type("drop");
-const wear = lamplighter.type("wear");
-const doff = lamplighter.type("doff");
-const examine = lamplighter.type("examine");
-const go = lamplighter.type("go");
-const hang = lamplighter.type("hang");
-const read = lamplighter.type("read");
+const game = lamplighter.type(lamplighter.decode("KwAAFQ=="));
+const thing = lamplighter.type(lamplighter.decode("OAkEHis="));
+const article = lamplighter.type(lamplighter.decode("LRMZGS8NCA=="));
+const stop_reason = lamplighter.type(lamplighter.decode("PxUCABMTCBE/DgM="));
+const physical = lamplighter.type(lamplighter.decode("PAkUAyUCDBw="));
+const container = lamplighter.type(lamplighter.decode("Lw4DBC0IAxU+"));
+const room = lamplighter.type(lamplighter.decode("Pg4CHQ=="));
+const item = lamplighter.type(lamplighter.decode("JRUIHQ=="));
+const box = lamplighter.type(lamplighter.decode("Lg4V"));
+const person = lamplighter.type(lamplighter.decode("PAQfAyMP"));
+const direction = lamplighter.type(lamplighter.decode("KAgfFS8VBB8i"));
+const look = lamplighter.type(lamplighter.decode("IA4CGw=="));
+const take = lamplighter.type(lamplighter.decode("OAAGFQ=="));
+const inventory = lamplighter.type(lamplighter.decode("JQ8bFSIVAgI1"));
+const drop = lamplighter.type(lamplighter.decode("KBMCAA=="));
+const wear = lamplighter.type(lamplighter.decode("OwQMAg=="));
+const doff = lamplighter.type(lamplighter.decode("KA4LFg=="));
+const examine = lamplighter.type(lamplighter.decode("KRkMHSUPCA=="));
+const go = lamplighter.type(lamplighter.decode("Kw4="));
+const hang = lamplighter.type(lamplighter.decode("JAADFw=="));
+const read = lamplighter.type(lamplighter.decode("PgQMFA=="));
 
-lamplighter.defineRelation("connects", {"source":"room","dir":"direction","target":"room"}, lamplighter.decode("Lw4DHikCGQNsOh4fORMOFRFBNhQlEzBQFxUMAisEGS0="), ["dir"], "source", "target");
-lamplighter.defineRelation("wears", {"wearer":"person","worn":"item"}, lamplighter.decode("OwQMAj9BNgcpAB8VPjxNKzsOHx4R"), [], "wearer", "worn");
+lamplighter.defineRelation(lamplighter.decode("Lw4DHikCGQM="), { "source": lamplighter.decode("Pg4CHQ=="), "dir": lamplighter.decode("KAgfFS8VBB8i"), "target": lamplighter.decode("Pg4CHQ==") }, lamplighter.decode("Lw4DHikCGQNsOh4fORMOFRFBNhQlEzBQFxUMAisEGS0="), ["dir"], "source", "target");
+lamplighter.defineRelation(lamplighter.decode("OwQMAj8="), { "wearer": lamplighter.decode("PAQfAyMP"), "worn": lamplighter.decode("JRUIHQ==") }, lamplighter.decode("OwQMAj9BNgcpAB8VPjxNKzsOHx4R"), [], "wearer", "worn");
 
-const connects = lamplighter.type("connects");
-const wears = lamplighter.type("wears");
+const connects = lamplighter.type(lamplighter.decode("Lw4DHikCGQM="));
+const wears = lamplighter.type(lamplighter.decode("OwQMAj8="));
 
-const count = lamplighter.createObject("article", lamplighter.decode("Lw4YHjg="), {  });
-const definite = lamplighter.createObject("article", lamplighter.decode("KAQLGSIIGRU="), {  });
-const proper = lamplighter.createObject("article", lamplighter.decode("PBMCACkT"), {  });
-const plural = lamplighter.createObject("article", lamplighter.decode("PA0YAi0N"), {  });
-lamplighter.createObject("stop_reason", lamplighter.decode("LQ0fFS0FFFAvAB8CNQgDFw=="), {  });
-lamplighter.createObject("stop_reason", lamplighter.decode("LwADBGwVDBspQRkYLRU="), {  });
-lamplighter.createObject("stop_reason", lamplighter.decode("Ig4ZUC8AHwI1CAMX"), {  });
-lamplighter.createObject("stop_reason", lamplighter.decode("LwADBGwGAlA4CQwEbBYMCQ=="), {  });
-lamplighter.createObject("stop_reason", lamplighter.decode("Ig4ZUDsEDAItAwEV"), {  });
-lamplighter.createObject("stop_reason", lamplighter.decode("LQ0fFS0FFFA7Dh8e"), {  });
-lamplighter.createObject("stop_reason", lamplighter.decode("Ig4ZUDsOHx4="), {  });
-lamplighter.createObject("stop_reason", lamplighter.decode("OA4CUCgAHxs="), {  });
-const north = lamplighter.createObject("direction", lamplighter.decode("Ig4fBCQ="), { "understand": lamplighter.decode("Ig==") });
-const northeast = lamplighter.createObject("direction", lamplighter.decode("Ig4fBCQEDAM4"), { "understand": lamplighter.decode("IgQ=") });
-const east = lamplighter.createObject("direction", lamplighter.decode("KQAeBA=="), { "understand": lamplighter.decode("KQ==") });
-const southeast = lamplighter.createObject("direction", lamplighter.decode("Pw4YBCQEDAM4"), { "understand": lamplighter.decode("PwQ=") });
-const south = lamplighter.createObject("direction", lamplighter.decode("Pw4YBCQ="), { "understand": lamplighter.decode("Pw==") });
-const southwest = lamplighter.createObject("direction", lamplighter.decode("Pw4YBCQWCAM4"), { "understand": lamplighter.decode("PxY=") });
-const west = lamplighter.createObject("direction", lamplighter.decode("OwQeBA=="), { "understand": lamplighter.decode("Ow==") });
-const northwest = lamplighter.createObject("direction", lamplighter.decode("Ig4fBCQWCAM4"), { "understand": lamplighter.decode("IhY=") });
-const up = lamplighter.createObject("direction", lamplighter.decode("ORE="), { "understand": lamplighter.decode("OQ==") });
-const down = lamplighter.createObject("direction", lamplighter.decode("KA4aHg=="), { "understand": lamplighter.decode("KA==") });
-const yourself = lamplighter.createObject("person", lamplighter.decode("NQ4YAj8EARY="), {  });
-lamplighter.createObject("game", lamplighter.decode("Dw0CESdBAhZsJQwCJw8IAz8="), { "author": lamplighter.decode("Hg4KFT5BKxk+FQU="), "tagline": lamplighter.decode("DUEhESERTQAjExlQIwdNBCQETRMgAB4DJQJNBCkZGVAtBRsVIhUYAik="), "version": 0, "release": lamplighter.decode("KAQb") });
-const Foyer = lamplighter.createObject("room", lamplighter.decode("Cg4UFT4="), { "description": lamplighter.decode("FQ4YUC0TCFA/FQweKAgDF2wIA1AtQR4ALQIEHzkSTRgtDQFcbBIdHCkPCRkoDRRQKAQOHz4AGRUoQQQebBMIFGwAAxRsBgIcKE1NByUVBVArDQQEOAQfGSIGTRMkAAMUKQ0EFT4STR86BB8YKQAJXmw1BRVsBAMEPgADEylBCwIjDE0EJARNAzgTCBU4QQQDbBUCUDgJCFAiDh8EJE1NESIFTQQkBB8VbAAfFWwFAh8+FgwJP0EeHzkVBVAtDwlQOwQeBGI=") });
-const Bar = lamplighter.createObject("room", lamplighter.decode("DgAf"), { "description": lamplighter.decode("GAkIUC4AH1xsDBgTJEEfHzkGBRU+QRkYLQ9NCSMUShRsCQwGKUEKBSkSHhUoQQwWOAQfUDgJCFAjERgcKQ8OFWwOC1A4CQhQKg4UFT5BGR9sFQUVbA8CAjgJQVAlEk0TIwwdHCkVCBw1QQgdPBUUXmw1BRU+BE0DKQQAA2wVAlAuBE0DIwwIUD8OHwRsDgtQIQQeAy0GCFA/Ah8ROw0IFGwIA1A4CQhQPwAaFDkSGVAjD00EJARNFiAOAgJi"), "lighted": false });
-const Cloakroom = lamplighter.createObject("room", lamplighter.decode("Dw0CEScTAh8h"), { "description": lamplighter.decode("GAkIUDsAARw/QQIWbBUFGT9BHh0tDQFQPg4CHWwWCAIpQQ4cKQAfHDVBAh4vBE0cJQ8IFGwWBAQkQQUfIwoeXGwVBR85BgVQIg4aUCMPAQlsDgMVbBMIHS0IAwNiQTkYKUEICCUVTRk/QQxQKA4CAmwVAlA4CQhQKQAeBGI=") });
-const hook = lamplighter.createObject("item", lamplighter.decode("JA4CGw=="), { "description": lamplighter.decode("BRVKA2wLGAM4QQxQPwwMHCBBDwItEh5QJA4CG2BBHhM+BBoVKEEZH2wVBRVsFgwcIE8="), "scenery": true });
-lamplighter.createObject("item", lamplighter.decode("OgQBBikVTRMgDgwb"), { "description": lamplighter.decode("DUEFESIFHh8hBE0TIA4MG2BBAhZsFwgcOgQZUDgTBB0hBAlQOwgZGGwSDAQlD0FQLQ8JUD8NBBckFQEJbBIdHC0VGRU+BAlQOwgZGGwTDBkiBR8fPBJDUAUVHlAuDQwTJw8IAz9BBANsEgJQKAQIAGwVBRE4QQQEbAABHSMSGVA/BAgdP0EZH2wSGBMnQQEZKwkZUCoTAh1sFQUVbBMCHyFP"), "wearable": true });
-const sawdust = lamplighter.createObject("item", lamplighter.decode("PwAaFDkSGQ=="), { "scenery": true });
+const count = lamplighter.createObject(lamplighter.decode("LRMZGS8NCA=="), lamplighter.decode("Lw4YHjg="), {  });
+const definite = lamplighter.createObject(lamplighter.decode("LRMZGS8NCA=="), lamplighter.decode("KAQLGSIIGRU="), {  });
+const proper = lamplighter.createObject(lamplighter.decode("LRMZGS8NCA=="), lamplighter.decode("PBMCACkT"), {  });
+const plural = lamplighter.createObject(lamplighter.decode("LRMZGS8NCA=="), lamplighter.decode("PA0YAi0N"), {  });
+lamplighter.createObject(lamplighter.decode("PxUCABMTCBE/DgM="), lamplighter.decode("LQ0fFS0FFFAvAB8CNQgDFw=="), {  });
+lamplighter.createObject(lamplighter.decode("PxUCABMTCBE/DgM="), lamplighter.decode("LwADBGwVDBspQRkYLRU="), {  });
+lamplighter.createObject(lamplighter.decode("PxUCABMTCBE/DgM="), lamplighter.decode("Ig4ZUC8AHwI1CAMX"), {  });
+lamplighter.createObject(lamplighter.decode("PxUCABMTCBE/DgM="), lamplighter.decode("LwADBGwGAlA4CQwEbBYMCQ=="), {  });
+lamplighter.createObject(lamplighter.decode("PxUCABMTCBE/DgM="), lamplighter.decode("Ig4ZUDsEDAItAwEV"), {  });
+lamplighter.createObject(lamplighter.decode("PxUCABMTCBE/DgM="), lamplighter.decode("LQ0fFS0FFFA7Dh8e"), {  });
+lamplighter.createObject(lamplighter.decode("PxUCABMTCBE/DgM="), lamplighter.decode("Ig4ZUDsOHx4="), {  });
+lamplighter.createObject(lamplighter.decode("PxUCABMTCBE/DgM="), lamplighter.decode("OA4CUCgAHxs="), {  });
+const north = lamplighter.createObject(lamplighter.decode("KAgfFS8VBB8i"), lamplighter.decode("Ig4fBCQ="), { "understand": lamplighter.decode("Ig==") });
+const northeast = lamplighter.createObject(lamplighter.decode("KAgfFS8VBB8i"), lamplighter.decode("Ig4fBCQEDAM4"), { "understand": lamplighter.decode("IgQ=") });
+const east = lamplighter.createObject(lamplighter.decode("KAgfFS8VBB8i"), lamplighter.decode("KQAeBA=="), { "understand": lamplighter.decode("KQ==") });
+const southeast = lamplighter.createObject(lamplighter.decode("KAgfFS8VBB8i"), lamplighter.decode("Pw4YBCQEDAM4"), { "understand": lamplighter.decode("PwQ=") });
+const south = lamplighter.createObject(lamplighter.decode("KAgfFS8VBB8i"), lamplighter.decode("Pw4YBCQ="), { "understand": lamplighter.decode("Pw==") });
+const southwest = lamplighter.createObject(lamplighter.decode("KAgfFS8VBB8i"), lamplighter.decode("Pw4YBCQWCAM4"), { "understand": lamplighter.decode("PxY=") });
+const west = lamplighter.createObject(lamplighter.decode("KAgfFS8VBB8i"), lamplighter.decode("OwQeBA=="), { "understand": lamplighter.decode("Ow==") });
+const northwest = lamplighter.createObject(lamplighter.decode("KAgfFS8VBB8i"), lamplighter.decode("Ig4fBCQWCAM4"), { "understand": lamplighter.decode("IhY=") });
+const up = lamplighter.createObject(lamplighter.decode("KAgfFS8VBB8i"), lamplighter.decode("ORE="), { "understand": lamplighter.decode("OQ==") });
+const down = lamplighter.createObject(lamplighter.decode("KAgfFS8VBB8i"), lamplighter.decode("KA4aHg=="), { "understand": lamplighter.decode("KA==") });
+const yourself = lamplighter.createObject(lamplighter.decode("PAQfAyMP"), lamplighter.decode("NQ4YAj8EARY="), {  });
+lamplighter.createObject(lamplighter.decode("KwAAFQ=="), lamplighter.decode("Dw0CESdBAhZsJQwCJw8IAz8="), { "author": lamplighter.decode("Hg4KFT5BKxk+FQU="), "tagline": lamplighter.decode("DUEhESERTQAjExlQIwdNBCQETRMgAB4DJQJNBCkZGVAtBRsVIhUYAik="), "version": 0, "release": lamplighter.decode("KAQb") });
+const Foyer = lamplighter.createObject(lamplighter.decode("Pg4CHQ=="), lamplighter.decode("Cg4UFT4="), { "description": lamplighter.decode("FQ4YUC0TCFA/FQweKAgDF2wIA1AtQR4ALQIEHzkSTRgtDQFcbBIdHCkPCRkoDRRQKAQOHz4AGRUoQQQebBMIFGwAAxRsBgIcKE1NByUVBVArDQQEOAQfGSIGTRMkAAMUKQ0EFT4STR86BB8YKQAJXmw1BRVsBAMEPgADEylBCwIjDE0EJARNAzgTCBU4QQQDbBUCUDgJCFAiDh8EJE1NESIFTQQkBB8VbAAfFWwFAh8+FgwJP0EeHzkVBVAtDwlQOwQeBGI=") });
+const Bar = lamplighter.createObject(lamplighter.decode("Pg4CHQ=="), lamplighter.decode("DgAf"), { "description": lamplighter.decode("GAkIUC4AH1xsDBgTJEEfHzkGBRU+QRkYLQ9NCSMUShRsCQwGKUEKBSkSHhUoQQwWOAQfUDgJCFAjERgcKQ8OFWwOC1A4CQhQKg4UFT5BGR9sFQUVbA8CAjgJQVAlEk0TIwwdHCkVCBw1QQgdPBUUXmw1BRU+BE0DKQQAA2wVAlAuBE0DIwwIUD8OHwRsDgtQIQQeAy0GCFA/Ah8ROw0IFGwIA1A4CQhQPwAaFDkSGVAjD00EJARNFiAOAgJi"), "lighted": false });
+const Cloakroom = lamplighter.createObject(lamplighter.decode("Pg4CHQ=="), lamplighter.decode("Dw0CEScTAh8h"), { "description": lamplighter.decode("GAkIUDsAARw/QQIWbBUFGT9BHh0tDQFQPg4CHWwWCAIpQQ4cKQAfHDVBAh4vBE0cJQ8IFGwWBAQkQQUfIwoeXGwVBR85BgVQIg4aUCMPAQlsDgMVbBMIHS0IAwNiQTkYKUEICCUVTRk/QQxQKA4CAmwVAlA4CQhQKQAeBGI=") });
+const hook = lamplighter.createObject(lamplighter.decode("JRUIHQ=="), lamplighter.decode("JA4CGw=="), { "description": lamplighter.decode("BRVKA2wLGAM4QQxQPwwMHCBBDwItEh5QJA4CG2BBHhM+BBoVKEEZH2wVBRVsFgwcIE8="), "scenery": true });
+lamplighter.createObject(lamplighter.decode("JRUIHQ=="), lamplighter.decode("OgQBBikVTRMgDgwb"), { "description": lamplighter.decode("DUEFESIFHh8hBE0TIA4MG2BBAhZsFwgcOgQZUDgTBB0hBAlQOwgZGGwSDAQlD0FQLQ8JUD8NBBckFQEJbBIdHC0VGRU+BAlQOwgZGGwTDBkiBR8fPBJDUAUVHlAuDQwTJw8IAz9BBANsEgJQKAQIAGwVBRE4QQQEbAABHSMSGVA/BAgdP0EZH2wSGBMnQQEZKwkZUCoTAh1sFQUVbBMCHyFP"), "wearable": true });
+const sawdust = lamplighter.createObject(lamplighter.decode("JRUIHQ=="), lamplighter.decode("PwAaFDkSGQ=="), { "scenery": true });
 north.inverse = lamplighter.getObject(lamplighter.decode("Pw4YBCQ="));
 northeast.inverse = lamplighter.getObject(lamplighter.decode("Pw4YBCQWCAM4"));
 east.inverse = lamplighter.getObject(lamplighter.decode("OwQeBA=="));
@@ -139,9 +139,9 @@ hook.holder = lamplighter.getObject(lamplighter.decode("Dw0CEScTAh8h"));
 lamplighter.getObject(lamplighter.decode("OgQBBikVTRMgDgwb")).holder = lamplighter.getObject(lamplighter.decode("NQ4YAj8EARY="));
 sawdust.holder = lamplighter.getObject(lamplighter.decode("DgAf"));
 
-lamplighter.addRelation("connects", { "source": lamplighter.getObject(lamplighter.decode("Cg4UFT4=")), "dir": lamplighter.getObject(lamplighter.decode("Pw4YBCQ=")), "target": lamplighter.getObject(lamplighter.decode("DgAf")) }, { bidi: true });
-lamplighter.addRelation("connects", { "source": lamplighter.getObject(lamplighter.decode("Cg4UFT4=")), "dir": lamplighter.getObject(lamplighter.decode("OwQeBA==")), "target": lamplighter.getObject(lamplighter.decode("Dw0CEScTAh8h")) }, { bidi: true });
-lamplighter.addRelation("wears", { "wearer": lamplighter.getObject(lamplighter.decode("NQ4YAj8EARY=")), "worn": lamplighter.getObject(lamplighter.decode("OgQBBikVTRMgDgwb")) });
+lamplighter.addRelation(lamplighter.decode("Lw4DHikCGQM="), { "source": lamplighter.getObject(lamplighter.decode("Cg4UFT4=")), "dir": lamplighter.getObject(lamplighter.decode("Pw4YBCQ=")), "target": lamplighter.getObject(lamplighter.decode("DgAf")) }, { bidi: true });
+lamplighter.addRelation(lamplighter.decode("Lw4DHikCGQM="), { "source": lamplighter.getObject(lamplighter.decode("Cg4UFT4=")), "dir": lamplighter.getObject(lamplighter.decode("OwQeBA==")), "target": lamplighter.getObject(lamplighter.decode("Dw0CEScTAh8h")) }, { bidi: true });
+lamplighter.addRelation(lamplighter.decode("OwQMAj8="), { "wearer": lamplighter.getObject(lamplighter.decode("NQ4YAj8EARY=")), "worn": lamplighter.getObject(lamplighter.decode("OgQBBikVTRMgDgwb")) });
 
 lamplighter.defineGlobal(lamplighter.decode("GTIoUAM5Kz8eJU0zAywgMQ=="), false);
 lamplighter.defineGlobal(lamplighter.decode("HCg="), 3.141592653);
@@ -228,7 +228,7 @@ lamplighter.onEvent("startup", () => {
         }
     }
 });
-lamplighter.registerChangeHandler("person", "holder", (self) => {
+lamplighter.registerChangeHandler(lamplighter.decode("PAQfAyMP"), "holder", (self) => {
     describe_room(lamplighter.getGlobal(lamplighter.decode("PA0MCSkT")).holder);
 });
 lamplighter.registerActionRule(lamplighter.decode("IA4CGw=="), "report", (self) => {
@@ -274,7 +274,7 @@ lamplighter.registerActionRule(lamplighter.decode("JQ8bFSIVAgI1"), "report", (se
                 lamplighter.print(lamplighter.decode("FQ4YUC0TCFAvAB8CNQgDF3Y="));
                 found = true;
             }
-            if ((lamplighter.queryRelation("wears", { "wearer": self.actor, "worn": x }).length > 0)) {
+            if ((lamplighter.queryRelation(lamplighter.decode("OwQMAj8="), { "wearer": self.actor, "worn": x }).length > 0)) {
                 lamplighter.print(lamplighter.concat(lamplighter.concat(lamplighter.decode("bEE="), x), lamplighter.decode("bEkaHz4PRA==")));
             } else {
                 lamplighter.print(lamplighter.concat(lamplighter.decode("bEE="), x));
@@ -292,12 +292,12 @@ lamplighter.registerActionRule(lamplighter.decode("KBMCAA=="), "check", (self) =
     }
 }, 1);
 lamplighter.registerActionRule(lamplighter.decode("KBMCAA=="), "do", (self) => {
-    if ((lamplighter.queryRelation("wears", { "wearer": self.actor, "worn": self.dropped }).length > 0)) {
+    if ((lamplighter.queryRelation(lamplighter.decode("OwQMAj8="), { "wearer": self.actor, "worn": self.dropped }).length > 0)) {
         if (self.actor === lamplighter.getGlobal(lamplighter.decode("PA0MCSkT"))) {
             lamplighter.print(lamplighter.concat(lamplighter.concat(lamplighter.decode("ZAcEAj8VTQQtCgQeK0ECFipB"), self.dropped), lamplighter.decode("ZQ==")));
         }
         lamplighter.runAction(lamplighter.decode("KA4LFg=="), { "type": lamplighter.decode("KA4LFg=="), "action": lamplighter.decode("KA4LFg=="), "clothing": self.dropped, "actor": self.actor });
-        if ((lamplighter.queryRelation("wears", { "wearer": self.actor, "worn": self.dropped }).length > 0)) {
+        if ((lamplighter.queryRelation(lamplighter.decode("OwQMAj8="), { "wearer": self.actor, "worn": self.dropped }).length > 0)) {
             return lamplighter.decode("KgAEHCkF");
         }
     }
@@ -323,7 +323,7 @@ lamplighter.registerActionRule(lamplighter.decode("OwQMAg=="), "check", (self) =
     }
 }, 1);
 lamplighter.registerActionRule(lamplighter.decode("OwQMAg=="), "check", (self) => {
-    if ((lamplighter.queryRelation("wears", { "wearer": self.actor, "worn": self.clothing }).length > 0)) {
+    if ((lamplighter.queryRelation(lamplighter.decode("OwQMAj8="), { "wearer": self.actor, "worn": self.clothing }).length > 0)) {
         self.reason = lamplighter.getObject(lamplighter.decode("LQ0fFS0FFFA7Dh8e"));
         return lamplighter.decode("KgAEHCkF");
     }
@@ -338,7 +338,7 @@ lamplighter.registerActionRule(lamplighter.decode("OwQMAg=="), "do", (self) => {
             return lamplighter.decode("KgAEHCkF");
         }
     }
-    lamplighter.addRelation("wears", { "wearer": self.actor, "worn": self.clothing });
+    lamplighter.addRelation(lamplighter.decode("OwQMAj8="), { "wearer": self.actor, "worn": self.clothing });
 }, 1);
 lamplighter.registerActionRule(lamplighter.decode("OwQMAg=="), "report", (self) => {
     if (self.actor === lamplighter.getGlobal(lamplighter.decode("PA0MCSkT"))) {
@@ -358,13 +358,13 @@ lamplighter.registerActionRule(lamplighter.decode("OwQMAg=="), "report_failed", 
     }
 }, 1);
 lamplighter.registerActionRule(lamplighter.decode("KA4LFg=="), "check", (self) => {
-    if (!((lamplighter.queryRelation("wears", { "wearer": self.actor, "worn": self.clothing }).length > 0))) {
+    if (!((lamplighter.queryRelation(lamplighter.decode("OwQMAj8="), { "wearer": self.actor, "worn": self.clothing }).length > 0))) {
         self.reason = lamplighter.getObject(lamplighter.decode("Ig4ZUDsOHx4="));
         return lamplighter.decode("KgAEHCkF");
     }
 }, 1);
 lamplighter.registerActionRule(lamplighter.decode("KA4LFg=="), "do", (self) => {
-    lamplighter.removeRelation("wears", { "wearer": self.actor, "worn": self.clothing });
+    lamplighter.removeRelation(lamplighter.decode("OwQMAj8="), { "wearer": self.actor, "worn": self.clothing });
 }, 1);
 lamplighter.registerActionRule(lamplighter.decode("KA4LFg=="), "report", (self) => {
     if (self.actor === lamplighter.getGlobal(lamplighter.decode("PA0MCSkT"))) {
@@ -395,13 +395,13 @@ lamplighter.registerActionRule(lamplighter.decode("KRkMHSUPCA=="), "report_faile
     }
 }, 1);
 lamplighter.registerActionRule(lamplighter.decode("Kw4="), "check", (self) => {
-    if (!((lamplighter.queryRelation("connects", { "source": self.actor.holder, "dir": self.way, "target": lamplighter.ANY }).length > 0))) {
+    if (!((lamplighter.queryRelation(lamplighter.decode("Lw4DHikCGQM="), { "source": self.actor.holder, "dir": self.way, "target": lamplighter.ANY }).length > 0))) {
         self.reason = lamplighter.getObject(lamplighter.decode("LwADBGwGAlA4CQwEbBYMCQ=="));
         return lamplighter.decode("KgAEHCkF");
     }
 }, 1);
 lamplighter.registerActionRule(lamplighter.decode("Kw4="), "do", (self) => {
-    lamplighter.setField(self.actor, "holder", lamplighter.queryRelationValue("connects", { "source": self.actor.holder, "dir": self.way, "target": lamplighter.ANY }, "target", "first"));
+    lamplighter.setField(self.actor, "holder", lamplighter.queryRelationValue(lamplighter.decode("Lw4DHikCGQM="), { "source": self.actor.holder, "dir": self.way, "target": lamplighter.ANY }, "target", "first"));
 }, 1);
 lamplighter.registerActionRule(lamplighter.decode("Kw4="), "report_failed", (self) => {
     if (self.reason === lamplighter.getObject(lamplighter.decode("LwADBGwGAlA4CQwEbBYMCQ=="))) {
@@ -410,7 +410,7 @@ lamplighter.registerActionRule(lamplighter.decode("Kw4="), "report_failed", (sel
     }
 }, 1);
 lamplighter.registerActionRule(lamplighter.decode("Kw4="), "before", (self) => {
-    let dest = lamplighter.queryRelationValue("connects", { "source": self.actor.holder, "dir": self.way, "target": lamplighter.ANY }, "target", "first");
+    let dest = lamplighter.queryRelationValue(lamplighter.decode("Lw4DHikCGQM="), { "source": self.actor.holder, "dir": self.way, "target": lamplighter.ANY }, "target", "first");
     if (dest === lamplighter.getObject(lamplighter.decode("DgAf"))) {
         lamplighter.setField(Bar, "lighted", !(lamplighter.getObject(lamplighter.decode("OgQBBikVTRMgDgwb")).holder === lamplighter.getGlobal(lamplighter.decode("PA0MCSkT"))));
     }
@@ -508,12 +508,12 @@ lamplighter.registerActionRule(lamplighter.decode("JAADFw=="), "check", (self) =
     }
 }, 0);
 lamplighter.registerActionRule(lamplighter.decode("JAADFw=="), "do", (self) => {
-    if ((lamplighter.queryRelation("wears", { "wearer": self.actor, "worn": self.carried }).length > 0)) {
+    if ((lamplighter.queryRelation(lamplighter.decode("OwQMAj8="), { "wearer": self.actor, "worn": self.carried }).length > 0)) {
         if (self.actor === lamplighter.getGlobal(lamplighter.decode("PA0MCSkT"))) {
             lamplighter.print(lamplighter.concat(lamplighter.concat(lamplighter.decode("ZAcEAj8VTQQtCgQeK0ECFipB"), self.carried), lamplighter.decode("ZQ==")));
         }
         lamplighter.runAction(lamplighter.decode("KA4LFg=="), { "type": lamplighter.decode("KA4LFg=="), "action": lamplighter.decode("KA4LFg=="), "clothing": self.carried, "actor": self.actor }, { silent: true });
-        if ((lamplighter.queryRelation("wears", { "wearer": self.actor, "worn": self.carried }).length > 0)) {
+        if ((lamplighter.queryRelation(lamplighter.decode("OwQMAj8="), { "wearer": self.actor, "worn": self.carried }).length > 0)) {
             return lamplighter.decode("KgAEHCkF");
         }
     }

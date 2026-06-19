@@ -82,6 +82,23 @@ function emitName(name) {
     return emitStringLiteral(name);
 }
 
+// Emits a `{ fieldName: typeName }` schema, encoding the type-name *values* while
+// leaving field-name keys plaintext. Falls back to verbatim JSON in plaintext
+// mode so generated output is byte-identical to an unencoded build.
+function emitFieldSchema(fields) {
+    if (!encodeStrings) return JSON.stringify(fields);
+    const pairs = Object.entries(fields).map(([key, typeName]) => `${JSON.stringify(key)}: ${emitName(typeName)}`);
+    return `{ ${pairs.join(", ")} }`;
+}
+
+// Emits an array of names (e.g. parent type names), each encoded. Same
+// plaintext-identical fallback as emitFieldSchema.
+function emitNameList(names) {
+    const list = names || [];
+    if (!encodeStrings) return JSON.stringify(list);
+    return `[${list.map((name) => emitName(name)).join(", ")}]`;
+}
+
 function emitProgram(programAst, options = {}) {
     const nativeJsContents = options.nativeJsContents || [];
     const globalDeclNodes = programAst.nodes.filter((node) => node.kind === "GlobalDecl");
@@ -193,7 +210,7 @@ function emitProgram(programAst, options = {}) {
     }
 
     for (const typeNode of mergedTypes.values()) {
-        lines.push(`const ${typeNode.name} = lamplighter.type(${JSON.stringify(typeNode.name)});`);
+        lines.push(`const ${typeNode.name} = lamplighter.type(${emitName(typeNode.name)});`);
     }
 
     if (mergedTypes.size > 0) {
@@ -209,7 +226,7 @@ function emitProgram(programAst, options = {}) {
     }
 
     for (const relationNode of relationNodes) {
-        lines.push(`const ${relationNode.name} = lamplighter.type(${JSON.stringify(relationNode.name)});`);
+        lines.push(`const ${relationNode.name} = lamplighter.type(${emitName(relationNode.name)});`);
     }
 
     if (relationNodes.length > 0) {
@@ -421,7 +438,7 @@ function emitTypeDecl(node) {
         }
     }
     const defaultsArg = defaultPairs.length > 0 ? `, { ${defaultPairs.join(", ")} }` : "";
-    return `lamplighter.defineType(${JSON.stringify(node.name)}, ${JSON.stringify(node.parents || [])}, ${JSON.stringify(fields)}${defaultsArg});`;
+    return `lamplighter.defineType(${emitName(node.name)}, ${emitNameList(node.parents)}, ${emitFieldSchema(fields)}${defaultsArg});`;
 }
 
 function emitRelationDecl(node) {
@@ -430,7 +447,7 @@ function emitRelationDecl(node) {
         fields[field.fieldName] = field.typeName;
     }
     const syntaxArg = node.syntax === null ? "null" : emitStringLiteral(node.syntax);
-    return `lamplighter.defineRelation(${JSON.stringify(node.name)}, ${JSON.stringify(fields)}, ${syntaxArg}, ${JSON.stringify(node.invertedFields || [])}, ${JSON.stringify(node.sourceField)}, ${JSON.stringify(node.targetField)});`;
+    return `lamplighter.defineRelation(${emitName(node.name)}, ${emitFieldSchema(fields)}, ${syntaxArg}, ${JSON.stringify(node.invertedFields || [])}, ${JSON.stringify(node.sourceField)}, ${JSON.stringify(node.targetField)});`;
 }
 
 function emitRelationAssert(node, globalNames = new Set()) {
@@ -450,7 +467,7 @@ function emitRelationAssert(node, globalNames = new Set()) {
     if (node.instanceName) opts.push(`name: ${JSON.stringify(node.instanceName)}`);
     if (node.bidi) opts.push("bidi: true");
     const optionsArg = opts.length > 0 ? `, { ${opts.join(", ")} }` : "";
-    return `lamplighter.addRelation(${JSON.stringify(node.relationName)}, { ${pairs.join(", ")} }${optionsArg});`;
+    return `lamplighter.addRelation(${emitName(node.relationName)}, { ${pairs.join(", ")} }${optionsArg});`;
 }
 
 function emitRelationRemove(node, globalNames = new Set()) {
@@ -472,7 +489,7 @@ function emitRelationRemove(node, globalNames = new Set()) {
         }
         return `${JSON.stringify(fieldName)}: ${valueExpr}`;
     });
-    return `lamplighter.removeRelation(${JSON.stringify(node.relationName)}, { ${pairs.join(", ")} });`;
+    return `lamplighter.removeRelation(${emitName(node.relationName)}, { ${pairs.join(", ")} });`;
 }
 
 function emitDisconnect(node) {
@@ -523,9 +540,9 @@ function emitRelationQuery(node, globalNames) {
     });
     const mapping = `{ ${pairs.join(", ")} }`;
     if (!node.outputField) {
-        return `(lamplighter.queryRelation(${JSON.stringify(node.relationName)}, ${mapping}).length > 0)`;
+        return `(lamplighter.queryRelation(${emitName(node.relationName)}, ${mapping}).length > 0)`;
     }
-    return `lamplighter.queryRelationValue(${JSON.stringify(node.relationName)}, ${mapping}, ${JSON.stringify(node.outputField)}, ${JSON.stringify(node.outputMode)})`;
+    return `lamplighter.queryRelationValue(${emitName(node.relationName)}, ${mapping}, ${JSON.stringify(node.outputField)}, ${JSON.stringify(node.outputMode)})`;
 }
 
 function emitObjectDecl(node, mergedTypes = new Map(), kindNames = new Set()) {
@@ -537,7 +554,7 @@ function emitObjectDecl(node, mergedTypes = new Map(), kindNames = new Set()) {
     }
 
     const pairs = Object.entries(fields).map(([key, value]) => `${JSON.stringify(key)}: ${value}`);
-    const call = `lamplighter.createObject(${JSON.stringify(node.typeName)}, ${emitName(node.objectName)}, { ${pairs.join(", ")} })`;
+    const call = `lamplighter.createObject(${emitName(node.typeName)}, ${emitName(node.objectName)}, { ${pairs.join(", ")} })`;
 
     if (/^[A-Za-z_][A-Za-z0-9_]*$/.test(node.objectName)) {
         return `const ${node.objectName} = ${call};`;
@@ -743,7 +760,7 @@ function resolveSelector(node) {
 function emitChangeHandler(node, globalNames = new Set()) {
     const bodyLines = emitStatementList(node.body, 1, globalNames);
     return [
-        `lamplighter.registerChangeHandler(${JSON.stringify(node.typeName)}, ${JSON.stringify(node.fieldName)}, (self) => {`,
+        `lamplighter.registerChangeHandler(${emitName(node.typeName)}, ${JSON.stringify(node.fieldName)}, (self) => {`,
         ...bodyLines,
         "});",
     ].join("\n");
@@ -752,7 +769,7 @@ function emitChangeHandler(node, globalNames = new Set()) {
 function emitRelationAddHandler(node, globalNames = new Set()) {
     const bodyLines = emitStatementList(node.body, 1, globalNames);
     return [
-        `lamplighter.registerRelationAddHandler(${JSON.stringify(node.relationName)}, (self) => {`,
+        `lamplighter.registerRelationAddHandler(${emitName(node.relationName)}, (self) => {`,
         ...bodyLines,
         "});",
     ].join("\n");
@@ -761,7 +778,7 @@ function emitRelationAddHandler(node, globalNames = new Set()) {
 function emitRelationRemoveHandler(node, globalNames = new Set()) {
     const bodyLines = emitStatementList(node.body, 1, globalNames);
     return [
-        `lamplighter.registerRelationRemoveHandler(${JSON.stringify(node.relationName)}, (self) => {`,
+        `lamplighter.registerRelationRemoveHandler(${emitName(node.relationName)}, (self) => {`,
         ...bodyLines,
         "});",
     ].join("\n");

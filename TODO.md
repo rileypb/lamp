@@ -8,12 +8,14 @@ prerequisite lists in `devdocs/game_parser.md`, `devdocs/rulebooks.md`, and
 ## 1. Lighthouse web bundle — headless CI test (optional)
 Web v1 is **built, verified live, shell-polished, and hardened for distribution**.
 **Done:** string encoding (`--encode-strings`, `npm run test:encode`) — covers
-prose, object names, global names, **action names** (incl. dispatch/grammar
-sites), and **grammar + relation-syntax templates** (the command phrasing); type
-and relation names + field keys stay plaintext; native-`index.js` strings
-untouched — and esbuild `minify` (default on, `--no-minify` escape; ~66 KB →
-~33 KB for cloak; covered by `npm run test:lighthouse`). Encoding correctness is
-guarded by the byte-identical-playthrough equivalence test. **Remaining (optional):** a
+prose, object/global/action/**type/relation** names, and grammar + relation-syntax
+templates (the command phrasing); kind/enum/rulebook/event names + field keys
+stay plaintext; native-`index.js` strings untouched (a name a native lib
+references by literal still leaks) — and esbuild `minify` (default on,
+`--no-minify` escape; ~66 KB → ~33 KB for cloak; covered by
+`npm run test:lighthouse`). Encoding correctness is guarded by a broad
+byte-identical-playthrough equivalence corpus (relations, inheritance, queries,
+actions) in `tests/encode`. **Remaining (optional):** a
 *headless* browser test that drives the live loop (worker `Atomics.wait` + shell
 SAB fill) — closes the last automation gap but needs a heavy Playwright/Puppeteer
 dep; decide if worth it for CI. Also still open: whether to default

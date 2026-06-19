@@ -37,11 +37,14 @@ function compile(inputPath, outPath, { encodeStrings }) {
     execFileSync("node", args, { stdio: "pipe" });
 }
 
+// Runs a generated game and returns its full output, never throwing — a runtime
+// error yields the same output for both builds, so equivalence still holds.
 function run(generatedPath, stdin) {
-    return execFileSync("node", [PLAY_CLI, generatedPath], {
-        input: stdin || "",
-        encoding: "utf8",
-    });
+    try {
+        return execFileSync("node", [PLAY_CLI, generatedPath], { input: stdin || "", encoding: "utf8" });
+    } catch (err) {
+        return `${err.stdout || ""}${err.stderr || ""}`;
+    }
 }
 
 test("codec round-trips arbitrary text", () => {
@@ -81,23 +84,50 @@ for (const { game, leaks } of cases) {
         assert.strictEqual(run(encPath, stdin), run(plainPath, stdin), "encoded run output differs");
     });
 
-    test(`${name}: encoded build hides prose + object/global names, keeps type names plaintext`, () => {
+    test(`${name}: encoded build hides prose + object/global/action/type/relation names`, () => {
         const enc = fs.readFileSync(encPath, "utf8");
         const plain = fs.readFileSync(plainPath, "utf8");
         assert.ok(enc.includes("lamplighter.decode("), "no decode() wrapping found");
-        // Type names (createObject's first argument) stay plaintext by design.
-        assert.ok(/createObject\("[a-z_]+"/.test(enc), "type names should stay plaintext");
-        // Object names are no longer emitted as plaintext getObject keys.
-        assert.ok(!/getObject\("[ -~]+"\)/.test(enc), "object names should be encoded, not plaintext");
-        // Action names (the puzzle verbs) are encoded at their registration sites.
+        // No emitter-emitted registration/lookup call carries a plaintext first
+        // arg. Excludes getGlobal/type, which inlined native JS legitimately calls
+        // with plaintext names (the documented native-`index.js` limitation).
         assert.ok(
-            !/(registerGrammar|registerActionRule|runAction)\("[ -~]+"/.test(enc),
-            "action names should be encoded, not plaintext",
+            !/(defineType|defineRelation|createObject|getObject|defineGlobal|setGlobal|registerGrammar|registerActionRule|runAction|addRelation|removeRelation|queryRelation|queryRelationValue|registerChangeHandler|registerRelationAddHandler|registerRelationRemoveHandler)\("[ -~]+"/.test(enc),
+            "type/relation/object/global/action names should be encoded, not plaintext",
         );
+        // Field-name keys stay plaintext (schema/object literal keys).
+        assert.ok(/"[a-z_]+":/.test(enc), "field-name keys should stay plaintext");
         for (const leak of leaks) {
             assert.ok(plain.includes(leak), `fixture should contain ${JSON.stringify(leak)} plaintext`);
             assert.ok(!enc.includes(leak), `encoded build leaked ${JSON.stringify(leak)}`);
         }
+    });
+}
+
+// Broad behavior-preservation guard. Encoding type and relation names touches
+// the type/dispatch/relation machinery, so a wide corpus of fixtures (relations,
+// inheritance, queries, change handlers, actions) must compile both ways and run
+// identically. Missing fixtures are skipped; this is purely an equivalence check.
+const corpus = [
+    "relation1", "relation5", "relation9", "relation10", "relation15", "relation20",
+    "relation_template1", "action1", "action_outcome", "example3",
+    "function7", "advent1", "advent5", "advent9",
+];
+for (const base of corpus) {
+    const lampPath = [
+        path.join(PROJECT_ROOT, "tests", "fixtures", `${base}.lamp`),
+        path.join(PROJECT_ROOT, "sample", `${base}.lamp`),
+    ].find((p) => fs.existsSync(p));
+    if (!lampPath) continue;
+    const stdinPath = path.join(GOLDEN_EXPECTED, `${base}.stdin.txt`);
+    const stdin = fs.existsSync(stdinPath) ? fs.readFileSync(stdinPath, "utf8") : "";
+
+    test(`${base}: encoded build runs identically to plaintext`, () => {
+        const plainPath = path.join(tmp, `${base}.plain.js`);
+        const encPath = path.join(tmp, `${base}.enc.js`);
+        compile(lampPath, plainPath, { encodeStrings: false });
+        compile(lampPath, encPath, { encodeStrings: true });
+        assert.strictEqual(run(encPath, stdin), run(plainPath, stdin), "encoded run output differs");
     });
 }
 
