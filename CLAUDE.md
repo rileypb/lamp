@@ -37,8 +37,6 @@ For files not covered by the source-of-truth hierarchy (for example, CI configs,
 ## What an Agent Should Not Do
 - Do not make assumptions about user intent beyond what is explicitly stated in the prompt or existing documentation. If requirements are incomplete, propose concrete next steps to clarify them before proceeding with implementation.
 - Do not introduce new npm dependencies without explicit justification. If a dependency would materially simplify the implementation, name it, state what it replaces, and ask for approval before adding it to package.json. Never add dependencies silently in generated code.
-- DO NOT edit files in lib/ without explicit instructions to do so. 
-- DO NOT edit files in sample/ without explicit instructions to do so. This directory is intended to be a stable reference for intended usage patterns and should not be changed except by the user.
 - The future/ directory is for dumping experimental code and should not be used for implementing intended behavior. Do not add or edit files in future/ without explicit instructions to do so.
 
 ## How an Agent Should Help
