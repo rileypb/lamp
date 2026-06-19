@@ -14,20 +14,46 @@ player command (the `run_command` path discards `runAction`'s result, unlike
 - **Where:** rulebook driver in `src/lamplighter/index.js`, `run_command` loop.
 - **See:** `devdocs/rulebooks.md` roadmap, `devdocs/game_parser.md` v2.
 
+## 2. Sync `devdocs/specs.md` with shipped language features
+`specs.md` is the #1 source-of-truth doc but lags recent work. Missing entirely:
+**action selectors** (`instead any except go …`, boolean over actions/tags),
+**action `tags`**, **`self.action`**, **`silently try`**, and **rulebook rule
+contributions** (`rule RULEBOOK [when]:` + the `registerRulebookRule`/`runRulebook`
+runtime). These are documented in `devdocs/rulebooks.md` but not in the language
+reference. **Where:** `devdocs/specs.md` (Language Definition + Runtime API
+contract).
+
 ## Smaller / opportunistic
-- **Simplify `sample/cloak.lamp` dark-bar rules with a selector.** Action selectors are now implemented (boolean over actions/tags, `any`/`except`, `self.action`); the six near-identical `instead … when … bar … dark` rules can collapse to one `instead any except go except look …`. Do when sample edits are requested.
-- **Better diagnostic for a leading unknown selector atom.** A selector that *begins* with an unknown atom (`instead manipulatoin …`) isn't recognized as a phase rule, so it reports a generic parse error ("Expected end of line") rather than "unknown action or tag". Selectors that start with a valid atom report the precise error. Consider a fallback that recognizes `BAND <ident> …` and surfaces the nicer message.
-- **`wearable` on cloak in sample.** The `wear`/`doff` actions are now in lib/advent, but `sample/cloak.lamp`'s cloak item lacks `wearable true`. Add when sample edits are requested.
-- **Extend `checkedGetObject` to expression contexts.** Object-name comparisons in `when` conditions and `if` expressions (e.g. `self.dropped == cloak`) are not validated at compile time; a typo silently becomes a string label that never matches.
-- Add a **one-way** connection to a test map (plain `connects`, no `bidi`) to
-  lock in that asymmetric exits stay asymmetric.
-- **Named-rule replacement.** Override suppression now works via bare-`stop` +
-  author-before-library ordering. Replacing *one* library rule out of several
-  (without depending on registration order) needs named rules. See
-  `devdocs/rulebooks.md` roadmap (*Next — identity & ergonomics*).
-- Confirm `list<T>` field types parse end-to-end (open question in
-  `devdocs/parser_refactor.md` — no fixture exercises it today).
+- **Extend object-name validation (`checkedGetObject`) to expression contexts.**
+  Object-name comparisons in `when`/`if` expressions (e.g. `self.dropped == cloak`)
+  aren't validated at compile time; a typo silently becomes a string label that
+  never matches. **Where:** `src/lantern/emitter.js` / checker.
+- **Nicer diagnostic for a leading unknown name in a rule head.** A selector or
+  rulebook contribution that *begins* with an unknown atom (`instead manipulatoin …`,
+  `rule no_such_rulebook:`) isn't recognized as a rule, so it reports a generic
+  parse error rather than "unknown action or tag" / "unknown rulebook". Heads that
+  start with a known name report the precise error. Consider a fallback that
+  recognizes `BAND <ident> …` / `rule <ident> …` and surfaces the better message.
+- **Named-rule replacement.** Override suppression works via bare-`stop` +
+  author-before-library ordering (now shared by actions and rulebook
+  contributions). Replacing *one* library rule out of several (without depending
+  on registration order) needs named rules. See `devdocs/rulebooks.md` roadmap
+  (*Next — identity & ergonomics*).
 - **a/an article selection.** advent prints "a idol" / "a oak door"; the `count`
   article should choose "an" before a vowel sound. The `article` enum exists but
   the runtime doesn't vary the indefinite article. **Where:** advent display
   helpers / `lib/advent`.
+- **Startup banner / `game` headline.** cloak.i7 opens with a title ("Cloak of
+  Darkness") and headline ("A basic IF demonstration."); Lamp has no banner
+  mechanism, so games hand-roll intro text via `rule startup_rules`. Consider a
+  `game` headline/subtitle field the runtime prints at startup. **Where:** `game`
+  object schema, `lib/advent` startup.
+- **Reserved words as member names — assignment/handler asymmetry.** Expression
+  property access now allows keyword field names (`self.action`), but assignment
+  targets (`readTargetSegment`) and `on TYPE.field change` headers still require a
+  plain IDENT. Align them if a keyword-named writable field ever appears.
+- **`list<T>` field types end-to-end.** Parsing is now covered by a parser unit
+  test, but no fixture declares a `list<T>` field and exercises it through
+  emit/runtime. Add one to lock in end-to-end behaviour.
+- Add a **one-way** connection to a test map (plain `connects`, no `bidi`) to
+  lock in that asymmetric exits stay asymmetric.
