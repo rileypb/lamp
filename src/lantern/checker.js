@@ -64,8 +64,8 @@ function checkProgram(programAst, options = {}) {
     rulebookSchema = buildRulebookSchema(programAst.nodes);
     actionSchema = buildActionSchema(programAst.nodes);
     actionTagSchema = buildActionTagSchema(programAst.nodes);
-    const typeSchema = buildTypeSchema(programAst.nodes);
     const kindSchema = buildKindSchema(programAst.nodes);
+    const typeSchema = buildTypeSchema(programAst.nodes, kindSchema);
     const globalTypes = buildGlobalTypeSchema(programAst.nodes);
     const functionSchema = buildFunctionSchema(programAst.nodes);
     const globalNames = new Set(globalTypes.keys());
@@ -400,7 +400,7 @@ function buildFunctionSchema(nodes) {
     return functionSchema;
 }
 
-function buildTypeSchema(nodes) {
+function buildTypeSchema(nodes, kindSchema = new Map()) {
     const typeFields = new Map();
     const typeParents = new Map();
 
@@ -438,7 +438,13 @@ function buildTypeSchema(nodes) {
             }
             if (f.defaultValue !== null) {
                 const defaultType = inferLiteralType(f.defaultValue);
-                if (defaultType !== null && defaultType !== f.typeName) {
+                // A string-literal default naming a valid label of an enum-kind
+                // field is accepted (mirrors enum-label field values elsewhere).
+                const kindDef = kindSchema.get(f.typeName);
+                const isEnumLabel = f.defaultValue.kind === "StringLiteral"
+                    && kindDef && kindDef.kind === "EnumExpr"
+                    && kindDef.labels.includes(f.defaultValue.value);
+                if (defaultType !== null && defaultType !== f.typeName && !isEnumLabel) {
                     throw typeError(
                         node.filePath,
                         node.lineNumber,

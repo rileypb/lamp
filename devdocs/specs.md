@@ -1422,7 +1422,9 @@ Lantern performs a semantic checking pass before emission.
 - Object-declaration field values are checked against the declared field type.
 - Field assignments in executable code are checked against the target field type.
 - Primitive fields (`string`, `int`, `real`) reject incompatible inferred expression types.
-- Enum-kind fields reject labels outside the enum definition.
+- Enum-kind fields reject labels outside the enum definition. This applies to
+  both field values and type-field defaults (`reltype release = dev` is accepted;
+  an unknown label is a compile error).
 - Expression inference covers literals, local variables, property-access chains (including `.all` → `list<T>` and `.first` → `T`), `+`, `*`, `==`, `<`, and `>`. Globals and object name references currently return unknown type and are not statically checked.
 - `list<T>` is recognized as a valid field type in chain resolution. Element-level validation of `list<T>` field assignments is not yet performed.
 - Function call statements are checked for correct argument count and compatible argument types against the declared parameter types.
@@ -1465,6 +1467,22 @@ below, and game files may declare more.
 - Directions: `north`, `northeast`, `east`, `southeast`, `south`, `southwest`,
   `west`, `northwest`, `up`, `down` — each with an `inverse` and an `understand`
   alias (e.g. `"n"`, `"ne"`).
+
+### Startup banner
+
+The advent `on startup` handler prints a title banner before any `startup_rules`
+contributions, reading it from the game object's fields:
+
+```
+<game name>
+<game.tagline>
+Version <game.version> <game.release>
+```
+
+The banner is **gated on `tagline`**: a game opts in by setting it; games that
+leave it blank (the `""` default) get no banner. The base `game` type
+(`lib/sys/types.lamp`) defaults the banner fields — `tagline = ""`,
+`version = 0`, `release = dev` — so a game need only set the ones it cares about.
 
 ### Relations
 

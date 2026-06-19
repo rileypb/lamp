@@ -2,5 +2,6 @@
 
 type game:
 	string author
-	int version
-	reltype release
+	string tagline = ""
+	int version = 0
+	reltype release = dev

@@ -1,4 +1,12 @@
 on startup:
+	# Title banner, printed before any startup_rules contributions. A game opts in
+	# by setting `tagline`; games that leave it blank get no banner.
+	let this_game = game.all.first
+	if not (this_game.tagline == ""):
+		print this_game.name
+		print this_game.tagline
+		print "Version " + this_game.version + " " + this_game.release
+		print ""
 	follow startup_rules()
 	player.holder = game.all.first.start
 	dispatch started

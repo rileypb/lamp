@@ -34,11 +34,6 @@ player command (the `run_command` path discards `runAction`'s result, unlike
   article should choose "an" before a vowel sound. The `article` enum exists but
   the runtime doesn't vary the indefinite article. **Where:** advent display
   helpers / `lib/advent`.
-- **Startup banner / `game` headline.** cloak.i7 opens with a title ("Cloak of
-  Darkness") and headline ("A basic IF demonstration."); Lamp has no banner
-  mechanism, so games hand-roll intro text via `rule startup_rules`. Consider a
-  `game` headline/subtitle field the runtime prints at startup. **Where:** `game`
-  object schema, `lib/advent` startup.
 - **Reserved words as member names — assignment/handler asymmetry.** Expression
   property access now allows keyword field names (`self.action`), but assignment
   targets (`readTargetSegment`) and `on TYPE.field change` headers still require a
