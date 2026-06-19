@@ -1,3 +1,5 @@
+const { encode } = require("../strcodec");
+
 // Expressions whose emitted form is already self-delimiting (literals, variable
 // names, property-access chains, function calls) and never need extra parens.
 const SAFE_ATOM = new Set([
@@ -56,6 +58,20 @@ let mainFilePath = null;
 // phase rule it halts the band (`return lamplighter.HALT;`); in a rulebook it
 // yields the declared default; elsewhere it is a plain `return;`.
 let currentBareStop = "return;";
+// When true, player-facing string literals are emitted as lamplighter.decode("…")
+// over an encoded payload instead of a plain JS string. Set per build from the
+// --encode-strings option; structural strings (names, labels, object refs) are
+// never routed through here. See src/strcodec.js.
+let encodeStrings = false;
+
+// Emits a player-facing string value, encoded when the build opts in. Used only
+// for prose/value literals — not for identifiers, object references, or other
+// strings that participate in lookups.
+function emitStringLiteral(value) {
+    return encodeStrings
+        ? `lamplighter.decode(${JSON.stringify(encode(value))})`
+        : JSON.stringify(value);
+}
 
 function emitProgram(programAst, options = {}) {
     const nativeJsContents = options.nativeJsContents || [];
@@ -73,6 +89,7 @@ function emitProgram(programAst, options = {}) {
     knownObjectNames = new Set(objectNodes.map((n) => n.objectName));
     emitKindNames = kindNames;
     mainFilePath = options.mainFilePath || null;
+    encodeStrings = options.encodeStrings === true;
     currentBareStop = "return;";
     functionParamTypes = new Map();
     rulebookParamNames = new Map();
@@ -382,14 +399,16 @@ function emitKindExpr(expr) {
 
 function emitTypeDecl(node) {
     const fields = {};
-    const defaults = {};
+    const defaultPairs = [];
     for (const field of node.fields) {
         fields[field.fieldName] = field.typeName;
         if (field.defaultValue !== null) {
-            defaults[field.fieldName] = field.defaultValue.value;
+            // emitValue (not raw JSON) so string defaults honor --encode-strings;
+            // behavior is identical in plaintext mode (decode runs at define time).
+            defaultPairs.push(`${JSON.stringify(field.fieldName)}: ${emitValue(field.defaultValue)}`);
         }
     }
-    const defaultsArg = Object.keys(defaults).length > 0 ? `, ${JSON.stringify(defaults)}` : "";
+    const defaultsArg = defaultPairs.length > 0 ? `, { ${defaultPairs.join(", ")} }` : "";
     return `lamplighter.defineType(${JSON.stringify(node.name)}, ${JSON.stringify(node.parents || [])}, ${JSON.stringify(fields)}${defaultsArg});`;
 }
 
@@ -522,7 +541,7 @@ function emitObjectFieldInits(node, mergedTypes, kindNames) {
 
 function emitValue(valueNode) {
     if (valueNode.kind === "StringLiteral") {
-        return JSON.stringify(valueNode.value);
+        return emitStringLiteral(valueNode.value);
     }
     if (valueNode.kind === "BooleanLiteral") {
         return valueNode.value ? "true" : "false";
@@ -869,7 +888,7 @@ function emitTryCall(node, globalNames = new Set()) {
 
 function emitExpression(expr, globalNames = new Set()) {
     if (expr.kind === "StringLiteral") {
-        return JSON.stringify(expr.value);
+        return emitStringLiteral(expr.value);
     }
     if (expr.kind === "VariableExpr") {
         return expr.name;

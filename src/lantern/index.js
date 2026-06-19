@@ -21,10 +21,12 @@ function main() {
 }
 
 function runCompilation() {
-    const [, , inputFileArg, outputFileArg] = process.argv;
+    const args = process.argv.slice(2);
+    const encodeStrings = args.includes("--encode-strings");
+    const [inputFileArg, outputFileArg] = args.filter((arg) => !arg.startsWith("--"));
 
     if (!inputFileArg) {
-        console.error("Usage: node src/lantern/index.js <input.lamp> [output.js]");
+        console.error("Usage: node src/lantern/index.js <input.lamp> [output.js] [--encode-strings]");
         process.exit(1);
     }
 
@@ -90,7 +92,7 @@ function runCompilation() {
     const mergedProgram = { kind: "Program", nodes: deduplicateFunctions(allNodes) };
     checkProgram(mergedProgram, { nativeFunctionNames });
 
-    const outputJs = emitProgram(mergedProgram, { nativeJsContents, mainFilePath: inputFile });
+    const outputJs = emitProgram(mergedProgram, { nativeJsContents, mainFilePath: inputFile, encodeStrings });
 
     fs.mkdirSync(path.dirname(outputFile), { recursive: true });
     fs.writeFileSync(outputFile, outputJs, "utf8");

@@ -1,3 +1,8 @@
+// decode reverses Lantern's optional build-time string encoding (--encode-strings);
+// the emitter wraps player-facing literals as lamplighter.decode("..."). See
+// src/strcodec.js.
+const { decode } = require("../strcodec");
+
 const typeRegistry = new Map();
 const instanceRegistry = new Map();
 const nameRegistry = new Map();
@@ -955,4 +960,5 @@ module.exports = {
     error,
     makeList,
     listItems,
+    decode,
 };

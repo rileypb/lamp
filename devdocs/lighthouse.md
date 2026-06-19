@@ -83,6 +83,18 @@ thin CLI). Steps:
 
 Default output directory is `dist/<game-name>/`.
 
+## String encoding (`--encode-strings`)
+
+Optional spoiler-hiding for distribution builds: `npm run build:web -- <game.lamp>
+--encode-strings` (passed through to Lantern) encodes player-facing prose so a
+casual reader cannot lift room text, messages, and endings straight out of
+`game.worker.js`. Lantern wraps prose literals as `lamplighter.decode("…")` over
+an XOR+base64 payload (`src/strcodec.js`); structural names stay plaintext. It is
+**not** security — the decoder and key ship in the same bundle, so it only raises
+the bar against casual `view-source` snooping. Off by default; pair it with
+`minify` (deferred) for the code itself. See `devdocs/specs.md` → Compiler
+pipeline.
+
 ## Cross-origin isolation (service worker)
 
 `src/lighthouse/web/sw.js` re-fetches each request and returns it carrying

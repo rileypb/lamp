@@ -20,9 +20,11 @@ const SHELL_ASSETS = ["index.html", "shell.css", "shell.js", "sw.js"];
 // Compile the game to a body-only module via the standard Lantern CLI rather than
 // reimplementing its prescan/parse pipeline. The output references `lamplighter`,
 // `require`, and `console` as free globals.
-function compileGame(inputFile, buildDir) {
+function compileGame(inputFile, buildDir, { encodeStrings = false } = {}) {
     const generatedPath = path.join(buildDir, `${path.basename(inputFile, ".lamp")}.generated.js`);
-    execFileSync("node", [LANTERN_CLI, inputFile, generatedPath], { stdio: "inherit" });
+    const args = [LANTERN_CLI, inputFile, generatedPath];
+    if (encodeStrings) args.push("--encode-strings");
+    execFileSync("node", args, { stdio: "inherit" });
     return generatedPath;
 }
 
@@ -42,14 +44,14 @@ function wrapAsWorkerEntry(generatedCode) {
     ].join("\n");
 }
 
-function buildWeb(inputFile, outDir) {
+function buildWeb(inputFile, outDir, { encodeStrings = false } = {}) {
     const absInput = path.resolve(inputFile);
     const absOut = path.resolve(outDir);
     const buildDir = path.join(PROJECT_ROOT, "build");
     fs.mkdirSync(buildDir, { recursive: true });
     fs.mkdirSync(absOut, { recursive: true });
 
-    const generatedPath = compileGame(absInput, buildDir);
+    const generatedPath = compileGame(absInput, buildDir, { encodeStrings });
     const generatedCode = fs.readFileSync(generatedPath, "utf8");
 
     const entryPath = path.join(buildDir, `${path.basename(absInput, ".lamp")}.worker-entry.js`);

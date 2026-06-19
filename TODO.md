@@ -5,14 +5,17 @@ Top recommended next steps, roughly in priority order. Each item notes *why*,
 prerequisite lists in `devdocs/game_parser.md`, `devdocs/rulebooks.md`, and
 `devdocs/relations.md`.
 
-## 1. Lighthouse web bundle — remaining polish + CI test
-Web v1 is **built, smoke-tested, and verified live in a browser**. Fixed: the
-duplicate prompt — input is now inline at the transcript tail, right after the
-last output, with the game's own `> ` as the single prompt (see
-`devdocs/lighthouse.md`). Remaining: any further shell/UX nits as they surface,
-and the one automation gap — a *headless* browser test for CI
-(Playwright/Puppeteer = heavy dep; decide if worth it). **Blocked by:** nothing
-pending. **Where:** `src/lighthouse/web/`.
+## 1. Lighthouse web bundle — minify + CI test
+Web v1 is **built, verified live, and shell-polished** (inline input). **Done:**
+optional string encoding for spoiler-hiding — `--encode-strings` (Lantern emitter
++ `src/strcodec.js` decode in Lamplighter, threaded through `build:web`),
+covered by `npm run test:encode` (encoded build runs byte-identically to
+plaintext; prose hidden, names plaintext). **Remaining cheap win:** esbuild
+`minify` for the code/size (Tier 1 from the obfuscation discussion) — add a
+`minify` flag to the `buildSync` in `src/lighthouse/index.js`, default on for
+distribution with a `--no-minify` escape; composes with `--encode-strings`. Plus
+the one automation gap: a *headless* browser test for CI (Playwright/Puppeteer =
+heavy dep; decide if worth it). **Where:** `src/lighthouse/`.
 
 ## 2. RESTART support for the end-of-story sequence
 The end-of-story mechanism (`story` global, `end_story_rules`, the post-game loop
