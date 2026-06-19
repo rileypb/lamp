@@ -6,6 +6,7 @@ const { tokenize } = require("./tokenizer");
 const { prescanDeclarations } = require("./prescan");
 const { parseTokens } = require("./parser_rd");
 const { orderedLampFiles } = require("./liborder");
+const { extractTopLevelFunctionNames } = require("./native_scan");
 const { emitProgram } = require("./emitter");
 const { checkProgram, serializeWhenExpr } = require("./checker");
 
@@ -159,8 +160,8 @@ function gatherNativeJs(libDirs) {
         if (!fs.existsSync(indexPath)) continue;
         const content = fs.readFileSync(indexPath, "utf8");
         nativeJsContents.push(content);
-        for (const match of content.matchAll(/\bfunction\s+([A-Za-z_][A-Za-z0-9_]*)\s*\(/g)) {
-            nativeFunctionNames.add(match[1]);
+        for (const name of extractTopLevelFunctionNames(content)) {
+            nativeFunctionNames.add(name);
         }
     }
     return { nativeJsContents, nativeFunctionNames };

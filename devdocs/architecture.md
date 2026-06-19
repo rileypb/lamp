@@ -66,13 +66,20 @@ prescan shares its comment/string handling. Covered by `tests/prescan`
 dependency resolution, scans only the user file for `lib NAME`) still uses a
 regex; it runs before the file set is known and is intentionally left as-is.
 
-### B. Native JS ↔ Lamp boundary is bound by regex
-`gatherNativeJs` discovers native function names with
-`/\bfunction\s+NAME\s*\(/g` over each lib `index.js`. This also matches
-functions inside comments or strings and nested function declarations, and it is
-the sole source of truth the checker uses to validate `native function`
-declarations. A token/AST-aware scan (or an explicit export manifest) would make
-the boundary robust.
+### B. Native JS ↔ Lamp boundary is bound by regex — RESOLVED (2026-06-19)
+`gatherNativeJs` previously discovered native function names with a bare
+`/\bfunction\s+NAME\s*\(/g` regex, which also matched the word in comments and
+strings and matched nested function declarations — overstating what is callable,
+so a `native function` declaration could pass validation yet fail at runtime.
+
+It now uses `extractTopLevelFunctionNames` (`src/lantern/native_scan.js`), a
+JavaScript surface scanner that skips line/block comments, string and template
+literals, and regex literals, and tracks brace depth so only *depth-0* function
+declarations (the ones inlined as callable globals) are collected. A native
+function implemented only inside another function — or merely named in a comment
+— is now a compile error (`native function "x" has no JavaScript implementation`)
+instead of a runtime `ReferenceError`. Unit-tested in `tests/native_scan`; the
+set extracted from the real lib files is unchanged, so the checker stays green.
 
 ### C. Lamplighter embeds the advent world model
 The "general" runtime hardcodes advent-library concepts: `scopeOf`,

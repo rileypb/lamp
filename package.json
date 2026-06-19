@@ -17,7 +17,8 @@
     "test:tokenizer": "node tests/tokenizer/run-tokenizer.js",
     "test:parser": "node tests/parser/run-parser.js",
     "test:prescan": "node tests/prescan/run-prescan.js",
-    "test:liborder": "node tests/liborder/run-liborder.js"
+    "test:liborder": "node tests/liborder/run-liborder.js",
+    "test:native-scan": "node tests/native_scan/run-native-scan.js"
   },
   "devDependencies": {
     "esbuild": "^0.28.1"

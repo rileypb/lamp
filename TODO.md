@@ -44,10 +44,13 @@ point, so emitter/prescan/`--encode-strings` all agree. Tested in
 `tests/tokenizer` and golden `advent17` (plaintext + encoded byte-identical).
 **(arch issue E)**
 
-### AR5. Harden the native-JS function boundary
-`gatherNativeJs` finds native names with a regex that also matches functions in
-comments/strings and nested decls. Use a token/AST-aware scan or an explicit
-export manifest per lib `index.js`. **(arch issue B)**
+### AR5. Harden the native-JS function boundary — DONE (2026-06-19)
+`gatherNativeJs` now uses `extractTopLevelFunctionNames`
+(`src/lantern/native_scan.js`), a JS surface scanner that skips comments,
+strings, template/regex literals, and tracks brace depth so only depth-0
+function declarations count. A native function implemented only nested (or named
+in a comment) is now a compile error instead of a runtime `ReferenceError`.
+Unit-tested in `tests/native_scan`; real-lib output unchanged. **(arch issue B)**
 
 ### AR6. Separate relation instances from the world-object registry
 Relations live in `instanceRegistry`, so `scopeOf`/`buildVocabIndex` iterate
