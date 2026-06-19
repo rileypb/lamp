@@ -5,7 +5,20 @@ Top recommended next steps, roughly in priority order. Each item notes *why*,
 prerequisite lists in `devdocs/game_parser.md`, `devdocs/rulebooks.md`, and
 `devdocs/relations.md`.
 
-## 1. RESTART support for the end-of-story sequence
+## 1. Lighthouse web bundle — first slice
+Design decisions are recorded in `devdocs/lighthouse.md` (service worker for
+COOP/COEP, esbuild bundler [approved new devDependency], output+input-only
+capabilities, directory-bundle artifact). Next concrete steps, in order:
+(a) confirm/relocate a **browser `Worker` bootstrap** in Lamplighter mirroring
+`src/lamplighter/sandbox/worker.js` (browser has no `vm`/`fs`/`worker_threads`;
+the Worker boundary is the restricted context); (b) build the **HTML/CSS/JS
+shell** (text-node output, input line, capability broker) driving the existing
+`setPrint`/`setWrite`/`setInputChannel`/`setPromptChannel` seam; (c) add the
+**esbuild build step** producing the worker bundle; (d) ship the **COOP/COEP
+service worker** + decide first-load reload strategy. **Blocked by:** none —
+start at (a). **Where:** new `src/lighthouse/`, imports `src/lamplighter/`.
+
+## 2. RESTART support for the end-of-story sequence
 The end-of-story mechanism (`story` global, `end_story_rules`, the post-game loop
 in `lib/advent/startup.lamp`) is in place but only offers QUIT — there is no state
 reset, so RESTART was deferred. Implement it by having the sandbox **host
@@ -15,7 +28,7 @@ guarding the `exit` handler), and re-enabling RESTART in the end sequence.
 Alternative (messier): a runtime-wide `reset()` + re-run. **Where:**
 `src/lamplighter/sandbox/host.js` + `worker.js`, `lib/advent/startup.lamp`.
 
-## 2. Parser v2 — every-turn & timed rules
+## 3. Parser v2 — every-turn & timed rules
 Action-rulebook bands are implemented; what remains for v2 is a turn clock:
 every-turn rules and timed/scheduled events, plus out-of-world actions
 (`save`/`undo`/`again` — currently out of scope). Also surface the outcome of a
