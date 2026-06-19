@@ -90,13 +90,22 @@ game logic and the capability boundary remain in Lamplighter's worker.
 - Any brokered capability beyond output and input for v1.
 - Reimplementing or forking the worker bootstrap or capability list.
 
+## Built
+
+- **Browser `Worker` bootstrap** — `src/lamplighter/sandbox/worker-browser.js`,
+  the browser analogue of `worker.js`. Lamplighter-owned (lives under
+  `src/lamplighter/sandbox/`); Lighthouse only packages it. It strips the
+  network/code-loading globals (`fetch`, `XMLHttpRequest`, `WebSocket`,
+  `importScripts`, `EventSource`), drives the same `setPrint`/`setWrite`/
+  `setInputChannel`/`setPromptChannel` seam over `postMessage` + a
+  `SharedArrayBuffer`/`Atomics` input bridge (identical buffer layout to the
+  stdio host), and hands author code the same throwing `require` shim and bridged
+  `console` as the dev path. The build step registers the wrapped body-only game
+  via the exported `runGame(factory)` entry; the game starts only after the
+  host's `init` message delivers the shared input buffer.
+
 ## Open Questions
 
-- **Browser `Worker` adapter location.** sandbox.md assigns the worker bootstrap
-  to Lamplighter and only "browser `Worker` adapter packaging" to Lighthouse.
-  Confirm where the browser-side bootstrap (the analogue of
-  `src/lamplighter/sandbox/worker.js`) physically lives so it stays Lamplighter-
-  owned while Lighthouse only packages it.
 - **Service-worker first-load.** A service worker controls the page only after
   its first navigation; the very first load may not be cross-origin isolated.
   Decide the reload/registration strategy (e.g. auto-reload once the SW is

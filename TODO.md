@@ -8,15 +8,18 @@ prerequisite lists in `devdocs/game_parser.md`, `devdocs/rulebooks.md`, and
 ## 1. Lighthouse web bundle — first slice
 Design decisions are recorded in `devdocs/lighthouse.md` (service worker for
 COOP/COEP, esbuild bundler [approved new devDependency], output+input-only
-capabilities, directory-bundle artifact). Next concrete steps, in order:
-(a) confirm/relocate a **browser `Worker` bootstrap** in Lamplighter mirroring
-`src/lamplighter/sandbox/worker.js` (browser has no `vm`/`fs`/`worker_threads`;
-the Worker boundary is the restricted context); (b) build the **HTML/CSS/JS
-shell** (text-node output, input line, capability broker) driving the existing
-`setPrint`/`setWrite`/`setInputChannel`/`setPromptChannel` seam; (c) add the
-**esbuild build step** producing the worker bundle; (d) ship the **COOP/COEP
-service worker** + decide first-load reload strategy. **Blocked by:** none —
-start at (a). **Where:** new `src/lighthouse/`, imports `src/lamplighter/`.
+capabilities, directory-bundle artifact). Remaining steps, in order:
+(a) ✅ **browser `Worker` bootstrap** — `src/lamplighter/sandbox/worker-browser.js`
+(strips network globals, drives the transport seam over `postMessage` + SAB,
+exports `runGame(factory)`; starts on the host `init` message). (b) build the
+**HTML/CSS/JS shell** (text-node output, input line, async input → SAB fill +
+`Atomics.notify`, console relay) — the main-thread host that posts `init`,
+relays `print`/`write`/`log`, and services `readline`/`prompt_readline`; (c) add
+the **esbuild build step** that wraps the body-only game as
+`(lamplighter, require, console) => {…}`, passes it to `runGame`, and bundles it
+with the runtime into one worker script; (d) ship the **COOP/COEP service
+worker** + decide first-load reload strategy. **Blocked by:** none — next is (b).
+**Where:** new `src/lighthouse/`, imports `src/lamplighter/`.
 
 ## 2. RESTART support for the end-of-story sequence
 The end-of-story mechanism (`story` global, `end_story_rules`, the post-game loop
