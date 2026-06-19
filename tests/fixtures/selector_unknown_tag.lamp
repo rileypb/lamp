@@ -1,0 +1,16 @@
+lib advent
+
+# A selector atom that is neither a declared action nor a known tag is a compile
+# error (catches selector typos). Here the selector begins with a valid action so
+# it is recognized as a phase rule, then the bad atom is caught during resolution.
+
+game Bad_Selector:
+	author "Tester"
+	start room1
+
+room room1:
+	description "A room."
+
+instead take or manipulatoin when self.actor.holder == room1:
+	print "nope"
+	stop failed

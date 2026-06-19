@@ -636,7 +636,7 @@ function runCommand(line, actor) {
         if (!matched) continue;
         const scope = scopeOf(actor);
         const slotTypes = (typeRegistry.get(entry.actionName) || {}).fields || {};
-        const instance = { type: entry.actionName, actor };
+        const instance = { type: entry.actionName, action: entry.actionName, actor };
         const status = resolveSlots(Object.entries(matched), instance, scope, slotTypes);
         if (status === "ok") {
             runAction(entry.actionName, instance);

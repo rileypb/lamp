@@ -42,6 +42,10 @@ let emitKindNames = new Set();
 let functionParamTypes = new Map();
 let actionSlotTypes = new Map();
 let knownObjectNames = new Set();
+// All declared action names (selector universe) and tag -> action-name sets,
+// used to resolve a multi-action rule's selector. See devdocs/rulebooks.md.
+let allActionNames = [];
+let actionTagMembers = new Map();
 // Absolute path of the author's game file; phase rules from it sort ahead of
 // library rules (order 0 vs 1). See devdocs/rulebooks.md.
 let mainFilePath = null;
@@ -83,8 +87,14 @@ function emitProgram(programAst, options = {}) {
     }
     const actionNodes = programAst.nodes.filter((node) => node.kind === "ActionDecl");
     actionSlotTypes = new Map();
+    allActionNames = actionNodes.map((n) => n.name);
+    actionTagMembers = new Map();
     for (const actionNode of actionNodes) {
         actionSlotTypes.set(actionNode.name, new Map(actionNode.slots.map((s) => [s.fieldName, s.typeName])));
+        for (const tag of actionNode.tags || []) {
+            if (!actionTagMembers.has(tag)) actionTagMembers.set(tag, new Set());
+            actionTagMembers.get(tag).add(actionNode.name);
+        }
     }
 
     // Body-only module: no shebang and no runtime require. The sandbox launcher
@@ -609,16 +619,57 @@ function emitPhaseRule(node, globalNames = new Set()) {
     const order = node.filePath === mainFilePath ? 0 : 1;
     const prevBareStop = currentBareStop;
     currentBareStop = "return lamplighter.HALT;";
-    const lines = [
-        `lamplighter.registerActionRule(${JSON.stringify(node.actionName)}, ${JSON.stringify(node.band)}, (self) => {`,
-    ];
+    // A multi-action selector expands to one registration per resolved action;
+    // the guard and body emit identically for each. See devdocs/rulebooks.md.
+    const targets = node.selector
+        ? resolveSelector(node.selector)
+        : [node.actionName];
+    const bodyLines = [];
     if (node.whenExpr) {
-        lines.push(`    if (!(${emitExpression(node.whenExpr, globalNames)})) return;`);
+        bodyLines.push(`    if (!(${emitExpression(node.whenExpr, globalNames)})) return;`);
     }
-    lines.push(...emitStatementList(node.body, 1, globalNames));
-    lines.push(`}, ${order});`);
+    bodyLines.push(...emitStatementList(node.body, 1, globalNames));
+    const lines = [];
+    for (const actionName of targets) {
+        lines.push(`lamplighter.registerActionRule(${JSON.stringify(actionName)}, ${JSON.stringify(node.band)}, (self) => {`);
+        lines.push(...bodyLines);
+        lines.push(`}, ${order});`);
+    }
     currentBareStop = prevBareStop;
     return lines.join("\n");
+}
+
+// Resolves a selector AST to a sorted array of action names. Each atom denotes a
+// set; `and`/`or`/`not` are set ops over the action universe. Throws a compile
+// error on an unknown atom or an empty result.
+function resolveSelector(node) {
+    const universe = new Set(allActionNames);
+    function resolveSet(n) {
+        if (n.kind === "SelAny") return new Set(universe);
+        if (n.kind === "SelAtom") {
+            if (universe.has(n.name)) return new Set([n.name]);
+            if (actionTagMembers.has(n.name)) return new Set(actionTagMembers.get(n.name));
+            throw new Error(`${n.filePath}:${n.lineNumber}: unknown action or tag "${n.name}"`);
+        }
+        if (n.kind === "SelNot") {
+            const inner = resolveSet(n.operand);
+            return new Set([...universe].filter((a) => !inner.has(a)));
+        }
+        if (n.kind === "SelAnd") {
+            const l = resolveSet(n.left);
+            const r = resolveSet(n.right);
+            return new Set([...l].filter((a) => r.has(a)));
+        }
+        if (n.kind === "SelOr") {
+            return new Set([...resolveSet(n.left), ...resolveSet(n.right)]);
+        }
+        throw new Error(`Unsupported selector node: ${n.kind}`);
+    }
+    const result = resolveSet(node);
+    if (result.size === 0) {
+        throw new Error(`${node.filePath}:${node.lineNumber}: action selector matches no actions`);
+    }
+    return [...result].sort();
 }
 
 function emitChangeHandler(node, globalNames = new Set()) {
@@ -774,7 +825,7 @@ function emitTryCall(node, globalNames = new Set()) {
             : emitExpression(field.value, globalNames);
         return `${JSON.stringify(field.fieldName)}: ${valueExpr}`;
     });
-    const instance = `{ "type": ${JSON.stringify(node.actionName)}${pairs.length ? ", " + pairs.join(", ") : ""} }`;
+    const instance = `{ "type": ${JSON.stringify(node.actionName)}, "action": ${JSON.stringify(node.actionName)}${pairs.length ? ", " + pairs.join(", ") : ""} }`;
     const opts = node.silent ? `, { silent: true }` : ``;
     return `lamplighter.runAction(${JSON.stringify(node.actionName)}, ${instance}${opts})`;
 }

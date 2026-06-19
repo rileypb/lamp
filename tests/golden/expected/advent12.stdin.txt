@@ -1,0 +1,7 @@
+shout
+hum
+take pebble
+north
+shout
+hum
+quit

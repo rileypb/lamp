@@ -1,0 +1,3 @@
+Compile error: tests/fixtures/selector_bad_slot.lamp:14: type error: selector rule reads "self.taken", but action "drop" has no slot "taken" (a multi-action rule may only use slots common to every targeted action, or actor/action/reason)
+  14 | instead take or drop:
+    | ^

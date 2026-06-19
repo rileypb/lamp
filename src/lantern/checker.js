@@ -15,6 +15,22 @@ let rulebookSchema = new Map();
 // relationSchema/rulebookSchema.
 let actionSchema = new Map();
 
+// Tag -> Set(actionName), built alongside actionSchema, for resolving and
+// validating multi-action rule selectors. See devdocs/rulebooks.md.
+let actionTagSchema = new Map();
+
+function buildActionTagSchema(nodes) {
+    const schema = new Map();
+    for (const node of nodes) {
+        if (node.kind !== "ActionDecl") continue;
+        for (const tag of node.tags || []) {
+            if (!schema.has(tag)) schema.set(tag, new Set());
+            schema.get(tag).add(node.name);
+        }
+    }
+    return schema;
+}
+
 function buildRelationSchema(nodes) {
     const schema = new Map();
     for (const node of nodes) {
@@ -47,6 +63,7 @@ function checkProgram(programAst, options = {}) {
     relationSchema = buildRelationSchema(programAst.nodes);
     rulebookSchema = buildRulebookSchema(programAst.nodes);
     actionSchema = buildActionSchema(programAst.nodes);
+    actionTagSchema = buildActionTagSchema(programAst.nodes);
     const typeSchema = buildTypeSchema(programAst.nodes);
     const kindSchema = buildKindSchema(programAst.nodes);
     const globalTypes = buildGlobalTypeSchema(programAst.nodes);
@@ -117,18 +134,100 @@ function checkActionDecl(node) {
 // A phase rule's body runs with `self` bound to the action instance; a `stop`
 // value is checked against the `outcome` kind (succeeded/failed).
 function checkPhaseRule(node, typeSchema, kindSchema, functionSchema, globalNames) {
-    if (!actionSchema.has(node.actionName)) {
+    // A multi-action selector rule resolves to a set of actions; `self` is bound to
+    // a representative for typing (only slots common to the whole set are allowed —
+    // see checkSelectorSlotSafety). A single-action rule binds `self` to its action.
+    let selfType = node.actionName;
+    let label = `"${node.actionName}"`;
+    if (node.selector) {
+        const targets = resolveSelectorActions(node.selector);
+        checkSelectorSlotSafety(node, targets);
+        selfType = targets[0];
+        label = "selector rule";
+    } else if (!actionSchema.has(node.actionName)) {
         throw typeError(node.filePath, node.lineNumber, `unknown action "${node.actionName}"`);
     }
-    const localTypes = new Map([["self", node.actionName]]);
+    const localTypes = new Map([["self", selfType]]);
     if (node.whenExpr) {
         checkExprCalls(node.whenExpr, typeSchema, kindSchema, localTypes, functionSchema);
         const guardType = inferExprType(node.whenExpr, typeSchema, kindSchema, localTypes, functionSchema);
         if (guardType !== null && guardType !== "bool") {
-            throw typeError(node.filePath, node.lineNumber, `guard of ${node.band} rule for "${node.actionName}" must be boolean`);
+            throw typeError(node.filePath, node.lineNumber, `guard of ${node.band} rule for ${label} must be boolean`);
         }
     }
     checkStatements(node.body, typeSchema, kindSchema, localTypes, functionSchema, "outcome", globalNames);
+}
+
+// Slots available on every action instance regardless of declaration, so a
+// multi-action rule may always reference them.
+const UNIVERSAL_SLOTS = new Set(["actor", "action", "reason"]);
+
+// Resolves a selector AST to a sorted action-name array, throwing on an unknown
+// atom or an empty result. Mirrors the emitter's resolver (kept separate so the
+// checker can report errors before emission).
+function resolveSelectorActions(node) {
+    const universe = new Set(actionSchema.keys());
+    function resolveSet(n) {
+        if (n.kind === "SelAny") return new Set(universe);
+        if (n.kind === "SelAtom") {
+            if (universe.has(n.name)) return new Set([n.name]);
+            if (actionTagSchema.has(n.name)) return new Set(actionTagSchema.get(n.name));
+            throw typeError(n.filePath, n.lineNumber, `unknown action or tag "${n.name}"`);
+        }
+        if (n.kind === "SelNot") {
+            const inner = resolveSet(n.operand);
+            return new Set([...universe].filter((a) => !inner.has(a)));
+        }
+        if (n.kind === "SelAnd") {
+            const l = resolveSet(n.left);
+            const r = resolveSet(n.right);
+            return new Set([...l].filter((a) => r.has(a)));
+        }
+        if (n.kind === "SelOr") {
+            return new Set([...resolveSet(n.left), ...resolveSet(n.right)]);
+        }
+        throw new Error(`Unsupported selector node: ${n.kind}`);
+    }
+    const result = resolveSet(node);
+    if (result.size === 0) {
+        throw typeError(node.filePath, node.lineNumber, "action selector matches no actions");
+    }
+    return [...result].sort();
+}
+
+// In a multi-action rule, `self.SLOT` is only valid for a universal slot or a slot
+// every targeted action declares — otherwise the slot may be absent at runtime.
+function checkSelectorSlotSafety(node, targets) {
+    const accesses = [];
+    collectPropertyAccess(node.whenExpr, accesses);
+    for (const stmt of node.body) collectPropertyAccess(stmt, accesses);
+    for (const access of accesses) {
+        const { chain } = access;
+        if (chain.length < 2 || chain[0] !== "self") continue;
+        const slot = chain[1];
+        if (UNIVERSAL_SLOTS.has(slot)) continue;
+        const missing = targets.filter((a) => !(actionSchema.get(a) || new Map()).has(slot));
+        if (missing.length > 0) {
+            throw typeError(node.filePath, node.lineNumber,
+                `selector rule reads "self.${slot}", but action "${missing[0]}" has no slot "${slot}" (a multi-action rule may only use slots common to every targeted action, or actor/action/reason)`);
+        }
+    }
+}
+
+// Deep-walks any AST node/array, pushing every PropertyAccess node into `acc`.
+function collectPropertyAccess(node, acc) {
+    if (node === null || typeof node !== "object") return;
+    if (Array.isArray(node)) {
+        for (const item of node) collectPropertyAccess(item, acc);
+        return;
+    }
+    if (node.kind === "PropertyAccess" && Array.isArray(node.chain)) {
+        acc.push(node);
+    }
+    for (const key of Object.keys(node)) {
+        if (key === "kind" || key === "filePath" || key === "lineNumber") continue;
+        collectPropertyAccess(node[key], acc);
+    }
 }
 
 function checkRulebookDecl(node, typeSchema, kindSchema, functionSchema, globalNames) {

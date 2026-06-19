@@ -1,0 +1,50 @@
+lib advent
+
+# Exercises action selectors: tag-based selection, `any except` chains, boolean
+# resolution, and `self.action` branching inside a multi-action rule.
+
+game Selector_Test:
+	author "Tester"
+	start cell
+
+room cell:
+	description "A cramped cell."
+
+room hall:
+	description "A wide hall."
+
+bidi connects cell north hall
+
+item pebble:
+	holder cell
+
+# Two custom actions sharing a tag.
+action shout:
+	tags vocal
+	syntax:
+		"shout"
+
+report shout:
+	print "You shout loudly."
+
+action hum:
+	tags vocal
+	syntax:
+		"hum"
+
+report hum:
+	print "You hum quietly."
+
+# Tag selector + self.action branching: vocal actions are muffled in the cell,
+# and the message names which action was attempted.
+instead vocal when self.actor.holder == cell:
+	if self.action == shout:
+		print "The cell muffles your shout."
+	else:
+		print "The cell muffles your hum."
+	stop failed
+
+# `any except` chain over the standard library actions, using only the universal
+# `actor` slot: any non-movement, non-looking, non-vocal action stirs dust.
+before any except go except look except shout except hum when self.actor.holder == cell:
+	print "Dust swirls."

@@ -1,0 +1,16 @@
+lib advent
+
+# A multi-action rule may only read slots common to every targeted action (or the
+# universal actor/action/reason). `self.taken` exists on take but not drop, so this
+# is a compile error.
+
+game Bad_Slot:
+	author "Tester"
+	start room1
+
+room room1:
+	description "A room."
+
+instead take or drop:
+	print self.taken
+	stop failed

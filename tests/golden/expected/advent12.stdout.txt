@@ -1,0 +1,26 @@
+cell
+A cramped cell.
+
+You see a pebble here.
+
+> shout
+The cell muffles your shout.
+
+> hum
+The cell muffles your hum.
+
+> take pebble
+Dust swirls.
+Taken.
+
+> north
+hall
+A wide hall.
+
+> shout
+You shout loudly.
+
+> hum
+You hum quietly.
+
+> quit

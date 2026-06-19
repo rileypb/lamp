@@ -246,14 +246,34 @@ function createStopStatement(expr, reason, filePath, lineNumber) {
 // named slots. `templates` are the `syntax` surface forms (raw strings) the Game
 // Parser matches player input against. The six-band rulebook is built from
 // PhaseRule nodes.
-function createActionDecl(name, slots, templates, filePath, lineNumber) {
-    return { kind: "ActionDecl", name, slots, templates, filePath, lineNumber };
+function createActionDecl(name, slots, templates, filePath, lineNumber, tags = []) {
+    return { kind: "ActionDecl", name, slots, templates, filePath, lineNumber, tags };
 }
 
 // One rule in an action's rulebook, attached to a band (before/instead/check/
-// do/after/report). `self` inside the body is the action instance.
-function createPhaseRule(band, actionName, whenExpr, body, filePath, lineNumber) {
-    return { kind: "PhaseRule", band, actionName, whenExpr, body, filePath, lineNumber };
+// do/after/report). `self` inside the body is the action instance. Exactly one of
+// `actionName` (single-action rule) or `selector` (multi-action rule, a SelNode
+// boolean tree) is non-null; see ast.SelNode constructors and devdocs/rulebooks.md.
+function createPhaseRule(band, actionName, whenExpr, body, filePath, lineNumber, selector = null) {
+    return { kind: "PhaseRule", band, actionName, whenExpr, body, filePath, lineNumber, selector };
+}
+
+// Action-selector AST: a boolean tree over atoms (action names / tags / `any`).
+// Resolved to a concrete action-name set at check/emit time.
+function createSelAtom(name, filePath, lineNumber) {
+    return { kind: "SelAtom", name, filePath, lineNumber };
+}
+function createSelAny(filePath, lineNumber) {
+    return { kind: "SelAny", filePath, lineNumber };
+}
+function createSelNot(operand, filePath, lineNumber) {
+    return { kind: "SelNot", operand, filePath, lineNumber };
+}
+function createSelAnd(left, right, filePath, lineNumber) {
+    return { kind: "SelAnd", left, right, filePath, lineNumber };
+}
+function createSelOr(left, right, filePath, lineNumber) {
+    return { kind: "SelOr", left, right, filePath, lineNumber };
 }
 
 // Imperatively run an action: construct an instance with the given slot values
@@ -337,6 +357,11 @@ module.exports = {
     createFollowExpr,
     createActionDecl,
     createPhaseRule,
+    createSelAtom,
+    createSelAny,
+    createSelNot,
+    createSelAnd,
+    createSelOr,
     createTryStatement,
     createTryExpr,
     createAndExpr,

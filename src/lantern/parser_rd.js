@@ -24,18 +24,30 @@ function getInfixBP(token) {
 
 const PHASE_WORDS = new Set(["before", "instead", "check", "do", "after", "report"]);
 
-function parseSource(sourceText, filePath, globalNames = new Set(), functionNames = new Set(), relationNames = new Set(), relationTemplates = new Map(), actionNames = new Set(), objectNames = new Set()) {
+function parseSource(sourceText, filePath, globalNames = new Set(), functionNames = new Set(), relationNames = new Set(), relationTemplates = new Map(), actionNames = new Set(), objectNames = new Set(), tagNames = new Set()) {
     const tokens = tokenize(sourceText, filePath);
-    return createParser(tokens, filePath, globalNames, functionNames, relationNames, relationTemplates, actionNames, objectNames).parseProgram();
+    return createParser(tokens, filePath, globalNames, functionNames, relationNames, relationTemplates, actionNames, objectNames, tagNames).parseProgram();
 }
 
-function createParser(tokens, filePath, globalNames, functionNames = new Set(), relationNames = new Set(), relationTemplates = new Map(), actionNames = new Set(), objectNames = new Set()) {
+function createParser(tokens, filePath, globalNames, functionNames = new Set(), relationNames = new Set(), relationTemplates = new Map(), actionNames = new Set(), objectNames = new Set(), tagNames = new Set()) {
     let pos = 0;
 
     const peek = (offset = 0) => tokens[pos + offset];
     const next = () => tokens[pos++];
     const at = (type) => peek().type === type;
     const atKeyword = (value) => peek().type === "KEYWORD" && peek().value === value;
+
+    // A phase-rule selector begins with `(`, `not`, `any`, a declared action, or a
+    // known tag. Used to recognize `BAND SELECTOR:` at the top level.
+    const selectorStartsAt = (offset) => {
+        const t = peek(offset);
+        if (t.type === "LPAREN") return true;
+        if (t.type === "KEYWORD" && t.value === "not") return true;
+        if (t.type === "IDENT") {
+            return t.value === "any" || actionNames.has(t.value) || tagNames.has(t.value);
+        }
+        return false;
+    };
 
     function err(message, line) {
         return syntaxError(filePath, line !== undefined ? line : peek().line, message);
@@ -116,10 +128,10 @@ function createParser(tokens, filePath, globalNames, functionNames = new Set(), 
             }
         }
         if (token.type === "IDENT") {
-            if (PHASE_WORDS.has(token.value) && peek(1).type === "IDENT" && actionNames.has(peek(1).value)) return parsePhaseRule();
-            // `report failed ACTION:` — the failure-reporting band.
+            if (PHASE_WORDS.has(token.value) && selectorStartsAt(1)) return parsePhaseRule();
+            // `report failed SELECTOR:` — the failure-reporting band.
             if (token.value === "report" && peek(1).type === "IDENT" && peek(1).value === "failed"
-                && peek(2).type === "IDENT" && actionNames.has(peek(2).value)) return parsePhaseRule();
+                && selectorStartsAt(2)) return parsePhaseRule();
             if (relationNames.has(token.value) && peek(1).type === "COLON") return parseRelationAssert();
             if (relationTemplates.has(token.value)) return parseCustomSyntaxAssert(relationTemplates.get(token.value), null);
             if (peek(1).type === "IDENT" && relationTemplates.has(peek(1).value)) return parseNamedCustomSyntaxAssert();
@@ -692,22 +704,25 @@ function createParser(tokens, filePath, globalNames, functionNames = new Set(), 
         const name = plainName("action name");
         let slots = [];
         let templates = [];
+        let tags = [];
         if (at("COLON")) {
             next();
             expectNewline();
-            ({ slots, templates } = parseActionBody());
+            ({ slots, templates, tags } = parseActionBody());
         } else {
             expectNewline();
         }
-        return ast.createActionDecl(name, slots, templates, filePath, keyword.line);
+        return ast.createActionDecl(name, slots, templates, filePath, keyword.line, tags);
     }
 
-    // An action body holds slot field declarations and an optional `syntax:`
-    // block of quoted surface templates. `syntax` is a contextual keyword here.
+    // An action body holds slot field declarations, an optional `syntax:` block of
+    // quoted surface templates, and optional `tags` lines. `syntax` and `tags` are
+    // contextual keywords here.
     function parseActionBody() {
         expect("INDENT", "Expected an indented action body");
         const slots = [];
         let templates = [];
+        const tags = [];
         while (!at("DEDENT")) {
             if (peek().type === "IDENT" && peek().value === "syntax" && peek(1).type === "COLON") {
                 next();
@@ -716,13 +731,23 @@ function createParser(tokens, filePath, globalNames, functionNames = new Set(), 
                 templates = parseSyntaxBlock();
                 continue;
             }
+            if (peek().type === "IDENT" && peek().value === "tags") {
+                next();
+                tags.push(plainName("tag name"));
+                while (at("COMMA")) {
+                    next();
+                    tags.push(plainName("tag name"));
+                }
+                expectNewline();
+                continue;
+            }
             const fieldType = parseFieldType();
             const fieldName = plainName("slot name");
             expectNewline();
             slots.push(ast.createFieldDecl(fieldType, fieldName));
         }
         next();
-        return { slots, templates };
+        return { slots, templates, tags };
     }
 
     function parseSyntaxBlock() {
@@ -737,19 +762,19 @@ function createParser(tokens, filePath, globalNames, functionNames = new Set(), 
         return templates;
     }
 
-    // A leading-band phase rule: `BAND ACTION [when COND]:` followed by a block.
-    // `self` is the action instance throughout the body.
+    // A leading-band phase rule: `BAND SELECTOR [when COND]:` followed by a block.
+    // SELECTOR is a single action name (the common case) or a boolean selector over
+    // actions/tags (see parseSelector). `self` is the action instance in the body.
     function parsePhaseRule() {
         const bandToken = next();
         let band = bandToken.value;
-        // `report failed ACTION` selects the failure-reporting band; the `failed`
+        // `report failed SELECTOR` selects the failure-reporting band; the `failed`
         // modifier distinguishes it from the success `report` band.
-        if (band === "report" && at("IDENT") && peek().value === "failed"
-            && peek(1).type === "IDENT" && actionNames.has(peek(1).value)) {
+        if (band === "report" && at("IDENT") && peek().value === "failed" && selectorStartsAt(1)) {
             next();
             band = "report_failed";
         }
-        const actionName = plainName("action name");
+        const selector = parseSelector();
         let whenExpr = null;
         if (atKeyword("when")) {
             next();
@@ -758,7 +783,56 @@ function createParser(tokens, filePath, globalNames, functionNames = new Set(), 
         expect("COLON", "Expected ':' after phase rule header");
         expectNewline();
         const body = parseBlock(new Set(["self"]));
-        return ast.createPhaseRule(band, actionName, whenExpr, body, filePath, bandToken.line);
+        // A bare single action name keeps the single-action code path (actionName
+        // set, selector null); anything else is a multi-action selector rule.
+        if (selector.kind === "SelAtom" && actionNames.has(selector.name)) {
+            return ast.createPhaseRule(band, selector.name, whenExpr, body, filePath, bandToken.line);
+        }
+        return ast.createPhaseRule(band, null, whenExpr, body, filePath, bandToken.line, selector);
+    }
+
+    // Selector grammar (lowest to highest precedence): `or`, then `and`/`except`
+    // (`a except b` ≡ `a and not b`), then `not`/atom. Atoms are `any`, action
+    // names, tag names, or parenthesized selectors. No comma sugar.
+    function parseSelector() {
+        let left = parseSelectorAnd();
+        while (atKeyword("or")) {
+            const op = next();
+            const right = parseSelectorAnd();
+            left = ast.createSelOr(left, right, filePath, op.line);
+        }
+        return left;
+    }
+
+    function parseSelectorAnd() {
+        let left = parseSelectorUnary();
+        while (atKeyword("and") || (peek().type === "IDENT" && peek().value === "except")) {
+            const op = next();
+            const right = parseSelectorUnary();
+            left = op.value === "except"
+                ? ast.createSelAnd(left, ast.createSelNot(right, filePath, op.line), filePath, op.line)
+                : ast.createSelAnd(left, right, filePath, op.line);
+        }
+        return left;
+    }
+
+    function parseSelectorUnary() {
+        if (atKeyword("not")) {
+            const op = next();
+            return ast.createSelNot(parseSelectorUnary(), filePath, op.line);
+        }
+        if (at("LPAREN")) {
+            next();
+            const inner = parseSelector();
+            expect("RPAREN", "Expected ')' to close selector group");
+            return inner;
+        }
+        const token = peek();
+        const name = plainName("action or tag name");
+        if (name === "any") {
+            return ast.createSelAny(filePath, token.line);
+        }
+        return ast.createSelAtom(name, filePath, token.line);
     }
 
     function parseRulebookDecl() {
@@ -1169,7 +1243,15 @@ function createParser(tokens, filePath, globalNames, functionNames = new Set(), 
         const fields = [];
         while (at("DOT")) {
             next();
-            fields.push(expect("IDENT", "Expected field name after '.'").value);
+            // A member name after `.` may be a reserved word (e.g. `self.action`),
+            // mirroring JS member access; the leading-identifier reservation does
+            // not apply in field position.
+            const fieldTok = peek();
+            if (fieldTok.type !== "IDENT" && fieldTok.type !== "KEYWORD") {
+                throw err("Expected field name after '.'", fieldTok.line);
+            }
+            next();
+            fields.push(fieldTok.value);
         }
 
         if (fields.length === 0) {

@@ -45,6 +45,7 @@ function runCompilation() {
     const relationNames = new Set();
     const actionNames = new Set();
     const objectNames = new Set();
+    const tagNames = new Set();
     const rawTemplates = [];
     for (const sourceFile of sourceFiles) {
         const source = fs.readFileSync(sourceFile, "utf8");
@@ -63,6 +64,9 @@ function runCompilation() {
         for (const name of extractObjectNames(source)) {
             objectNames.add(name);
         }
+        for (const name of extractActionTags(source)) {
+            tagNames.add(name);
+        }
         rawTemplates.push(...extractRelationTemplates(source));
     }
 
@@ -70,7 +74,7 @@ function runCompilation() {
 
     for (const sourceFile of sourceFiles) {
         const source = fs.readFileSync(sourceFile, "utf8");
-        const ast = parseSource(source, sourceFile, globalNames, functionNames, relationNames, relationTemplates, actionNames, objectNames);
+        const ast = parseSource(source, sourceFile, globalNames, functionNames, relationNames, relationTemplates, actionNames, objectNames, tagNames);
         allNodes.push(...ast.nodes);
     }
 
@@ -268,6 +272,22 @@ function extractActionNames(sourceText) {
         const match = code.match(/^action\s+([A-Za-z_][A-Za-z0-9_]*)\s*:?/);
         if (match) {
             names.add(match[1]);
+        }
+    }
+    return names;
+}
+
+// Tag names are collected ahead of parsing so the parser can recognize a
+// tag-led selector (`instead manipulation:`) as a phase rule. A `tags a, b` line
+// appears only inside an action body, so a simple indented-line scan suffices.
+function extractActionTags(sourceText) {
+    const names = new Set();
+    for (const line of sourceText.split(/\r?\n/)) {
+        const match = line.replace(/#.*$/, "").match(/^\s+tags\s+(.+)$/);
+        if (!match) continue;
+        for (const raw of match[1].split(",")) {
+            const name = raw.trim();
+            if (name) names.add(name);
         }
     }
     return names;

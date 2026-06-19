@@ -281,6 +281,89 @@ report never run; action outcome `failed`.
 through) → `do` moves the lamp (falls through) → `report` prints "Taken." →
 pipeline ends, outcome `succeeded`.
 
+## Action selectors — rules that span a set of actions
+
+> Status: implemented. A band rule may target a **set** of actions instead of a
+> single one, via a boolean *selector* in the action position of the rule head.
+> Exercised by `tests/fixtures/advent12.lamp`.
+
+The single-action form `BAND ACTION [when …]:` is the common case. Where a rule
+should apply uniformly across many actions (Inform's "Instead of doing something
+other than going …"), the action position accepts a **selector** — a compile-time
+boolean expression over *atoms*, where each atom denotes the set of actions it
+names:
+
+| Atom / operator | Denotes |
+|---|---|
+| `any` | every declared action (the universe) |
+| an action name (`take`) | that one action |
+| a tag name (`manipulation`) | every action carrying that tag |
+| `a and b` | intersection — actions in both sets |
+| `a or b` | union — actions in either set |
+| `not a` | complement — every action not in `a` |
+| `a except b` | sugar for `a and not b` |
+| `( … )` | grouping |
+
+Precedence, lowest to highest: `or`, then `and`/`except`, then `not`/atom — the
+same shape as ordinary expressions. There is **no comma sugar**: write
+`take or drop`, not `take, drop`. (Comma would collide with `except` by
+precedence — `any except go, look` would re-add `look` — so it is omitted.)
+Exclude several actions by chaining `except` or grouping:
+
+```lamp
+instead any except go except look when self.actor.holder == bar and in_darkness(self.actor):
+    print "In the dark? You could easily disturb something."
+    disturbance = disturbance + 1
+    stop failed
+```
+
+The selector is resolved to a concrete set of action names **at compile time**
+(the action and tag tables are known from the prescan), and the rule is expanded
+to one registration per action in the set — each carrying the same band, guard,
+body, and source position, so the existing author-before-library and source-order
+sorting is unchanged. A selector that resolves to the empty set, or names an atom
+that is neither a declared action nor a known tag, is a compile error.
+
+### Slot access in a multi-action rule
+
+A single-action rule's `self` exposes that action's slots (`self.taken`,
+`self.way`). A multi-action rule's `self` may only touch slots **every** targeted
+action has — in practice the universal slots `actor`, `action`, and (in the
+`report failed` band) `reason`. Referencing an action-specific slot that is not
+present on every action in the set is a compile error; write a single-action rule
+for behaviour that needs such a slot. (This is the one place the otherwise lenient
+field checker is strict, because the slot genuinely may not exist at runtime.)
+
+### `self.action` — the acting action's identity
+
+Every action instance carries `self.action`, the name of the action being run
+(e.g. `"go"`). It compares against a bare action name, so a multi-action rule can
+still branch on which action fired:
+
+```lamp
+before any when self.action == go:
+    ...
+```
+
+### Action tags
+
+An action declares zero or more tags with a `tags` line in its body (a
+contextual keyword, like `syntax`); multiple tags are comma-separated:
+
+```lamp
+action take:
+    item taken
+    tags manipulation, theft
+    syntax:
+        "take [taken]"
+```
+
+Tags are **not** pre-declared — the set of valid tags is the union of every
+`tags` line across all actions. A tag used in a selector that no action carries
+is a compile error (catching selector typos). A tag typo on the *action* side
+silently drops that action from the group; pre-declared tags would close that
+gap and can be added later if it bites.
+
 ## Failure reasons and the `report failed` band
 
 > Status: implemented. Typed reasons (`stop failed REASON`), the implicit
