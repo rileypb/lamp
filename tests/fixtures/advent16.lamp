@@ -1,0 +1,31 @@
+lib advent
+
+# Regression: the `supports` relation must stay consistent with `holder`.
+# Hanging asserts the edge; taking the item off must retract it. The `probe`
+# action reads the relation directly (the room-description path reads `holder`,
+# so it would not catch a stale edge).
+
+game Supports_Cleanup:
+    start hall
+
+room hall:
+    description "A plain hall."
+
+item hook:
+    scenery true
+    supporter true
+    holder hall
+
+item cloak:
+    wearable true
+    holder yourself
+
+action probe:
+    syntax:
+        "probe"
+
+report probe:
+    if supports hook cloak:
+        print "on hook"
+    else:
+        print "off hook"

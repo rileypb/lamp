@@ -1,0 +1,6 @@
+probe
+hang cloak on hook
+probe
+take cloak
+probe
+quit

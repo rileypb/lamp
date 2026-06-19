@@ -1,0 +1,5 @@
+take ball
+look
+take trumpet
+look
+quit

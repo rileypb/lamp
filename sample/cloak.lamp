@@ -46,6 +46,7 @@ item hook:
 	description "It's just a small brass hook, screwed to the wall."
     scenery true
     holder Cloakroom
+    supporter true
 
 # The cloak starts in the player's inventory, worn.
 item velvet_cloak:

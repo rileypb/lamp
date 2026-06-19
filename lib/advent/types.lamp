@@ -16,6 +16,7 @@ type game:
 type physical < thing:
 	string description
 	article article
+	bool supporter
 
 type container < physical
 

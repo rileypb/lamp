@@ -28,8 +28,12 @@ function run_command(line) {
     lamplighter.runCommand(line, lamplighter.getGlobal("player"));
 }
 
+function display_name(x) {
+    return x.printed_name ? String(x.printed_name) : String(x.name).replace(/_/g, " ");
+}
+
 function with_article(x) {
-    const name = x.printed_name ? String(x.printed_name) : String(x.name).replace(/_/g, " ");
+    const name = display_name(x);
     const art = x.article ? x.article.name : null;
     if (art === "definite") return "the " + name;
     if (art === "proper" || art === "plural") return name;
@@ -40,6 +44,22 @@ function contents_of(r) {
     const all = lamplighter.listItems(lamplighter.type("item").all);
     const visible = all.filter((x) => x.holder === r && !x.scenery);
     return lamplighter.makeList(visible.map(with_article));
+}
+
+// Lists the contents of any scenery supporter resting in room `r`. A supporter
+// is flagged by the `physical.supporter` field; the items resting on it are the
+// non-scenery items whose `holder` is the supporter.
+function describe_supporters(r) {
+    const all = lamplighter.listItems(lamplighter.type("item").all);
+    const supporters = all.filter((x) => x.holder === r && x.scenery && x.supporter);
+    for (const s of supporters) {
+        const onIt = all.filter((x) => x.holder === s && !x.scenery);
+        if (onIt.length === 0) continue;
+        const listed = lamplighter.makeList(onIt.map(with_article));
+        const verb = onIt.length === 1 ? "is" : "are";
+        lamplighter.print("");
+        lamplighter.print("On the " + display_name(s) + " " + verb + " " + lamplighter.concat("", listed) + ".");
+    }
 }
 
 lamplighter.defineKind("color", lamplighter.enum("red", "green", "blue"));
@@ -56,7 +76,7 @@ lamplighter.defineType("game", [], {"author":"string","tagline":"string","versio
 lamplighter.defineType("thing", [], {"printed_name":"string","understand":"string"});
 lamplighter.defineType("article", [], {});
 lamplighter.defineType("stop_reason", [], {});
-lamplighter.defineType("physical", ["thing"], {"description":"string","article":"article"});
+lamplighter.defineType("physical", ["thing"], {"description":"string","article":"article","supporter":"bool"});
 lamplighter.defineType("container", ["physical"], {});
 lamplighter.defineType("room", ["container"], {"lighted":"bool"}, { "lighted": true });
 lamplighter.defineType("item", ["physical"], {"scenery":"bool","wearable":"bool","holder":"container"});
@@ -131,7 +151,7 @@ lamplighter.createObject("game", "Cloak of Darkness", { "author": "Roger Firth",
 const Foyer = lamplighter.createObject("room", "Foyer", { "description": "You are standing in a spacious hall, splendidly decorated in red and gold, with glittering chandeliers overhead. The entrance from the street is to the north, and there are doorways south and west." });
 const Bar = lamplighter.createObject("room", "Bar", { "description": "The bar, much rougher than you'd have guessed after the opulence of the foyer to the north, is completely empty. There seems to be some sort of message scrawled in the sawdust on the floor.", "lighted": false });
 const Cloakroom = lamplighter.createObject("room", "Cloakroom", { "description": "The walls of this small room were clearly once lined with hooks, though now only one remains. The exit is a door to the east." });
-const hook = lamplighter.createObject("item", "hook", { "description": "It's just a small brass hook, screwed to the wall.", "scenery": true });
+const hook = lamplighter.createObject("item", "hook", { "description": "It's just a small brass hook, screwed to the wall.", "scenery": true, "supporter": true });
 lamplighter.createObject("item", "velvet cloak", { "description": "A handsome cloak, of velvet trimmed with satin, and slightly splattered with raindrops. Its blackness is so deep that it almost seems to suck light from the room.", "wearable": true });
 const sawdust = lamplighter.createObject("item", "sawdust", { "scenery": true, "understand": "message/writing/floor" });
 north.inverse = lamplighter.getObject("south");
@@ -178,6 +198,7 @@ function list_room_contents(r) {
         lamplighter.print("");
         lamplighter.print(lamplighter.concat(lamplighter.concat("You see ", contents), " here."));
     }
+    describe_supporters(r);
 }
 
 function in_darkness(p) {

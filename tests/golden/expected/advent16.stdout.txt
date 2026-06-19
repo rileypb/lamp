@@ -1,0 +1,19 @@
+hall
+A plain hall.
+
+> probe
+off hook
+
+> hang cloak on hook
+You hang cloak on hook.
+
+> probe
+on hook
+
+> take cloak
+Taken.
+
+> probe
+off hook
+
+> quit

@@ -206,6 +206,13 @@ relation supports:
 	to item supported
 	syntax "supports [support] [supported]"
 
+# Keep `supports` consistent with `holder`: an item rests on a supporter only
+# while its holder is that supporter. Any holder change (taken, dropped, or
+# re-hung elsewhere) drops the stale edge; `do hang` re-asserts the new one
+# right after it sets the holder.
+on item.holder change:
+	remove supports _ self
+
 action hang:
 	direct item carried
 	item peg

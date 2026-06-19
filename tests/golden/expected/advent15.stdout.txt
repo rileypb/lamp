@@ -1,0 +1,28 @@
+hall
+A plain hall.
+
+On the shelf are a ball and a trumpet.
+
+On the hook is a cloak.
+
+> take ball
+Taken.
+
+> look
+hall
+A plain hall.
+
+On the shelf is a trumpet.
+
+On the hook is a cloak.
+
+> take trumpet
+Taken.
+
+> look
+hall
+A plain hall.
+
+On the hook is a cloak.
+
+> quit

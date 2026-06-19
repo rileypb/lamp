@@ -424,7 +424,24 @@ item bhagavad_gita:
 ```
 
 Article auto-detection (`a` vs `an`) is applied when `article` is `count`,
-based on the printed name's first letter.
+based on the printed name's first letter. The same `with_article` helper is used
+for room-contents listings ("You see an idol here.") and the inventory listing
+("  a velvet cloak (worn)").
+
+**Supporters (`supporter` field).** A scenery `physical` with `supporter true`
+that has non-scenery items resting on it (their `holder` set to the supporter)
+gets its own line in the room description, listing those items with articles and
+a number-agreeing verb:
+
+```
+On the shelf are a ball and a trumpet.
+On the hook is a cloak.
+```
+
+Items move onto a supporter via the `hang`/`put … on …` action (which sets
+`holder` and records the `supports` relation); taking an item clears it from the
+listing because the listing is driven by `holder`, not the stored relation. An
+empty supporter prints no line.
 
 **Type hierarchy.** The vocabulary fields live on a `thing` base type in the
 library. `thing` is the common root for everything a player can name in a

@@ -1,5 +1,6 @@
 native function list<string> contents_of(room r)
 native function string with_article(physical x)
+native function void describe_supporters(room r)
 
 # All of the printing for room description is in here, including
 # listing contents, and whatever else we may want to add.
@@ -17,6 +18,7 @@ function void list_room_contents(room r):
 	if not (contents.first == none):
 		print
 		print "You see " + contents + " here."
+	describe_supporters(r)
 
 on person.holder change:
 	describe_room(player.holder)
