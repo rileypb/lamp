@@ -5,6 +5,54 @@ Top recommended next steps, roughly in priority order. Each item notes *why*,
 prerequisite lists in `devdocs/game_parser.md`, `devdocs/rulebooks.md`, and
 `devdocs/relations.md`.
 
+## Architecture review follow-ups (2026-06-19)
+From the standing review captured in `devdocs/architecture.md` → "Known
+Architectural Issues". Listed highest-leverage first.
+
+### AR1. Replace raw-source regex prescans with a token-level pre-pass
+`src/lantern/index.js` derives eight name sets via regex over raw text and feeds
+them to `parseSource`. They use naive comment stripping (inconsistent with the
+tokenizer's string-aware `stripComment`) and re-encode grammar in regex. Tokenize
+once, run a small declaration pre-pass over tokens, then parse. Removes the
+biggest front-end fragility. **(arch issue A)**
+
+### AR2. Decouple Lamplighter from the advent world model
+`scopeOf`/`resolvePool`/`canBeAntecedent` hardcode `holder`/`physical`;
+`lib/sys` `run_command` hardcodes the `player` global; `runAction` hardcodes
+`"succeeded"`/`"failed"`. Define an explicit world-model contract (or
+library-provided scope/antecedent hooks) so `lib/sys` is self-contained and a
+non-advent library is possible. **(arch issue C)**
+
+### AR3. Distinguish object references from string literals in the AST
+A bare name and a quoted string share one `StringLiteral` node; the emitter
+re-derives object-vs-string from expected type at seven sites with duplicated
+logic, and validation is inconsistent (`checkedGetObject` vs bare `getObject`).
+Resolve once in the parser/checker into an `ObjectRef` node; centralize dispatch
+and compile-time unknown-object checking (covers object-name typos in `when`/`if`
+comparisons, currently unvalidated). **(arch issue D)**
+
+### AR4. Decode string escapes
+`\n`, `\t`, `\"` currently render literally; prose can't contain a quote or
+newline. Unescape once (tokenizer or a dedicated step) before the emitter's
+`JSON.stringify`. Add fixtures for embedded quote/newline. **(arch issue E)**
+
+### AR5. Harden the native-JS function boundary
+`gatherNativeJs` finds native names with a regex that also matches functions in
+comments/strings and nested decls. Use a token/AST-aware scan or an explicit
+export manifest per lib `index.js`. **(arch issue B)**
+
+### AR6. Separate relation instances from the world-object registry
+Relations live in `instanceRegistry`, so `scopeOf`/`buildVocabIndex` iterate
+edges (anonymous edges get indexed under the `"null"` token). Give relations
+their own store, or tag iterations to skip them. **(arch issue F)**
+
+### AR7. Small structural fixes
+Make lib load order explicit rather than alphabetical; thread emitter context
+(`currentBareStop`) instead of module state; diagnose duplicate same-signature
+functions in `deduplicateFunctions`; fix case-sensitive QUIT in
+`lib/advent/startup.lamp`; delete dead artifacts (`gameloop.lamp_hide`, unused
+`words` global). **(arch issue G)**
+
 ## 1. Lighthouse web bundle — headless CI test (optional)
 Web v1 is **built, verified live, shell-polished, and hardened for distribution**.
 **Done:** string encoding (`--encode-strings`, `npm run test:encode`) — covers
@@ -49,10 +97,6 @@ player command (the `run_command` path discards `runAction`'s result, unlike
   letting the game (not just the player) set the antecedent when it describes
   an object. **See:** `devdocs/game_parser.md` (Pronoun `it`; Open questions →
   Pronouns).
-- **Extend object-name validation (`checkedGetObject`) to expression contexts.**
-  Object-name comparisons in `when`/`if` expressions (e.g. `self.dropped == cloak`)
-  aren't validated at compile time; a typo silently becomes a string label that
-  never matches. **Where:** `src/lantern/emitter.js` / checker.
 - **Nicer diagnostic for a leading unknown name in a rule head.** A selector or
   rulebook contribution that *begins* with an unknown atom (`instead manipulatoin …`,
   `rule no_such_rulebook:`) isn't recognized as a rule, so it reports a generic
