@@ -41,6 +41,14 @@ player command (the `run_command` path discards `runAction`'s result, unlike
 - **See:** `devdocs/rulebooks.md` roadmap, `devdocs/game_parser.md` v2.
 
 ## Smaller / opportunistic
+- **Remaining pronouns (`him`/`her`/`them`).** `it` is now implemented (single
+  antecedent = last single physical object referred to, in
+  `src/lamplighter/index.js`: `pronounIt`/`noteAntecedent`/`resolveCandidates`;
+  golden `tests/fixtures/parser_it.lamp`). The gendered/plural pronouns need a
+  `pronoun` field (and `plural` for `them`) on `thing` plus per-pronoun
+  antecedents. Also open: letting the game (not just the player) set the
+  antecedent when it describes an object. **See:** `devdocs/game_parser.md`
+  (Pronoun `it`; Open questions → Pronouns).
 - **Extend object-name validation (`checkedGetObject`) to expression contexts.**
   Object-name comparisons in `when`/`if` expressions (e.g. `self.dropped == cloak`)
   aren't validated at compile time; a typo silently becomes a string label that
@@ -67,5 +75,3 @@ player command (the `run_command` path discards `runAction`'s result, unlike
 - **`list<T>` field types end-to-end.** Parsing is now covered by a parser unit
   test, but no fixture declares a `list<T>` field and exercises it through
   emit/runtime. Add one to lock in end-to-end behaviour.
-- Add a **one-way** connection to a test map (plain `connects`, no `bidi`) to
-  lock in that asymmetric exits stay asymmetric.

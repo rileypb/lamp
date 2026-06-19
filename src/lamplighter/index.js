@@ -508,6 +508,52 @@ let vocabIndex = new Map();
 
 const ARTICLES = new Set(["a", "an", "the", "some"]);
 
+// Pronouns the player may use in place of a noun. v1 supports only "it"
+// (him/her/them are deferred — see devdocs/game_parser.md). A pronoun span
+// resolves to the antecedent tracked in `pronounIt`, not via the vocab index.
+const PRONOUNS = new Set(["it"]);
+
+// The antecedent for "it": the last single object the player referred to.
+// Updated whenever a noun phrase binds to exactly one physical object.
+let pronounIt = null;
+
+// "it" refers to things in the world, not to non-physical referents such as
+// directions, so only physical objects become antecedents. A game without a
+// `physical` type treats every object as eligible (matching resolvePool).
+function canBeAntecedent(obj) {
+    if (!typeRegistry.has("physical")) return true;
+    return isTypeOrSubtype(obj.type, "physical");
+}
+
+function noteAntecedent(obj) {
+    if (canBeAntecedent(obj)) pronounIt = obj;
+}
+
+// The player's phrase tokens for a noun span: the span with leading/internal
+// articles dropped (but never reduced to nothing — a bare article stays).
+function strippedPhraseTokens(span) {
+    const stripped = span.filter((t) => !ARTICLES.has(t));
+    return stripped.length > 0 ? stripped : span;
+}
+
+// The pronoun word if `span` is exactly one pronoun (e.g. "it"), else null.
+function pronounOf(span) {
+    const tokens = strippedPhraseTokens(span);
+    return tokens.length === 1 && PRONOUNS.has(tokens[0]) ? tokens[0] : null;
+}
+
+// A pronoun used among `spans` that has no antecedent yet, else null. This is
+// the "never bound" case — distinct from a bound pronoun whose referent has
+// left scope (pronounIt is set) — so it gets its own message.
+function unboundPronounIn(spans) {
+    if (pronounIt) return null;
+    for (const span of spans) {
+        const word = pronounOf(span);
+        if (word) return word;
+    }
+    return null;
+}
+
 function buildVocabIndex() {
     vocabIndex = new Map();
     for (const instances of instanceRegistry.values()) {
@@ -548,9 +594,14 @@ function objectsForTokens(tokens) {
 
 // All in-scope objects of the slot's type whose vocabulary matches the noun span.
 function resolveCandidates(span, scope, slotType) {
-    const stripped = span.filter((t) => !ARTICLES.has(t));
-    const phraseTokens = stripped.length > 0 ? stripped : span;
+    const phraseTokens = strippedPhraseTokens(span);
     const scopeSet = new Set(scope);
+    if (pronounOf(span)) {
+        if (pronounIt && scopeSet.has(pronounIt) && (!slotType || isTypeOrSubtype(pronounIt.type, slotType))) {
+            return [pronounIt];
+        }
+        return [];
+    }
     return objectsForTokens(phraseTokens).filter(
         (obj) => scopeSet.has(obj) && (!slotType || isTypeOrSubtype(obj.type, slotType)),
     );
@@ -603,6 +654,7 @@ function resolveSlots(slots, instance, scope, slotTypes) {
         }
         if (candidates.length === 1) {
             instance[field] = candidates[0];
+            noteAntecedent(candidates[0]);
         } else {
             printDisambiguationPrompt(candidates);
             pendingDisambiguation = {
@@ -635,12 +687,14 @@ function runCommand(line, actor) {
         if (narrowed.length === 1) {
             pendingDisambiguation = null;
             instance[field] = narrowed[0];
+            noteAntecedent(narrowed[0]);
             const status = resolveSlots(remainingSlots, instance, scope, slotTypes);
             if (status === "ok") {
                 runAction(actionName, instance);
             } else if (status === "unresolved") {
                 // Already committed to this action — no backtracking here.
-                print("You can't see any such thing.");
+                const unbound = unboundPronounIn(remainingSlots.map(([, span]) => span));
+                print(unbound ? `I don't know what "${unbound}" refers to.` : "You can't see any such thing.");
             }
             return;
         }
@@ -667,6 +721,7 @@ function runCommand(line, actor) {
     // understand that." (no recognized command). So `take xyzzy` differs from a
     // lone `xyzzy`.
     let sawVerbMatch = false;
+    const unresolvedSpans = [];
     for (const entry of grammarRegistry) {
         const matched = matchGrammar(entry.parts, tokens);
         if (!matched) continue;
@@ -681,14 +736,23 @@ function runCommand(line, actor) {
         if (status === "ambiguous") {
             return;
         }
+        unresolvedSpans.push(...Object.values(matched));
         if (entry.parts.some((part) => part.kind === "literal")) {
             sawVerbMatch = true;
         }
+    }
+    // An unbound pronoun (the player said "it" before referring to anything) gets
+    // its own message ahead of the generic scope/grammar failures.
+    const unbound = unboundPronounIn(unresolvedSpans);
+    if (unbound) {
+        print(`I don't know what "${unbound}" refers to.`);
+        return;
     }
     print(sawVerbMatch ? "You can't see any such thing." : "I don't understand that.");
 }
 
 function run() {
+    pronounIt = null;
     buildVocabIndex();
     fireEvent("startup");
 }

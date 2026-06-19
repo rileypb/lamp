@@ -143,8 +143,9 @@ The design targets these Inform 7/10 parser capabilities, grouped by stage:
 - `printed name` and `article` fields (see Vocabulary model below).
 - Noun phrases with articles and multi-object lists
   (`all`, `take all but the sword`) — multi-object forms are v3.
-- Pronouns (`it`, `them`, `him`, `her`) bound to the last-referenced object(s)
-  — deferred to v2.
+- Pronouns (`it`, `them`, `him`, `her`) bound to the last-referenced object(s).
+  **`it` is implemented** (v1): a bare `it` noun resolves to the last single
+  object the player referred to, gated by scope. `them`/`him`/`her` are deferred.
 
 **Scope & resolution**
 - Scope: the set of objects the player can currently refer to (room contents,
@@ -444,7 +445,22 @@ thing  (printed name, understand)
 articled ("go north", not "go a north"). `game` and `action` are outside `thing`
 — the game singleton and action instances are not player-nameable.
 
-**Deferred.** Pronouns (`it`/`him`/`her`/`them`) and mass nouns (uncountable,
+**Pronoun `it` (implemented).** A noun phrase that is exactly `it` (after
+articles are dropped) resolves to the **antecedent**: the last single object the
+player referred to. The antecedent is updated whenever a noun phrase binds to
+exactly one physical object (including via a disambiguation answer), so after
+`take lamp` a following `take it` / `drop it` / `examine it` all refer to the
+lamp. Resolution is scope-gated and type-checked like any other noun: `it`
+fails with `You can't see any such thing.` if the antecedent has left the
+actor's scope or does not fit the slot's type. The *never bound* case is
+distinguished: `it` typed before any object has been referred to has no
+antecedent and reports `I don't know what "it" refers to.` instead, so the
+player learns the pronoun is empty rather than that the (nonexistent) thing is
+out of view. Directions and other non-physical referents never become the
+antecedent. `him`/`her`/`them` (which
+need per-object pronoun/gender and plurality declarations) remain deferred.
+
+**Deferred.** `him`/`her`/`them` and mass nouns (uncountable,
 e.g. "water") are out of scope for v1. Multi-word understand phrases (e.g. an
 object recognized only by the exact phrase "brass lamp", not by "lamp" alone)
 are a noted future extension — the current token-bag model does not support
@@ -464,7 +480,10 @@ of a noun phrase:
 4. `all` / `everything` expands to all matching in-scope objects (minus
    `... but ...` exclusions). Conjunctions (`X and Y`) produce multiple nouns.
    (Multi-object forms are v3.)
-5. Pronouns resolve against the saved "last referenced" object(s). (Deferred to v2.)
+5. A pronoun phrase (`it`) resolves against the saved "last referenced" object
+   (the antecedent) instead of the vocabulary index, then is scope- and
+   type-checked like any other candidate. `it` is implemented; `them`/`him`/`her`
+   are deferred.
 
 **Scope** is computed by a `scope_of(person)` function: start from the actor's
 location, add the room's contents, the actor's possessions, and recursively the
@@ -661,11 +680,14 @@ populating it.
 - **Where does the standard parser live** — populate the empty `lib/vanilla/`,
   or a new `lib/parse/`? (Requires user direction; both `lib/` dirs are
   author-owned.)
-- **Pronouns (deferred to v2).** `it`/`him`/`her`/`them` bound to the
-  last-referenced object(s). Requires gender/pronoun declarations on objects
-  (a `pronoun` field on `thing`, probably `"he"`/`"she"`/`"they"`/`"it"`)
-  and plurality (`plural` boolean). Singular-they (non-binary persons) and
-  custom pronouns are noted as further extensions.
+- **Pronouns.** `it` is **implemented** (single antecedent = last single
+  physical object referred to; resolved in the native resolver, scope- and
+  type-gated). `him`/`her`/`them` remain deferred: they require gender/pronoun
+  declarations on objects (a `pronoun` field on `thing`, probably
+  `"he"`/`"she"`/`"they"`/`"it"`) and plurality (`plural` boolean). Singular-they
+  (non-binary persons) and custom pronouns are noted as further extensions. Open:
+  whether the antecedent should also be settable by the game describing an object
+  (not just the player naming one), and how multi-object antecedents feed `them`.
 - **Mass nouns (deferred).** Uncountable items like "water" that use `some` but
   are grammatically singular. Whether `mass` is a separate `article` enum value
   or handled differently depends on whether generated-text output for `mass`

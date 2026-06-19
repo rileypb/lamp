@@ -1,0 +1,7 @@
+take it
+take apple
+examine it
+drop it
+examine knife
+examine it
+quit

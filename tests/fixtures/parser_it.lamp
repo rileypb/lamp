@@ -1,0 +1,73 @@
+# Game Parser pronoun "it": a bare "it" noun resolves to the last object the
+# player referred to (the antecedent), gated by scope. See devdocs/game_parser.md.
+
+game Pronoun_Demo:
+	author "Test Author"
+	version 1
+
+type physical
+type container < physical
+type room < container:
+	string description
+type item < physical:
+	container holder
+	string description
+type person < physical:
+	container holder
+
+person yourself
+
+room Kitchen:
+	description "A small kitchen."
+
+item apple:
+	holder Kitchen
+	description "A shiny red apple."
+
+item knife:
+	holder Kitchen
+	description "A sharp knife."
+
+global person player = yourself
+
+action take:
+	item taken
+	syntax:
+		"take [taken]"
+		"get [taken]"
+
+action drop:
+	item taken
+	syntax:
+		"drop [taken]"
+
+action examine:
+	item target
+	syntax:
+		"examine [target]"
+		"x [target]"
+
+check take:
+	if self.taken.holder == player:
+		print "You already have that."
+		stop failed
+
+do take:
+	self.taken.holder = player
+	print "Taken."
+
+do drop:
+	self.taken.holder = player.holder
+	print "Dropped."
+
+do examine:
+	print self.target.description
+
+on startup:
+	player.holder = Kitchen
+	print player.holder.description
+	while true:
+		let line = readline()
+		if line == "quit":
+			break
+		run_command(line)

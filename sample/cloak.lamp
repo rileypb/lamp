@@ -58,6 +58,7 @@ wears yourself velvet_cloak
 item sawdust:
     scenery true
     holder Bar
+	understand "message/writing/floor"
 
 # ========== Dark-bar disturbance counter ==========
 

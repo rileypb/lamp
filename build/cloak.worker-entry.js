@@ -123,7 +123,7 @@ const Bar = lamplighter.createObject(lamplighter.decode("Pg4CHQ=="), lamplighter
 const Cloakroom = lamplighter.createObject(lamplighter.decode("Pg4CHQ=="), lamplighter.decode("Dw0CEScTAh8h"), { "description": lamplighter.decode("GAkIUDsAARw/QQIWbBUFGT9BHh0tDQFQPg4CHWwWCAIpQQ4cKQAfHDVBAh4vBE0cJQ8IFGwWBAQkQQUfIwoeXGwVBR85BgVQIg4aUCMPAQlsDgMVbBMIHS0IAwNiQTkYKUEICCUVTRk/QQxQKA4CAmwVAlA4CQhQKQAeBGI=") });
 const hook = lamplighter.createObject(lamplighter.decode("JRUIHQ=="), lamplighter.decode("JA4CGw=="), { "description": lamplighter.decode("BRVKA2wLGAM4QQxQPwwMHCBBDwItEh5QJA4CG2BBHhM+BBoVKEEZH2wVBRVsFgwcIE8="), "scenery": true });
 lamplighter.createObject(lamplighter.decode("JRUIHQ=="), lamplighter.decode("OgQBBikVTRMgDgwb"), { "description": lamplighter.decode("DUEFESIFHh8hBE0TIA4MG2BBAhZsFwgcOgQZUDgTBB0hBAlQOwgZGGwSDAQlD0FQLQ8JUD8NBBckFQEJbBIdHC0VGRU+BAlQOwgZGGwTDBkiBR8fPBJDUAUVHlAuDQwTJw8IAz9BBANsEgJQKAQIAGwVBRE4QQQEbAABHSMSGVA/BAgdP0EZH2wSGBMnQQEZKwkZUCoTAh1sFQUVbBMCHyFP"), "wearable": true });
-const sawdust = lamplighter.createObject(lamplighter.decode("JRUIHQ=="), lamplighter.decode("PwAaFDkSGQ=="), { "scenery": true });
+const sawdust = lamplighter.createObject(lamplighter.decode("JRUIHQ=="), lamplighter.decode("PwAaFDkSGQ=="), { "scenery": true, "understand": lamplighter.decode("IQQeAy0GCF87EwQEJQ8KXyoNAh8+") });
 north.inverse = lamplighter.getObject(lamplighter.decode("Pw4YBCQ="));
 northeast.inverse = lamplighter.getObject(lamplighter.decode("Pw4YBCQWCAM4"));
 east.inverse = lamplighter.getObject(lamplighter.decode("OwQeBA=="));
