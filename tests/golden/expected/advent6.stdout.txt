@@ -1,7 +1,7 @@
 Shrine
 A quiet shrine.
 
-You see a coin and a idol here.
+You see a coin and an idol here.
 
 > take coin
 Taken.

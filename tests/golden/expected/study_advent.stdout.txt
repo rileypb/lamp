@@ -1,13 +1,13 @@
 foyer
 A bare foyer. A door leads north to the study.
 
-You see a brass key, a idol and a oak door here.
+You see a brass key, an idol and an oak door here.
 
 > look
 foyer
 A bare foyer. A door leads north to the study.
 
-You see a brass key, a idol and a oak door here.
+You see a brass key, an idol and an oak door here.
 
 > take statue
 That stays right where it is.

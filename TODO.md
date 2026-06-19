@@ -64,10 +64,6 @@ player command (the `run_command` path discards `runAction`'s result, unlike
   contributions). Replacing *one* library rule out of several (without depending
   on registration order) needs named rules. See `devdocs/rulebooks.md` roadmap
   (*Next — identity & ergonomics*).
-- **a/an article selection.** advent prints "a idol" / "a oak door"; the `count`
-  article should choose "an" before a vowel sound. The `article` enum exists but
-  the runtime doesn't vary the indefinite article. **Where:** advent display
-  helpers / `lib/advent`.
 - **Reserved words as member names — assignment/handler asymmetry.** Expression
   property access now allows keyword field names (`self.action`), but assignment
   targets (`readTargetSegment`) and `on TYPE.field change` headers still require a
