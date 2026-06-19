@@ -83,9 +83,19 @@ const tokenCases = [
             "KEYWORD(for) IDENT(i) EQUALS NUMBER(1) KEYWORD(to) NUMBER(5) KEYWORD(step) NUMBER(2) COLON NEWLINE INDENT KEYWORD(print) IDENT(i) NEWLINE DEDENT EOF",
     },
     {
-        name: "string preserves inner escapes",
+        name: "string resolves an escaped quote",
         src: 'print "a \\" b"',
-        expect: 'KEYWORD(print) STRING(a \\" b) NEWLINE EOF',
+        expect: 'KEYWORD(print) STRING(a " b) NEWLINE EOF',
+    },
+    {
+        name: "string resolves newline, tab, and backslash escapes",
+        src: 'print "a\\nb\\tc\\\\d"',
+        expect: "KEYWORD(print) STRING(a\nb\tc\\d) NEWLINE EOF",
+    },
+    {
+        name: "unknown escape keeps its backslash",
+        src: 'print "C:\\Users"',
+        expect: "KEYWORD(print) STRING(C:\\Users) NEWLINE EOF",
     },
     // New single-char tokens and priority ordering
     {

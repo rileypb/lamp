@@ -131,7 +131,7 @@ function tokenizeLine(s, lineNumber, filePath, tokens) {
             if (j >= s.length) {
                 throw syntaxError(filePath, lineNumber, "Unterminated string literal");
             }
-            tokens.push({ type: "STRING", value: s.slice(i + 1, j), line: lineNumber });
+            tokens.push({ type: "STRING", value: unescapeString(s.slice(i + 1, j)), line: lineNumber });
             i = j + 1;
             continue;
         }
@@ -233,6 +233,32 @@ function coerceName(raw) {
         } else {
             out += raw[i];
         }
+    }
+    return out;
+}
+
+// Resolves backslash escapes in a string literal's raw inner text to their
+// character values, so prose can contain a double quote or a line break. The
+// recognized escapes are `\\`, `\"`, `\n`, `\t`, and `\r`; any other `\X` is
+// left verbatim (backslash kept) so a stray backslash in prose is never lost.
+// This is the one place strings are decoded — every downstream consumer
+// (emitter, prescan templates, --encode-strings) sees the resolved value.
+function unescapeString(raw) {
+    if (raw.indexOf("\\") === -1) return raw;
+    let out = "";
+    for (let i = 0; i < raw.length; i += 1) {
+        if (raw[i] !== "\\" || i + 1 >= raw.length) {
+            out += raw[i];
+            continue;
+        }
+        const next = raw[i + 1];
+        if (next === "\\") out += "\\";
+        else if (next === '"') out += '"';
+        else if (next === "n") out += "\n";
+        else if (next === "t") out += "\t";
+        else if (next === "r") out += "\r";
+        else { out += "\\" + next; }
+        i += 1;
     }
     return out;
 }

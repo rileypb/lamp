@@ -99,12 +99,14 @@ bare `lamplighter.getObject(...)` that only fails at runtime. A resolved
 `ObjectRef` vs `StringLiteral` distinction (decided once in the parser/checker)
 would centralize both the dispatch and the validation.
 
-### E. String escapes are not processed
-The tokenizer stores a string literal's **raw bytes**, backslashes included, and
-the emitter passes them through `JSON.stringify`, which escapes the backslash
-again. Result: `\n`, `\t`, and `\"` render literally, so prose **cannot contain
-a double quote or a newline**. Escape decoding needs to happen once (tokenizer or
-a dedicated unescape step) so `"a\"b"` and `"line1\nline2"` mean what they say.
+### E. String escapes are not processed — RESOLVED (2026-06-19)
+The tokenizer now resolves escapes when it builds a STRING token's value
+(`unescapeString` in `src/lantern/tokenizer.js`): `\\`, `\"`, `\n`, `\t`, and
+`\r` become their characters; any other `\X` keeps its backslash so a stray
+backslash in prose is never lost. This is the single decode point, so the
+emitter, the prescan's relation templates, and `--encode-strings` all see the
+resolved value. Covered by `tests/tokenizer` (unit) and the `advent17` golden
+fixture (embedded quote + newline + literal backslash, plaintext and encoded).
 
 ### F. Relations share the world-object instance registry
 `defineRelation` registers each relation as an ordinary type, so relation

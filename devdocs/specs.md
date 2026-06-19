@@ -260,7 +260,11 @@ Built-in complex types:
 - `event`
 
 Built-in primitive types:
-- `string` — string values; literals are written in double quotes: `"hello"`
+- `string` — string values; literals are written in double quotes: `"hello"`.
+  Backslash escapes are resolved by the tokenizer: `\"` (double quote), `\n`
+  (newline), `\t` (tab), `\r` (carriage return), and `\\` (literal backslash).
+  Any other `\X` is left as-is (the backslash is kept), so a stray backslash in
+  prose is never lost.
 - `int` — integer values; literals are plain digits: `42`, `-7`
 - `bool` — boolean values; literals are `true` and `false`
 - `real` — floating-point values; literals require a decimal point: `3.14`, `-0.5`

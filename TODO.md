@@ -33,10 +33,12 @@ Resolve once in the parser/checker into an `ObjectRef` node; centralize dispatch
 and compile-time unknown-object checking (covers object-name typos in `when`/`if`
 comparisons, currently unvalidated). **(arch issue D)**
 
-### AR4. Decode string escapes
-`\n`, `\t`, `\"` currently render literally; prose can't contain a quote or
-newline. Unescape once (tokenizer or a dedicated step) before the emitter's
-`JSON.stringify`. Add fixtures for embedded quote/newline. **(arch issue E)**
+### AR4. Decode string escapes — DONE (2026-06-19)
+`unescapeString` in `src/lantern/tokenizer.js` resolves `\\`, `\"`, `\n`, `\t`,
+`\r` at the STRING-token chokepoint; unknown `\X` keeps its backslash. One decode
+point, so emitter/prescan/`--encode-strings` all agree. Tested in
+`tests/tokenizer` and golden `advent17` (plaintext + encoded byte-identical).
+**(arch issue E)**
 
 ### AR5. Harden the native-JS function boundary
 `gatherNativeJs` finds native names with a regex that also matches functions in

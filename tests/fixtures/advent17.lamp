@@ -1,0 +1,20 @@
+lib advent
+
+# Regression: string escapes resolve through the full pipeline. Prose may
+# contain a double quote (\") and a line break (\n); \\ yields a literal
+# backslash; an unknown escape keeps its backslash.
+
+game Escape_Test:
+    start hall
+
+room hall:
+    description "She said \"hello\" and left."
+
+action probe:
+    syntax:
+        "probe"
+
+report probe:
+    print "line one\nline two"
+    print "a literal backslash: \\ done"
+    print "unknown stays: C:\Users"

@@ -1,0 +1,10 @@
+hall
+She said "hello" and left.
+
+> probe
+line one
+line two
+a literal backslash: \ done
+unknown stays: C:\Users
+
+> quit
