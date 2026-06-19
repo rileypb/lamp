@@ -12,6 +12,7 @@
     "build:web": "node src/lighthouse/build.js",
     "test": "node tests/golden/run-golden.js",
     "test:sandbox": "node tests/sandbox/run-sandbox.js",
+    "test:lighthouse": "node tests/lighthouse/run-lighthouse.js",
     "test:tokenizer": "node tests/tokenizer/run-tokenizer.js",
     "test:parser": "node tests/parser/run-parser.js"
   },

@@ -5,28 +5,14 @@ Top recommended next steps, roughly in priority order. Each item notes *why*,
 prerequisite lists in `devdocs/game_parser.md`, `devdocs/rulebooks.md`, and
 `devdocs/relations.md`.
 
-## 1. Lighthouse web bundle — first slice
-Design decisions are recorded in `devdocs/lighthouse.md` (service worker for
-COOP/COEP, esbuild bundler [approved new devDependency], output+input-only
-capabilities, directory-bundle artifact). Remaining steps, in order:
-(a) ✅ **browser `Worker` bootstrap** — `src/lamplighter/sandbox/worker-browser.js`
-(strips network globals, drives the transport seam over `postMessage` + SAB,
-exports `runGame(factory)`; starts on the host `init` message). (b) ✅
-**HTML/CSS/JS shell** — `src/lighthouse/web/{index.html,shell.css,shell.js}`:
-main-thread host that builds the SAB, spawns `game.worker.js`, posts `init`,
-relays `print`/`write` as text nodes + `log` to console, and services
-`readline`/`prompt_readline` async (echo + SAB fill + `Atomics.notify`); refuses
-to start if not cross-origin isolated. (c) ✅ **esbuild build step** —
-`src/lighthouse/{index.js,build.js}`, `npm run build:web -- <game.lamp> [outDir]`
-(added `esbuild` devDependency): compiles via Lantern, wraps the body-only game
-as the `runGame((lamplighter, require, console) => {…})` factory, esbuild-bundles
-it with the runtime + `worker-browser.js` into one `game.worker.js`, copies the
-shell assets; verified on `sample/cloak.lamp` (0 warnings, shadowed `require`
-preserved). (d) ship the **COOP/COEP service worker** + decide first-load reload
-strategy, and wire its registration into `index.html`. **Blocked by:** none —
-next is (d), after which the bundle can actually run cross-origin-isolated.
-**Where:** `src/lighthouse/web/` (sw.js + index.html). After (d): add a
-browser-path smoke/golden test (first point the web path runs end-to-end).
+## 1. Lighthouse web bundle — polish shell/UX details
+Web v1 is **built, smoke-tested, and verified live in a browser** (full loop
+plays through; see `devdocs/lighthouse.md`). Remaining: a handful of minor
+shell/UX details noticed in the first live run — to be enumerated, then fixed in
+`src/lighthouse/web/{shell.js,shell.css,index.html}`. Separately, the only
+automation gap is a *headless* browser test for CI (Playwright/Puppeteer = heavy
+dep; decide if worth it). **Blocked by:** the specific details to fix.
+**Where:** `src/lighthouse/web/`.
 
 ## 2. RESTART support for the end-of-story sequence
 The end-of-story mechanism (`story` global, `end_story_rules`, the post-game loop

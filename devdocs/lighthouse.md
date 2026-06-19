@@ -78,10 +78,21 @@ thin CLI). Steps:
    `game.worker.js` (`format: iife`, `platform: browser`). The runtime has zero
    `require`s and touches `process` only inside the default `writeImpl` (replaced
    by `setWrite` before any game code runs), so it bundles and loads cleanly.
-4. Copy the shell assets (`index.html`, `shell.css`, `shell.js`) into the output
-   directory. (The COOP/COEP service worker is added in step (d).)
+4. Copy the shell assets (`index.html`, `shell.css`, `shell.js`, `sw.js`) into
+   the output directory.
 
 Default output directory is `dist/<game-name>/`.
+
+## Cross-origin isolation (service worker)
+
+`src/lighthouse/web/sw.js` re-fetches each request and returns it carrying
+`Cross-Origin-Opener-Policy: same-origin`, `Cross-Origin-Embedder-Policy:
+require-corp`, and `Cross-Origin-Resource-Policy: cross-origin`, so the page is
+cross-origin isolated (and `SharedArrayBuffer` available) on any static host with
+no server configuration. `index.html` registers the worker before the shell runs
+and reloads once when the worker takes control — the worker controls the page
+only after it activates, so the first visit loads un-isolated and the reload
+brings it back isolated. If already isolated, registration is a no-op.
 
 ## Shell
 
@@ -127,11 +138,25 @@ Built in `src/lighthouse/web/` as the bundle's template assets:
   via the exported `runGame(factory)` entry; the game starts only after the
   host's `init` message delivers the shared input buffer.
 
+## Status
+
+Web v1 is built, smoke-tested (`npm run test:lighthouse`), and **verified live in
+a browser**: a bundle built with `buildWeb` registers the service worker, becomes
+cross-origin isolated, and plays through the full loop (worker blocks on
+`Atomics.wait`, shell fills the SAB on submit). Minor shell/UX details remain to
+polish. The remaining automation gap is a *headless* browser test for CI; the
+manual run is confirmed.
+
 ## Open Questions
 
-- **Service-worker first-load.** A service worker controls the page only after
-  its first navigation; the very first load may not be cross-origin isolated.
-  Decide the reload/registration strategy (e.g. auto-reload once the SW is
-  active).
-- **`lamp build` CLI surface.** Exact command name, inputs (raw `.lamp` vs.
-  pre-compiled), and output path conventions.
+- **Headless browser test for CI.** The live run is verified manually; the Node
+  smoke test still only validates the artifact. A Playwright/Puppeteer test would
+  automate the live loop but adds a heavy dependency — decide whether it is worth
+  it for CI.
+- **Shell/UX polish.** Minor details observed in the first live run remain to be
+  pinned down and fixed (to be enumerated).
+- **`lamp build` CLI surface.** Currently `npm run build:web -- <game.lamp>
+  [outDir]`. Confirm the eventual unified `lamp` command name and whether it also
+  accepts pre-compiled output.
+- **Electron target.** Same shell, different packaging and capability backing;
+  deferred. Confirm it reuses this bundle's shell and the worker bootstrap.

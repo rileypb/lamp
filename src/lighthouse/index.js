@@ -15,7 +15,7 @@ const PROJECT_ROOT = path.resolve(__dirname, "..", "..");
 const LANTERN_CLI = path.join(PROJECT_ROOT, "src", "lantern", "index.js");
 const WORKER_BOOTSTRAP = path.join(PROJECT_ROOT, "src", "lamplighter", "sandbox", "worker-browser.js");
 const SHELL_DIR = path.join(__dirname, "web");
-const SHELL_ASSETS = ["index.html", "shell.css", "shell.js"];
+const SHELL_ASSETS = ["index.html", "shell.css", "shell.js", "sw.js"];
 
 // Compile the game to a body-only module via the standard Lantern CLI rather than
 // reimplementing its prescan/parse pipeline. The output references `lamplighter`,

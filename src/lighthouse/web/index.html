@@ -5,6 +5,27 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Lamp Game</title>
     <link rel="stylesheet" href="./shell.css">
+    <script>
+        // Register the cross-origin-isolation service worker before the shell
+        // runs. On first visit the page loads without the isolation headers (the
+        // worker controls the page only after it activates), so reload once the
+        // worker takes control; the reloaded page loads isolated and the shell's
+        // SharedArrayBuffer succeeds. If already isolated, do nothing. See sw.js.
+        (function () {
+            if (window.crossOriginIsolated) return;
+            if (!window.isSecureContext || !("serviceWorker" in navigator)) return;
+            navigator.serviceWorker.addEventListener("controllerchange", function () {
+                window.location.reload();
+            });
+            navigator.serviceWorker.register("./sw.js").then(function (registration) {
+                if (registration.active && !navigator.serviceWorker.controller) {
+                    window.location.reload();
+                }
+            }).catch(function () {
+                // No service worker means no isolation; the shell shows a notice.
+            });
+        })();
+    </script>
 </head>
 <body>
     <!-- Host shell: renders worker output as text nodes, captures one line of
