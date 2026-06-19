@@ -88,8 +88,8 @@ const go = lamplighter.type("go");
 const hang = lamplighter.type("hang");
 const read = lamplighter.type("read");
 
-lamplighter.defineRelation("connects", {"source":"room","dir":"direction","target":"room"}, "connects [source] [dir] [target]", ["dir"], "source", "target");
-lamplighter.defineRelation("wears", {"wearer":"person","worn":"item"}, "wears [wearer] [worn]", [], "wearer", "worn");
+lamplighter.defineRelation("connects", {"source":"room","dir":"direction","target":"room"}, lamplighter.decode("Lw4DHikCGQNsOh4fORMOFRFBNhQlEzBQFxUMAisEGS0="), ["dir"], "source", "target");
+lamplighter.defineRelation("wears", {"wearer":"person","worn":"item"}, lamplighter.decode("OwQMAj9BNgcpAB8VPjxNKzsOHx4R"), [], "wearer", "worn");
 
 const connects = lamplighter.type("connects");
 const wears = lamplighter.type("wears");
@@ -543,23 +543,23 @@ lamplighter.registerRulebookRule("startup_rules", () => {
     lamplighter.print(lamplighter.decode("BBQfAjUIAxdsFQUCIxQKGGwVBRVsEwwZIhIaFTwVTT4jFwgdLgQfUCIIChg4TU0JIxRKAilBChwtBU0EI0EeFSlBGRgpQQ8CJQYFBGwNBBckFR5QIwdNBCQETT88BB8RbCkCBT8EQ1AFFUoDbBIYAjwTBAMlDwpQOAkMBGwVBRU+BE0RPgQDVzhBAB8+BE0AKQ4dHClBDBIjFBlQLhQZXGwJCAlgQRoYLRVNFCNBFB85QQgIPAQOBGwIA1AtQQ4YKQAdUCgEAB9sBgwdKU9DXnM="));
     lamplighter.print(lamplighter.decode(""));
 }, 0);
-lamplighter.registerGrammar("look", "look");
-lamplighter.registerGrammar("look", "l");
-lamplighter.registerGrammar("take", "take [taken]");
-lamplighter.registerGrammar("take", "get [taken]");
-lamplighter.registerGrammar("inventory", "inventory");
-lamplighter.registerGrammar("inventory", "i");
-lamplighter.registerGrammar("drop", "drop [dropped]");
-lamplighter.registerGrammar("wear", "wear [clothing]");
-lamplighter.registerGrammar("doff", "remove [clothing]");
-lamplighter.registerGrammar("doff", "take off [clothing]");
-lamplighter.registerGrammar("examine", "examine [target]");
-lamplighter.registerGrammar("examine", "x [target]");
-lamplighter.registerGrammar("go", "go [way]");
-lamplighter.registerGrammar("go", "[way]");
-lamplighter.registerGrammar("hang", "hang [carried] on [peg]");
-lamplighter.registerGrammar("hang", "put [carried] on [peg]");
-lamplighter.registerGrammar("read", "read [target]");
+lamplighter.registerGrammar("look", lamplighter.decode("IA4CGw=="));
+lamplighter.registerGrammar("look", lamplighter.decode("IA=="));
+lamplighter.registerGrammar("take", lamplighter.decode("OAAGFWw6GREnBAMt"));
+lamplighter.registerGrammar("take", lamplighter.decode("KwQZUBcVDBspDzA="));
+lamplighter.registerGrammar("inventory", lamplighter.decode("JQ8bFSIVAgI1"));
+lamplighter.registerGrammar("inventory", lamplighter.decode("JQ=="));
+lamplighter.registerGrammar("drop", lamplighter.decode("KBMCAGw6CQIjER0VKDw="));
+lamplighter.registerGrammar("wear", lamplighter.decode("OwQMAmw6DhwjFQUZIgYw"));
+lamplighter.registerGrammar("doff", lamplighter.decode("PgQAHzoETSsvDQIEJAgDFxE="));
+lamplighter.registerGrammar("doff", lamplighter.decode("OAAGFWwOCxZsOg4cIxUFGSIGMA=="));
+lamplighter.registerGrammar("examine", lamplighter.decode("KRkMHSUPCFAXFQwCKwQZLQ=="));
+lamplighter.registerGrammar("examine", lamplighter.decode("NEE2BC0TChU4PA=="));
+lamplighter.registerGrammar("go", lamplighter.decode("Kw5NKzsAFC0="));
+lamplighter.registerGrammar("go", lamplighter.decode("FxYMCRE="));
+lamplighter.registerGrammar("hang", lamplighter.decode("JAADF2w6DhE+EwQVKDxNHyJBNgApBjA="));
+lamplighter.registerGrammar("hang", lamplighter.decode("PBQZUBcCDAI+CAgUEUECHmw6HRUrPA=="));
+lamplighter.registerGrammar("read", lamplighter.decode("PgQMFGw6GRE+BggEEQ=="));
 
 lamplighter.run();
 

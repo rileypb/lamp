@@ -62,7 +62,7 @@ const tmp = fs.mkdtempSync(path.join(os.tmpdir(), "lamp-encode-"));
 // `leaks`: strings present plaintext in the unencoded build that must NOT appear
 // in the encoded build — a mix of prose, object names, and global names.
 const cases = [
-    { game: "sample/cloak.lamp", leaks: ["spacious hall", "cant go that way", "USE OXFORD COMMA"] },
+    { game: "sample/cloak.lamp", leaks: ["spacious hall", "cant go that way", "USE OXFORD COMMA", "on [peg]"] },
     { game: "sample/study.lamp", leaks: [] },
 ];
 

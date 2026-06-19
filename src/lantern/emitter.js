@@ -312,7 +312,10 @@ function emitProgram(programAst, options = {}) {
 
     for (const actionNode of actionNodes) {
         for (const template of (actionNode.templates || [])) {
-            lines.push(`lamplighter.registerGrammar(${JSON.stringify(actionNode.name)}, ${JSON.stringify(template)});`);
+            // The grammar template (the player-visible command phrasing) is the
+            // strongest puzzle spoiler; encode it. Parsed at runtime from the
+            // decoded string, so behavior is unchanged.
+            lines.push(`lamplighter.registerGrammar(${JSON.stringify(actionNode.name)}, ${emitStringLiteral(template)});`);
         }
     }
 
@@ -426,7 +429,7 @@ function emitRelationDecl(node) {
     for (const field of node.fields) {
         fields[field.fieldName] = field.typeName;
     }
-    const syntaxArg = node.syntax === null ? "null" : JSON.stringify(node.syntax);
+    const syntaxArg = node.syntax === null ? "null" : emitStringLiteral(node.syntax);
     return `lamplighter.defineRelation(${JSON.stringify(node.name)}, ${JSON.stringify(fields)}, ${syntaxArg}, ${JSON.stringify(node.invertedFields || [])}, ${JSON.stringify(node.sourceField)}, ${JSON.stringify(node.targetField)});`;
 }
 
