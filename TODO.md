@@ -83,8 +83,9 @@ in emitter/checker are per-invocation config, not the save/restore hazard; full
 concurrent reentrancy would still need them bundled. **(arch issue G)**
 
 ## 0. GitHub Pages deploy — enable Pages source (one-time) — DONE workflow (2026-06-19)
-`.github/workflows/deploy-pages.yml` builds `sample/cloak.lamp` and publishes it
-to GitHub Pages on push to `main` (and `workflow_dispatch`). **Remaining (manual,
+`.github/workflows/deploy-pages.yml` builds `sample/cloak.lamp --encode-strings`
+(prose hidden from view-source) and publishes it to GitHub Pages on push to
+`main` (and `workflow_dispatch`). **Remaining (manual,
 one-time):** in the repo Settings → Pages, set **Source: GitHub Actions** so the
 workflow's `deploy-pages` step has a target; until then the deploy job will fail.
 The bundle's service worker supplies COOP/COEP, so no host header config is
