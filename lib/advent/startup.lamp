@@ -17,7 +17,7 @@ on startup:
 		input = prompt("> ")
 		if to_lower(input) == "quit":
 			break
-		run_command(input)
+		run_command(input, player)
 	# End-of-story sequence: print the win/lose banner, then accept only QUIT.
 	# (RESTART is not yet supported.)
 	if not (story == ongoing):

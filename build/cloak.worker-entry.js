@@ -24,8 +24,8 @@ function to_lower(input) {
     return input.toLowerCase();
 }
 
-function run_command(line) {
-    lamplighter.runCommand(line, lamplighter.getGlobal("player"));
+function run_command(line, actor) {
+    lamplighter.runCommand(line, actor);
 }
 
 function display_name(x) {
@@ -243,7 +243,7 @@ lamplighter.onEvent("startup", () => {
         if (to_lower(lamplighter.getGlobal("input")) === "quit") {
             break;
         }
-        run_command(lamplighter.getGlobal("input"));
+        run_command(lamplighter.getGlobal("input"), lamplighter.getGlobal("player"));
     }
     if (!(lamplighter.getGlobal("story") === "ongoing")) {
         lamplighter.print("");

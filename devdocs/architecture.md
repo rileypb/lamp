@@ -81,18 +81,25 @@ function implemented only inside another function — or merely named in a comme
 instead of a runtime `ReferenceError`. Unit-tested in `tests/native_scan`; the
 set extracted from the real lib files is unchanged, so the checker stays green.
 
-### C. Lamplighter embeds the advent world model
-The "general" runtime hardcodes advent-library concepts: `scopeOf`,
-`resolvePool`, and `canBeAntecedent` are written in terms of the `holder` field
-and the `physical` type; `run_command` (in `lib/sys/index.js`) calls
-`getGlobal("player")`; `runAction` compares outcomes against the literal strings
-`"succeeded"`/`"failed"` (which must match the `outcome` enum in
-`lib/sys/kinds.lamp`); list formatting reads the magic global
-`"USE OXFORD COMMA"`. `lib/sys` is therefore **not self-contained** — it depends
-on names defined in `lib/advent`. A different world library cannot reuse the
-parser/scope/loop without inheriting these assumptions. Either formalize the
-contract (a documented "world model interface" the runtime requires) or push the
-scope/antecedent logic down into library-provided hooks.
+### C. Lamplighter embeds the advent world model — mostly RESOLVED (2026-06-19)
+The runtime is an IF runtime by design (decision D1 in `devdocs/world-model.md`),
+so the structural names it depends on — `holder` (containment field), `physical`
+(scope root), and `succeeded`/`failed` (action outcomes) — are **owned by the
+runtime and hardcoded**, documented as the runtime↔library contract rather than
+made configurable. `scopeOf`/`resolvePool`/`canBeAntecedent`/`runAction` keep
+using them.
+
+The one genuine coupling — `lib/sys`'s `run_command` calling
+`getGlobal("player")` — is **fixed**: the commanding actor is now passed in
+(`run_command(line, actor)`, actor typed `object`). `lib/sys` references no
+world-defined name and is self-contained; the `lib/sys ↔ lib/advent` split is
+kept and justified (base vs. opt-in IF world model — see the design note).
+
+**Remaining (open):** presentation policy still lives in the runtime —
+`formatListValue` reads the magic global `USE OXFORD COMMA`. The plan is to move
+list formatting library-side over an open settings store (not a fixed config
+object), so new presentation options never touch the runtime. Tracked in
+`TODO.md`; full design in `devdocs/world-model.md`.
 
 ### D. The AST conflates bare object names with string literals — RESOLVED (2026-06-19)
 A bare identifier used as a value parses to the same `StringLiteral` node as a

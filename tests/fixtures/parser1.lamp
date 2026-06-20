@@ -65,4 +65,4 @@ on startup:
 		let line = readline()
 		if line == "quit":
 			break
-		run_command(line)
+		run_command(line, player)

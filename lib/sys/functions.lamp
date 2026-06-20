@@ -4,5 +4,7 @@ native function void write(string s)
 native function list<string> split(string input)
 native function string to_lower(string input)
 
-# parse one line of player input and run the matched action (see devdocs/game_parser.md)
-native function void run_command(string line)
+# Parse one line of input and run the matched action on behalf of `actor` (see
+# devdocs/game_parser.md). The actor is supplied by the caller — typically the
+# world library's player — so this base function names no world-specific global.
+native function void run_command(string line, object actor)
