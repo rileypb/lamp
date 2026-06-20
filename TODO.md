@@ -9,16 +9,7 @@ prerequisite lists in `devdocs/game_parser.md`, `devdocs/rulebooks.md`, and
 > `devdocs/architecture.md` → "Known Architectural Issues" for the per-issue
 > record. The only optional remnant is item 5 below.
 
-## 1. GitHub Pages deploy — enable Pages source (one-time, manual)
-`.github/workflows/deploy-pages.yml` builds `sample/cloak.lamp --encode-strings`
-(prose hidden from view-source) and publishes it to GitHub Pages on push to
-`main` (and `workflow_dispatch`). **Remaining (manual, one-time):** in the repo
-Settings → Pages, set **Source: GitHub Actions** so the workflow's `deploy-pages`
-step has a target; until then the deploy job will fail. The bundle's service
-worker supplies COOP/COEP, so no host header config is needed. **Where:**
-`.github/workflows/deploy-pages.yml`, `devdocs/lighthouse.md`.
-
-## 2. Lighthouse web bundle — headless CI test (optional)
+## 1. Lighthouse web bundle — headless CI test (optional)
 Web v1 is **built, verified live, shell-polished, and hardened for distribution**
 (string encoding + esbuild minify, both covered by `npm run test:lighthouse` /
 `npm run test:encode`). **Remaining (optional):** a *headless* browser test that
@@ -27,7 +18,7 @@ automation gap but needs a heavy Playwright/Puppeteer dep; decide if worth it fo
 CI. Also still open: whether to default `--encode-strings` on for distribution
 builds. **Where:** `src/lighthouse/`.
 
-## 3. RESTART support for the end-of-story sequence
+## 2. RESTART support for the end-of-story sequence
 The end-of-story mechanism (`story` global, `end_story_rules`, the post-game loop
 in `lib/advent/startup.lamp`) is in place but only offers QUIT — there is no state
 reset, so RESTART was deferred. Implement it by having the sandbox **host
@@ -37,7 +28,7 @@ guarding the `exit` handler), and re-enabling RESTART in the end sequence.
 Alternative (messier): a runtime-wide `reset()` + re-run. **Where:**
 `src/lamplighter/sandbox/host.js` + `worker.js`, `lib/advent/startup.lamp`.
 
-## 4. Parser v2 — every-turn & timed rules
+## 3. Parser v2 — every-turn & timed rules
 Action-rulebook bands are implemented; what remains for v2 is a turn clock:
 every-turn rules and timed/scheduled events, plus out-of-world actions
 (`save`/`undo`/`again` — currently out of scope). Also surface the outcome of a
@@ -46,7 +37,7 @@ player command (the `run_command` path discards `runAction`'s result, unlike
 - **Where:** rulebook driver in `src/lamplighter/index.js`, `run_command` loop.
 - **See:** `devdocs/rulebooks.md` roadmap, `devdocs/game_parser.md` v2.
 
-## 5. Malformed-world startup check (optional hardening)
+## 4. Malformed-world startup check (optional hardening)
 Carryover from arch issue C. When the parser is used, assert at startup that a
 `physical` type and a `holder` field exist, so a world library missing the
 runtime↔world contract names fails loudly instead of on `undefined.holder` deep
