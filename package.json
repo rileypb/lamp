@@ -18,7 +18,8 @@
     "test:parser": "node tests/parser/run-parser.js",
     "test:prescan": "node tests/prescan/run-prescan.js",
     "test:liborder": "node tests/liborder/run-liborder.js",
-    "test:native-scan": "node tests/native_scan/run-native-scan.js"
+    "test:native-scan": "node tests/native_scan/run-native-scan.js",
+    "test:state": "node tests/state/run-state.js"
   },
   "devDependencies": {
     "esbuild": "^0.28.1"

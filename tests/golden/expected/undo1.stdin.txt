@@ -1,0 +1,5 @@
+undo
+take coin
+undo
+i
+quit

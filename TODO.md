@@ -13,7 +13,22 @@ prerequisite lists in `devdocs/game_parser.md`, `devdocs/rulebooks.md`, and
 > grammar, world-model traits, turn-cycle/daemon, and message ideas mined from
 > `lurkinghorror.txt`. The user will pick which to promote into real TODO items.
 
-## 1. Lighthouse web bundle — headless CI test (optional)
+## 1. SAVE / RESTORE — serialize the state snapshot to storage
+UNDO is **done** (Slice 1): the snapshot core (`captureState`/`restoreState`, a
+state-provider registry with four built-ins, encode/decode over the closed
+value algebra) plus an undo stack and the out-of-world `undo` verb, all in
+`src/lamplighter/index.js`. Round-trip unit test `tests/state` + golden `undo1`;
+design in `devdocs/state.md`. **Remaining:**
+- **Slice 2 — SAVE/RESTORE to a file (dev host).** `JSON.stringify` the same
+  snapshot via a storage native; out-of-world `save`/`restore` verbs; `restore`
+  clears undo history. Decide save-slot/metadata + schema-drift policy
+  (`devdocs/state.md` Open questions). **Where:** `src/lamplighter/index.js`,
+  `src/lamplighter/sandbox/host.js`, a storage native in `lib/sys`.
+- **Slice 3 — browser persistence.** Wire the storage native to the sandbox
+  persistence capability (`devdocs/sandbox.md`) — download/localStorage.
+This shares the out-of-world-verb hook with RESTART (item 3) and Parser v2.
+
+## 2. Lighthouse web bundle — headless CI test (optional)
 Web v1 is **built, verified live, shell-polished, and hardened for distribution**
 (string encoding + esbuild minify, both covered by `npm run test:lighthouse` /
 `npm run test:encode`). **Remaining (optional):** a *headless* browser test that
@@ -22,7 +37,7 @@ automation gap but needs a heavy Playwright/Puppeteer dep; decide if worth it fo
 CI. Also still open: whether to default `--encode-strings` on for distribution
 builds. **Where:** `src/lighthouse/`.
 
-## 2. RESTART support for the end-of-story sequence
+## 3. RESTART support for the end-of-story sequence
 The end-of-story mechanism (`story` global, `end_story_rules`, the post-game loop
 in `lib/advent/startup.lamp`) is in place but only offers QUIT — there is no state
 reset, so RESTART was deferred. Implement it by having the sandbox **host
@@ -32,7 +47,7 @@ guarding the `exit` handler), and re-enabling RESTART in the end sequence.
 Alternative (messier): a runtime-wide `reset()` + re-run. **Where:**
 `src/lamplighter/sandbox/host.js` + `worker.js`, `lib/advent/startup.lamp`.
 
-## 3. Parser v2 — every-turn & timed rules
+## 4. Parser v2 — every-turn & timed rules
 Action-rulebook bands are implemented; what remains for v2 is a turn clock:
 every-turn rules and timed/scheduled events, plus out-of-world actions
 (`save`/`undo`/`again` — currently out of scope). Also surface the outcome of a
@@ -41,7 +56,7 @@ player command (the `run_command` path discards `runAction`'s result, unlike
 - **Where:** rulebook driver in `src/lamplighter/index.js`, `run_command` loop.
 - **See:** `devdocs/rulebooks.md` roadmap, `devdocs/game_parser.md` v2.
 
-## 4. Malformed-world startup check (optional hardening)
+## 5. Malformed-world startup check (optional hardening)
 Carryover from arch issue C. When the parser is used, assert at startup that a
 `physical` type and a `holder` field exist, so a world library missing the
 runtime↔world contract names fails loudly instead of on `undefined.holder` deep

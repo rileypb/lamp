@@ -772,6 +772,15 @@ function runCommand(line, actor) {
         pendingDisambiguation = null;
     }
 
+    // Out-of-world verbs (undo; later save/restore) bypass the turn and take no
+    // checkpoint. Otherwise checkpoint the pre-turn state so `undo` can revert
+    // this command. See devdocs/state.md.
+    if (tokens.length === 1 && outOfWorldCommands.has(tokens[0])) {
+        outOfWorldCommands.get(tokens[0])();
+        return;
+    }
+    checkpoint();
+
     // Try each grammar whose structure matches. A grammar that matches
     // structurally but whose nouns don't resolve ("unresolved") is not the end
     // of the road — we backtrack and try the next, so overlapping syntaxes can
@@ -1046,6 +1055,199 @@ function kind(name) {
     return kindRegistry.get(name);
 }
 
+// ====================================================================
+// State snapshots — UNDO now, SAVE/RESTORE next. See devdocs/state.md.
+// ====================================================================
+
+// The value algebra is closed: scalar | object reference | list. encode/decode
+// is the single place that changes if a new value kind is ever introduced; the
+// `throw` surfaces any unrecognized value rather than silently dropping it.
+function encodeValue(value) {
+    if (value === null || value === undefined) return null;
+    if (isListValue(value)) return { $list: value.items.map(encodeValue) };
+    if (typeof value === "object") {
+        if (typeof value.name === "string" && nameRegistry.get(value.name) === value) {
+            return { $ref: value.name };
+        }
+        throw new Error("cannot snapshot value: unrecognized object (not a named instance or list)");
+    }
+    return value;
+}
+
+function decodeValue(data) {
+    if (data === null || data === undefined) return null;
+    if (typeof data === "object") {
+        if ("$ref" in data) return nameRegistry.get(data.$ref) ?? null;
+        if ("$list" in data) return makeList(data.$list.map(decodeValue));
+        throw new Error("cannot restore value: unrecognized encoded object");
+    }
+    return data;
+}
+
+// State providers own each slice of mutable game state. The snapshot core never
+// hardcodes what to capture — new mutable state is captured by registering a
+// provider, not by editing this file. See devdocs/state.md → State-provider
+// registry.
+const stateProviders = [];
+function registerStateProvider(provider) {
+    stateProviders.push(provider);
+}
+
+function captureState() {
+    const snap = {};
+    for (const provider of stateProviders) snap[provider.key] = provider.capture();
+    return snap;
+}
+
+function restoreState(snap) {
+    for (const provider of stateProviders) provider.restore(snap[provider.key]);
+    buildVocabIndex();
+}
+
+// Own-field encode for a registry record, skipping the structural keys that
+// identity (not state) is carried by.
+function encodeFields(record, skip) {
+    const fields = {};
+    for (const key of Object.keys(record)) {
+        if (skip.has(key)) continue;
+        fields[key] = encodeValue(record[key]);
+    }
+    return fields;
+}
+
+// Built-in providers. Registration order matters on restore: instances first so
+// that later providers' $refs resolve against the restored instance set.
+const INSTANCE_SKIP = new Set(["name", "type"]);
+registerStateProvider({
+    key: "instances",
+    capture() {
+        const out = {};
+        for (const instances of instanceRegistry.values()) {
+            for (const inst of instances) {
+                out[inst.name] = { type: inst.type, fields: encodeFields(inst, INSTANCE_SKIP) };
+            }
+        }
+        return out;
+    },
+    restore(data) {
+        const wanted = new Set(Object.keys(data));
+        // Drop instances created since the snapshot.
+        for (const instances of instanceRegistry.values()) {
+            for (let i = instances.length - 1; i >= 0; i -= 1) {
+                if (!wanted.has(instances[i].name)) {
+                    nameRegistry.delete(instances[i].name);
+                    instances.splice(i, 1);
+                }
+            }
+        }
+        // Recreate instances deleted since the snapshot (empty for now; fields
+        // assigned in the second pass once every instance exists).
+        for (const [name, rec] of Object.entries(data)) {
+            if (!nameRegistry.has(name)) createObject(rec.type, name, {});
+        }
+        // Assign fields by direct write (never setField — no change handlers).
+        for (const [name, rec] of Object.entries(data)) {
+            const inst = nameRegistry.get(name);
+            for (const key of Object.keys(inst)) {
+                if (!INSTANCE_SKIP.has(key)) delete inst[key];
+            }
+            for (const [key, encoded] of Object.entries(rec.fields)) {
+                inst[key] = decodeValue(encoded);
+            }
+        }
+    },
+});
+
+registerStateProvider({
+    key: "globals",
+    capture() {
+        const out = {};
+        for (const [name, value] of globalRegistry) out[name] = encodeValue(value);
+        return out;
+    },
+    restore(data) {
+        for (const [name, encoded] of Object.entries(data)) {
+            globalRegistry.set(name, decodeValue(encoded));
+        }
+    },
+});
+
+const EDGE_SKIP = new Set(["name", "type", "bidi"]);
+registerStateProvider({
+    key: "relations",
+    capture() {
+        const out = {};
+        for (const [typeName, edges] of relationInstanceRegistry) {
+            out[typeName] = edges.map((edge) => ({
+                name: edge.name ?? null,
+                bidi: Boolean(edge.bidi),
+                fields: encodeFields(edge, EDGE_SKIP),
+            }));
+        }
+        return out;
+    },
+    restore(data) {
+        // Edges are recreated wholesale (nothing holds edge identity across a
+        // turn). Clear current edges and their name bindings first.
+        for (const [typeName, edges] of relationInstanceRegistry) {
+            for (const edge of edges) {
+                if (edge.name) nameRegistry.delete(edge.name);
+            }
+            relationInstanceRegistry.set(typeName, []);
+        }
+        for (const [typeName, encodedEdges] of Object.entries(data)) {
+            const list = relationInstanceRegistry.get(typeName) || [];
+            for (const enc of encodedEdges) {
+                const edge = { name: enc.name ?? null, type: typeName, bidi: enc.bidi };
+                for (const [key, encoded] of Object.entries(enc.fields)) {
+                    edge[key] = decodeValue(encoded);
+                }
+                list.push(edge);
+                if (enc.name) nameRegistry.set(enc.name, edge);
+            }
+            relationInstanceRegistry.set(typeName, list);
+        }
+    },
+});
+
+registerStateProvider({
+    key: "pronoun",
+    capture() {
+        return pronounIt ? pronounIt.name : null;
+    },
+    restore(data) {
+        pronounIt = data ? (nameRegistry.get(data) ?? null) : null;
+    },
+});
+
+// Undo: a bounded stack of snapshots. runCommand checkpoints before each fresh
+// turn mutates; `undo` pops and restores.
+const UNDO_LIMIT = 32;
+const undoStack = [];
+function checkpoint() {
+    undoStack.push(captureState());
+    if (undoStack.length > UNDO_LIMIT) undoStack.shift();
+}
+function clearUndoHistory() {
+    undoStack.length = 0;
+}
+function performUndo() {
+    if (undoStack.length === 0) {
+        print("You can't undo any further.");
+        return;
+    }
+    restoreState(undoStack.pop());
+    print("[Previous turn undone.]");
+}
+
+// Out-of-world verbs bypass the turn clock and take no undo checkpoint. An
+// interim hook until parser-v2 out-of-world actions land; `undo` is the first.
+const outOfWorldCommands = new Map();
+function registerOutOfWorld(word, handler) {
+    outOfWorldCommands.set(word, handler);
+}
+registerOutOfWorld("undo", performUndo);
+
 module.exports = {
     bootstrapBuiltins,
     defineType,
@@ -1095,4 +1297,9 @@ module.exports = {
     listItems,
     setListFormatter,
     decode,
+    captureState,
+    restoreState,
+    registerStateProvider,
+    registerOutOfWorld,
+    clearUndoHistory,
 };

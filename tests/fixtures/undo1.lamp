@@ -1,0 +1,13 @@
+lib advent
+
+# Exercises UNDO (snapshot core, Slice 1): an empty-stack undo, then a `take`
+# reverted by `undo` so the item returns to the room and inventory empties.
+
+game Undo_Demo:
+    start hall
+
+room hall:
+    description "A plain hall."
+
+item coin:
+    holder hall

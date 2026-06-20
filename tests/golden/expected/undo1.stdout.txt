@@ -1,0 +1,18 @@
+hall
+A plain hall.
+
+You see a coin here.
+
+> undo
+You can't undo any further.
+
+> take coin
+Taken.
+
+> undo
+[Previous turn undone.]
+
+> i
+You are carrying nothing.
+
+> quit
