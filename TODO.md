@@ -18,21 +18,26 @@ comment/string handling. Unit-tested in `tests/prescan` (`npm run test:prescan`)
 Remaining nit: `extractLibImports` (lib resolution; scans only the user file)
 still uses a regex — low risk, left as-is. **(arch issue A)**
 
-### AR2. Decouple Lamplighter from the advent world model — IN PROGRESS (2026-06-19)
+### AR2. Decouple Lamplighter from the advent world model — DONE (2026-06-19)
 Design: `devdocs/world-model.md`. Decision D1 — Lamplighter is an IF runtime;
-`holder`/`physical`/`succeeded`/`failed` are runtime-owned and hardcoded
+`holder`/`physical`/`succeeded`/`failed`/`startup` are runtime-owned and hardcoded
 (documented contract, not configurable). The `lib/sys ↔ lib/advent` split is kept
 (base vs. opt-in IF world; a merge was investigated and rejected — it collides
 with fixtures that build their own worlds).
-- **Done:** `run_command(line, actor)` — the actor is passed in (typed `object`),
-  so `lib/sys` no longer reads `getGlobal("player")` and is self-contained.
-  Byte-identical output.
-- **Open:** move list formatting out of the runtime into a library-owned formatter
-  over an open settings store (`get/setSetting`), retiring the `USE OXFORD COMMA`
-  magic global so new presentation options never touch the runtime.
-- **Open (docs):** comment the `holder`/`physical`/`succeeded`/`failed` contract at
-  the runtime sites and in `devdocs/rulebooks.md`.
-**(arch issue C)**
+- `run_command(line, actor)` — the actor is passed in (typed `object`), so
+  `lib/sys` no longer reads `getGlobal("player")` and is self-contained.
+- Presentation moved library-side — `formatListValue` calls a
+  `setListFormatter`-installed formatter; `lib/sys` owns list-prose rendering and
+  reads the renamed `oxford_comma` global (author form: `oxford_comma = true`).
+  (Cost: the native reads the name by literal, so it leaks in `--encode-strings`
+  builds — documented limitation.)
+- Contract made explicit: a "Runtime ↔ world-model contract" block in
+  `src/lamplighter/index.js`, per-site tags, and notes in `world-model.md` /
+  `rulebooks.md`.
+
+Optional future hardening (not done, low priority): a startup check that
+`physical`/`holder` exist when the parser is used, so a malformed world fails
+loudly instead of on `undefined.holder`. **(arch issue C)**
 
 ### AR3. Distinguish object references from string literals — DONE (2026-06-19)
 The seven duplicated object-vs-string predicates collapsed to one

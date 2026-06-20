@@ -1,6 +1,6 @@
 lib test
 
-USE_OXFORD_COMMA = true
+oxford_comma = true
 
 game Game_1:
     author "Test Author"

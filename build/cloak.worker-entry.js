@@ -28,6 +28,20 @@ function run_command(line, actor) {
     lamplighter.runCommand(line, actor);
 }
 
+// Renders a list of already-formatted strings to prose. Presentation policy
+// lives here in the base library, not in the runtime. The serial (Oxford) comma
+// is the author-settable `oxford_comma` global (set `oxford_comma = true` in a
+// game to enable it).
+function format_list(strings) {
+    if (strings.length === 0) return "nothing";
+    if (strings.length === 1) return strings[0];
+    if (strings.length === 2) return strings[0] + " and " + strings[1];
+    const conjunction = lamplighter.getGlobal("oxford comma") ? ", and " : " and ";
+    return strings.slice(0, -1).join(", ") + conjunction + strings[strings.length - 1];
+}
+
+lamplighter.setListFormatter(format_list);
+
 function display_name(x) {
     return x.printed_name ? String(x.printed_name) : String(x.name).replace(/_/g, " ");
 }
@@ -173,7 +187,7 @@ lamplighter.addRelation("connects", { "source": lamplighter.getObject("Foyer"), 
 lamplighter.addRelation("connects", { "source": lamplighter.getObject("Foyer"), "dir": lamplighter.getObject("west"), "target": lamplighter.getObject("Cloakroom") }, { bidi: true });
 lamplighter.addRelation("wears", { "wearer": lamplighter.getObject("yourself"), "worn": lamplighter.getObject("velvet cloak") });
 
-lamplighter.defineGlobal("USE OXFORD COMMA", false);
+lamplighter.defineGlobal("oxford comma", false);
 lamplighter.defineGlobal("PI", 3.141592653);
 lamplighter.defineGlobal("player", lamplighter.getObject("yourself"));
 lamplighter.defineGlobal("input", null);

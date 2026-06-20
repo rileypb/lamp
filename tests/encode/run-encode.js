@@ -65,7 +65,11 @@ const tmp = fs.mkdtempSync(path.join(os.tmpdir(), "lamp-encode-"));
 // `leaks`: strings present plaintext in the unencoded build that must NOT appear
 // in the encoded build — a mix of prose, object names, and global names.
 const cases = [
-    { game: "sample/cloak.lamp", leaks: ["spacious hall", "cant go that way", "USE OXFORD COMMA", "on [peg]"] },
+    // `disturbance` is a game global referenced only from .lamp (encoded). The
+    // `oxford_comma` setting is intentionally NOT listed: the base list formatter
+    // reads it by name in native index.js, which is inlined verbatim and not
+    // encoded, so the name leaks — the documented native-literal limitation.
+    { game: "sample/cloak.lamp", leaks: ["spacious hall", "cant go that way", "disturbance", "on [peg]"] },
     { game: "sample/study.lamp", leaks: [] },
 ];
 

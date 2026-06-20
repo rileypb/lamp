@@ -105,6 +105,12 @@ An action phase rulebook simply has result type `outcome`, so `stop failed` is
 any other type is the identical construct with a different `T`. There is no
 "value-producing rulebook" as a separate concept.
 
+**The `succeeded`/`failed` labels are runtime-owned.** `runAction` in Lamplighter
+runs the `report failed` band when the pipeline outcome is `failed`, so the
+`outcome` kind above (in `lib/sys/kinds.lamp`) must use exactly these labels — the
+library mirrors the runtime, not the reverse. This is part of the runtime↔world
+contract (see `devdocs/world-model.md`).
+
 **Messages are not outcomes.** Refusal text is printed, then the rule stops:
 
 ```lamp

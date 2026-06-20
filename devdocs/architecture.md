@@ -81,13 +81,18 @@ function implemented only inside another function — or merely named in a comme
 instead of a runtime `ReferenceError`. Unit-tested in `tests/native_scan`; the
 set extracted from the real lib files is unchanged, so the checker stays green.
 
-### C. Lamplighter embeds the advent world model — mostly RESOLVED (2026-06-19)
+### C. Lamplighter embeds the advent world model — RESOLVED (2026-06-19)
 The runtime is an IF runtime by design (decision D1 in `devdocs/world-model.md`),
 so the structural names it depends on — `holder` (containment field), `physical`
-(scope root), and `succeeded`/`failed` (action outcomes) — are **owned by the
-runtime and hardcoded**, documented as the runtime↔library contract rather than
-made configurable. `scopeOf`/`resolvePool`/`canBeAntecedent`/`runAction` keep
-using them.
+(scope root), `succeeded`/`failed` (action outcomes), and the `startup` event —
+are **owned by the runtime and hardcoded**, not configurable. They are now an
+**explicit, documented contract**: a "Runtime ↔ world-model contract" block at the
+top of `src/lamplighter/index.js` lists the four required names, each dependent
+site (`scopeOf`/`resolvePool`/`canBeAntecedent`/`runAction`/`run`) is tagged
+"world-model contract," and `devdocs/world-model.md` + `devdocs/rulebooks.md`
+state it. A world library must provide these names; the engine no longer assumes
+any *library-specific* name (the actor is passed into `run_command`, not read from
+a `player` global).
 
 The one genuine coupling — `lib/sys`'s `run_command` calling
 `getGlobal("player")` — is **fixed**: the commanding actor is now passed in
@@ -95,11 +100,14 @@ The one genuine coupling — `lib/sys`'s `run_command` calling
 world-defined name and is self-contained; the `lib/sys ↔ lib/advent` split is
 kept and justified (base vs. opt-in IF world model — see the design note).
 
-**Remaining (open):** presentation policy still lives in the runtime —
-`formatListValue` reads the magic global `USE OXFORD COMMA`. The plan is to move
-list formatting library-side over an open settings store (not a fixed config
-object), so new presentation options never touch the runtime. Tracked in
-`TODO.md`; full design in `devdocs/world-model.md`.
+Presentation policy is also out of the runtime: `formatListValue` now calls a
+library-installed formatter (`setListFormatter`); `lib/sys` owns the list-prose
+rendering and reads the renamed `oxford_comma` setting (an ordinary author-set
+global, e.g. `oxford_comma = true`). The runtime reads no presentation global.
+Full design in `devdocs/world-model.md`. Possible future hardening (not done, low
+priority): a startup check that a `physical` type and `holder` field exist when
+the parser is used, so a malformed world fails loudly instead of on
+`undefined.holder`.
 
 ### D. The AST conflates bare object names with string literals — RESOLVED (2026-06-19)
 A bare identifier used as a value parses to the same `StringLiteral` node as a

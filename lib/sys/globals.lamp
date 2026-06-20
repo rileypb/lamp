@@ -1,3 +1,5 @@
-global bool USE_OXFORD_COMMA = false
+# Presentation setting read by the base list formatter (lib/sys/index.js). Set
+# `oxford_comma = true` in a game to use the serial comma in lists.
+global bool oxford_comma = false
 
 global real PI = 3.141592653

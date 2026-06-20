@@ -34,6 +34,28 @@ const HALT = Symbol("halt");
 // from null/none (which match only an unset field).
 const ANY = Symbol("relation-wildcard");
 
+// --- Runtime ↔ world-model contract -----------------------------------------
+// Lamplighter is a parser-IF runtime, so a few world-model names are baked into
+// the engine rather than configured (see devdocs/world-model.md, decision D1). A
+// world library (e.g. lib/advent) must provide them; the engine references them
+// by these exact names:
+//
+//   - field `holder`     — an object's container. scopeOf walks reachability over
+//                          it; an object with no `holder` is out of scope.
+//   - type  `physical`   — the scope-root type. Only `physical` objects are
+//                          scoped by location and can be pronoun antecedents;
+//                          non-physical nameables (e.g. directions) are global.
+//                          If no `physical` type exists, everything is in scope.
+//   - outcomes `succeeded` / `failed` — the action-pipeline result values (see
+//                          the `outcome` kind in lib/sys/kinds.lamp). runAction
+//                          runs the `report failed` band on a `failed` outcome.
+//   - event `startup`    — fired once by run(); the world library hooks it to set
+//                          up the world and drive the command loop.
+//
+// The commanding actor is NOT in this contract — it is passed into run_command
+// explicitly (no `player` global is assumed). Each site that depends on a contract
+// name is tagged "world-model contract" below.
+
 let printImpl = (value) => {
     console.log(String(value));
 };
@@ -406,6 +428,10 @@ function runRulebook(name, args) {
 // runs to render the failure (self.reason is available); a bare `stop` there
 // halts it, letting an author rule suppress a library one. See
 // devdocs/rulebooks.md.
+//
+// World-model contract: the outcome values `succeeded`/`failed` are runtime-owned
+// (mirrored by the `outcome` kind in lib/sys/kinds.lamp); `failed` triggers the
+// `report failed` band.
 function runAction(actionName, instance, opts = {}) {
     const bands = actionRuleRegistry.get(actionName);
     if (!bands) {
@@ -487,6 +513,7 @@ function matchGrammar(parts, tokens) {
 // The objects the actor can currently refer to: contents of the actor's location
 // and the actor's own contents, plus anything transitively held by those objects
 // (items resting on surfaces, contents of containers, etc.), via `holder`.
+// World-model contract: reachability is computed over the `holder` field.
 function scopeOf(actor) {
     const location = actor.holder;
     const inScope = new Set();
@@ -519,6 +546,7 @@ function scopeOf(actor) {
 // The candidate objects for a slot. Physical objects must be in the actor's
 // scope; non-physical objects (e.g. directions) are referable globally by name
 // within their type. A game without a `physical` type keeps everything scoped.
+// World-model contract: the scope-root type is named `physical`.
 function resolvePool(slotType, scope) {
     if (slotType && typeRegistry.has("physical") && !isTypeOrSubtype(slotType, "physical")) {
         return getInstancesForTypeAndSubtypes(slotType);
@@ -543,6 +571,7 @@ let pronounIt = null;
 // "it" refers to things in the world, not to non-physical referents such as
 // directions, so only physical objects become antecedents. A game without a
 // `physical` type treats every object as eligible (matching resolvePool).
+// World-model contract: antecedent eligibility is gated on the `physical` type.
 function canBeAntecedent(obj) {
     if (!typeRegistry.has("physical")) return true;
     return isTypeOrSubtype(obj.type, "physical");
@@ -776,6 +805,8 @@ function runCommand(line, actor) {
     print(sawVerbMatch ? "You can't see any such thing." : "I don't understand that.");
 }
 
+// World-model contract: fires the `startup` event, which the world library hooks
+// to build the world and drive the command loop.
 function run() {
     pronounIt = null;
     buildVocabIndex();
@@ -893,24 +924,19 @@ function isListValue(value) {
     return Boolean(value) && typeof value === "object" && Array.isArray(value.items) && "first" in value;
 }
 
+// Rendering a list to prose ("a, b and c", the empty-list word, the serial
+// comma) is presentation policy, which a library owns — it installs a formatter
+// via setListFormatter (lib/sys does, honoring the author-settable `oxford_comma`
+// global). The runtime's only fallback, used if nothing registers one, is a bare
+// comma join, so the engine holds no English-prose policy of its own.
+let listFormatter = (strings) => strings.join(", ");
+
+function setListFormatter(formatter) {
+    listFormatter = formatter;
+}
+
 function formatListValue(items) {
-    const formattedItems = items.map((item) => String(formatValue(item)));
-    const useOxfordComma = Boolean(getGlobal("USE OXFORD COMMA"));
-
-    if (formattedItems.length === 0) {
-        return "nothing";
-    }
-    if (formattedItems.length === 1) {
-        return formattedItems[0];
-    }
-    if (formattedItems.length === 2) {
-        return `${formattedItems[0]} and ${formattedItems[1]}`;
-    }
-
-    if (useOxfordComma) {
-        return `${formattedItems.slice(0, -1).join(", ")}, and ${formattedItems[formattedItems.length - 1]}`;
-    }
-    return `${formattedItems.slice(0, -1).join(", ")} and ${formattedItems[formattedItems.length - 1]}`;
+    return listFormatter(items.map((item) => String(formatValue(item))));
 }
 
 function makeList(items) {
@@ -1050,5 +1076,6 @@ module.exports = {
     error,
     makeList,
     listItems,
+    setListFormatter,
     decode,
 };

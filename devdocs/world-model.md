@@ -93,24 +93,38 @@ runtime only needs an object with a `holder`. `lib/sys` now references no
 world-defined name (verified) and is self-contained. Output is byte-identical
 (golden + encode corpus).
 
-## Remaining — presentation should be extensible, not a magic global (open)
+## Resolved — presentation is library-owned, settings are plain globals
 
-`formatListValue` reads the string-keyed global `USE OXFORD COMMA`. Oxford comma
-is just the first of an open-ended set of presentation options (list separators,
-the empty-list string, capitalization, number words, pronoun tables…). The fix is
-**not** a fixed-shape config object — that would put a new option on a runtime
-signature every time. Two complementary directions, neither implemented yet:
+Presentation policy no longer lives in the runtime. The decisions:
 
-- **Open settings store** — `getSetting(name, default)` over a plain map (or
-  plain author-set globals), so new options are just new keys; the runtime never
-  changes shape.
-- **Library-owned formatting** — `formatListValue` is presentation *policy* living
-  in the engine. Move it into the world/base library (the runtime keeps a thin
-  default, or exposes a `setListFormatter`-style hook), so the runtime holds no
-  presentation policy and the library reads whatever settings it wants.
+**Author-facing form — settings are plain declared globals.** An author tunes
+presentation with an ordinary top-level assignment; the names are declared (typed,
+compile-checked), never string keys:
 
-Recommended: do both — formatting owned by the library, reading an open settings
-store — so presentation is fully extensible without touching the runtime.
+```lamp
+oxford_comma = true
+```
+
+The base library declares each setting global with a default
+(`global bool oxford_comma = false` in `lib/sys/globals.lamp`). New presentation
+options are just new declared globals — no runtime signature changes. Authors
+never write stringly-typed calls like `set_setting("oxford_comma", true)`; that
+shape is rejected. (If presentation ever grows past a handful of knobs, these can
+be promoted to fields on the `game` object or a dedicated `style` singleton
+without changing this principle.)
+
+**Implementation — formatting moved out of the runtime.** `formatListValue` in
+the runtime is now a thin call into a `listFormatter` that a library installs via
+`setListFormatter`; the runtime's only fallback is a bare comma join, so it holds
+no English-prose policy. `lib/sys/index.js` installs the real formatter (empty →
+`nothing`, two → `a and b`, the serial comma) and reads the `oxford_comma`
+setting. The runtime reads no presentation global.
+
+**Known cost.** Because the formatter is a native (inlined verbatim, not encoded),
+its `getGlobal("oxford comma")` makes the setting name appear plaintext in
+`--encode-strings` builds — the documented native-literal leak (the same class as
+the old `getGlobal("player")`). The name is a formatting flag, not a spoiler, so
+this is acceptable; the encode corpus no longer asserts it is hidden.
 
 ## Outcome labels — runtime-owned, documented not configured
 
@@ -122,8 +136,9 @@ the reverse. (Not yet written.)
 ## Status / remaining work
 
 1. **Done:** `run_command(line, actor)` — `lib/sys` self-contained (D5).
-2. **Open:** presentation — move list formatting library-side over an open
-   settings store; retire the `USE OXFORD COMMA` magic global.
+2. **Done:** presentation moved library-side (`setListFormatter` + `lib/sys`
+   formatter); the `USE OXFORD COMMA` magic global is renamed `oxford_comma` and
+   read only by the library. The runtime reads no presentation global.
 3. **Open (docs):** comment the `holder`/`physical`/`succeeded`/`failed` contract
    at the runtime sites and in `devdocs/rulebooks.md`.
 
@@ -142,11 +157,6 @@ the reverse. (Not yet written.)
 
 ## Open questions
 
-- **Settings store vs. plain globals** for presentation options — a dedicated
-  `get/setSetting` API, or just documented author-settable globals that the
-  library's formatter reads? Decide when implementing step 2.
-- **Keep an author-facing `USE_OXFORD_COMMA`** that forwards into the new
-  mechanism, or drop it?
 - **Does the `actor` parameter want a real base type** rather than `object`?
   Would need a shared in-world root (e.g. making user-type roots descend from
   `object`, or a base `thing`); not worth it until stricter object-type checking
