@@ -1,0 +1,3 @@
+Compile error: tests/fixtures/understand_unknown_action.lamp:12: type error: understand references unknown action "tako"
+  12 | understand "grab [taken]" as tako
+    | ^

@@ -1,0 +1,19 @@
+lib advent
+
+# Exercises `understand "TEMPLATE" as ACTION`: a game contributes an extra
+# grammar phrasing ("grab ...") to the library `take` action without redeclaring
+# it. Both the built-in verb and the contributed verb must drive the same action.
+
+game Understand_Grammar:
+    start hall
+
+room hall:
+    description "A plain hall."
+
+item coin:
+    holder hall
+
+item key:
+    holder hall
+
+understand "grab [taken]" as take

@@ -76,10 +76,10 @@ before go:
     if dest == Bar:
         Bar.lighted = not (velvet_cloak.holder == player)
 
-# The `hang` and `drop` actions can also change cloak location in the Cloakroom.
-# After either, refresh bar lighting in case the player later returns.
+# The `put_on` and `drop` actions can also change cloak location in the
+# Cloakroom. After either, refresh bar lighting in case the player later returns.
 
-after hang when self.carried == velvet_cloak:
+after put_on when self.put_item == velvet_cloak:
     Bar.lighted = not (velvet_cloak.holder == player)
 
 after drop when self.dropped == velvet_cloak:
@@ -125,12 +125,11 @@ before look when self.actor.holder == Bar and in_darkness(self.actor):
 report examine when self.target == sawdust:
     print "The sawdust on the floor has been disturbed. Something is written there."
 
-check hang:
-    if not (self.peg == hook):
-        print "That's not something you can hang things on."
-        stop failed
+# "hang ... on ..." is just a cloak-flavored phrasing for the generic advent
+# `put_on` action (the hook is a supporter, so put_on's check accepts it).
+understand "hang [put_item] on [destination]" as put_on
 
-report hang when self.carried == velvet_cloak:
+report put_on when self.put_item == velvet_cloak:
     print "You hang the cloak neatly on the hook."
     stop
 

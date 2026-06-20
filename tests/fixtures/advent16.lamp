@@ -1,9 +1,9 @@
 lib advent
 
 # Regression: the `supports` relation must stay consistent with `holder`.
-# Hanging asserts the edge; taking the item off must retract it. The `probe`
-# action reads the relation directly (the room-description path reads `holder`,
-# so it would not catch a stale edge).
+# Putting an item on a supporter asserts the edge; taking it off must retract it.
+# The `probe` action reads the relation directly (the room-description path reads
+# `holder`, so it would not catch a stale edge).
 
 game Supports_Cleanup:
     start hall

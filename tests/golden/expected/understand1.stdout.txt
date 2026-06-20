@@ -1,0 +1,17 @@
+hall
+A plain hall.
+
+You see a coin and a key here.
+
+> take coin
+Taken.
+
+> grab key
+Taken.
+
+> inventory
+You are carrying:
+  a coin
+  a key
+
+> quit

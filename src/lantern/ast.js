@@ -250,6 +250,13 @@ function createActionDecl(name, slots, templates, filePath, lineNumber, tags = [
     return { kind: "ActionDecl", name, slots, templates, filePath, lineNumber, tags };
 }
 
+// `understand "TEMPLATE" as ACTION` — contributes one extra grammar phrasing to
+// an already-declared action without redeclaring it (so a game can add a verb
+// for a library action). Emits a single registerGrammar call.
+function createUnderstandDecl(template, actionName, filePath, lineNumber) {
+    return { kind: "UnderstandDecl", template, actionName, filePath, lineNumber };
+}
+
 // One rule in an action's rulebook, attached to a band (before/instead/check/
 // do/after/report). `self` inside the body is the action instance. Exactly one of
 // `actionName` (single-action rule) or `selector` (multi-action rule, a SelNode
@@ -362,6 +369,7 @@ module.exports = {
     createFollowStatement,
     createFollowExpr,
     createActionDecl,
+    createUnderstandDecl,
     createPhaseRule,
     createRulebookRule,
     createSelAtom,

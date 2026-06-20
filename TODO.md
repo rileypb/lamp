@@ -70,11 +70,12 @@ in `scopeOf`. Low priority. **Where:** `src/lamplighter/index.js` (`run`).
 - **`list<T>` field types end-to-end.** Parsing is now covered by a parser unit
   test, but no fixture declares a `list<T>` field and exercises it through
   emit/runtime. Add one to lock in end-to-end behaviour.
-- **General `put [x] on [y]` action.** Items reach a supporter only through
-  `hang` ([lib/advent/actions.lamp](lib/advent/actions.lamp)). The supporter
-  machinery is in place — room-description listing via `describe_supporters`
-  (`advent15`), and the `supports`/`holder` invariant is now enforced by an
-  `on item.holder change` handler that retracts stale edges on take/drop/re-hang
-  (`advent16`). What's missing is a player-facing verb to place an item on an
-  arbitrary supporter (with a `supporter`-aware `check`), rather than reusing
-  the cloak-specific `hang`.
+- **General `put [x] on [y]` action — DONE (2026-06-20).** advent now has a
+  generic `put_on` action (`put [x] on [y]`) with a `supporter`-aware `check`
+  (refuses non-supporters with `cant_put_on_that`); `hang` is gone as a builtin.
+  cloak contributes its `hang … on …` phrasing via the new
+  `understand "TEMPLATE" as ACTION` construct and keeps only its flavored report.
+  Enabled by that construct — grammar can now be contributed to an action
+  declared anywhere (parser/checker/emitter + `understand1` /
+  `understand_unknown_action` fixtures); the runtime's flat grammar registry
+  already supported it.

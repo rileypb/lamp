@@ -140,12 +140,29 @@ function createParser(tokens, filePath, globalNames, functionNames = new Set(), 
             // `report failed SELECTOR:` — the failure-reporting band.
             if (token.value === "report" && peek(1).type === "IDENT" && peek(1).value === "failed"
                 && selectorStartsAt(2)) return parsePhaseRule();
+            if (token.value === "understand" && peek(1).type === "STRING") return parseUnderstandDecl();
             if (relationNames.has(token.value) && peek(1).type === "COLON") return parseRelationAssert();
             if (relationTemplates.has(token.value)) return parseCustomSyntaxAssert(relationTemplates.get(token.value), null);
             if (peek(1).type === "IDENT" && relationTemplates.has(peek(1).value)) return parseNamedCustomSyntaxAssert();
             return peek(1).type === "EQUALS" ? parseGlobalAssign() : parseObjectDecl();
         }
         throw err(`Unexpected token at top level: ${token.type}`);
+    }
+
+    // `understand "TEMPLATE" as ACTION` — a standalone grammar contribution. Both
+    // `understand` and `as` tokenize as IDENTs (contextual), so this is only a
+    // declaration at top level; `understand "x"` inside an object body is an
+    // ordinary field assignment parsed elsewhere.
+    function parseUnderstandDecl() {
+        const kw = next();
+        const template = expect("STRING", "Expected a syntax template string after 'understand'");
+        if (!(at("IDENT") && peek().value === "as")) {
+            throw err("Expected 'as <action>' after the understand template");
+        }
+        next();
+        const actionName = plainName("action name");
+        expectNewline();
+        return ast.createUnderstandDecl(template.value, actionName, filePath, kw.line);
     }
 
     function parseTypeDecl() {

@@ -1,0 +1,4 @@
+take coin
+grab key
+inventory
+quit

@@ -117,6 +117,22 @@ function checkProgram(programAst, options = {}) {
             checkPhaseRule(node, typeSchema, kindSchema, functionSchema, globalNames);
         } else if (node.kind === "ActionDecl") {
             checkActionDecl(node);
+        } else if (node.kind === "UnderstandDecl") {
+            checkUnderstandDecl(node);
+        }
+    }
+}
+
+// `understand "TEMPLATE" as ACTION` must name a declared action, and each `[slot]`
+// in the template must be one of that action's slots.
+function checkUnderstandDecl(node) {
+    const slots = actionSchema.get(node.actionName);
+    if (!slots) {
+        throw typeError(node.filePath, node.lineNumber, `understand references unknown action "${node.actionName}"`);
+    }
+    for (const match of node.template.matchAll(/\[([A-Za-z_][A-Za-z0-9_]*)\]/g)) {
+        if (!slots.has(match[1])) {
+            throw typeError(node.filePath, node.lineNumber, `understand template for action "${node.actionName}" references unknown slot "${match[1]}"`);
         }
     }
 }

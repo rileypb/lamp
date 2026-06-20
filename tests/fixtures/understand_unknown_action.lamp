@@ -1,0 +1,12 @@
+lib advent
+
+# `understand "..." as ACTION` must name a declared action; an unknown action is
+# a compile error reported at the understand line.
+
+game Understand_Bad:
+    start hall
+
+room hall:
+    description "A hall."
+
+understand "grab [taken]" as tako

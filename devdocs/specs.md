@@ -192,7 +192,7 @@ Local variables (introduced by `let`) and loop variables (introduced by `for`) a
 
 Free text that contains spaces or punctuation is written as a double-quoted string literal, not a bare identifier (for example, `author "Phil Riley"`).
 
-The following words are **reserved** and may not be used as a name (object, type, kind, global, field, event, or local): `type`, `kind`, `global`, `on`, `for`, `in`, `while`, `if`, `else`, `let`, `print`, `error`, `dispatch`, `break`, `lib`, `from`, `to`, `step`, `change`, `function`, `native`, `return`, `when`, `and`, `or`, `not`, `relation`, `bidi`, `remove`, `disconnect`, `rulebook`, `stop`, `follow`, `action`, `try`. (`syntax` and `inverted` are contextual keywords recognized only inside a `relation` body; `tags` is contextual only inside an `action` body; `default` is a contextual keyword recognized only inside a `rulebook` body; the band words `before`, `instead`, `check`, `do`, `after`, and `report` are contextual keywords recognized only as the leading token of a phase rule; `any` and `except` are contextual only in a phase-rule action selector; `rule` is contextual only when followed by a declared rulebook name; `silently` is contextual only immediately before `try`; none of these are globally reserved.) A reservation applies only to a whole identifier: a reserved word appearing *inside* a longer identifier is unrestricted, so `move_to_room` (which denotes the name `move to room`) is a valid identifier even though `to` is reserved.
+The following words are **reserved** and may not be used as a name (object, type, kind, global, field, event, or local): `type`, `kind`, `global`, `on`, `for`, `in`, `while`, `if`, `else`, `let`, `print`, `error`, `dispatch`, `break`, `lib`, `from`, `to`, `step`, `change`, `function`, `native`, `return`, `when`, `and`, `or`, `not`, `relation`, `bidi`, `remove`, `disconnect`, `rulebook`, `stop`, `follow`, `action`, `try`. (`syntax` and `inverted` are contextual keywords recognized only inside a `relation` body; `tags` is contextual only inside an `action` body; `default` is a contextual keyword recognized only inside a `rulebook` body; the band words `before`, `instead`, `check`, `do`, `after`, and `report` are contextual keywords recognized only as the leading token of a phase rule; `any` and `except` are contextual only in a phase-rule action selector; `rule` is contextual only when followed by a declared rulebook name; `silently` is contextual only immediately before `try`; `understand` and `as` are contextual only in a top-level `understand "TEMPLATE" as ACTION` grammar contribution; none of these are globally reserved.) A reservation applies only to a whole identifier: a reserved word appearing *inside* a longer identifier is unrestricted, so `move_to_room` (which denotes the name `move to room`) is a valid identifier even though `to` is reserved.
 
 ### Objects and types
 
@@ -878,6 +878,22 @@ action take:
         "take [taken]"
         "get [taken]"
 ```
+
+A top-level `understand "TEMPLATE" as ACTION` contributes one additional surface
+template to an action **declared anywhere** (including a library action), without
+redeclaring it. The action must already be declared, and each `[slot]` in the
+template must name one of that action's slots; both are checked at compile time.
+This lets a game add a verb phrasing for a library action — e.g. giving the
+generic `put_on` action a game-specific `hang … on …` phrasing:
+
+```lamp
+understand "hang [put_item] on [destination]" as put_on
+```
+
+(`understand` is contextual: at top level followed by a string it is this
+declaration; inside an object body, `understand "n"` is an ordinary field
+assignment.) It emits a single `registerGrammar` call — the same one an action's
+own `syntax:` line emits — so the two are equivalent at runtime.
 
 #### Running commands
 

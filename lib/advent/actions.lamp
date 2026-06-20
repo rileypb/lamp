@@ -213,36 +213,42 @@ relation supports:
 on item.holder change:
 	remove supports _ self
 
-action hang:
-	direct item carried
-	item peg
+action put_on:
+	direct item put_item
+	item destination
 	syntax:
-		"hang [carried] on [peg]"
-		"put [carried] on [peg]"
+		"put [put_item] on [destination]"
 
-check hang:
-	if not (self.carried.holder == self.actor):
+check put_on:
+	if not (self.put_item.holder == self.actor):
 		stop failed not_carrying
 
-do hang:
-	if wears self.actor self.carried:
+check put_on:
+	if not self.destination.supporter:
+		stop failed cant_put_on_that
+
+do put_on:
+	if wears self.actor self.put_item:
 		if (self.actor == player):
-			print "(first taking off " + self.carried + ")"
+			print "(first taking off " + self.put_item + ")"
 		silently try doff:
-			clothing self.carried
+			clothing self.put_item
 			actor self.actor
-		if wears self.actor self.carried:
+		if wears self.actor self.put_item:
 			stop failed
-	self.carried.holder = self.peg
-	supports self.peg self.carried
+	self.put_item.holder = self.destination
+	supports self.destination self.put_item
 
-report hang:
+report put_on:
 	if self.actor == player:
-		print "You hang " + self.carried + " on " + self.peg + "."
+		print "You put " + self.put_item + " on " + self.destination + "."
 	else:
-		print self.actor + " hangs " + self.carried + " on " + self.peg + "."
+		print self.actor + " puts " + self.put_item + " on " + self.destination + "."
 
-report failed hang:
+report failed put_on:
 	if self.reason == not_carrying:
 		print "You aren't carrying that."
+		stop
+	if self.reason == cant_put_on_that:
+		print "You can't put things on that."
 		stop

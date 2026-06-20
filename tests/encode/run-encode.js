@@ -69,7 +69,7 @@ const cases = [
     // `oxford_comma` setting is intentionally NOT listed: the base list formatter
     // reads it by name in native index.js, which is inlined verbatim and not
     // encoded, so the name leaks — the documented native-literal limitation.
-    { game: "sample/cloak.lamp", leaks: ["spacious hall", "cant go that way", "disturbance", "on [peg]"] },
+    { game: "sample/cloak.lamp", leaks: ["spacious hall", "cant go that way", "disturbance", "on [destination]"] },
     { game: "sample/study.lamp", leaks: [] },
 ];
 

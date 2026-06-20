@@ -335,6 +335,14 @@ function emitProgram(programAst, options = {}) {
         }
     }
 
+    // `understand "TEMPLATE" as ACTION` — an extra grammar phrasing for an action
+    // declared anywhere. Emits the same registerGrammar call an action's own
+    // syntax line does (template encoded as a puzzle-phrasing spoiler).
+    for (const node of programAst.nodes) {
+        if (node.kind !== "UnderstandDecl") continue;
+        lines.push(`lamplighter.registerGrammar(${emitName(node.actionName)}, ${emitStringLiteral(node.template)});`);
+    }
+
     for (const node of relationAddHandlerNodes) {
         lines.push(emitRelationAddHandler(node, globalNames));
     }

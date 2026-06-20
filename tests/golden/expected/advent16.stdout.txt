@@ -4,8 +4,8 @@ A plain hall.
 > probe
 off hook
 
-> hang cloak on hook
-You hang cloak on hook.
+> put cloak on hook
+You put cloak on hook.
 
 > probe
 on hook
