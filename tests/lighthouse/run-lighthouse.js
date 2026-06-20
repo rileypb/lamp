@@ -71,6 +71,14 @@ try {
         assert.ok(html.includes("game.worker.js") || html.includes("shell.js"), "shell entry missing");
     });
 
+    test("index.html title is 'Name by Author' from the game source", () => {
+        const html = fs.readFileSync(path.join(outDir, "index.html"), "utf8");
+        assert.ok(
+            html.includes("<title>Cloak of Darkness by Roger Firth</title>"),
+            "page title should be derived from the game name and author",
+        );
+    });
+
     test("minified bundle parses and is smaller", () => {
         buildWeb(GAME, minOutDir, { minify: true });
         const min = fs.readFileSync(path.join(minOutDir, "game.worker.js"), "utf8");

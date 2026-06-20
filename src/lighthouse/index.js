@@ -10,6 +10,7 @@ const { execFileSync } = require("child_process");
 const fs = require("fs");
 const path = require("path");
 const esbuild = require("esbuild");
+const { tokenize, coerceName } = require("../lantern/tokenizer");
 
 const PROJECT_ROOT = path.resolve(__dirname, "..", "..");
 const LANTERN_CLI = path.join(PROJECT_ROOT, "src", "lantern", "index.js");
@@ -44,6 +45,50 @@ function wrapAsWorkerEntry(generatedCode) {
     ].join("\n");
 }
 
+// Reads the game's display name and author from the source so the page title can
+// be "Name by Author". Uses the Lantern tokenizer (comments/strings handled),
+// scanning logical lines for the top-level `game NAME:` declaration and the
+// `author "..."` field. Missing pieces degrade gracefully.
+function extractGameMeta(source, filePath) {
+    let tokens;
+    try {
+        tokens = tokenize(source, filePath);
+    } catch {
+        return { name: null, author: null };
+    }
+    let name = null;
+    let author = null;
+    let depth = 0;
+    let line = [];
+    const consider = () => {
+        const [a, b] = line;
+        if (name === null && depth === 0 && a && a.type === "IDENT" && a.value === "game" && b && b.type === "IDENT") {
+            name = coerceName(b.value);
+        }
+        if (author === null && a && a.type === "IDENT" && a.value === "author" && b && b.type === "STRING") {
+            author = b.value;
+        }
+        line = [];
+    };
+    for (const token of tokens) {
+        if (token.type === "INDENT") depth += 1;
+        else if (token.type === "DEDENT") depth -= 1;
+        else if (token.type === "NEWLINE" || token.type === "EOF") consider();
+        else line.push(token);
+    }
+    return { name, author };
+}
+
+function pageTitle({ name, author }) {
+    if (name && author) return `${name} by ${author}`;
+    if (name) return name;
+    return "Lamp Game";
+}
+
+function escapeHtml(text) {
+    return String(text).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+}
+
 function buildWeb(inputFile, outDir, { encodeStrings = false, minify = true } = {}) {
     const absInput = path.resolve(inputFile);
     const absOut = path.resolve(outDir);
@@ -72,8 +117,16 @@ function buildWeb(inputFile, outDir, { encodeStrings = false, minify = true } = 
         legalComments: "none",
     });
 
+    const title = escapeHtml(pageTitle(extractGameMeta(fs.readFileSync(absInput, "utf8"), absInput)));
     for (const asset of SHELL_ASSETS) {
-        fs.copyFileSync(path.join(SHELL_DIR, asset), path.join(absOut, asset));
+        const src = path.join(SHELL_DIR, asset);
+        const dest = path.join(absOut, asset);
+        if (asset === "index.html") {
+            const html = fs.readFileSync(src, "utf8").replace(/<title>[\s\S]*?<\/title>/, `<title>${title}</title>`);
+            fs.writeFileSync(dest, html, "utf8");
+        } else {
+            fs.copyFileSync(src, dest);
+        }
     }
 
     return { outDir: absOut, files: ["game.worker.js", ...SHELL_ASSETS] };
