@@ -24,8 +24,9 @@ and the current world state, the Game Parser must:
 2. Match it against the game's **grammar** (the set of understood command
    patterns) to identify a candidate **action** and its noun phrases.
 3. Resolve each noun phrase to a concrete game object (or objects), using
-   **scope** (what the player can currently see/reach), pronouns, adjectives,
-   and **disambiguation** when a phrase is ambiguous.
+   **scope** (what the player can currently see/reach), pronouns, multi-word
+   names (token-bag, not adjectives-as-grammar — see Non-goals), and
+   **disambiguation** when a phrase is ambiguous.
 4. Produce a fully-bound **action** and run it through the **action-processing
    pipeline** (the rulebooks), which decides what actually happens and what is
    printed.
@@ -94,7 +95,7 @@ the relation `syntax` templates and vocabulary are Lamp-declared and compiled,
 while the relation *engine* in Lamplighter is a single shared implementation.
 
 Bespoke per-game generation is rejected because the expensive, interesting work
-in an IF parser — scope, noun resolution, adjective matching, disambiguation,
+in an IF parser — scope, noun resolution, multi-word name matching, disambiguation,
 and the rulebooks — is driven by **runtime world state, not grammar shape**.
 Lantern cannot know at compile time where objects are, what is open, or what the
 player holds this turn. The only thing specializable from the grammar is the
@@ -394,6 +395,29 @@ item brass_lamp:
 Vocabulary for `brass_lamp` is then `{brass, lamp, lantern, golden}`. A player
 typing "brass lantern", "golden lamp", or just "lantern" can all refer to it.
 
+**Adjectives are not modeled — by design (non-goal).** There is no part-of-speech
+distinction between nouns and adjectives; every word an object answers to is just
+a token in its bag, matched with AND semantics (a phrase resolves to objects
+whose vocabulary is a superset of the phrase's tokens). This is the Inform
+approach, and it already disambiguates multi-word nouns without grammatical
+labels: a `red ball` (`{red, ball}`) and a `blue ball` (`{blue, ball}`) are told
+apart because typing "red ball" excludes the blue one (missing `red`), typing
+"red" alone resolves uniquely if only one red thing is in scope, and answering a
+"Which ball?" prompt with just "red" narrows the candidate set the same way.
+Part-of-speech tagging would buy grammatical correctness IF parsers deliberately
+forgo (it also accepts "ball red"), at the cost of making every author categorize
+each object's words. We accept the order-insensitivity as the standard forgiving-
+parser tradeoff.
+
+The one capability a *static* token bag lacks is **state-derived vocabulary** —
+parsing `open box`, `lit lamp`, or `empty bottle` where the word reflects the
+object's *current* field value rather than a fixed name token. The correct future
+solution is **not** adjectives-as-grammar but a small dynamic-vocabulary hook that
+injects tokens from selected boolean/enum fields at parse time (cf. Inform's
+"Understand the open property as describing a container"). That keeps the token
+bag as the foundation; it is noted as a possible extension, not a part-of-speech
+system. See **Non-goals**.
+
 **Printed name (`printed name` field).** Controls how the game *displays* the
 object — in room descriptions, inventory, and generated messages. Defaults to
 the identifier with underscores → spaces. Override:
@@ -638,10 +662,13 @@ populating it.
   wins. Entry point: the native `run_command(line)` (actor = the `player`
   global), driven by a `readline` loop. Standard responses "You can't see any
   such thing." / "I don't understand that." Demo + golden:
-  `tests/fixtures/parser1.lamp`. No adjectives, pronouns, disambiguation, or
-  multiple objects yet.
-- **v1 — resolution depth.** Adjectives, articles, nested/transparent container
-  scope, pronouns (`it`), disambiguation prompts, richer parser error messages.
+  `tests/fixtures/parser1.lamp`. No pronouns, disambiguation, or multiple objects
+  yet. (Adjectives are a deliberate non-goal, not a pending feature — multi-word
+  names are handled by the token bag; see Non-goals.)
+- **v1 — resolution depth.** Articles, nested/transparent container scope,
+  pronouns (`it`), disambiguation prompts, richer parser error messages.
+  (Multi-word noun disambiguation falls out of the token bag — no adjective POS;
+  see Non-goals.)
 - **v2 — rulebooks.** The action-rulebook bands are implemented
   (`devdocs/rulebooks.md`); remaining: every-turn and timed rules, and
   out-of-world actions.
@@ -688,6 +715,13 @@ populating it.
 - No change to the Lamp surface language is proposed here; needed language
   features are listed as prerequisites for separate decision.
 - No NLP/ML parsing; matching stays deterministic and table-driven, as in I7.
+- **No adjectives as a part of speech.** Object vocabulary is a flat token bag
+  (nouns and "adjectives" are the same kind of token), matched with AND
+  semantics. This is the Inform model and disambiguates multi-word nouns
+  (`red ball` vs `blue ball`) without grammatical labels — see Vocabulary model
+  for the rationale. The only reserved future extension is *state-derived*
+  vocabulary (parsing by a current field value, e.g. `open box`), to be added as
+  a dynamic-vocabulary hook on the same token bag, never as POS tagging.
 - Save/restore/undo are out of scope (noted in Open questions).
 
 ## Open questions

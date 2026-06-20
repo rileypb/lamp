@@ -9,6 +9,10 @@ prerequisite lists in `devdocs/game_parser.md`, `devdocs/rulebooks.md`, and
 > `devdocs/architecture.md` → "Known Architectural Issues" for the per-issue
 > record. The only optional remnant is item 5 below.
 
+> Feature backlog awaiting triage: `lurking_todo.md` catalogs candidate verbs,
+> grammar, world-model traits, turn-cycle/daemon, and message ideas mined from
+> `lurkinghorror.txt`. The user will pick which to promote into real TODO items.
+
 ## 1. Lighthouse web bundle — headless CI test (optional)
 Web v1 is **built, verified live, shell-polished, and hardened for distribution**
 (string encoding + esbuild minify, both covered by `npm run test:lighthouse` /
