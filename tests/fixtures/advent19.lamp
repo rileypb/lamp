@@ -1,0 +1,23 @@
+lib advent
+
+# Exercises the generic `put_on` action end-to-end, with no game-specific
+# override: the supporter-aware refusal ("You can't put things on that.") on a
+# non-supporter, and the default report ("You put X on Y.") on a real supporter.
+
+game Put_On_Generic:
+    start hall
+
+room hall:
+    description "A plain hall."
+
+item table:
+    scenery true
+    supporter true
+    holder hall
+
+item rock:
+    scenery true
+    holder hall
+
+item coin:
+    holder yourself

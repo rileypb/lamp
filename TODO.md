@@ -78,4 +78,6 @@ in `scopeOf`. Low priority. **Where:** `src/lamplighter/index.js` (`run`).
   Enabled by that construct — grammar can now be contributed to an action
   declared anywhere (parser/checker/emitter + `understand1` /
   `understand_unknown_action` fixtures); the runtime's flat grammar registry
-  already supported it.
+  already supported it. The generic action is covered end-to-end by `advent19`
+  (default `You put X on Y.` report + `cant_put_on_that` refusal on a
+  non-supporter).

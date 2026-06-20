@@ -1,0 +1,10 @@
+hall
+A plain hall.
+
+> put coin on rock
+You can't put things on that.
+
+> put coin on table
+You put coin on table.
+
+> quit

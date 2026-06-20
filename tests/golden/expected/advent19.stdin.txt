@@ -1,0 +1,3 @@
+put coin on rock
+put coin on table
+quit
