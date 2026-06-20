@@ -82,6 +82,14 @@ module `let` (byte-identical output). Note: the remaining set-once module `let`s
 in emitter/checker are per-invocation config, not the save/restore hazard; full
 concurrent reentrancy would still need them bundled. **(arch issue G)**
 
+## 0. GitHub Pages deploy — enable Pages source (one-time) — DONE workflow (2026-06-19)
+`.github/workflows/deploy-pages.yml` builds `sample/cloak.lamp` and publishes it
+to GitHub Pages on push to `main` (and `workflow_dispatch`). **Remaining (manual,
+one-time):** in the repo Settings → Pages, set **Source: GitHub Actions** so the
+workflow's `deploy-pages` step has a target; until then the deploy job will fail.
+The bundle's service worker supplies COOP/COEP, so no host header config is
+needed. **Where:** `.github/workflows/deploy-pages.yml`, `devdocs/lighthouse.md`.
+
 ## 1. Lighthouse web bundle — headless CI test (optional)
 Web v1 is **built, verified live, shell-polished, and hardened for distribution**.
 **Done:** string encoding (`--encode-strings`, `npm run test:encode`) — covers
