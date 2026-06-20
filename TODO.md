@@ -5,114 +5,29 @@ Top recommended next steps, roughly in priority order. Each item notes *why*,
 prerequisite lists in `devdocs/game_parser.md`, `devdocs/rulebooks.md`, and
 `devdocs/relations.md`.
 
-## Architecture review follow-ups (2026-06-19)
-From the standing review captured in `devdocs/architecture.md` → "Known
-Architectural Issues". Listed highest-leverage first.
+> The 2026-06-19/20 architecture review (issues A–G) is **fully resolved** — see
+> `devdocs/architecture.md` → "Known Architectural Issues" for the per-issue
+> record. The only optional remnant is item 5 below.
 
-### AR1. Replace raw-source regex prescans with a token-level pre-pass — DONE (2026-06-19)
-`src/lantern/index.js` now tokenizes each file once, runs `prescanDeclarations`
-(`src/lantern/prescan.js`) over the tokens to build the parser's name sets, then
-parses from the same tokens via `parseTokens`. The eight `extract*` regex
-functions are gone; the lexer runs once per file and the prescan shares its
-comment/string handling. Unit-tested in `tests/prescan` (`npm run test:prescan`).
-Remaining nit: `extractLibImports` (lib resolution; scans only the user file)
-still uses a regex — low risk, left as-is. **(arch issue A)**
-
-### AR2. Decouple Lamplighter from the advent world model — DONE (2026-06-19)
-Design: `devdocs/world-model.md`. Decision D1 — Lamplighter is an IF runtime;
-`holder`/`physical`/`succeeded`/`failed`/`startup` are runtime-owned and hardcoded
-(documented contract, not configurable). The `lib/sys ↔ lib/advent` split is kept
-(base vs. opt-in IF world; a merge was investigated and rejected — it collides
-with fixtures that build their own worlds).
-- `run_command(line, actor)` — the actor is passed in (typed `object`), so
-  `lib/sys` no longer reads `getGlobal("player")` and is self-contained.
-- Presentation moved library-side — `formatListValue` calls a
-  `setListFormatter`-installed formatter; `lib/sys` owns list-prose rendering and
-  reads the renamed `oxford_comma` global (author form: `oxford_comma = true`).
-  (Cost: the native reads the name by literal, so it leaks in `--encode-strings`
-  builds — documented limitation.)
-- Contract made explicit: a "Runtime ↔ world-model contract" block in
-  `src/lamplighter/index.js`, per-site tags, and notes in `world-model.md` /
-  `rulebooks.md`.
-
-Optional future hardening (not done, low priority): a startup check that
-`physical`/`holder` exist when the parser is used, so a malformed world fails
-loudly instead of on `undefined.holder`. **(arch issue C)**
-
-### AR3. Distinguish object references from string literals — DONE (2026-06-19)
-The seven duplicated object-vs-string predicates collapsed to one
-(`valueIsObjectRef` + `emitObjectOrValue` in `src/lantern/emitter.js`); validation
-is uniform `checkedGetObject`, so unknown objects in call args / relation queries
-/ relation removes are now compile errors (`call_unknown_object` fixture). The
-checker also flags bare-name typos compared against an object-typed expression
-(`checkObjectNameComparison`; `compare_unknown_object` fixture). Output for valid
-programs is byte-identical. Chosen approach: emitter-centralized dispatch rather
-than a distinct `ObjectRef` AST node — same outcomes, far lower risk. Residual:
-typos on the `ParenNameExpr`/global side of a comparison aren't inferred, so
-aren't caught. **(arch issue D)**
-
-### AR4. Decode string escapes — DONE (2026-06-19)
-`unescapeString` in `src/lantern/tokenizer.js` resolves `\\`, `\"`, `\n`, `\t`,
-`\r` at the STRING-token chokepoint; unknown `\X` keeps its backslash. One decode
-point, so emitter/prescan/`--encode-strings` all agree. Tested in
-`tests/tokenizer` and golden `advent17` (plaintext + encoded byte-identical).
-**(arch issue E)**
-
-### AR5. Harden the native-JS function boundary — DONE (2026-06-19)
-`gatherNativeJs` now uses `extractTopLevelFunctionNames`
-(`src/lantern/native_scan.js`), a JS surface scanner that skips comments,
-strings, template/regex literals, and tracks brace depth so only depth-0
-function declarations count. A native function implemented only nested (or named
-in a comment) is now a compile error instead of a runtime `ReferenceError`.
-Unit-tested in `tests/native_scan`; real-lib output unchanged. **(arch issue B)**
-
-### AR6. Separate relation instances from the world-object registry — DONE (2026-06-20)
-Relation edges now live in a dedicated `relationInstanceRegistry`;
-`instanceRegistry` holds world objects only. `defineRelation` keeps the relation
-registered as a *type* (so `.all`/`isTypeOrSubtype` dispatch are unchanged) but
-its edges go to the relation store; the five relation CRUD fns read/write it.
-`scopeOf`/`buildVocabIndex` are untouched and now structurally can't iterate edges
-(closing the `"null"`-token and scope-walks-edges hazards). The lone union point
-is `getInstancesForTypeAndSubtypes`, so `connects.all` still returns its edges.
-Byte-identical output (112 golden + sandbox + encode). **(arch issue F)**
-
-### AR7. Small structural fixes — DONE (2026-06-19)
-Explicit lib load order via optional `load.order` manifest
-(`src/lantern/liborder.js`, `tests/liborder`); same-file duplicate-function
-compile error in `deduplicateFunctions` (`function_dup` fixture);
-case-insensitive QUIT in `lib/advent/startup.lamp` (`advent18` fixture); deleted
-dead artifacts (`gameloop.lamp_hide`, unused `words` global); and the emitter's
-bare-`stop` JS is now a threaded `bareStop` parameter rather than a hand-saved
-module `let` (byte-identical output). Note: the remaining set-once module `let`s
-in emitter/checker are per-invocation config, not the save/restore hazard; full
-concurrent reentrancy would still need them bundled. **(arch issue G)**
-
-## 0. GitHub Pages deploy — enable Pages source (one-time) — DONE workflow (2026-06-19)
+## 1. GitHub Pages deploy — enable Pages source (one-time, manual)
 `.github/workflows/deploy-pages.yml` builds `sample/cloak.lamp --encode-strings`
 (prose hidden from view-source) and publishes it to GitHub Pages on push to
-`main` (and `workflow_dispatch`). **Remaining (manual,
-one-time):** in the repo Settings → Pages, set **Source: GitHub Actions** so the
-workflow's `deploy-pages` step has a target; until then the deploy job will fail.
-The bundle's service worker supplies COOP/COEP, so no host header config is
-needed. **Where:** `.github/workflows/deploy-pages.yml`, `devdocs/lighthouse.md`.
+`main` (and `workflow_dispatch`). **Remaining (manual, one-time):** in the repo
+Settings → Pages, set **Source: GitHub Actions** so the workflow's `deploy-pages`
+step has a target; until then the deploy job will fail. The bundle's service
+worker supplies COOP/COEP, so no host header config is needed. **Where:**
+`.github/workflows/deploy-pages.yml`, `devdocs/lighthouse.md`.
 
-## 1. Lighthouse web bundle — headless CI test (optional)
-Web v1 is **built, verified live, shell-polished, and hardened for distribution**.
-**Done:** string encoding (`--encode-strings`, `npm run test:encode`) — covers
-prose, object/global/action/**type/relation** names, and grammar + relation-syntax
-templates (the command phrasing); kind/enum/rulebook/event names + field keys
-stay plaintext; native-`index.js` strings untouched (a name a native lib
-references by literal still leaks) — and esbuild `minify` (default on,
-`--no-minify` escape; ~66 KB → ~33 KB for cloak; covered by
-`npm run test:lighthouse`). Encoding correctness is guarded by a broad
-byte-identical-playthrough equivalence corpus (relations, inheritance, queries,
-actions) in `tests/encode`. **Remaining (optional):** a
-*headless* browser test that drives the live loop (worker `Atomics.wait` + shell
-SAB fill) — closes the last automation gap but needs a heavy Playwright/Puppeteer
-dep; decide if worth it for CI. Also still open: whether to default
-`--encode-strings` on for distribution builds. **Where:** `src/lighthouse/`.
+## 2. Lighthouse web bundle — headless CI test (optional)
+Web v1 is **built, verified live, shell-polished, and hardened for distribution**
+(string encoding + esbuild minify, both covered by `npm run test:lighthouse` /
+`npm run test:encode`). **Remaining (optional):** a *headless* browser test that
+drives the live loop (worker `Atomics.wait` + shell SAB fill) — closes the last
+automation gap but needs a heavy Playwright/Puppeteer dep; decide if worth it for
+CI. Also still open: whether to default `--encode-strings` on for distribution
+builds. **Where:** `src/lighthouse/`.
 
-## 2. RESTART support for the end-of-story sequence
+## 3. RESTART support for the end-of-story sequence
 The end-of-story mechanism (`story` global, `end_story_rules`, the post-game loop
 in `lib/advent/startup.lamp`) is in place but only offers QUIT — there is no state
 reset, so RESTART was deferred. Implement it by having the sandbox **host
@@ -122,7 +37,7 @@ guarding the `exit` handler), and re-enabling RESTART in the end sequence.
 Alternative (messier): a runtime-wide `reset()` + re-run. **Where:**
 `src/lamplighter/sandbox/host.js` + `worker.js`, `lib/advent/startup.lamp`.
 
-## 3. Parser v2 — every-turn & timed rules
+## 4. Parser v2 — every-turn & timed rules
 Action-rulebook bands are implemented; what remains for v2 is a turn clock:
 every-turn rules and timed/scheduled events, plus out-of-world actions
 (`save`/`undo`/`again` — currently out of scope). Also surface the outcome of a
@@ -130,6 +45,12 @@ player command (the `run_command` path discards `runAction`'s result, unlike
 `let x = try`) so turn rules can see whether the command succeeded.
 - **Where:** rulebook driver in `src/lamplighter/index.js`, `run_command` loop.
 - **See:** `devdocs/rulebooks.md` roadmap, `devdocs/game_parser.md` v2.
+
+## 5. Malformed-world startup check (optional hardening)
+Carryover from arch issue C. When the parser is used, assert at startup that a
+`physical` type and a `holder` field exist, so a world library missing the
+runtime↔world contract names fails loudly instead of on `undefined.holder` deep
+in `scopeOf`. Low priority. **Where:** `src/lamplighter/index.js` (`run`).
 
 ## Smaller / opportunistic
 - **Remaining pronouns (`him`/`her`/`them`).** `it` is implemented with
