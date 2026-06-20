@@ -4,7 +4,13 @@
 const { decode } = require("../strcodec");
 
 const typeRegistry = new Map();
+// World objects only. Relation edges live in relationInstanceRegistry so that
+// world-iterating consumers (scopeOf, buildVocabIndex) never walk graph edges.
 const instanceRegistry = new Map();
+// relationTypeName -> edge instances. Kept separate from instanceRegistry; the
+// only place the two are unioned is getInstancesForTypeAndSubtypes (so a
+// relation's `.all` still returns its edges).
+const relationInstanceRegistry = new Map();
 const nameRegistry = new Map();
 const eventRegistry = new Map();
 const kindRegistry = new Map();
@@ -121,11 +127,15 @@ function defineType(name, parents, fields, defaults = {}) {
     }
 }
 
-// A relation type is registered as an ordinary type (so `TYPE.all` and the
-// instance registry work) plus a relation-specific record carrying the field
-// schema and optional syntax template for later phases (assertion, querying).
+// A relation type is registered as an ordinary type (so `TYPE.all` and
+// `isTypeOrSubtype` dispatch work) plus a relation-specific record carrying the
+// field schema and optional syntax template for later phases (assertion,
+// querying). Its edges live in relationInstanceRegistry, not the world-object
+// instance registry, so we drop the empty instance list defineType created.
 function defineRelation(name, fields, syntaxTemplate = null, invertedFields = [], sourceField = "source", targetField = "target") {
     defineType(name, [], fields);
+    instanceRegistry.delete(name);
+    relationInstanceRegistry.set(name, []);
     relationRegistry.set(name, {
         name,
         fields: { ...fields },
@@ -164,7 +174,7 @@ function addRelation(typeName, fields, options = {}) {
         ...fields,
     };
 
-    instanceRegistry.get(typeName).push(instance);
+    relationInstanceRegistry.get(typeName).push(instance);
     if (options.name) {
         nameRegistry.set(options.name, instance);
     }
@@ -180,7 +190,7 @@ function addRelation(typeName, fields, options = {}) {
 function findMatchingRelation(typeName, fields) {
     const keys = Object.keys(relationRegistry.get(typeName).fields);
     const matches = (mapping) => keys.every((key) => mapping[key] === fields[key]);
-    for (const instance of (instanceRegistry.get(typeName) || [])) {
+    for (const instance of (relationInstanceRegistry.get(typeName) || [])) {
         if (matches(instance)) {
             return instance;
         }
@@ -202,7 +212,7 @@ function queryRelation(typeName, query) {
     const keys = Object.keys(relationRegistry.get(typeName).fields);
     const matches = (mapping) => keys.every((key) => query[key] === ANY || mapping[key] === query[key]);
     const results = [];
-    for (const instance of (instanceRegistry.get(typeName) || [])) {
+    for (const instance of (relationInstanceRegistry.get(typeName) || [])) {
         if (matches(instance)) {
             results.push(instance);
         } else if (instance.bidi) {
@@ -224,7 +234,7 @@ function removeRelation(typeName, query) {
     }
     const keys = Object.keys(relationRegistry.get(typeName).fields);
     const matches = (mapping) => keys.every((key) => query[key] === ANY || mapping[key] === query[key]);
-    const instances = instanceRegistry.get(typeName) || [];
+    const instances = relationInstanceRegistry.get(typeName) || [];
     const toRemove = new Set();
     for (const instance of instances) {
         if (matches(instance) || (instance.bidi && matches(relationInverse(typeName, instance)))) {
@@ -251,7 +261,7 @@ function removeRelationByName(name) {
         throw new Error(`No relation instance named '${name}'`);
     }
     const typeName = instance.type;
-    const instances = instanceRegistry.get(typeName) || [];
+    const instances = relationInstanceRegistry.get(typeName) || [];
     const idx = instances.indexOf(instance);
     if (idx !== -1) instances.splice(idx, 1);
     nameRegistry.delete(name);
@@ -963,9 +973,16 @@ function listItems(value) {
     throw new Error("for ... in expected a list");
 }
 
+// The only place world objects and relation edges are unioned: a relation's
+// `.all` returns its edges, while a world type's `.all` returns its objects.
 function getInstancesForTypeAndSubtypes(typeName) {
     const results = [];
     for (const [registeredTypeName, instances] of instanceRegistry.entries()) {
+        if (isTypeOrSubtype(registeredTypeName, typeName)) {
+            results.push(...instances);
+        }
+    }
+    for (const [registeredTypeName, instances] of relationInstanceRegistry.entries()) {
         if (isTypeOrSubtype(registeredTypeName, typeName)) {
             results.push(...instances);
         }
