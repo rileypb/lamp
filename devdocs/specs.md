@@ -90,12 +90,12 @@ Lantern-generated JavaScript targets the following Lamplighter API surface:
     - Type handle exposes `all`, which includes instances of the type and all subtypes.
     - `all.first` returns the first element in that list.
 - `defineRelation(name, fields, syntaxTemplate?, invertedFields?, sourceField?, targetField?)`
-    - Registers a relation type. Internally registers it as a type (so `name.all` and the instance registry work) and records the field schema, optional syntax template, the list of `inverted`-tagged field names, and the canonical source and target field names (used by `relationInverse` to derive the mechanical inverse).
+    - Registers a relation type. It is registered as a type (so `name.all` and `isTypeOrSubtype` dispatch work) but its edges live in a **separate relation-instance store**, not the world-object instance registry — so scope/vocabulary iteration never walks relation edges. Records the field schema, optional syntax template, the list of `inverted`-tagged field names, and the canonical source and target field names (used by `relationInverse` to derive the mechanical inverse). See `devdocs/architecture.md` issue F.
 - `addRelation(typeName, fields, options?)`
     - Creates a relation instance from a field-value mapping.
     - Deduplicates by field values (object fields by identity, value fields by equality); asserting an identical instance returns the existing one. For a `bidi` instance, an assertion that matches its mechanical inverse also deduplicates against it.
     - `options` may carry `name` (registers the instance for `getObject`) and `bidi` (marks the instance bidirectional, upgrading an existing match in place).
-    - The instance is added to the relation type's `all` list.
+    - The edge is stored in the relation-instance store (separate from world objects); it still appears in the relation type's `all` (the two stores are unioned only there).
 - `queryRelation(typeName, query)`
     - Returns the matching edges as **oriented** field-mappings (the instance for a direct match; its mechanical inverse for a `bidi` instance matched in reverse). A slot holding the `ANY` wildcard sentinel matches any value; other slots match by identity (objects) or value (primitives).
 - `queryRelationValue(typeName, query, outputField, mode)`
@@ -151,7 +151,7 @@ Lantern-generated JavaScript targets the following Lamplighter API surface:
 - `registerGrammar(actionName, template)`
     - Registers a surface template string for an action with the Game Parser. Used by the emitter for each syntax line in an action declaration.
 - `runCommand(line, actor)`
-    - Parses `line` against registered grammar templates, resolves each slot to an in-scope object of the slot's declared type, and runs the matched action. `actor` supplies the scope (actor's location contents and inventory). Prints `"I don't understand that."` on no match; `"You can't see any such thing."` on a failed slot resolve. The Lamp-level `run_command` native function calls this with `lamplighter.getGlobal("player")` as the actor.
+    - Parses `line` against registered grammar templates, resolves each slot to an in-scope object of the slot's declared type, and runs the matched action. `actor` supplies the scope (actor's location contents and inventory). Prints `"I don't understand that."` on no match; `"You can't see any such thing."` on a failed slot resolve. The commanding actor is **passed in** — the Lamp-level `run_command(line, actor)` native threads it through (the advent loop passes `player`), so the runtime reads no `player` global itself. Before dispatching a fresh command it takes an **undo checkpoint** (see *State, undo, and save*); a registered **out-of-world** verb (`undo`/`save`/`restore`) bypasses the turn and takes no checkpoint.
 - `registerRelationAddHandler(relationName, handler)`
     - Registers a handler called whenever a new instance of the named relation is asserted. The handler receives the new instance as its argument (`self`). Used by the emitter for `on RELATION add:` blocks.
 - `registerRelationRemoveHandler(relationName, handler)`
@@ -160,6 +160,40 @@ Lantern-generated JavaScript targets the following Lamplighter API surface:
     - Installs the input callback used by `readLine()`. Called by the sandbox launcher to wire the worker's blocking-input bridge before the game starts.
 - `readLine()`
     - Requests one line of player input via the installed input channel. Throws if no channel has been installed (i.e., outside the sandbox).
+- `setBuildId(id)`
+    - Records the build fingerprint Lantern stamps at the top of every generated module — a content hash over the compilation source inputs (invariant under `--encode-strings`). Gates save compatibility (see below).
+
+#### State, undo, and save
+
+The runtime can capture and restore the **mutable game state**, which powers
+UNDO (in-memory) and SAVE/RESTORE (state serialized to storage on the same
+mechanism). Full design in `devdocs/state.md`; the contract in brief:
+
+- **What is state.** Object **field values**, **relation edges**, **global
+  values**, and the pronoun antecedent. Schema, rules, handlers, and grammar are
+  load-time program structure and are *not* snapshotted (they come from re-loading
+  the module). Every value is a member of the closed algebra **scalar | object
+  reference | list**; references are encoded by object name.
+- **Extensibility.** State is captured by a **state-provider registry**, not a
+  hardcoded list. New mutable state is captured by registering a provider — the
+  snapshot core is never edited. New fields/globals/relations are captured
+  automatically by the built-in providers.
+- **API.** `captureState()` → a plain JSON-able snapshot; `restoreState(snap)`
+  overwrites instance fields **in place** (preserving object identity; no change
+  handlers fire) and rebuilds the vocab index. `registerStateProvider({ key,
+  capture, restore })` adds a provider. `clearUndoHistory()` empties the undo
+  stack.
+- **UNDO.** `runCommand` checkpoints before each fresh turn; the **`undo`**
+  out-of-world verb pops and restores. Depth is the author-settable **`undo_limit`**
+  global (default 32; `0` disables), read fresh each checkpoint like `oxford_comma`.
+- **SAVE / RESTORE.** `captureSave()` wraps a snapshot in a versioned header
+  `{ format, buildId, gameName, gameAuthor, savedAt, state }`. `restoreSave(save)`
+  checks format → game → version and **never restores on a mismatch** (a
+  cross-build restore can corrupt a name-keyed world), returning
+  `{ ok }` / `{ ok:false, reason }`. The host injects storage via
+  `setSaveChannel({ write, read })`; the **`save`**/**`restore`** out-of-world
+  verbs prompt for a named slot. Build compatibility is gated on the `buildId`
+  hash, not the author-facing `version`/`release` (which stay display-only).
 
 ## Non-Functional Specifications
 
@@ -1404,13 +1438,13 @@ follow reachable(brass_lamp)
 
 Lantern compiles in three passes:
 
-1. **Pre-scan** (`index.js`): scan all source files with a single regex per line to collect declared global names, function names, relation names, action names, object names, action tag names, rulebook names with their parameter names, and relation syntax templates — so the parser can resolve bare identifiers and recognize tag/selector/`rule`-contribution heads before full parsing. Also scans each library directory for `index.js`; if present, reads it and extracts top-level function names (via `function NAME(` regex) for `native function` resolution, and inlines the raw native JS content.
+1. **Pre-scan** (`index.js` + `prescan.js`): each file is tokenized **once**; `prescanDeclarations` walks that token stream (sharing the tokenizer's comment/string handling) to collect declared global names, function names, relation names, action names, object names, action tag names, rulebook names with their parameter names, and relation syntax templates — so the parser can resolve bare identifiers and recognize tag/selector/`rule`-contribution heads before full parsing. (The earlier per-line regex prescan was replaced; see `devdocs/architecture.md` issue A.) Also scans each library directory for `index.js`; if present, inlines the raw native JS and extracts its **top-level** function names via `native_scan.js` — a JS surface scanner that skips comments, strings, template/regex literals, and tracks brace depth (issue B) — for `native function` resolution.
 2. **Parse** (`parser_rd.js`): parse each file into an AST using the collected global and function names so that bare identifiers in expressions are resolved correctly.
 3. **Check** (`checker.js`) + **emit** (`emitter.js`): semantic check then emit standalone Node.js JavaScript.
 
 **Optional string encoding (`--encode-strings`).** When this flag is passed, the emitter wraps player-facing strings as `lamplighter.decode("…")` over an encoded payload instead of plain JS string literals. Encoded: prose/value literals (via `emitValue`/`emitExpression` and type-level field defaults); **object, global, action, type, and relation names** at *every* emission site, routed through the shared `emitName`/`emitFieldSchema`/`emitNameList` helpers — `createObject`/`getObject`/`objectRef`/`checkedGetObject`; `defineGlobal`/`setGlobal`/`getGlobal`; `registerGrammar`/`registerActionRule`/`runAction` (action name + the instance's `type`/`action` values); `defineType` (name, parent list, and the field schema's type-name *values*); `lamplighter.type(...)` constants; `defineRelation` (name + field-type values); `addRelation`/`removeRelation`/`queryRelation`/`queryRelationValue`; and `registerChangeHandler`/`registerRelationAddHandler`/`registerRelationRemoveHandler`; and **grammar templates** (`registerGrammar`) and **relation syntax templates** (`defineRelation`), the player-visible command phrasing. All of these are registry/dispatch keys, but encoding is behavior-preserving because `decode` runs at load: every registration and lookup decodes to the same plaintext key at runtime (the broad equivalence corpus in `tests/encode` guards this). The `emitFieldSchema`/`emitNameList` helpers fall back to verbatim `JSON.stringify` in plaintext mode. This is behavior-preserving because `decode` runs at load: object/global names are registry keys, but the runtime key is the decoded plaintext, identical to the plaintext build, so lookups and `===` identity are unchanged. Left plaintext: **kind names and enum labels** (`defineKind`/`enum`), **rulebook and event names** (`registerRulebookRule`/`onEvent`), and **field/property keys** (encoding keys would require dynamic property access); the JS `const <name>` bindings stay plain identifiers (minify mangles them). Strings inside inlined native `index.js` are not touched — the emitter does not parse native JS — so a native library that references a name or prints text by literal (e.g. `getGlobal("player")`, `type("item")`) still leaks it; those plaintext lookups continue to resolve precisely because the encoded registrations decode to the same keys. The shared codec (`src/strcodec.js`, XOR + base64) is reversible by design: its purpose is only to make spoilers inconvenient for a casual reader of a shipped bundle, **not** to provide security — the decoder and key ship together. Strings inside inlined native `index.js` are not touched (the emitter does not parse native JS). The flag is off by default (readable output for development); Lighthouse turns it on for distribution builds.
 
-The emitted program is a body-only module that assumes `lamplighter` is already available as a context global (injected by the sandbox launcher). It runs in this order: `bootstrapBuiltins()` → native JS (inlined from `index.js` files) → kinds → kind constants → types → type constants → objects (primitive/kind fields only) → object-typed field assignments → top-level relation assertions/removes → global declarations → global assignments → function definitions → rulebook definitions (each a dispatcher function plus a `registerRulebookRule` call per declaration-block rule) → event handler registrations → change handler registrations → phase rule registrations (a selector rule expands to one registration per resolved action) → rulebook rule contribution registrations → grammar registrations → relation add/remove handler registrations → `run()`. Globals and object-typed field assignments are placed after all `createObject` calls so that any `lamplighter.getObject(...)` reference resolves against an already-registered instance regardless of declaration order. Function definitions are emitted before event handler registrations so they are in scope when handlers run.
+The emitted program is a body-only module that assumes `lamplighter` is already available as a context global (injected by the sandbox launcher). It is prefixed with a single `lamplighter.setBuildId("…")` call carrying the build fingerprint (a content hash of the source inputs, used to gate save compatibility). It then runs in this order: `bootstrapBuiltins()` → native JS (inlined from `index.js` files) → kinds → kind constants → types → type constants → objects (primitive/kind fields only) → object-typed field assignments → top-level relation assertions/removes → global declarations → global assignments → function definitions → rulebook definitions (each a dispatcher function plus a `registerRulebookRule` call per declaration-block rule) → event handler registrations → change handler registrations → phase rule registrations (a selector rule expands to one registration per resolved action) → rulebook rule contribution registrations → grammar registrations → relation add/remove handler registrations → `run()`. Globals and object-typed field assignments are placed after all `createObject` calls so that any `lamplighter.getObject(...)` reference resolves against an already-registered instance regardless of declaration order. Function definitions are emitted before event handler registrations so they are in scope when handlers run.
 
 ### Parser design
 
@@ -1485,12 +1519,18 @@ below, and game files may declare more.
 - `global person player = yourself` — the player character; `yourself` is a
   built-in `person` object.
 - `global string input` — the raw input line each turn.
-- `global list<string> words` — the input split into words.
 - `global story_state story = ongoing` — story-end state (`ongoing`/`won`/`lost`);
   see *Ending the story*.
 - Directions: `north`, `northeast`, `east`, `southeast`, `south`, `southwest`,
   `west`, `northwest`, `up`, `down` — each with an `inverse` and an `understand`
   alias (e.g. `"n"`, `"ne"`).
+
+Settings (declared in `lib/sys`, available to any game) are ordinary author-set
+globals read by the runtime/library:
+
+- `global bool oxford_comma = false` — use the serial comma in list prose.
+- `global int undo_limit = 32` — turns of UNDO history kept (`0` disables);
+  read fresh each turn (see *State, undo, and save*).
 
 ### Startup banner
 
@@ -1540,8 +1580,9 @@ rule end_story_rules when story == lost:
     stop true
 ```
 
-RESTART is not yet supported (the runtime has no state reset), so only `quit`
-ends the session.
+RESTART is not yet wired into the end sequence, so only `quit` ends the session —
+though the state-snapshot mechanism (see *State, undo, and save*) now provides the
+reset primitive a RESTART would build on.
 
 ### Relations
 
@@ -1553,8 +1594,8 @@ ends the session.
 
 ### Stop reasons
 
-`already_carrying`, `cant_take_that`, `not_carrying`, `cant_go_that_way`,
-`not_wearable`, `already_worn`, `not_worn`.
+`already_carrying`, `cant_take_that`, `not_carrying`, `cant_put_on_that`,
+`cant_go_that_way`, `not_wearable`, `already_worn`, `not_worn`, `too_dark`.
 
 ### Actions
 
@@ -1568,10 +1609,14 @@ ends the session.
 | `wear` | `item clothing` | `wear [clothing]` | Asserts `wears actor clothing`; implicitly calls `take` if item is not yet carried (printing `(first taking X)` for the player). |
 | `doff` | `item clothing` | `remove [clothing]`, `take off [clothing]` | Retracts `wears actor clothing`. (Named `doff` internally because `remove` is a reserved keyword.) |
 | `go` | `direction way` | `go [way]`, `[way]` | Moves actor along a `connects` edge. |
+| `put_on` | `direct item put_item`, `item destination` | `put [put_item] on [destination]` | Moves an item onto a supporter (sets `holder`, records `supports`); a `check` refuses a non-`supporter` destination (`cant_put_on_that`). Worn items are taken off first. Games add their own phrasing with `understand` (e.g. cloak's `hang … on …`). |
 
 All report rules are actor-aware: player actions produce second-person text
 (`"Taken."`, `"Dropped."`, etc.); NPC actions produce third-person text
 (`"npc takes hat."`, `"npc drops hat."`, etc.).
+
+The player also has **out-of-world** verbs handled by the runtime (no turn taken):
+`undo`, `save`, `restore` — see *State, undo, and save*.
 
 ## Open Questions
 
