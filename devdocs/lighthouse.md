@@ -96,7 +96,8 @@ Default output directory is `dist/<game-name>/`.
 `.github/workflows/deploy-pages.yml` builds the Cloak of Darkness sample and
 publishes the bundle to GitHub Pages on every push to `main` (and on manual
 `workflow_dispatch`). It runs `node src/lighthouse/build.js sample/cloak.lamp
-dist/cloak`, then uploads `dist/cloak` via `actions/upload-pages-artifact` and
+dist/cloak --encode-strings` (the published build hides prose/spoilers from
+view-source), then uploads `dist/cloak` via `actions/upload-pages-artifact` and
 publishes it with `actions/deploy-pages`. No server header configuration is
 needed: the bundle's own service worker synthesizes the cross-origin-isolation
 headers (see below), so `SharedArrayBuffer` is available on plain Pages. Pages
