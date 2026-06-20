@@ -147,15 +147,25 @@ emitter, the prescan's relation templates, and `--encode-strings` all see the
 resolved value. Covered by `tests/tokenizer` (unit) and the `advent17` golden
 fixture (embedded quote + newline + literal backslash, plaintext and encoded).
 
-### F. Relations share the world-object instance registry
-`defineRelation` registers each relation as an ordinary type, so relation
-instances live in `instanceRegistry` alongside game objects. `scopeOf` and
-`buildVocabIndex` iterate every instance, including relation edges (anonymous
-edges have `name: null`, which `buildVocabIndex` indexes under the token
-`"null"`). Harmless today (edges are never in scope and never physical) but it is
-a latent correctness/perf smell: world scope iterates graph edges as if they
-were objects. Consider a separate store for relation instances, or a tag the
-iteration can skip.
+### F. Relations share the world-object instance registry — RESOLVED (2026-06-20)
+Previously `defineRelation` registered each relation as an ordinary type, so
+relation edges lived in `instanceRegistry` alongside game objects, and `scopeOf`
+and `buildVocabIndex` iterated every instance including edges (anonymous edges
+have `name: null`, which `buildVocabIndex` indexed under the token `"null"`).
+
+Relation edges now live in a dedicated `relationInstanceRegistry`;
+`instanceRegistry` holds world objects only. `defineRelation` still registers the
+relation as a type (so `isTypeOrSubtype` and `.all` dispatch are unchanged) but
+drops the empty instance list `defineType` created and allocates an edge list in
+the relation store instead. The five relation CRUD functions (`addRelation`,
+`findMatchingRelation`, `queryRelation`, `removeRelation`,
+`removeRelationByName`) read/write the relation store. The two world iterators
+(`scopeOf`, `buildVocabIndex`) are untouched and now structurally cannot see
+edges — closing the `"null"`-token and scope-walks-edges hazards. The single
+place the two stores are unioned is `getInstancesForTypeAndSubtypes`, so a
+relation's `.all` (e.g. `print connects.all`) still returns its edges. Output is
+byte-identical (112 golden incl. the relation/`connects.all` fixtures, sandbox,
+and the encode equivalence corpus).
 
 ### G. Smaller structural notes
 - **Lib load order** — RESOLVED (2026-06-19). A library may now pin file load

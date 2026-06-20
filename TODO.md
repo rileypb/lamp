@@ -66,10 +66,15 @@ function declarations count. A native function implemented only nested (or named
 in a comment) is now a compile error instead of a runtime `ReferenceError`.
 Unit-tested in `tests/native_scan`; real-lib output unchanged. **(arch issue B)**
 
-### AR6. Separate relation instances from the world-object registry
-Relations live in `instanceRegistry`, so `scopeOf`/`buildVocabIndex` iterate
-edges (anonymous edges get indexed under the `"null"` token). Give relations
-their own store, or tag iterations to skip them. **(arch issue F)**
+### AR6. Separate relation instances from the world-object registry — DONE (2026-06-20)
+Relation edges now live in a dedicated `relationInstanceRegistry`;
+`instanceRegistry` holds world objects only. `defineRelation` keeps the relation
+registered as a *type* (so `.all`/`isTypeOrSubtype` dispatch are unchanged) but
+its edges go to the relation store; the five relation CRUD fns read/write it.
+`scopeOf`/`buildVocabIndex` are untouched and now structurally can't iterate edges
+(closing the `"null"`-token and scope-walks-edges hazards). The lone union point
+is `getInstancesForTypeAndSubtypes`, so `connects.all` still returns its edges.
+Byte-identical output (112 golden + sandbox + encode). **(arch issue F)**
 
 ### AR7. Small structural fixes — DONE (2026-06-19)
 Explicit lib load order via optional `load.order` manifest
