@@ -1,0 +1,19 @@
+lib advent
+
+# Exercises the author-settable `undo_limit` global (a setting like
+# `oxford_comma`). With a depth of 1, only the most recent turn can be undone:
+# the first `undo` reverts taking the gem, the second has nothing left.
+
+game Undo_Limit:
+    start hall
+
+undo_limit = 1
+
+room hall:
+    description "A plain hall."
+
+item coin:
+    holder hall
+
+item gem:
+    holder hall

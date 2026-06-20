@@ -189,6 +189,7 @@ lamplighter.addRelation("connects", { "source": lamplighter.getObject("Foyer"), 
 lamplighter.addRelation("wears", { "wearer": lamplighter.getObject("yourself"), "worn": lamplighter.getObject("velvet cloak") });
 
 lamplighter.defineGlobal("oxford comma", false);
+lamplighter.defineGlobal("undo limit", 32);
 lamplighter.defineGlobal("PI", 3.141592653);
 lamplighter.defineGlobal("player", lamplighter.getObject("yourself"));
 lamplighter.defineGlobal("input", null);

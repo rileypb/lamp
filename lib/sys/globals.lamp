@@ -2,4 +2,8 @@
 # `oxford_comma = true` in a game to use the serial comma in lists.
 global bool oxford_comma = false
 
+# How many turns of UNDO the runtime keeps (read fresh each turn; see
+# devdocs/state.md). Set `undo_limit = N` in a game to change it; 0 disables undo.
+global int undo_limit = 32
+
 global real PI = 3.141592653

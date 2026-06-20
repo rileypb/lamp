@@ -112,7 +112,14 @@ mutate, restore, and assert the state matches the capture.
 
 ## UNDO (Slice 1)
 
-- A bounded **undo stack** of encoded snapshots.
+- A bounded **undo stack** of encoded snapshots. The depth is the
+  author-settable **`undo_limit`** global (declared in `lib/sys`, default 32),
+  read fresh each checkpoint exactly like the `oxford_comma` presentation setting
+  — so a game can change it at runtime (`undo_limit = 10`), and `undo_limit = 0`
+  disables undo. The runtime falls back to 32 when the global is absent (a program
+  not using the standard library) or invalid. Because it is an ordinary global it
+  is itself snapshotted (harmless and consistent with `oxford_comma`); the undo
+  *stack* is not part of game state and is never snapshotted.
 - `runCommand` takes a **checkpoint** (`captureState()` pushed on the stack)
   at the start of each fresh command turn, *before* it mutates — so `undo`
   reverts the command just typed. Disambiguation answers continue the same turn
@@ -167,8 +174,9 @@ UNDO.
 
 ## Open questions
 
-- **Undo depth.** Bounded stack (current) vs. single-level (classic Z-machine) vs.
-  unbounded. Currently bounded; revisit if memory matters.
+- **Undo depth.** Bounded stack, depth = the author-settable `undo_limit` global
+  (default 32; `0` disables). Single-level (classic Z-machine) or unbounded are
+  just other `undo_limit` values; no further decision needed.
 - **Save slots & metadata.** Named slots, timestamps, per-save descriptions — a
   Slice 2 concern.
 - **Schema drift across saves.** A save from an older build loaded into a newer

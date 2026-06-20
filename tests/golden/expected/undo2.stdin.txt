@@ -1,0 +1,6 @@
+take coin
+take gem
+undo
+undo
+i
+quit

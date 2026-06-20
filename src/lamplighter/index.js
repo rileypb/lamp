@@ -1222,11 +1222,22 @@ registerStateProvider({
 
 // Undo: a bounded stack of snapshots. runCommand checkpoints before each fresh
 // turn mutates; `undo` pops and restores.
-const UNDO_LIMIT = 32;
+// The undo depth is an author-settable global (`undo_limit`, declared in
+// lib/sys), read fresh each checkpoint like the `oxford_comma` presentation
+// setting — so a game can change it at runtime. Falls back to the default when
+// the global is absent (a program not using the standard library) or invalid.
+const DEFAULT_UNDO_LIMIT = 32;
+function undoLimit() {
+    const value = getGlobal("undo limit");
+    return typeof value === "number" && Number.isFinite(value) && value >= 0
+        ? Math.floor(value)
+        : DEFAULT_UNDO_LIMIT;
+}
 const undoStack = [];
 function checkpoint() {
     undoStack.push(captureState());
-    if (undoStack.length > UNDO_LIMIT) undoStack.shift();
+    const limit = undoLimit();
+    while (undoStack.length > limit) undoStack.shift();
 }
 function clearUndoHistory() {
     undoStack.length = 0;

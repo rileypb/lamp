@@ -1,0 +1,22 @@
+hall
+A plain hall.
+
+You see a coin and a gem here.
+
+> take coin
+Taken.
+
+> take gem
+Taken.
+
+> undo
+[Previous turn undone.]
+
+> undo
+You can't undo any further.
+
+> i
+You are carrying:
+  a coin
+
+> quit
