@@ -135,6 +135,47 @@ The library turn loop is unchanged — `undo` typed by the player simply falls
 through to `run_command`, which recognizes it. No `lib/` change is required for
 UNDO.
 
+## SAVE / RESTORE (Slice 2)
+
+SAVE is the snapshot plus a **versioned header**, written through a host storage
+seam; RESTORE reads it back behind a strict compatibility gate.
+
+**Save versioning.** A save is keyed by names (objects, globals, fields,
+relations); if the compiled build changed shape, those keys may not line up, so a
+cross-build restore can silently corrupt the world. RESTORE therefore
+**detects-and-refuses** rather than best-effort migrating (the Z-machine model:
+saves carry the story's release/serial/checksum and `@restore` refuses on
+mismatch). Two identifiers:
+
+- **`buildId`** — a reproducible content hash Lantern computes over the
+  compilation *source inputs* (not the emitted JS, so it is invariant under
+  `--encode-strings`), stamped into the module via `setBuildId`. Identical source
+  → identical id (a no-op recompile keeps saves valid; a build on another machine
+  validates the same save); any change → a different id. This is the
+  compatibility gate, and being a *hash* it is reproducible and could later be
+  narrowed to a schema-only fingerprint — neither true of a random-per-compile id.
+- **game name + author** — read from the game object at save time, so RESTORE can
+  distinguish a save for a *different game* from one for an *older build of this
+  game*, for the refusal message.
+
+The author-facing `version`/`release` fields stay display-only; they are not the
+gate (an author would forget to bump them after a structural change).
+
+**Header.** `{ format, buildId, gameName, gameAuthor, savedAt, state }`.
+`restoreSave` checks format → game → version in that order and returns
+`{ ok }` / `{ ok:false, reason }`; on success it `restoreState`s and clears undo
+history. It never restores on a mismatch.
+
+**Storage seam.** The host injects a save channel (`setSaveChannel({ write, read })`)
+so the engine stays host-agnostic. The dev/CLI host brokers it like input: the
+sandboxed game posts `save_write`/`save_read`, the host does the filesystem op
+and replies over a dedicated `SharedArrayBuffer` (a `-1` length is the
+"no such save" sentinel). Saves are addressed by **named slots** (the `save`/
+`restore` out-of-world verbs prompt for a name), namespaced per game so two games'
+identically-named slots don't collide. The dev host stores them under a temporary
+directory (provisional; a durable per-user location is a later concern). The
+browser host wires the same seam to its own persistence (Slice 3).
+
 ## Inputs and Outputs
 
 - **Input (capture):** the live registries.
@@ -166,11 +207,14 @@ UNDO.
 - **Slice 1 — snapshot core + UNDO. (Implemented.)** Encoder/restore, provider
   registry + four built-ins, undo stack, `runCommand` checkpoint, out-of-world
   `undo`. In-memory only; works in every host.
-- **Slice 2 — SAVE/RESTORE to storage (dev host).** `JSON.stringify` the same
-  snapshot to a file via a storage native; `restore` clears undo history. Out-of-
-  world `save`/`restore` verbs.
-- **Slice 3 — browser persistence.** Wire the storage native to the sandbox's
-  persistence capability (`devdocs/sandbox.md`), download/localStorage.
+- **Slice 2 — SAVE/RESTORE to storage (dev host). (Implemented.)** Versioned
+  header (`buildId` + game identity), `captureSave`/`restoreSave` with the strict
+  restore gate, the `setSaveChannel` storage seam brokered to the filesystem by
+  the dev host, and named-slot `save`/`restore` out-of-world verbs. Unit test
+  `tests/save`; golden `save1`.
+- **Slice 3 — browser persistence.** Wire the save channel to the sandbox's
+  persistence capability (`devdocs/sandbox.md`) — download/localStorage. Also
+  open: a durable save location for the CLI host, and save-slot listing/metadata.
 
 ## Open questions
 

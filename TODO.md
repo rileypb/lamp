@@ -13,19 +13,19 @@ prerequisite lists in `devdocs/game_parser.md`, `devdocs/rulebooks.md`, and
 > grammar, world-model traits, turn-cycle/daemon, and message ideas mined from
 > `lurkinghorror.txt`. The user will pick which to promote into real TODO items.
 
-## 1. SAVE / RESTORE — serialize the state snapshot to storage
-UNDO is **done** (Slice 1): the snapshot core (`captureState`/`restoreState`, a
-state-provider registry with four built-ins, encode/decode over the closed
-value algebra) plus an undo stack and the out-of-world `undo` verb, all in
-`src/lamplighter/index.js`. Round-trip unit test `tests/state` + golden `undo1`;
-design in `devdocs/state.md`. **Remaining:**
-- **Slice 2 — SAVE/RESTORE to a file (dev host).** `JSON.stringify` the same
-  snapshot via a storage native; out-of-world `save`/`restore` verbs; `restore`
-  clears undo history. Decide save-slot/metadata + schema-drift policy
-  (`devdocs/state.md` Open questions). **Where:** `src/lamplighter/index.js`,
-  `src/lamplighter/sandbox/host.js`, a storage native in `lib/sys`.
-- **Slice 3 — browser persistence.** Wire the storage native to the sandbox
-  persistence capability (`devdocs/sandbox.md`) — download/localStorage.
+## 1. SAVE / RESTORE — browser persistence + durable CLI saves (Slice 3)
+UNDO (Slice 1) and SAVE/RESTORE to the dev host (Slice 2) are **done**: the
+snapshot core (`captureState`/`restoreState`, a state-provider registry +
+encode/decode over the closed value algebra), the undo stack + `undo` verb, a
+versioned save header (`buildId` content-hash from Lantern + game identity) with
+a strict restore gate, the `setSaveChannel` storage seam brokered to the
+filesystem by the dev host, and named-slot `save`/`restore` verbs. Tests:
+`tests/state`, `tests/save`, goldens `undo1`/`undo2`/`save1`; design in
+`devdocs/state.md`. **Remaining (Slice 3):**
+- Wire the save channel to the **browser** sandbox persistence capability
+  (`devdocs/sandbox.md`) — download / localStorage.
+- A **durable CLI save location** (the dev host currently uses a temp dir) and
+  save-slot **listing/metadata** (a `saves` verb).
 This shares the out-of-world-verb hook with RESTART (item 3) and Parser v2.
 
 ## 2. Lighthouse web bundle — headless CI test (optional)

@@ -1,0 +1,13 @@
+lib advent
+
+# Exercises SAVE/RESTORE end-to-end through the brokered storage channel: save a
+# named slot, mutate, then restore it so the mutation is rolled back.
+
+game Save_Demo:
+    start hall
+
+room hall:
+    description "A plain hall."
+
+item coin:
+    holder hall

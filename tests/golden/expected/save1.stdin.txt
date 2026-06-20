@@ -1,0 +1,7 @@
+save
+slot1
+take coin
+restore
+slot1
+i
+quit

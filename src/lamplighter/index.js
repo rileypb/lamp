@@ -1259,6 +1259,125 @@ function registerOutOfWorld(word, handler) {
 }
 registerOutOfWorld("undo", performUndo);
 
+// ====================================================================
+// SAVE / RESTORE — the snapshot plus a versioned header and a storage
+// seam. See devdocs/state.md → Save versioning.
+// ====================================================================
+
+// Build identity, stamped into the module by Lantern (setBuildId). It gates save
+// compatibility: a save records the build it was made with, and restore refuses
+// any save whose build differs, because a cross-build restore can corrupt the
+// world (the snapshot is keyed by names that may no longer line up).
+let buildId = null;
+function setBuildId(id) {
+    buildId = id;
+}
+function getBuildId() {
+    return buildId;
+}
+
+// The game's display identity, read from the game object at save time, so a save
+// from a *different game* is distinguished from one from a different *build*.
+function gameInfo() {
+    if (!typeRegistry.has("game")) return { name: null, author: null };
+    const game = getInstancesForTypeAndSubtypes("game")[0];
+    return game ? { name: game.name, author: game.author ?? null } : { name: null, author: null };
+}
+
+const SAVE_FORMAT = 1;
+function captureSave() {
+    const info = gameInfo();
+    return {
+        format: SAVE_FORMAT,
+        buildId,
+        gameName: info.name,
+        gameAuthor: info.author,
+        savedAt: new Date().toISOString(),
+        state: captureState(),
+    };
+}
+
+// Never restores on a mismatch. Returns { ok: true } or { ok: false, reason }
+// where reason is "format" | "game" | "version" (checked in that order, so a
+// build mismatch within the same game reports "version", not "game").
+function restoreSave(save) {
+    if (!save || save.format !== SAVE_FORMAT) return { ok: false, reason: "format" };
+    if (save.gameName !== gameInfo().name) return { ok: false, reason: "game" };
+    if (save.buildId !== buildId) return { ok: false, reason: "version" };
+    restoreState(save.state);
+    clearUndoHistory();
+    return { ok: true };
+}
+
+// Storage seam: the host injects a save channel so the engine stays
+// host-agnostic. write(key, text) persists; read(key) returns text or null.
+let saveChannel = null;
+function setSaveChannel(channel) {
+    saveChannel = channel;
+}
+
+// A storage key namespaced by game so two games' identically-named slots don't
+// collide; sanitized for use as a filename/key by the host.
+function saveSlotKey(slot) {
+    const safe = (s, fallback) => (String(s).trim().replace(/[^A-Za-z0-9_-]+/g, "_") || fallback);
+    return `${safe(gameInfo().name, "game")}__${safe(slot, "save")}`;
+}
+
+function performSave() {
+    if (!saveChannel) {
+        print("Saving isn't available here.");
+        return;
+    }
+    const slot = promptLine("Name for saved game: ");
+    if (!slot || !slot.trim()) {
+        print("Save cancelled.");
+        return;
+    }
+    try {
+        saveChannel.write(saveSlotKey(slot), JSON.stringify(captureSave()));
+        print("Game saved.");
+    } catch (err) {
+        print("Save failed.");
+    }
+}
+
+function performRestore() {
+    if (!saveChannel) {
+        print("Restoring isn't available here.");
+        return;
+    }
+    const slot = promptLine("Name of saved game: ");
+    if (!slot || !slot.trim()) {
+        print("Restore cancelled.");
+        return;
+    }
+    const text = saveChannel.read(saveSlotKey(slot));
+    if (text == null) {
+        print("There is no saved game by that name.");
+        return;
+    }
+    let save;
+    try {
+        save = JSON.parse(text);
+    } catch (err) {
+        print("That saved game is corrupted.");
+        return;
+    }
+    const result = restoreSave(save);
+    if (result.ok) {
+        print("Game restored.");
+    } else if (result.reason === "game") {
+        print("That saved game is for a different game.");
+    } else if (result.reason === "version") {
+        print("That saved game is from a different version of this game.");
+    } else {
+        print("That saved game is in an unrecognized format.");
+    }
+}
+
+registerOutOfWorld("save", performSave);
+registerOutOfWorld("restore", performRestore);
+
 module.exports = {
     bootstrapBuiltins,
     defineType,
@@ -1313,4 +1432,9 @@ module.exports = {
     registerStateProvider,
     registerOutOfWorld,
     clearUndoHistory,
+    setBuildId,
+    getBuildId,
+    captureSave,
+    restoreSave,
+    setSaveChannel,
 };

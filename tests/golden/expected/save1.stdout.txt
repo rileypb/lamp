@@ -1,0 +1,20 @@
+hall
+A plain hall.
+
+You see a coin here.
+
+> save
+Name for saved game: slot1
+Game saved.
+
+> take coin
+Taken.
+
+> restore
+Name of saved game: slot1
+Game restored.
+
+> i
+You are carrying nothing.
+
+> quit
