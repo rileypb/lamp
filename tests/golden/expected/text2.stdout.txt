@@ -1,0 +1,5 @@
+She said "hello" to me.
+It's a sailor's knot.
+lazy text re-renders: count is 5
+frozen snapshot holds: count is 1
+field text: notice reads 5

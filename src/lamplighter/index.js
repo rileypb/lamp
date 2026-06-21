@@ -931,7 +931,29 @@ function renderTemplate(parts) {
     return out;
 }
 
+// A `text` value is a lazy, branded thunk: calling it renders the template now.
+// Laziness is what makes `text` worth a distinct type — it re-evaluates its
+// substitutions each time it is printed/frozen. `makeText` brands the thunk so
+// formatValue/encodeValue can recognize it; `isTextValue` tests the brand;
+// `renderText` is the `freeze` primitive (force a text — or any value — to a
+// string). See devdocs/text.md K2.
+function makeText(thunk) {
+    thunk.__lampText = true;
+    return thunk;
+}
+
+function isTextValue(value) {
+    return typeof value === "function" && value.__lampText === true;
+}
+
+function renderText(value) {
+    return isTextValue(value) ? value() : String(formatValue(value));
+}
+
 function formatValue(value) {
+    if (isTextValue(value)) {
+        return value();
+    }
     if (isListValue(value)) {
         return formatListValue(value.items);
     }
@@ -1078,6 +1100,11 @@ function kind(name) {
 // `throw` surfaces any unrecognized value rather than silently dropping it.
 function encodeValue(value) {
     if (value === null || value === undefined) return null;
+    // A `text` thunk is a transient/computed value, not a member of the closed
+    // save algebra (like a function). Freeze it to its current rendered string at
+    // capture, so a field holding a template is still saveable. For Slice 1 (no
+    // context-dependent substitution) this is lossless. See devdocs/state.md.
+    if (isTextValue(value)) return value();
     if (isListValue(value)) return { $list: value.items.map(encodeValue) };
     if (typeof value === "object") {
         if (typeof value.name === "string" && nameRegistry.get(value.name) === value) {
@@ -1416,6 +1443,8 @@ module.exports = {
     kind,
     concat,
     renderTemplate,
+    makeText,
+    renderText,
     divide,
     onEvent,
     registerActionRule,

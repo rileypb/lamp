@@ -88,8 +88,16 @@ function createStringLiteral(value) {
 // expressions; rendering interleaves them, formatting each expression as the
 // runtime would `print` it. A literal with no substitutions stays a plain
 // StringLiteral, so this node only appears when at least one `[…]` is present.
+// A TemplateLiteral evaluates to a lazy `text` value (re-rendered each time it is
+// printed); `freeze` forces it to a concrete `string`. See devdocs/text.md K2.
 function createTemplateLiteral(parts) {
     return { kind: "TemplateLiteral", parts };
+}
+
+// `freeze EXPR` forces a lazy `text` value to a concrete `string` (rendering its
+// substitutions now). A no-op stringification on a value that is already a string.
+function createFreezeExpr(expr) {
+    return { kind: "FreezeExpr", expr };
 }
 
 function createVariableExpr(name) {
@@ -343,6 +351,7 @@ module.exports = {
     createFieldAssign,
     createStringLiteral,
     createTemplateLiteral,
+    createFreezeExpr,
     createVariableExpr,
     createNumberLiteral,
     createBooleanLiteral,

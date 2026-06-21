@@ -1,4 +1,4 @@
-const PRIMITIVE_TYPES = new Set(["string", "int", "bool", "real"]);
+const PRIMITIVE_TYPES = new Set(["string", "int", "bool", "real", "text"]);
 
 // Relation field schemas (relationName -> Map(fieldName -> typeName)), set at the
 // start of checkProgram so inferExprType can type value queries by their output
@@ -460,7 +460,11 @@ function buildTypeSchema(nodes, kindSchema = new Map()) {
                 const isEnumLabel = f.defaultValue.kind === "StringLiteral"
                     && kindDef && kindDef.kind === "EnumExpr"
                     && kindDef.labels.includes(f.defaultValue.value);
-                if (defaultType !== null && defaultType !== f.typeName && !isEnumLabel) {
+                // text and string interoperate: a `text` field accepts any
+                // renderable literal default, and a `string` field accepts a text.
+                const stringTextOk = (f.typeName === "text" && isStringCompatible(defaultType, kindSchema))
+                    || (f.typeName === "string" && defaultType === "text");
+                if (defaultType !== null && defaultType !== f.typeName && !isEnumLabel && !stringTextOk) {
                     throw typeError(
                         node.filePath,
                         node.lineNumber,
@@ -848,6 +852,9 @@ function inferExprType(expr, typeSchema, kindSchema, localTypes, functionSchema 
         return "string";
     }
     if (expr.kind === "TemplateLiteral") {
+        return "text";
+    }
+    if (expr.kind === "FreezeExpr") {
         return "string";
     }
     if (expr.kind === "NumberLiteral") {
@@ -943,7 +950,7 @@ function isNumericType(type) {
 }
 
 function isStringCompatible(type, kindSchema) {
-    if (type === "string" || type === "int" || type === "real") {
+    if (type === "string" || type === "text" || type === "int" || type === "real") {
         return true;
     }
     return kindSchema.has(type);
@@ -1024,6 +1031,15 @@ function checkValueCompatibility(valueNode, fieldTypeName, typeSchema, kindSchem
             return;
         }
         if (fieldTypeName === "real" && inferredType === "int") {
+            return;
+        }
+        // text and string interoperate: a `text` renders to a string (so a text
+        // value satisfies a string position), and any renderable value satisfies a
+        // `text` position. `freeze` is the explicit text -> string form.
+        if (fieldTypeName === "string" && inferredType === "text") {
+            return;
+        }
+        if (fieldTypeName === "text" && isStringCompatible(inferredType, kindSchema)) {
             return;
         }
         throw typeError(filePath, lineNumber, `${context} expects ${fieldTypeName}, got ${inferredType}`);

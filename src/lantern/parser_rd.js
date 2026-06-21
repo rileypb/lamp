@@ -36,14 +36,37 @@ function parseTokens(tokens, filePath, globalNames = new Set(), functionNames = 
     return createParser(tokens, filePath, globalNames, functionNames, relationNames, relationTemplates, actionNames, objectNames, tagNames, rulebookParams).parseProgram();
 }
 
+// Applies Inform's single-quote convention to a literal text run: a `'` flanked
+// by word characters on both sides is an apostrophe ("don't") and stays; any
+// other `'` (start or end of a word) is a typographic double quote, so `'foo'`
+// renders as "foo". The `[']` form (handled in splitTemplate) forces a literal
+// apostrophe where this rule would otherwise convert. This is an English-prose
+// convention; a future locale pass could own it. See devdocs/text.md A5.
+function applyQuoteConvention(run) {
+    if (run.indexOf("'") === -1) return run;
+    let out = "";
+    for (let k = 0; k < run.length; k += 1) {
+        if (run[k] !== "'") {
+            out += run[k];
+            continue;
+        }
+        const wordBefore = k > 0 && /[A-Za-z0-9]/.test(run[k - 1]);
+        const wordAfter = k + 1 < run.length && /[A-Za-z0-9]/.test(run[k + 1]);
+        out += wordBefore && wordAfter ? "'" : '"';
+    }
+    return out;
+}
+
 // Splits a string-literal value (in expression position) into template parts: an
 // ordered list of { kind: "text", value } literals and { kind: "exprSrc", src }
 // substitutions. The tokenizer has already resolved \n \t \r \" \\, but `\[` and
 // `\]` survive as backslash-bracket (brackets are not tokenizer escapes), so this
 // is where they become literal `[` / `]`. An unescaped `[` opens a substitution
 // running to the next unescaped `]`; the inner source is an embedded Lamp
-// expression the caller parses. `hasSub` is false for an ordinary string, in
-// which case the single text part is the value with escaped brackets resolved.
+// expression the caller parses, except `[']` which is the literal-apostrophe form.
+// Literal text runs pass through applyQuoteConvention; the forced `[']` does not.
+// `hasSub` is false when there is no expression substitution (a plain string,
+// possibly with `[']`/escaped brackets), so the caller keeps a StringLiteral.
 function splitTemplate(rawValue, fail) {
     const parts = [];
     let text = "";
@@ -51,7 +74,7 @@ function splitTemplate(rawValue, fail) {
     let i = 0;
     const flush = () => {
         if (text.length > 0) {
-            parts.push({ kind: "text", value: text });
+            parts.push({ kind: "text", value: applyQuoteConvention(text) });
             text = "";
         }
     };
@@ -63,7 +86,6 @@ function splitTemplate(rawValue, fail) {
             continue;
         }
         if (c === "[") {
-            flush();
             i += 1;
             let src = "";
             while (i < rawValue.length && rawValue[i] !== "]") {
@@ -75,9 +97,15 @@ function splitTemplate(rawValue, fail) {
             }
             i += 1;
             const trimmed = src.trim();
+            if (trimmed === "'") {
+                flush();
+                parts.push({ kind: "text", value: "'" });
+                continue;
+            }
             if (trimmed.length === 0) {
                 throw fail("empty '[]' substitution in string literal");
             }
+            flush();
             parts.push({ kind: "exprSrc", src: trimmed });
             hasSub = true;
             continue;
@@ -620,11 +648,15 @@ function createParser(tokens, filePath, globalNames, functionNames = new Set(), 
     }
 
     // Object-field and global values are literals or a bare object reference,
-    // never full expressions (mirrors the legacy parseSimpleValue).
+    // never full expressions (mirrors the legacy parseSimpleValue) — except a
+    // quoted string may carry `[expr]` substitutions, becoming a TemplateLiteral
+    // (`text`) here just as in expression position. Embedded expressions see only
+    // file-level names (globals/objects/functions); there is no local or `self`
+    // scope at a field/global default, so an empty local set is passed.
     function parseSimpleValue() {
         const token = next();
         if (token.type === "NUMBER") return ast.createNumberLiteral(token.value);
-        if (token.type === "STRING") return ast.createStringLiteral(token.value);
+        if (token.type === "STRING") return parseStringExpr(token, new Set());
         if (token.type === "IDENT") {
             if (token.value === "true") return ast.createBooleanLiteral(true);
             if (token.value === "false") return ast.createBooleanLiteral(false);
@@ -1343,6 +1375,9 @@ function createParser(tokens, filePath, globalNames, functionNames = new Set(), 
         // so `-x^2` parses as `-(x^2)` and `-x*2` as `(-x)*2`.
         if (token.type === "MINUS") return ast.createNegateExpr(parseExpression(25, localNames));
         if (token.type === "KEYWORD" && token.value === "not") return ast.createNotExpr(parseExpression(3, localNames));
+        // `freeze EXPR` binds tightly (like unary minus) so `freeze a + b` is
+        // `(freeze a) + b`; wrap in parens to freeze a larger expression.
+        if (token.type === "KEYWORD" && token.value === "freeze") return ast.createFreezeExpr(parseExpression(25, localNames));
         if (token.type === "KEYWORD" && token.value === "follow") {
             const { name, args } = parseFollowTail(localNames);
             return ast.createFollowExpr(name, args, filePath, token.line);

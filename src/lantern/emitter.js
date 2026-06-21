@@ -3,7 +3,7 @@ const { encode } = require("../strcodec");
 // Expressions whose emitted form is already self-delimiting (literals, variable
 // names, property-access chains, function calls) and never need extra parens.
 const SAFE_ATOM = new Set([
-    "StringLiteral", "TemplateLiteral", "NumberLiteral", "BooleanLiteral", "NoneLiteral",
+    "StringLiteral", "TemplateLiteral", "FreezeExpr", "NumberLiteral", "BooleanLiteral", "NoneLiteral",
     "VariableExpr", "PropertyAccess", "GlobalExpr", "ParenNameExpr", "Concat", "DivideExpr", "CallExpr", "FunctionRefExpr", "FollowExpr", "IndexExpr",
 ]);
 
@@ -559,6 +559,12 @@ function emitValue(valueNode) {
     if (valueNode.kind === "NoneLiteral") {
         return "null";
     }
+    // A template/freeze default emits as a normal expression. Embedded bare
+    // globals self-emit as getGlobal (so they resolve); a default template has no
+    // local/`self` scope, so referencing `self` there is unsupported by design.
+    if (valueNode.kind === "TemplateLiteral" || valueNode.kind === "FreezeExpr") {
+        return emitExpression(valueNode, new Set());
+    }
     throw new Error(`Unsupported value kind: ${valueNode.kind}`);
 }
 
@@ -889,15 +895,20 @@ function emitExpression(expr, globalNames = new Set()) {
         return emitStringLiteral(expr.value);
     }
     if (expr.kind === "TemplateLiteral") {
+        // A template is a lazy `text` value: the thunk re-renders on each call, so
+        // embedded expressions are re-evaluated when the text is printed/frozen.
         // Text segments encode like any prose literal (--encode-strings sees only
-        // them); expression segments render through the runtime's value→text rules
-        // at print time, so an object renders as its name, a list as its prose, etc.
+        // them); expression segments render through the runtime's value→text rules,
+        // so an object renders as its name, a list as its prose, etc.
         const frags = expr.parts.map((part) =>
             part.kind === "text"
                 ? emitStringLiteral(part.value)
                 : emitExpression(part.expr, globalNames),
         );
-        return `lamplighter.renderTemplate([${frags.join(", ")}])`;
+        return `lamplighter.makeText(() => lamplighter.renderTemplate([${frags.join(", ")}]))`;
+    }
+    if (expr.kind === "FreezeExpr") {
+        return `lamplighter.renderText(${emitExpression(expr.expr, globalNames)})`;
     }
     if (expr.kind === "VariableExpr") {
         return expr.name;

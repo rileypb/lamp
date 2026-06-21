@@ -13,25 +13,25 @@ prerequisite lists in `devdocs/game_parser.md`, `devdocs/rulebooks.md`, and
 > grammar, world-model traits, turn-cycle/daemon, and message ideas mined from
 > `lurkinghorror.txt`. `devdocs/text.md` is the **text-substitution**
 > design + 7-slice Action list (Inform-7-style `"[We] [drop] [the velvet_cloak]"`).
-> **Slice 1 (bracket-substitution mechanism) is mostly DONE** — see item below.
+> **Slice 1 is DONE** (bracket substitution + quote convention + lazy `text`/`freeze`).
 > `lurking_todo.md` still awaits triage.
 
-## 1. Text substitution — finish Slice 1, then Slice 2 (names/articles)
-**Slice 1 (the `[expr]` bracket-substitution mechanism) is mostly DONE** — see
-`devdocs/text.md` → "Action list → Slice 1" for the per-item record. Implemented:
-compile-time template parse into a `TemplateLiteral` node (parser `splitTemplate` /
-`parseEmbeddedExpression`), `\[`/`\]` escapes, value/object interpolation with the
-`printed_name` override (`formatValue`), eager render via `lamplighter.renderTemplate`,
-`--encode-strings` parity, and `+`/`print` composability. Tests: `text1` golden +
-parser unit/reject cases. **Carryovers to close Slice 1:**
-- **A5** — `[']` apostrophe + straight/smart-quote handling (not started).
-- **K2** — a distinct lazy/storable `text` type (today templates render eagerly to
-  `string`); a type-system + `devdocs/state.md` (save/undo) change deserving its own
-  step. Decided to be a distinct type; not yet built.
-Then **Slice 2 — names, articles, case** (`[the X]`/`[a X]`/`[The X]`, proper/plural
-flags, `cap`/`upper`/`title`, per-object overrides), which needs the `lib/<locale>`
-locale-pack scaffolding (three-layer split — engine mechanism vs. `lib/en-US` data).
-**Where:** `src/lantern/{parser_rd,emitter,checker,ast}.js`, `src/lamplighter/index.js`.
+## 1. Text substitution — Slice 1 DONE; next is Slice 2 (names/articles)
+**Slice 1 is complete** — see `devdocs/text.md` → "Action list → Slice 1" for the
+per-item record. Implemented across `src/lantern/{tokenizer,parser_rd,ast,checker,
+emitter}.js` + `src/lamplighter/index.js`: compile-time template parse into a
+`TemplateLiteral` node; `\[`/`\]` escapes; value/object interpolation with the
+`printed_name` override; **A5** Inform quote convention (`applyQuoteConvention`) +
+`[']`; **K2** the lazy `text` type (`makeText` thunk, re-renders on print) with the
+**`freeze`** keyword (`renderText`) forcing `text`→`string`, `text`/`string` interop
+in the checker, and freeze-on-capture for save (`encodeValue`, `devdocs/state.md`);
+`--encode-strings` parity. Tests: `text1` + `text2` goldens, six parser unit cases +
+three reject cases; all 11 suites green (120 goldens).
+**Next — Slice 2: names, articles, case** (`[the X]`/`[a X]`/`[The X]`, proper/plural
+flags, `cap`/`upper`/`title`, per-object overrides). Needs the **`lib/<locale>`
+locale-pack scaffolding** (three-layer split — engine/`lib/sys` mechanism vs.
+`lib/en-US` language data). **Where:** `src/lantern/*` + `src/lamplighter/index.js`,
+new `lib/en-US/`.
 
 ## 2. SAVE / RESTORE — browser persistence + durable CLI saves (Slice 3)
 UNDO (Slice 1) and SAVE/RESTORE to the dev host (Slice 2) are **done**: the

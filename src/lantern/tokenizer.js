@@ -38,6 +38,7 @@ const KEYWORDS = new Set([
     "or",
     "not",
     "native",
+    "freeze",
     "relation",
     "bidi",
     "remove",

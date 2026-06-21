@@ -47,6 +47,19 @@ change if a genuinely new value kind is ever added (e.g. a keyed map) is
 `encodeValue`/`decodeValue` — a single, localized extension point, guarded by a
 `throw` on any unrecognized value.
 
+**`text` values are not a new kind.** A `text` value (a lazily-rendered template;
+see `devdocs/text.md` K2 and the `text` primitive in `specs.md`) is a transient,
+computed value — a thunk, like a function reference — and is deliberately kept
+*out* of the algebra. When `encodeValue` meets a `text` in a captured field, it
+**freezes it to its current rendered string** (`isTextValue(value) ? value() :
+…`), which is an ordinary scalar. So a field holding a template is saveable, and a
+restored game gets the frozen string rather than a live template. For Slice 1
+(substitutions are plain expressions, no render-context dependence) this is
+lossless; once context-dependent sugar lands (a stored `text` whose rendering
+depends on a subject/tense set elsewhere), freezing at capture time is a
+deliberate, documented simplification to revisit — persistent state should
+generally hold a `freeze`-d string, not a live `text`.
+
 ## Encoded form (JSON-able)
 
 `captureState()` produces a plain, JSON-serializable object (so the same value

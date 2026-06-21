@@ -172,6 +172,24 @@ const cases = [
         },
     },
     {
+        name: "freeze: produces a FreezeExpr over the operand",
+        run() {
+            const [handler] = parse(["on startup:", '    let s = freeze "hi [score]"'].join("\n"), ["score"]);
+            const expr = handler.body[0].expr;
+            assert.strictEqual(expr.kind, "FreezeExpr");
+            assert.strictEqual(expr.expr.kind, "TemplateLiteral");
+        },
+    },
+    {
+        name: "A5 quotes: word-boundary ' becomes \" ; [']  forces a literal apostrophe; both stay StringLiteral",
+        run() {
+            const [a] = parse(["on startup:", `    print "say 'hi'"`].join("\n"));
+            assert.deepStrictEqual(a.body[0].expr, { kind: "StringLiteral", value: 'say "hi"' });
+            const [b] = parse(["on startup:", `    print "it[']s"`].join("\n"));
+            assert.deepStrictEqual(b.body[0].expr, { kind: "StringLiteral", value: "it's" });
+        },
+    },
+    {
         name: "expression: multi-word object reference becomes ParenNameExpr",
         run() {
             const [handler] = parse(["on startup:", "    print Unit_Circle.radius"].join("\n"));

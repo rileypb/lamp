@@ -1,0 +1,26 @@
+# Slice 1 completion: A5 (Inform quote convention + the [']  literal-apostrophe
+# form) and K2 (the lazy `text` type + `freeze`). A template is a `text` value
+# that re-renders on each print; `freeze` snapshots it to a `string`. A `'` at a
+# word boundary becomes a typographic double quote; one between letters stays an
+# apostrophe. See devdocs/text.md A5, K2.
+game Text_Two:
+    author "Lamp"
+
+global int score = 0
+
+type sign:
+    text caption = "default sign [score]"
+
+sign notice:
+    caption "notice reads [score]"
+
+on startup:
+    print "She said 'hello' to me."
+    print "It's a sailor[']s knot."
+    score = 1
+    let t = "count is [score]"
+    let snap = freeze t
+    score = 5
+    print "lazy text re-renders: [t]"
+    print "frozen snapshot holds: [snap]"
+    print "field text: [notice.caption]"

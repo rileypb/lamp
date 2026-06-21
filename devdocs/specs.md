@@ -226,7 +226,7 @@ Local variables (introduced by `let`) and loop variables (introduced by `for`) a
 
 Free text that contains spaces or punctuation is written as a double-quoted string literal, not a bare identifier (for example, `author "Phil Riley"`).
 
-The following words are **reserved** and may not be used as a name (object, type, kind, global, field, event, or local): `type`, `kind`, `global`, `on`, `for`, `in`, `while`, `if`, `else`, `let`, `print`, `error`, `dispatch`, `break`, `lib`, `from`, `to`, `step`, `change`, `function`, `native`, `return`, `when`, `and`, `or`, `not`, `relation`, `bidi`, `remove`, `disconnect`, `rulebook`, `stop`, `follow`, `action`, `try`. (`syntax` and `inverted` are contextual keywords recognized only inside a `relation` body; `tags` is contextual only inside an `action` body; `default` is a contextual keyword recognized only inside a `rulebook` body; the band words `before`, `instead`, `check`, `do`, `after`, and `report` are contextual keywords recognized only as the leading token of a phase rule; `any` and `except` are contextual only in a phase-rule action selector; `rule` is contextual only when followed by a declared rulebook name; `silently` is contextual only immediately before `try`; `understand` and `as` are contextual only in a top-level `understand "TEMPLATE" as ACTION` grammar contribution; none of these are globally reserved.) A reservation applies only to a whole identifier: a reserved word appearing *inside* a longer identifier is unrestricted, so `move_to_room` (which denotes the name `move to room`) is a valid identifier even though `to` is reserved.
+The following words are **reserved** and may not be used as a name (object, type, kind, global, field, event, or local): `type`, `kind`, `global`, `on`, `for`, `in`, `while`, `if`, `else`, `let`, `print`, `error`, `dispatch`, `break`, `lib`, `from`, `to`, `step`, `change`, `function`, `native`, `freeze`, `return`, `when`, `and`, `or`, `not`, `relation`, `bidi`, `remove`, `disconnect`, `rulebook`, `stop`, `follow`, `action`, `try`. (`freeze EXPR` forces a `text` value to a `string`; see the `text` primitive type. `syntax` and `inverted` are contextual keywords recognized only inside a `relation` body; `tags` is contextual only inside an `action` body; `default` is a contextual keyword recognized only inside a `rulebook` body; the band words `before`, `instead`, `check`, `do`, `after`, and `report` are contextual keywords recognized only as the leading token of a phase rule; `any` and `except` are contextual only in a phase-rule action selector; `rule` is contextual only when followed by a declared rulebook name; `silently` is contextual only immediately before `try`; `understand` and `as` are contextual only in a top-level `understand "TEMPLATE" as ACTION` grammar contribution; none of these are globally reserved.) A reservation applies only to a whole identifier: a reserved word appearing *inside* a longer identifier is unrestricted, so `move_to_room` (which denotes the name `move to room`) is a valid identifier even though `to` is reserved.
 
 ### Objects and types
 
@@ -298,16 +298,30 @@ Built-in primitive types:
   Backslash escapes are resolved by the tokenizer: `\"` (double quote), `\n`
   (newline), `\t` (tab), `\r` (carriage return), and `\\` (literal backslash).
   Any other `\X` is left as-is (the backslash is kept), so a stray backslash in
-  prose is never lost. A string literal **in expression position** also supports
-  **text substitution**: an unescaped `[EXPR]` embeds a Lamp expression, evaluated
-  and rendered at print time as `print` would render that value (an object as its
-  name — or its `printed_name` field when set —, a list as its prose, a number as
-  digits). Write a literal bracket as `\[` or `\]`. So `"you have [score] of
-  [room.exits]"` interpolates the two expressions. Substitution is the foundation of
-  the text-generation system (`devdocs/text.md`); it applies only where a string is
-  an expression (a `print`/`let`/field value/argument), **not** to grammar/`syntax`/
-  `understand` templates, whose `[slot]` markers stay literal. An empty `[]` or an
-  unterminated `[` is a compile error.
+  prose is never lost. A string literal used as a **value** (a `print`/`let`/field
+  or global default/argument/return — *not* a grammar/`syntax`/`understand`
+  template, whose `[slot]` markers stay literal) also gets two transformations:
+  - **Quote convention** (Inform-style): a `'` flanked by letters/digits on both
+    sides is an apostrophe and stays (`don't`); any other `'` is a typographic
+    double quote, so `'hello'` renders as `"hello"`. Write `[']` to force a literal
+    apostrophe where the rule would otherwise convert.
+  - **Text substitution**: an unescaped `[EXPR]` embeds a Lamp expression. A literal
+    with at least one substitution is a **`text`** value (below), not a `string`;
+    write a literal bracket as `\[` / `\]`. An empty `[]` or an unterminated `[` is
+    a compile error.
+- `text` — a **lazily-rendered template**: the value of a string literal that
+  contains `[EXPR]` substitutions. Rendering (on `print`, on `freeze`, or when
+  embedded in another template) interleaves the literal segments with each
+  expression rendered as `print` would render that value — an object as its `name`
+  (or its `printed_name` field when set), a list as its prose, a number as digits.
+  A `text` is **lazy**: its substitutions re-evaluate every time it renders, so a
+  stored `text` reflects current state. `text` and `string` interoperate (a `text`
+  satisfies a `string` position and renders on output); **`freeze EXPR`** forces a
+  `text` to a concrete `string` snapshot (the value at that moment). A `text` is a
+  transient/computed value (like a function): it is not a member of the save-state
+  algebra, so a stored `text` is **frozen to its current string when captured** for
+  undo/save (see `devdocs/state.md`). Text substitution is the foundation of the
+  text-generation system — see `devdocs/text.md`.
 - `int` — integer values; literals are plain digits: `42`, `-7`
 - `bool` — boolean values; literals are `true` and `false`
 - `real` — floating-point values; literals require a decimal point: `3.14`, `-0.5`

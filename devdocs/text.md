@@ -2,9 +2,9 @@
 
 > Status: **in progress.** This file enumerates the text-substitution features
 > modeled on Inform 7's "[bracketed]" text, plus additions specific to Lamp, and
-> the triaged Action list that follows. **Slice 1 (the bracket-substitution
-> mechanism) is mostly implemented** — see "Action list → Slice 1" for the precise
-> done/carryover state. Later slices remain candidates. Items are grouped by
+> the triaged Action list that follows. **Slice 1 (bracket substitution, the
+> Inform quote convention, and the lazy `text` type + `freeze`) is DONE** — see
+> "Action list → Slice 1". Later slices remain candidates. Items are grouped by
 > category; each notes its Inform 7 parallel (chapter 5 of *Writing with Inform*,
 > sections cited as `WI 5.x`) and Lamp-specific notes.
 >
@@ -488,43 +488,52 @@ slices depend on earlier ones except where noted.
 
 ### Slice 1 — mechanism (no language awareness)
 
-**Status: mostly DONE (2026-06-20).** Bracket substitution of arbitrary Lamp
-expressions is implemented end-to-end and rendered eagerly to a string. Two
-carryovers remain (A5, K2) — see below. Tests: `tests/fixtures/text1.lamp` +
-golden `text1.stdout.txt`; three parser unit cases + three reject cases in
-`tests/parser`; `--encode-strings` parity verified.
+**Status: DONE (2026-06-21).** The whole bracket-substitution mechanism, the
+Inform quote convention, and the lazy `text` type + `freeze` are implemented
+end-to-end. Tests: `tests/fixtures/text1.lamp` (A1–A3, B1, B2, K4) and
+`text2.lamp` (A5, K2) + their goldens; six parser unit cases + three reject cases
+in `tests/parser`; `--encode-strings` parity verified for both; all 11 suites
+green (120 goldens).
 
-1. **A1/A3 — DONE.** A string literal *in expression position* parses at compile
-   time into a `TemplateLiteral` AST node (an ordered mix of `text` segments and
+1. **A1/A3 — DONE.** A string literal *in value position* parses at compile time
+   into a `TemplateLiteral` AST node (an ordered mix of `text` segments and
    parsed-expression segments). The split happens in the parser
    (`splitTemplate` + `parseStringExpr`/`parseEmbeddedExpression` in
    `parser_rd.js`), so grammar/`syntax`/`understand` templates — which take a
-   different STRING path — keep their literal `[slot]` markers. Each embedded
-   expression is parsed with the surrounding name scope; a malformed one is a
-   compile error pointing at the host string's line.
+   different STRING path — keep their literal `[slot]` markers. Both expression
+   position *and* field/global default values (`parseSimpleValue`) interpolate.
+   Each embedded expression is parsed with the surrounding name scope; a malformed
+   one is a compile error pointing at the host string's line.
 2. **A2 — DONE.** `\[` / `\]` escape to literal brackets (resolved in
    `splitTemplate`; the tokenizer leaves them intact so the parser can tell a
    literal from a substitution). **A4 — partial:** the substitution source is
    trimmed; strings are single-line so spanning is N/A.
-3. **A5 — NOT DONE (carryover).** `[']` apostrophe + straight/smart-quote handling
-   is not yet implemented.
+3. **A5 — DONE.** Inform's quote convention (`applyQuoteConvention`): a `'`
+   between word characters stays an apostrophe (`don't`), any other `'` becomes a
+   typographic double quote (`'hi'` → `"hi"`); `[']` forces a literal apostrophe.
+   Applies to value-position literals only (not grammar templates). A repo scan
+   confirmed all existing apostrophes are mid-word, so no prose changed.
 4. **B1 — DONE** (any expression interpolates). **B2 — DONE**: an object renders
    as its `name`, overridden by a `printed_name` field when set (in `formatValue`).
-5. **K2 — DEFERRED (carryover).** Templates currently render **eagerly to a
-   `string`** (the checker infers `TemplateLiteral` as `string`; the emitter emits
-   `lamplighter.renderTemplate([...])`). A distinct lazy/storable `text` type with
-   its own state/save representation is a type-system change deferred to its own
-   step.
-6. **K4 — DONE.** `renderTemplate` returns a plain string, so a template composes
-   with `+`/`print` exactly like any string ("substitute, then compose").
+5. **K2 — DONE.** A template is a distinct **lazy `text` value**: the emitter emits
+   `lamplighter.makeText(() => renderTemplate([...]))`, a branded thunk that
+   re-renders (re-evaluating its substitutions) each time it is printed/embedded;
+   `formatValue` renders it transparently. The **`freeze EXPR`** keyword
+   (`renderText`) forces a `text` to a concrete `string` snapshot. `text` is a
+   declared primitive type (fields/params/returns), interoperable with `string`
+   (checker). **Save:** a captured `text` is frozen to its current string in
+   `encodeValue` (it is not a save-algebra value kind) — see `devdocs/state.md`.
+6. **K4 — DONE.** A rendered template is an ordinary string at use sites, so it
+   composes with `+`/`print` ("substitute, then compose"); `freeze` is the explicit
+   text→string when a concrete string is needed.
 7. **Cross-cutting — DONE.** `--encode-strings` encodes only the text segments
    (each emitted via `emitStringLiteral`); embedded expressions emit normally.
-   Verified: an encoded build of `text1` produces byte-identical output with no
-   plaintext prose. The `[`/`]` migration is safe — a repo scan found no
-   expression-position string literal containing `[` (all are grammar templates).
+   Verified on `text1` and `text2`: encoded builds produce byte-identical output
+   with no plaintext prose. The `[`/`]` migration is safe — a repo scan found no
+   value-position string literal containing `[` (all are grammar templates).
 
-**Remaining before Slice 1 is fully closed:** A5 (apostrophe/quotes) and K2 (the
-distinct `text` type).
+**Slice 1 is fully closed.** Next: Slice 2 (names, articles, case), which needs the
+`lib/<locale>` locale-pack scaffolding.
 
 ### Slice 2 — names, articles, case
 
