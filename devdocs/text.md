@@ -301,6 +301,17 @@ either the trailing sugar word or the function's mode argument.
 - **G6. Empty-list phrasing.** Inform: list fallbacks. **Lamp:** a `list<T>`
   already renders empty as "nothing"; add an `is_empty(list)` predicate and/or a
   fallback parameter (`the_list(q, empty: "nothing here")`).
+- **G7. Plural suffix `[s]`.** Inform: `[s]` — prints "s" unless the governing
+  count is 1. **Lamp (sugar):** keep `[s]` as a number-agreeing suffix keyed on the
+  **most recently interpolated number** in the same template. So
+  `"[We] [have] [bullet_count] bullet[s]."` prints **"You have 1 bullet."** when
+  `bullet_count == 1` and **"You have 3 bullets."** when it is 3 — the `[bullet_count]`
+  substitution sets a small render-time "governing count" that the following `[s]`
+  (and the G3 agreement helpers) read, so no explicit argument is needed. An
+  explicit-argument form `[s bullet_count]` is the fallback when the count isn't the
+  most recent number, and `[es]` is the companion for "box[es]"-style stems. Ties to
+  D3 (verb agreement) and G3 (count-driven agreement); the governing-count context
+  is the same one G3 needs, so build them together.
 
 ## H. Layout / paragraph control (`WI 5.1`, `WI 5.9`)
 
@@ -384,6 +395,48 @@ Where "more mature than Inform" can show up.
   replacing that library. See "Library placement" under Open questions for the full
   three-layer split.
 
+## Render context (shared per-render state)
+
+Several sugar features need state *while a string is being rendered*, and the
+obvious-but-wrong move is a global per feature (a "current subject" global, a "last
+number" global, an RNG cursor). Don't: these have **different lifetimes**, and
+conflating them breaks determinism. Separate them into three tiers — only the first
+is the "render context" proper.
+
+1. **Render-local context (ephemeral).** One object threaded through a single
+   render pass, holding state meaningful only while a template renders and discarded
+   afterward:
+   - **current subject** — who `[We]` / `[They]` / `[drop]` agree with (D1–D5); seeded
+     from the action's actor, overridden by `[regarding EXPR]` (D5).
+   - **governing count** — the most recently interpolated number, read by `[s]` /
+     `[es]` (G7) and the `is`/`are` agreement helpers (G3).
+
+   Created at the **outermost** render boundary (a `print` of a template, or a
+   top-level template value) and threaded into every nested substitution, so a
+   `[regarding]` early in the string governs the verbs after it and `[bullet_count]`
+   governs the `bullet[s]` after it. Reset per render; **never saved**. A nested
+   render (a substitution that itself yields a template) shares the same context.
+
+2. **Site-durable state (persisted).** Per-call-site state that must survive across
+   turns: the `[cycling]` / `[stopping]` / `[sticky random]` cursors and the
+   `[first time]` / `[Nth time]` visit counters (F4–F9), plus the RNG stream/seed
+   (F8). Keyed by source location, **not** in the render context, and **captured by a
+   state provider** (`devdocs/state.md`) so `undo` / `restore` and golden replays stay
+   consistent. (This corrects the earlier offhand idea of putting "the RNG cursor" in
+   the ephemeral context — an ephemeral cursor would re-shuffle after every restore.)
+
+3. **Output-stream state.** Pending paragraph/line-break state for `[run on]` /
+   `[par if printed]` (H2/H3) spans *multiple* prints, so it is neither render-local
+   nor site-keyed: it belongs to the writer/output channel.
+
+Placement follows the three-layer split: the context object and its plumbing are
+**mechanism** (engine / `lib/sys`); the language data (pronoun/verb tables,
+number-words) *reads* tiers 1–2 but doesn't own them. Today's Slice-1
+`renderTemplate` is contextless (eager concat); the render context is introduced
+with the first feature that needs it (D `[regarding]`, G `[s]`, or F variation), and
+Slices 3–5 all build against it — so **design this object once, up front**, rather
+than growing three ad-hoc globals.
+
 ## Cross-cutting concerns (apply to every item)
 
 - **String-literal syntax change.** `[` and `]` are literal today. Introducing
@@ -394,7 +447,9 @@ Where "more mature than Inform" can show up.
   resolve (the build already encodes grammar/relation templates — same discipline).
 - **Determinism & state.** Any stateful substitution (F's cycling/random, story
   tense if mutable) must be captured by a state provider so UNDO/SAVE/RESTORE and
-  golden tests stay reproducible (`devdocs/state.md`).
+  golden tests stay reproducible (`devdocs/state.md`). Mind the lifetime tiers in
+  "Render context" — render-local state is never saved, site-durable state always
+  is; don't mix them.
 - **Output-channel neutrality.** Substitution produces a value sent through
   `print`/`write`; styling/markup (I3) must not assume HTML — the dev stdio host
   and the web shell both take plain text.
@@ -508,6 +563,7 @@ distinct `text` type).
 3. **G4** numbers in words + ordinals.
 4. **G5** grouped/qualified lists (see the elucidated G5 bullet).
 5. **G6** empty-list phrasing (`is_empty`, fallback parameter).
+6. **G7** plural suffix `[s]` (+ `[es]`), built with the G3 governing-count context.
 
 ### Slice 6 — layout & misc output
 
