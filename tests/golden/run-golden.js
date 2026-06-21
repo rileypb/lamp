@@ -1,8 +1,14 @@
 const fs = require("fs");
+const os = require("os");
 const path = require("path");
 const { execFileSync } = require("child_process");
 
 const projectRoot = path.resolve(__dirname, "../..");
+
+// Isolate save-file I/O (the `save1` fixture) to a throwaway dir so tests never
+// touch the real per-user save location.
+const saveDir = fs.mkdtempSync(path.join(os.tmpdir(), "lamp-golden-saves-"));
+process.on("exit", () => fs.rmSync(saveDir, { recursive: true, force: true }));
 const lanternCli = path.join(projectRoot, "src", "lantern", "index.js");
 const playCli = path.join(projectRoot, "src", "lamplighter", "play.js");
 const testRoots = [
@@ -118,6 +124,7 @@ function runGenerated(generatedPath, expectRuntimeFailure = false, stdinContent 
             stdio: "pipe",
             encoding: "utf8",
             input: stdinContent !== null ? stdinContent : undefined,
+            env: { ...process.env, LAMP_SAVE_DIR: saveDir },
         });
     } catch (error) {
         if (!expectRuntimeFailure) throw error;

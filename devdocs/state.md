@@ -124,12 +124,23 @@ mutate, restore, and assert the state matches the capture.
   at the start of each fresh command turn, *before* it mutates — so `undo`
   reverts the command just typed. Disambiguation answers continue the same turn
   and do not checkpoint again.
-- **Out-of-world verbs** bypass the turn clock and take no checkpoint. `undo` is
-  registered as the first such verb via `registerOutOfWorld(word, handler)`; it
-  pops the latest snapshot and restores it (`"[Previous turn undone.]"`), or
-  reports `"You can't undo any further."` on an empty stack. This interim
-  out-of-world hook will fold into proper out-of-world *actions* when the parser's
-  turn cycle (Parser v2) lands.
+- **Out-of-world verbs** bypass the turn clock and take no checkpoint. `undo`,
+  `save`, and `restore` are registered via `registerOutOfWorld(word, handler)`,
+  and the handlers live **in the runtime** today (`performUndo`/`performSave`/
+  `performRestore`), prompting via `promptLine` and printing fixed English prose.
+
+  **Known layering smell (to fix with out-of-world actions, Parser v2):** the
+  *mechanism* belongs in the runtime (snapshot, versioned blob, obfuscation,
+  storage seam, the out-of-world dispatch hook), but the *verb words, the
+  slot-name prompting, and the wording* are UX policy that should live in the
+  library — consistent with the command loop, the list formatter, and the banner,
+  all already library-side. `promptLine` itself is correctly placed (a
+  host-agnostic seam both the CLI and browser workers implement); the smell is
+  that engine code calls it and hardcodes prose. The fix: expose `save`/`restore`
+  as slot-taking runtime *primitives* and let `registerOutOfWorld` accept a **Lamp
+  callback**, so `lib/advent` defines the verbs and owns the prompting/wording.
+  This needs the runtime→Lamp out-of-world hook that the deferred out-of-world
+  *actions* work builds — so it is folded into Parser v2 rather than built twice.
 
 The library turn loop is unchanged — `undo` typed by the player simply falls
 through to `run_command`, which recognizes it. No `lib/` change is required for
@@ -166,15 +177,26 @@ gate (an author would forget to bump them after a structural change).
 `{ ok }` / `{ ok:false, reason }`; on success it `restoreState`s and clears undo
 history. It never restores on a mismatch.
 
+**Obfuscation.** The serialized blob is run through the same reversible XOR+base64
+codec as `--encode-strings` (`src/strcodec.js`) before it leaves the runtime, and
+decoded on the way back in. This discourages a casual peeker from reading or
+hand-editing a save; it is **not** security — the key ships in the runtime, so a
+determined cheater can reverse it (decode with `src/strcodec.js`). Files use a
+`.sav` extension (opaque, not JSON). The build-compatibility gate still rejects
+edited-then-mismatched saves regardless.
+
 **Storage seam.** The host injects a save channel (`setSaveChannel({ write, read })`)
 so the engine stays host-agnostic. The dev/CLI host brokers it like input: the
 sandboxed game posts `save_write`/`save_read`, the host does the filesystem op
 and replies over a dedicated `SharedArrayBuffer` (a `-1` length is the
 "no such save" sentinel). Saves are addressed by **named slots** (the `save`/
 `restore` out-of-world verbs prompt for a name), namespaced per game so two games'
-identically-named slots don't collide. The dev host stores them under a temporary
-directory (provisional; a durable per-user location is a later concern). The
-browser host wires the same seam to its own persistence (Slice 3).
+identically-named slots don't collide. The dev/CLI host stores them in a durable
+per-user app-data directory following each platform's convention (macOS
+`~/Library/Application Support/lamp/saves`, Linux `$XDG_DATA_HOME/lamp/saves`,
+Windows `%APPDATA%/lamp/saves`); `LAMP_SAVE_DIR` overrides it (the golden tests set
+it to a throwaway dir so they never touch the real location). The browser host
+wires the same seam to its own persistence (Slice 3).
 
 ## Inputs and Outputs
 
@@ -212,17 +234,25 @@ browser host wires the same seam to its own persistence (Slice 3).
   restore gate, the `setSaveChannel` storage seam brokered to the filesystem by
   the dev host, and named-slot `save`/`restore` out-of-world verbs. Unit test
   `tests/save`; golden `save1`.
-- **Slice 3 — browser persistence.** Wire the save channel to the sandbox's
-  persistence capability (`devdocs/sandbox.md`) — download/localStorage. Also
-  open: a durable save location for the CLI host, and save-slot listing/metadata.
+- **Slice 3 — browser persistence + slot listing.** Wire the save channel to the
+  sandbox's persistence capability (`devdocs/sandbox.md`) — download/upload-picker
+  (the browser's native file UI is the right home for a "dialog"; a native CLI
+  dialog is deliberately *not* pursued — it breaks the headless/piped path). The
+  durable CLI save location is **done** (per-user app-data dir + `LAMP_SAVE_DIR`).
+  Still open: save-slot **listing/metadata** (a `saves` verb).
 
 ## Open questions
 
 - **Undo depth.** Bounded stack, depth = the author-settable `undo_limit` global
   (default 32; `0` disables). Single-level (classic Z-machine) or unbounded are
   just other `undo_limit` values; no further decision needed.
-- **Save slots & metadata.** Named slots, timestamps, per-save descriptions — a
-  Slice 2 concern.
+- **Save slots & metadata.** Named slots, timestamps, per-save descriptions.
+- **CLI save-name-prompt UX (deferred to the out-of-world verb move).** Once the
+  `save`/`restore` verbs and their prompting live in `lib` rather than the engine
+  (see "Known layering smell"), the CLI name prompt can offer: `^L` to **list**
+  this game's existing saves, and an **overwrite-confirmation** before clobbering
+  an existing slot. Both need a save-slot listing/exists primitive and the in-`lib`
+  prompt flow. Tracked in TODO item 1 (Slice 3) / item 4 (Parser v2).
 - **Schema drift across saves.** A save from an older build loaded into a newer
   one (added/removed globals or fields). Tolerated loosely today (missing keys
   ignored); a versioning policy is a Slice 2/3 question.

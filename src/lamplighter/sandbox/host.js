@@ -18,10 +18,23 @@ const INPUT_DATA_OFFSET = 8;
 // Save transport buffer: same header layout, but sized for whole save blobs
 // (state JSON) returned host→worker. 4 MiB is generous for any realistic IF save.
 const SAVE_BUFFER_BYTES = 4 * 1024 * 1024;
-// Provisional save location for the dev/CLI host; a durable per-user location is
-// a later concern (see devdocs/state.md). Files are namespaced by game via the
-// key the runtime supplies.
-const SAVE_DIR = path.join(os.tmpdir(), "lamp-saves");
+
+// Durable per-user save location, following each platform's app-data convention,
+// so saves survive across sessions. `LAMP_SAVE_DIR` overrides it (used by tests to
+// stay out of the real user directory, and by anyone wanting a custom location).
+// Files are namespaced by game via the key the runtime supplies. See
+// devdocs/state.md.
+function defaultSaveDir() {
+    const home = os.homedir();
+    if (process.platform === "darwin") {
+        return path.join(home, "Library", "Application Support", "lamp", "saves");
+    }
+    if (process.platform === "win32") {
+        return path.join(process.env.APPDATA || path.join(home, "AppData", "Roaming"), "lamp", "saves");
+    }
+    return path.join(process.env.XDG_DATA_HOME || path.join(home, ".local", "share"), "lamp", "saves");
+}
+const SAVE_DIR = process.env.LAMP_SAVE_DIR || defaultSaveDir();
 
 // Read one line from the host's stdin, character by character. The host is
 // trusted and owns fd 0; the sandboxed game cannot touch it directly.
@@ -103,13 +116,13 @@ function playFile(generatedPath, { out = process.stdout, err = process.stderr } 
             } else if (msg.type === "save_write") {
                 try {
                     fs.mkdirSync(SAVE_DIR, { recursive: true });
-                    fs.writeFileSync(path.join(SAVE_DIR, `${msg.key}.json`), msg.data, "utf8");
+                    fs.writeFileSync(path.join(SAVE_DIR, `${msg.key}.sav`), msg.data, "utf8");
                     replySave("ok");
                 } catch (e) {
                     replySave(`error: ${e.message}`);
                 }
             } else if (msg.type === "save_read") {
-                const file = path.join(SAVE_DIR, `${msg.key}.json`);
+                const file = path.join(SAVE_DIR, `${msg.key}.sav`);
                 replySave(fs.existsSync(file) ? fs.readFileSync(file, "utf8") : null);
             } else if (msg.type === "error") {
                 worker.terminate();

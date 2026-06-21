@@ -1,7 +1,7 @@
 // decode reverses Lantern's optional build-time string encoding (--encode-strings);
-// the emitter wraps player-facing literals as lamplighter.decode("..."). See
-// src/strcodec.js.
-const { decode } = require("../strcodec");
+// the emitter wraps player-facing literals as lamplighter.decode("..."). The same
+// reversible codec (encode) also obfuscates save files. See src/strcodec.js.
+const { encode: encodeText, decode } = require("../strcodec");
 
 const typeRegistry = new Map();
 // World objects only. Relation edges live in relationInstanceRegistry so that
@@ -1334,7 +1334,10 @@ function performSave() {
         return;
     }
     try {
-        saveChannel.write(saveSlotKey(slot), JSON.stringify(captureSave()));
+        // Obfuscate the blob so a casual peeker can't read or hand-edit the save.
+        // Same reversible XOR+base64 codec as --encode-strings: it discourages
+        // snooping, it is not security (the key ships in the runtime).
+        saveChannel.write(saveSlotKey(slot), encodeText(JSON.stringify(captureSave())));
         print("Game saved.");
     } catch (err) {
         print("Save failed.");
@@ -1351,14 +1354,14 @@ function performRestore() {
         print("Restore cancelled.");
         return;
     }
-    const text = saveChannel.read(saveSlotKey(slot));
-    if (text == null) {
+    const stored = saveChannel.read(saveSlotKey(slot));
+    if (stored == null) {
         print("There is no saved game by that name.");
         return;
     }
     let save;
     try {
-        save = JSON.parse(text);
+        save = JSON.parse(decode(stored));
     } catch (err) {
         print("That saved game is corrupted.");
         return;

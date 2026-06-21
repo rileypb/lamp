@@ -21,11 +21,22 @@ versioned save header (`buildId` content-hash from Lantern + game identity) with
 a strict restore gate, the `setSaveChannel` storage seam brokered to the
 filesystem by the dev host, and named-slot `save`/`restore` verbs. Tests:
 `tests/state`, `tests/save`, goldens `undo1`/`undo2`/`save1`; design in
-`devdocs/state.md`. **Remaining (Slice 3):**
+`devdocs/state.md`. The **durable CLI save location is done** (per-user app-data
+dir, `LAMP_SAVE_DIR` override; macOS `~/Library/Application Support/lamp/saves`
+etc.); save files are obfuscated (`.sav`, XOR+base64). A native CLI file dialog is
+**not** pursued (it breaks the headless/piped/test path); the browser host's
+download/upload picker is the right home for that. **Remaining (Slice 3):**
 - Wire the save channel to the **browser** sandbox persistence capability
   (`devdocs/sandbox.md`) — download / localStorage.
-- A **durable CLI save location** (the dev host currently uses a temp dir) and
-  save-slot **listing/metadata** (a `saves` verb).
+- Save-slot **listing/metadata** (a `saves` verb).
+- **CLI save-name-prompt UX (defer until the out-of-world verb move — item 4).**
+  Once the `save`/`restore` verbs + prompting live in `lib` (not the engine),
+  the name prompt can host these CLI conveniences:
+  - `^L` (or a keyword) at the name prompt → **list previous saves** for this game.
+  - an **overwrite-confirmation** ("Replace the saved game named X?") before
+    clobbering an existing slot, instead of silently overwriting.
+  Both need the save-slot listing/exists primitives above and the in-`lib` prompt
+  flow, so they wait on item 4.
 This shares the out-of-world-verb hook with RESTART (item 3) and Parser v2.
 
 ## 2. Lighthouse web bundle — headless CI test (optional)
@@ -47,12 +58,19 @@ guarding the `exit` handler), and re-enabling RESTART in the end sequence.
 Alternative (messier): a runtime-wide `reset()` + re-run. **Where:**
 `src/lamplighter/sandbox/host.js` + `worker.js`, `lib/advent/startup.lamp`.
 
-## 4. Parser v2 — every-turn & timed rules
+## 4. Parser v2 — every-turn & timed rules + out-of-world actions
 Action-rulebook bands are implemented; what remains for v2 is a turn clock:
-every-turn rules and timed/scheduled events, plus out-of-world actions
-(`save`/`undo`/`again` — currently out of scope). Also surface the outcome of a
-player command (the `run_command` path discards `runAction`'s result, unlike
-`let x = try`) so turn rules can see whether the command succeeded.
+every-turn rules and timed/scheduled events, plus **out-of-world actions**
+(`save`/`undo`/`restore`/`again`). Also surface the outcome of a player command
+(the `run_command` path discards `runAction`'s result, unlike `let x = try`) so
+turn rules can see whether the command succeeded.
+- **Fold in here:** move the `undo`/`save`/`restore` verb handling + prompting +
+  wording **out of the runtime** and into `lib/advent`. Today `performUndo`/
+  `performSave`/`performRestore` live in the engine and hardcode English prose —
+  a layering smell (`devdocs/state.md` → "Known layering smell"). The fix needs
+  `registerOutOfWorld` to accept a **Lamp callback** so the library owns the verbs
+  while the runtime keeps the save/restore/snapshot *primitives* — the same
+  runtime→Lamp out-of-world hook this item builds, so do it once here.
 - **Where:** rulebook driver in `src/lamplighter/index.js`, `run_command` loop.
 - **See:** `devdocs/rulebooks.md` roadmap, `devdocs/game_parser.md` v2.
 
