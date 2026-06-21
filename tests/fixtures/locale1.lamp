@@ -1,4 +1,5 @@
-# Slice 2: the en-US locale pack. Articles (the/a/an) honor a proper/plural
+# Slice 2: the en-US locale pack. Bare-word article sugar `[the X]` / `[a X]` /
+# `[The X]` desugars to the locale's article functions and honors a proper/plural
 # `article`; case functions (cap/upper/title) are plain transforms. All provided
 # by lib/en-US, auto-loaded after lib/sys. See devdocs/text.md (three-layer split).
 game Locale_One:
@@ -21,7 +22,7 @@ thing scissors:
     article plural
 
 on startup:
-    print "[cap(the(lantern))] glows; [cap(a(apple))] sits nearby."
-    print "You see [the(lantern)], [a(apple)], [a(alice)] and [a(scissors)]."
-    print "[cap(the(alice))] waves. [cap(the(scissors))] gleam."
+    print "[The lantern] glows; [A apple] sits nearby."
+    print "You see [the lantern], [a apple], [a alice] and [a scissors]."
+    print "[The alice] waves. [The scissors] gleam."
     print "title: [title(lantern.name)]; shout: [upper(apple.name)]."

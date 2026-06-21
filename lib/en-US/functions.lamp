@@ -12,8 +12,12 @@ native function string upper(string s)
 native function string lower(string s)
 native function string title(string s)
 
-# Articles. The caller picks definite (`the`) vs indefinite (`a`/`an`); a
-# proper- or plural-named object overrides (no article / "some"). See text.md B.
+# Articles. The caller picks definite (`the`) vs indefinite (`indefinite`/`an`); a
+# proper- or plural-named object overrides (no article / "some"). The bare-word
+# sugar `[the X]` / `[a X]` / `[an X]` desugars to these (see text.md B3-B5). The
+# indefinite is NOT named `a`: a one-letter function name shadows the very common
+# local variable `a` (a JS temporal-dead-zone hazard), so `a` stays an ordinary
+# name and only the sugar word `[a X]` maps to `indefinite(X)`.
 native function string the(object x)
-native function string a(object x)
+native function string indefinite(object x)
 native function string an(object x)

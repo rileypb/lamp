@@ -537,18 +537,24 @@ green (120 goldens).
 
 ### Slice 2 — names, articles, case
 
-**Status: locale scaffolding + functions DONE (2026-06-21); bare-word sugar next.**
-`lib/en-US` now exists as the **default locale pack, auto-loaded after `lib/sys`**
-(`gatherLibDirs` in `src/lantern/index.js` — the three-layer split is real: engine/
-`lib/sys` mechanism vs. `lib/en-US` language data). The English list-prose
-formatter (`format_list`, the "and"/Oxford comma) **moved from `lib/sys` to
-`lib/en-US`**, where language data belongs. Fixture `locale1.lamp` + golden.
+**Status: B3–B7 + C1/C3/C4 DONE (2026-06-21); K5 pending.** `lib/en-US` is the
+**default locale pack, auto-loaded after `lib/sys`** (`gatherLibDirs` in
+`src/lantern/index.js` — the three-layer split is real: engine/`lib/sys` mechanism
+vs. `lib/en-US` language data). The English list-prose formatter (`format_list`,
+the "and"/Oxford comma) **moved from `lib/sys` to `lib/en-US`**. Fixture
+`locale1.lamp` + golden; six parser article-sugar/quote/freeze cases.
 
-1. **B3/B4/B5 — functions DONE, sugar PENDING.** `lib/en-US` provides the article
-   functions `the(x)` / `a(x)` (a/an auto-selected) / `an(x)`; compose with C1 for
-   the capitalized form (`[cap(the(x))]`). Proper-/plural-named objects override
-   (no article / "some"). The **bare-word sugar** `[the X]` / `[a X]` / `[The X]`
-   (desugaring to these calls in the template parser) is the **next increment**.
+1. **B3/B4/B5 — DONE (functions + bare-word sugar).** `lib/en-US` provides the
+   article functions `the(x)` / `indefinite(x)` (a/an auto-selected) / `an(x)`. The
+   **bare-word sugar** `[the X]` / `[a X]` / `[an X]` (and capitalized `[The X]` /
+   `[A X]`, which wrap in `cap`) desugars to those calls in the template parser
+   (`desugarArticleSugar` in `parser_rd.js`), so `[the velvet_cloak]` ==
+   `[the(velvet_cloak)]`. The sugar fires only on exactly `<article> <reference>`
+   (two tokens, operand starting with a letter), so `[a + b]` with a local `a` is
+   untouched. **Naming note:** the indefinite function is `indefinite`, *not* `a` —
+   a one-letter `a()` function shadows the very common local `a` (a JS
+   temporal-dead-zone hazard). The natural `[a X]` surface is unaffected; only the
+   explicit call form is `[indefinite(x)]`.
 2. **B6/B7 — DONE via the existing world-model convention.** The locale reads an
    object's `printed_name` and its `article` (an object whose `.name` is
    `proper`/`plural`/`definite`/`count`, the model `lib/advent` already uses);
@@ -560,7 +566,10 @@ formatter (`format_list`, the "and"/Oxford comma) **moved from `lib/sys` to
 4. **K5 — PENDING.** Per-object overrides + a small default irregular table (e.g.
    "sheep"); one world-model home for proper-named / plural / printed_name.
 
-**Remaining for Slice 2:** the bare-word article sugar (B3/B5 surface) and K5.
+**Remaining for Slice 2:** K5, and (later) real per-locale sugar words + locale
+swapping. The article-sugar word set (`the`/`a`/`an`) is currently hardcoded
+English in the parser — a deliberate small coupling to the active locale's article
+functions, to revisit when a non-English locale lands.
 
 ### Slice 3 — the adaptive engine (headline)
 

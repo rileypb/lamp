@@ -57,6 +57,28 @@ function applyQuoteConvention(run) {
     return out;
 }
 
+// Bare-word article sugar: a substitution of exactly `<article> <reference>`
+// (two whitespace-separated tokens, the operand starting with a letter/underscore)
+// rewrites to the locale's article function call, so `[the velvet_cloak]` ==
+// `[the(velvet_cloak)]` and `[The velvet_cloak]` == `[cap(the(velvet_cloak))]`.
+// Anything more complex (operators, multiple operands) is left alone — write the
+// explicit call form, e.g. `[the(box.first)]`. The indefinite word `a`/`an` maps
+// to `indefinite(...)`, not a one-letter `a(...)` function (which would shadow the
+// common local variable `a`); so `[a + b]` with a local `a` is untouched (three
+// tokens) and `[a apple]` desugars to `indefinite(apple)`. NOTE: the recognized
+// words are English, a deliberate small coupling to the active locale's article
+// functions; real per-locale sugar words are a later refinement. See text.md B3-B5.
+const ARTICLE_SUGAR_FNS = { the: "the", a: "indefinite", an: "an" };
+function desugarArticleSugar(src) {
+    const m = src.match(/^(the|a|an|The|A|An)\s+([A-Za-z_]\S*)$/);
+    if (!m) return src;
+    const word = m[1];
+    const operand = m[2];
+    const lower = word.toLowerCase();
+    const call = `${ARTICLE_SUGAR_FNS[lower]}(${operand})`;
+    return word === lower ? call : `cap(${call})`;
+}
+
 // Splits a string-literal value (in expression position) into template parts: an
 // ordered list of { kind: "text", value } literals and { kind: "exprSrc", src }
 // substitutions. The tokenizer has already resolved \n \t \r \" \\, but `\[` and
@@ -1335,7 +1357,7 @@ function createParser(tokens, filePath, globalNames, functionNames = new Set(), 
         const templateParts = parts.map((p) =>
             p.kind === "text"
                 ? { kind: "text", value: p.value }
-                : { kind: "expr", expr: parseEmbeddedExpression(p.src, token.line, localNames) },
+                : { kind: "expr", expr: parseEmbeddedExpression(desugarArticleSugar(p.src), token.line, localNames) },
         );
         return ast.createTemplateLiteral(templateParts);
     }

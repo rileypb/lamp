@@ -26,15 +26,18 @@ far: article functions `the`/`a`/`an` (a/an auto, proper/plural overrides via th
 world-model `article` convention), case functions `cap`/`upper`/`lower`/`title`, and
 `format_list` (the "and"/Oxford-comma list prose) **moved from `lib/sys` to
 `lib/en-US`**. Fixture `locale1.lamp` + golden; all 11 suites green (121 goldens).
+Also done: **bare-word article sugar** `[the X]`/`[a X]`/`[The X]` desugars to the
+article calls (`desugarArticleSugar` in `parser_rd.js`), firing only on exactly
+`<article> <reference>` so a local `a` in `[a + b]` is safe. The indefinite function
+is named `indefinite` (not `a`) to avoid shadowing the common local `a`.
 **Remaining for Slice 2:**
-- **Bare-word article sugar** `[the X]` / `[a X]` / `[The X]` — desugar leading
-  article words in a substitution to `the(X)`/`a(X)`/`cap(the(X))` in the template
-  parser (`splitTemplate`/`parseStringExpr`). The natural surface the user wants.
 - **K5** — per-object overrides + a small default irregular table ("sheep"); a
   cleaner boolean proper/plural flag contract to replace the `article` object.
-- **Locale swapping** — currently `lib/en-US` is hard-auto-loaded; a later refinement
-  picks the locale dir (e.g. a `locale` setting) so `lib/en-GB`/`lib/fr-FR` can drop in.
-**Where:** `src/lantern/{parser_rd}.js`, `lib/en-US/`, `lib/advent/` (flags).
+- **Per-locale sugar words + locale swapping** — the sugar word set (`the`/`a`/`an`)
+  is hardcoded English in the parser, and `lib/en-US` is hard-auto-loaded; a later
+  refinement picks the locale dir (e.g. a `locale` setting) and its sugar words so
+  `lib/en-GB`/`lib/fr-FR` can drop in.
+**Where:** `src/lantern/parser_rd.js`, `lib/en-US/`, `lib/advent/` (flags).
 
 ## 2. SAVE / RESTORE — browser persistence + durable CLI saves (Slice 3)
 UNDO (Slice 1) and SAVE/RESTORE to the dev host (Slice 2) are **done**: the

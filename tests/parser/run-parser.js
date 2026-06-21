@@ -181,6 +181,25 @@ const cases = [
         },
     },
     {
+        name: "article sugar: [the X] / [A X] desugar to article calls; [a + b] does not",
+        run() {
+            const [a] = parse(["on startup:", '    print "[the cloak]"'].join("\n"));
+            const e1 = a.body[0].expr.parts[0].expr;
+            assert.strictEqual(e1.kind, "CallExpr");
+            assert.strictEqual(e1.name, "the");
+            const [b] = parse(["on startup:", '    print "[A apple]"'].join("\n"));
+            const e2 = b.body[0].expr.parts[0].expr;
+            assert.strictEqual(e2.kind, "CallExpr");
+            assert.strictEqual(e2.name, "cap");
+            assert.strictEqual(e2.args[0].kind, "CallExpr");
+            assert.strictEqual(e2.args[0].name, "indefinite");
+            // A leading article word followed by an operator is NOT sugar (so a
+            // local `a` in `[a + b]` is safe); it parses as an ordinary expression.
+            const [c] = parse(["on startup:", "    let a = 1", '    print "[a + b]"'].join("\n"));
+            assert.strictEqual(c.body[1].expr.parts[0].expr.kind, "Concat");
+        },
+    },
+    {
         name: "A5 quotes: word-boundary ' becomes \" ; [']  forces a literal apostrophe; both stay StringLiteral",
         run() {
             const [a] = parse(["on startup:", `    print "say 'hi'"`].join("\n"));
