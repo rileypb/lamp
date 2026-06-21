@@ -72,6 +72,7 @@ function prescanDeclarations(tokens) {
     const actionNames = new Set();
     const objectNames = new Set();
     const tagNames = new Set();
+    const verbNames = new Set();
     const rulebookParams = new Map();
     const relationTemplates = [];
     let currentRelation = null;
@@ -109,6 +110,17 @@ function prescanDeclarations(tokens) {
         // action name:
         if (isKeyword(head, "action")) {
             if (isIdent(line[1])) actionNames.add(line[1].value);
+            return;
+        }
+
+        // verb a, b, c  — registers conjugation-sugar words so the parser rewrites
+        // `[drop]` in a template to a conjugate() call (vs. an object reference).
+        // A word may itself be a keyword (`verb do`), so collect IDENT and KEYWORD
+        // tokens alike, skipping the comma separators. See devdocs/text.md D3.
+        if (isKeyword(head, "verb")) {
+            for (let i = 1; i < line.length; i += 1) {
+                if (line[i].type === "IDENT" || line[i].type === "KEYWORD") verbNames.add(line[i].value);
+            }
             return;
         }
 
@@ -157,6 +169,7 @@ function prescanDeclarations(tokens) {
         actionNames,
         objectNames,
         tagNames,
+        verbNames,
         rulebookParams,
         relationTemplates,
     };

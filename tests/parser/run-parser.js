@@ -16,6 +16,15 @@ function parse(src, globals = []) {
     return parseSource(src, "t.lamp", new Set(globals)).nodes;
 }
 
+// Like parse but supplies the declared verb-sugar word set (the 11th positional
+// arg), so `[drop]` desugars to a conjugate() call. See parser_rd desugarSugar.
+function parseWithVerbs(src, verbs = [], globals = []) {
+    return parseSource(
+        src, "t.lamp", new Set(globals), new Set(), new Set(), new Map(),
+        new Set(), new Set(), new Set(), new Map(), new Set(verbs),
+    ).nodes;
+}
+
 const cases = [
     {
         name: "object decl: multi-word name coerces; values typed correctly",
@@ -197,6 +206,55 @@ const cases = [
             // local `a` in `[a + b]` is safe); it parses as an ordinary expression.
             const [c] = parse(["on startup:", "    let a = 1", '    print "[a + b]"'].join("\n"));
             assert.strictEqual(c.body[1].expr.parts[0].expr.kind, "Concat");
+        },
+    },
+    {
+        name: "pronoun sugar: [We]/[they]/[them] desugar to zero-arg locale calls; [We] caps",
+        run() {
+            const [a] = parse(["on startup:", '    print "[We] and [they] saw [them]"'].join("\n"));
+            const parts = a.body[0].expr.parts;
+            const we = parts[0].expr;
+            assert.strictEqual(we.kind, "CallExpr");
+            assert.strictEqual(we.name, "cap");
+            assert.strictEqual(we.args[0].name, "we");
+            assert.deepStrictEqual(we.args[0].args, []);
+            assert.strictEqual(parts[2].expr.name, "they");
+            assert.strictEqual(parts[4].expr.name, "them");
+        },
+    },
+    {
+        name: "regarding sugar: [regarding EXPR] desugars to a regarding(EXPR) call",
+        run() {
+            const [a] = parse(["on startup:", '    print "[regarding cloak]gone"'].join("\n"));
+            const e = a.body[0].expr.parts[0].expr;
+            assert.strictEqual(e.kind, "CallExpr");
+            assert.strictEqual(e.name, "regarding");
+            assert.strictEqual(e.args.length, 1);
+        },
+    },
+    {
+        name: "verb sugar: a declared verb word becomes conjugate(\"word\"); [Drop] caps; an undeclared word stays a reference",
+        run() {
+            const [a] = parseWithVerbs(["on startup:", '    print "[We] [drop] it"'].join("\n"), ["drop"]);
+            const drop = a.body[0].expr.parts[2].expr;
+            assert.strictEqual(drop.kind, "CallExpr");
+            assert.strictEqual(drop.name, "conjugate");
+            assert.deepStrictEqual(drop.args[0], { kind: "StringLiteral", value: "drop" });
+            const [b] = parseWithVerbs(["on startup:", '    print "[Drop] it"'].join("\n"), ["drop"]);
+            const cap = b.body[0].expr.parts[0].expr;
+            assert.strictEqual(cap.name, "cap");
+            assert.strictEqual(cap.args[0].name, "conjugate");
+            // An undeclared bare word is an ordinary reference, not a verb.
+            const [c] = parse(["on startup:", '    print "[box]"'].join("\n"));
+            assert.notStrictEqual(c.body[0].expr.parts[0].expr.kind, "CallExpr");
+        },
+    },
+    {
+        name: "verb declaration: `verb a, b` parses to a discardable VerbDecl (keyword words allowed)",
+        run() {
+            const nodes = parse(["verb drop, do", "on startup:", "    print 1"].join("\n"));
+            assert.strictEqual(nodes[0].kind, "VerbDecl");
+            assert.strictEqual(nodes[1].kind, "EventHandler");
         },
     },
     {

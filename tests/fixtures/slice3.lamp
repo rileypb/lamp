@@ -1,0 +1,62 @@
+# Slice 3: the adaptive pronoun/verb engine. [We]/[us]/[our]/[ours] are the PLAYER,
+# rendered by the story viewpoint (default second person, "you"). The third-person
+# [They]/[them]/[their]/[theirs]/[themself] refer to the render *subject*, set by
+# [regarding EXPR] or by naming a thing (the article functions). Verbs agree with
+# whichever was last established — [We] (the viewpoint), [They], or [regarding].
+# The subject/agreement reset per render (per print). See devdocs/text.md D.
+game Slice_Three:
+    author "Lamp"
+
+type person:
+    string printed_name = ""
+    int grammatical_person = 3
+    string gender = "neuter"
+    bool plural = false
+
+type thing:
+    string printed_name = ""
+    bool plural = false
+
+person you:
+    grammatical_person 2
+person alice:
+    printed_name "Alice"
+    gender "female"
+person twins:
+    printed_name "twins"
+    plural true
+
+thing cloak:
+    printed_name "velvet cloak"
+thing coins:
+    printed_name "gold coins"
+    plural true
+
+verb count
+
+action take:
+    thing taken
+
+# One report serves every actor: [regarding self.actor] makes [They] and the verb
+# adapt — "She takes ..." for Alice, "You take ..." when the actor is the player.
+report take:
+    print "[regarding self.actor][They] [take] [the self.taken]."
+
+on startup:
+    # [We] is the player ("you"); naming the cloak makes [They] refer to it and the
+    # following verb agree with it, while [ours] stays the player's ("yours").
+    print "[We] [have] [the cloak]. [They] [are] [ours]."
+    # Verbs after [We] stay with the player even once a thing is named.
+    print "[We] [take] [the coins] and [count] [them]."
+    # [regarding] sets a third-person subject for [They] and the verb.
+    print "[regarding alice][They] [have] [the cloak]."
+    print "[regarding alice][They] [are] here."
+    # A plural subject takes plural pronouns and verb.
+    print "[regarding twins][They] [are] ready; [their] hands are full."
+    # The shared report, actor = Alice, then actor = the player.
+    try take:
+        taken cloak
+        actor alice
+    try take:
+        taken coins
+        actor you

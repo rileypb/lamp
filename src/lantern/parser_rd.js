@@ -24,16 +24,16 @@ function getInfixBP(token) {
 
 const PHASE_WORDS = new Set(["before", "instead", "check", "do", "after", "report"]);
 
-function parseSource(sourceText, filePath, globalNames = new Set(), functionNames = new Set(), relationNames = new Set(), relationTemplates = new Map(), actionNames = new Set(), objectNames = new Set(), tagNames = new Set(), rulebookParams = new Map()) {
+function parseSource(sourceText, filePath, globalNames = new Set(), functionNames = new Set(), relationNames = new Set(), relationTemplates = new Map(), actionNames = new Set(), objectNames = new Set(), tagNames = new Set(), rulebookParams = new Map(), verbNames = new Set()) {
     const tokens = tokenize(sourceText, filePath);
-    return parseTokens(tokens, filePath, globalNames, functionNames, relationNames, relationTemplates, actionNames, objectNames, tagNames, rulebookParams);
+    return parseTokens(tokens, filePath, globalNames, functionNames, relationNames, relationTemplates, actionNames, objectNames, tagNames, rulebookParams, verbNames);
 }
 
 // Parses an already-tokenized file. The driver (src/lantern/index.js) tokenizes
 // each file once, runs the token-level prescan over those tokens, then parses
 // from the same tokens — so tokenization happens exactly once per file.
-function parseTokens(tokens, filePath, globalNames = new Set(), functionNames = new Set(), relationNames = new Set(), relationTemplates = new Map(), actionNames = new Set(), objectNames = new Set(), tagNames = new Set(), rulebookParams = new Map()) {
-    return createParser(tokens, filePath, globalNames, functionNames, relationNames, relationTemplates, actionNames, objectNames, tagNames, rulebookParams).parseProgram();
+function parseTokens(tokens, filePath, globalNames = new Set(), functionNames = new Set(), relationNames = new Set(), relationTemplates = new Map(), actionNames = new Set(), objectNames = new Set(), tagNames = new Set(), rulebookParams = new Map(), verbNames = new Set()) {
+    return createParser(tokens, filePath, globalNames, functionNames, relationNames, relationTemplates, actionNames, objectNames, tagNames, rulebookParams, verbNames).parseProgram();
 }
 
 // Applies Inform's single-quote convention to a literal text run: a `'` flanked
@@ -77,6 +77,39 @@ function desugarArticleSugar(src) {
     const lower = word.toLowerCase();
     const call = `${ARTICLE_SUGAR_FNS[lower]}(${operand})`;
     return word === lower ? call : `cap(${call})`;
+}
+
+// Closed pronoun sugar set (D1/D2). A single bare pronoun word maps to a zero-arg
+// locale call that reads the render context: the `we`/`us`/`our`/`ours` family
+// agrees with the context *subject* (the actor; "you" for the player), the
+// `they`/`them`/`their`/`theirs`/`themself` family with the context *antecedent*
+// (the most recently named thing). The locale functions own the actual words;
+// these are the canonical English tokens that name them — a deliberate coupling to
+// the active locale, the same one the article words have. Capitalized input wraps
+// the call in cap(...). The subject's possessive pronoun is `[ours]`, which adapts
+// by person (so it reads "yours" for the 2nd-person player). See text.md D1/D2.
+const PRONOUN_SUGAR_FNS = {
+    we: "we", us: "us", our: "our", ours: "ours",
+    they: "they", them: "them", their: "their", theirs: "theirs", themself: "themself",
+};
+
+// Rewrites one substitution's source through the natural-language sugar layer:
+// `[regarding EXPR]` sets the render subject (D5); a bare pronoun word becomes its
+// locale call (D1/D2); a declared verb word becomes a conjugate() call agreeing
+// with the subject (D3); otherwise the article sugar (B3-B5) applies, and anything
+// it does not match is returned verbatim as an ordinary expression.
+function desugarSugar(src, verbNames) {
+    const regarding = src.match(/^regarding\s+(\S.*)$/);
+    if (regarding) {
+        return `regarding(${desugarArticleSugar(regarding[1].trim())})`;
+    }
+    if (/^[A-Za-z]+$/.test(src)) {
+        const lower = src.toLowerCase();
+        const wrap = (call) => (src === lower ? call : `cap(${call})`);
+        if (PRONOUN_SUGAR_FNS[lower]) return wrap(`${PRONOUN_SUGAR_FNS[lower]}()`);
+        if (verbNames.has(src) || verbNames.has(lower)) return wrap(`conjugate("${lower}")`);
+    }
+    return desugarArticleSugar(src);
 }
 
 // Splits a string-literal value (in expression position) into template parts: an
@@ -142,7 +175,7 @@ function splitTemplate(rawValue, fail) {
     return { parts, hasSub };
 }
 
-function createParser(tokens, filePath, globalNames, functionNames = new Set(), relationNames = new Set(), relationTemplates = new Map(), actionNames = new Set(), objectNames = new Set(), tagNames = new Set(), rulebookParams = new Map()) {
+function createParser(tokens, filePath, globalNames, functionNames = new Set(), relationNames = new Set(), relationTemplates = new Map(), actionNames = new Set(), objectNames = new Set(), tagNames = new Set(), rulebookParams = new Map(), verbNames = new Set()) {
     let pos = 0;
 
     const peek = (offset = 0) => tokens[pos + offset];
@@ -237,6 +270,7 @@ function createParser(tokens, filePath, globalNames, functionNames = new Set(), 
                 case "native": return parseNativeFunctionDecl();
                 case "rulebook": return parseRulebookDecl();
                 case "action": return parseActionDecl();
+                case "verb": return parseVerbDecl();
                 default: throw err(`Unexpected '${token.value}' at top level`);
             }
         }
@@ -834,6 +868,24 @@ function createParser(tokens, filePath, globalNames, functionNames = new Set(), 
     // `action NAME:` declares an action type whose body is its named slots
     // (field declarations, like a type body). The `syntax` grammar block is
     // deferred (see devdocs/game_parser.md).
+    // `verb a, b, c` — registers conjugation-sugar words (collected in the prescan,
+    // already in `verbNames`). It carries no runtime behavior: the conjugation
+    // rules live in the locale's conjugate() function, and the declaration only
+    // tells the parser to rewrite `[drop]` to a conjugate() call. So it parses to a
+    // node the checker and emitter ignore. A word may be a keyword (`verb do`).
+    function parseVerbDecl() {
+        expectKeyword("verb");
+        do {
+            const t = peek();
+            if (t.type !== "IDENT" && t.type !== "KEYWORD") {
+                throw err("Expected a verb word after 'verb'");
+            }
+            next();
+        } while (at("COMMA") && (next(), true));
+        expectNewline();
+        return ast.createVerbDecl();
+    }
+
     function parseActionDecl() {
         const keyword = expectKeyword("action");
         const name = plainName("action name");
@@ -1357,7 +1409,7 @@ function createParser(tokens, filePath, globalNames, functionNames = new Set(), 
         const templateParts = parts.map((p) =>
             p.kind === "text"
                 ? { kind: "text", value: p.value }
-                : { kind: "expr", expr: parseEmbeddedExpression(desugarArticleSugar(p.src), token.line, localNames) },
+                : { kind: "expr", expr: parseEmbeddedExpression(desugarSugar(p.src, verbNames), token.line, localNames) },
         );
         return ast.createTemplateLiteral(templateParts);
     }
@@ -1372,7 +1424,7 @@ function createParser(tokens, filePath, globalNames, functionNames = new Set(), 
         } catch (e) {
             throw err(`invalid substitution "[${src}]": ${e.message}`, line);
         }
-        const sub = createParser(subTokens, filePath, globalNames, functionNames, relationNames, relationTemplates, actionNames, objectNames, tagNames, rulebookParams);
+        const sub = createParser(subTokens, filePath, globalNames, functionNames, relationNames, relationTemplates, actionNames, objectNames, tagNames, rulebookParams, verbNames);
         try {
             return sub.parseWholeExpression(localNames);
         } catch (e) {

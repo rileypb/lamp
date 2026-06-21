@@ -227,7 +227,7 @@ Local variables (introduced by `let`) and loop variables (introduced by `for`) a
 
 Free text that contains spaces or punctuation is written as a double-quoted string literal, not a bare identifier (for example, `author "Phil Riley"`).
 
-The following words are **reserved** and may not be used as a name (object, type, kind, global, field, event, or local): `type`, `kind`, `global`, `on`, `for`, `in`, `while`, `if`, `else`, `let`, `print`, `error`, `dispatch`, `break`, `lib`, `from`, `to`, `step`, `change`, `function`, `native`, `freeze`, `return`, `when`, `and`, `or`, `not`, `relation`, `bidi`, `remove`, `disconnect`, `rulebook`, `stop`, `follow`, `action`, `try`. (`freeze EXPR` forces a `text` value to a `string`; see the `text` primitive type. `syntax` and `inverted` are contextual keywords recognized only inside a `relation` body; `tags` is contextual only inside an `action` body; `default` is a contextual keyword recognized only inside a `rulebook` body; the band words `before`, `instead`, `check`, `do`, `after`, and `report` are contextual keywords recognized only as the leading token of a phase rule; `any` and `except` are contextual only in a phase-rule action selector; `rule` is contextual only when followed by a declared rulebook name; `silently` is contextual only immediately before `try`; `understand` and `as` are contextual only in a top-level `understand "TEMPLATE" as ACTION` grammar contribution; none of these are globally reserved.) A reservation applies only to a whole identifier: a reserved word appearing *inside* a longer identifier is unrestricted, so `move_to_room` (which denotes the name `move to room`) is a valid identifier even though `to` is reserved.
+The following words are **reserved** and may not be used as a name (object, type, kind, global, field, event, or local): `type`, `kind`, `global`, `on`, `for`, `in`, `while`, `if`, `else`, `let`, `print`, `error`, `dispatch`, `break`, `lib`, `from`, `to`, `step`, `change`, `function`, `native`, `freeze`, `return`, `when`, `and`, `or`, `not`, `relation`, `bidi`, `remove`, `disconnect`, `rulebook`, `stop`, `follow`, `action`, `try`, `verb`. (`freeze EXPR` forces a `text` value to a `string`; see the `text` primitive type. `verb WORD, …` registers conjugation-sugar words for text substitution; see the `text` type. `syntax` and `inverted` are contextual keywords recognized only inside a `relation` body; `tags` is contextual only inside an `action` body; `default` is a contextual keyword recognized only inside a `rulebook` body; the band words `before`, `instead`, `check`, `do`, `after`, and `report` are contextual keywords recognized only as the leading token of a phase rule; `any` and `except` are contextual only in a phase-rule action selector; `rule` is contextual only when followed by a declared rulebook name; `silently` is contextual only immediately before `try`; `understand` and `as` are contextual only in a top-level `understand "TEMPLATE" as ACTION` grammar contribution; none of these are globally reserved.) A reservation applies only to a whole identifier: a reserved word appearing *inside* a longer identifier is unrestricted, so `move_to_room` (which denotes the name `move to room`) is a valid identifier even though `to` is reserved.
 
 ### Objects and types
 
@@ -323,6 +323,24 @@ Built-in primitive types:
   algebra, so a stored `text` is **frozen to its current string when captured** for
   undo/save (see `devdocs/state.md`). Text substitution is the foundation of the
   text-generation system — see `devdocs/text.md`.
+  - **Natural-language sugar (locale layer).** Inside a substitution, bare words are
+    rewritten to `lib/en-US` calls: an article `[the X]`/`[a X]`; the **player**
+    pronouns `[We]`/`[us]`/`[our]`/`[ours]` (rendered by the story viewpoint —
+    person + number, default 2nd singular → "you"; the globals
+    `viewpoint_person`/`viewpoint_plural` change it); the **subject** pronouns
+    `[They]`/`[them]`/`[their]`/`[theirs]`/`[themself]` (a third-person referent set
+    by `[regarding EXPR]` or by naming a thing); and a verb `[drop]`/`[are]`
+    (conjugated against the current agreement, set by `[We]`/`[They]`/`[regarding]`).
+    `[regarding EXPR]` sets the subject and renders empty. These read a
+    **render-local context** that resets per render and is never saved. The
+    world-model→locale contract for a referent is the optional fields
+    `grammatical_person` (1/2/3, default 3), `gender` ("male"/"female"/"neuter"), and
+    `plural`; the player object sets `grammatical_person 2`. See `devdocs/text.md` D.
+- A **`verb` declaration** — `verb WORD, WORD, …` at top level — registers
+  conjugation-sugar words so a template `[drop]` is rewritten to a `conjugate("drop")`
+  call rather than read as an object reference. It has no runtime effect (the
+  conjugation rules live in the locale's `conjugate()`); the locale ships the
+  default verbs and a game adds its own. A word may itself be a keyword (`verb do`).
 - `int` — integer values; literals are plain digits: `42`, `-7`
 - `bool` — boolean values; literals are `true` and `false`
 - `real` — floating-point values; literals require a decimal point: `3.14`, `-0.5`

@@ -267,6 +267,14 @@ function createActionDecl(name, slots, templates, filePath, lineNumber, tags = [
     return { kind: "ActionDecl", name, slots, templates, filePath, lineNumber, tags };
 }
 
+// `verb a, b, c` — registers conjugation-sugar words. A declaration-only node
+// with no runtime effect: the parser uses the prescanned word set to rewrite
+// `[drop]` template slots into conjugate() calls, and the checker/emitter skip
+// this node. The conjugation rules live in the locale's conjugate(). See text.md D3.
+function createVerbDecl() {
+    return { kind: "VerbDecl" };
+}
+
 // `understand "TEMPLATE" as ACTION` — contributes one extra grammar phrasing to
 // an already-declared action without redeclaring it (so a game can add a verb
 // for a library action). Emits a single registerGrammar call.
@@ -388,6 +396,7 @@ module.exports = {
     createFollowStatement,
     createFollowExpr,
     createActionDecl,
+    createVerbDecl,
     createUnderstandDecl,
     createPhaseRule,
     createRulebookRule,

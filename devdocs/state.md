@@ -60,6 +60,16 @@ depends on a subject/tense set elsewhere), freezing at capture time is a
 deliberate, documented simplification to revisit — persistent state should
 generally hold a `freeze`-d string, not a live `text`.
 
+**The render context is render-local and never saved.** Slice 3's adaptive sugar
+reads a per-render context (the third-person `subject`, the verb `agreement`
+descriptor, and the governing `count`) that is created at the outermost render
+boundary and discarded when that render returns — it never outlives a single
+`print`/`freeze`. So it is not part of any snapshot; `captureState`/`restoreState`
+neither read nor write it. (The story viewpoint that drives `[We]` is a separate,
+ordinary saved global — `viewpoint_person`/`viewpoint_plural` — not render state.)
+This is the render-local tier of `devdocs/text.md` "Render context"; only the
+site-durable tier (the future `[cycling]`/RNG cursors) will need a state provider.
+
 ## Encoded form (JSON-able)
 
 `captureState()` produces a plain, JSON-serializable object (so the same value

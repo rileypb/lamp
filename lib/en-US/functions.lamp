@@ -27,3 +27,38 @@ native function string an(object x)
 # not `plural`, to avoid colliding with lib/advent's `article plural` object.
 # See text.md K5.
 native function string pluralize(object x)
+
+# Adaptive pronouns and verbs (the "[We] [drop] [the cloak]" engine, text.md D).
+# Each reads the render context rather than taking an explicit argument: the
+# we/us/our/ours family agrees with the context *subject* (the acting person,
+# seeded from the action's actor; "you" for the player), and the
+# they/them/their/theirs/themself family with the context *antecedent* (the most
+# recently named thing — set by the article functions above). The bare-word sugar
+# `[We]`, `[they]`, `[ours]`, ... desugars to these calls (see text.md D1/D2).
+native function string we()
+native function string us()
+native function string our()
+native function string ours()
+native function string they()
+native function string them()
+native function string their()
+native function string theirs()
+native function string themself()
+
+# `[regarding EXPR]` sets the subject the following pronouns/verbs adapt to, when
+# it is not the default actor; it renders to the empty string. See text.md D5.
+native function string regarding(object x)
+
+# `conjugate(word)` returns the surface form of an English verb agreeing with the
+# context subject's person and number ("drop"/"drops", "is"/"are", "has"/"have").
+# The bare-word sugar `[drop]` desugars to `conjugate("drop")`. The verb word must
+# be registered with a `verb` declaration so the parser treats `[drop]` as a verb
+# rather than an object reference. See text.md D3/D4.
+native function string conjugate(string word)
+
+# The locale's default verb vocabulary: the irregular auxiliaries plus a few common
+# verbs. A game registers its own domain verbs with its own `verb` declaration; the
+# conjugation *rules* live in conjugate() above, so a newly declared regular verb
+# conjugates for free. `do` is a keyword, accepted here as a verb word.
+verb is, are, has, have, does, do, goes, go
+verb drop, take, get, put, look, examine, open, close, wear, carry, hold

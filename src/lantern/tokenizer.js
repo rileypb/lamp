@@ -48,6 +48,7 @@ const KEYWORDS = new Set([
     "follow",
     "action",
     "try",
+    "verb",
 ]);
 
 const SINGLE_CHAR_TOKENS = {

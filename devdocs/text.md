@@ -2,9 +2,12 @@
 
 > Status: **in progress.** This file enumerates the text-substitution features
 > modeled on Inform 7's "[bracketed]" text, plus additions specific to Lamp, and
-> the triaged Action list that follows. **Slice 1 (bracket substitution, the
-> Inform quote convention, and the lazy `text` type + `freeze`) is DONE** — see
-> "Action list → Slice 1". Later slices remain candidates. Items are grouped by
+> the triaged Action list that follows. **Slices 1–3 are DONE**: bracket
+> substitution + the Inform quote convention + the lazy `text` type/`freeze`
+> (Slice 1); the `lib/en-US` locale pack — articles, case, list prose, pluralizer
+> (Slice 2); and the adaptive engine — render context, pronouns, verb conjugation,
+> `[regarding]` (Slice 3). See "Action list → Slices 1–3". Slice 4 (variation &
+> conditionals) is next. Later slices remain candidates. Items are grouped by
 > category; each notes its Inform 7 parallel (chapter 5 of *Writing with Inform*,
 > sections cited as `WI 5.x`) and Lamp-specific notes.
 >
@@ -578,14 +581,71 @@ hard-auto-loaded; generalize both when a non-English locale lands.
 
 ### Slice 3 — the adaptive engine (headline)
 
-1. **D1** `[We]`/`[we]` (subject → "you") vs `[They]`/`[they]` (third person →
-   "it/he/she/they"), reading the actor and the parser's tracked antecedent.
-2. **D2** object/possessive pronouns `[them]`/`[their]`/`[ours]`/`[yours]`.
-3. **D3** verb conjugation `[drop]`/`[have]`/`[are]`, agreeing with the subject and
-   the B7 plural flag.
-4. **D4** irregular-verb table in `lib/sys`.
-5. **D5** `[regarding EXPR]` to set a non-default subject.
-6. **D8** action-default report templates built on `[We] … [the self.noun]`.
+**Status: DONE (2026-06-21).** The render context, adaptive pronouns, verb
+conjugation, and `[regarding]` all landed. Fixture `slice3` + golden;
+parser/prescan unit tests; all 11 suites green (123 goldens).
+
+The model has **two distinct referents** plus a verb-**agreement** descriptor:
+
+- **The player** — `[We]`/`[us]`/`[our]`/`[ours]`. Always the player, rendered by
+  the **story viewpoint** (person + number: default 2nd singular → "you"; the
+  globals `viewpoint_person`/`viewpoint_plural` change it, e.g. 1st → "I"). The
+  player is **not** the actor and **not** a `[regarding]` target — those don't touch
+  `[We]`. (This corrected an earlier draft that seeded `[We]` from the actor.)
+- **The subject** — `[They]`/`[them]`/`[their]`/`[theirs]`/`[themself]`. A
+  third-person referent, render-local, set by `[regarding EXPR]` or by *naming* a
+  thing (the article functions). So `"[the cloak] … [they]"` reads "the velvet cloak
+  … it". If the subject is itself the player object (`grammatical_person 2`),
+  `[They]` correctly reads "you" — which is what makes one report serve every actor.
+- **Agreement** — what a verb conjugates against, `{person, plural}`. Set by `[We]`
+  (→ the viewpoint), `[They]` (→ the subject), or `[regarding]` (→ its argument).
+  *Naming* a thing sets the subject but **not** the agreement, so `"[We] [take] [the
+  cloak] and [drop] it"` keeps `[drop]` agreeing with the player.
+
+All three are **render-local** (reset per render/print, never saved). The engine
+owns the context object and the accessors (`renderSubject`/`renderSetSubject`,
+`renderAgreement`/`renderSetAgreement`, `renderCount`); the locale owns the words,
+the viewpoint, and the conjugation rules.
+
+The canonical example now works exactly: `"[We] [have] [the cloak]. [They] [are]
+[ours]."` → **"You have the velvet cloak. It is yours."** (`[We]`/`[have]` = player;
+`[the cloak]` names the subject; `[They]`/`[are]` = that subject; `[ours]` = the
+player's possessive, person-adapted to "yours").
+
+1. **D1 — DONE.** `[We]`/`[we]` (the player, viewpoint) vs `[They]`/`[they]` (the
+   subject). Distinct referents, per above.
+2. **D2 — DONE.** Object/possessive pronouns: player family `[us]`/`[our]`/`[ours]`,
+   subject family `[them]`/`[their]`/`[theirs]`/`[themself]`. `[ours]` adapts by the
+   viewpoint person — "yours" for the 2nd-person player. (No separate
+   `[yours]`/`[mine]` token; the one adaptive token covers it.)
+3. **D3 — DONE.** Verb conjugation `[drop]`/`[have]`/`[are]`, agreeing with the
+   agreement descriptor. A `verb` declaration registers a word so `[drop]` becomes
+   `conjugate("drop")` rather than an object reference; the parser collects the
+   words in the prescan. The locale ships the irregular auxiliaries plus common
+   verbs; a game adds its own with `verb`.
+4. **D4 — DONE, in `lib/en-US`, not `lib/sys`.** The be/have/do/go irregular table
+   lives with `conjugate()` in the locale (the original "in `lib/sys`" note was
+   wrong — conjugation rules are language data, so they belong to the swappable
+   locale, like the article words and the pluralizer).
+5. **D5 — DONE.** `[regarding EXPR]` sets the subject *and* the agreement, renders
+   empty.
+6. **D8 — DONE (capability), not yet adopted by advent.** One report serves every
+   actor: `report take: print "[regarding self.actor][They] [take] [the
+   self.taken]."` renders "You take the velvet cloak." when the player acts and
+   "Alice takes …" for a third-person actor — the `slice3` fixture proves both.
+   advent's existing reports still branch on `self.actor == player` by hand;
+   migrating them is a follow-up (it would churn goldens) — see TODO.
+
+**Scope boundary (deliberate).** A verb agrees with the agreement descriptor, not
+with whatever noun phrase reads as the grammatical subject of a sentence. To agree a
+verb with a non-actor ("The cloak hangs on its hook"), name it with `[regarding
+cloak]` first. One Inform nicety is **deferred**: auto subject-switching, where a
+subject-position `[They]` would make following verbs agree with the *named* thing
+without a `[regarding]`. Revisit if a real game needs it.
+
+**Sugar words are English, in the parser** (`PRONOUN_SUGAR_FNS`, the verb-word set,
+`regarding`), the same small coupling the article words already have. Real
+per-locale sugar words remain the deferred refinement noted under Slice 2.
 
 ### Slice 4 — variation & conditionals
 

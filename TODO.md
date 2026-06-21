@@ -13,29 +13,42 @@ prerequisite lists in `devdocs/game_parser.md`, `devdocs/rulebooks.md`, and
 > grammar, world-model traits, turn-cycle/daemon, and message ideas mined from
 > `lurkinghorror.txt`. `devdocs/text.md` is the **text-substitution**
 > design + 7-slice Action list (Inform-7-style `"[We] [drop] [the velvet_cloak]"`).
-> **Slices 1 & 2 DONE**; Slice 3 (the adaptive `[We]`/`[They]` engine) is next.
+> **Slices 1, 2 & 3 DONE**; Slice 4 (variation & conditionals) is next.
 > `lurking_todo.md` still awaits triage.
 
-## 1. Text substitution — Slices 1 & 2 DONE; Slice 3 next
+## 1. Text substitution — Slices 1–3 DONE; Slice 4 next
 **Slice 1 (complete):** bracket substitution + quote convention + lazy `text`/`freeze`.
 **Slice 2 (complete) — names, articles, case:** the **`lib/en-US` default locale pack
-auto-loads after `lib/sys`** (`gatherLibDirs`), realizing the three-layer split
-(engine/`lib/sys` mechanism vs. `lib/en-US` language data). Articles `the`/`indefinite`
-/`an` with the bare-word sugar `[the X]`/`[a X]`/`[The X]` (`desugarArticleSugar`);
-case `cap`/`upper`/`lower`/`title`; `format_list` (the "and"/Oxford comma) moved to the
-locale; the pluralizer `pluralize(x)` (irregular table + rules + `plural_name`
-override); the clean boolean `proper`/`plural` flag contract (advent `article`-object
-fallback kept). Fixtures `locale1`/`locale2` + goldens; all 11 suites green (122).
-See `devdocs/text.md` → "Action list → Slices 1–2".
-**Next — Slice 3: the adaptive engine (headline).** `[We]`/`[They]` pronouns + verb
-conjugation (`[drop]`/`[have]`/`[are]`) + `[regarding]` + action-default report
-templates, plus the **render-context** object (current subject / governing count —
-see text.md "Render context"). Needs the locale's verb table (`lib/en-US`).
-**Deferred refinements:** per-locale sugar words + locale swapping — the article-sugar
-word set (`the`/`a`/`an`) is hardcoded English in the parser and `lib/en-US` is
-hard-auto-loaded; generalize when a non-English locale lands.
-**Where:** `src/lamplighter/index.js` (render context), `lib/en-US/`, `src/lantern/parser_rd.js`.
-**Where:** `src/lantern/parser_rd.js`, `lib/en-US/`, `lib/advent/` (flags).
+auto-loads after `lib/sys`** (`gatherLibDirs`), realizing the three-layer split.
+Articles + bare-word sugar `[the X]`/`[a X]`; case `cap`/`upper`/`lower`/`title`;
+`format_list`; the pluralizer `pluralize(x)`; the boolean `proper`/`plural` contract.
+**Slice 3 (complete) — the adaptive engine:** a render-local **render context**
+(third-person `subject` + verb `agreement` + `count`, never saved) created at the
+outermost render boundary. `[We]`/`[us]`/`[our]`/`[ours]` are the **player**,
+rendered by the story viewpoint (`viewpoint_person`/`viewpoint_plural` globals,
+default 2nd → "you"); `[They]`/`[them]`/`[their]`/`[theirs]`/`[themself]` are the
+**subject**, set by `[regarding EXPR]` or by naming a thing. Verb conjugation
+`[drop]`/`[are]`/`[has]` via `conjugate()` agreeing with the `agreement` descriptor
+(set by `[We]`/`[They]`/`[regarding]`) + the `verb` declaration (prescan-collected
+sugar words). World-model→locale person contract (`grammatical_person`/`gender`/
+`plural`). One report serves every actor via `[regarding self.actor][They]`. Fixture
+`slice3` + golden; parser/prescan unit tests; all 11 suites green (123). See
+`devdocs/text.md` → "Slice 3".
+**Next — Slice 4: variation & conditionals.** Inline `[if]`/`[else if]`/`[else]`/`[end]`
+(literal-only, `[otherwise]` alias); `[one of]…[at random]`/`[cycling]`/`[stopping]`/
+`[sticky random]` + `pick(list, mode)`; `[first time]…[only]`; seeded RNG + a
+**state provider** capturing per-site cursor/visited state (the site-durable tier of
+the render context — couples with `devdocs/state.md`; without it undo/restore desyncs).
+**Follow-ups from Slice 3 (optional):** (a) migrate advent's reports from the manual
+`self.actor == player` branch to `[regarding self.actor][They] [verb] [the self.noun]`
+templates (D8 — churns goldens, do deliberately); (b) the deferred Inform nicety —
+auto subject-switch on a subject-position `[They]` without `[regarding]` (see text.md
+"Scope boundary").
+**Deferred refinements:** per-locale sugar words + locale swapping — the sugar word
+sets (`the`/`a`/`an`, pronouns, `regarding`) are hardcoded English in the parser and
+`lib/en-US` is hard-auto-loaded; generalize when a non-English locale lands.
+**Where:** `src/lamplighter/index.js` (render context), `lib/en-US/`,
+`src/lantern/{parser_rd,prescan}.js`, `lib/advent/` (D8 migration).
 
 ## 2. SAVE / RESTORE — browser persistence + durable CLI saves (Slice 3)
 UNDO (Slice 1) and SAVE/RESTORE to the dev host (Slice 2) are **done**: the
@@ -109,6 +122,13 @@ runtime↔world contract names fails loudly instead of on `undefined.holder` dee
 in `scopeOf`. Low priority. **Where:** `src/lamplighter/index.js` (`run`).
 
 ## Smaller / opportunistic
+- **Reassigning a multi-word (underscore) global fails the checker.** `global int
+  my_score = 0` then `my_score = 5` reports "assignment to undeclared name
+  `my_score`", while a single-word global (`score = 5`) works. The assignment-target
+  name coercion (underscore→space) doesn't line up with the global-name set the
+  checker holds for multi-word names. Found while wiring `viewpoint_person`
+  (Slice 3) — declaring it works, only *reassignment* is blocked. **Where:**
+  `src/lantern/checker.js` (assignment-target lookup) + the global-name coercion.
 - **Remaining pronouns (`him`/`her`/`them`).** `it` is implemented with
   explicit `direct` slot marking (the `direct item NAME` annotation on action
   field declarations sets the antecedent; at most one per action; enforced at

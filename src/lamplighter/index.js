@@ -947,12 +947,88 @@ function isTextValue(value) {
 }
 
 function renderText(value) {
-    return isTextValue(value) ? value() : String(formatValue(value));
+    return isTextValue(value) ? renderTextValue(value) : String(formatValue(value));
+}
+
+// --- Render context (text substitution, render-local) -----------------------
+// Render-local state threaded through a single outermost render pass: the
+// third-person `subject` that [They]/[them]/[their] refer to and that verbs agree
+// with (set by [regarding] or by naming a thing); the verb `agreement`
+// (person/number) currently in force; and the most-recent `count` for plural
+// agreement (Slice 5). [We]/[us]/[our]/[ours] do NOT read this context — they are
+// the player, rendered by the story viewpoint (a saved global) — so the context
+// holds only third-person/agreement state. Created at the outermost render
+// boundary (a print/freeze of a text value) and shared by every nested
+// substitution, so a [regarding] early in a string governs the verbs after it.
+// Reset per render and NEVER saved — render-local lifetime (devdocs/text.md
+// "Render context"). The engine owns the object and lifetime; the locale's
+// pronoun/verb functions read and write it through the accessors below, and own
+// the language data (which person maps to which word).
+const renderContextStack = [];
+
+function currentRenderContext() {
+    return renderContextStack.length > 0 ? renderContextStack[renderContextStack.length - 1] : null;
+}
+
+// Renders a text value, establishing a render context if none is active. A nested
+// text (a substitution that itself yields a text) reuses the active context so a
+// [regarding]/count set in the outer string governs the inner one. The single
+// boundary formatValue/renderText/encodeValue route text rendering through.
+function renderTextValue(textValue) {
+    if (currentRenderContext() !== null) {
+        return textValue();
+    }
+    renderContextStack.push({ subject: null, agreement: null, count: null });
+    try {
+        return textValue();
+    } finally {
+        renderContextStack.pop();
+    }
+}
+
+// Render-context accessors exposed to the locale's pronoun/verb/regarding/count
+// language data. `subject` is the current third-person referent ([They]/[them]),
+// set by [regarding] and by the article functions when they name a thing.
+// `agreement` is the opaque person/number descriptor a following verb conjugates
+// against (set by [We]/[They]/[regarding]); the locale builds and reads it. Each
+// returns null rather than throwing when no render is active, so a stray call
+// outside a render degrades gracefully.
+function renderSubject() {
+    const ctx = currentRenderContext();
+    return ctx ? ctx.subject : null;
+}
+
+function renderSetSubject(value) {
+    const ctx = currentRenderContext();
+    if (ctx) ctx.subject = value;
+    return "";
+}
+
+function renderAgreement() {
+    const ctx = currentRenderContext();
+    return ctx ? ctx.agreement : null;
+}
+
+function renderSetAgreement(value) {
+    const ctx = currentRenderContext();
+    if (ctx) ctx.agreement = value;
+    return "";
+}
+
+function renderCount() {
+    const ctx = currentRenderContext();
+    return ctx ? ctx.count : null;
+}
+
+function renderSetCount(value) {
+    const ctx = currentRenderContext();
+    if (ctx) ctx.count = value;
+    return value;
 }
 
 function formatValue(value) {
     if (isTextValue(value)) {
-        return value();
+        return renderTextValue(value);
     }
     if (isListValue(value)) {
         return formatListValue(value.items);
@@ -1104,7 +1180,7 @@ function encodeValue(value) {
     // save algebra (like a function). Freeze it to its current rendered string at
     // capture, so a field holding a template is still saveable. For Slice 1 (no
     // context-dependent substitution) this is lossless. See devdocs/state.md.
-    if (isTextValue(value)) return value();
+    if (isTextValue(value)) return renderTextValue(value);
     if (isListValue(value)) return { $list: value.items.map(encodeValue) };
     if (typeof value === "object") {
         if (typeof value.name === "string" && nameRegistry.get(value.name) === value) {
@@ -1445,6 +1521,12 @@ module.exports = {
     renderTemplate,
     makeText,
     renderText,
+    renderSubject,
+    renderSetSubject,
+    renderAgreement,
+    renderSetAgreement,
+    renderCount,
+    renderSetCount,
     divide,
     onEvent,
     registerActionRule,

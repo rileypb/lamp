@@ -53,6 +53,13 @@ const cases = [
         },
     },
     {
+        name: "verb words: comma-separated, including keyword words like `do`",
+        run() {
+            const d = scan(["verb drop, take", "verb do, go"].join("\n"));
+            assert.deepStrictEqual([...d.verbNames].sort(), ["do", "drop", "go", "take"]);
+        },
+    },
+    {
         name: "rulebook params: typed list, and empty",
         run() {
             const d = scan([
