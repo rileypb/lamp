@@ -58,6 +58,19 @@ try {
         assert.ok(/runGame\(function/.test(code), "game factory wrapper missing");
     });
 
+    test("worker bundle wires the brokered save channel", () => {
+        const code = fs.readFileSync(path.join(outDir, "game.worker.js"), "utf8");
+        assert.ok(code.includes("setSaveChannel"), "save channel wiring missing");
+        assert.ok(code.includes("save_write") && code.includes("save_read"), "save broker messages missing");
+    });
+
+    test("shell services save/restore via localStorage", () => {
+        const shell = fs.readFileSync(path.join(outDir, "shell.js"), "utf8");
+        assert.ok(shell.includes("save_write") && shell.includes("save_read"), "shell save handlers missing");
+        assert.ok(shell.includes("localStorage"), "shell localStorage backing missing");
+        assert.ok(shell.includes("saveBuffer"), "shell save buffer missing");
+    });
+
     test("service worker parses and sets isolation headers", () => {
         const code = fs.readFileSync(path.join(outDir, "sw.js"), "utf8");
         assertParses(code, "sw.js");

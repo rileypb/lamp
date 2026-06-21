@@ -78,6 +78,40 @@ function installInputChannel(inputBuffer) {
     });
 }
 
+// Save storage brokered over a dedicated buffer, identical to worker.js: outbound
+// data rides the message, the reply (write status or read contents) rides the
+// buffer, a length of -1 is the "no such save" sentinel. The host (shell) backs
+// it with localStorage. See devdocs/state.md.
+function installSaveChannel(saveBuffer) {
+    if (!saveBuffer) return;
+    const ctrl = new Int32Array(saveBuffer, 0, 2);
+    const data = new Uint8Array(saveBuffer, 8);
+    const decoder = new TextDecoder();
+
+    function blockForReply() {
+        Atomics.wait(ctrl, 0, 0);
+        const len = Atomics.load(ctrl, 1);
+        if (len < 0) return null;
+        const copy = new Uint8Array(len);
+        copy.set(data.subarray(0, len));
+        return decoder.decode(copy);
+    }
+
+    lamplighter.setSaveChannel({
+        write(key, text) {
+            Atomics.store(ctrl, 0, 0);
+            self.postMessage({ type: "save_write", key, data: text });
+            const status = blockForReply();
+            if (status !== "ok") throw new Error(status || "save failed");
+        },
+        read(key) {
+            Atomics.store(ctrl, 0, 0);
+            self.postMessage({ type: "save_read", key });
+            return blockForReply();
+        },
+    });
+}
+
 // The build step (Lighthouse) wraps the body-only game module as a factory
 // `(lamplighter, require, console) => { <game body> }` and passes it here. We run
 // it with the controlled trio, mirroring the free globals the dev `vm` context
@@ -85,6 +119,7 @@ function installInputChannel(inputBuffer) {
 // shared input buffer, so input is ready before the parser loop can block on it.
 let gameFactory = null;
 let pendingInputBuffer = null;
+let pendingSaveBuffer = null;
 let started = false;
 
 function startIfReady() {
@@ -94,6 +129,7 @@ function startIfReady() {
     lamplighter.setPrint((value) => self.postMessage({ type: "print", value: String(value) }));
     lamplighter.setWrite((value) => self.postMessage({ type: "write", value: String(value) }));
     installInputChannel(pendingInputBuffer);
+    installSaveChannel(pendingSaveBuffer);
 
     try {
         gameFactory(lamplighter, sandboxRequire, bridgedConsole);
@@ -116,6 +152,9 @@ self.addEventListener("message", (event) => {
             return;
         }
         pendingInputBuffer = msg.inputBuffer;
+        // Optional: a save buffer enables SAVE/RESTORE. Absent → save channel
+        // stays uninstalled and the save verbs report it is unavailable.
+        if (msg.saveBuffer instanceof SharedArrayBuffer) pendingSaveBuffer = msg.saveBuffer;
         startIfReady();
     }
 });

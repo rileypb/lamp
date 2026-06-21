@@ -234,12 +234,18 @@ wires the same seam to its own persistence (Slice 3).
   restore gate, the `setSaveChannel` storage seam brokered to the filesystem by
   the dev host, and named-slot `save`/`restore` out-of-world verbs. Unit test
   `tests/save`; golden `save1`.
-- **Slice 3 — browser persistence + slot listing.** Wire the save channel to the
-  sandbox's persistence capability (`devdocs/sandbox.md`) — download/upload-picker
-  (the browser's native file UI is the right home for a "dialog"; a native CLI
-  dialog is deliberately *not* pursued — it breaks the headless/piped path). The
-  durable CLI save location is **done** (per-user app-data dir + `LAMP_SAVE_DIR`).
-  Still open: save-slot **listing/metadata** (a `saves` verb).
+- **Slice 3 — browser persistence. (Implemented, localStorage.)** The browser
+  worker installs the same brokered save channel as the CLI; the shell
+  (`src/lighthouse/web/shell.js`) backs it with **localStorage** over a second
+  shared buffer (synchronous, so it fits the blocking broker with no async work).
+  Named slots persist per game across reloads. The durable CLI save location is
+  also done (per-user app-data dir + `LAMP_SAVE_DIR`). Build-smoke coverage in
+  `tests/lighthouse`; the live browser loop is manually verified (the headless
+  test gap is the same one already noted for input). Still open: save-slot
+  **listing/metadata** (a `saves` verb), optional **file export/import** in the
+  browser (the native-file-UI path), and the CLI save-name-prompt conveniences
+  above. A native CLI file dialog is deliberately *not* pursued (it breaks the
+  headless/piped path).
 
 ## Open questions
 

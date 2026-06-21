@@ -16,6 +16,10 @@
     // header (ctrl[0] ready flag, ctrl[1] byte length) then UTF-8 line data.
     const INPUT_BUFFER_BYTES = 64 * 1024;
     const INPUT_DATA_OFFSET = 8;
+    // Save transport buffer (host→worker replies): sized for whole save blobs.
+    const SAVE_BUFFER_BYTES = 4 * 1024 * 1024;
+    // localStorage key prefix; the runtime already namespaces the key by game.
+    const SAVE_KEY_PREFIX = "lamp:save:";
     const WORKER_URL = "./game.worker.js";
 
     const transcript = document.getElementById("transcript");
@@ -82,6 +86,28 @@
         Atomics.notify(ctrl, 0);
     }
 
+    // Save storage: a second shared buffer for the worker's brokered save/restore.
+    // localStorage is synchronous, so a request is satisfied inline and the worker
+    // (blocked on Atomics.wait) is released immediately. A length of -1 is the
+    // "no such save" sentinel; the blob is opaque (obfuscated by the runtime).
+    const saveBuffer = new SharedArrayBuffer(SAVE_BUFFER_BYTES);
+    const sctrl = new Int32Array(saveBuffer, 0, 2);
+    const sdata = new Uint8Array(saveBuffer, INPUT_DATA_OFFSET);
+    const saveCapacity = SAVE_BUFFER_BYTES - INPUT_DATA_OFFSET;
+
+    function replySave(text) {
+        if (text === null) {
+            Atomics.store(sctrl, 1, -1);
+        } else {
+            const bytes = encoder.encode(text);
+            const len = Math.min(bytes.length, saveCapacity);
+            sdata.set(bytes.subarray(0, len), 0);
+            Atomics.store(sctrl, 1, len);
+        }
+        Atomics.store(sctrl, 0, 1);
+        Atomics.notify(sctrl, 0);
+    }
+
     const worker = new Worker(WORKER_URL);
 
     worker.addEventListener("message", (event) => {
@@ -103,6 +129,17 @@
             case "prompt_readline":
                 appendClassed(msg.prompt, "prompt-text");
                 requestInput();
+                break;
+            case "save_write":
+                try {
+                    localStorage.setItem(SAVE_KEY_PREFIX + msg.key, msg.data);
+                    replySave("ok");
+                } catch (e) {
+                    replySave(`error: ${e && e.message ? e.message : "save failed"}`);
+                }
+                break;
+            case "save_read":
+                replySave(localStorage.getItem(SAVE_KEY_PREFIX + msg.key));
                 break;
             case "done":
                 endGame(null);
@@ -149,6 +186,6 @@
         }
     }
 
-    // Hand the worker the shared buffer; the bootstrap starts the game on receipt.
-    worker.postMessage({ type: "init", inputBuffer });
+    // Hand the worker the shared buffers; the bootstrap starts the game on receipt.
+    worker.postMessage({ type: "init", inputBuffer, saveBuffer });
 })();

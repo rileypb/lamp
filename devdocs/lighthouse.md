@@ -53,10 +53,13 @@ game logic and the capability boundary remain in Lamplighter's worker.
    shim that throws and `lamplighter` injected as a free global, with network/
    code-loading globals stripped at worker startup by Lamplighter's bootstrap.
 
-3. **Capability surface: output + synchronous input only.** Matches the current
-   dev sandbox exactly (`print`/`write` out; brokered `readLine`/prompt in over
-   SAB+Atomics). Persistent save (localStorage or download) stays deferred,
-   consistent with the existing save/restore TODO.
+3. **Capability surface: output, synchronous input, and persistent save.** Matches
+   the dev sandbox (`print`/`write` out; brokered `readLine`/prompt in over
+   SAB+Atomics) plus a brokered **save channel** (`setSaveChannel`) the shell backs
+   with **localStorage** over a second shared buffer — the same broker shape as
+   input. SAVE/RESTORE therefore work in the browser; named slots persist per game
+   across reloads. File export/import (download/upload) is a possible later
+   addition. See `devdocs/state.md`.
 
 4. **Artifact shape: directory bundle.** `index.html` + shell script + browser
    worker bundle + service worker. A single inlined HTML file is rejected because

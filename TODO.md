@@ -11,7 +11,14 @@ prerequisite lists in `devdocs/game_parser.md`, `devdocs/rulebooks.md`, and
 
 > Feature backlog awaiting triage: `lurking_todo.md` catalogs candidate verbs,
 > grammar, world-model traits, turn-cycle/daemon, and message ideas mined from
-> `lurkinghorror.txt`. The user will pick which to promote into real TODO items.
+> `lurkinghorror.txt`. `devdocs/text.md` catalogs **text-substitution**
+> features (Inform-7-style `"[We] [drop] [the velvet_cloak]"`), grouped A–K and now
+> **triaged into an "Action list"** — decisions locked (`\[`/`\]` escapes, distinct
+> `text` type, list `.size`, sugar-vs-expression line, three-layer language split
+> with verb/pronoun data in a swappable locale pack `lib/<locale>`)
+> and a 7-slice plan (Slice 1 = bracket-parse mechanism) plus Deferred/Cut buckets.
+> Ready to promote Slice 1 into real TODO items when the user starts the work.
+> `lurking_todo.md` still awaits triage.
 
 ## 1. SAVE / RESTORE — browser persistence + durable CLI saves (Slice 3)
 UNDO (Slice 1) and SAVE/RESTORE to the dev host (Slice 2) are **done**: the
@@ -25,10 +32,14 @@ filesystem by the dev host, and named-slot `save`/`restore` verbs. Tests:
 dir, `LAMP_SAVE_DIR` override; macOS `~/Library/Application Support/lamp/saves`
 etc.); save files are obfuscated (`.sav`, XOR+base64). A native CLI file dialog is
 **not** pursued (it breaks the headless/piped/test path); the browser host's
-download/upload picker is the right home for that. **Remaining (Slice 3):**
-- Wire the save channel to the **browser** sandbox persistence capability
-  (`devdocs/sandbox.md`) — download / localStorage.
+download/upload picker is the right home for that. **Browser persistence is done**:
+the browser worker installs the same brokered save channel, and the shell
+(`src/lighthouse/web/shell.js`) backs it with **localStorage** over a second shared
+buffer; named slots persist per game across reloads. Build-smoke coverage in
+`tests/lighthouse`; live loop manually verified. **Remaining (Slice 3):**
 - Save-slot **listing/metadata** (a `saves` verb).
+- Optional browser **file export/import** (download/upload — the native-file-UI
+  path) layered on top of localStorage.
 - **CLI save-name-prompt UX (defer until the out-of-world verb move — item 4).**
   Once the `save`/`restore` verbs + prompting live in `lib` (not the engine),
   the name prompt can host these CLI conveniences:
