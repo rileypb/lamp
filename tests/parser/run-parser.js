@@ -306,6 +306,22 @@ const cases = [
         },
     },
     {
+        name: "[one of]…[or]…[mode]: builds a oneOf node with alternatives and mode; rejects [or]/[mode] without [one of]",
+        run() {
+            const [h] = parse(["on startup:", '    print "[one of]a[or]b [score][cycling]"'].join("\n"), ["score"]);
+            const node = h.body[0].expr.parts[0];
+            assert.strictEqual(node.kind, "oneOf");
+            assert.strictEqual(node.mode, "cycling");
+            assert.strictEqual(node.alternatives.length, 2);
+            assert.deepStrictEqual(node.alternatives[0], [{ kind: "text", value: "a" }]);
+            assert.deepStrictEqual(node.alternatives[1][0], { kind: "text", value: "b " });
+            assert.strictEqual(node.alternatives[1][1].expr.kind, "GlobalExpr");
+            assert.throws(() => parse(["on startup:", '    print "[or]x"'].join("\n")), /'\[or\]' without a matching '\[one of\]'/);
+            assert.throws(() => parse(["on startup:", '    print "[at random]"'].join("\n")), /without a matching '\[one of\]'/);
+            assert.throws(() => parse(["on startup:", '    print "[one of]a[or]b"'].join("\n")), /unterminated '\[one of\]'/);
+        },
+    },
+    {
         name: "A5 quotes: word-boundary ' becomes \" ; [']  forces a literal apostrophe; both stay StringLiteral",
         run() {
             const [a] = parse(["on startup:", `    print "say 'hi'"`].join("\n"));

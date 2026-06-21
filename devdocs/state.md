@@ -77,7 +77,11 @@ must survive across turns and snapshots, or a restored game would re-show a
 under a buildId-gated restore) and held in the runtime's `variationState` map,
 captured by the `variation` state provider. Round-tripped in `tests/state`. This is
 the site-durable tier of `devdocs/text.md` "Render context", distinct from the
-never-saved render-local tier above.
+never-saved render-local tier above. The random variation modes (`[at random]`,
+`[in random order]`, `[sticky random]`) store their per-site cursors (`{last}` /
+`{order, pos}` / `{chosen}`) in the same `variation` provider, and the **seeded
+RNG** stream position is captured by a separate `rng` provider — so a restored game
+reproduces the same draws rather than diverging.
 This is the render-local tier of `devdocs/text.md` "Render context"; only the
 site-durable tier (the future `[cycling]`/RNG cursors) will need a state provider.
 

@@ -1344,6 +1344,11 @@ registerStateProvider({
 // *before* this visit (0 on the first) and increments it. This must survive
 // undo/save, or a restored game would re-show a [first time] block — hence the
 // state provider. Unlike the render-local context, this is NOT reset per render.
+// A site's value is a plain count for the sequential modes ([first time],
+// cycling, stopping) or a small mode-specific record for the random modes
+// ({ last } / { chosen } / { order, pos }). A site uses exactly one mode, so its
+// value kind is consistent. Records are always replaced, never mutated in place,
+// and capture deep-clones, so a snapshot is never aliased to live state.
 const variationState = new Map();
 function variationAdvance(siteId) {
     const count = variationState.get(siteId) || 0;
@@ -1351,16 +1356,90 @@ function variationAdvance(siteId) {
     return count;
 }
 
+// Chooses an alternative index for a random text-variation mode (F1-F6). The
+// sequential modes (cycling/stopping) don't come through here — the emitter
+// derives their index from variationAdvance directly. Per-site state and the RNG
+// draws are captured by state providers, so undo/restore reproduce the sequence.
+function variationPick(siteId, n, mode) {
+    if (n <= 0) return -1;
+    if (mode === "purely") return rngInt(n);
+    if (mode === "sticky") {
+        const rec = variationState.get(siteId);
+        if (rec && typeof rec.chosen === "number") return rec.chosen;
+        const chosen = rngInt(n);
+        variationState.set(siteId, { chosen });
+        return chosen;
+    }
+    if (mode === "shuffled") {
+        let rec = variationState.get(siteId);
+        if (!rec || !Array.isArray(rec.order) || rec.pos >= rec.order.length) {
+            rec = { order: shuffledIndices(n), pos: 0 };
+        }
+        const idx = rec.order[rec.pos];
+        variationState.set(siteId, { order: rec.order, pos: rec.pos + 1 });
+        return idx;
+    }
+    // "random": uniform but never the immediately-previous index.
+    const rec = variationState.get(siteId);
+    const last = rec && typeof rec.last === "number" ? rec.last : -1;
+    let idx;
+    if (n > 1 && last >= 0) {
+        idx = rngInt(n - 1);
+        if (idx >= last) idx += 1;
+    } else {
+        idx = rngInt(n);
+    }
+    variationState.set(siteId, { last: idx });
+    return idx;
+}
+
 registerStateProvider({
     key: "variation",
     capture() {
         const out = {};
-        for (const [siteId, count] of variationState) out[siteId] = count;
-        return out;
+        for (const [siteId, value] of variationState) out[siteId] = value;
+        return JSON.parse(JSON.stringify(out));
     },
     restore(data) {
         variationState.clear();
-        for (const [siteId, count] of Object.entries(data || {})) variationState.set(siteId, count);
+        for (const [siteId, value] of Object.entries(data || {})) variationState.set(siteId, value);
+    },
+});
+
+// Seeded RNG (F8) so randomized text is reproducible: deterministic from a fixed
+// default seed (golden tests are stable) and its state is captured by a provider
+// so undo/save/restore reproduce the same draws. mulberry32 — small, fast, decent
+// distribution. A game seeding from entropy for cross-playthrough variety is a
+// later nicety; today every fresh run draws the same sequence.
+const DEFAULT_RNG_SEED = 0x9e3779b9 | 0;
+let rngState = DEFAULT_RNG_SEED;
+function rngNext() {
+    rngState = (rngState + 0x6d2b79f5) | 0;
+    let t = Math.imul(rngState ^ (rngState >>> 15), 1 | rngState);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+}
+function rngInt(n) {
+    return Math.floor(rngNext() * n);
+}
+function shuffledIndices(n) {
+    const order = Array.from({ length: n }, (_, i) => i);
+    for (let i = n - 1; i > 0; i -= 1) {
+        const j = rngInt(i + 1);
+        const tmp = order[i];
+        order[i] = order[j];
+        order[j] = tmp;
+    }
+    return order;
+}
+
+registerStateProvider({
+    key: "rng",
+    capture() {
+        return rngState;
+    },
+    restore(data) {
+        rngState = typeof data === "number" ? data : DEFAULT_RNG_SEED;
     },
 });
 
@@ -1555,6 +1634,7 @@ module.exports = {
     renderCount,
     renderSetCount,
     variationAdvance,
+    variationPick,
     divide,
     onEvent,
     registerActionRule,

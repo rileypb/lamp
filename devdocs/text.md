@@ -659,6 +659,10 @@ per-locale sugar words remain the deferred refinement noted under Slice 2.
 
 ### Slice 4 — variation & conditionals
 
+**Status: DONE (2026-06-21)** except the deferred F7 (weighted) and the `pick(list,
+mode)` function form. Inline conditionals (E), `[first time]` (F9), the site-durable
+state mechanism, the six variation modes (F1–F6), and the seeded RNG (F8) all landed.
+
 1. **E1–E4 — DONE (2026-06-21).** Inline `[if COND]` / `[else if COND]` /
    `[else]` / `[end]` inside a string literal, with `[otherwise]` as an `[else]`
    alias and `[end if]` as an `[end]` alias. The condition is an ordinary Lamp
@@ -691,10 +695,26 @@ per-locale sugar words remain the deferred refinement noted under Slice 2.
    render(parts) : "")`. Fixture `firsttime1` + golden; a `tests/state` round-trip
    test; parser unit tests. The seeded **RNG** half of F8 lands in 4c with its first
    random consumer.
-3. **F1–F7** `[one of]…[at random]` / `[cycling]` / `[stopping]` / `[in random
-   order]` / `[sticky random]` / weighted, plus the `pick(list, mode)` function form.
-   These reuse the same per-site `variationAdvance` cursor (cycling/stopping) and add
-   the seeded RNG (random modes).
+3. **F1–F6 + F8 — DONE (2026-06-21).** `[one of]ALT[or]ALT…[MODE]` chooses one
+   alternative per render by the closing mode word: `[cycling]` (in order, wrapping),
+   `[stopping]` (advance, then stick on the last), `[at random]` (uniform but never
+   the immediately-previous), `[purely at random]` (independent uniform), `[in random
+   order]` (a shuffled run, no repeat until exhausted, then reshuffle), `[sticky
+   random]` (random once, then fixed). An alternative carries its own substitutions;
+   the same block stack rejects nesting. The parser folds it into a `oneOf` node
+   (`alternatives` + `mode`); the emitter computes the index **once** (cycling/stopping
+   from `variationAdvance`; the random modes from `variationPick`) inside an IIFE, then
+   a ternary renders only the chosen alternative. **F8 — DONE:** a seeded RNG
+   (mulberry32, fixed default seed → deterministic golden output) whose stream state
+   is captured by the `rng` state provider, and the random modes' per-site cursors
+   ({last}/{chosen}/{order,pos}) live in the same `variation` provider — so
+   undo/save/restore reproduce the exact sequence. Fixture `variation1` + golden; a
+   `tests/state` RNG round-trip; parser unit tests.
+   - **Deferred (F7 + the function form):** weighted alternatives, and `pick(list,
+     mode)` over a computed list. The function form needs the emitter to inject a
+     per-call-site id into each `pick(...)` call so the stateful modes have a cursor —
+     a distinct mechanism, left for a follow-up. Cross-playthrough RNG seeding from
+     entropy (today every fresh run draws the same sequence) is also a later nicety.
 
 ### Slice 5 — lists & numbers
 

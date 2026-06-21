@@ -346,7 +346,17 @@ Built-in primitive types:
     durable — captured in snapshots — so it survives `undo`/`save`/`restore` (a
     restored game does not re-show the block). Like the conditional blocks, a
     `[first time]` cannot nest inside another block; `[only]` without a matching
-    `[first time]` (or vice versa) is a compile error. These read a
+    `[first time]` (or vice versa) is a compile error.
+  - **Variation.** `[one of]ALT[or]ALT…[MODE]` renders one alternative per render,
+    chosen by the closing mode: `[cycling]` (in order, wrapping), `[stopping]`
+    (advance then stick on the last), `[at random]` (uniform, never the
+    immediately-previous), `[purely at random]` (independent uniform), `[in random
+    order]` (shuffled, no repeat until exhausted), `[sticky random]` (random once,
+    then fixed). An alternative may contain its own substitutions. The random modes
+    draw from a seeded RNG; both the RNG stream and the per-site cursors are durable
+    (captured in snapshots), so `undo`/`save`/`restore` reproduce the sequence. Like
+    the other blocks, `[one of]` cannot nest; `[or]` or a mode word without a
+    matching `[one of]` is a compile error. These read a
     **render-local context** that resets per render and is never saved. The
     world-model→locale contract for a referent is the optional fields
     `grammatical_person` (1/2/3, default 3), `gender` ("male"/"female"/"neuter"), and

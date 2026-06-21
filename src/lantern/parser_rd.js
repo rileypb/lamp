@@ -109,6 +109,16 @@ function classifyControl(src) {
     // site, then nothing. See devdocs/text.md F9.
     if (/^first\s+time$/.test(src)) return { type: "firsttime" };
     if (/^only$/.test(src)) return { type: "only" };
+    // [one of]ALT[or]ALT…[MODE] (F1-F6): choose one alternative per render by the
+    // closing mode word. See devdocs/text.md F1-F6.
+    if (/^one\s+of$/.test(src)) return { type: "oneof" };
+    if (/^or$/.test(src)) return { type: "or" };
+    if (/^purely\s+at\s+random$/.test(src)) return { type: "mode", mode: "purely" };
+    if (/^at\s+random$/.test(src)) return { type: "mode", mode: "random" };
+    if (/^in\s+random\s+order$/.test(src)) return { type: "mode", mode: "shuffled" };
+    if (/^sticky\s+random$/.test(src)) return { type: "mode", mode: "sticky" };
+    if (/^cycling$/.test(src)) return { type: "mode", mode: "cycling" };
+    if (/^stopping$/.test(src)) return { type: "mode", mode: "stopping" };
     return null;
 }
 
@@ -1456,9 +1466,9 @@ function createParser(tokens, filePath, globalNames, functionNames = new Set(), 
                 top().items.push({ kind: "expr", expr: parseEmbeddedExpression(desugarSugar(p.src, verbNames), line, localNames) });
                 continue;
             }
-            if (ctrl.type === "if" || ctrl.type === "firsttime") {
+            if (ctrl.type === "if" || ctrl.type === "firsttime" || ctrl.type === "oneof") {
                 if (top().block !== null) {
-                    const what = ctrl.type === "if" ? "[if]" : "[first time]";
+                    const what = ctrl.type === "if" ? "[if]" : ctrl.type === "firsttime" ? "[first time]" : "[one of]";
                     throw fail(`nested '${what}' is not allowed in a template (the marker pairing would be unreadable without indentation); compute the inner text as a separate value and interpolate it`);
                 }
                 if (ctrl.type === "if") {
@@ -1466,11 +1476,25 @@ function createParser(tokens, filePath, globalNames, functionNames = new Set(), 
                     const condNode = { kind: "cond", branches: [{ cond: parseEmbeddedExpression(ctrl.cond, line, localNames), parts: [] }] };
                     top().items.push(condNode);
                     stack.push({ items: condNode.branches[0].parts, block: condNode });
-                } else {
+                } else if (ctrl.type === "firsttime") {
                     const ftNode = { kind: "firstTime", parts: [] };
                     top().items.push(ftNode);
                     stack.push({ items: ftNode.parts, block: ftNode });
+                } else {
+                    const oneOfNode = { kind: "oneOf", mode: null, alternatives: [[]] };
+                    top().items.push(oneOfNode);
+                    stack.push({ items: oneOfNode.alternatives[0], block: oneOfNode });
                 }
+            } else if (ctrl.type === "or") {
+                const frame = top();
+                if (!frame.block || frame.block.kind !== "oneOf") throw fail("'[or]' without a matching '[one of]' in template");
+                const alt = [];
+                frame.block.alternatives.push(alt);
+                frame.items = alt;
+            } else if (ctrl.type === "mode") {
+                if (!top().block || top().block.kind !== "oneOf") throw fail(`'[${ctrl.mode}]' variation mode without a matching '[one of]' in template`);
+                top().block.mode = ctrl.mode;
+                stack.pop();
             } else if (ctrl.type === "elif" || ctrl.type === "else") {
                 const frame = top();
                 if (!frame.block || frame.block.kind !== "cond") {
@@ -1493,9 +1517,12 @@ function createParser(tokens, filePath, globalNames, functionNames = new Set(), 
             }
         }
         if (stack.length !== 1) {
-            throw fail(top().block.kind === "cond"
+            const kind = top().block.kind;
+            throw fail(kind === "cond"
                 ? "unterminated '[if]' (missing '[end]') in template"
-                : "unterminated '[first time]' (missing '[only]') in template");
+                : kind === "firstTime"
+                    ? "unterminated '[first time]' (missing '[only]') in template"
+                    : "unterminated '[one of]' (missing a mode like '[at random]' or '[cycling]') in template");
         }
         return root;
     }

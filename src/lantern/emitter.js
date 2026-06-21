@@ -917,6 +917,23 @@ function emitTemplateFrag(part, globalNames) {
         const rendered = `lamplighter.renderTemplate([${emitTemplateFrags(part.parts, globalNames)}])`;
         return `(lamplighter.variationAdvance(${JSON.stringify(siteId)}) === 0 ? ${rendered} : "")`;
     }
+    if (part.kind === "oneOf") {
+        // [one of]…[or]…[MODE] (F1-F6): compute the chosen index ONCE (so the cursor
+        // advances once / one RNG draw), then a ternary renders only that
+        // alternative. cycling/stopping derive the index from the visit count;
+        // the random modes go through variationPick. Wrapped in an IIFE so the index
+        // is shared without re-evaluating it.
+        const siteId = JSON.stringify(`v${variationSiteCounter++}`);
+        const n = part.alternatives.length;
+        const renders = part.alternatives.map((alt) => `lamplighter.renderTemplate([${emitTemplateFrags(alt, globalNames)}])`);
+        let indexExpr;
+        if (part.mode === "cycling") indexExpr = `lamplighter.variationAdvance(${siteId}) % ${n}`;
+        else if (part.mode === "stopping") indexExpr = `Math.min(lamplighter.variationAdvance(${siteId}), ${n - 1})`;
+        else indexExpr = `lamplighter.variationPick(${siteId}, ${n}, ${JSON.stringify(part.mode)})`;
+        let sel = '""';
+        for (let i = n - 1; i >= 0; i -= 1) sel = `__i === ${i} ? ${renders[i]} : ${sel}`;
+        return `((__i) => (${sel}))(${indexExpr})`;
+    }
     // A `cond` node: fold the branches into a right-nested ternary, each branch a
     // renderTemplate over its own parts; a `null` condition is the `[else]` tail.
     let out = '""';

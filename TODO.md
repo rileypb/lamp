@@ -13,10 +13,10 @@ prerequisite lists in `devdocs/game_parser.md`, `devdocs/rulebooks.md`, and
 > grammar, world-model traits, turn-cycle/daemon, and message ideas mined from
 > `lurkinghorror.txt`. `devdocs/text.md` is the **text-substitution**
 > design + 7-slice Action list (Inform-7-style `"[We] [drop] [the velvet_cloak]"`).
-> **Slices 1, 2 & 3 DONE**; Slice 4 (variation & conditionals) is next.
-> `lurking_todo.md` still awaits triage.
+> **Slices 1–4 DONE** (variation & conditionals complete bar deferred F7/`pick`);
+> Slice 5 (lists & numbers) is next. `lurking_todo.md` still awaits triage.
 
-## 1. Text substitution — Slices 1–3 DONE; Slice 4 next
+## 1. Text substitution — Slices 1–4 DONE; Slice 5 next
 **Slice 1 (complete):** bracket substitution + quote convention + lazy `text`/`freeze`.
 **Slice 2 (complete) — names, articles, case:** the **`lib/en-US` default locale pack
 auto-loads after `lib/sys`** (`gatherLibDirs`), realizing the three-layer split.
@@ -49,12 +49,20 @@ sugar words). World-model→locale person contract (`grammatical_person`/`gender
   parses to a `firstTime` node (same block stack as `[if]`, no nesting) and emits
   `(variationAdvance(id) === 0 ? render : "")`. Fixture `firsttime1` + golden;
   `tests/state` round-trip; parser tests; all 11 suites green (125).
-- **4c (next) — variation modes (F1–F7) + seeded RNG (F8):** `[one of]…[or]…[at
-  random]`/`[cycling]`/`[stopping]`/`[in random order]`/`[sticky random]`/weighted +
-  `pick(list, mode)`. Cycling/stopping reuse `variationAdvance`; the random modes add
-  a seeded RNG whose seed is captured by a state provider (the rest of F8). The
-  `[one of]…[or]…` sugar needs the parser to collect alternatives (like the
-  conditional branches) and the runtime to select one by mode.
+- **4c (complete) — variation modes (F1–F6) + seeded RNG (F8):** `[one of]ALT[or]
+  ALT…[MODE]` with `[cycling]`/`[stopping]`/`[at random]`/`[purely at random]`/`[in
+  random order]`/`[sticky random]`. Parser folds it into a `oneOf` node (alternatives
+  + mode, no nesting); the emitter computes the index once (cycling/stopping from
+  `variationAdvance`, random modes from `variationPick`) inside an IIFE, then a
+  ternary renders only the chosen alternative. Seeded RNG (mulberry32, fixed default
+  seed → deterministic goldens) captured by the `rng` state provider; per-site random
+  cursors live in the `variation` provider. Fixture `variation1` + golden; `tests/state`
+  RNG round-trip; parser tests; all 11 suites green (126).
+- **4 — deferred follow-ups:** (F7) weighted alternatives; the **`pick(list, mode)`**
+  function form over a computed list (needs the emitter to inject a per-call-site id
+  into each `pick(...)` so the stateful modes have a cursor); and **entropy seeding**
+  of the RNG for cross-playthrough variety (today every fresh run draws the same
+  sequence — deterministic by design for tests).
 **Follow-up from Slice 3 (optional):** migrate advent's reports from the manual
 `self.actor == player` branch to `[regarding self.actor][They] [verb] [the self.noun]`
 templates (D8 — churns goldens, do deliberately). (Verb agreement auto-switches onto

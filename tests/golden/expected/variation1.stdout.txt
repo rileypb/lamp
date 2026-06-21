@@ -1,0 +1,6 @@
+cycling: north east south north east
+stopping: one two three three
+sticky: green green green
+shuffled: c b a b a c
+at random: 1 2 1 2 3 2
+purely: heads tails (7) heads heads

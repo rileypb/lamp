@@ -1,0 +1,25 @@
+# Slice 4c: [one of]ALT[or]ALT…[MODE] variation (F1-F6). Each render of a site picks
+# one alternative by the closing mode word. Sequential modes (cycling/stopping) use
+# the per-site visit cursor; the random modes (at random / purely at random / in
+# random order / sticky random) draw from a seeded RNG, so the output here is
+# deterministic. Storing a site in a variable and interpolating it repeatedly walks
+# the sequence. An alternative may carry its own substitutions. See devdocs/text.md F.
+game Variation:
+    author "Lamp"
+
+global int n = 7
+
+on startup:
+    let cyc = "[one of]north[or]east[or]south[cycling]"
+    print "cycling: [cyc] [cyc] [cyc] [cyc] [cyc]"
+    let stp = "[one of]one[or]two[or]three[stopping]"
+    print "stopping: [stp] [stp] [stp] [stp]"
+    let sticky = "[one of]red[or]green[or]blue[sticky random]"
+    print "sticky: [sticky] [sticky] [sticky]"
+    let shuf = "[one of]a[or]b[or]c[in random order]"
+    print "shuffled: [shuf] [shuf] [shuf] [shuf] [shuf] [shuf]"
+    let rnd = "[one of]1[or]2[or]3[at random]"
+    print "at random: [rnd] [rnd] [rnd] [rnd] [rnd] [rnd]"
+    # An alternative carrying its own substitution.
+    let pure = "[one of]heads[or]tails ([n])[purely at random]"
+    print "purely: [pure] [pure] [pure] [pure]"

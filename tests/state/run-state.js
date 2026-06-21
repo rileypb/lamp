@@ -103,6 +103,16 @@ test("per-site variation state is captured and reverts on restore", () => {
     assert.strictEqual(lamp.variationAdvance("vsite"), 1);
 });
 
+test("seeded RNG state reverts on restore (reproducible draws)", () => {
+    // Snapshot, draw a random pick, restore, draw again: the same value comes back
+    // because the RNG state provider rolls the stream position back.
+    const snap = lamp.captureState();
+    const first = lamp.variationPick("rsite", 6, "purely");
+    lamp.restoreState(snap);
+    const again = lamp.variationPick("rsite", 6, "purely");
+    assert.strictEqual(again, first);
+});
+
 if (failures > 0) {
     console.error(`\n${failures} test(s) failed`);
     process.exit(1);
