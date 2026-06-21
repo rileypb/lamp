@@ -304,17 +304,23 @@ either the trailing sugar word or the function's mode argument.
 - **G6. Empty-list phrasing.** Inform: list fallbacks. **Lamp:** a `list<T>`
   already renders empty as "nothing"; add an `is_empty(list)` predicate and/or a
   fallback parameter (`the_list(q, empty: "nothing here")`).
-- **G7. Plural suffix `[s]`.** Inform: `[s]` — prints "s" unless the governing
-  count is 1. **Lamp (sugar):** keep `[s]` as a number-agreeing suffix keyed on the
-  **most recently interpolated number** in the same template. So
-  `"[We] [have] [bullet_count] bullet[s]."` prints **"You have 1 bullet."** when
-  `bullet_count == 1` and **"You have 3 bullets."** when it is 3 — the `[bullet_count]`
-  substitution sets a small render-time "governing count" that the following `[s]`
-  (and the G3 agreement helpers) read, so no explicit argument is needed. An
-  explicit-argument form `[s bullet_count]` is the fallback when the count isn't the
-  most recent number, and `[es]` is the companion for "box[es]"-style stems. Ties to
-  D3 (verb agreement) and G3 (count-driven agreement); the governing-count context
-  is the same one G3 needs, so build them together.
+- **G7. Plural suffix `[s]` (single token, pluralizer-backed).** Inform: `[s]` —
+  prints "s" unless the governing count is 1, with a separate companion for
+  "box[es]" stems. **Lamp (sugar):** **just `[s]`** — no `[es]`. `[s]` attaches to
+  the **immediately-preceding word** and renders that word's correct plural when the
+  governing count isn't 1, by routing the word through the locale's existing
+  `pluralize_word` (the irregular table + `+s`/`+es`/`+ies` rules from Slice 2 K5).
+  So `"[We] [have] [bullet_count] bullet[s]."` → "You have 1 bullet." / "…3 bullets.";
+  `box[s]` → "box"/"boxes"; `berry[s]` → "berry"/"berries"; `sheep[s]` → "sheep"
+  either way. A separate `[es]` would (a) duplicate the pluralizer's job and (b)
+  can't even express `berry`→`berries` (a replacement, not a suffix) — so it is
+  **dropped**. Mechanically `[s]` is not a literal "s": at parse time it consumes
+  the trailing word `W` of the preceding text and emits `count == 1 ? W :
+  pluralize_word(W)`, reading the **governing count** (the most recently interpolated
+  number — the same render-context value G3 needs). An explicit-argument form
+  `[s bullet_count]` is the fallback when the count isn't the most recent number.
+  Ties to D3 (verb agreement) and G3 (count-driven agreement); the governing-count
+  context is the same one G3 needs, so build them together.
 
 ## H. Layout / paragraph control (`WI 5.1`, `WI 5.9`)
 
@@ -411,8 +417,8 @@ is the "render context" proper.
    afterward:
    - **current subject** — who `[We]` / `[They]` / `[drop]` agree with (D1–D5); seeded
      from the action's actor, overridden by `[regarding EXPR]` (D5).
-   - **governing count** — the most recently interpolated number, read by `[s]` /
-     `[es]` (G7) and the `is`/`are` agreement helpers (G3).
+   - **governing count** — the most recently interpolated number, read by `[s]`
+     (G7) and the `is`/`are` agreement helpers (G3).
 
    Created at the **outermost** render boundary (a `print` of a template, or a
    top-level template value) and threaded into every nested substitution, so a
@@ -723,7 +729,9 @@ state mechanism, the six variation modes (F1–F6), and the seeded RNG (F8) all 
 3. **G4** numbers in words + ordinals.
 4. **G5** grouped/qualified lists (see the elucidated G5 bullet).
 5. **G6** empty-list phrasing (`is_empty`, fallback parameter).
-6. **G7** plural suffix `[s]` (+ `[es]`), built with the G3 governing-count context.
+6. **G7** plural suffix `[s]` — a single token that pluralizes the preceding word
+   via the locale's `pluralize_word` (no `[es]`), built with the G3 governing-count
+   context.
 
 ### Slice 6 — layout & misc output
 
