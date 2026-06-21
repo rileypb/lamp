@@ -1,0 +1,4 @@
+plurals: lanterns, boxes, berries, sheep, children.
+override: oxen herd.
+flags: Alice, some scissors, the scissors.
+Two lanterns and a box.

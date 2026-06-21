@@ -563,13 +563,18 @@ the "and"/Oxford comma) **moved from `lib/sys` to `lib/en-US`**. Fixture
    later; the locale read is defensive so a world with neither still works.
 3. **C1/C3/C4 — DONE.** `cap()`, `upper()`, `lower()`, `title()` in `lib/en-US`
    (plain string transforms; casing is language data, so it lives in the locale).
-4. **K5 — PENDING.** Per-object overrides + a small default irregular table (e.g.
-   "sheep"); one world-model home for proper-named / plural / printed_name.
+4. **K5 — DONE.** The world-model→locale contract is now the clean boolean flags
+   `proper` / `plural` (+ `printed_name`, `plural_name`), read by the locale with
+   `lib/advent`'s `article`-enum object kept as a back-compat fallback. The locale
+   pluralizer `pluralize(x)` (named to avoid colliding with advent's `article
+   plural` *object*) returns the plural display name: a per-object `plural_name`
+   override wins, else the head word is pluralized via an irregular table
+   (sheep/child/person/…) + regular `+s`/`+es`/`+ies` rules. Fixture `locale2.lamp`.
 
-**Remaining for Slice 2:** K5, and (later) real per-locale sugar words + locale
-swapping. The article-sugar word set (`the`/`a`/`an`) is currently hardcoded
-English in the parser — a deliberate small coupling to the active locale's article
-functions, to revisit when a non-English locale lands.
+**Slice 2 is functionally complete** (B3–B7, C1/C3/C4, K5). Deferred refinements:
+real **per-locale sugar words** + **locale swapping** — the article-sugar word set
+(`the`/`a`/`an`) is hardcoded English in the parser and `lib/en-US` is
+hard-auto-loaded; generalize both when a non-English locale lands.
 
 ### Slice 3 — the adaptive engine (headline)
 

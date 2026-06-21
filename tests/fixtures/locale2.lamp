@@ -1,0 +1,30 @@
+# Slice 2 K5: the locale pluralizer (irregular table + regular rules + a per-object
+# `plural_name` override) and the clean boolean proper/plural flag contract the
+# locale reads (no `article` enum object needed). See devdocs/text.md K5.
+game Locale_Two:
+    author "Lamp"
+
+type beast:
+    string printed_name = ""
+    string plural_name = ""
+    bool proper = false
+    bool plural = false
+
+beast lantern
+beast box
+beast berry
+beast sheep
+beast child
+beast ox:
+    plural_name "oxen herd"
+beast alice:
+    printed_name "Alice"
+    proper true
+beast scissors:
+    plural true
+
+on startup:
+    print "plurals: [pluralize(lantern)], [pluralize(box)], [pluralize(berry)], [pluralize(sheep)], [pluralize(child)]."
+    print "override: [pluralize(ox)]."
+    print "flags: [a alice], [a scissors], [the scissors]."
+    print "Two [pluralize(lantern)] and [a box]."

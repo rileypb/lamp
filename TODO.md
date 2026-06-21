@@ -13,30 +13,28 @@ prerequisite lists in `devdocs/game_parser.md`, `devdocs/rulebooks.md`, and
 > grammar, world-model traits, turn-cycle/daemon, and message ideas mined from
 > `lurkinghorror.txt`. `devdocs/text.md` is the **text-substitution**
 > design + 7-slice Action list (Inform-7-style `"[We] [drop] [the velvet_cloak]"`).
-> **Slice 1 is DONE**; **Slice 2 in progress** (locale pack + article/case functions).
+> **Slices 1 & 2 DONE**; Slice 3 (the adaptive `[We]`/`[They]` engine) is next.
 > `lurking_todo.md` still awaits triage.
 
-## 1. Text substitution — Slice 1 DONE; Slice 2 in progress
-**Slice 1 (complete):** bracket substitution + quote convention + lazy `text`/`freeze`
-— see `devdocs/text.md` → "Action list → Slice 1".
-**Slice 2 (in progress) — names, articles, case:** the **`lib/en-US` default locale
-pack is stood up and auto-loads after `lib/sys`** (`gatherLibDirs`), realizing the
-three-layer split (engine/`lib/sys` mechanism vs. `lib/en-US` language data). Done so
-far: article functions `the`/`a`/`an` (a/an auto, proper/plural overrides via the
-world-model `article` convention), case functions `cap`/`upper`/`lower`/`title`, and
-`format_list` (the "and"/Oxford-comma list prose) **moved from `lib/sys` to
-`lib/en-US`**. Fixture `locale1.lamp` + golden; all 11 suites green (121 goldens).
-Also done: **bare-word article sugar** `[the X]`/`[a X]`/`[The X]` desugars to the
-article calls (`desugarArticleSugar` in `parser_rd.js`), firing only on exactly
-`<article> <reference>` so a local `a` in `[a + b]` is safe. The indefinite function
-is named `indefinite` (not `a`) to avoid shadowing the common local `a`.
-**Remaining for Slice 2:**
-- **K5** — per-object overrides + a small default irregular table ("sheep"); a
-  cleaner boolean proper/plural flag contract to replace the `article` object.
-- **Per-locale sugar words + locale swapping** — the sugar word set (`the`/`a`/`an`)
-  is hardcoded English in the parser, and `lib/en-US` is hard-auto-loaded; a later
-  refinement picks the locale dir (e.g. a `locale` setting) and its sugar words so
-  `lib/en-GB`/`lib/fr-FR` can drop in.
+## 1. Text substitution — Slices 1 & 2 DONE; Slice 3 next
+**Slice 1 (complete):** bracket substitution + quote convention + lazy `text`/`freeze`.
+**Slice 2 (complete) — names, articles, case:** the **`lib/en-US` default locale pack
+auto-loads after `lib/sys`** (`gatherLibDirs`), realizing the three-layer split
+(engine/`lib/sys` mechanism vs. `lib/en-US` language data). Articles `the`/`indefinite`
+/`an` with the bare-word sugar `[the X]`/`[a X]`/`[The X]` (`desugarArticleSugar`);
+case `cap`/`upper`/`lower`/`title`; `format_list` (the "and"/Oxford comma) moved to the
+locale; the pluralizer `pluralize(x)` (irregular table + rules + `plural_name`
+override); the clean boolean `proper`/`plural` flag contract (advent `article`-object
+fallback kept). Fixtures `locale1`/`locale2` + goldens; all 11 suites green (122).
+See `devdocs/text.md` → "Action list → Slices 1–2".
+**Next — Slice 3: the adaptive engine (headline).** `[We]`/`[They]` pronouns + verb
+conjugation (`[drop]`/`[have]`/`[are]`) + `[regarding]` + action-default report
+templates, plus the **render-context** object (current subject / governing count —
+see text.md "Render context"). Needs the locale's verb table (`lib/en-US`).
+**Deferred refinements:** per-locale sugar words + locale swapping — the article-sugar
+word set (`the`/`a`/`an`) is hardcoded English in the parser and `lib/en-US` is
+hard-auto-loaded; generalize when a non-English locale lands.
+**Where:** `src/lamplighter/index.js` (render context), `lib/en-US/`, `src/lantern/parser_rd.js`.
 **Where:** `src/lantern/parser_rd.js`, `lib/en-US/`, `lib/advent/` (flags).
 
 ## 2. SAVE / RESTORE — browser persistence + durable CLI saves (Slice 3)

@@ -21,3 +21,9 @@ native function string title(string s)
 native function string the(object x)
 native function string indefinite(object x)
 native function string an(object x)
+
+# Plural display name: an author-set `plural_name` field wins; otherwise the head
+# word is pluralized via the irregular table + regular rules. Named `pluralize`,
+# not `plural`, to avoid colliding with lib/advent's `article plural` object.
+# See text.md K5.
+native function string pluralize(object x)
