@@ -298,7 +298,16 @@ Built-in primitive types:
   Backslash escapes are resolved by the tokenizer: `\"` (double quote), `\n`
   (newline), `\t` (tab), `\r` (carriage return), and `\\` (literal backslash).
   Any other `\X` is left as-is (the backslash is kept), so a stray backslash in
-  prose is never lost.
+  prose is never lost. A string literal **in expression position** also supports
+  **text substitution**: an unescaped `[EXPR]` embeds a Lamp expression, evaluated
+  and rendered at print time as `print` would render that value (an object as its
+  name — or its `printed_name` field when set —, a list as its prose, a number as
+  digits). Write a literal bracket as `\[` or `\]`. So `"you have [score] of
+  [room.exits]"` interpolates the two expressions. Substitution is the foundation of
+  the text-generation system (`devdocs/text.md`); it applies only where a string is
+  an expression (a `print`/`let`/field value/argument), **not** to grammar/`syntax`/
+  `understand` templates, whose `[slot]` markers stay literal. An empty `[]` or an
+  unterminated `[` is a compile error.
 - `int` — integer values; literals are plain digits: `42`, `-7`
 - `bool` — boolean values; literals are `true` and `false`
 - `real` — floating-point values; literals require a decimal point: `3.14`, `-0.5`

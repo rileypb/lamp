@@ -1,0 +1,26 @@
+# Slice 1 text substitution: `[expr]` interpolates an arbitrary Lamp expression
+# into a string literal, rendered as `print` would (objects by name, with a
+# printed_name override; lists, locals, arithmetic). `\[`/`\]` escape literal
+# brackets, and a template composes with `+`. See devdocs/text.md (A1-A3, B1, B2).
+game Text_Substitution:
+    author "Lamp"
+
+type gadget:
+    int charge = 0
+    string printed_name = ""
+
+gadget lamp:
+    charge 3
+
+gadget bolt:
+    charge 5
+    printed_name "shiny bolt"
+
+on startup:
+    print "You are holding [lamp] and [bolt]."
+    print "The lamp has [lamp.charge] charge; the bolt has [bolt.charge]."
+    let total = lamp.charge + bolt.charge
+    print "Total charge: [total]."
+    print "All gadgets: [gadget.all]."
+    print "A literal \[tag\] stays put."
+    print "Mix: " + "still [total] units"

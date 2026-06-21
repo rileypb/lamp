@@ -1,0 +1,6 @@
+You are holding lamp and shiny bolt.
+The lamp has 3 charge; the bolt has 5.
+Total charge: 8.
+All gadgets: lamp and shiny bolt.
+A literal [tag] stays put.
+Mix: still 8 units

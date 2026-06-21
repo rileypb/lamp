@@ -3,7 +3,7 @@ const { encode } = require("../strcodec");
 // Expressions whose emitted form is already self-delimiting (literals, variable
 // names, property-access chains, function calls) and never need extra parens.
 const SAFE_ATOM = new Set([
-    "StringLiteral", "NumberLiteral", "BooleanLiteral", "NoneLiteral",
+    "StringLiteral", "TemplateLiteral", "NumberLiteral", "BooleanLiteral", "NoneLiteral",
     "VariableExpr", "PropertyAccess", "GlobalExpr", "ParenNameExpr", "Concat", "DivideExpr", "CallExpr", "FunctionRefExpr", "FollowExpr", "IndexExpr",
 ]);
 
@@ -887,6 +887,17 @@ function emitTryCall(node, globalNames = new Set()) {
 function emitExpression(expr, globalNames = new Set()) {
     if (expr.kind === "StringLiteral") {
         return emitStringLiteral(expr.value);
+    }
+    if (expr.kind === "TemplateLiteral") {
+        // Text segments encode like any prose literal (--encode-strings sees only
+        // them); expression segments render through the runtime's value→text rules
+        // at print time, so an object renders as its name, a list as its prose, etc.
+        const frags = expr.parts.map((part) =>
+            part.kind === "text"
+                ? emitStringLiteral(part.value)
+                : emitExpression(part.expr, globalNames),
+        );
+        return `lamplighter.renderTemplate([${frags.join(", ")}])`;
     }
     if (expr.kind === "VariableExpr") {
         return expr.name;

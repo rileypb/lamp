@@ -920,12 +920,26 @@ function divide(a, b) {
     return b === 0 ? NaN : a / b;
 }
 
+// Renders a template literal's parts (text strings and embedded values) to a
+// single string, formatting each part as `print` would. Emitter target for a
+// TemplateLiteral; the eager-render form of text substitution. See devdocs/text.md.
+function renderTemplate(parts) {
+    let out = "";
+    for (const part of parts) {
+        out += String(formatValue(part));
+    }
+    return out;
+}
+
 function formatValue(value) {
     if (isListValue(value)) {
         return formatListValue(value.items);
     }
     if (value && typeof value === "object" && typeof value.name === "string") {
-        return value.name;
+        // A `printed_name` field, when set, overrides the canonical `name` for
+        // display only (the registry key stays `name`). See devdocs/text.md B2.
+        const printed = value.printed_name;
+        return typeof printed === "string" && printed.length > 0 ? printed : value.name;
     }
     if (value && typeof value === "object" && relationRegistry.has(value.type)) {
         return formatRelationValue(value);
@@ -1401,6 +1415,7 @@ module.exports = {
     enum: enumKind,
     kind,
     concat,
+    renderTemplate,
     divide,
     onEvent,
     registerActionRule,

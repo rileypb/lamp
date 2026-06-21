@@ -143,6 +143,35 @@ const cases = [
         },
     },
     {
+        name: "template literal: text + embedded expressions split into parts",
+        run() {
+            const [handler] = parse(["on startup:", '    print "you have [score] of [max]"'].join("\n"), ["score"]);
+            const expr = handler.body[0].expr;
+            assert.strictEqual(expr.kind, "TemplateLiteral");
+            // Empty text segments (e.g. the tail after the last `]`) are omitted.
+            assert.deepStrictEqual(expr.parts.map((p) => p.kind), ["text", "expr", "text", "expr"]);
+            assert.deepStrictEqual(expr.parts[0], { kind: "text", value: "you have " });
+            assert.deepStrictEqual(expr.parts[1].expr, { kind: "GlobalExpr", name: "score" });
+            assert.deepStrictEqual(expr.parts[2], { kind: "text", value: " of " });
+        },
+    },
+    {
+        name: "template literal: embedded expression resolves locals and property access",
+        run() {
+            const [handler] = parse(["on startup:", "    let n = 1", '    print "n is [n.x]"'].join("\n"));
+            const expr = handler.body[1].expr;
+            assert.strictEqual(expr.kind, "TemplateLiteral");
+            assert.deepStrictEqual(expr.parts[1].expr, { kind: "PropertyAccess", chain: ["n", "x"] });
+        },
+    },
+    {
+        name: "template literal: no substitution stays a StringLiteral; \\[ \\] resolve to literal brackets",
+        run() {
+            const [handler] = parse(["on startup:", '    print "a \\[tag\\] here"'].join("\n"));
+            assert.deepStrictEqual(handler.body[0].expr, { kind: "StringLiteral", value: "a [tag] here" });
+        },
+    },
+    {
         name: "expression: multi-word object reference becomes ParenNameExpr",
         run() {
             const [handler] = parse(["on startup:", "    print Unit_Circle.radius"].join("\n"));
@@ -360,6 +389,9 @@ const rejectCases = [
     { name: "reserved word as object name", src: "game while:\n    version 1", message: /Expected object name/ },
     { name: "property access on a literal", src: "on startup:\n    print 2.name", message: /property access '\.' requires a variable or object reference/ },
     { name: "unmatched left parenthesis", src: "on startup:\n    let x = (3 + 4", message: /close expression/ },
+    { name: "empty substitution in template", src: 'on startup:\n    print "bad []"', message: /empty '\[\]' substitution/ },
+    { name: "unterminated substitution in template", src: 'on startup:\n    print "bad [score"', message: /unterminated '\[' substitution/ },
+    { name: "malformed expression in substitution", src: 'on startup:\n    print "bad [1 +]"', message: /invalid substitution/ },
 ];
 
 let failures = 0;

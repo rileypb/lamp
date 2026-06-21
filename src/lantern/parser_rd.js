@@ -36,6 +36,62 @@ function parseTokens(tokens, filePath, globalNames = new Set(), functionNames = 
     return createParser(tokens, filePath, globalNames, functionNames, relationNames, relationTemplates, actionNames, objectNames, tagNames, rulebookParams).parseProgram();
 }
 
+// Splits a string-literal value (in expression position) into template parts: an
+// ordered list of { kind: "text", value } literals and { kind: "exprSrc", src }
+// substitutions. The tokenizer has already resolved \n \t \r \" \\, but `\[` and
+// `\]` survive as backslash-bracket (brackets are not tokenizer escapes), so this
+// is where they become literal `[` / `]`. An unescaped `[` opens a substitution
+// running to the next unescaped `]`; the inner source is an embedded Lamp
+// expression the caller parses. `hasSub` is false for an ordinary string, in
+// which case the single text part is the value with escaped brackets resolved.
+function splitTemplate(rawValue, fail) {
+    const parts = [];
+    let text = "";
+    let hasSub = false;
+    let i = 0;
+    const flush = () => {
+        if (text.length > 0) {
+            parts.push({ kind: "text", value: text });
+            text = "";
+        }
+    };
+    while (i < rawValue.length) {
+        const c = rawValue[i];
+        if (c === "\\" && (rawValue[i + 1] === "[" || rawValue[i + 1] === "]")) {
+            text += rawValue[i + 1];
+            i += 2;
+            continue;
+        }
+        if (c === "[") {
+            flush();
+            i += 1;
+            let src = "";
+            while (i < rawValue.length && rawValue[i] !== "]") {
+                src += rawValue[i];
+                i += 1;
+            }
+            if (i >= rawValue.length) {
+                throw fail("unterminated '[' substitution in string literal (use \\[ for a literal bracket)");
+            }
+            i += 1;
+            const trimmed = src.trim();
+            if (trimmed.length === 0) {
+                throw fail("empty '[]' substitution in string literal");
+            }
+            parts.push({ kind: "exprSrc", src: trimmed });
+            hasSub = true;
+            continue;
+        }
+        text += c;
+        i += 1;
+    }
+    flush();
+    if (parts.length === 0) {
+        parts.push({ kind: "text", value: "" });
+    }
+    return { parts, hasSub };
+}
+
 function createParser(tokens, filePath, globalNames, functionNames = new Set(), relationNames = new Set(), relationTemplates = new Map(), actionNames = new Set(), objectNames = new Set(), tagNames = new Set(), rulebookParams = new Map()) {
     let pos = 0;
 
@@ -1220,9 +1276,59 @@ function createParser(tokens, filePath, globalNames, functionNames = new Set(), 
         return left;
     }
 
+    // Entry point for parsing a substitution source as a single complete
+    // expression (tolerating the leading/trailing layout tokens the tokenizer
+    // emits for a one-line source), used by parseEmbeddedExpression.
+    function parseWholeExpression(localNames) {
+        while (at("NEWLINE") || at("INDENT")) next();
+        const expr = parseExpression(0, localNames);
+        while (at("NEWLINE") || at("DEDENT")) next();
+        if (!at("EOF")) {
+            throw err("unexpected tokens after substitution expression");
+        }
+        return expr;
+    }
+
+    // A string literal in expression position may carry `[expr]` substitutions.
+    // With none it is a plain StringLiteral (escaped brackets resolved); otherwise
+    // it becomes a TemplateLiteral whose embedded expressions are parsed here with
+    // the same name scope as the surrounding expression. Grammar/syntax/understand
+    // templates take a different path (parseSimpleValue / expect("STRING")), so
+    // their literal `[slot]` markers are untouched.
+    function parseStringExpr(token, localNames) {
+        const { parts, hasSub } = splitTemplate(token.value, (m) => err(m, token.line));
+        if (!hasSub) {
+            return ast.createStringLiteral(parts.map((p) => p.value).join(""));
+        }
+        const templateParts = parts.map((p) =>
+            p.kind === "text"
+                ? { kind: "text", value: p.value }
+                : { kind: "expr", expr: parseEmbeddedExpression(p.src, token.line, localNames) },
+        );
+        return ast.createTemplateLiteral(templateParts);
+    }
+
+    // Parses one substitution's source as a standalone expression, reusing the
+    // surrounding parser's name scope (globals, functions, relations, objects) and
+    // the caller's local variables. Errors are re-pointed at the host string's line.
+    function parseEmbeddedExpression(src, line, localNames) {
+        let subTokens;
+        try {
+            subTokens = tokenize(src, filePath);
+        } catch (e) {
+            throw err(`invalid substitution "[${src}]": ${e.message}`, line);
+        }
+        const sub = createParser(subTokens, filePath, globalNames, functionNames, relationNames, relationTemplates, actionNames, objectNames, tagNames, rulebookParams);
+        try {
+            return sub.parseWholeExpression(localNames);
+        } catch (e) {
+            throw err(`invalid substitution "[${src}]": ${e.message}`, line);
+        }
+    }
+
     function parseNud(localNames) {
         const token = next();
-        if (token.type === "STRING") return ast.createStringLiteral(token.value);
+        if (token.type === "STRING") return parseStringExpr(token, localNames);
         if (token.type === "NUMBER") return ast.createNumberLiteral(token.value);
         if (token.type === "IDENT") {
             // A relation query in expression position (`connects foyer north hall`).
@@ -1326,7 +1432,7 @@ function createParser(tokens, filePath, globalNames, functionNames = new Set(), 
             : ast.createParenNameExpr(coerced, fields);
     }
 
-    return { parseProgram };
+    return { parseProgram, parseWholeExpression };
 }
 
 function syntaxError(filePath, lineNumber, message) {

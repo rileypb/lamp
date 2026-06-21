@@ -7,20 +7,33 @@ prerequisite lists in `devdocs/game_parser.md`, `devdocs/rulebooks.md`, and
 
 > The 2026-06-19/20 architecture review (issues A–G) is **fully resolved** — see
 > `devdocs/architecture.md` → "Known Architectural Issues" for the per-issue
-> record. The only optional remnant is item 5 below.
+> record. The only optional remnant is item 6 below.
 
 > Feature backlog awaiting triage: `lurking_todo.md` catalogs candidate verbs,
 > grammar, world-model traits, turn-cycle/daemon, and message ideas mined from
-> `lurkinghorror.txt`. `devdocs/text.md` catalogs **text-substitution**
-> features (Inform-7-style `"[We] [drop] [the velvet_cloak]"`), grouped A–K and now
-> **triaged into an "Action list"** — decisions locked (`\[`/`\]` escapes, distinct
-> `text` type, list `.size`, sugar-vs-expression line, three-layer language split
-> with verb/pronoun data in a swappable locale pack `lib/<locale>`)
-> and a 7-slice plan (Slice 1 = bracket-parse mechanism) plus Deferred/Cut buckets.
-> Ready to promote Slice 1 into real TODO items when the user starts the work.
+> `lurkinghorror.txt`. `devdocs/text.md` is the **text-substitution**
+> design + 7-slice Action list (Inform-7-style `"[We] [drop] [the velvet_cloak]"`).
+> **Slice 1 (bracket-substitution mechanism) is mostly DONE** — see item below.
 > `lurking_todo.md` still awaits triage.
 
-## 1. SAVE / RESTORE — browser persistence + durable CLI saves (Slice 3)
+## 1. Text substitution — finish Slice 1, then Slice 2 (names/articles)
+**Slice 1 (the `[expr]` bracket-substitution mechanism) is mostly DONE** — see
+`devdocs/text.md` → "Action list → Slice 1" for the per-item record. Implemented:
+compile-time template parse into a `TemplateLiteral` node (parser `splitTemplate` /
+`parseEmbeddedExpression`), `\[`/`\]` escapes, value/object interpolation with the
+`printed_name` override (`formatValue`), eager render via `lamplighter.renderTemplate`,
+`--encode-strings` parity, and `+`/`print` composability. Tests: `text1` golden +
+parser unit/reject cases. **Carryovers to close Slice 1:**
+- **A5** — `[']` apostrophe + straight/smart-quote handling (not started).
+- **K2** — a distinct lazy/storable `text` type (today templates render eagerly to
+  `string`); a type-system + `devdocs/state.md` (save/undo) change deserving its own
+  step. Decided to be a distinct type; not yet built.
+Then **Slice 2 — names, articles, case** (`[the X]`/`[a X]`/`[The X]`, proper/plural
+flags, `cap`/`upper`/`title`, per-object overrides), which needs the `lib/<locale>`
+locale-pack scaffolding (three-layer split — engine mechanism vs. `lib/en-US` data).
+**Where:** `src/lantern/{parser_rd,emitter,checker,ast}.js`, `src/lamplighter/index.js`.
+
+## 2. SAVE / RESTORE — browser persistence + durable CLI saves (Slice 3)
 UNDO (Slice 1) and SAVE/RESTORE to the dev host (Slice 2) are **done**: the
 snapshot core (`captureState`/`restoreState`, a state-provider registry +
 encode/decode over the closed value algebra), the undo stack + `undo` verb, a
@@ -40,17 +53,17 @@ buffer; named slots persist per game across reloads. Build-smoke coverage in
 - Save-slot **listing/metadata** (a `saves` verb).
 - Optional browser **file export/import** (download/upload — the native-file-UI
   path) layered on top of localStorage.
-- **CLI save-name-prompt UX (defer until the out-of-world verb move — item 4).**
+- **CLI save-name-prompt UX (defer until the out-of-world verb move — item 5).**
   Once the `save`/`restore` verbs + prompting live in `lib` (not the engine),
   the name prompt can host these CLI conveniences:
   - `^L` (or a keyword) at the name prompt → **list previous saves** for this game.
   - an **overwrite-confirmation** ("Replace the saved game named X?") before
     clobbering an existing slot, instead of silently overwriting.
   Both need the save-slot listing/exists primitives above and the in-`lib` prompt
-  flow, so they wait on item 4.
-This shares the out-of-world-verb hook with RESTART (item 3) and Parser v2.
+  flow, so they wait on item 5.
+This shares the out-of-world-verb hook with RESTART (item 4) and Parser v2.
 
-## 2. Lighthouse web bundle — headless CI test (optional)
+## 3. Lighthouse web bundle — headless CI test (optional)
 Web v1 is **built, verified live, shell-polished, and hardened for distribution**
 (string encoding + esbuild minify, both covered by `npm run test:lighthouse` /
 `npm run test:encode`). **Remaining (optional):** a *headless* browser test that
@@ -59,7 +72,7 @@ automation gap but needs a heavy Playwright/Puppeteer dep; decide if worth it fo
 CI. Also still open: whether to default `--encode-strings` on for distribution
 builds. **Where:** `src/lighthouse/`.
 
-## 3. RESTART support for the end-of-story sequence
+## 4. RESTART support for the end-of-story sequence
 The end-of-story mechanism (`story` global, `end_story_rules`, the post-game loop
 in `lib/advent/startup.lamp`) is in place but only offers QUIT — there is no state
 reset, so RESTART was deferred. Implement it by having the sandbox **host
@@ -69,7 +82,7 @@ guarding the `exit` handler), and re-enabling RESTART in the end sequence.
 Alternative (messier): a runtime-wide `reset()` + re-run. **Where:**
 `src/lamplighter/sandbox/host.js` + `worker.js`, `lib/advent/startup.lamp`.
 
-## 4. Parser v2 — every-turn & timed rules + out-of-world actions
+## 5. Parser v2 — every-turn & timed rules + out-of-world actions
 Action-rulebook bands are implemented; what remains for v2 is a turn clock:
 every-turn rules and timed/scheduled events, plus **out-of-world actions**
 (`save`/`undo`/`restore`/`again`). Also surface the outcome of a player command
@@ -85,7 +98,7 @@ turn rules can see whether the command succeeded.
 - **Where:** rulebook driver in `src/lamplighter/index.js`, `run_command` loop.
 - **See:** `devdocs/rulebooks.md` roadmap, `devdocs/game_parser.md` v2.
 
-## 5. Malformed-world startup check (optional hardening)
+## 6. Malformed-world startup check (optional hardening)
 Carryover from arch issue C. When the parser is used, assert at startup that a
 `physical` type and a `holder` field exist, so a world library missing the
 runtime↔world contract names fails loudly instead of on `undefined.holder` deep

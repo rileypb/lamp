@@ -83,6 +83,15 @@ function createStringLiteral(value) {
     return { kind: "StringLiteral", value };
 }
 
+// A string literal carrying `[expr]` substitutions. `parts` is an ordered mix of
+// { kind: "text", value } literal segments and { kind: "expr", expr } embedded
+// expressions; rendering interleaves them, formatting each expression as the
+// runtime would `print` it. A literal with no substitutions stays a plain
+// StringLiteral, so this node only appears when at least one `[…]` is present.
+function createTemplateLiteral(parts) {
+    return { kind: "TemplateLiteral", parts };
+}
+
 function createVariableExpr(name) {
     return { kind: "VariableExpr", name };
 }
@@ -333,6 +342,7 @@ module.exports = {
     createFieldDecl,
     createFieldAssign,
     createStringLiteral,
+    createTemplateLiteral,
     createVariableExpr,
     createNumberLiteral,
     createBooleanLiteral,

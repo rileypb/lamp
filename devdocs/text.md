@@ -1,11 +1,12 @@
 # Text Substitution — Feature Catalog (candidates)
 
-> Status: **catalog / pre-design.** This file enumerates *candidate* features for
-> a text-substitution system modeled on Inform 7's "[bracketed]" text, plus
-> additions specific to Lamp. It is a menu for the author (repo owner) to triage
-> into a real action list — **nothing here is committed or implemented.** Items
-> are grouped by category; each notes its Inform 7 parallel (chapter 5 of *Writing
-> with Inform*, sections cited as `WI 5.x`) and Lamp-specific notes.
+> Status: **in progress.** This file enumerates the text-substitution features
+> modeled on Inform 7's "[bracketed]" text, plus additions specific to Lamp, and
+> the triaged Action list that follows. **Slice 1 (the bracket-substitution
+> mechanism) is mostly implemented** — see "Action list → Slice 1" for the precise
+> done/carryover state. Later slices remain candidates. Items are grouped by
+> category; each notes its Inform 7 parallel (chapter 5 of *Writing with Inform*,
+> sections cited as `WI 5.x`) and Lamp-specific notes.
 >
 > Treating this as **greenfield** — `devdocs/specs.md` covers `print`/string
 > literals but not interpolation. See "Current state" for the baseline this builds
@@ -432,19 +433,43 @@ slices depend on earlier ones except where noted.
 
 ### Slice 1 — mechanism (no language awareness)
 
-1. **A1/A3** Tokenizer + parser: `"[EXPR]"` parses at compile time into a sequence
-   of literal segments + expression substitutions (checker validates the
-   expressions; unknown ones caught at compile time).
-2. **A2** `\[` / `\]` escapes; **A4** whitespace rules inside brackets.
-3. **A5** `[']` apostrophe + straight/smart-quote handling.
-4. **B1** value interpolation (any expression); **B2** bare object → `name`, with
-   the `printed_name` override.
-5. **K2** introduce the `text` type and its render-on-print semantics; decide its
-   state/save representation (`devdocs/state.md`).
-6. **K4** composability: a `+`/`print` value is substituted, then composed.
-7. **Cross-cutting:** `--encode-strings` parses substitutions *before* encoding
-   (encode only literal segments); the `[`/`]` escape migration must not
-   reinterpret existing prose.
+**Status: mostly DONE (2026-06-20).** Bracket substitution of arbitrary Lamp
+expressions is implemented end-to-end and rendered eagerly to a string. Two
+carryovers remain (A5, K2) — see below. Tests: `tests/fixtures/text1.lamp` +
+golden `text1.stdout.txt`; three parser unit cases + three reject cases in
+`tests/parser`; `--encode-strings` parity verified.
+
+1. **A1/A3 — DONE.** A string literal *in expression position* parses at compile
+   time into a `TemplateLiteral` AST node (an ordered mix of `text` segments and
+   parsed-expression segments). The split happens in the parser
+   (`splitTemplate` + `parseStringExpr`/`parseEmbeddedExpression` in
+   `parser_rd.js`), so grammar/`syntax`/`understand` templates — which take a
+   different STRING path — keep their literal `[slot]` markers. Each embedded
+   expression is parsed with the surrounding name scope; a malformed one is a
+   compile error pointing at the host string's line.
+2. **A2 — DONE.** `\[` / `\]` escape to literal brackets (resolved in
+   `splitTemplate`; the tokenizer leaves them intact so the parser can tell a
+   literal from a substitution). **A4 — partial:** the substitution source is
+   trimmed; strings are single-line so spanning is N/A.
+3. **A5 — NOT DONE (carryover).** `[']` apostrophe + straight/smart-quote handling
+   is not yet implemented.
+4. **B1 — DONE** (any expression interpolates). **B2 — DONE**: an object renders
+   as its `name`, overridden by a `printed_name` field when set (in `formatValue`).
+5. **K2 — DEFERRED (carryover).** Templates currently render **eagerly to a
+   `string`** (the checker infers `TemplateLiteral` as `string`; the emitter emits
+   `lamplighter.renderTemplate([...])`). A distinct lazy/storable `text` type with
+   its own state/save representation is a type-system change deferred to its own
+   step.
+6. **K4 — DONE.** `renderTemplate` returns a plain string, so a template composes
+   with `+`/`print` exactly like any string ("substitute, then compose").
+7. **Cross-cutting — DONE.** `--encode-strings` encodes only the text segments
+   (each emitted via `emitStringLiteral`); embedded expressions emit normally.
+   Verified: an encoded build of `text1` produces byte-identical output with no
+   plaintext prose. The `[`/`]` migration is safe — a repo scan found no
+   expression-position string literal containing `[` (all are grammar templates).
+
+**Remaining before Slice 1 is fully closed:** A5 (apostrophe/quotes) and K2 (the
+distinct `text` type).
 
 ### Slice 2 — names, articles, case
 

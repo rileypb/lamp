@@ -847,6 +847,9 @@ function inferExprType(expr, typeSchema, kindSchema, localTypes, functionSchema 
     if (expr.kind === "StringLiteral") {
         return "string";
     }
+    if (expr.kind === "TemplateLiteral") {
+        return "string";
+    }
     if (expr.kind === "NumberLiteral") {
         return Number.isInteger(expr.value) ? "int" : "real";
     }
