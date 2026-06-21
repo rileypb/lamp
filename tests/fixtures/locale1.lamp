@@ -1,0 +1,27 @@
+# Slice 2: the en-US locale pack. Articles (the/a/an) honor a proper/plural
+# `article`; case functions (cap/upper/title) are plain transforms. All provided
+# by lib/en-US, auto-loaded after lib/sys. See devdocs/text.md (three-layer split).
+game Locale_One:
+    author "Lamp"
+
+type article
+article proper
+article plural
+
+type thing:
+    string printed_name = ""
+    article article
+
+thing lantern
+thing apple
+thing alice:
+    printed_name "Alice"
+    article proper
+thing scissors:
+    article plural
+
+on startup:
+    print "[cap(the(lantern))] glows; [cap(a(apple))] sits nearby."
+    print "You see [the(lantern)], [a(apple)], [a(alice)] and [a(scissors)]."
+    print "[cap(the(alice))] waves. [cap(the(scissors))] gleam."
+    print "title: [title(lantern.name)]; shout: [upper(apple.name)]."

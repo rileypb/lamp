@@ -15,6 +15,7 @@
     - `readline() → string` — reads one line of player input, blocking until the player submits. Input is brokered through the sandbox's input channel; `readline` is not available outside the sandbox.
     - `split(string) → list<string>` — splits a string on whitespace and returns the words as a list.
     - `run_command(string) → void` — parses one line of player input against registered action templates, resolves slot objects in scope, and runs the matched action. Uses the `player` global as the actor.
+- `lib/en-US/` is the **default locale pack** — English *language data* for the text-substitution layer (article functions `the`/`a`/`an`, case functions `cap`/`upper`/`lower`/`title`, and the list-to-prose formatter `format_list` with its "and"/Oxford comma). Like `lib/sys`, it auto-loads on every invocation, inserted **immediately after `lib/sys/` and before any imported library**. It is the swappable language layer (a future `lib/en-GB`/`lib/fr-FR` replaces it) — `lib/sys` holds only language-agnostic mechanism. See `devdocs/text.md` (three-layer split).
 - Other subdirectories of `lib/` (e.g. `lib/test/`, `lib/advent/`) are optional libraries that must be imported explicitly with `lib LIBNAME`.
 - `.lamp` files placed directly in `lib/` (not inside a named subdirectory) are not parsed and are not available for import.
 

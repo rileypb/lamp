@@ -537,12 +537,30 @@ green (120 goldens).
 
 ### Slice 2 — names, articles, case
 
-1. **B3** `[the X]`, **B4** `[a X]` (a/an auto-selected), **B5** `[The X]` / `[A X]`.
-2. **B6** proper-named flag (no article); **B7** plural flag (consumed by agreement).
-3. **C1** `cap()`, **C3** `upper()`/`lower()`, **C4** `title()` functions.
-4. **K5** per-object overrides + a small default irregular table (e.g. "sheep");
-   author-extendable. One world-model home for proper-named / plural / printed_name
-   / article overrides, consulted by every substitution.
+**Status: locale scaffolding + functions DONE (2026-06-21); bare-word sugar next.**
+`lib/en-US` now exists as the **default locale pack, auto-loaded after `lib/sys`**
+(`gatherLibDirs` in `src/lantern/index.js` — the three-layer split is real: engine/
+`lib/sys` mechanism vs. `lib/en-US` language data). The English list-prose
+formatter (`format_list`, the "and"/Oxford comma) **moved from `lib/sys` to
+`lib/en-US`**, where language data belongs. Fixture `locale1.lamp` + golden.
+
+1. **B3/B4/B5 — functions DONE, sugar PENDING.** `lib/en-US` provides the article
+   functions `the(x)` / `a(x)` (a/an auto-selected) / `an(x)`; compose with C1 for
+   the capitalized form (`[cap(the(x))]`). Proper-/plural-named objects override
+   (no article / "some"). The **bare-word sugar** `[the X]` / `[a X]` / `[The X]`
+   (desugaring to these calls in the template parser) is the **next increment**.
+2. **B6/B7 — DONE via the existing world-model convention.** The locale reads an
+   object's `printed_name` and its `article` (an object whose `.name` is
+   `proper`/`plural`/`definite`/`count`, the model `lib/advent` already uses);
+   `proper` → no article, `plural` → "some"/definite plural. A cleaner
+   boolean-flag contract (B6/B7 as named flags) can replace the `article` object
+   later; the locale read is defensive so a world with neither still works.
+3. **C1/C3/C4 — DONE.** `cap()`, `upper()`, `lower()`, `title()` in `lib/en-US`
+   (plain string transforms; casing is language data, so it lives in the locale).
+4. **K5 — PENDING.** Per-object overrides + a small default irregular table (e.g.
+   "sheep"); one world-model home for proper-named / plural / printed_name.
+
+**Remaining for Slice 2:** the bare-word article sugar (B3/B5 surface) and K5.
 
 ### Slice 3 — the adaptive engine (headline)
 

@@ -1,0 +1,19 @@
+# en-US locale pack — the default language layer for text substitution.
+#
+# The substitution *mechanism* (bracket parsing, the `text` type, render-time
+# dispatch) lives in the engine / lib/sys; this library is the swappable
+# *language data* (articles, case, list prose). Swap it for another locale
+# (lib/en-GB, lib/fr-FR) to change the language without touching the engine or a
+# world model. Auto-loaded after lib/sys. See devdocs/text.md (three-layer split).
+
+# Case transforms (no sugar — plain functions; see devdocs/text.md C).
+native function string cap(string s)
+native function string upper(string s)
+native function string lower(string s)
+native function string title(string s)
+
+# Articles. The caller picks definite (`the`) vs indefinite (`a`/`an`); a
+# proper- or plural-named object overrides (no article / "some"). See text.md B.
+native function string the(object x)
+native function string a(object x)
+native function string an(object x)

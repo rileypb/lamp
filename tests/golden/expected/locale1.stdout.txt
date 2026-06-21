@@ -1,0 +1,4 @@
+The lantern glows; An apple sits nearby.
+You see the lantern, an apple, Alice and some scissors.
+Alice waves. The scissors gleam.
+title: Lantern; shout: APPLE.

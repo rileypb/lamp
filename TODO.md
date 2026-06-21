@@ -13,25 +13,28 @@ prerequisite lists in `devdocs/game_parser.md`, `devdocs/rulebooks.md`, and
 > grammar, world-model traits, turn-cycle/daemon, and message ideas mined from
 > `lurkinghorror.txt`. `devdocs/text.md` is the **text-substitution**
 > design + 7-slice Action list (Inform-7-style `"[We] [drop] [the velvet_cloak]"`).
-> **Slice 1 is DONE** (bracket substitution + quote convention + lazy `text`/`freeze`).
+> **Slice 1 is DONE**; **Slice 2 in progress** (locale pack + article/case functions).
 > `lurking_todo.md` still awaits triage.
 
-## 1. Text substitution — Slice 1 DONE; next is Slice 2 (names/articles)
-**Slice 1 is complete** — see `devdocs/text.md` → "Action list → Slice 1" for the
-per-item record. Implemented across `src/lantern/{tokenizer,parser_rd,ast,checker,
-emitter}.js` + `src/lamplighter/index.js`: compile-time template parse into a
-`TemplateLiteral` node; `\[`/`\]` escapes; value/object interpolation with the
-`printed_name` override; **A5** Inform quote convention (`applyQuoteConvention`) +
-`[']`; **K2** the lazy `text` type (`makeText` thunk, re-renders on print) with the
-**`freeze`** keyword (`renderText`) forcing `text`→`string`, `text`/`string` interop
-in the checker, and freeze-on-capture for save (`encodeValue`, `devdocs/state.md`);
-`--encode-strings` parity. Tests: `text1` + `text2` goldens, six parser unit cases +
-three reject cases; all 11 suites green (120 goldens).
-**Next — Slice 2: names, articles, case** (`[the X]`/`[a X]`/`[The X]`, proper/plural
-flags, `cap`/`upper`/`title`, per-object overrides). Needs the **`lib/<locale>`
-locale-pack scaffolding** (three-layer split — engine/`lib/sys` mechanism vs.
-`lib/en-US` language data). **Where:** `src/lantern/*` + `src/lamplighter/index.js`,
-new `lib/en-US/`.
+## 1. Text substitution — Slice 1 DONE; Slice 2 in progress
+**Slice 1 (complete):** bracket substitution + quote convention + lazy `text`/`freeze`
+— see `devdocs/text.md` → "Action list → Slice 1".
+**Slice 2 (in progress) — names, articles, case:** the **`lib/en-US` default locale
+pack is stood up and auto-loads after `lib/sys`** (`gatherLibDirs`), realizing the
+three-layer split (engine/`lib/sys` mechanism vs. `lib/en-US` language data). Done so
+far: article functions `the`/`a`/`an` (a/an auto, proper/plural overrides via the
+world-model `article` convention), case functions `cap`/`upper`/`lower`/`title`, and
+`format_list` (the "and"/Oxford-comma list prose) **moved from `lib/sys` to
+`lib/en-US`**. Fixture `locale1.lamp` + golden; all 11 suites green (121 goldens).
+**Remaining for Slice 2:**
+- **Bare-word article sugar** `[the X]` / `[a X]` / `[The X]` — desugar leading
+  article words in a substitution to `the(X)`/`a(X)`/`cap(the(X))` in the template
+  parser (`splitTemplate`/`parseStringExpr`). The natural surface the user wants.
+- **K5** — per-object overrides + a small default irregular table ("sheep"); a
+  cleaner boolean proper/plural flag contract to replace the `article` object.
+- **Locale swapping** — currently `lib/en-US` is hard-auto-loaded; a later refinement
+  picks the locale dir (e.g. a `locale` setting) so `lib/en-GB`/`lib/fr-FR` can drop in.
+**Where:** `src/lantern/{parser_rd}.js`, `lib/en-US/`, `lib/advent/` (flags).
 
 ## 2. SAVE / RESTORE — browser persistence + durable CLI saves (Slice 3)
 UNDO (Slice 1) and SAVE/RESTORE to the dev host (Slice 2) are **done**: the
