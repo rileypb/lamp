@@ -39,11 +39,11 @@ sugar words). World-model→locale person contract (`grammatical_person`/`gender
 `[sticky random]` + `pick(list, mode)`; `[first time]…[only]`; seeded RNG + a
 **state provider** capturing per-site cursor/visited state (the site-durable tier of
 the render context — couples with `devdocs/state.md`; without it undo/restore desyncs).
-**Follow-ups from Slice 3 (optional):** (a) migrate advent's reports from the manual
+**Follow-up from Slice 3 (optional):** migrate advent's reports from the manual
 `self.actor == player` branch to `[regarding self.actor][They] [verb] [the self.noun]`
-templates (D8 — churns goldens, do deliberately); (b) the deferred Inform nicety —
-auto subject-switch on a subject-position `[They]` without `[regarding]` (see text.md
-"Scope boundary").
+templates (D8 — churns goldens, do deliberately). (Verb agreement auto-switches onto
+a named noun, matching Inform — "...and drops it" is correct — and `[regarding]`
+overrides; see text.md "Auto subject-switching (and its override)".)
 **Deferred refinements:** per-locale sugar words + locale swapping — the sugar word
 sets (`the`/`a`/`an`, pronouns, `regarding`) are hardcoded English in the parser and
 `lib/en-US` is hard-auto-loaded; generalize when a non-English locale lands.

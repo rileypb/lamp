@@ -101,7 +101,11 @@ const PRONOUN_SUGAR_FNS = {
 function desugarSugar(src, verbNames) {
     const regarding = src.match(/^regarding\s+(\S.*)$/);
     if (regarding) {
-        return `regarding(${desugarArticleSugar(regarding[1].trim())})`;
+        // `[regarding the player]` names the player *object* — the article word is
+        // decorative (Inform writes it this way), so strip a leading the/a/an and
+        // pass the bare reference; regarding() needs the object, not its name.
+        const operand = regarding[1].trim().replace(/^(the|a|an)\s+/i, "");
+        return `regarding(${operand})`;
     }
     if (/^[A-Za-z]+$/.test(src)) {
         const lower = src.toLowerCase();

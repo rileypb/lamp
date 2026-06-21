@@ -330,8 +330,10 @@ Built-in primitive types:
     `viewpoint_person`/`viewpoint_plural` change it); the **subject** pronouns
     `[They]`/`[them]`/`[their]`/`[theirs]`/`[themself]` (a third-person referent set
     by `[regarding EXPR]` or by naming a thing); and a verb `[drop]`/`[are]`
-    (conjugated against the current agreement, set by `[We]`/`[They]`/`[regarding]`).
-    `[regarding EXPR]` sets the subject and renders empty. These read a
+    (conjugated against the current agreement). Naming a thing switches the agreement
+    onto it (so a verb after `[the cloak]` agrees with the cloak); `[We]`/`[They]`/
+    `[regarding EXPR]` reset it. `[regarding EXPR]` sets the subject and renders empty
+    (a decorative leading article — `[regarding the player]` — is stripped). These read a
     **render-local context** that resets per render and is never saved. The
     world-model→locale contract for a referent is the optional fields
     `grammatical_person` (1/2/3, default 3), `gender` ("male"/"female"/"neuter"), and

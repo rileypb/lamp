@@ -597,10 +597,16 @@ The model has **two distinct referents** plus a verb-**agreement** descriptor:
   thing (the article functions). So `"[the cloak] … [they]"` reads "the velvet cloak
   … it". If the subject is itself the player object (`grammatical_person 2`),
   `[They]` correctly reads "you" — which is what makes one report serve every actor.
+  **All** of these pronouns (subject and object/possessive alike) follow the *one*
+  subject — there is no separate object-pronoun antecedent — so `[regarding]`
+  redirects `[them]`/`[their]` too. To refer to a specific noun a `[regarding]` has
+  moved away from, name it again or use literal text. (Decision: 2026-06-21.)
 - **Agreement** — what a verb conjugates against, `{person, plural}`. Set by `[We]`
-  (→ the viewpoint), `[They]` (→ the subject), or `[regarding]` (→ its argument).
-  *Naming* a thing sets the subject but **not** the agreement, so `"[We] [take] [the
-  cloak] and [drop] it"` keeps `[drop]` agreeing with the player.
+  (→ the viewpoint), `[They]` (→ the subject), `[regarding]` (→ its argument), and
+  **by naming a thing** — naming switches the agreement onto that thing, so `"[We]
+  [take] [the cloak] and [drop] it"` reads "You take the velvet cloak and **drops**
+  it": the second verb has switched to the cloak. To put the agreement back on the
+  player, write `[regarding the player]` (or `[regarding you]`) before the verb.
 
 All three are **render-local** (reset per render/print, never saved). The engine
 owns the context object and the accessors (`renderSubject`/`renderSetSubject`,
@@ -636,12 +642,16 @@ player's possessive, person-adapted to "yours").
    advent's existing reports still branch on `self.actor == player` by hand;
    migrating them is a follow-up (it would churn goldens) — see TODO.
 
-**Scope boundary (deliberate).** A verb agrees with the agreement descriptor, not
-with whatever noun phrase reads as the grammatical subject of a sentence. To agree a
-verb with a non-actor ("The cloak hangs on its hook"), name it with `[regarding
-cloak]` first. One Inform nicety is **deferred**: auto subject-switching, where a
-subject-position `[They]` would make following verbs agree with the *named* thing
-without a `[regarding]`. Revisit if a real game needs it.
+**Auto subject-switching (and its override).** Naming a thing switches the verb
+agreement onto it, exactly as Inform does (verified empirically against an Inform
+test game). So `"[We] [take] [the cloak] and [drop] it"` yields "You take the velvet
+cloak and **drops** it" — the second verb agrees with the most recently named noun,
+not the player. This is correct, intended behavior, not a bug. When the author wants
+the verb to stay with the player (or any other subject), they reset it explicitly
+with `[regarding the player]` / `[regarding you]`: `"[We] [take] [the cloak] and
+[regarding you][drop] it"` → "…and **drop** it". `[regarding]` is the canonical
+override in both Lamp and Inform. (A decorative article in `[regarding the player]`
+is stripped — it names the player object, not its rendered name.)
 
 **Sugar words are English, in the parser** (`PRONOUN_SUGAR_FNS`, the verb-word set,
 `regarding`), the same small coupling the article words already have. Real

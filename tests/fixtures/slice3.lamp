@@ -46,8 +46,13 @@ on startup:
     # [We] is the player ("you"); naming the cloak makes [They] refer to it and the
     # following verb agree with it, while [ours] stays the player's ("yours").
     print "[We] [have] [the cloak]. [They] [are] [ours]."
-    # Verbs after [We] stay with the player even once a thing is named.
-    print "[We] [take] [the coins] and [count] [them]."
+    # Naming a thing switches the verb subject onto it (as Inform does): the second
+    # verb agrees with the cloak, so "drops", not "drop".
+    print "[We] [take] [the cloak] and [drop] it."
+    # [regarding the player] puts the agreement back on the player to get "drop".
+    print "[We] [take] [the cloak] and [regarding you][drop] it."
+    # An author-declared verb; [them] refers to the gold coins just named.
+    print "[We] [drop] [the coins] and [count] [them]."
     # [regarding] sets a third-person subject for [They] and the verb.
     print "[regarding alice][They] [have] [the cloak]."
     print "[regarding alice][They] [are] here."
