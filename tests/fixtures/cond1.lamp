@@ -1,0 +1,22 @@
+# Slice 4a: inline conditional text. [if COND] / [else if COND] / [else] / [end]
+# inside a string literal choose between branches; the condition is an ordinary Lamp
+# boolean expression and a branch may carry its own substitutions. [otherwise] is an
+# [else] alias, [end if] an [end] alias. Inline nesting is forbidden — compose a
+# separate text value and interpolate it instead. See devdocs/text.md E.
+game Cond_One:
+    author "Lamp"
+
+global bool dark = true
+global int score = 0
+
+on startup:
+    print "[if dark]It is pitch black.[else]You see clearly.[end]"
+    score = 5
+    print "Rating: [if score > 10]high[else if score > 3]medium[else]low[end]."
+    dark = false
+    print "[if dark]dark[else]light[end] and [if score > 3]winning[end]."
+    # Nesting is forbidden inline; compose a separate text value and interpolate it.
+    let inner = "[if dark]lost[else]found[end]"
+    print "[if score > 3]you ([score]) are [inner] now[end]."
+    # The [otherwise] / [end if] aliases.
+    print "[if dark]night[otherwise]day[end if]."

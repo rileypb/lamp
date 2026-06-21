@@ -34,11 +34,19 @@ sugar words). World-model→locale person contract (`grammatical_person`/`gender
 `plural`). One report serves every actor via `[regarding self.actor][They]`. Fixture
 `slice3` + golden; parser/prescan unit tests; all 11 suites green (123). See
 `devdocs/text.md` → "Slice 3".
-**Next — Slice 4: variation & conditionals.** Inline `[if]`/`[else if]`/`[else]`/`[end]`
-(literal-only, `[otherwise]` alias); `[one of]…[at random]`/`[cycling]`/`[stopping]`/
-`[sticky random]` + `pick(list, mode)`; `[first time]…[only]`; seeded RNG + a
-**state provider** capturing per-site cursor/visited state (the site-durable tier of
-the render context — couples with `devdocs/state.md`; without it undo/restore desyncs).
+**Slice 4 (in progress) — variation & conditionals.**
+- **4a (complete) — inline conditionals (E1–E4):** `[if COND]`/`[else if COND]`/
+  `[else]`/`[end]` in templates (`[otherwise]`/`[end if]` aliases), nesting +
+  per-branch substitutions, unbalanced-marker errors. Template-only. Built in the
+  parser (`classifyControl`/`buildTemplateParts` → `cond` AST node) + emitter
+  (`emitTemplateFrag` ternary chain); no runtime change. Fixture `cond1` + golden;
+  parser unit tests; all 11 suites green (124).
+- **4b (next) — variation state infra + `[first time]…[only]` (F9, F8 foundation):**
+  a seeded RNG + a **state provider** capturing per-site cursor/visited state (the
+  site-durable tier of the render context — couples with `devdocs/state.md`; without
+  it undo/restore desyncs). `[first time]…[only]` is the degenerate stopping case.
+- **4c — variation modes (F1–F7):** `[one of]…[or]…[at random]`/`[cycling]`/
+  `[stopping]`/`[in random order]`/`[sticky random]`/weighted + `pick(list, mode)`.
 **Follow-up from Slice 3 (optional):** migrate advent's reports from the manual
 `self.actor == player` branch to `[regarding self.actor][They] [verb] [the self.noun]`
 templates (D8 — churns goldens, do deliberately). (Verb agreement auto-switches onto

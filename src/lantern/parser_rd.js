@@ -93,6 +93,21 @@ const PRONOUN_SUGAR_FNS = {
     they: "they", them: "them", their: "their", theirs: "theirs", themself: "themself",
 };
 
+// Classifies a substitution source as an inline-conditional control marker (E1-E4)
+// or null for an ordinary value/sugar substitution. Markers are the leading words
+// `if` / `else if` / `else` / `end` (with `otherwise` as an `else` alias and an
+// optional `end if`); the condition is the remaining Lamp boolean expression. These
+// are control words only at the START of a substitution, so a value expression is
+// never misread. See devdocs/text.md E.
+function classifyControl(src) {
+    let m;
+    if ((m = src.match(/^(?:else\s+if|otherwise\s+if)\b\s*(.*)$/))) return { type: "elif", cond: m[1].trim() };
+    if (/^(?:else|otherwise)$/.test(src)) return { type: "else" };
+    if (/^end(?:\s+if)?$/.test(src)) return { type: "end" };
+    if ((m = src.match(/^if\b\s*(.*)$/))) return { type: "if", cond: m[1].trim() };
+    return null;
+}
+
 // Rewrites one substitution's source through the natural-language sugar layer:
 // `[regarding EXPR]` sets the render subject (D5); a bare pronoun word becomes its
 // locale call (D1/D2); a declared verb word becomes a conjugate() call agreeing
@@ -1410,12 +1425,59 @@ function createParser(tokens, filePath, globalNames, functionNames = new Set(), 
         if (!hasSub) {
             return ast.createStringLiteral(parts.map((p) => p.value).join(""));
         }
-        const templateParts = parts.map((p) =>
-            p.kind === "text"
-                ? { kind: "text", value: p.value }
-                : { kind: "expr", expr: parseEmbeddedExpression(desugarSugar(p.src, verbNames), token.line, localNames) },
-        );
-        return ast.createTemplateLiteral(templateParts);
+        return ast.createTemplateLiteral(buildTemplateParts(parts, localNames, token.line));
+    }
+
+    // Folds the flat text/substitution parts into a tree, lifting inline-conditional
+    // markers (`[if]`/`[else if]`/`[else]`/`[end]`) into a `cond` node whose branches
+    // hold their own parts. A stack tracks the (at most one) open conditional; the
+    // open frame appends to its active branch's part list, switched by
+    // `[else if]`/`[else]`. A nested `[if]` inside a branch is rejected — without
+    // indentation the `[else]`/`[end]` pairing is unreadable, so authors compose a
+    // separate text value and interpolate it (Lamp keeps real branching in indented
+    // code). A value substitution is desugared and parsed; a condition is a plain
+    // Lamp expression (no sugar). See devdocs/text.md E1-E4.
+    function buildTemplateParts(parts, localNames, line) {
+        const fail = (m) => err(m, line);
+        const root = [];
+        const stack = [{ items: root, cond: null }];
+        const top = () => stack[stack.length - 1];
+        for (const p of parts) {
+            if (p.kind === "text") {
+                top().items.push({ kind: "text", value: p.value });
+                continue;
+            }
+            const ctrl = classifyControl(p.src);
+            if (!ctrl) {
+                top().items.push({ kind: "expr", expr: parseEmbeddedExpression(desugarSugar(p.src, verbNames), line, localNames) });
+                continue;
+            }
+            if (ctrl.type === "if") {
+                if (top().cond !== null) {
+                    throw fail("nested '[if]' is not allowed in a template (the '[else]'/'[end]' pairing would be unreadable without indentation); compute the inner text as a separate value and interpolate it");
+                }
+                if (ctrl.cond === "") throw fail("'[if]' requires a condition in template");
+                const condNode = { kind: "cond", branches: [{ cond: parseEmbeddedExpression(ctrl.cond, line, localNames), parts: [] }] };
+                top().items.push(condNode);
+                stack.push({ items: condNode.branches[0].parts, cond: condNode });
+            } else if (ctrl.type === "elif" || ctrl.type === "else") {
+                const frame = top();
+                if (!frame.cond) throw fail(`'[${ctrl.type === "elif" ? "else if" : "else"}]' without a matching '[if]' in template`);
+                const branches = frame.cond.branches;
+                if (branches[branches.length - 1].cond === null) {
+                    throw fail("'[else if]'/'[else]' after '[else]' in template");
+                }
+                if (ctrl.type === "elif" && ctrl.cond === "") throw fail("'[else if]' requires a condition in template");
+                const branch = { cond: ctrl.type === "elif" ? parseEmbeddedExpression(ctrl.cond, line, localNames) : null, parts: [] };
+                branches.push(branch);
+                frame.items = branch.parts;
+            } else {
+                if (!top().cond) throw fail("'[end]' without a matching '[if]' in template");
+                stack.pop();
+            }
+        }
+        if (stack.length !== 1) throw fail("unterminated '[if]' (missing '[end]') in template");
+        return root;
     }
 
     // Parses one substitution's source as a standalone expression, reusing the

@@ -258,6 +258,40 @@ const cases = [
         },
     },
     {
+        name: "inline conditional: [if]/[else if]/[else]/[end] builds a cond part with branches",
+        run() {
+            const [h] = parse(["on startup:", '    print "[if dark]x[else if lit]y[else]z[end]!"'].join("\n"), ["dark", "lit"]);
+            const parts = h.body[0].expr.parts;
+            const cond = parts[0];
+            assert.strictEqual(cond.kind, "cond");
+            assert.strictEqual(cond.branches.length, 3);
+            assert.deepStrictEqual(cond.branches[0].cond, { kind: "GlobalExpr", name: "dark" });
+            assert.deepStrictEqual(cond.branches[0].parts, [{ kind: "text", value: "x" }]);
+            assert.deepStrictEqual(cond.branches[1].cond, { kind: "GlobalExpr", name: "lit" });
+            assert.strictEqual(cond.branches[2].cond, null);
+            assert.deepStrictEqual(parts[1], { kind: "text", value: "!" });
+        },
+    },
+    {
+        name: "inline conditional: a branch carries its own text and value substitutions",
+        run() {
+            const [h] = parse(["on startup:", '    print "[if dark]seen [score] times[end]"'].join("\n"), ["dark", "score"]);
+            const branch = h.body[0].expr.parts[0].branches[0];
+            assert.deepStrictEqual(branch.parts[0], { kind: "text", value: "seen " });
+            assert.deepStrictEqual(branch.parts[1].expr, { kind: "GlobalExpr", name: "score" });
+            assert.deepStrictEqual(branch.parts[2], { kind: "text", value: " times" });
+        },
+    },
+    {
+        name: "inline conditional: rejects unbalanced markers and nested [if]",
+        run() {
+            assert.throws(() => parse(["on startup:", '    print "[end]"'].join("\n")), /'\[end\]' without a matching '\[if\]'/);
+            assert.throws(() => parse(["on startup:", '    print "[if dark]x"'].join("\n"), ["dark"]), /unterminated '\[if\]'/);
+            assert.throws(() => parse(["on startup:", '    print "[else]"'].join("\n")), /'\[else\]' without a matching/);
+            assert.throws(() => parse(["on startup:", '    print "[if dark]a[if dark]b[end][end]"'].join("\n"), ["dark"]), /nested '\[if\]' is not allowed/);
+        },
+    },
+    {
         name: "A5 quotes: word-boundary ' becomes \" ; [']  forces a literal apostrophe; both stay StringLiteral",
         run() {
             const [a] = parse(["on startup:", `    print "say 'hi'"`].join("\n"));

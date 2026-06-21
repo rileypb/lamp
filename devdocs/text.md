@@ -659,8 +659,24 @@ per-locale sugar words remain the deferred refinement noted under Slice 2.
 
 ### Slice 4 — variation & conditionals
 
-1. **E1–E4** inline `[if]` / `[else if]` / `[else]` / `[end]` (literal-only;
-   `[otherwise]` accepted as an `[else]` alias).
+1. **E1–E4 — DONE (2026-06-21).** Inline `[if COND]` / `[else if COND]` /
+   `[else]` / `[end]` inside a string literal, with `[otherwise]` as an `[else]`
+   alias and `[end if]` as an `[end]` alias. The condition is an ordinary Lamp
+   boolean expression; a branch carries its own text and value substitutions.
+   **Inline nesting is forbidden** — a `[if]` inside a branch is a compile error,
+   because the `[else]`/`[end]` pairing is unreadable without the indentation that
+   statement-level `if` relies on (the dangling-else problem). Flat `[else if]`
+   chains cover most cases; for genuine nesting the author composes a separate
+   `text` value and interpolates it (`let inner = "[if cold]B[else]C[end]"` then
+   `"[if dark]A[inner][end]"`), keeping real branching in indented Lamp code. Built
+   in the template layer: the parser classifies control markers
+   (`classifyControl`) and folds the flat parts into a `cond` node
+   (`buildTemplateParts`, a stack rejecting a second open `[if]`); the emitter
+   emits a ternary chain of `renderTemplate(...)` calls (`emitTemplateFrag`) — no
+   runtime change. Other unbalanced markers (`[end]`/`[else]` without `[if]`,
+   missing `[end]`, `[if]` with no condition) are compile errors too. Conditionals
+   are template-only (E4: not a standalone expression form). Fixture `cond1` +
+   golden; parser unit tests.
 2. **F1–F7** `[one of]…[at random]` / `[cycling]` / `[stopping]` / `[in random
    order]` / `[sticky random]` / weighted, plus the `pick(list, mode)` function form.
 3. **F9** `[first time]…[only]`.

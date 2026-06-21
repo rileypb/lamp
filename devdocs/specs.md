@@ -333,7 +333,14 @@ Built-in primitive types:
     (conjugated against the current agreement). Naming a thing switches the agreement
     onto it (so a verb after `[the cloak]` agrees with the cloak); `[We]`/`[They]`/
     `[regarding EXPR]` reset it. `[regarding EXPR]` sets the subject and renders empty
-    (a decorative leading article — `[regarding the player]` — is stripped). These read a
+    (a decorative leading article — `[regarding the player]` — is stripped).
+  - **Inline conditionals.** `[if COND]…[else if COND]…[else]…[end]` choose between
+    branches by a Lamp boolean `COND`; `[otherwise]` is an `[else]` alias and `[end
+    if]` an `[end]` alias. A branch may contain its own substitutions. **Nesting a
+    `[if]` inside a branch is not allowed** (the `[else]`/`[end]` pairing would be
+    unreadable without indentation); compose a separate `text` value and interpolate
+    it instead. Conditionals are valid only inside a string-literal template (not as
+    a standalone expression). Unbalanced markers are a compile error. These read a
     **render-local context** that resets per render and is never saved. The
     world-model→locale contract for a referent is the optional fields
     `grammatical_person` (1/2/3, default 3), `gender` ("male"/"female"/"neuter"), and

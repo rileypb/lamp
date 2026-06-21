@@ -890,6 +890,28 @@ function emitTryCall(node, globalNames = new Set()) {
     return `lamplighter.runAction(${emitName(node.actionName)}, ${instance}${opts})`;
 }
 
+// Emits the comma-joined fragment list for a template's parts: a text literal, an
+// embedded expression, or a `cond` node (a ternary chain over its branches, each
+// branch rendering its own nested parts to a string via renderTemplate). Recursive
+// so conditionals nest. See devdocs/text.md E.
+function emitTemplateFrags(parts, globalNames) {
+    return parts.map((part) => emitTemplateFrag(part, globalNames)).join(", ");
+}
+
+function emitTemplateFrag(part, globalNames) {
+    if (part.kind === "text") return emitStringLiteral(part.value);
+    if (part.kind === "expr") return emitExpression(part.expr, globalNames);
+    // A `cond` node: fold the branches into a right-nested ternary, each branch a
+    // renderTemplate over its own parts; a `null` condition is the `[else]` tail.
+    let out = '""';
+    for (let i = part.branches.length - 1; i >= 0; i -= 1) {
+        const branch = part.branches[i];
+        const rendered = `lamplighter.renderTemplate([${emitTemplateFrags(branch.parts, globalNames)}])`;
+        out = branch.cond === null ? rendered : `(${emitExpression(branch.cond, globalNames)} ? ${rendered} : ${out})`;
+    }
+    return out;
+}
+
 function emitExpression(expr, globalNames = new Set()) {
     if (expr.kind === "StringLiteral") {
         return emitStringLiteral(expr.value);
@@ -899,13 +921,10 @@ function emitExpression(expr, globalNames = new Set()) {
         // embedded expressions are re-evaluated when the text is printed/frozen.
         // Text segments encode like any prose literal (--encode-strings sees only
         // them); expression segments render through the runtime's value→text rules,
-        // so an object renders as its name, a list as its prose, etc.
-        const frags = expr.parts.map((part) =>
-            part.kind === "text"
-                ? emitStringLiteral(part.value)
-                : emitExpression(part.expr, globalNames),
-        );
-        return `lamplighter.makeText(() => lamplighter.renderTemplate([${frags.join(", ")}]))`;
+        // so an object renders as its name, a list as its prose, etc. A `cond` part
+        // (inline `[if]`/`[else if]`/`[else]`) emits a ternary chain that renders the
+        // chosen branch's nested parts.
+        return `lamplighter.makeText(() => lamplighter.renderTemplate([${emitTemplateFrags(expr.parts, globalNames)}]))`;
     }
     if (expr.kind === "FreezeExpr") {
         return `lamplighter.renderText(${emitExpression(expr.expr, globalNames)})`;
