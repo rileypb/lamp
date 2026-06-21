@@ -1337,6 +1337,33 @@ registerStateProvider({
     },
 });
 
+// Per-site variation state (the site-durable tier of the render context — see
+// devdocs/text.md "Render context"). Each stateful text site ([first time], and
+// the cycling/stopping modes in Slice 4c) is keyed by a compile-time site id and
+// holds how many times it has been rendered. variationAdvance returns the count
+// *before* this visit (0 on the first) and increments it. This must survive
+// undo/save, or a restored game would re-show a [first time] block — hence the
+// state provider. Unlike the render-local context, this is NOT reset per render.
+const variationState = new Map();
+function variationAdvance(siteId) {
+    const count = variationState.get(siteId) || 0;
+    variationState.set(siteId, count + 1);
+    return count;
+}
+
+registerStateProvider({
+    key: "variation",
+    capture() {
+        const out = {};
+        for (const [siteId, count] of variationState) out[siteId] = count;
+        return out;
+    },
+    restore(data) {
+        variationState.clear();
+        for (const [siteId, count] of Object.entries(data || {})) variationState.set(siteId, count);
+    },
+});
+
 // Undo: a bounded stack of snapshots. runCommand checkpoints before each fresh
 // turn mutates; `undo` pops and restores.
 // The undo depth is an author-settable global (`undo_limit`, declared in
@@ -1527,6 +1554,7 @@ module.exports = {
     renderSetAgreement,
     renderCount,
     renderSetCount,
+    variationAdvance,
     divide,
     onEvent,
     registerActionRule,

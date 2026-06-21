@@ -677,11 +677,24 @@ per-locale sugar words remain the deferred refinement noted under Slice 2.
    missing `[end]`, `[if]` with no condition) are compile errors too. Conditionals
    are template-only (E4: not a standalone expression form). Fixture `cond1` +
    golden; parser unit tests.
-2. **F1–F7** `[one of]…[at random]` / `[cycling]` / `[stopping]` / `[in random
+2. **F9 + F8-foundation — DONE (2026-06-21).** `[first time]…[only]` renders the
+   enclosed text the first time a site is reached, then nothing. The site-durable
+   state mechanism lands here: each stateful text site gets a stable compile-time
+   **site id** (allocated by the emitter, reset per build, so it is deterministic
+   and survives a buildId-gated restore), and the runtime keeps a per-site visit
+   count in `variationState`, advanced by `variationAdvance(siteId)` (returns the
+   pre-visit count, 0 on the first). That store is captured by a **state provider**
+   (key `variation`) so undo/save/restore and golden replays stay consistent —
+   without it a restored game would re-show a `[first time]` block. The parser folds
+   `[first time]`/`[only]` into a `firstTime` node (same block stack as `[if]`, so a
+   nested block is rejected); the emitter emits `(variationAdvance(id) === 0 ?
+   render(parts) : "")`. Fixture `firsttime1` + golden; a `tests/state` round-trip
+   test; parser unit tests. The seeded **RNG** half of F8 lands in 4c with its first
+   random consumer.
+3. **F1–F7** `[one of]…[at random]` / `[cycling]` / `[stopping]` / `[in random
    order]` / `[sticky random]` / weighted, plus the `pick(list, mode)` function form.
-3. **F9** `[first time]…[only]`.
-4. **F8** seeded RNG + a state provider capturing per-site cursor / visited state
-   (couples with `devdocs/state.md`; without it, undo/restore desyncs).
+   These reuse the same per-site `variationAdvance` cursor (cycling/stopping) and add
+   the seeded RNG (random modes).
 
 ### Slice 5 — lists & numbers
 

@@ -292,6 +292,20 @@ const cases = [
         },
     },
     {
+        name: "[first time]…[only]: builds a firstTime part; rejects [only] without [first time] and nesting",
+        run() {
+            const [h] = parse(["on startup:", '    print "[first time]hi [score][only]bye"'].join("\n"), ["score"]);
+            const parts = h.body[0].expr.parts;
+            assert.strictEqual(parts[0].kind, "firstTime");
+            assert.deepStrictEqual(parts[0].parts[0], { kind: "text", value: "hi " });
+            assert.strictEqual(parts[0].parts[1].expr.kind, "GlobalExpr");
+            assert.deepStrictEqual(parts[1], { kind: "text", value: "bye" });
+            assert.throws(() => parse(["on startup:", '    print "[only]"'].join("\n")), /'\[only\]' without a matching '\[first time\]'/);
+            assert.throws(() => parse(["on startup:", '    print "[first time]x"'].join("\n")), /unterminated '\[first time\]'/);
+            assert.throws(() => parse(["on startup:", '    print "[if dark]a[first time]b[only][end]"'].join("\n"), ["dark"]), /nested '\[first time\]' is not allowed/);
+        },
+    },
+    {
         name: "A5 quotes: word-boundary ' becomes \" ; [']  forces a literal apostrophe; both stay StringLiteral",
         run() {
             const [a] = parse(["on startup:", `    print "say 'hi'"`].join("\n"));

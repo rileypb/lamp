@@ -340,7 +340,13 @@ Built-in primitive types:
     `[if]` inside a branch is not allowed** (the `[else]`/`[end]` pairing would be
     unreadable without indentation); compose a separate `text` value and interpolate
     it instead. Conditionals are valid only inside a string-literal template (not as
-    a standalone expression). Unbalanced markers are a compile error. These read a
+    a standalone expression). Unbalanced markers are a compile error.
+  - **First-time text.** `[first time]…[only]` renders the enclosed text the first
+    time that site is reached and nothing afterward. The per-site visit state is
+    durable — captured in snapshots — so it survives `undo`/`save`/`restore` (a
+    restored game does not re-show the block). Like the conditional blocks, a
+    `[first time]` cannot nest inside another block; `[only]` without a matching
+    `[first time]` (or vice versa) is a compile error. These read a
     **render-local context** that resets per render and is never saved. The
     world-model→locale contract for a referent is the optional fields
     `grammatical_person` (1/2/3, default 3), `gender` ("male"/"female"/"neuter"), and

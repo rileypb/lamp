@@ -90,6 +90,19 @@ test("a custom state provider is captured and restored", () => {
     assert.strictEqual(external, "before");
 });
 
+test("per-site variation state is captured and reverts on restore", () => {
+    // A [first time] site advances once (count 0 -> 1). Snapshot, advance twice
+    // more, then restore: the count must roll back to the snapshotted value so an
+    // already-consumed [first time] stays consumed and a since-advanced site is
+    // rolled back — without this, undo/restore would re-show or re-suppress text.
+    assert.strictEqual(lamp.variationAdvance("vsite"), 0);
+    const s = lamp.captureState();
+    lamp.variationAdvance("vsite");
+    lamp.variationAdvance("vsite");
+    lamp.restoreState(s);
+    assert.strictEqual(lamp.variationAdvance("vsite"), 1);
+});
+
 if (failures > 0) {
     console.error(`\n${failures} test(s) failed`);
     process.exit(1);

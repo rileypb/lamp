@@ -45,6 +45,112 @@ For the intended execution and isolation model of packaged games — how native 
 - **Lamp Parser**: The component of Lantern responsible for parsing the Lamp source code.
 - **Game Parser**: The parser that processes player commands and translates them into actions within the game world.
 
+## Layer boundaries and IF coupling
+
+This section maps where interactive-fiction concerns actually live across the
+layers — what is cleanly separated, and what IF mechanism sits *below*
+`lib/advent` (in the runtime, the system library, or even the compiler). It is a
+companion to issue **C** below, which covers the runtime side; here we add the
+compiler side and the consolidated picture.
+
+The governing decision (D1 in `devdocs/world-model.md`) is that **Lamp is an IF
+runtime by design** — not a general-purpose object VM that happens to ship an IF
+library. So much of what follows is *intentional* coupling, not accidental
+leakage. The value of writing it down is to mark the seams precisely and to flag
+the one place the coupling runs deeper than the contract in C: the **compiler**.
+
+### Intended layering
+
+| Layer | Owns | Nature |
+|---|---|---|
+| **Lantern** (`src/lantern`) | Language → JS: syntax, types, kinds, relations, rulebooks, functions, events. | compiler |
+| **Lamplighter** (`src/lamplighter`) | World-model VM: object/type/relation registries, events, change handlers, rulebook execution, the Game Parser, save/undo, I/O channels. | IF runtime (by design) |
+| **lib/sys** + **lib/en-US** | Language built-ins (`split`, `prompt`, `run_command`) and *language data* (articles, list-prose, case). | thin, world-agnostic |
+| **lib/advent** | The IF world model: rooms, items, directions, take/drop/wear/go, scope helpers, the game loop, story-end, banner. | the IF library |
+
+### What is cleanly separated
+
+The relation engine, kinds, events, change handlers, and the generic `rulebook`
+primitive are world-agnostic. The strongest example is the **three-layer text
+split**: `lib/en-US` holds articles/list-prose/case transforms as swappable
+*language data*, `lib/sys` holds only the substitution mechanism, and the world
+content stays in `lib/advent` (see `devdocs/text.md`). The world *content* —
+`describe_room`, `in_darkness`, the standard actions, the player object, the loop
+— is correctly in `lib/advent`.
+
+### IF mechanism that lives below lib/advent (runtime)
+
+Per the world-model contract (issue C), these are runtime-owned and IF-specific
+**on purpose**:
+
+- **The Game Parser** — `runCommand`, `scopeOf` (containment reachability over the
+  `holder` field), the vocabulary index, pronoun "it"/antecedent tracking, and
+  disambiguation, with player-facing English hardcoded (`"You can't see any such
+  thing."`, `"I don't understand that."`) in `src/lamplighter/index.js`. It is
+  written against the **world-model contract** (field `holder`, type `physical`)
+  rather than importing advent, so the coupling is a *structural contract*, not a
+  dependency — but the mechanism and its prose are IF and in the runtime.
+- **The six-band action model** — `ACTION_BANDS = [before, instead, check, do,
+  after, report]` (+ `report_failed`) is Inform's IF rulebook convention,
+  hardcoded in the runtime.
+- **Save / Undo / Restore** — checkpoint stack, out-of-world verbs
+  (`registerOutOfWorld("undo"/"save"/"restore")`), and ~15 hardcoded English
+  strings — an IF session subsystem with its text in the engine
+  (see `devdocs/state.md`).
+- **List-to-prose presentation** is now *out* of the runtime (installed by
+  `lib/sys` via `setListFormatter`); noted here as the model the items above have
+  not yet followed.
+
+System-layer items with mild IF/narrative flavor: the `game` bibliographic fields
+(`author`/`tagline`/`version`/`release`) and `reltype` (dev/beta/final) in
+`lib/sys/types.lamp`/`kinds.lamp`; the `outcome` (succeeded/failed) action-result
+kind; and `undo_limit` (policy for the runtime's IF undo).
+
+### IF mechanism baked into the compiler (Lantern)
+
+This is what issue C does not cover: the **IF action/turn model is first-class
+language, not library**. It appears in all three compiler stages.
+
+- **Syntax (tokenizer + parser).** `action` and `try` are reserved keywords
+  (`tokenizer.js`). The six band words are a hardcoded `PHASE_WORDS` set that
+  triggers `parsePhaseRule` (`parser_rd.js`); `report failed` is special-cased
+  into a seventh `report_failed` band; `silently try` is a distinct form; and
+  action selectors (`any`/`except`/tags) are parsed here.
+- **Semantics (checker).** `outcome` (succeeded/failed) is the hardcoded expected
+  result type of *every* phase-rule body (`checkStatements(…, "outcome", …)`).
+  Every action auto-gains a `reason` slot of the magic `stop_reason` type so
+  `stop failed REASON`/`self.reason` type-check. `UNIVERSAL_SLOTS = {actor,
+  action, reason}` makes `actor` — the commanding IF agent — a universal implicit
+  slot the compiler knows by name.
+- **Prose sugar.** The `verb` keyword → `conjugate()`, and `[the X]`/`[a X]` /
+  pronoun brackets, are English-agreement machinery in the parser. This is
+  *linguistic* rather than world-model IF and it delegates the actual data to the
+  `lib/en-US` locale, but it lives in the compiler and exists to generate
+  player-facing prose.
+
+Types, kinds, relations, rulebooks (the generic primitive), functions, events,
+globals, and control flow remain world-agnostic. The distinction worth holding:
+`action` is really "a rulebook bound to a typed instance" — the generic half is
+clean; it is the **band vocabulary plus the `outcome`/`reason`/`actor` magic** that
+make it specifically IF.
+
+### The open question
+
+A strictly "pure" separation would push the parser, the action/turn model, and
+save/undo *up* into an IF library, leaving Lamplighter a pure
+object/relation/rulebook/event VM and Lantern knowing only `rulebook` (with a
+library defining the band set, the result kind, and the actor/reason slots as
+data). The counter-position — the one currently chosen — is that for an IF VM,
+parsing, turns, and save/undo *are* the engine's domain, with `holder`/`physical`
+as the deliberate thin interface. This is recorded as a known, accepted coupling,
+not a scheduled refactor; the text layer shows the project does a clean extraction
+when it decides one is worth it.
+
+Two directions for resolving it — *promote actions to first-class core* and/or
+*make the compiler extensible so a library contributes the action syntax* — are
+worked through in `devdocs/compiler-extensibility.md`, including a staged
+core-vs-plugin first step.
+
 ## Known Architectural Issues (review 2026-06-19)
 
 A standing review of `src/lantern`, `src/lamplighter`, and `lib/advent`. These
@@ -110,6 +216,11 @@ Full design in `devdocs/world-model.md`. Possible future hardening (not done, lo
 priority): a startup check that a `physical` type and `holder` field exist when
 the parser is used, so a malformed world fails loudly instead of on
 `undefined.holder`.
+
+This issue covers the *runtime* side only. The IF action/turn model is also baked
+into the *compiler* (band keywords, the `outcome` result type, the auto `reason`
+slot, the `actor`/`action`/`reason` universal slots) — see "Layer boundaries and
+IF coupling" above for the full cross-layer picture.
 
 ### D. The AST conflates bare object names with string literals — RESOLVED (2026-06-19)
 A bare identifier used as a value parses to the same `StringLiteral` node as a

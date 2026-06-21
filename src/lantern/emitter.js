@@ -95,7 +95,15 @@ function emitNameList(names) {
     return `[${list.map((name) => emitName(name)).join(", ")}]`;
 }
 
+// Allocates stable per-build ids for stateful variation sites ([first time], and
+// the cycling/stopping modes in Slice 4c). Reset at the start of each emit so ids
+// are deterministic for a given source — the runtime keys per-site cursor state by
+// them, and a save only restores into the same build (buildId-gated). See
+// devdocs/text.md F8/F9.
+let variationSiteCounter = 0;
+
 function emitProgram(programAst, options = {}) {
+    variationSiteCounter = 0;
     const nativeJsContents = options.nativeJsContents || [];
     const globalDeclNodes = programAst.nodes.filter((node) => node.kind === "GlobalDecl");
     const globalAssignNodes = programAst.nodes.filter((node) => node.kind === "GlobalAssign");
@@ -901,6 +909,14 @@ function emitTemplateFrags(parts, globalNames) {
 function emitTemplateFrag(part, globalNames) {
     if (part.kind === "text") return emitStringLiteral(part.value);
     if (part.kind === "expr") return emitExpression(part.expr, globalNames);
+    if (part.kind === "firstTime") {
+        // [first time]…[only] (F9): render the enclosed parts the first time this
+        // site is reached, then nothing. variationAdvance returns the pre-visit
+        // count (0 on the first) and records the visit in saved per-site state.
+        const siteId = `v${variationSiteCounter++}`;
+        const rendered = `lamplighter.renderTemplate([${emitTemplateFrags(part.parts, globalNames)}])`;
+        return `(lamplighter.variationAdvance(${JSON.stringify(siteId)}) === 0 ? ${rendered} : "")`;
+    }
     // A `cond` node: fold the branches into a right-nested ternary, each branch a
     // renderTemplate over its own parts; a `null` condition is the `[else]` tail.
     let out = '""';

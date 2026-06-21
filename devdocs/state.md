@@ -67,6 +67,17 @@ boundary and discarded when that render returns — it never outlives a single
 `print`/`freeze`. So it is not part of any snapshot; `captureState`/`restoreState`
 neither read nor write it. (The story viewpoint that drives `[We]` is a separate,
 ordinary saved global — `viewpoint_person`/`viewpoint_plural` — not render state.)
+
+**Per-site variation state IS saved (the site-durable tier).** The other half of the
+text render context is per-call-site cursor state — the `[first time]` visit count
+(Slice 4b), and the `[cycling]`/`[stopping]`/sticky cursors to come (Slice 4c). This
+must survive across turns and snapshots, or a restored game would re-show a
+`[first time]` block or re-shuffle a cycle. It is keyed by a compile-time **site id**
+(allocated deterministically by the emitter and stable for a build, so it lines up
+under a buildId-gated restore) and held in the runtime's `variationState` map,
+captured by the `variation` state provider. Round-tripped in `tests/state`. This is
+the site-durable tier of `devdocs/text.md` "Render context", distinct from the
+never-saved render-local tier above.
 This is the render-local tier of `devdocs/text.md` "Render context"; only the
 site-durable tier (the future `[cycling]`/RNG cursors) will need a state provider.
 

@@ -105,6 +105,10 @@ function classifyControl(src) {
     if (/^(?:else|otherwise)$/.test(src)) return { type: "else" };
     if (/^end(?:\s+if)?$/.test(src)) return { type: "end" };
     if ((m = src.match(/^if\b\s*(.*)$/))) return { type: "if", cond: m[1].trim() };
+    // [first time]…[only] (F9): show the enclosed text on the first render of this
+    // site, then nothing. See devdocs/text.md F9.
+    if (/^first\s+time$/.test(src)) return { type: "firsttime" };
+    if (/^only$/.test(src)) return { type: "only" };
     return null;
 }
 
@@ -1428,19 +1432,19 @@ function createParser(tokens, filePath, globalNames, functionNames = new Set(), 
         return ast.createTemplateLiteral(buildTemplateParts(parts, localNames, token.line));
     }
 
-    // Folds the flat text/substitution parts into a tree, lifting inline-conditional
-    // markers (`[if]`/`[else if]`/`[else]`/`[end]`) into a `cond` node whose branches
-    // hold their own parts. A stack tracks the (at most one) open conditional; the
-    // open frame appends to its active branch's part list, switched by
-    // `[else if]`/`[else]`. A nested `[if]` inside a branch is rejected — without
-    // indentation the `[else]`/`[end]` pairing is unreadable, so authors compose a
-    // separate text value and interpolate it (Lamp keeps real branching in indented
-    // code). A value substitution is desugared and parsed; a condition is a plain
-    // Lamp expression (no sugar). See devdocs/text.md E1-E4.
+    // Folds the flat text/substitution parts into a tree, lifting the block markers
+    // into nodes: `[if]`/`[else if]`/`[else]`/`[end]` into a `cond` node (branches,
+    // each holding its own parts) and `[first time]`/`[only]` into a `firstTime`
+    // node. A stack tracks the (at most one) open block; the open frame appends to
+    // its active part list, switched by `[else if]`/`[else]`. Opening a second block
+    // inside one is rejected — without indentation the marker pairing is unreadable,
+    // so authors compose a separate text value and interpolate it (Lamp keeps real
+    // branching in indented code). A value substitution is desugared and parsed; a
+    // condition is a plain Lamp expression (no sugar). See devdocs/text.md E, F9.
     function buildTemplateParts(parts, localNames, line) {
         const fail = (m) => err(m, line);
         const root = [];
-        const stack = [{ items: root, cond: null }];
+        const stack = [{ items: root, block: null }];
         const top = () => stack[stack.length - 1];
         for (const p of parts) {
             if (p.kind === "text") {
@@ -1452,18 +1456,27 @@ function createParser(tokens, filePath, globalNames, functionNames = new Set(), 
                 top().items.push({ kind: "expr", expr: parseEmbeddedExpression(desugarSugar(p.src, verbNames), line, localNames) });
                 continue;
             }
-            if (ctrl.type === "if") {
-                if (top().cond !== null) {
-                    throw fail("nested '[if]' is not allowed in a template (the '[else]'/'[end]' pairing would be unreadable without indentation); compute the inner text as a separate value and interpolate it");
+            if (ctrl.type === "if" || ctrl.type === "firsttime") {
+                if (top().block !== null) {
+                    const what = ctrl.type === "if" ? "[if]" : "[first time]";
+                    throw fail(`nested '${what}' is not allowed in a template (the marker pairing would be unreadable without indentation); compute the inner text as a separate value and interpolate it`);
                 }
-                if (ctrl.cond === "") throw fail("'[if]' requires a condition in template");
-                const condNode = { kind: "cond", branches: [{ cond: parseEmbeddedExpression(ctrl.cond, line, localNames), parts: [] }] };
-                top().items.push(condNode);
-                stack.push({ items: condNode.branches[0].parts, cond: condNode });
+                if (ctrl.type === "if") {
+                    if (ctrl.cond === "") throw fail("'[if]' requires a condition in template");
+                    const condNode = { kind: "cond", branches: [{ cond: parseEmbeddedExpression(ctrl.cond, line, localNames), parts: [] }] };
+                    top().items.push(condNode);
+                    stack.push({ items: condNode.branches[0].parts, block: condNode });
+                } else {
+                    const ftNode = { kind: "firstTime", parts: [] };
+                    top().items.push(ftNode);
+                    stack.push({ items: ftNode.parts, block: ftNode });
+                }
             } else if (ctrl.type === "elif" || ctrl.type === "else") {
                 const frame = top();
-                if (!frame.cond) throw fail(`'[${ctrl.type === "elif" ? "else if" : "else"}]' without a matching '[if]' in template`);
-                const branches = frame.cond.branches;
+                if (!frame.block || frame.block.kind !== "cond") {
+                    throw fail(`'[${ctrl.type === "elif" ? "else if" : "else"}]' without a matching '[if]' in template`);
+                }
+                const branches = frame.block.branches;
                 if (branches[branches.length - 1].cond === null) {
                     throw fail("'[else if]'/'[else]' after '[else]' in template");
                 }
@@ -1471,12 +1484,19 @@ function createParser(tokens, filePath, globalNames, functionNames = new Set(), 
                 const branch = { cond: ctrl.type === "elif" ? parseEmbeddedExpression(ctrl.cond, line, localNames) : null, parts: [] };
                 branches.push(branch);
                 frame.items = branch.parts;
+            } else if (ctrl.type === "end") {
+                if (!top().block || top().block.kind !== "cond") throw fail("'[end]' without a matching '[if]' in template");
+                stack.pop();
             } else {
-                if (!top().cond) throw fail("'[end]' without a matching '[if]' in template");
+                if (!top().block || top().block.kind !== "firstTime") throw fail("'[only]' without a matching '[first time]' in template");
                 stack.pop();
             }
         }
-        if (stack.length !== 1) throw fail("unterminated '[if]' (missing '[end]') in template");
+        if (stack.length !== 1) {
+            throw fail(top().block.kind === "cond"
+                ? "unterminated '[if]' (missing '[end]') in template"
+                : "unterminated '[first time]' (missing '[only]') in template");
+        }
         return root;
     }
 

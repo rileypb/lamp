@@ -41,12 +41,20 @@ sugar words). World-model→locale person contract (`grammatical_person`/`gender
   parser (`classifyControl`/`buildTemplateParts` → `cond` AST node) + emitter
   (`emitTemplateFrag` ternary chain); no runtime change. Fixture `cond1` + golden;
   parser unit tests; all 11 suites green (124).
-- **4b (next) — variation state infra + `[first time]…[only]` (F9, F8 foundation):**
-  a seeded RNG + a **state provider** capturing per-site cursor/visited state (the
-  site-durable tier of the render context — couples with `devdocs/state.md`; without
-  it undo/restore desyncs). `[first time]…[only]` is the degenerate stopping case.
-- **4c — variation modes (F1–F7):** `[one of]…[or]…[at random]`/`[cycling]`/
-  `[stopping]`/`[in random order]`/`[sticky random]`/weighted + `pick(list, mode)`.
+- **4b (complete) — variation state infra + `[first time]…[only]` (F9, F8 base):**
+  the site-durable tier landed. Each stateful text site gets a deterministic
+  compile-time **site id** (emitter, reset per build); the runtime holds a per-site
+  visit count (`variationState` / `variationAdvance`) captured by the `variation`
+  **state provider** so undo/save/restore stay consistent. `[first time]…[only]`
+  parses to a `firstTime` node (same block stack as `[if]`, no nesting) and emits
+  `(variationAdvance(id) === 0 ? render : "")`. Fixture `firsttime1` + golden;
+  `tests/state` round-trip; parser tests; all 11 suites green (125).
+- **4c (next) — variation modes (F1–F7) + seeded RNG (F8):** `[one of]…[or]…[at
+  random]`/`[cycling]`/`[stopping]`/`[in random order]`/`[sticky random]`/weighted +
+  `pick(list, mode)`. Cycling/stopping reuse `variationAdvance`; the random modes add
+  a seeded RNG whose seed is captured by a state provider (the rest of F8). The
+  `[one of]…[or]…` sugar needs the parser to collect alternatives (like the
+  conditional branches) and the runtime to select one by mode.
 **Follow-up from Slice 3 (optional):** migrate advent's reports from the manual
 `self.actor == player` branch to `[regarding self.actor][They] [verb] [the self.noun]`
 templates (D8 — churns goldens, do deliberately). (Verb agreement auto-switches onto
@@ -128,6 +136,16 @@ Carryover from arch issue C. When the parser is used, assert at startup that a
 `physical` type and a `holder` field exist, so a world library missing the
 runtime↔world contract names fails loudly instead of on `undefined.holder` deep
 in `scopeOf`. Low priority. **Where:** `src/lamplighter/index.js` (`run`).
+
+## 7. Core-vs-plugin: actions as core and/or an extensible compiler (design, not scheduled)
+Proposal recorded in `devdocs/compiler-extensibility.md`: resolve the
+"IF baked into the compiler" coupling (arch doc → "Layer boundaries and IF
+coupling") by (1) promoting actions+bands to first-class general core, and/or
+(2) making Lantern plugin-extensible so a library contributes the action syntax.
+Recommended de-risking first step: refactor Lantern into *core + one first-party
+plugin* owning the action/IF constructs (no third-party grammar yet), which also
+lets the base `action` type move out of the runtime bootstrap. No code until the
+direction is chosen. **Where:** `src/lantern/*` (pipeline), `src/lamplighter/index.js`.
 
 ## Smaller / opportunistic
 - **Reassigning a multi-word (underscore) global fails the checker.** `global int

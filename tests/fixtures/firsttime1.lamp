@@ -1,0 +1,16 @@
+# Slice 4b: [first time]…[only] (F9). The enclosed text renders the first time the
+# site is reached, then nothing. State is per call-site and survives undo/save (it
+# is captured by a state provider), so a stored text printed repeatedly shows the
+# block only once. Two independent sites advance independently. See devdocs/text.md F9.
+game First_Time:
+    author "Lamp"
+
+on startup:
+    let greet = "[first time]Welcome, newcomer! [only]You are in the hall."
+    print greet
+    print greet
+    print greet
+    # A second, independent site.
+    let tip = "[first time](Tip: type HELP.) [only]Nothing new here."
+    print tip
+    print tip
