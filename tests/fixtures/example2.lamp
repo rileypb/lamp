@@ -7,4 +7,4 @@ game Example_2:
 
 on startup:
 	let this_game = game.all.first
-	print this_game
+	print (this_game) + "[line break]"

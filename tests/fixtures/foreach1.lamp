@@ -17,11 +17,11 @@ game Beta:
 
 on startup:
 	for g in game.all:
-		print g.name
-		print g.author
+		print (g.name) + "[line break]"
+		print (g.author) + "[line break]"
 	for word in split("the quick brown fox"):
-		print word
+		print (word) + "[line break]"
 	let total = 0
 	for n in split("a b c"):
 		total = total + 1
-	print total
+	print (total) + "[line break]"

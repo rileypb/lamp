@@ -8,7 +8,7 @@ game Extended:
 on startup:
     let this_game = game.all.first
     this_game.version = this_game.version + 1
-    print "after " + this_game.version
+    print ("after " + this_game.version) + "[line break]"
 
 on validation:
     error "invalid state"

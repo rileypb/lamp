@@ -13,10 +13,10 @@ prerequisite lists in `devdocs/game_parser.md`, `devdocs/rulebooks.md`, and
 > grammar, world-model traits, turn-cycle/daemon, and message ideas mined from
 > `lurkinghorror.txt`. `devdocs/text.md` is the **text-substitution**
 > design + 7-slice Action list (Inform-7-style `"[We] [drop] [the velvet_cloak]"`).
-> **Slices 1–5 DONE** (lists & numbers complete, incl. G3 count-driven agreement);
-> **Slice 6 in progress** (I1 Unicode escape + J1/K1/K3 misc-output done; only H
-> paragraph control remains, blocked on an output-path decision — see §1).
-> `lurking_todo.md` still awaits triage.
+> **Slices 1–6 DONE** (Slice 6: H1/H2/H3/H6 paragraph control, I1 Unicode escape,
+> J1/K1/K3 misc-output — runtime now owns newlines; non-punctuated prints run on,
+> `[line break]`/`[par]`/`[no break]`/`[run on]`/`[par if printed]` markers). Slice 7
+> (text styling) is next. `lurking_todo.md` still awaits triage.
 
 ## 1. Text substitution — Slices 1–5 DONE; Slice 6 next
 **Slice 1 (complete):** bracket substitution + quote convention + lazy `text`/`freeze`.
@@ -103,15 +103,23 @@ sugar words). World-model→locale person contract (`grammatical_person`/`gender
   downstream consumers see the character; malformed `\u{…}` stays verbatim. Combine
   with literal UTF-8 for I2 typographic entities (no new syntax needed). Fixture
   `typography1` + golden; tokenizer unit tests; 133 goldens.
-- **6b (BLOCKED on a decision) — H1/H2/H3 paragraph control:** `[par]`/`[no break]`
-  (H1), `[run on]` (H2), `[par if printed]` (H3). These need **output-stream state**
-  (pending-break + printed-since-break) spanning multiple prints. The blocker: the
-  trailing newline is currently owned by the **host** (`sandbox/host.js` appends `\n`
-  per `print` message), not the runtime — so faithful run-on/par-if-printed requires
-  moving newline ownership into a runtime output-stream manager (route `print`
-  through `writeImpl` with managed newlines). Options: (1) full manager — faithful,
-  some golden-churn risk; (2) lighter flag-based run-on, defer H3; (3) defer H,
-  do J/K items first. Awaiting direction.
+- **6b (complete) — H1/H2/H3/H6 paragraph control:** the runtime output-stream manager
+  (`src/lamplighter/index.js`) now owns newlines — `print`/`write` route through
+  `streamWrite` (emitting via the `write` channel; host/shell add no `\n`). Rule A:
+  a print ending in `.?!` auto-breaks (`SENTENCE_END`); non-punctuated text runs on.
+  Markers `[line break]`/`[par]`/`[no break]`/`[run on]`/`[par if printed]` desugar to
+  lib/sys output-stream functions, carried as private-use sentinels processed in stream
+  order; `flushOutput` at worker exit. Rule B is a lib/advent convention (turn-boundary
+  `[par if printed]` in `startup.lamp`; paragraph break between supporter groups).
+  lib/advent + value fixtures got explicit `[line break]` where output must hold its
+  own line; rebaseline was output-compatible (one cosmetic blank changed, `advent14`).
+  Fixture `para1` + golden; parser test; all 11 suites green (135 goldens).
+  - *Known refinements (not blocking):* (a) the host-written prompt/echo bypasses the
+    manager, so the end-of-story leading break can't see it's at line-start — `advent14`
+    loses one blank in that narrow case; fix by tracking trailing-newline count across
+    the prompt path. (b) Rule B is turn-boundary, not per-`report`/`after` band;
+    per-band separation is a later refinement. (c) The legacy `"print"` worker/host/shell
+    message path is now unused (print routes through `"write"`); remove when convenient.
 - **6c (complete) — J1/K1/K3 misc output:** J1 `[player_command()]` echoes the
   player's last raw input (original casing, trimmed) — retained by the runtime in
   `runCommand`, exposed as `native function string player_command()` in lib/sys (call

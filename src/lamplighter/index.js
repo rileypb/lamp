@@ -848,8 +848,85 @@ function fireEvent(eventName) {
     }
 }
 
+// --- Output-stream paragraph control (text.md H) ----------------------------
+// Newlines are owned here, not by the host: `print` output is written raw (via
+// writeImpl, the "write" channel — the host/shell add no trailing newline) and this
+// manager decides breaks. `streamPending` is the strongest break requested but not
+// yet materialized — an "ensure at least N newlines before the next visible text"
+// counter (1 = line break, 2 = paragraph break). `streamPrintedSinceBreak` gates the
+// conditional boundary break (H3/H6). Inline markers in rendered text arrive as
+// private-use sentinels and are processed in stream order. See devdocs/text.md H6.
+const STREAM_LINE_BREAK = "\uE000";
+const STREAM_PAR_BREAK = "\uE001";
+const STREAM_NO_BREAK = "\uE002";
+const STREAM_PAR_IF_PRINTED = "\uE003";
+const STREAM_SENTINELS = /[\uE000-\uE003]/;
+
+let streamPending = 0;
+let streamPrintedSinceBreak = false;
+
+// Rule A (auto line break): a run "ends a sentence" when its last non-space char,
+// past any trailing closing quotes / parens / brackets, is `.` `?` or `!`.
+const SENTENCE_END = /[.?!]['")\]’”]*\s*$/;
+
+function outputMarker(kind) {
+    return kind === "line" ? STREAM_LINE_BREAK
+        : kind === "par" ? STREAM_PAR_BREAK
+        : kind === "nobreak" ? STREAM_NO_BREAK
+        : STREAM_PAR_IF_PRINTED;
+}
+
+function streamFlushPending() {
+    if (streamPending > 0) {
+        writeImpl("\n".repeat(streamPending));
+        streamPending = 0;
+        streamPrintedSinceBreak = false;
+    }
+}
+
+function streamRequestBreak(n) {
+    if (n > streamPending) streamPending = n;
+}
+
+function streamEmitRun(run, applyRuleA) {
+    if (run.length === 0) return;
+    streamFlushPending();
+    writeImpl(run);
+    streamPrintedSinceBreak = true;
+    if (applyRuleA && SENTENCE_END.test(run)) streamRequestBreak(1);
+}
+
+// Emit a rendered string: split on break sentinels, writing text runs and applying
+// each break request in order. `applyRuleA` is on for print (sentence-end auto line
+// break), off for raw write.
+function streamWrite(s, applyRuleA) {
+    if (!STREAM_SENTINELS.test(s)) {
+        streamEmitRun(s, applyRuleA);
+        return;
+    }
+    let run = "";
+    for (const ch of s) {
+        if (ch >= STREAM_LINE_BREAK && ch <= STREAM_PAR_IF_PRINTED) {
+            streamEmitRun(run, applyRuleA);
+            run = "";
+            if (ch === STREAM_LINE_BREAK) streamRequestBreak(1);
+            else if (ch === STREAM_PAR_BREAK) streamRequestBreak(2);
+            else if (ch === STREAM_NO_BREAK) streamPending = 0;
+            else if (streamPrintedSinceBreak) streamRequestBreak(2);
+        } else {
+            run += ch;
+        }
+    }
+    streamEmitRun(run, applyRuleA);
+}
+
+// Materialize any pending break at program end so the final line is terminated.
+function flushOutput() {
+    streamFlushPending();
+}
+
 function print(value) {
-    printImpl(formatValue(value));
+    streamWrite(formatValue(value), true);
 }
 
 function defineGlobal(name, value) {
@@ -875,7 +952,7 @@ function setPrint(nextPrintImpl) {
 }
 
 function write(value) {
-    writeImpl(String(value));
+    streamWrite(String(value), false);
 }
 
 function setWrite(nextWriteImpl) {
@@ -901,6 +978,7 @@ function readLine() {
     if (!requestLineImpl) {
         throw new Error("no input channel installed; run the game through the sandbox launcher");
     }
+    streamFlushPending();
     return requestLineImpl();
 }
 
@@ -911,6 +989,7 @@ function promptLine(promptText) {
     if (!promptLineImpl) {
         throw new Error("no prompt channel installed; run the game through the sandbox launcher");
     }
+    streamFlushPending();
     return promptLineImpl(promptText);
 }
 
@@ -1742,6 +1821,8 @@ module.exports = {
     setPrint,
     write,
     setWrite,
+    outputMarker,
+    flushOutput,
     setPromptChannel,
     promptLine,
     setInputChannel,

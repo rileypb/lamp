@@ -94,11 +94,14 @@ async function workerTests() {
         assert.deepStrictEqual(msgs, [{ type: "done" }]);
     });
 
-    await run("lamplighter.print() sends print message", async () => {
+    await run("lamplighter.print() sends a write message (runtime owns newlines)", async () => {
+        // The runtime's output-stream manager owns newlines (text.md H6), so print
+        // emits raw text via the write channel; a string with no sentence-ending
+        // punctuation gets no trailing newline (it would run on into the next text).
         const f = writeTempGame('lamplighter.print("hello sandbox");');
         const msgs = await runWorker(f);
         assert.deepStrictEqual(msgs, [
-            { type: "print", value: "hello sandbox" },
+            { type: "write", value: "hello sandbox" },
             { type: "done" },
         ]);
     });
@@ -177,7 +180,7 @@ async function workerTests() {
         const f = writeTempGame('lamplighter.print(lamplighter.readLine());');
         const msgs = await runWorker(f, { inputLines: ["player typed this"] });
         assert.deepStrictEqual(msgs, [
-            { type: "print", value: "player typed this" },
+            { type: "write", value: "player typed this" },
             { type: "done" },
         ]);
     });
@@ -190,8 +193,8 @@ async function workerTests() {
         const f = writeTempGame(code);
         const msgs = await runWorker(f, { inputLines: ["first", "second"] });
         assert.deepStrictEqual(msgs, [
-            { type: "print", value: "first" },
-            { type: "print", value: "second" },
+            { type: "write", value: "first" },
+            { type: "write", value: "second" },
             { type: "done" },
         ]);
     });
@@ -214,19 +217,31 @@ async function hostTests() {
     console.log("\nhost:");
 
     await run("print output goes to out stream", async () => {
-        const f = writeTempGame('lamplighter.print("host output test");');
+        // A sentence-ending string auto-breaks (rule A), so its newline is emitted at
+        // exit flush; the runtime owns the newline, not the host.
+        const f = writeTempGame('lamplighter.print("host output test.");');
         const out = mockStream();
         const err = mockStream();
         await playFile(f, { out, err });
-        assert.strictEqual(out.output, "host output test\n");
+        assert.strictEqual(out.output, "host output test.\n");
         assert.strictEqual(err.output, "");
     });
 
-    await run("multiple prints are ordered and newline-terminated", async () => {
-        const code = ['lamplighter.print("line one");', 'lamplighter.print("line two");'].join("\n");
-        const f = writeTempGame(code);
-        const out = mockStream();
-        await playFile(f, { out, err: mockStream() });
+    await run("multiple prints run on without breaks; punctuation/markers add newlines", async () => {
+        // No sentence-ending punctuation and no [line break] → the two prints run on.
+        const runOn = ['lamplighter.print("line one");', 'lamplighter.print("line two");'].join("\n");
+        let out = mockStream();
+        await playFile(writeTempGame(runOn), { out, err: mockStream() });
+        assert.strictEqual(out.output, "line oneline two");
+
+        // A line-break marker between them yields one newline each (the trailing one
+        // flushed at exit).
+        const broken = [
+            'lamplighter.print("line one" + lamplighter.outputMarker("line"));',
+            'lamplighter.print("line two" + lamplighter.outputMarker("line"));',
+        ].join("\n");
+        out = mockStream();
+        await playFile(writeTempGame(broken), { out, err: mockStream() });
         assert.strictEqual(out.output, "line one\nline two\n");
     });
 

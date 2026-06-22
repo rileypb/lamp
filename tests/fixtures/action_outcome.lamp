@@ -21,14 +21,14 @@ check take:
 		stop failed
 
 do take:
-	print "Taken."
+	print ("Taken.") + "[line break]"
 
 on startup:
 	let got = try take:
 		taken lamp
 	if got == succeeded:
-		print "(the lamp came free)"
+		print ("(the lamp came free)") + "[line break]"
 	let blocked = try take:
 		taken rock
 	if blocked == failed:
-		print "(the rock would not budge)"
+		print ("(the rock would not budge)") + "[line break]"

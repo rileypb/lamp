@@ -6,4 +6,4 @@ game Example_2:
     release dev
 
 on startup:
-	print game.all
+	print (game.all) + "[line break]"

@@ -123,6 +123,13 @@ Lantern-generated JavaScript targets the following Lamplighter API surface:
     - Objects print as their `name`.
     - Lists print as human-readable strings using `,` and `and`.
     - An empty list prints as `nothing` (the default empty-list display string; subject to change).
+    - **Newlines are runtime-owned (paragraph control, text.md H).** `print` does *not*
+      unconditionally append a newline. A value whose rendered text ends in
+      sentence-ending punctuation (`.` `?` `!`, past trailing quotes/parens) auto-ends
+      its line; text without it *runs on* into the next output. The break markers
+      `[line break]` / `[par]` / `[no break]` / `[run on]` / `[par if printed]` (and the
+      lib/sys functions they desugar to) request or cancel breaks, which are
+      deduplicated and flushed before the next text, a prompt, or at program exit.
 - `setPrint(fn)`
     - Replaces the output implementation used by `print`.
 - `defineGlobal(name, value)`

@@ -14,6 +14,18 @@ native function void run_command(string line, object actor)
 # \"[player_command()]\"." Empty before the first command. See devdocs/text.md J1.
 native function string player_command()
 
+# Paragraph-control markers (text.md H). Each returns an output-stream control token
+# meant to be printed in place; the bare-word sugar [line break] / [par] / [no break]
+# / [run on] / [par if printed] desugars to these calls. line_break/paragraph request
+# a line/paragraph break; no_break (and its [run on] alias) cancels a pending break so
+# the next text continues; par_if_printed breaks only if something was printed since
+# the last break. The runtime owns newline emission — a printed string ending in
+# sentence-ending punctuation auto-breaks (H6), and these markers override that.
+native function string line_break()
+native function string paragraph()
+native function string no_break()
+native function string par_if_printed()
+
 # RNG control for randomized text variation (text.md F8). The seed defaults to a
 # fixed value (so golden tests are deterministic). A game wanting cross-playthrough
 # variety calls `randomize()` at startup to seed from entropy, or `seed_random(n)`

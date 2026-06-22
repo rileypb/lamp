@@ -21,6 +21,6 @@ connects foyer north hall
 
 on startup:
     if connects foyer north hall and not connects foyer south hall:
-        print "exactly north"
+        print ("exactly north") + "[line break]"
     else:
-        print "nope"
+        print ("nope") + "[line break]"

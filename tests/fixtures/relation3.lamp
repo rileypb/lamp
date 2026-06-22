@@ -32,4 +32,4 @@ connects:
     target foyer
 
 on startup:
-    print connects.all
+    print (connects.all) + "[line break]"

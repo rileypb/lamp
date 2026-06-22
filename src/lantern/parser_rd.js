@@ -93,6 +93,18 @@ const PRONOUN_SUGAR_FNS = {
     they: "they", them: "them", their: "their", theirs: "theirs", themself: "themself",
 };
 
+// Paragraph-control marker phrases (H1/H2/H3) → their lib/sys output-stream calls.
+// `[run on]` is an alias for `[no break]` (both cancel a pending break). These are
+// matched before the bare-word sugar so `[par]` is not read as an object reference.
+const MARKER_CALLS = {
+    "line break": "line_break()",
+    "par": "paragraph()",
+    "paragraph break": "paragraph()",
+    "no break": "no_break()",
+    "run on": "no_break()",
+    "par if printed": "par_if_printed()",
+};
+
 // Classifies a substitution source as an inline-conditional control marker (E1-E4)
 // or null for an ordinary value/sugar substitution. Markers are the leading words
 // `if` / `else if` / `else` / `end` (with `otherwise` as an `else` alias and an
@@ -131,6 +143,9 @@ function classifyControl(src) {
 // with the subject (D3); otherwise the article sugar (B3-B5) applies, and anything
 // it does not match is returned verbatim as an ordinary expression.
 function desugarSugar(src, verbNames) {
+    // Paragraph-control markers (H1/H2/H3): inline substitutions that desugar to the
+    // lib/sys output-stream functions. See devdocs/text.md H.
+    if (MARKER_CALLS[src]) return MARKER_CALLS[src];
     const regarding = src.match(/^regarding\s+(\S.*)$/);
     if (regarding) {
         // `[regarding the player]` names the player *object* — the article word is

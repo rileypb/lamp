@@ -6,18 +6,17 @@ native function void describe_supporters(room r)
 # listing contents, and whatever else we may want to add.
 function void describe_room(room r):
 	if r.lighted:
-		print r
-		print r.description
+		print r + "[line break]"
+		print r.description + "[line break]"
 		list_room_contents(r)
 	else:
-		print "Darkness"
+		print "Darkness[line break]"
 		print "It is pitch dark, and you can't see a thing."
 
 function void list_room_contents(room r):
 	let contents = contents_of(r)
 	if not (contents.first == none):
-		print
-		print "You see " + contents + " here."
+		print "[par]You see " + contents + " here."
 	describe_supporters(r)
 
 on person.holder change:

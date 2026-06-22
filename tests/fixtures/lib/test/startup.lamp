@@ -2,9 +2,9 @@
 
 on startup:
 	let this_game = game.all.first
-	print this_game.name
-	print "by " + this_game.author
+	print this_game.name + "[line break]"
+	print "by " + this_game.author + "[line break]"
 	if this_game.release == final:
-		print "version " + this_game.version 
+		print "version " + this_game.version + "[line break]"
 	else:
-		print "version " + this_game.version + " " + this_game.release
+		print "version " + this_game.version + " " + this_game.release + "[line break]"

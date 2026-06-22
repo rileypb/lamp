@@ -9,4 +9,4 @@ function int triple(int n):
     return n * 100
 
 on startup:
-    print triple(3)
+    print (triple(3)) + "[line break]"

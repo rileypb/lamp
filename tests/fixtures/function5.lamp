@@ -6,5 +6,5 @@ game Game_1:
 lib fntest
 
 on startup:
-    print double(5)
-    print double(double(3))
+    print (double(5)) + "[line break]"
+    print (double(double(3))) + "[line break]"

@@ -28,8 +28,8 @@ rulebook string describe(animal a):
 		stop "friendly"
 
 on startup:
-	print follow sign(7)
-	print follow sign(-2)
-	print follow sign(0)
-	print follow describe(cat)
-	print follow describe(wolf)
+	print (follow sign(7)) + "[line break]"
+	print (follow sign(-2)) + "[line break]"
+	print (follow sign(0)) + "[line break]"
+	print (follow describe(cat)) + "[line break]"
+	print (follow describe(wolf)) + "[line break]"

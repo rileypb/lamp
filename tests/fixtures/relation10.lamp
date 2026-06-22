@@ -9,4 +9,4 @@ bidi connects foyer north to hall
 connects hall south to foyer
 
 on startup:
-    print connects.all
+    print (connects.all) + "[line break]"

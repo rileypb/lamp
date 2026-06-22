@@ -133,8 +133,10 @@ function startIfReady() {
 
     try {
         gameFactory(lamplighter, sandboxRequire, bridgedConsole);
+        lamplighter.flushOutput();
         self.postMessage({ type: "done" });
     } catch (err) {
+        lamplighter.flushOutput();
         self.postMessage({ type: "error", message: err && err.message ? err.message : String(err) });
     }
 }

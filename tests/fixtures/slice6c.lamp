@@ -20,6 +20,6 @@ action recall:
         "recall"
 
 report recall:
-    print "Snippet (K1): [vibe]"
-    print "Command (J1): [player_command()]"
-    print "Shouted (K3): [upper(player_command())]"
+    print ("Snippet (K1): [vibe]") + "[line break]"
+    print ("Command (J1): [player_command()]") + "[line break]"
+    print ("Shouted (K3): [upper(player_command())]") + "[line break]"

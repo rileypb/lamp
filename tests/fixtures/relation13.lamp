@@ -23,8 +23,8 @@ connects foyer east study
 
 on startup:
     if connects foyer _ _:
-        print "foyer has an exit"
+        print ("foyer has an exit") + "[line break]"
     if connects study _ _:
-        print "study has an exit"
+        print ("study has an exit") + "[line break]"
     else:
-        print "study has no exits"
+        print ("study has no exits") + "[line break]"

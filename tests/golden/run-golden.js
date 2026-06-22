@@ -18,6 +18,10 @@ const testRoots = [
 const expectedDir = path.join(projectRoot, "tests", "golden", "expected");
 const tmpDir = path.join(projectRoot, "tests", "golden", "tmp");
 
+// Dev utility: `node run-golden.js --update` rewrites the expected stdout (and
+// generated JS) from current output instead of asserting. Review the git diff after.
+const updateMode = process.argv.includes("--update");
+
 function main() {
     const cases = discoverCases();
     const failures = [];
@@ -28,20 +32,36 @@ function main() {
             const compileResult = compileCase(testCase.inputPath, testCase.generatedPath, testCase.expectCompileFailure);
 
             if (!testCase.expectCompileFailure && testCase.expectedJsPath) {
-                assertFileMatches(testCase.generatedPath, testCase.expectedJsPath, `${name} generated JavaScript`);
+                if (updateMode) {
+                    fs.copyFileSync(testCase.generatedPath, testCase.expectedJsPath);
+                } else {
+                    assertFileMatches(testCase.generatedPath, testCase.expectedJsPath, `${name} generated JavaScript`);
+                }
             }
 
             const stdout = normalizeProjectPaths(testCase.expectCompileFailure
                 ? compileResult.stdout
                 : runGenerated(testCase.generatedPath, testCase.expectRuntimeFailure, testCase.stdinContent));
-            assertTextMatches(
-                stdout,
-                fs.readFileSync(testCase.expectedStdoutPath, "utf8"),
-                `${name} runtime stdout`,
-            );
+            if (updateMode) {
+                fs.writeFileSync(testCase.expectedStdoutPath, stdout);
+            } else {
+                assertTextMatches(
+                    stdout,
+                    fs.readFileSync(testCase.expectedStdoutPath, "utf8"),
+                    `${name} runtime stdout`,
+                );
+            }
         } catch (error) {
             failures.push({ name, message: error.message });
         }
+    }
+
+    if (updateMode) {
+        console.log(`Updated ${cases.length} golden(s).${failures.length ? ` ${failures.length} error(s):` : ""}`);
+        for (const { name, message } of failures) {
+            console.error(`ERROR: ${name}\n${message}\n`);
+        }
+        return;
     }
 
     if (failures.length === 0) {

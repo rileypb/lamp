@@ -7,6 +7,6 @@ lib interactivetest
 
 on startup:
 	let line = readline()
-	print line
+	print (line) + "[line break]"
 
 	

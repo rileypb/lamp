@@ -7,15 +7,15 @@ lib relations
 
 # specificity 0 (fallback)
 function void check():
-    print "none"
+    print ("none") + "[line break]"
 
 # specificity 1: one bound slot
 function void check() when connects foyer _ to _:
-    print "foyer has exit"
+    print ("foyer has exit") + "[line break]"
 
 # specificity 3: three bound slots, wins over specificity 1
 function void check() when connects foyer north to hall:
-    print "foyer connects north to hall"
+    print ("foyer connects north to hall") + "[line break]"
 
 on startup:
     check()

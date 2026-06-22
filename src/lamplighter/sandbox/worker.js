@@ -117,8 +117,10 @@ function main() {
 
     try {
         vm.runInContext(code, context, { filename: path.basename(generatedPath) });
+        lamplighter.flushOutput();
         parentPort.postMessage({ type: "done" });
     } catch (err) {
+        lamplighter.flushOutput();
         parentPort.postMessage({ type: "error", message: err && err.message ? err.message : String(err) });
     }
 }

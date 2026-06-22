@@ -270,6 +270,25 @@ const cases = [
         },
     },
     {
+        name: "paragraph markers: [par]/[line break]/[no break]/[run on]/[par if printed] desugar to output-stream calls",
+        run() {
+            const cases = [
+                ["[par]", "paragraph"],
+                ["[line break]", "line_break"],
+                ["[no break]", "no_break"],
+                ["[run on]", "no_break"],
+                ["[par if printed]", "par_if_printed"],
+            ];
+            for (const [marker, fn] of cases) {
+                const [a] = parse(["on startup:", `    print "${marker}"`].join("\n"));
+                const e = a.body[0].expr.parts[0].expr;
+                assert.strictEqual(e.kind, "CallExpr", `${marker} should be a call`);
+                assert.strictEqual(e.name, fn, `${marker} -> ${fn}()`);
+                assert.deepStrictEqual(e.args, []);
+            }
+        },
+    },
+    {
         name: "verb declaration: `verb a, b` parses to a discardable VerbDecl (keyword words allowed)",
         run() {
             const nodes = parse(["verb drop, do", "on startup:", "    print 1"].join("\n"));

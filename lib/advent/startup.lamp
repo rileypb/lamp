@@ -3,17 +3,16 @@ on startup:
 	# by setting `tagline`; games that leave it blank get no banner.
 	let this_game = game.all.first
 	if not (this_game.tagline == ""):
-		print this_game.name
-		print this_game.tagline + " by " + this_game.author
-		print "Version " + this_game.version + " " + this_game.release
-		print ""
+		print this_game.name + "[line break]"
+		print this_game.tagline + " by " + this_game.author + "[line break]"
+		print "Version " + this_game.version + " " + this_game.release + "[par]"
 	follow startup_rules()
 	player.holder = game.all.first.start
 	dispatch started
 	# Command loop. Exits when the player quits or a command ends the story (sets
 	# `story` away from `ongoing`).
 	while story == ongoing:
-		print
+		print "[par if printed]"
 		input = prompt("> ")
 		if to_lower(input) == "quit":
 			break
@@ -21,9 +20,9 @@ on startup:
 	# End-of-story sequence: print the win/lose banner, then accept only QUIT.
 	# (RESTART is not yet supported.)
 	if not (story == ongoing):
-		print
+		print "[par if printed]"
 		follow end_story_rules()
-		print
+		print "[par]"
 		print "Please type QUIT to exit."
 		while true:
 			input = prompt("> ")

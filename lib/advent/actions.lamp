@@ -59,12 +59,12 @@ report inventory:
 	for x in item.all:
 		if x.holder == self.actor:
 			if not found:
-				print "You are carrying:"
+				print "You are carrying:[line break]"
 				found = true
 			if wears self.actor x:
-				print "  " + with_article(x) + " (worn)"
+				print "  " + with_article(x) + " (worn)[line break]"
 			else:
-				print "  " + with_article(x)
+				print "  " + with_article(x) + "[line break]"
 	if not found:
 		print "You are carrying nothing."
 
@@ -80,7 +80,7 @@ check drop:
 do drop:
 	if wears self.actor self.dropped:
 		if (self.actor == player):
-			print "(first taking off " + self.dropped + ")"
+			print "(first taking off " + self.dropped + ")[line break]"
 		try doff:
 			clothing self.dropped
 			actor self.actor
@@ -115,7 +115,7 @@ check wear:
 do wear:
 	if not (self.clothing.holder == self.actor):
 		if (self.actor == player):
-			print "(first taking " + self.clothing + ")"
+			print "(first taking " + self.clothing + ")[line break]"
 		try take:
 			taken self.clothing
 			actor self.actor
@@ -172,7 +172,7 @@ check examine:
 		stop failed too_dark
 
 report examine:
-	print self.target.description
+	print self.target.description + "[line break]"
 
 report failed examine:
 	if self.reason == too_dark:
@@ -230,7 +230,7 @@ check put_on:
 do put_on:
 	if wears self.actor self.put_item:
 		if (self.actor == player):
-			print "(first taking off " + self.put_item + ")"
+			print "(first taking off " + self.put_item + ")[line break]"
 		silently try doff:
 			clothing self.put_item
 			actor self.actor

@@ -12,4 +12,4 @@ circle Unit_Circle:
     radius 2.0
 
 on startup:
-    print "foo" + 2 + 3
+    print ("foo" + 2 + 3) + "[line break]"

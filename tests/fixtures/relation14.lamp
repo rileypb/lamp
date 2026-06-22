@@ -11,6 +11,6 @@ bidi connects foyer north to hall
 
 on startup:
     if connects hall south to foyer:
-        print "reverse edge found"
+        print ("reverse edge found") + "[line break]"
     if connects here _ to _:
-        print "here has an exit"
+        print ("here has an exit") + "[line break]"

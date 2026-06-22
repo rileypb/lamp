@@ -338,16 +338,72 @@ either the trailing sugar word or the function's mode argument.
 
 ## H. Layout / paragraph control (`WI 5.1`, `WI 5.9`)
 
-- **H1. Explicit breaks.** Inform: `[line break]` / `[paragraph break]` / `[no line
-  break]`. **Lamp:** `\n` already exists for hard line breaks; the new value is
-  *paragraph* state — propose `[par]` (a paragraph break) and `[no break]` markers,
-  distinct from raw `\n`.
-- **H2. Run paragraph on.** Inform: `[run paragraph on]`. **Lamp:** `[run on]` —
-  suppress the trailing break so the next print continues the line (heavily used by
-  IF report rules; the runtime must track pending-break state).
-- **H3. Conditional paragraph break.** Inform: `[conditional paragraph break]`.
-  **Lamp:** `[par if printed]` — break only if something was printed since the last
-  break.
+- **H1. Explicit breaks.** DONE. `[line break]` (a single newline) and `[par]` /
+  `[paragraph break]` (a blank line); `[no break]` cancels a pending break. Inline
+  markers that desugar to lib/sys output-stream calls (`line_break()` / `paragraph()`
+  / `no_break()`), emitted into the rendered text as private-use sentinels the runtime
+  interprets in stream order. Raw `\n` still works for hard newlines.
+- **H2. Run paragraph on.** DONE. `[run on]` (an alias for `[no break]`) cancels the
+  pending break so the next print continues — used to suppress an automatic break for
+  the rare case where it is wrong.
+- **H3. Conditional paragraph break.** DONE. `[par if printed]` → `par_if_printed()`
+  — requests a paragraph break only if text was printed since the last break (the
+  dedup that prevents leading/stacked blank lines). lib/advent uses it at the turn
+  boundary before the prompt.
+- **H6. Automatic breaks — two composing rules.** DONE. The standard blank-line-
+  before-prompt comes from **two rules that add together**, each contributing one
+  newline:
+  - **A. Sentence punctuation.** A printed string ending in sentence-ending
+    punctuation (`.` `?` `!`, skipping trailing closing quotes / parens / whitespace)
+    ends its line — i.e. requests a line break. Text **not** so terminated does *not*
+    (it runs on into the next output).
+  - **B. Rulebook boundary.** At the end of certain rulebooks — `report` /
+    `report failed`, `after` (and the turn boundary before the prompt) — a paragraph
+    break is requested, **conditional and deduplicated** (only if text was printed
+    since the last break; never stacks). This is H3 `[par if printed]` invoked
+    automatically.
+
+  Worked example — a `report take` whose only message is `Taken.`:
+  ```
+  Taken.   <- A: the "." ends the line          (newline 1)
+           <- B: the report rulebook ends, paragraph break (newline 2)
+  >        <- prompt
+  ```
+  i.e. `Taken.\n\n>`. Drop rule A (message lacks end punctuation) **or** rule B (no
+  boundary break) and only one newline remains — the text is smashed against the
+  prompt. `[run on]` / `[no break]` (H2/H1) cancel a pending break for the cases where
+  the default is wrong ("usually right, though not always").
+  - **Pending-break model:** a break request *ensures at least* N newlines before the
+    next visible text (line break ⇒ ≥1, paragraph break ⇒ ≥2); the manager keeps the
+    strongest pending request and flushes it before the next text / prompt / at exit,
+    so consecutive boundary breaks don't stack. `[run on]` / `[no break]` reset pending
+    to 0.
+  - **Consequence for Lamp:** because rule A makes the per-print line-ending
+    **conditional on punctuation**, the trailing newline can no longer be appended
+    blindly by the host — the runtime output-stream manager must own it (the
+    host→runtime newline move). Today `print` always appends one `\n` and the prompt
+    fakes the blank line; the new model replaces both with rules A+B. *(This corrects
+    an earlier draft of this note that said H6 needs only a printed-since-break flag;
+    that held only for a boundary-break-only reading.)*
+  - **Implementation.** The runtime output-stream manager (`src/lamplighter/index.js`)
+    routes `print`/`write` through `streamWrite`, owning newlines (emitted via the
+    `write` channel; the host/shell add none). Rule A fires in `streamEmitRun`
+    (`SENTENCE_END`); markers travel as private-use sentinels and are processed in
+    stream order; `flushOutput` (worker exit) materializes the final break. Rule B is
+    a **lib/advent convention** — `print "[par if printed]"` at the turn boundary
+    (`startup.lamp`) and a paragraph break between supporter groups
+    (`describe_supporters`). Per the decision, output that should occupy its own line
+    without sentence punctuation uses an explicit `[line break]` (banners, room names,
+    inventory rows, parentheticals). Fixture `para1` + golden; parser test. Rebaseline
+    was output-compatible (only one fixture's cosmetic blank changed — see below).
+  - **Known refinement.** The host writes the prompt/echo directly, bypassing the
+    manager, so after a command that printed nothing the end-of-story leading break
+    can't tell it is already at line-start (the manager doesn't count the host's
+    newline). One golden (`advent14`) loses a single blank line in that narrow case.
+    A future fix: have the prompt path tell the manager the stream is at line-start
+    (track trailing-newline count).
+  - **Boundary granularity (later).** Rule B currently lands at the turn boundary, not
+    per `report`/`after` band; once-per-band separation is the noted refinement.
 - **H4. Spacing normalization** — collapse/avoid double spaces and stray blank
   lines from composed substitutions (a real pain point in IF output). Engine-side
   output filter, no surface syntax.
@@ -461,9 +517,14 @@ is the "render context" proper.
    consistent. (This corrects the earlier offhand idea of putting "the RNG cursor" in
    the ephemeral context — an ephemeral cursor would re-shuffle after every restore.)
 
-3. **Output-stream state.** Pending paragraph/line-break state for `[run on]` /
-   `[par if printed]` (H2/H3) spans *multiple* prints, so it is neither render-local
-   nor site-keyed: it belongs to the writer/output channel.
+3. **Output-stream state.** Pending-break state (ensure-at-least N newlines) plus a
+   **printed-since-break** flag for `[run on]` / `[par if printed]` (H2/H3) and the
+   automatic breaks (H6: sentence punctuation + rulebook boundary) span *multiple*
+   prints, so this is neither render-local nor site-keyed: it belongs to the
+   writer/output channel. The trailing newline is currently owned by the *host*
+   (`sandbox/host.js` appends `\n` per print); H6 requires moving that ownership into a
+   runtime output-stream manager, because rule A makes the per-print line-ending
+   conditional on punctuation (the host can no longer append `\n` unconditionally).
 
 Placement follows the three-layer split: the context object and its plumbing are
 **mechanism** (engine / `lib/sys`); the language data (pronoun/verb tables,
@@ -814,12 +875,14 @@ Fixtures `list1` / `numbers1` / `plural1` + goldens; parser unit tests
 
 ### Slice 6 — layout & misc output
 
-1. **H1** `[par]` / `[no break]`; **H2** `[run on]`; **H3** `[par if printed]`
-   (pending-break state in an engine output filter). **BLOCKED on a decision:** the
-   trailing newline is owned by the *host* (`sandbox/host.js`), not the runtime, so
-   faithful run-on / par-if-printed needs newline ownership moved into a runtime
-   output-stream manager (the design-of-record tier-3 output state). Deferred pending
-   that call.
+1. **H1/H2/H3/H6 — DONE.** `[par]` / `[line break]` / `[no break]` / `[run on]` /
+   `[par if printed]` markers + the two composing auto-break rules (A: a print ending
+   in `.?!` ends its line; B: a conditional paragraph break at the lib/advent turn
+   boundary). Newline ownership moved off the host into a runtime output-stream
+   manager. Output that needs its own line without sentence punctuation uses an
+   explicit `[line break]`. Fixture `para1` + golden; parser test; rebaseline was
+   output-compatible (one cosmetic blank changed). See the H6 entry for the
+   implementation, the prompt-spacing refinement, and the per-band granularity note.
 2. **I1** `\u{…}` escape — DONE (`tokenizer.js`, fixture `typography1`). **I2**
    typographic entities — covered by literal UTF-8 + `\u{…}`; no new syntax.
 3. **J1** `[player_command()]` — DONE (`lib/sys`, fixture `slice6c`). **J3** is
@@ -852,6 +915,13 @@ Fixtures `list1` / `numbers1` / `plural1` + goldens; parser unit tests
 
 ## Open questions
 
+- **H6 automatic breaks (the 6b design).** RESOLVED & DONE. Decisions taken:
+  (1) non-punctuated prints run on; output needing its own line uses explicit
+  `[line break]` / `[par]`. (2) Rule B is a lib/advent convention at the turn boundary
+  (per-band granularity is a later refinement). (3) Built, with the rebaseline (it came
+  out output-compatible). (4) No per-band default-off exceptions for now — `[run on]`
+  is the escape hatch. See the H6 entry above for the implementation and the one known
+  prompt-spacing refinement.
 - Bracket vs. escape choice for literal `[` `]` (A2) — `\[` reads better with the
   existing escape model; `[bracket]` matches Inform. Pick one.
   - use the `\[`

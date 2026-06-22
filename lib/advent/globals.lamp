@@ -83,8 +83,8 @@ rulebook bool startup_rules():
 rulebook bool end_story_rules():
 	default true
 	when story == won:
-		print "*** You have won ***"
+		print "*** You have won ***[line break]"
 		stop true
 	when story == lost:
-		print "*** You have lost ***"
+		print "*** You have lost ***[line break]"
 		stop true

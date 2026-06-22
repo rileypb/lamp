@@ -27,12 +27,12 @@ function int bar(int n) when y == 1:
     return n * 20
 
 on startup:
-    print foo(2)
+    print (foo(2)) + "[line break]"
     x = 1
-    print foo(2)
+    print (foo(2)) + "[line break]"
     y = 1
-    print foo(2)
+    print (foo(2)) + "[line break]"
     y = 0
-    print bar(3)
+    print (bar(3)) + "[line break]"
     y = 1
-    print bar(3)
+    print (bar(3)) + "[line break]"

@@ -17,10 +17,10 @@ gadget bolt:
     printed_name "shiny bolt"
 
 on startup:
-    print "You are holding [lamp] and [bolt]."
-    print "The lamp has [lamp.charge] charge; the bolt has [bolt.charge]."
+    print ("You are holding [lamp] and [bolt].") + "[line break]"
+    print ("The lamp has [lamp.charge] charge; the bolt has [bolt.charge].") + "[line break]"
     let total = lamp.charge + bolt.charge
-    print "Total charge: [total]."
-    print "All gadgets: [gadget.all]."
-    print "A literal \[tag\] stays put."
-    print "Mix: " + "still [total] units"
+    print ("Total charge: [total].") + "[line break]"
+    print ("All gadgets: [gadget.all].") + "[line break]"
+    print ("A literal \[tag\] stays put.") + "[line break]"
+    print ("Mix: " + "still [total] units") + "[line break]"

@@ -82,22 +82,22 @@ rulebook string door_state(door d):
 # --- extra bands on the standard `take` action ------------------------------
 
 before take when self.taken == idol:
-    print "(you hesitate)"
+    print ("(you hesitate)") + "[line break]"
 
 instead take when self.taken == oak_door:
-    print "The oak door is firmly set in its frame."
+    print ("The oak door is firmly set in its frame.") + "[line break]"
     stop failed
 
 check take when self.taken == idol:
     stop failed too_sacred
 
 after take when self.taken == brass_key:
-    print "The key is cold to the touch."
+    print ("The key is cold to the touch.") + "[line break]"
 
 # Renders the game's own reason; advent's report-failed rules handle theirs.
 report failed take:
     if self.reason == too_sacred:
-        print "The idol is too sacred to disturb."
+        print ("The idol is too sacred to disturb.") + "[line break]"
         stop
 
 # --- a custom action driven by the `unlocks` relation -----------------------
@@ -110,17 +110,17 @@ action unlock:
 
 check unlock:
     if not self.target.locked:
-        print "It's already unlocked."
+        print ("It's already unlocked.") + "[line break]"
         stop failed
 check unlock when not unlocks self.with self.target:
-    print "That doesn't fit the lock."
+    print ("That doesn't fit the lock.") + "[line break]"
     stop failed
 
 do unlock:
     self.target.locked = false
 
 report unlock:
-    print "The lock turns; the door swings open."
+    print ("The lock turns; the door swings open.") + "[line break]"
 
 # --- gate `go` north on the door, with a reason rendered via `follow` --------
 
@@ -129,7 +129,7 @@ check go when oak_door.locked and self.way == north:
 
 report failed go:
     if self.reason == door_locked:
-        print "The way north is " + follow door_state(oak_door) + "."
+        print ("The way north is " + follow door_state(oak_door) + ".") + "[line break]"
         stop
 
 # ============================================================================
@@ -143,7 +143,7 @@ report failed go:
 
 # Override the standard success line "Taken." with game flavor.
 report take:
-    print "You tuck it carefully away."
+    print ("You tuck it carefully away.") + "[line break]"
     stop
 
 # Retheme advent's `cant_take_that` refusal ("That's not something you can
@@ -151,5 +151,5 @@ report take:
 # reason; only the text changes here.
 report failed take:
     if self.reason == cant_take_that:
-        print "That stays right where it is."
+        print ("That stays right where it is.") + "[line break]"
         stop

@@ -9,4 +9,4 @@ function int foo(int n) when Game_1.release == dev:
     return n * 8
 
 on startup:
-    print foo(1)
+    print (foo(1)) + "[line break]"

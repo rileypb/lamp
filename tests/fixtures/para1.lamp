@@ -1,0 +1,19 @@
+# Slice 6 (H1/H2/H3/H6): paragraph control. The runtime owns newline emission. A
+# print ending in sentence punctuation auto-breaks its line (rule A, H6); otherwise
+# the text runs on into the next print. [line break] / [par] force a line/paragraph
+# break; [no break] (alias [run on]) cancels a pending break so the next text
+# continues; [par if printed] breaks only if something was printed since the last
+# break. See devdocs/text.md H.
+game Paragraphs:
+    author "Lamp"
+
+on startup:
+    print "First sentence."
+    print "Second sentence."
+    print "Run on part one "
+    print "and part two."
+    print "Header[line break]Body line."
+    print "Above[par]below a blank line."
+    print "Cancelled.[no break]"
+    print "joined to previous."
+    print "[par if printed]After a conditional paragraph break."
