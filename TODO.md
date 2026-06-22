@@ -69,8 +69,9 @@ sugar words). World-model→locale person contract (`grammatical_person`/`gender
   `(...)` nud collects a trailing `.field` chain; shared `applyFieldToType` checker
   helper; `makeList` size/count getters). `a_list()`/`the_list()`/`is_empty()` in
   lib/en-US. Fixture `list1` + golden; parser test; all 11 suites green (127).
-- **5b (next) — numbers (G4):** `in_words(n)` → "five", `ordinal(n)` → "fifth"
-  (lib/en-US number-to-words).
+- **5b (complete) — numbers (G4):** `in_words(n)` → "forty-two", `ordinal(n)` →
+  "forty-second" in lib/en-US (American style, up to billions). Fixture `numbers1` +
+  golden; 128 goldens green.
 - **5c — plural suffix (G7):** single `[s]` token pluralizing the preceding word via
   `pluralize_word`, reading a new **governing-count** render-context value (set when a
   number is interpolated) — shared with G3 count-driven agreement.

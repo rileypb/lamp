@@ -1,0 +1,13 @@
+# Slice 5b: numbers in words (G4). in_words(n) gives the cardinal ("forty-two"),
+# ordinal(n) the ordinal ("forty-second"). American style (no "and"). See text.md G4.
+game Numbers:
+    author "Lamp"
+
+global int score = 42
+
+on startup:
+    print "[in_words(0)], [in_words(7)], [in_words(21)], [in_words(100)]."
+    print "[in_words(1234)] and [in_words(1000000)]."
+    print "score in words: [in_words(score)]."
+    print "[ordinal(1)], [ordinal(2)], [ordinal(3)], [ordinal(5)], [ordinal(12)], [ordinal(20)], [ordinal(21)], [ordinal(100)]."
+    print "the [ordinal(score)] attempt."

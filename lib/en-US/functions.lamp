@@ -65,6 +65,11 @@ native function string a_list(list<object> xs)
 native function string the_list(list<object> xs)
 native function bool is_empty(list<object> xs)
 
+# Numbers in words (G4): in_words(42) -> "forty-two"; ordinal(42) -> "forty-second".
+# American style (no "and": "one hundred twenty"). See text.md G4.
+native function string in_words(int n)
+native function string ordinal(int n)
+
 # The locale's default verb vocabulary: the irregular auxiliaries plus a few common
 # verbs. A game registers its own domain verbs with its own `verb` declaration; the
 # conjugation *rules* live in conjugate() above, so a newly declared regular verb

@@ -735,7 +735,11 @@ state mechanism, the six variation modes (F1–F6), and the seeded RNG (F8) all 
 2. **G1 — DONE (2026-06-21).** `a_list(xs)` / `the_list(xs)` (lib/en-US) render a
    list with indefinite / definite articles via the serial-comma formatter — "a
    brass lantern, a key and an apple" / "the …". Works over any query collection.
-3. **G4** numbers in words + ordinals.
+3. **G4 — DONE (2026-06-21).** `in_words(n)` → "forty-two" and `ordinal(n)` →
+   "forty-second" (lib/en-US), American style (no "and"), covering negatives and up
+   to billions; ordinals ordinalize the last cardinal word (irregular table for
+   first/second/third/fifth/eighth/ninth/twelfth, `y`→`ieth` for the tens). Fixture
+   `numbers1` + golden.
 4. **G5** grouped/qualified lists (see the elucidated G5 bullet).
 5. **G6 — DONE (2026-06-21).** `is_empty(xs)` predicate; an empty list already
    renders "nothing", and a custom fallback composes with the conditional sugar
