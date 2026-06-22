@@ -1024,6 +1024,15 @@ function emitExpression(expr, globalNames = new Set()) {
         const base = `lamplighter.getObject(${emitName(expr.objectName)})`;
         return expr.fieldChain.length === 0 ? base : `${base}.${expr.fieldChain.join(".")}`;
     }
+    if (expr.kind === "CallExpr" && expr.name === "pick") {
+        // pick(LIST, [MODE]) is a built-in: inject a stable per-call-site id so the
+        // stateful variation modes keep a cursor. Default mode is "random". See
+        // devdocs/text.md F (function form).
+        const siteId = JSON.stringify(`v${variationSiteCounter++}`);
+        const list = emitExpression(expr.args[0], globalNames);
+        const mode = expr.args.length > 1 ? emitExpression(expr.args[1], globalNames) : '"random"';
+        return `lamplighter.pick(${list}, ${mode}, ${siteId})`;
+    }
     if (expr.kind === "CallExpr") {
         return `${expr.name}(${emitCallArgs(expr.name, expr.args, globalNames, expr.filePath, expr.lineNumber)})`;
     }

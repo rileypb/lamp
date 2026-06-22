@@ -356,7 +356,13 @@ Built-in primitive types:
     draw from a seeded RNG; both the RNG stream and the per-site cursors are durable
     (captured in snapshots), so `undo`/`save`/`restore` reproduce the sequence. Like
     the other blocks, `[one of]` cannot nest; `[or]` or a mode word without a
-    matching `[one of]` is a compile error. These read a
+    matching `[one of]` is a compile error. A further mode `[as decreasingly likely
+    outcomes]` is a weighted draw (the first alternative most likely). The function
+    form **`pick(LIST, MODE)`** chooses among a computed list's elements by the same
+    modes (`MODE` optional, default no-repeat random); it returns one element. RNG
+    control: **`seed_random(n)`** reseeds reproducibly, **`randomize()`** seeds from
+    entropy for cross-playthrough variety (the default seed is fixed, so output is
+    deterministic until a game opts in). These read a
     **render-local context** that resets per render and is never saved. The
     world-model→locale contract for a referent is the optional fields
     `grammatical_person` (1/2/3, default 3), `gender` ("male"/"female"/"neuter"), and

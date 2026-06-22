@@ -319,6 +319,9 @@ const cases = [
             assert.throws(() => parse(["on startup:", '    print "[or]x"'].join("\n")), /'\[or\]' without a matching '\[one of\]'/);
             assert.throws(() => parse(["on startup:", '    print "[at random]"'].join("\n")), /without a matching '\[one of\]'/);
             assert.throws(() => parse(["on startup:", '    print "[one of]a[or]b"'].join("\n")), /unterminated '\[one of\]'/);
+            // F7 weighted mode marker.
+            const [w] = parse(["on startup:", '    print "[one of]a[or]b[as decreasingly likely outcomes]"'].join("\n"));
+            assert.strictEqual(w.body[0].expr.parts[0].mode, "decreasing");
         },
     },
     {

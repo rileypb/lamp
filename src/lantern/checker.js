@@ -740,9 +740,15 @@ function checkExprCalls(expr, typeSchema, kindSchema, localTypes, functionSchema
         checkObjectNameComparison(expr, typeSchema, kindSchema, localTypes, functionSchema);
     }
     if (expr.kind === "CallExpr") {
-        const fn = functionSchema.get(expr.name);
-        if (fn) {
-            checkCallArgs(expr.name, expr.args, fn, "function", expr.filePath, expr.lineNumber, typeSchema, kindSchema, localTypes, functionSchema);
+        if (expr.name === "pick") {
+            if (expr.args.length < 1 || expr.args.length > 2) {
+                throw typeError(expr.filePath, expr.lineNumber, `"pick" expects 1 or 2 arguments (a list and an optional mode), got ${expr.args.length}`);
+            }
+        } else {
+            const fn = functionSchema.get(expr.name);
+            if (fn) {
+                checkCallArgs(expr.name, expr.args, fn, "function", expr.filePath, expr.lineNumber, typeSchema, kindSchema, localTypes, functionSchema);
+            }
         }
     } else if (expr.kind === "FollowExpr") {
         const rb = rulebookSchema.get(expr.name);
@@ -918,6 +924,12 @@ function inferExprType(expr, typeSchema, kindSchema, localTypes, functionSchema 
         return null;
     }
     if (expr.kind === "CallExpr") {
+        if (expr.name === "pick") {
+            // pick(LIST, ...) returns one element of the list (its element type).
+            const listType = inferExprType(expr.args[0], typeSchema, kindSchema, localTypes, functionSchema);
+            const m = listType && listType.match(/^list<(.+)>$/);
+            return m ? m[1] : null;
+        }
         const fn = functionSchema.get(expr.name);
         if (!fn || fn.returnType === "void") return null;
         return fn.returnType;

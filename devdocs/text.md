@@ -665,9 +665,11 @@ per-locale sugar words remain the deferred refinement noted under Slice 2.
 
 ### Slice 4 — variation & conditionals
 
-**Status: DONE (2026-06-21)** except the deferred F7 (weighted) and the `pick(list,
-mode)` function form. Inline conditionals (E), `[first time]` (F9), the site-durable
-state mechanism, the six variation modes (F1–F6), and the seeded RNG (F8) all landed.
+**Status: DONE (2026-06-21), all items.** Inline conditionals (E), `[first time]`
+(F9), the site-durable state mechanism, the six variation modes (F1–F6), the seeded
+RNG (F8), plus the formerly-deferred **F7 weighted** (`[as decreasingly likely
+outcomes]`), the **`pick(list, mode)`** function form, and **RNG entropy seeding**
+(`seed_random`/`randomize`) all landed.
 
 1. **E1–E4 — DONE (2026-06-21).** Inline `[if COND]` / `[else if COND]` /
    `[else]` / `[end]` inside a string literal, with `[otherwise]` as an `[else]`
@@ -716,11 +718,24 @@ state mechanism, the six variation modes (F1–F6), and the seeded RNG (F8) all 
    ({last}/{chosen}/{order,pos}) live in the same `variation` provider — so
    undo/save/restore reproduce the exact sequence. Fixture `variation1` + golden; a
    `tests/state` RNG round-trip; parser unit tests.
-   - **Deferred (F7 + the function form):** weighted alternatives, and `pick(list,
-     mode)` over a computed list. The function form needs the emitter to inject a
-     per-call-site id into each `pick(...)` call so the stateful modes have a cursor —
-     a distinct mechanism, left for a follow-up. Cross-playthrough RNG seeding from
-     entropy (today every fresh run draws the same sequence) is also a later nicety.
+4. **F7 + `pick()` + seeding — DONE (2026-06-21).**
+   - **F7 weighted:** the inline mode `[as decreasingly likely outcomes]` — a
+     weighted draw with weight `n` for the first alternative down to `1` for the last
+     (`variationPick` mode `"decreasing"`, stateless).
+   - **`pick(LIST, MODE)` function form:** chooses among a computed list's *elements*
+     (default mode `"random"`; the mode string accepts the internal names and the
+     inline phrasings, e.g. `"in random order"`). The emitter special-cases `pick`
+     and injects a stable per-call-site id, so the stateful modes keep a cursor in the
+     same `variation` provider; the checker infers the list's element type as the
+     result and validates the 1–2 argument arity. (Note: passing a `"quoted"` mode
+     inside a `[…]` template substitution hits the general nested-quote limitation —
+     use `pick` in code position there, or the inline `[one of]` sugar.)
+   - **RNG entropy seeding:** `seed_random(n)` reseeds reproducibly from an integer;
+     `randomize()` draws a fresh seed from entropy for cross-playthrough variety
+     (lib/sys). Golden fixtures call neither, so they keep the deterministic default
+     seed; the seed is captured by the `rng` provider, so a seeded game still restores
+     consistently. Fixture `variation2` + golden; parser unit test for the weighted
+     marker.
 
 ### Slice 5 — lists & numbers
 

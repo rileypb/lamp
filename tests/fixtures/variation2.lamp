@@ -1,0 +1,31 @@
+# Slice 4 (deferred items): F7 weighted variation [as decreasingly likely outcomes],
+# the pick(list, mode) function form over a computed list, and reproducible seeding
+# with seed_random. (randomize() seeds from entropy for cross-playthrough variety
+# and is deliberately not used here, so this golden stays deterministic.) See
+# devdocs/text.md F.
+game Variation_Two:
+    author "Lamp"
+
+type room:
+    string printed_name = ""
+room alpha:
+    printed_name "Alpha"
+room beta:
+    printed_name "Beta"
+room gamma:
+    printed_name "Gamma"
+
+on startup:
+    # F7: the first alternative is the most likely, the last the least.
+    let tier = "[one of]common[or]rare[or]legendary[as decreasingly likely outcomes]"
+    print "tiers: [tier] [tier] [tier] [tier] [tier] [tier] [tier] [tier]"
+    # pick() over a computed list; default mode in a template substitution.
+    let rooms = room.all
+    print "a room: [pick(rooms)]."
+    # pick() with an explicit mode, cycling the same call site in a loop.
+    for i = 1 to 5:
+        print "cycle: " + pick(rooms, "cycling")
+    # seed_random makes the stream reproducible from an integer.
+    seed_random(7)
+    for i = 1 to 4:
+        print "seeded: " + pick(rooms, "purely")

@@ -58,11 +58,14 @@ sugar words). World-model→locale person contract (`grammatical_person`/`gender
   seed → deterministic goldens) captured by the `rng` state provider; per-site random
   cursors live in the `variation` provider. Fixture `variation1` + golden; `tests/state`
   RNG round-trip; parser tests; all 11 suites green (126).
-- **4 — deferred follow-ups:** (F7) weighted alternatives; the **`pick(list, mode)`**
-  function form over a computed list (needs the emitter to inject a per-call-site id
-  into each `pick(...)` so the stateful modes have a cursor); and **entropy seeding**
-  of the RNG for cross-playthrough variety (today every fresh run draws the same
-  sequence — deterministic by design for tests).
+- **4 — deferred follow-ups (complete):** (F7) weighted variation `[as decreasingly
+  likely outcomes]` (`variationPick` mode `"decreasing"`); the **`pick(list, mode)`**
+  function form over a computed list (emitter special-cases `pick` and injects a
+  per-call-site id; checker infers the element type + 1–2 arity); and **RNG seeding**
+  `seed_random(n)` / `randomize()` in lib/sys (entropy seeding opt-in; default seed
+  stays fixed for deterministic goldens). Fixture `variation2` + golden; parser test;
+  131 goldens. Remaining nicety: arbitrary explicit per-alternative weights (only the
+  "decreasing" scheme is built).
 **Slice 5 (in progress) — lists & numbers.**
 - **5a (complete) — list quantities & articles (G2/G1/G6):** `.size`/`.count` on a
   list (name or parenthesized query, the latter via a new `MemberAccess` node — the

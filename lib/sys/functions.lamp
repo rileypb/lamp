@@ -8,3 +8,11 @@ native function string to_lower(string input)
 # devdocs/game_parser.md). The actor is supplied by the caller — typically the
 # world library's player — so this base function names no world-specific global.
 native function void run_command(string line, object actor)
+
+# RNG control for randomized text variation (text.md F8). The seed defaults to a
+# fixed value (so golden tests are deterministic). A game wanting cross-playthrough
+# variety calls `randomize()` at startup to seed from entropy, or `seed_random(n)`
+# to seed reproducibly from an integer. The seed is captured in saves, so a seeded
+# game still restores consistently.
+native function void seed_random(int n)
+native function void randomize()

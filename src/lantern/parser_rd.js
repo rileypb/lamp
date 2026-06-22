@@ -119,6 +119,7 @@ function classifyControl(src) {
     if (/^sticky\s+random$/.test(src)) return { type: "mode", mode: "sticky" };
     if (/^cycling$/.test(src)) return { type: "mode", mode: "cycling" };
     if (/^stopping$/.test(src)) return { type: "mode", mode: "stopping" };
+    if (/^as\s+decreasingly\s+likely\s+outcomes$/.test(src)) return { type: "mode", mode: "decreasing" };
     // [s] plural suffix (G7): pluralizes the preceding word by the governing count.
     if (/^s$/.test(src)) return { type: "plural" };
     return null;

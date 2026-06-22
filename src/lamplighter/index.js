@@ -1397,6 +1397,17 @@ function variationPick(siteId, n, mode) {
         variationState.set(siteId, { order: rec.order, pos: rec.pos + 1 });
         return idx;
     }
+    if (mode === "decreasing") {
+        // F7: "decreasingly likely" — weight n for the first alternative down to 1
+        // for the last; a weighted draw. Stateless (no per-site record).
+        let r = rngInt((n * (n + 1)) / 2);
+        for (let i = 0; i < n; i += 1) {
+            const weight = n - i;
+            if (r < weight) return i;
+            r -= weight;
+        }
+        return n - 1;
+    }
     // "random": uniform but never the immediately-previous index.
     const rec = variationState.get(siteId);
     const last = rec && typeof rec.last === "number" ? rec.last : -1;
@@ -1449,6 +1460,50 @@ function shuffledIndices(n) {
         order[j] = tmp;
     }
     return order;
+}
+
+// Normalizes a pick() mode argument to the internal mode names, accepting the inline
+// sugar phrasings too ("at random", "in random order", ...). Unknown/empty → the
+// default "random" (no immediate repeat).
+const PICK_MODE_ALIASES = {
+    "": "random", random: "random", "at random": "random",
+    purely: "purely", "purely at random": "purely",
+    shuffled: "shuffled", "in random order": "shuffled",
+    sticky: "sticky", "sticky random": "sticky",
+    cycling: "cycling", stopping: "stopping",
+    decreasing: "decreasing", "as decreasingly likely outcomes": "decreasing",
+};
+function normalizePickMode(mode) {
+    return PICK_MODE_ALIASES[String(mode == null ? "" : mode).trim().toLowerCase()] || "random";
+}
+
+// The pick(LIST, MODE) function form (F1-F7) over a computed list. Like the inline
+// [one of] sugar but choosing among list *elements*; the emitter injects a stable
+// per-call-site id so the stateful modes (cycling/stopping/sticky/shuffled and
+// no-repeat random) keep a cursor across calls. Returns the chosen element, or
+// `none` for an empty list.
+function pick(xs, mode, siteId) {
+    const items = listItems(xs);
+    const n = items.length;
+    if (n === 0) return null;
+    const normalized = normalizePickMode(mode);
+    let idx;
+    if (normalized === "cycling") idx = variationAdvance(siteId) % n;
+    else if (normalized === "stopping") idx = Math.min(variationAdvance(siteId), n - 1);
+    else idx = variationPick(siteId, n, normalized);
+    return items[idx];
+}
+
+// RNG seeding (F8 follow-up). seedRandom makes the stream reproducible from an
+// explicit integer; randomizeRng draws a fresh seed from entropy for
+// cross-playthrough variety. Both update the saved `rng` provider state, so a
+// game that seeds at startup still restores consistently. Golden tests call
+// neither, so they keep the deterministic default seed.
+function seedRandom(n) {
+    rngState = (Number(n) | 0) || DEFAULT_RNG_SEED;
+}
+function randomizeRng() {
+    rngState = (Date.now() ^ Math.floor(Math.random() * 0x100000000)) | 0;
 }
 
 registerStateProvider({
@@ -1654,6 +1709,9 @@ module.exports = {
     interp,
     variationAdvance,
     variationPick,
+    pick,
+    seedRandom,
+    randomizeRng,
     divide,
     onEvent,
     registerActionRule,

@@ -1,0 +1,11 @@
+tiers: common common rare legendary common common common common
+a room: Beta.
+cycle: Alpha
+cycle: Beta
+cycle: Gamma
+cycle: Alpha
+cycle: Beta
+seeded: Alpha
+seeded: Alpha
+seeded: Gamma
+seeded: Gamma
