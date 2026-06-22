@@ -1,0 +1,4 @@
+You have 1 bullet.
+You have 3 bullets.
+3 boxes, 3 berries, and 3 sheep.
+Now just 1 box and 1 berry.

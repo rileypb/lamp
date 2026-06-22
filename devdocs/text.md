@@ -744,12 +744,19 @@ state mechanism, the six variation modes (F1–F6), and the seeded RNG (F8) all 
 5. **G6 — DONE (2026-06-21).** `is_empty(xs)` predicate; an empty list already
    renders "nothing", and a custom fallback composes with the conditional sugar
    (`[if is_empty(xs)]…[else][the_list(xs)][end]`).
-6. **G7** plural suffix `[s]` — a single token that pluralizes the preceding word
-   via the locale's `pluralize_word` (no `[es]`), built with the G3 governing-count
-   context.
+6. **G7 — DONE (2026-06-21).** The single `[s]` token (no `[es]`). At parse time it
+   splits the trailing word `W` off the preceding text into a `pluralSuffix` node;
+   the emitter emits `plural_suffix("W")`, which returns `W` when the **governing
+   count** is 1 and `pluralize_word(W)` otherwise — so `bullet[s]`/`box[s]`/`berry[s]`/
+   `sheep[s]` all inflect correctly. The governing count is "the most recently
+   interpolated number": every value substitution is wrapped in `lamplighter.interp(…)`
+   which records an interpolated number as the render-context `count`; template parts
+   are array elements evaluated left-to-right, so the count is set before a later
+   `[s]` reads it. `[s]` not immediately following a word is a compile error. Fixture
+   `plural1` + golden; parser unit test.
 
-Fixture `list1` + golden (G1/G2/G6); parser unit test for `MemberAccess`. All 11
-suites green (127 goldens).
+Fixtures `list1` / `numbers1` / `plural1` + goldens; parser unit tests
+(`MemberAccess`, `pluralSuffix`). All 11 suites green (129 goldens).
 
 ### Slice 6 — layout & misc output
 

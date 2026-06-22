@@ -1,0 +1,16 @@
+# Slice 5c: the [s] plural suffix (G7). [s] attaches to the preceding word and
+# renders its plural via the locale pluralizer unless the governing count (the most
+# recently interpolated number) is 1 — so one token handles bullet/bullets,
+# box/boxes, berry/berries, sheep/sheep. See devdocs/text.md G7.
+game Plural:
+    author "Lamp"
+
+global int n = 1
+
+on startup:
+    print "You have [n] bullet[s]."
+    n = 3
+    print "You have [n] bullet[s]."
+    print "[n] box[s], [n] berry[s], and [n] sheep[s]."
+    n = 1
+    print "Now just [n] box[s] and [n] berry[s]."

@@ -119,6 +119,8 @@ function classifyControl(src) {
     if (/^sticky\s+random$/.test(src)) return { type: "mode", mode: "sticky" };
     if (/^cycling$/.test(src)) return { type: "mode", mode: "cycling" };
     if (/^stopping$/.test(src)) return { type: "mode", mode: "stopping" };
+    // [s] plural suffix (G7): pluralizes the preceding word by the governing count.
+    if (/^s$/.test(src)) return { type: "plural" };
     return null;
 }
 
@@ -1464,6 +1466,19 @@ function createParser(tokens, filePath, globalNames, functionNames = new Set(), 
             const ctrl = classifyControl(p.src);
             if (!ctrl) {
                 top().items.push({ kind: "expr", expr: parseEmbeddedExpression(desugarSugar(p.src, verbNames), line, localNames) });
+                continue;
+            }
+            if (ctrl.type === "plural") {
+                // [s] pluralizes the immediately-preceding word: split the trailing
+                // word off the last text part and emit a pluralSuffix node for it.
+                const items = top().items;
+                const last = items[items.length - 1];
+                const m = last && last.kind === "text" ? last.value.match(/([A-Za-z]+)$/) : null;
+                if (!m) throw fail("'[s]' must immediately follow a word in template");
+                const word = m[1];
+                last.value = last.value.slice(0, last.value.length - word.length);
+                if (last.value === "") items.pop();
+                items.push({ kind: "pluralSuffix", word });
                 continue;
             }
             if (ctrl.type === "if" || ctrl.type === "firsttime" || ctrl.type === "oneof") {

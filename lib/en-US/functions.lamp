@@ -70,6 +70,12 @@ native function bool is_empty(list<object> xs)
 native function string in_words(int n)
 native function string ordinal(int n)
 
+# Plural suffix (G7): the `[s]` sugar — `bullet[s]` — desugars to plural_suffix on
+# the preceding word, returning its plural via pluralize_word unless the governing
+# count (the most recently interpolated number) is 1. So "[n] bullet[s]" gives
+# "1 bullet" / "3 bullets", "box[s]" -> boxes, "berry[s]" -> berries. See text.md G7.
+native function string plural_suffix(string word)
+
 # The locale's default verb vocabulary: the irregular auxiliaries plus a few common
 # verbs. A game registers its own domain verbs with its own `verb` declaration; the
 # conjugation *rules* live in conjugate() above, so a newly declared regular verb

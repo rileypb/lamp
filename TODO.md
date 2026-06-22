@@ -72,12 +72,16 @@ sugar words). World-model→locale person contract (`grammatical_person`/`gender
 - **5b (complete) — numbers (G4):** `in_words(n)` → "forty-two", `ordinal(n)` →
   "forty-second" in lib/en-US (American style, up to billions). Fixture `numbers1` +
   golden; 128 goldens green.
-- **5c — plural suffix (G7):** single `[s]` token pluralizing the preceding word via
-  `pluralize_word`, reading a new **governing-count** render-context value (set when a
-  number is interpolated) — shared with G3 count-driven agreement.
-- **5 — likely deferred:** G5 grouped/qualified lists ("two brass lanterns and a
-  key") — the most involved, with an open definite-vs-indefinite article sub-decision;
-  assess after 5b/5c.
+- **5c (complete) — plural suffix (G7):** single `[s]` token; parse-time splits the
+  preceding word into a `pluralSuffix` node, emits `plural_suffix("W")` which inflects
+  via `pluralize_word` unless the **governing count** is 1. The count is set by
+  wrapping every value substitution in `lamplighter.interp(…)` (records an interpolated
+  number); left-to-right array order means the count is set before `[s]` reads it.
+  Fixture `plural1` + golden; parser test; 129 goldens.
+- **5d (next) — G5 grouped/qualified lists:** `a_group()`/`the_group()` collapse
+  indistinguishable objects ("two brass lanterns and a key"). The definite-vs-indefinite
+  sub-decision is resolved by providing both variants. Reuses in_words + pluralize +
+  format_list.
 **Follow-up from Slice 3 (optional):** migrate advent's reports from the manual
 `self.actor == player` branch to `[regarding self.actor][They] [verb] [the self.noun]`
 templates (D8 — churns goldens, do deliberately). (Verb agreement auto-switches onto

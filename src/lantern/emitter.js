@@ -908,7 +908,12 @@ function emitTemplateFrags(parts, globalNames) {
 
 function emitTemplateFrag(part, globalNames) {
     if (part.kind === "text") return emitStringLiteral(part.value);
-    if (part.kind === "expr") return emitExpression(part.expr, globalNames);
+    // Value substitutions go through interp() so an interpolated number is recorded
+    // as the governing count for a following [s] (G7); it returns the value
+    // unchanged for rendering.
+    if (part.kind === "expr") return `lamplighter.interp(${emitExpression(part.expr, globalNames)})`;
+    // [s] plural suffix (G7): pluralize the captured word by the governing count.
+    if (part.kind === "pluralSuffix") return `plural_suffix(${JSON.stringify(part.word)})`;
     if (part.kind === "firstTime") {
         // [first time]…[only] (F9): render the enclosed parts the first time this
         // site is reached, then nothing. variationAdvance returns the pre-visit

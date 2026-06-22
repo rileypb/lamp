@@ -1026,6 +1026,16 @@ function renderSetCount(value) {
     return value;
 }
 
+// Interpolation hook wrapped around every template value-substitution. Its only
+// job is to record an interpolated *number* as the governing count (G3/G7), so a
+// following `[s]` agrees with it; it returns the value unchanged for rendering.
+// Template parts are array elements evaluated left-to-right, so the count is set
+// before a later `[s]` (also an array element) reads it. See devdocs/text.md G7.
+function interp(value) {
+    if (typeof value === "number") renderSetCount(value);
+    return value;
+}
+
 function formatValue(value) {
     if (isTextValue(value)) {
         return renderTextValue(value);
@@ -1641,6 +1651,7 @@ module.exports = {
     renderSetAgreement,
     renderCount,
     renderSetCount,
+    interp,
     variationAdvance,
     variationPick,
     divide,

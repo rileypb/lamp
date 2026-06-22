@@ -322,6 +322,18 @@ const cases = [
         },
     },
     {
+        name: "[s] plural suffix: splits the preceding word into a pluralSuffix part; rejects when not after a word",
+        run() {
+            const [h] = parse(["on startup:", '    print "[n] bullet[s]!"'].join("\n"), ["n"]);
+            const parts = h.body[0].expr.parts;
+            // ... expr(n), text(" bullet") -> text(" ") + pluralSuffix("bullet"), text("!")
+            const suffix = parts.find((p) => p.kind === "pluralSuffix");
+            assert.strictEqual(suffix.word, "bullet");
+            assert.deepStrictEqual(parts[1], { kind: "text", value: " " });
+            assert.throws(() => parse(["on startup:", '    print "[n][s]"'].join("\n"), ["n"]), /'\[s\]' must immediately follow a word/);
+        },
+    },
+    {
         name: "member access: (EXPR).field parses to a MemberAccess; name.field stays a PropertyAccess",
         run() {
             const [h] = parse(["on startup:", "    let n = (a).size"].join("\n"), ["a"]);
