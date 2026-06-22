@@ -14,7 +14,9 @@ prerequisite lists in `devdocs/game_parser.md`, `devdocs/rulebooks.md`, and
 > `lurkinghorror.txt`. `devdocs/text.md` is the **text-substitution**
 > design + 7-slice Action list (Inform-7-style `"[We] [drop] [the velvet_cloak]"`).
 > **Slices 1–5 DONE** (lists & numbers complete, incl. G3 count-driven agreement);
-> Slice 6 (layout/paragraph control) is next. `lurking_todo.md` still awaits triage.
+> **Slice 6 in progress** (I1 Unicode escape + J1/K1/K3 misc-output done; only H
+> paragraph control remains, blocked on an output-path decision — see §1).
+> `lurking_todo.md` still awaits triage.
 
 ## 1. Text substitution — Slices 1–5 DONE; Slice 6 next
 **Slice 1 (complete):** bracket substitution + quote convention + lazy `text`/`freeze`.
@@ -95,6 +97,30 @@ sugar words). World-model→locale person contract (`grammatical_person`/`gender
   golden; parser test; 132 goldens. The `[is …]` operand is list-typed
   (checker-enforced). Companion helpers `that_those(n)`/`a_an(x)` unbuilt (add on demand).
 - **Slice 5 deferred:** an author-overridable grouping key for G5.
+**Slice 6 (in progress) — layout & misc output.**
+- **6a (complete) — I1 Unicode escape:** `\u{HEX}` (1–6 hex digits) in
+  `unescapeString` (`tokenizer.js`) — resolved at the single decode point, so all
+  downstream consumers see the character; malformed `\u{…}` stays verbatim. Combine
+  with literal UTF-8 for I2 typographic entities (no new syntax needed). Fixture
+  `typography1` + golden; tokenizer unit tests; 133 goldens.
+- **6b (BLOCKED on a decision) — H1/H2/H3 paragraph control:** `[par]`/`[no break]`
+  (H1), `[run on]` (H2), `[par if printed]` (H3). These need **output-stream state**
+  (pending-break + printed-since-break) spanning multiple prints. The blocker: the
+  trailing newline is currently owned by the **host** (`sandbox/host.js` appends `\n`
+  per `print` message), not the runtime — so faithful run-on/par-if-printed requires
+  moving newline ownership into a runtime output-stream manager (route `print`
+  through `writeImpl` with managed newlines). Options: (1) full manager — faithful,
+  some golden-churn risk; (2) lighter flag-based run-on, defer H3; (3) defer H,
+  do J/K items first. Awaiting direction.
+- **6c (complete) — J1/K1/K3 misc output:** J1 `[player_command()]` echoes the
+  player's last raw input (original casing, trimmed) — retained by the runtime in
+  `runCommand`, exposed as `native function string player_command()` in lib/sys (call
+  form, not bare-word sugar; transient/unsaved). K1 named `text` snippets and K3
+  substitution-as-function needed **no code** — both fall out of the existing `text`
+  type; a `text` global renders lazily against the *caller's* render context
+  (`[regarding x][snippet]` adapts pronouns/verbs at the use site). Fixture `slice6c`
+  (+ stdin) + golden; 134 goldens.
+- **6b remains** the only open Slice 6 item — see the H paragraph-control entry above.
 **Follow-up from Slice 3 (optional):** migrate advent's reports from the manual
 `self.actor == player` branch to `[regarding self.actor][They] [verb] [the self.noun]`
 templates (D8 — churns goldens, do deliberately). (Verb agreement auto-switches onto

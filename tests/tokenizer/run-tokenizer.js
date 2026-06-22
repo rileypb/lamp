@@ -97,6 +97,16 @@ const tokenCases = [
         src: 'print "C:\\Users"',
         expect: "KEYWORD(print) STRING(C:\\Users) NEWLINE EOF",
     },
+    {
+        name: "\\u{HEX} resolves a Unicode code point (BMP and astral)",
+        src: 'print "caf\\u{e9} \\u{1f600}"',
+        expect: "KEYWORD(print) STRING(café 😀) NEWLINE EOF",
+    },
+    {
+        name: "malformed \\u{...} keeps its backslash verbatim",
+        src: 'print "x\\u{wxyz}y"',
+        expect: "KEYWORD(print) STRING(x\\u{wxyz}y) NEWLINE EOF",
+    },
     // New single-char tokens and priority ordering
     {
         name: "MINUS SLASH CARET tokenize as infix operators",

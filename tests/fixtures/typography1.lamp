@@ -1,0 +1,13 @@
+# Slice 6 (I1): the \u{HEX} Unicode code-point escape — 1-6 hex digits resolve to
+# the character at parse time, so prose carries any Unicode directly (combine with
+# literal UTF-8 in source for I2 typographic entities). A malformed \u{...} is left
+# verbatim (backslash kept), like any unrecognized escape. See devdocs/text.md I1.
+game Typography:
+    author "Lamp"
+
+on startup:
+    print "caf\u{e9} au lait"
+    print "na\u{ef}ve r\u{f4}le"
+    print "em dash \u{2014} ellipsis\u{2026} curly \u{201c}quote\u{201d}"
+    print "astral plane: \u{1f600}"
+    print "verbatim when malformed: \u{wxyz} stays"

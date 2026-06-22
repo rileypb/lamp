@@ -359,9 +359,14 @@ either the trailing sugar word or the function's mode argument.
 
 ## I. Special characters & typography (`WI 5.2`)
 
-- **I1. Unicode escape.** Inform: `[unicode 233]`. **Lamp:** a `\u{…}` string
-  escape (fits the existing escape model in `tokenizer.js`) rather than a bracket
-  substitution — `"caf\u{e9}"`.
+- **I1. Unicode escape.** DONE. A `\u{HEX}` string escape (1–6 hex digits) in
+  `unescapeString` (`tokenizer.js`) rather than a bracket substitution —
+  `"caf\u{e9}"` → "café", `"\u{1f600}"` → an astral-plane emoji. Resolved at decode
+  time (the single decode point), so every downstream consumer sees the character; a
+  malformed `\u{…}` is left verbatim like any unrecognized escape. Note `[\u{a0}]`
+  still opens a substitution — `\u{…}` resolves *before* template splitting, so an
+  nbsp inside brackets is an empty-substitution error; print such a character bare.
+  Fixture `typography1` + golden; tokenizer unit tests.
 - **I2. Named typographic entities** — em dash, ellipsis, curly quotes, non-breaking
   space. **Lamp:** prefer literal UTF-8 in source plus a few `\`-escapes
   (`\—`-style) over bracket words; only add `[entity]` words if literals prove
@@ -377,8 +382,12 @@ either the trailing sugar word or the function's mode argument.
 
 ## J. Player/parser-derived text
 
-- **J1. Player's command.** Inform: `[the player's command]`. **Lamp:** a
-  `[player_command]` accessor/global — echo what the player typed.
+- **J1. Player's command.** DONE. `[player_command()]` — the player's most recent
+  raw input line (original casing, trimmed), retained by the runtime in `runCommand`
+  and exposed as a `native function string player_command()` in `lib/sys`. Transient
+  narration state (not saved). Surface is the call form (no bare-word sugar — it
+  doubles as a K3 example and avoids coupling another word into the parser's sugar
+  layer). Fixture `slice6c` + golden.
 - **J2. Matched text.** Inform: `[the topic understood]`. **Lamp:** a field on the
   current action / parse result, e.g. `[self.topic]` — matched-text snippets from
   the grammar.
@@ -392,18 +401,22 @@ either the trailing sugar word or the function's mode argument.
 
 Where "more mature than Inform" can show up.
 
-- **K1. Named text snippets / macros.** Author-defined reusable templates
-  (`text greeting = "[The actor] [wave]."`) referenced by name — first-class text
-  values, not just inline literals.
+- **K1. Named text snippets / macros.** DONE (no new code — falls out of the `text`
+  type, K2). A `text`-typed global/field holds a template referenced by name
+  (`global text vibe = "[We] [are] still here."`), and renders **lazily against the
+  caller's render context** — so `[regarding x][vibe]` makes the snippet's pronouns
+  and verbs adapt at the use site. Composes into other templates and through `+`.
+  Verified by fixture `slice6c` (and the deferred-render behavior by scratch tests).
 - **K2. Text as a first-class value & type.** A `text` (template) type distinct from
   `string`, so templates can be stored in fields, passed to functions, and
   late-rendered. Decide how this relates to the closed value algebra in
   `devdocs/state.md` (is an unrendered template a storable/saveable value?).
-- **K3. Substitution functions.** This is the **realized core principle** (see
-  Design principle): a substitution is just an expression that yields text, so it
-  can call any author/library function — `[describe(self)]`, `[the(self.noun)]` —
-  closing the loop with the language instead of a fixed substitution vocabulary.
-  All of B/C/G's article/case/list helpers are instances of this.
+- **K3. Substitution functions.** DONE (the **realized core principle**, see Design
+  principle): a substitution is just an expression that yields text, so it can call
+  any author/library function — `[describe(self)]`, `[the(self.noun)]`,
+  `[upper(player_command())]` — closing the loop with the language instead of a fixed
+  substitution vocabulary. All of B/C/G's article/case/list helpers are instances of
+  this; `slice6c` exercises it explicitly.
 - **K4. Composability with `+` and `print`.** Define precisely how a template
   literal interacts with existing concatenation so old `print a + b` code keeps
   working during migration.
@@ -802,11 +815,18 @@ Fixtures `list1` / `numbers1` / `plural1` + goldens; parser unit tests
 ### Slice 6 — layout & misc output
 
 1. **H1** `[par]` / `[no break]`; **H2** `[run on]`; **H3** `[par if printed]`
-   (pending-break state in an engine output filter).
-2. **I1** `\u{…}` escape; **I2** typographic entities.
-3. **J1** `[player_command]`; **J3** is already plain expressions (no work).
-4. **K1** named `text` snippets; **K3** substitution-as-function (falls out of the
-   mechanism); **K6** keep the localization seam open.
+   (pending-break state in an engine output filter). **BLOCKED on a decision:** the
+   trailing newline is owned by the *host* (`sandbox/host.js`), not the runtime, so
+   faithful run-on / par-if-printed needs newline ownership moved into a runtime
+   output-stream manager (the design-of-record tier-3 output state). Deferred pending
+   that call.
+2. **I1** `\u{…}` escape — DONE (`tokenizer.js`, fixture `typography1`). **I2**
+   typographic entities — covered by literal UTF-8 + `\u{…}`; no new syntax.
+3. **J1** `[player_command()]` — DONE (`lib/sys`, fixture `slice6c`). **J3** is
+   already plain expressions (no work).
+4. **K1** named `text` snippets — DONE (no code; falls out of K2). **K3**
+   substitution-as-function — DONE (the realized core principle). **K6** localization
+   seam kept open. Both in fixture `slice6c`.
 
 ### Slice 7 — text styling (after the core; author wants rich styling)
 

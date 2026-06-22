@@ -1,0 +1,14 @@
+hall
+A plain hall.
+
+> ReCALL
+Snippet (K1): You are still in the hall.
+Command (J1): ReCALL
+Shouted (K3): RECALL
+
+> recall
+Snippet (K1): You are still in the hall.
+Command (J1): recall
+Shouted (K3): RECALL
+
+> quit

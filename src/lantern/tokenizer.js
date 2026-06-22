@@ -241,10 +241,11 @@ function coerceName(raw) {
 
 // Resolves backslash escapes in a string literal's raw inner text to their
 // character values, so prose can contain a double quote or a line break. The
-// recognized escapes are `\\`, `\"`, `\n`, `\t`, and `\r`; any other `\X` is
-// left verbatim (backslash kept) so a stray backslash in prose is never lost.
-// This is the one place strings are decoded — every downstream consumer
-// (emitter, prescan templates, --encode-strings) sees the resolved value.
+// recognized escapes are `\\`, `\"`, `\n`, `\t`, `\r`, and the Unicode code-point
+// form `\u{HEX}` (1–6 hex digits, e.g. `\u{e9}` → "é"); any other `\X` is left
+// verbatim (backslash kept) so a stray backslash in prose is never lost. This is
+// the one place strings are decoded — every downstream consumer (emitter, prescan
+// templates, --encode-strings) sees the resolved value.
 function unescapeString(raw) {
     if (raw.indexOf("\\") === -1) return raw;
     let out = "";
@@ -259,6 +260,17 @@ function unescapeString(raw) {
         else if (next === "n") out += "\n";
         else if (next === "t") out += "\t";
         else if (next === "r") out += "\r";
+        else if (next === "u" && raw[i + 2] === "{") {
+            const close = raw.indexOf("}", i + 3);
+            const hex = close === -1 ? "" : raw.slice(i + 3, close);
+            const code = /^[0-9a-fA-F]{1,6}$/.test(hex) ? Number.parseInt(hex, 16) : NaN;
+            if (code <= 0x10ffff) {
+                out += String.fromCodePoint(code);
+                i = close - 1;
+            } else {
+                out += "\\" + next;
+            }
+        }
         else { out += "\\" + next; }
         i += 1;
     }

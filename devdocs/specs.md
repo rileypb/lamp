@@ -297,9 +297,10 @@ Built-in complex types:
 Built-in primitive types:
 - `string` — string values; literals are written in double quotes: `"hello"`.
   Backslash escapes are resolved by the tokenizer: `\"` (double quote), `\n`
-  (newline), `\t` (tab), `\r` (carriage return), and `\\` (literal backslash).
-  Any other `\X` is left as-is (the backslash is kept), so a stray backslash in
-  prose is never lost. A string literal used as a **value** (a `print`/`let`/field
+  (newline), `\t` (tab), `\r` (carriage return), `\\` (literal backslash), and
+  `\u{HEX}` (a Unicode code point, 1–6 hex digits — `\u{e9}` → "é",
+  `\u{1f600}` → an emoji). Any other `\X` (including a malformed `\u{…}`) is left
+  as-is (the backslash is kept), so a stray backslash in prose is never lost. A string literal used as a **value** (a `print`/`let`/field
   or global default/argument/return — *not* a grammar/`syntax`/`understand`
   template, whose `[slot]` markers stay literal) also gets two transformations:
   - **Quote convention** (Inform-style): a `'` flanked by letters/digits on both

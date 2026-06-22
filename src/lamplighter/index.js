@@ -738,7 +738,16 @@ function resolveSlots(slots, instance, scope, slotTypes) {
 // Parses one line of player input and runs the matched action. If a pending
 // disambiguation exists, tries to resolve it first; if the input doesn't match
 // any candidate it is discarded and treated as a fresh command.
+// The player's most recent raw input line (original casing, trimmed), exposed to
+// templates as `[player_command()]` (J1). Transient narration state, not saved.
+let lastCommand = "";
+
+function playerCommand() {
+    return lastCommand;
+}
+
 function runCommand(line, actor) {
+    lastCommand = String(line).trim();
     const tokens = String(line).toLowerCase().trim().split(/\s+/).filter(Boolean);
     if (tokens.length === 0) return;
 
@@ -1722,6 +1731,7 @@ module.exports = {
     registerGrammar,
     setDirectSlot,
     runCommand,
+    playerCommand,
     registerChangeHandler,
     registerRelationAddHandler,
     registerRelationRemoveHandler,

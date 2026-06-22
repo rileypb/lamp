@@ -1,0 +1,5 @@
+café au lait
+naïve rôle
+em dash — ellipsis… curly “quote”
+astral plane: 😀
+verbatim when malformed: \u{wxyz} stays

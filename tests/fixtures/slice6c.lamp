@@ -1,0 +1,25 @@
+lib advent
+
+# Slice 6c: three "misc output" items from devdocs/text.md.
+#  - J1 player command: [player_command()] echoes the player's last raw input
+#    (original casing, trimmed) — captured by the runtime in run_command.
+#  - K1 named text snippet: `vibe` is a reusable `text` global rendered lazily
+#    against the *caller's* render context (so [We]/[are] adapt at the use site).
+#  - K3 substitution-as-function: any function call works as a [..] substitution,
+#    so the J1 accessor composes with ordinary functions like upper().
+game Slice6c:
+    start hall
+
+global text vibe = "[We] [are] still in the hall."
+
+room hall:
+    description "A plain hall."
+
+action recall:
+    syntax:
+        "recall"
+
+report recall:
+    print "Snippet (K1): [vibe]"
+    print "Command (J1): [player_command()]"
+    print "Shouted (K3): [upper(player_command())]"
