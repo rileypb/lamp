@@ -65,6 +65,13 @@ native function string a_list(list<object> xs)
 native function string the_list(list<object> xs)
 native function bool is_empty(list<object> xs)
 
+# Grouped lists (G5): collapse indistinguishable objects (same display name) into a
+# counted entry — "two brass lanterns and a key". a_group uses indefinite articles
+# for singletons, the_group definite ("the two brass lanterns and the key"). See
+# text.md G5.
+native function string a_group(list<object> xs)
+native function string the_group(list<object> xs)
+
 # Numbers in words (G4): in_words(42) -> "forty-two"; ordinal(42) -> "forty-second".
 # American style (no "and": "one hundred twenty"). See text.md G4.
 native function string in_words(int n)

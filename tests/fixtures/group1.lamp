@@ -1,0 +1,38 @@
+# Slice 5d: grouped/qualified lists (G5). a_group/the_group collapse objects with
+# the same display name into a counted entry ("two brass lanterns"), singletons
+# keeping their article. See devdocs/text.md G5.
+game Group:
+    author "Lamp"
+
+type thing:
+    string printed_name = ""
+type box < thing
+
+box chest
+thing lantern_a:
+    printed_name "brass lantern"
+thing lantern_b:
+    printed_name "brass lantern"
+thing coin_a:
+    printed_name "coin"
+thing coin_b:
+    printed_name "coin"
+thing coin_c:
+    printed_name "coin"
+thing key
+
+relation contains:
+    from box container
+    to thing held
+    syntax "contains [container] [held]"
+
+contains chest lantern_a
+contains chest lantern_b
+contains chest coin_a
+contains chest coin_b
+contains chest coin_c
+contains chest key
+
+on startup:
+    print "You see [a_group(contains chest ?all)]."
+    print "You take [the_group(contains chest ?all)]."

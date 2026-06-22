@@ -724,6 +724,11 @@ state mechanism, the six variation modes (F1–F6), and the seeded RNG (F8) all 
 
 ### Slice 5 — lists & numbers
 
+**Status: DONE (2026-06-21).** All listed items (G1, G2, G4, G5, G6, G7) landed;
+G3 (count-driven `is`/`are` agreement) stays deferred — its syntax was never
+settled, and the governing-count context it needs now exists (built for G7), so it
+can be picked up cheaply later.
+
 1. **G2 — DONE (2026-06-21).** A list value exposes `.size` / `.count` (both the
    element count, an `int`). Works on a list-typed name (`stuff.size`, via the
    existing `name.field` chain) and on a parenthesized query
@@ -740,7 +745,14 @@ state mechanism, the six variation modes (F1–F6), and the seeded RNG (F8) all 
    to billions; ordinals ordinalize the last cardinal word (irregular table for
    first/second/third/fifth/eighth/ninth/twelfth, `y`→`ieth` for the tens). Fixture
    `numbers1` + golden.
-4. **G5** grouped/qualified lists (see the elucidated G5 bullet).
+4. **G5 — DONE (2026-06-21).** `a_group(xs)` / `the_group(xs)` (lib/en-US) collapse
+   objects with the same display name into a counted entry — "two brass lanterns,
+   three coins and a key" — reusing `in_words` (count word), `pluralize` (plural
+   name), and `format_list` (serial comma). The definite-vs-indefinite sub-decision
+   is resolved by the two variants (`a_group` → indefinite singletons; `the_group` →
+   "the two brass lanterns…"). Grouping key is the display name; first-seen order is
+   preserved. Fixture `group1` + golden. (An author-overridable grouping key is a
+   later refinement.)
 5. **G6 — DONE (2026-06-21).** `is_empty(xs)` predicate; an empty list already
    renders "nothing", and a custom fallback composes with the conditional sugar
    (`[if is_empty(xs)]…[else][the_list(xs)][end]`).

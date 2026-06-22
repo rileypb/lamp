@@ -13,10 +13,10 @@ prerequisite lists in `devdocs/game_parser.md`, `devdocs/rulebooks.md`, and
 > grammar, world-model traits, turn-cycle/daemon, and message ideas mined from
 > `lurkinghorror.txt`. `devdocs/text.md` is the **text-substitution**
 > design + 7-slice Action list (Inform-7-style `"[We] [drop] [the velvet_cloak]"`).
-> **Slices 1–4 DONE** (variation & conditionals complete bar deferred F7/`pick`);
-> Slice 5 (lists & numbers) is next. `lurking_todo.md` still awaits triage.
+> **Slices 1–5 DONE** (lists & numbers complete; G3 agreement deferred); Slice 6
+> (layout/paragraph control) is next. `lurking_todo.md` still awaits triage.
 
-## 1. Text substitution — Slices 1–4 DONE; Slice 5 next
+## 1. Text substitution — Slices 1–5 DONE; Slice 6 next
 **Slice 1 (complete):** bracket substitution + quote convention + lazy `text`/`freeze`.
 **Slice 2 (complete) — names, articles, case:** the **`lib/en-US` default locale pack
 auto-loads after `lib/sys`** (`gatherLibDirs`), realizing the three-layer split.
@@ -78,10 +78,13 @@ sugar words). World-model→locale person contract (`grammatical_person`/`gender
   wrapping every value substitution in `lamplighter.interp(…)` (records an interpolated
   number); left-to-right array order means the count is set before `[s]` reads it.
   Fixture `plural1` + golden; parser test; 129 goldens.
-- **5d (next) — G5 grouped/qualified lists:** `a_group()`/`the_group()` collapse
-  indistinguishable objects ("two brass lanterns and a key"). The definite-vs-indefinite
-  sub-decision is resolved by providing both variants. Reuses in_words + pluralize +
-  format_list.
+- **5d (complete) — G5 grouped/qualified lists:** `a_group()`/`the_group()` collapse
+  same-display-name objects into counted entries ("two brass lanterns, three coins
+  and a key"); both article variants. Reuses in_words + pluralize + format_list.
+  Fixture `group1` + golden; 130 goldens.
+- **Slice 5 deferred:** G3 count-driven `is`/`are` agreement (syntax never settled;
+  the governing-count context it needs now exists from G7); an author-overridable
+  grouping key for G5.
 **Follow-up from Slice 3 (optional):** migrate advent's reports from the manual
 `self.actor == player` branch to `[regarding self.actor][They] [verb] [the self.noun]`
 templates (D8 — churns goldens, do deliberately). (Verb agreement auto-switches onto
