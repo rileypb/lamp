@@ -16,4 +16,4 @@ relation links:
 links foyer to hall
 
 on startup:
-    print (links.all) + "[line break]"
+    print "[links.all][line break]"

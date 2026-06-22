@@ -6,5 +6,5 @@ game Test_2:
 on startup:
 	let line = readline()
 	let parts = split(line)
-	print (line) + "[line break]"
-	print (parts) + "[line break]"
+	print "[line][line break]"
+	print "[parts][line break]"

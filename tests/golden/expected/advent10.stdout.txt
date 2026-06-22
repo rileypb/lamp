@@ -7,9 +7,9 @@ You see a hat and a book here.
 That's not something you can wear.
 
 > wear hat
-(first taking hat)
+(first taking the hat)
 Taken.
-You put on hat.
+You put on the hat.
 
 > i
 You are carrying:
@@ -22,18 +22,18 @@ You're already wearing that.
 You're not wearing that.
 
 > remove hat
-You take off hat.
+You take off the hat.
 
 > i
 You are carrying:
   a hat
 
 > wear hat
-You put on hat.
+You put on the hat.
 
 > drop hat
-(first taking off hat)
-You take off hat.
+(first taking off the hat)
+You take off the hat.
 Dropped.
 
 > i

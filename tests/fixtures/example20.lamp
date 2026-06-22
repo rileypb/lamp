@@ -9,14 +9,14 @@ on startup:
     let a = 3
     let b = 5
     if a <= b:
-        print ("a le b") + "[line break]"
+        print "a le b[line break]"
     if b >= a:
-        print ("b ge a") + "[line break]"
+        print "b ge a[line break]"
     if a <= 3:
-        print ("a le 3") + "[line break]"
+        print "a le 3[line break]"
     if 5 >= b:
-        print ("5 ge b") + "[line break]"
+        print "5 ge b[line break]"
     if a <= 2:
-        print ("wrong") + "[line break]"
+        print "wrong[line break]"
     if 4 >= b:
-        print ("wrong") + "[line break]"
+        print "wrong[line break]"

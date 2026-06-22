@@ -7,8 +7,8 @@ game Example_18:
 
 on startup:
     let x = 5
-    print (-x) + "[line break]"
+    print "[-x][line break]"
     print (-x + 10) + "[line break]"
-    print (-x ^ 2) + "[line break]"
+    print "[-x ^ 2][line break]"
     let y = 3
-    print (10 - -y) + "[line break]"
+    print "[10 - -y][line break]"

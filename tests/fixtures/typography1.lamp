@@ -6,8 +6,8 @@ game Typography:
     author "Lamp"
 
 on startup:
-    print ("caf\u{e9} au lait") + "[line break]"
-    print ("na\u{ef}ve r\u{f4}le") + "[line break]"
-    print ("em dash \u{2014} ellipsis\u{2026} curly \u{201c}quote\u{201d}") + "[line break]"
-    print ("astral plane: \u{1f600}") + "[line break]"
-    print ("verbatim when malformed: \u{wxyz} stays") + "[line break]"
+    print "caf\u{e9} au lait[line break]"
+    print "na\u{ef}ve r\u{f4}le[line break]"
+    print "em dash \u{2014} ellipsis\u{2026} curly \u{201c}quote\u{201d}[line break]"
+    print "astral plane: \u{1f600}[line break]"
+    print "verbatim when malformed: \u{wxyz} stays[line break]"

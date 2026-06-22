@@ -9,6 +9,6 @@ connects foyer north to hall
 connects foyer east to study
 
 on startup:
-    print (connects.all) + "[line break]"
+    print "[connects.all][line break]"
     remove connects foyer _ to _
-    print (connects.all) + "[line break]"
+    print "[connects.all][line break]"

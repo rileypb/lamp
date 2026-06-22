@@ -729,12 +729,19 @@ player's possessive, person-adapted to "yours").
    locale, like the article words and the pluralizer).
 5. **D5 — DONE.** `[regarding EXPR]` sets the subject *and* the agreement, renders
    empty.
-6. **D8 — DONE (capability), not yet adopted by advent.** One report serves every
-   actor: `report take: print "[regarding self.actor][They] [take] [the
-   self.taken]."` renders "You take the velvet cloak." when the player acts and
-   "Alice takes …" for a third-person actor — the `slice3` fixture proves both.
-   advent's existing reports still branch on `self.actor == player` by hand;
-   migrating them is a follow-up (it would churn goldens) — see TODO.
+6. **D8 — capability DONE; advent uses Inform-style separate branches (2026-06-22).**
+   The adaptive verb/pronoun machinery (D1–D7) is the capability. For action reports,
+   advent keeps the player and other-actor cases as **separate branches**, matching
+   Inform's `standard report dropping rule`: the player branch is terse ("Dropped."),
+   the other-actor branch **names** the actor with an adaptive verb —
+   `print "[The self.actor] [drop] [the self.dropped]."` → "The npc drops the cloak."
+   (articles + capitalization + agreement). Implemented across advent's reports.
+   - **Rejected:** folding the two branches into one template via
+     `[regarding self.actor][They] …`. `[They]` is a *pronoun*, so a third-person actor
+     would render "It drops the cloak." rather than a name — and Inform itself keeps the
+     branches separate for this reason. Choosing name-vs-pronoun is deliberately the
+     author's, made explicit per branch (see the D8 entry under section D, and
+     "Auto subject-switching" below).
 
 **Auto subject-switching (and its override).** Naming a thing switches the verb
 agreement onto it, exactly as Inform does (verified empirically against an Inform

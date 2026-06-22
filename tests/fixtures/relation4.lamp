@@ -20,4 +20,4 @@ on startup:
         source foyer
         dir north
         target hall
-    print (connects.all) + "[line break]"
+    print "[connects.all][line break]"

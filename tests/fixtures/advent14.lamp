@@ -20,5 +20,5 @@ report lose_now:
 	story = lost
 
 rule end_story_rules when story == lost:
-	print ("*** Game over, friend. ***") + "[line break]"
+	print "*** Game over, friend. ***[line break]"
 	stop true

@@ -11,15 +11,15 @@ global int n = 7
 
 on startup:
     let cyc = "[one of]north[or]east[or]south[cycling]"
-    print ("cycling: [cyc] [cyc] [cyc] [cyc] [cyc]") + "[line break]"
+    print "cycling: [cyc] [cyc] [cyc] [cyc] [cyc][line break]"
     let stp = "[one of]one[or]two[or]three[stopping]"
-    print ("stopping: [stp] [stp] [stp] [stp]") + "[line break]"
+    print "stopping: [stp] [stp] [stp] [stp][line break]"
     let sticky = "[one of]red[or]green[or]blue[sticky random]"
-    print ("sticky: [sticky] [sticky] [sticky]") + "[line break]"
+    print "sticky: [sticky] [sticky] [sticky][line break]"
     let shuf = "[one of]a[or]b[or]c[in random order]"
-    print ("shuffled: [shuf] [shuf] [shuf] [shuf] [shuf] [shuf]") + "[line break]"
+    print "shuffled: [shuf] [shuf] [shuf] [shuf] [shuf] [shuf][line break]"
     let rnd = "[one of]1[or]2[or]3[at random]"
-    print ("at random: [rnd] [rnd] [rnd] [rnd] [rnd] [rnd]") + "[line break]"
+    print "at random: [rnd] [rnd] [rnd] [rnd] [rnd] [rnd][line break]"
     # An alternative carrying its own substitution.
     let pure = "[one of]heads[or]tails ([n])[purely at random]"
-    print ("purely: [pure] [pure] [pure] [pure]") + "[line break]"
+    print "purely: [pure] [pure] [pure] [pure][line break]"

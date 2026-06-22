@@ -15,6 +15,6 @@ action probe:
         "probe"
 
 report probe:
-    print ("line one\nline two") + "[line break]"
-    print ("a literal backslash: \\ done") + "[line break]"
-    print ("unknown stays: C:\Users") + "[line break]"
+    print "line one\nline two[line break]"
+    print "a literal backslash: \\ done[line break]"
+    print "unknown stays: C:\Users[line break]"

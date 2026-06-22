@@ -12,4 +12,4 @@ function int bar(int n):
     return n + 7
 
 on startup:
-    print (foo(5, bar)) + "[line break]"
+    print "[foo(5, bar)][line break]"

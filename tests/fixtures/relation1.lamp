@@ -13,4 +13,4 @@ relation connects:
     syntax "connects [source] [dir] [target]"
 
 on startup:
-    print (connects.all) + "[line break]"
+    print "[connects.all][line break]"

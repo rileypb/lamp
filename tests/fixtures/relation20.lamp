@@ -9,9 +9,9 @@ north_door connects foyer north to hall
 
 on startup:
     if connects foyer north to hall:
-        print ("connected") + "[line break]"
+        print "connected[line break]"
     disconnect north_door
     if connects foyer north to hall:
-        print ("still connected") + "[line break]"
+        print "still connected[line break]"
     else:
-        print ("disconnected") + "[line break]"
+        print "disconnected[line break]"

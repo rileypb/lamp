@@ -4,7 +4,7 @@ game Game_1:
     release dev
 
 on startup:
-    print (factorial(5)) + "[line break]"
+    print "[factorial(5)][line break]"
 
 function int factorial(int n):
     if n == 0:

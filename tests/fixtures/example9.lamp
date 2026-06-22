@@ -12,4 +12,4 @@ circle Unit_Circle:
     radius 1.0
 
 on startup:
-    print ("circumference: " + 2 * circle.all.first.radius * PI) + "[line break]"
+    print "circumference: [2 * circle.all.first.radius * PI][line break]"

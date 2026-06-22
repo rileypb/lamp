@@ -18,10 +18,10 @@ room gamma:
 on startup:
     # F7: the first alternative is the most likely, the last the least.
     let tier = "[one of]common[or]rare[or]legendary[as decreasingly likely outcomes]"
-    print ("tiers: [tier] [tier] [tier] [tier] [tier] [tier] [tier] [tier]") + "[line break]"
+    print "tiers: [tier] [tier] [tier] [tier] [tier] [tier] [tier] [tier][line break]"
     # pick() over a computed list; default mode in a template substitution.
     let rooms = room.all
-    print ("a room: [pick(rooms)].") + "[line break]"
+    print "a room: [pick(rooms)].[line break]"
     # pick() with an explicit mode, cycling the same call site in a loop.
     for i = 1 to 5:
         print ("cycle: " + pick(rooms, "cycling")) + "[line break]"

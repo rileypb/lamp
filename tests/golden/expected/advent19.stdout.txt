@@ -5,6 +5,6 @@ A plain hall.
 You can't put things on that.
 
 > put coin on table
-You put coin on table.
+You put the coin on the table.
 
 > quit

@@ -9,7 +9,7 @@ function int apply(int n, function fn):
     return fn(n)
 
 on startup:
-    print (add(3, 4)) + "[line break]"
-    print (double(5)) + "[line break]"
-    print (apply(6, double)) + "[line break]"
-    print (greet("lamp")) + "[line break]"
+    print "[add(3, 4)][line break]"
+    print "[double(5)][line break]"
+    print "[apply(6, double)][line break]"
+    print greet("lamp") + "[line break]"

@@ -162,10 +162,10 @@ action take:
         "get [taken]"
 
 before take:
-    print ("(reaching out...)") + "[line break]"
+    print "(reaching out...)[line break]"
 
 instead take when self.taken == oak_door:
-    print ("The door stays where it is.") + "[line break]"
+    print "The door stays where it is.[line break]"
     stop failed
 
 # check rules raise typed reasons instead of printing
@@ -180,10 +180,10 @@ do take:
     self.taken.holder = player
 
 after take:
-    print ("(a faint click as it leaves the shelf)") + "[line break]"
+    print "(a faint click as it leaves the shelf)[line break]"
 
 report take:
-    print ("Taken.") + "[line break]"
+    print "Taken.[line break]"
 
 # Rendering failures -- the `report failed` band. One place that turns each
 # reason into text. Condition (in `check`) and message (here) are now separate,
@@ -191,10 +191,10 @@ report take:
 # single rule; bare `stop` early-exits the rule once a reason matches.
 report failed take:
     if self.reason == already_held:
-        print ("You're already carrying that.") + "[line break]"
+        print "You're already carrying that.[line break]"
         stop
     if self.reason == cant_lift:
-        print ("That's not something you can pick up.") + "[line break]"
+        print "That's not something you can pick up.[line break]"
         stop
 
 
@@ -219,7 +219,7 @@ do unlock:
     self.target.locked = false
 
 report unlock:
-    print ("The lock turns and the door swings open.") + "[line break]"
+    print "The lock turns and the door swings open.[line break]"
 
 action go:
     direction way
@@ -231,7 +231,7 @@ check go when not connects player.holder self.way to _:
 
 check go:
     if oak_door.locked and self.way == north:
-        print ("The study door is locked.") + "[line break]"
+        print "The study door is locked.[line break]"
         stop failed
 
 do go:
@@ -296,7 +296,7 @@ do go:
 # ----------------------------------------------------------------------------
 
 on startup:
-    print (foyer.description) + "[line break]"
+    print "[foyer.description][line break]"
 
     try take:
         taken statue        # check raises cant_lift -> report failed prints
@@ -309,7 +309,7 @@ on startup:
 
     try go:
         way north           # exit exists and door now unlocked -> moves
-    print (study.description) + "[line break]"
+    print "[study.description][line break]"
 
 
 # ----------------------------------------------------------------------------

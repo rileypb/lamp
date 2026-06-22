@@ -22,6 +22,6 @@ connects foyer north hall
 connects foyer east study
 
 on startup:
-    print (connects foyer _ ?all) + "[line break]"
-    print (connects foyer _ ?first) + "[line break]"
-    print (connects foyer ? hall) + "[line break]"
+    print "[connects foyer _ ?all][line break]"
+    print "[connects foyer _ ?first][line break]"
+    print "[connects foyer ? hall][line break]"

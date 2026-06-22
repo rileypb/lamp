@@ -18,4 +18,4 @@ relation connects:
 
 on startup:
     connects foyer north hall
-    print (connects.all) + "[line break]"
+    print "[connects.all][line break]"

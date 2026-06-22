@@ -6,10 +6,10 @@ game Example_21:
     release dev
 
 on startup:
-    print (10 / 2) + "[line break]"
-    print (10 / 0) + "[line break]"
-    print (0 / 0) + "[line break]"
+    print "[10 / 2][line break]"
+    print "[10 / 0][line break]"
+    print "[0 / 0][line break]"
     let a = (-2) ^ 0.5
-    print (a) + "[line break]"
+    print "[a][line break]"
     let b = (-2) ^ 2
-    print (b) + "[line break]"
+    print "[b][line break]"

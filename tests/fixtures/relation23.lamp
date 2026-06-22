@@ -6,10 +6,10 @@ game Relation_23:
 lib relations
 
 on connects add:
-    print ("added edge") + "[line break]"
+    print "added edge[line break]"
 
 on connects remove:
-    print ("removed edge") + "[line break]"
+    print "removed edge[line break]"
 
 on startup:
     connects foyer north to hall

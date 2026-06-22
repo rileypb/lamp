@@ -13,7 +13,7 @@ room room1:
 
 # Contribute an opening line to the library startup rulebook.
 rule startup_rules:
-	print ("The lamp flickers to life.") + "[line break]"
+	print "The lamp flickers to life.[line break]"
 	print "[par]"
 
 # A local rulebook with a default, extended by a separate rule below.
@@ -30,6 +30,6 @@ action knock:
 report knock:
 	let ok = follow admits(player)
 	if ok:
-		print ("The door admits you.") + "[line break]"
+		print "The door admits you.[line break]"
 	else:
-		print ("The door stays shut.") + "[line break]"
+		print "The door stays shut.[line break]"

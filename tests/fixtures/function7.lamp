@@ -14,6 +14,6 @@ function int foo(int n) when x == 3:
     return 11 * n
 
 on startup:
-    print (foo(5)) + "[line break]"
+    print "[foo(5)][line break]"
     x = 3
-    print (foo(5)) + "[line break]"
+    print "[foo(5)][line break]"

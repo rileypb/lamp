@@ -5,7 +5,7 @@ A plain hall.
 off hook
 
 > put cloak on hook
-You put cloak on hook.
+You put the cloak on the hook.
 
 > probe
 on hook

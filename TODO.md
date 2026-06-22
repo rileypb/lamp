@@ -129,11 +129,24 @@ sugar words). World-model→locale person contract (`grammatical_person`/`gender
   (`[regarding x][snippet]` adapts pronouns/verbs at the use site). Fixture `slice6c`
   (+ stdin) + golden; 134 goldens.
 - **6b remains** the only open Slice 6 item — see the H paragraph-control entry above.
-**Follow-up from Slice 3 (optional):** migrate advent's reports from the manual
-`self.actor == player` branch to `[regarding self.actor][They] [verb] [the self.noun]`
-templates (D8 — churns goldens, do deliberately). (Verb agreement auto-switches onto
-a named noun, matching Inform — "...and drops it" is correct — and `[regarding]`
-overrides; see text.md "Auto subject-switching (and its override)".)
+**Prose-concat → templates (done 2026-06-22):** advent's report prose now uses
+substitution templates instead of string concatenation — e.g. the non-player branch
+`self.actor + " drops " + self.dropped + "."` → `"[The self.actor] [drop] [the
+self.dropped]."` (gains articles, capitalization, adaptive verb agreement: "The npc
+drops the cloak."). Player branches keep their terse wording but interpolate via
+`[the self.x]`. lib/advent + sample games + fixtures swept of unnecessary concat
+(the marker-append `(X) + "[line break]"` artifacts inlined to `"X[line break]"`,
+output-preserving); `+`-operator tests and nested-quote `pick(…, "mode")` cases left
+as-is. 5 goldens improved (articles/caps), rest unchanged; all 11 suites green.
+**D8 branch-unification — REJECTED (2026-06-22).** The idea of collapsing the
+player/non-player report branches into one template via `[regarding self.actor][They]
+…` is undesirable and is not pursued: `[They]` is a *pronoun*, so a third-person actor
+would render "It drops the cloak." instead of a name. The correct structure — which
+advent now uses and which matches Inform's `standard report dropping rule` — keeps the
+branches **separate**: terse player wording ("Dropped.") + a named, adaptive
+other-actor line (`"[The self.actor] [drop] [the self.dropped]."`). Already implemented.
+(Verb agreement auto-switches onto a named noun, matching Inform — "...and drops it" is
+correct — and `[regarding]` overrides; see text.md "Auto subject-switching".)
 **Deferred refinements:** per-locale sugar words + locale swapping — the sugar word
 sets (`the`/`a`/`an`, pronouns, `regarding`) are hardcoded English in the parser and
 `lib/en-US` is hard-auto-loaded; generalize when a non-English locale lands.
@@ -222,6 +235,24 @@ lets the base `action` type move out of the runtime bootstrap. No code until the
 direction is chosen. **Where:** `src/lantern/*` (pipeline), `src/lamplighter/index.js`.
 
 ## Smaller / opportunistic
+- **Slice 6 paragraph-control follow-ups (queued next).** Refinements deferred from
+  the H1/H2/H3/H6 build (devdocs/text.md → H6):
+  1. **Prompt-spacing / line-start tracking.** The host writes the prompt+echo
+     directly, bypassing the output-stream manager, so after a command that printed
+     nothing the end-of-story leading break can't tell the stream is already at
+     line-start — `advent14` loses one blank line. Fix: track a trailing-newline count
+     and have the prompt path tell the manager it's at line-start (so "ensure N
+     newlines" subtracts what the echo already emitted). **Where:**
+     `src/lamplighter/index.js` (output-stream manager + `promptLine`).
+  2. **Per-band rule B.** The automatic paragraph break currently lands once at the
+     lib/advent turn boundary; move it to per-`report`/`report failed`/`after` band so
+     multi-band output (e.g. `after` + `report`) is separated. Decide engine
+     `runAction` hook vs. catch-all lib/advent rules. **Where:** `lib/advent` and/or
+     `src/lamplighter/index.js` (`runAction`).
+  3. **Remove the dead `"print"` message path.** `print` now routes through the
+     `"write"` channel, so the worker/host/shell `"print"` handlers (and the `setPrint`
+     poster) are unused. Remove for clarity. **Where:** `sandbox/{worker,worker-browser,
+     host}.js`, `lighthouse/web/shell.js`, `src/lamplighter/index.js` (`printImpl`/`setPrint`).
 - **Reassigning a multi-word (underscore) global fails the checker.** `global int
   my_score = 0` then `my_score = 5` reports "assignment to undeclared name
   `my_score`", while a single-word global (`score = 5`) works. The assignment-target

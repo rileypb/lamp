@@ -7,12 +7,12 @@ game Example_19:
 
 on startup:
     let a = (3 + 4) * 2
-    print (a) + "[line break]"
+    print "[a][line break]"
     let b = 10 / (3 - 1)
-    print (b) + "[line break]"
+    print "[b][line break]"
     let c = (2 ^ 3) ^ 2
-    print (c) + "[line break]"
+    print "[c][line break]"
     let d = 2 ^ (3 ^ 2)
-    print (d) + "[line break]"
+    print "[d][line break]"
     let e = (4 - 1) * 3
-    print (e) + "[line break]"
+    print "[e][line break]"

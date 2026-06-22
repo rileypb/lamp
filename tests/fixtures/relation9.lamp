@@ -20,4 +20,4 @@ connects foyer north hall
 north_door connects foyer north hall
 
 on startup:
-    print (connects.all) + "[line break]"
+    print "[connects.all][line break]"

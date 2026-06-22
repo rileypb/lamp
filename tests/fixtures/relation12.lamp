@@ -21,8 +21,8 @@ connects foyer north hall
 
 on startup:
     if connects foyer north hall:
-        print ("north exists") + "[line break]"
+        print "north exists[line break]"
     if connects foyer south hall:
-        print ("south exists") + "[line break]"
+        print "south exists[line break]"
     else:
-        print ("no south") + "[line break]"
+        print "no south[line break]"

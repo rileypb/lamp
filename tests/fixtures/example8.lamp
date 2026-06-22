@@ -18,4 +18,4 @@ game Game_3:
     release dev
 
 on startup:
-	print (game.all) + "[line break]"
+	print "[game.all][line break]"

@@ -37,7 +37,7 @@ report take:
 	if self.actor == player:
 		print "Taken."
 	else:
-		print self.actor + " takes " + self.taken + "."
+		print "[The self.actor] [take] [the self.taken]."
 
 # Failure text lives here, keyed by reason, so a game can retheme a refusal
 # without restating the `check` condition (see devdocs/rulebooks.md).
@@ -62,9 +62,9 @@ report inventory:
 				print "You are carrying:[line break]"
 				found = true
 			if wears self.actor x:
-				print "  " + with_article(x) + " (worn)[line break]"
+				print "  [with_article(x)] (worn)[line break]"
 			else:
-				print "  " + with_article(x) + "[line break]"
+				print "  [with_article(x)][line break]"
 	if not found:
 		print "You are carrying nothing."
 
@@ -80,7 +80,7 @@ check drop:
 do drop:
 	if wears self.actor self.dropped:
 		if (self.actor == player):
-			print "(first taking off " + self.dropped + ")[line break]"
+			print "(first taking off [the self.dropped])[line break]"
 		try doff:
 			clothing self.dropped
 			actor self.actor
@@ -92,7 +92,7 @@ report drop:
 	if self.actor == player:
 		print "Dropped."
 	else:
-		print self.actor + " drops " + self.dropped + "."
+		print "[The self.actor] [drop] [the self.dropped]."
 
 report failed drop:
 	if self.reason == not_carrying:
@@ -115,7 +115,7 @@ check wear:
 do wear:
 	if not (self.clothing.holder == self.actor):
 		if (self.actor == player):
-			print "(first taking " + self.clothing + ")[line break]"
+			print "(first taking [the self.clothing])[line break]"
 		try take:
 			taken self.clothing
 			actor self.actor
@@ -125,9 +125,9 @@ do wear:
 
 report wear:
 	if self.actor == player:
-		print "You put on " + self.clothing + "."
+		print "You put on [the self.clothing]."
 	else:
-		print self.actor + " puts on " + self.clothing + "."
+		print "[The self.actor] [put] on [the self.clothing]."
 
 report failed wear:
 	if self.reason == not_wearable:
@@ -152,9 +152,9 @@ do doff:
 
 report doff:
 	if self.actor == player:
-		print "You take off " + self.clothing + "."
+		print "You take off [the self.clothing]."
 	else:
-		print self.actor + " takes off " + self.clothing + "."
+		print "[The self.actor] [take] off [the self.clothing]."
 
 report failed doff:
 	if self.reason == not_worn:
@@ -172,7 +172,7 @@ check examine:
 		stop failed too_dark
 
 report examine:
-	print self.target.description + "[line break]"
+	print "[self.target.description][line break]"
 
 report failed examine:
 	if self.reason == too_dark:
@@ -230,7 +230,7 @@ check put_on:
 do put_on:
 	if wears self.actor self.put_item:
 		if (self.actor == player):
-			print "(first taking off " + self.put_item + ")[line break]"
+			print "(first taking off [the self.put_item])[line break]"
 		silently try doff:
 			clothing self.put_item
 			actor self.actor
@@ -241,9 +241,9 @@ do put_on:
 
 report put_on:
 	if self.actor == player:
-		print "You put " + self.put_item + " on " + self.destination + "."
+		print "You put [the self.put_item] on [the self.destination]."
 	else:
-		print self.actor + " puts " + self.put_item + " on " + self.destination + "."
+		print "[The self.actor] [put] [the self.put_item] on [the self.destination]."
 
 report failed put_on:
 	if self.reason == not_carrying:

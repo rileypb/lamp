@@ -10,4 +10,4 @@ relation adjacent:
     to place target
 
 on startup:
-    print (adjacent.all) + "[line break]"
+    print "[adjacent.all][line break]"

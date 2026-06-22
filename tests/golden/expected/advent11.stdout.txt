@@ -4,12 +4,12 @@ A hall.
 You see a hat here.
 
 > npc act
-npc takes hat.
-npc puts on coat.
-npc takes off coat.
-npc puts on coat.
-npc takes off coat.
-npc drops coat.
-npc drops hat.
+The npc takes the hat.
+The npc puts on the coat.
+The npc takes off the coat.
+The npc puts on the coat.
+The npc takes off the coat.
+The npc drops the coat.
+The npc drops the hat.
 
 > quit

@@ -15,12 +15,12 @@ sign notice:
     caption "notice reads [score]"
 
 on startup:
-    print ("She said 'hello' to me.") + "[line break]"
-    print ("It's a sailor[']s knot.") + "[line break]"
+    print "She said 'hello' to me.[line break]"
+    print "It's a sailor[']s knot.[line break]"
     score = 1
     let t = "count is [score]"
     let snap = freeze t
     score = 5
-    print ("lazy text re-renders: [t]") + "[line break]"
-    print ("frozen snapshot holds: [snap]") + "[line break]"
-    print ("field text: [notice.caption]") + "[line break]"
+    print "lazy text re-renders: [t][line break]"
+    print "frozen snapshot holds: [snap][line break]"
+    print "field text: [notice.caption][line break]"
