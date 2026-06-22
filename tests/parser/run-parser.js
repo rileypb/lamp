@@ -250,6 +250,26 @@ const cases = [
         },
     },
     {
+        name: "is/are list sugar: [is LIST]/[is the LIST]/[is a LIST] desugar; [Is …] caps; bare [is] stays a verb",
+        run() {
+            const [a] = parse(["on startup:", '    print "[is stuff]"'].join("\n"));
+            const bare = a.body[0].expr.parts[0].expr;
+            assert.strictEqual(bare.kind, "CallExpr");
+            assert.strictEqual(bare.name, "is_are_list");
+            const [b] = parse(["on startup:", '    print "[is the stuff]"'].join("\n"));
+            assert.strictEqual(b.body[0].expr.parts[0].expr.name, "is_are_the_list");
+            const [c] = parse(["on startup:", '    print "[is a stuff]"'].join("\n"));
+            assert.strictEqual(c.body[0].expr.parts[0].expr.name, "is_are_a_list");
+            const [d] = parse(["on startup:", '    print "[Is the stuff]"'].join("\n"));
+            const cap = d.body[0].expr.parts[0].expr;
+            assert.strictEqual(cap.name, "cap");
+            assert.strictEqual(cap.args[0].name, "is_are_the_list");
+            // Bare [is] with no operand stays the verb conjugation, not the list sugar.
+            const [e] = parseWithVerbs(["on startup:", '    print "[is]"'].join("\n"), ["is"]);
+            assert.strictEqual(e.body[0].expr.parts[0].expr.name, "conjugate");
+        },
+    },
+    {
         name: "verb declaration: `verb a, b` parses to a discardable VerbDecl (keyword words allowed)",
         run() {
             const nodes = parse(["verb drop, do", "on startup:", "    print 1"].join("\n"));

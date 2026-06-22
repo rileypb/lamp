@@ -13,8 +13,8 @@ prerequisite lists in `devdocs/game_parser.md`, `devdocs/rulebooks.md`, and
 > grammar, world-model traits, turn-cycle/daemon, and message ideas mined from
 > `lurkinghorror.txt`. `devdocs/text.md` is the **text-substitution**
 > design + 7-slice Action list (Inform-7-style `"[We] [drop] [the velvet_cloak]"`).
-> **Slices 1–5 DONE** (lists & numbers complete; G3 agreement deferred); Slice 6
-> (layout/paragraph control) is next. `lurking_todo.md` still awaits triage.
+> **Slices 1–5 DONE** (lists & numbers complete, incl. G3 count-driven agreement);
+> Slice 6 (layout/paragraph control) is next. `lurking_todo.md` still awaits triage.
 
 ## 1. Text substitution — Slices 1–5 DONE; Slice 6 next
 **Slice 1 (complete):** bracket substitution + quote convention + lazy `text`/`freeze`.
@@ -66,7 +66,7 @@ sugar words). World-model→locale person contract (`grammatical_person`/`gender
   stays fixed for deterministic goldens). Fixture `variation2` + golden; parser test;
   131 goldens. Remaining nicety: arbitrary explicit per-alternative weights (only the
   "decreasing" scheme is built).
-**Slice 5 (in progress) — lists & numbers.**
+**Slice 5 (complete) — lists & numbers.**
 - **5a (complete) — list quantities & articles (G2/G1/G6):** `.size`/`.count` on a
   list (name or parenthesized query, the latter via a new `MemberAccess` node — the
   `(...)` nud collects a trailing `.field` chain; shared `applyFieldToType` checker
@@ -85,9 +85,16 @@ sugar words). World-model→locale person contract (`grammatical_person`/`gender
   same-display-name objects into counted entries ("two brass lanterns, three coins
   and a key"); both article variants. Reuses in_words + pluralize + format_list.
   Fixture `group1` + golden; 130 goldens.
-- **Slice 5 deferred:** G3 count-driven `is`/`are` agreement (syntax never settled;
-  the governing-count context it needs now exists from G7); an author-overridable
-  grouping key for G5.
+- **5e (complete) — G3 count-driven agreement:** `are(int n)` returns "is"/"are" by a
+  raw count (singular only at exactly 1, so `are(0)` → "are"). Sugar `[is LIST]` /
+  `[is the LIST]` / `[is a LIST]` (capitalized `[Is …]`) renders the copula agreeing
+  with the list's **size** — empty and singular both "is" ("is nothing"), 2+ "are" —
+  followed by the list with no / definite / indefinite articles. Pure parser desugar
+  (`desugarSugar` → `is_are_list`/`is_are_the_list`/`is_are_a_list`, reusing
+  `format_list`/`the_list`/`a_list`); no emitter/AST change. Fixture `agreement1` +
+  golden; parser test; 132 goldens. The `[is …]` operand is list-typed
+  (checker-enforced). Companion helpers `that_those(n)`/`a_an(x)` unbuilt (add on demand).
+- **Slice 5 deferred:** an author-overridable grouping key for G5.
 **Follow-up from Slice 3 (optional):** migrate advent's reports from the manual
 `self.actor == player` branch to `[regarding self.actor][They] [verb] [the self.noun]`
 templates (D8 — churns goldens, do deliberately). (Verb agreement auto-switches onto

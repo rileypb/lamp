@@ -381,7 +381,11 @@ Built-in primitive types:
   name (`stuff.size`) and on a parenthesized expression — `(connects here _ ?all).size`
   — the latter being postfix field access on a computed value. The locale provides
   `a_list(xs)` / `the_list(xs)` (render a list with indefinite / definite articles)
-  and `is_empty(xs)`.
+  and `is_empty(xs)`. Count-driven copula agreement (G3): `are(n)` returns "is"/"are"
+  by a raw count (singular only at exactly 1), and the sugar `[is LIST]` /
+  `[is the LIST]` / `[is a LIST]` (capitalized `[Is …]`) renders the copula agreeing
+  with the list's size — empty and singular both "is" — followed by the list with
+  no / definite / indefinite articles.
 
 The literal `none` represents the absence of an object reference. It is valid wherever an object-typed value is expected and evaluates to `null` at runtime.
 

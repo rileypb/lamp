@@ -1,0 +1,42 @@
+# Slice 5b: count-driven copula agreement (G3). are(n) is the bare primitive —
+# "is" only when the count is exactly 1, else "are" (zero is plural: "are 0"). The
+# [is LIST] sugar forms agree with the list's size (empty/singular -> "is") and
+# print the list with no / definite / indefinite articles. See devdocs/text.md G3.
+game Agreement:
+    author "Lamp"
+
+type thing:
+    string printed_name = ""
+type box < thing
+
+box chest
+box drawer
+thing lantern:
+    printed_name "brass lantern"
+thing key
+thing apple
+
+relation contains:
+    from box container
+    to thing held
+    syntax "contains [container] [held]"
+
+contains chest lantern
+contains chest key
+contains drawer apple
+
+on startup:
+    # are(n): grammatical number of a raw count — singular only at exactly 1.
+    print "There [are(0)] no exits."
+    print "There [are(1)] one exit."
+    print "There [are(2)] two exits."
+    # [is LIST]: the copula agrees with the list size; empty and singular both "is".
+    let many = contains chest ?all
+    let single = contains drawer ?all
+    let none = contains key ?all
+    print "In the chest [is the many]."
+    print "In the drawer [is the single]."
+    print "On the key [is the none]."
+    print "Here [is a many]."
+    print "Listed: [is many]."
+    print "[Is the single] right here."

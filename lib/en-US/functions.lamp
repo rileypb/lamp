@@ -65,6 +65,16 @@ native function string a_list(list<object> xs)
 native function string the_list(list<object> xs)
 native function bool is_empty(list<object> xs)
 
+# Count-driven copula agreement (G3). are(n) is the bare primitive: "is" when the
+# count is exactly 1, else "are" (so are(0) -> "are 0 bullets"). The [is LIST] sugar
+# forms render the verb agreeing with the list's size followed by the list itself —
+# [is LIST] with no articles, [is the LIST] definite, [is a LIST] indefinite — and
+# treat an empty list as singular ("is nothing"), matching Inform. See text.md G3.
+native function string are(int n)
+native function string is_are_list(list<object> xs)
+native function string is_are_the_list(list<object> xs)
+native function string is_are_a_list(list<object> xs)
+
 # Grouped lists (G5): collapse indistinguishable objects (same display name) into a
 # counted entry — "two brass lanterns and a key". a_group uses indefinite articles
 # for singletons, the_group definite ("the two brass lanterns and the key"). See

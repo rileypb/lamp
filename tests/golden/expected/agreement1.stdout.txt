@@ -1,0 +1,9 @@
+There are no exits.
+There is one exit.
+There are two exits.
+In the chest are the brass lantern and the key.
+In the drawer is the apple.
+On the key is nothing.
+Here are a brass lantern and a key.
+Listed: are brass lantern and key.
+Is the apple right here.

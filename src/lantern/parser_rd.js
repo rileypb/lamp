@@ -139,6 +139,21 @@ function desugarSugar(src, verbNames) {
         const operand = regarding[1].trim().replace(/^(the|a|an)\s+/i, "");
         return `regarding(${operand})`;
     }
+    // [is LIST] / [is the LIST] / [is a LIST] (G3): the copula agreeing with the
+    // list's size ("is" for empty/singular, "are" for 2+) followed by the list
+    // rendered with no / definite / indefinite articles. The verb word is decorative
+    // — agreement is by count — so `are` leads equivalently; a capitalized lead word
+    // ([Is …]) capitalizes for a sentence start. See devdocs/text.md G3.
+    const isAre = src.match(/^(is|are)\s+(\S.*)$/i);
+    if (isAre) {
+        let rest = isAre[2].trim();
+        let helper = "is_are_list";
+        let article;
+        if ((article = rest.match(/^the\s+(\S.*)$/i))) { helper = "is_are_the_list"; rest = article[1].trim(); }
+        else if ((article = rest.match(/^an?\s+(\S.*)$/i))) { helper = "is_are_a_list"; rest = article[1].trim(); }
+        const call = `${helper}(${rest})`;
+        return /^[A-Z]/.test(isAre[1]) ? `cap(${call})` : call;
+    }
     if (/^[A-Za-z]+$/.test(src)) {
         const lower = src.toLowerCase();
         const wrap = (call) => (src === lower ? call : `cap(${call})`);

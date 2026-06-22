@@ -276,10 +276,24 @@ either the trailing sugar word or the function's mode argument.
   box ?all).size]"`. **New primitive:** a list `.size`/`.count` accessor — today a
   list value exposes only `.first` (`devdocs/specs.md`). This is the user's
   canonical example of the Inform→Lamp translation.
-- **G3. Count-driven agreement.** Inform: `[is-are the contents]`. **Lamp:**
-  `[are((contains box ?all).size)]` → "is"/"are" by count; helpers
-  `that_those(n)`, `a_an(x)` (also reading B7's plural flag for object subjects).
-  - I'm not decided on the syntax here. DEFER
+- **G3. Count-driven agreement.** Inform: `[is-are list of …]`. **Lamp:** DONE.
+  Two pieces, no shared count-passing magic:
+  - **`are(int n)`** — the bare primitive. Returns "is" only when `n` is exactly 1,
+    else "are" (zero is plural — `[are(0)] bullets` → "are 0 bullets"). A plain
+    function; it does not touch the render context. `[are(n)]` in a template is just
+    an ordinary call substitution.
+  - **`[is LIST]` / `[is the LIST]` / `[is a LIST]`** (+ capitalized `[Is …]`) —
+    sugar mirroring Inform's three `[is-are list of …]` forms. Each renders the
+    copula agreeing with the list's **size** followed by the list itself, with no /
+    definite / indefinite articles. An empty list is **singular** here ("is nothing"),
+    so the verb is "is" for size 0 or 1 and "are" for 2+ — deliberately *not*
+    `are(LIST.size)` (which makes 0 plural). The lead verb word is decorative
+    (agreement is by count), so `are` leads equivalently. Desugars in the parser to
+    `is_are_list` / `is_are_the_list` / `is_are_a_list`, which reuse `format_list` /
+    `the_list` / `a_list`. The operand must be list-typed (checker-enforced via the
+    `list<object>` parameter).
+  - Companion helpers `that_those(n)` / `a_an(x)` remain unbuilt — add when a fixture
+    needs them.
 - **G4. Numbers in words.** Inform: `"[score in words]"`. **Lamp:**
   `"[in_words(score)]"` → "five"; ordinal `"[ordinal(rank)]"` → "fifth".
 - **G5. Grouped/qualified lists.** Inform: `[a list of … with definite articles]` /
