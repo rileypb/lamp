@@ -1572,6 +1572,18 @@ function createParser(tokens, filePath, globalNames, functionNames = new Set(), 
         if (token.type === "LPAREN") {
             const expr = parseExpression(0, localNames);
             expect("RPAREN", "Expected ')' to close expression");
+            // Postfix field access on the parenthesized value, e.g.
+            // `(connects foyer _ ?all).size` (G2). Collect the trailing dotted
+            // names into a MemberAccess; with no trailing '.' the value passes
+            // through unchanged.
+            if (at("DOT")) {
+                const fields = [];
+                while (at("DOT")) {
+                    next();
+                    fields.push(plainName("field name"));
+                }
+                return ast.createMemberAccess(expr, fields);
+            }
             return expr;
         }
         throw err(`Unexpected token in expression: ${token.type}`, token.line);

@@ -322,6 +322,18 @@ const cases = [
         },
     },
     {
+        name: "member access: (EXPR).field parses to a MemberAccess; name.field stays a PropertyAccess",
+        run() {
+            const [h] = parse(["on startup:", "    let n = (a).size"].join("\n"), ["a"]);
+            const expr = h.body[0].expr;
+            assert.strictEqual(expr.kind, "MemberAccess");
+            assert.deepStrictEqual(expr.fields, ["size"]);
+            assert.deepStrictEqual(expr.object, { kind: "GlobalExpr", name: "a" });
+            const [h2] = parse(["on startup:", "    let n = xs.count"].join("\n"));
+            assert.deepStrictEqual(h2.body[0].expr, { kind: "PropertyAccess", chain: ["xs", "count"] });
+        },
+    },
+    {
         name: "A5 quotes: word-boundary ' becomes \" ; [']  forces a literal apostrophe; both stay StringLiteral",
         run() {
             const [a] = parse(["on startup:", `    print "say 'hi'"`].join("\n"));

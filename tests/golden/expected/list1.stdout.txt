@@ -1,0 +1,6 @@
+The chest holds 3 things.
+Count via query: 3.
+You see a brass lantern, a key and an apple.
+You take the brass lantern, the key and the apple.
+It is not empty.
+On the key: nothing. Nothing there.

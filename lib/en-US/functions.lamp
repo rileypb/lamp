@@ -56,6 +56,15 @@ native function string regarding(object x)
 # rather than an object reference. See text.md D3/D4.
 native function string conjugate(string word)
 
+# List rendering with articles (G1) and the empty test (G6). a_list / the_list map
+# each element through the indefinite / definite article and join with the serial
+# comma (honoring `oxford_comma`); an empty list renders "nothing". For a custom
+# empty fallback, compose with the conditional sugar:
+# "[if is_empty(xs)]nothing here[else][the_list(xs)][end]". See text.md G1/G6.
+native function string a_list(list<object> xs)
+native function string the_list(list<object> xs)
+native function bool is_empty(list<object> xs)
+
 # The locale's default verb vocabulary: the irregular auxiliaries plus a few common
 # verbs. A game registers its own domain verbs with its own `verb` declaration; the
 # conjugation *rules* live in conjugate() above, so a newly declared regular verb

@@ -120,6 +120,14 @@ function createIndexExpr(target, index) {
     return { kind: "IndexExpr", target, index };
 }
 
+// Postfix field access on a computed (non-name) expression — e.g. a parenthesized
+// query `(connects foyer _ ?all).size`. The plain `name.field` chain is a
+// PropertyAccess; this is its analogue when the head is an arbitrary expression.
+// `fields` is the trailing dotted names (usually one). See devdocs/text.md G2.
+function createMemberAccess(object, fields) {
+    return { kind: "MemberAccess", object, fields };
+}
+
 function createConcat(left, right) {
     return { kind: "Concat", left, right };
 }
@@ -364,6 +372,7 @@ module.exports = {
     createNumberLiteral,
     createBooleanLiteral,
     createPropertyAccess,
+    createMemberAccess,
     createConcat,
     createEqualsExpr,
     createMultiplyExpr,

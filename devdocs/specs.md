@@ -369,7 +369,13 @@ Built-in primitive types:
 - `int` — integer values; literals are plain digits: `42`, `-7`
 - `bool` — boolean values; literals are `true` and `false`
 - `real` — floating-point values; literals require a decimal point: `3.14`, `-0.5`
-- `list<T>` (generic list of elements of type `T`)
+- `list<T>` (generic list of elements of type `T`). A list value exposes the
+  accessors `.first` (the first element, or `none` if empty, type `T`) and
+  `.size` / `.count` (the element count, type `int`). These work on a list-typed
+  name (`stuff.size`) and on a parenthesized expression — `(connects here _ ?all).size`
+  — the latter being postfix field access on a computed value. The locale provides
+  `a_list(xs)` / `the_list(xs)` (render a list with indefinite / definite articles)
+  and `is_empty(xs)`.
 
 The literal `none` represents the absence of an object reference. It is valid wherever an object-typed value is expected and evaluates to `null` at runtime.
 

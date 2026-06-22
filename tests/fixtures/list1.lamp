@@ -1,0 +1,36 @@
+# Slice 5a: list quantities & article rendering. G2 — `.size`/`.count` on a list
+# (a name or a parenthesized query). G1 — a_list()/the_list() render a list with
+# indefinite/definite articles through the serial-comma formatter. G6 — is_empty()
+# tests for no elements; compose with [if] for a custom empty fallback. See text.md G.
+game Lists:
+    author "Lamp"
+
+type thing:
+    string printed_name = ""
+type box < thing
+
+box chest
+thing lantern:
+    printed_name "brass lantern"
+thing key
+thing apple
+
+relation contains:
+    from box container
+    to thing held
+    syntax "contains [container] [held]"
+
+contains chest lantern
+contains chest key
+contains chest apple
+
+on startup:
+    let stuff = contains chest ?all
+    print "The chest holds [stuff.size] things."
+    print "Count via query: [(contains chest ?all).count]."
+    print "You see [a_list(stuff)]."
+    print "You take [the_list(stuff)]."
+    print "[if is_empty(stuff)]The chest is empty.[else]It is not empty.[end]"
+    # An empty list: a_list/the_list render "nothing", and is_empty composes a fallback.
+    let none = contains key ?all
+    print "On the key: [a_list(none)]. [if is_empty(none)]Nothing there.[else]Something.[end]"

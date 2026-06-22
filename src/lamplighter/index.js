@@ -1076,6 +1076,14 @@ function makeList(items) {
         get first() {
             return items.length > 0 ? items[0] : null;
         },
+        // List quantity accessors (G2): `.size` / `.count` both give the element
+        // count. See devdocs/text.md G2.
+        get size() {
+            return items.length;
+        },
+        get count() {
+            return items.length;
+        },
     };
 }
 

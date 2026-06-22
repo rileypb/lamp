@@ -4,7 +4,7 @@ const { encode } = require("../strcodec");
 // names, property-access chains, function calls) and never need extra parens.
 const SAFE_ATOM = new Set([
     "StringLiteral", "TemplateLiteral", "FreezeExpr", "NumberLiteral", "BooleanLiteral", "NoneLiteral",
-    "VariableExpr", "PropertyAccess", "GlobalExpr", "ParenNameExpr", "Concat", "DivideExpr", "CallExpr", "FunctionRefExpr", "FollowExpr", "IndexExpr",
+    "VariableExpr", "PropertyAccess", "GlobalExpr", "ParenNameExpr", "Concat", "DivideExpr", "CallExpr", "FunctionRefExpr", "FollowExpr", "IndexExpr", "MemberAccess",
 ]);
 
 // JS operator precedence for the binary/unary expression kinds we emit.
@@ -978,6 +978,9 @@ function emitExpression(expr, globalNames = new Set()) {
         const [head, ...tail] = expr.chain;
         const headExpr = globalNames.has(head) ? `lamplighter.getGlobal(${emitName(head)})` : head;
         return tail.length === 0 ? headExpr : `${headExpr}.${tail.join(".")}`;
+    }
+    if (expr.kind === "MemberAccess") {
+        return `(${emitExpression(expr.object, globalNames)}).${expr.fields.join(".")}`;
     }
     if (expr.kind === "Concat") {
         return `lamplighter.concat(${emitExpression(expr.left, globalNames)}, ${emitExpression(expr.right, globalNames)})`;

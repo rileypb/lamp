@@ -724,14 +724,28 @@ state mechanism, the six variation modes (F1–F6), and the seeded RNG (F8) all 
 
 ### Slice 5 — lists & numbers
 
-1. **G2** count via the `.size` accessor (the primitive can land in Slice 1).
-2. **G1** list-of-a-set with `a_list()` / `the_list()` over any query collection.
+1. **G2 — DONE (2026-06-21).** A list value exposes `.size` / `.count` (both the
+   element count, an `int`). Works on a list-typed name (`stuff.size`, via the
+   existing `name.field` chain) and on a parenthesized query
+   (`(contains chest ?all).size`) — the latter via a new **`MemberAccess`** node:
+   the `(...)` nud collects a trailing `.field` chain, the emitter emits
+   `(expr).field`, and the checker infers it through a shared `applyFieldToType`
+   helper (refactored out of the chain walker). Runtime: `makeList` gains `size` /
+   `count` getters.
+2. **G1 — DONE (2026-06-21).** `a_list(xs)` / `the_list(xs)` (lib/en-US) render a
+   list with indefinite / definite articles via the serial-comma formatter — "a
+   brass lantern, a key and an apple" / "the …". Works over any query collection.
 3. **G4** numbers in words + ordinals.
 4. **G5** grouped/qualified lists (see the elucidated G5 bullet).
-5. **G6** empty-list phrasing (`is_empty`, fallback parameter).
+5. **G6 — DONE (2026-06-21).** `is_empty(xs)` predicate; an empty list already
+   renders "nothing", and a custom fallback composes with the conditional sugar
+   (`[if is_empty(xs)]…[else][the_list(xs)][end]`).
 6. **G7** plural suffix `[s]` — a single token that pluralizes the preceding word
    via the locale's `pluralize_word` (no `[es]`), built with the G3 governing-count
    context.
+
+Fixture `list1` + golden (G1/G2/G6); parser unit test for `MemberAccess`. All 11
+suites green (127 goldens).
 
 ### Slice 6 — layout & misc output
 

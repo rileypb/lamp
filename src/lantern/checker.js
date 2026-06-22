@@ -869,6 +869,14 @@ function inferExprType(expr, typeSchema, kindSchema, localTypes, functionSchema 
     if (expr.kind === "PropertyAccess") {
         return resolveChainType(expr.chain, typeSchema, kindSchema, localTypes);
     }
+    if (expr.kind === "MemberAccess") {
+        let t = inferExprType(expr.object, typeSchema, kindSchema, localTypes, functionSchema);
+        for (const field of expr.fields) {
+            if (t === null) return null;
+            t = applyFieldToType(t, field, typeSchema);
+        }
+        return t;
+    }
     if (expr.kind === "Concat") {
         const leftType = inferExprType(expr.left, typeSchema, kindSchema, localTypes, functionSchema);
         const rightType = inferExprType(expr.right, typeSchema, kindSchema, localTypes, functionSchema);
@@ -970,33 +978,25 @@ function resolveChainType(chain, typeSchema, kindSchema, localTypes) {
                 return null;
             }
         } else {
-            if (token === "all") {
-                currentType = `list<${currentType}>`;
-                continue;
-            }
-            if (token === "first") {
-                const listMatch = currentType.match(/^list<(.+)>$/);
-                if (listMatch) {
-                    currentType = listMatch[1];
-                } else {
-                    return null;
-                }
-                continue;
-            }
-            const listMatch = currentType.match(/^list<(.+)>$/);
-            if (listMatch) {
-                return null;
-            }
-            const allFields = getAllFields(currentType, typeSchema);
-            const fieldType = allFields.get(token);
-            if (!fieldType) {
-                return null;
-            }
-            currentType = fieldType;
+            currentType = applyFieldToType(currentType, token, typeSchema);
+            if (currentType === null) return null;
         }
     }
 
     return currentType;
+}
+
+// Applies one field/accessor token to a known type, returning the resulting type
+// or null. Shared by the `name.field` chain (resolveChainType) and the computed
+// `(expr).field` member access (MemberAccess inference). Handles the list
+// pseudo-fields `.all` / `.first` and the G2 quantity accessors `.size` / `.count`.
+function applyFieldToType(currentType, token, typeSchema) {
+    if (token === "all") return `list<${currentType}>`;
+    const listMatch = currentType.match(/^list<(.+)>$/);
+    if (token === "first") return listMatch ? listMatch[1] : null;
+    if (token === "size" || token === "count") return listMatch ? "int" : null;
+    if (listMatch) return null;
+    return getAllFields(currentType, typeSchema).get(token) || null;
 }
 
 function checkValueCompatibility(valueNode, fieldTypeName, typeSchema, kindSchema, filePath, lineNumber, context, localTypes = new Map(), functionSchema = new Map()) {
