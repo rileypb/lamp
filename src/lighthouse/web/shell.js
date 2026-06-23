@@ -159,6 +159,24 @@
             case "save_read":
                 replySave(localStorage.getItem(SAVE_KEY_PREFIX + msg.key));
                 break;
+            case "save_list": {
+                // Enumerate this game's metadata sidecars (keys "<prefix>…#meta"),
+                // newest first; read only the unobfuscated meta, never the blobs.
+                const metaPrefix = SAVE_KEY_PREFIX + msg.prefix;
+                const rows = [];
+                for (let i = 0; i < localStorage.length; i++) {
+                    const k = localStorage.key(i);
+                    if (!k || !k.startsWith(metaPrefix) || !k.endsWith("#meta")) continue;
+                    try {
+                        rows.push(JSON.parse(localStorage.getItem(k)));
+                    } catch (e) {
+                        // Skip a corrupt sidecar rather than fail the whole list.
+                    }
+                }
+                rows.sort((a, b) => String(b.savedAt).localeCompare(String(a.savedAt)));
+                replySave(JSON.stringify(rows));
+                break;
+            }
             case "done":
                 endGame(null);
                 break;

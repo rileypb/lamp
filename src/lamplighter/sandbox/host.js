@@ -36,6 +36,32 @@ function defaultSaveDir() {
 }
 const SAVE_DIR = process.env.LAMP_SAVE_DIR || defaultSaveDir();
 
+// Enumerate the metadata sidecars for slots under `prefix` (this game's key
+// namespace), newest first. Reads only the unobfuscated `.meta` files, never the
+// blobs; skips foreign games (prefix mismatch) and unreadable/corrupt sidecars.
+// ISO `savedAt` strings sort lexicographically by time. See devdocs/sandbox.md.
+function listSaveMeta(dir, prefix) {
+    let entries;
+    try {
+        entries = fs.readdirSync(dir);
+    } catch (e) {
+        return [];
+    }
+    const rows = [];
+    for (const entry of entries) {
+        if (!entry.endsWith(".meta")) continue;
+        const key = entry.slice(0, -".meta".length);
+        if (!key.startsWith(prefix)) continue;
+        try {
+            rows.push(JSON.parse(fs.readFileSync(path.join(dir, entry), "utf8")));
+        } catch (e) {
+            // Skip a corrupt or unreadable sidecar rather than fail the whole list.
+        }
+    }
+    rows.sort((a, b) => String(b.savedAt).localeCompare(String(a.savedAt)));
+    return rows;
+}
+
 // Read one line from the host's stdin, character by character. The host is
 // trusted and owns fd 0; the sandboxed game cannot touch it directly.
 function readStdinLine() {
@@ -139,6 +165,8 @@ function playFile(generatedPath, { out = process.stdout, err = process.stderr } 
             } else if (msg.type === "save_read") {
                 const file = path.join(SAVE_DIR, `${msg.key}.sav`);
                 replySave(fs.existsSync(file) ? fs.readFileSync(file, "utf8") : null);
+            } else if (msg.type === "save_list") {
+                replySave(JSON.stringify(listSaveMeta(SAVE_DIR, msg.prefix)));
             } else if (msg.type === "error") {
                 worker.terminate();
                 reject(new Error(msg.message));
@@ -153,4 +181,4 @@ function playFile(generatedPath, { out = process.stdout, err = process.stderr } 
     });
 }
 
-module.exports = { playFile };
+module.exports = { playFile, listSaveMeta };

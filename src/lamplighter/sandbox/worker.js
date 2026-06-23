@@ -76,6 +76,17 @@ function installSaveChannel(saveBuffer) {
             parentPort.postMessage({ type: "save_read", key });
             return blockForReply();
         },
+        list(prefix) {
+            Atomics.store(ctrl, 0, 0);
+            parentPort.postMessage({ type: "save_list", prefix });
+            const text = blockForReply();
+            if (text == null) return [];
+            try {
+                return JSON.parse(text);
+            } catch (e) {
+                return [];
+            }
+        },
     });
 }
 

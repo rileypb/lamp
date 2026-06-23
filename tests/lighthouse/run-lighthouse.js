@@ -61,12 +61,18 @@ try {
     test("worker bundle wires the brokered save channel", () => {
         const code = fs.readFileSync(path.join(outDir, "game.worker.js"), "utf8");
         assert.ok(code.includes("setSaveChannel"), "save channel wiring missing");
-        assert.ok(code.includes("save_write") && code.includes("save_read"), "save broker messages missing");
+        assert.ok(
+            code.includes("save_write") && code.includes("save_read") && code.includes("save_list"),
+            "save broker messages missing",
+        );
     });
 
     test("shell services save/restore via localStorage", () => {
         const shell = fs.readFileSync(path.join(outDir, "shell.js"), "utf8");
-        assert.ok(shell.includes("save_write") && shell.includes("save_read"), "shell save handlers missing");
+        assert.ok(
+            shell.includes("save_write") && shell.includes("save_read") && shell.includes("save_list"),
+            "shell save handlers missing",
+        );
         assert.ok(shell.includes("localStorage"), "shell localStorage backing missing");
         assert.ok(shell.includes("saveBuffer"), "shell save buffer missing");
     });

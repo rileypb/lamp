@@ -64,6 +64,7 @@ function main() {
             const meta = JSON.parse(fs.readFileSync(path.join(saveDir, "Save_Demo__slot1.meta"), "utf8"));
             if (typeof meta.savedAt !== "string" || !meta.savedAt) throw new Error("sidecar missing savedAt");
             if (meta.turns !== 0) throw new Error(`sidecar turns: expected 0, got ${meta.turns}`);
+            if (meta.name !== "slot1") throw new Error(`sidecar name: expected "slot1", got ${meta.name}`);
         } catch (error) {
             failures.push({ name: "save1 metadata sidecar", message: error.message });
         }

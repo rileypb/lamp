@@ -280,16 +280,17 @@ triggers that hand off to the host seam, instead of driving an in-game `promptLi
   `runCommand` checkpoint site, captured by the `turns` state provider so it survives
   undo/restore (a forerunner of the Parser v2 turn clock; see "State-provider
   registry"). It is surfaced host-readably via the **`meta` sidecar** (built — both hosts
-  write `{ savedAt, turns }` beside the blob; see `devdocs/sandbox.md`); what remains is a
-  reader (`save_list` + the picker). The CLI list (`^L` at the name prompt) prints the
-  same columns.
+  write `{ name, savedAt, turns }` beside the blob; see `devdocs/sandbox.md`) and read
+  back by **`save_list`** (built — `listSaves()` enumerates this game's slots, most-recent
+  first). What remains is the UI that consumes them: the browser restore picker and the
+  CLI `^L`-list at the name prompt. Both print the same columns.
 
 **Broker protocol growth.** The wire protocol is specified in `devdocs/sandbox.md`
 → "Save/restore broker protocol" (message catalog, reply/sentinel encoding, the
 inline-vs-deferred contract). In brief: today's channel carries only
 `save_write(key,text)` / `save_read(key)` and replies *inline synchronously* (suited
 to synchronous localStorage). The seam adds:
-- `save_list` — host enumerates **this game's** slots and returns `{ name, ts, turns }`
+- `save_list` — host enumerates **this game's** slots and returns `{ name, savedAt, turns }`
   rows. **Filtering is mandatory, not incidental:** the `lamp:save:` localStorage
   namespace is shared by every Lamp game on the same origin, so a naive scan of the
   whole prefix would surface other games' saves (origin isolation hides this when each

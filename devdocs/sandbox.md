@@ -159,20 +159,23 @@ Worker → host (each blocks for one reply):
 | --- | --- | --- | --- | --- |
 | `save_write` | `{ key, data, meta }` | `ok` / `error` | inline | built (incl. `meta` sidecar) |
 | `save_read` | `{ key }` | blob text / `-1` | inline | built |
-| `save_list` | `{ prefix }` | rows JSON / `[]` | inline | **new** |
+| `save_list` | `{ prefix }` | rows JSON / `[]` | inline | built |
 | `save_prompt` | `{ prefix }` | `{ name }` text / `-1` | deferred | new (browser UX) |
 | `restore_prompt` | `{ prefix }` | chosen blob / `-1` | deferred | new (browser UX) |
 | `save_delete` | `{ key }` | `ok` / `-2` | inline | new |
 
-- **`save_list { prefix }` → metadata rows.** The host enumerates its store for keys
-  under `prefix` and returns a JSON array of `{ name, ts, turns }`, most-recent first.
-  `prefix` is the game's key-namespace (`<safeGameName>__`), supplied by the runtime
-  because **only the runtime knows the game name** — the host filters by it and strips
-  it from each returned `name`. Filtering is mandatory: the store is shared across all
-  games on an origin (see `devdocs/state.md`, the `save_list` filtering note). An empty
-  store returns `[]`, not a sentinel.
+- **`save_list { prefix }` → metadata rows. (Built.)** The host reads the metadata
+  sidecars (never the blobs) for keys under `prefix` and returns a JSON array of the
+  `meta` objects (`{ name, savedAt, turns }`), most-recent first (ISO `savedAt` sorts
+  lexicographically). `prefix` is the game's key-namespace (`<safeGameName>__`), supplied
+  by the runtime because **only the runtime knows the game name**, and the host filters
+  by it. Filtering is mandatory: the store is shared across all games on an origin (see
+  `devdocs/state.md`, the `save_list` filtering note). The displayed `name` is the
+  player's original slot name carried in `meta` (not the sanitized key), so labels are
+  faithful. An empty store returns `[]`, not a sentinel. Runtime accessor: `listSaves()`;
+  CLI host helper `listSaveMeta(dir, prefix)`; browser shell enumerates `localStorage`.
 - **Metadata (`meta`) and where it lives. (Built.)** `save_write` carries a `meta` field
-  (`{ savedAt, turns }`, extensible) written as an **unobfuscated sidecar** beside the
+  (`{ name, savedAt, turns }`, extensible) written as an **unobfuscated sidecar** beside the
   opaque blob: the CLI host writes `<key>.meta`, the browser shell writes localStorage
   `<key>#meta`. The picker's columns come from the sidecar, so the host renders labels
   without decoding the blob

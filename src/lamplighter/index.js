@@ -1831,9 +1831,16 @@ function setSaveChannel(channel) {
 
 // A storage key namespaced by game so two games' identically-named slots don't
 // collide; sanitized for use as a filename/key by the host.
+function saveKeySafe(value, fallback) {
+    return String(value).trim().replace(/[^A-Za-z0-9_-]+/g, "_") || fallback;
+}
+// The per-game key namespace. save_list filters the host store by this so one
+// game's saves never appear in another's picker (devdocs/sandbox.md).
+function gameKeyPrefix() {
+    return `${saveKeySafe(gameInfo().name, "game")}__`;
+}
 function saveSlotKey(slot) {
-    const safe = (s, fallback) => (String(s).trim().replace(/[^A-Za-z0-9_-]+/g, "_") || fallback);
-    return `${safe(gameInfo().name, "game")}__${safe(slot, "save")}`;
+    return `${gameKeyPrefix()}${saveKeySafe(slot, "save")}`;
 }
 
 function performSave() {
@@ -1853,9 +1860,10 @@ function performSave() {
         // snooping, it is not security (the key ships in the runtime).
         // The metadata rides alongside *unobfuscated* so a save picker can label
         // slots without decoding the blob (devdocs/sandbox.md → "Save/restore
-        // broker protocol"): savedAt mirrors the blob header, turns is the count
-        // at save time.
-        const meta = { savedAt: save.savedAt, turns: turnsTaken() };
+        // broker protocol"): name is the player's slot name (the faithful display
+        // label, not the sanitized key), savedAt mirrors the blob header, turns is
+        // the count at save time.
+        const meta = { name: slot.trim(), savedAt: save.savedAt, turns: turnsTaken() };
         saveChannel.write(saveSlotKey(slot), encodeText(JSON.stringify(save)), meta);
         print("Game saved.");
     } catch (err) {
@@ -1895,6 +1903,17 @@ function performRestore() {
     } else {
         print("That saved game is in an unrecognized format.");
     }
+}
+
+// Enumerate this game's saved slots via the host (which owns the store and reads
+// the unobfuscated metadata sidecars). Returns the metadata rows
+// (`{ name, savedAt, turns }`), most-recent first, filtered to this game by its key
+// prefix; `[]` when no channel, no `list` support, or no saves. The reader behind a
+// future restore picker / CLI `^L`-list. See devdocs/sandbox.md.
+function listSaves() {
+    if (!saveChannel || typeof saveChannel.list !== "function") return [];
+    const rows = saveChannel.list(gameKeyPrefix());
+    return Array.isArray(rows) ? rows : [];
 }
 
 registerOutOfWorld("save", performSave);
@@ -1979,4 +1998,5 @@ module.exports = {
     captureSave,
     restoreSave,
     setSaveChannel,
+    listSaves,
 };
