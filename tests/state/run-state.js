@@ -103,6 +103,21 @@ test("per-site variation state is captured and reverts on restore", () => {
     assert.strictEqual(lamp.variationAdvance("vsite"), 1);
 });
 
+test("turn counter advances and reverts on restore", () => {
+    // advanceTurn is called once per fresh command turn; the count is captured by
+    // its own state provider, so a snapshot taken mid-game and later restored (undo
+    // or RESTORE) rolls the count back to the snapshotted value.
+    const before = lamp.turnsTaken();
+    lamp.advanceTurn();
+    lamp.advanceTurn();
+    assert.strictEqual(lamp.turnsTaken(), before + 2);
+    const s = lamp.captureState();
+    lamp.advanceTurn();
+    assert.strictEqual(lamp.turnsTaken(), before + 3);
+    lamp.restoreState(s);
+    assert.strictEqual(lamp.turnsTaken(), before + 2);
+});
+
 test("seeded RNG state reverts on restore (reproducible draws)", () => {
     // Snapshot, draw a random pick, restore, draw again: the same value comes back
     // because the RNG state provider rolls the stream position back.

@@ -805,6 +805,7 @@ function runCommand(line, actor) {
         return;
     }
     checkpoint();
+    advanceTurn();
 
     // Try each grammar whose structure matches. A grammar that matches
     // structurally but whose nouns don't resolve ("unresolved") is not the end
@@ -1705,6 +1706,32 @@ registerStateProvider({
     },
 });
 
+// Turn counter: how many fresh command turns have been taken. runCommand calls
+// advanceTurn once per fresh turn, just after the undo checkpoint, so the
+// checkpoint snapshot holds the pre-turn count and `undo` rolls it back with the
+// rest of state. Out-of-world verbs and disambiguation continuations are not
+// turns and do not advance it. Captured by its own state provider so a restore
+// (and a SAVE blob's `turns` metadata) reflects the count at that point. This is a
+// minimal forerunner of the Parser v2 turn clock, not the full clock — every-turn
+// rules will build on this counter rather than introduce a second. See
+// devdocs/state.md and devdocs/sandbox.md ("Save/restore broker protocol").
+let turnCount = 0;
+function advanceTurn() {
+    turnCount += 1;
+}
+function turnsTaken() {
+    return turnCount;
+}
+registerStateProvider({
+    key: "turns",
+    capture() {
+        return turnCount;
+    },
+    restore(data) {
+        turnCount = typeof data === "number" && Number.isFinite(data) ? data : 0;
+    },
+});
+
 // Undo: a bounded stack of snapshots. runCommand checkpoints before each fresh
 // turn mutates; `undo` pops and restores.
 // The undo depth is an author-settable global (`undo_limit`, declared in
@@ -1936,6 +1963,8 @@ module.exports = {
     captureState,
     restoreState,
     registerStateProvider,
+    advanceTurn,
+    turnsTaken,
     registerOutOfWorld,
     clearUndoHistory,
     setBuildId,
