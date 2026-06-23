@@ -83,7 +83,14 @@ function main() {
     const { generatedPath } = workerData;
     const code = fs.readFileSync(generatedPath, "utf8");
 
-    lamplighter.setWrite((value) => parentPort.postMessage({ type: "write", value: String(value) }));
+    // Output segments carry the active type-style set (text.md I3) out-of-band: a
+    // styled run adds a `styles` array, plain text omits it (so unstyled output
+    // keeps the bare {type:"write", value} shape the host already handles).
+    lamplighter.setWrite((value, styles) => {
+        const msg = { type: "write", value: String(value) };
+        if (styles && styles.length) msg.styles = styles;
+        parentPort.postMessage(msg);
+    });
 
     installInputChannel(workerData.inputBuffer);
     installSaveChannel(workerData.saveBuffer);

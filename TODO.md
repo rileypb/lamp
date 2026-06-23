@@ -16,9 +16,9 @@ prerequisite lists in `devdocs/game_parser.md`, `devdocs/rulebooks.md`, and
 > **Slices 1–6 DONE** (Slice 6: H1/H2/H3/H6 paragraph control, I1 Unicode escape,
 > J1/K1/K3 misc-output — runtime now owns newlines; non-punctuated prints run on,
 > `[line break]`/`[par]`/`[no break]`/`[run on]`/`[par if printed]` markers). **Slice 7
-> (text styling) is next — design LOCKED 2026-06-22** (wrapping functions
-> `bold`/`italic`/`fixed`, structured-segment transport; see item 1 / `text.md`).
-> `lurking_todo.md` still awaits triage.
+> (text styling) first cut DONE 2026-06-22** — bold/italic/fixed wrapping functions +
+> structured-segment transport (see item 1 / `text.md`); paired-marker sugar is the
+> next follow-up. `lurking_todo.md` still awaits triage.
 
 ## 1. Text substitution — Slices 1–5 DONE; Slice 6 next
 **Slice 1 (complete):** bracket substitution + quote convention + lazy `text`/`freeze`.
@@ -135,23 +135,23 @@ sugar words). World-model→locale person contract (`grammatical_person`/`gender
   (+ stdin) + golden; 134 goldens.
 - **Slice 6 is complete** — all of H/I/J/K landed (paragraph control, Unicode escape,
   misc output).
-**Slice 7 (next) — text styling (I3/I4). DESIGN LOCKED 2026-06-22; awaiting go.**
-First cut: **bold, italic, fixed-width.** Decisions (full record in
-`devdocs/text.md` → Slice 7): (1) **surface = wrapping functions** `bold(…)`/
-`italic(…)`/`fixed(…)` in `lib/sys` (compose/nest, no reset bug); **paired-marker
-sugar** `[b]…[/b]`/`[i]…[/i]`/`[fixed]…[/fixed]` queued as the immediate follow-up.
-(2) **transport = structured segments** — runtime owns the style stack, each
-`{type:"write"}` message carries its resolved `styles:[…]`; hosts stay dumb.
-(3) **per-host fail-silently, no handshake** — stdio→ANSI SGR on a TTY (fixed-width
-a no-op, terminal is monospace), web shell→`span` class + `textContent` (existing
-markup-safe channel), unknown styles dropped. **New plumbing:** `text` values must
-carry style runs and preserve them across concatenation (value type stops being a
-plain string); style stack is orthogonal to break sentinels and does not survive a
-`[par]` unless still open. **Where:** `src/lamplighter/index.js` (stream manager +
-`text` value algebra), `lib/sys/index.js` + `functions.lamp` (style fns),
-`host.js`/`worker*.js`/`shell.js` (segment rendering). Fixture + golden; sandbox
-test asserting `{value, styles}` messages.
-  - *Follow-up after the first cut:* paired-marker sugar in the template parser.
+**Slice 7 (first cut DONE 2026-06-22) — text styling (I3).** bold, italic,
+fixed-width shipped. **Surface = wrapping functions** `bold(value)`/`italic(value)`/
+`fixed(value)` in `lib/sys` (param `string`; a template/`text` arg works, style an
+object via `bold(the(obj))`); they compose/nest. **Transport = structured segments**:
+the stream manager (`src/lamplighter/index.js`) brackets rendered content with
+per-style PUA push/pop sentinels, tracks a depth per style, and tags each emitted run
+with the active set via `writeImpl(run, styles)`; the worker adds `styles:[…]` to the
+`{type:"write"}` message only when non-empty (plain text keeps the bare shape).
+**Per-host fail-silently:** stdio→ANSI SGR on a TTY (bold=1, italic=3; fixed a no-op),
+plain on a pipe; web shell→`span.style-*` classes (`shell.css`), `textContent` only;
+unknown styles dropped. Fixture `styling1` (+ golden, plain text proving
+fail-silently); sandbox tests assert styled segments + ANSI/plain split; all 11 suites
+green (136 goldens).
+  - *Follow-up (next):* **paired-marker sugar** `[b]…[/b]`/`[i]…[/i]`/`[fixed]…[/fixed]`
+    in the template parser, desugaring to the `bold`/`italic`/`fixed` calls.
+  - *Deferred (I4):* true fixed letter-spacing / table layout; capability handshake +
+    author-specified fallbacks (e.g. script fonts).
 **Prose-concat → templates (done 2026-06-22):** advent's report prose now uses
 substitution templates instead of string concatenation — e.g. the non-player branch
 `self.actor + " drops " + self.dropped + "."` → `"[The self.actor] [drop] [the

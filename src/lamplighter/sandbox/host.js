@@ -57,6 +57,18 @@ function readStdinLine() {
     return line;
 }
 
+// Type-style → ANSI SGR mapping (text.md I3). Only applied to a TTY; piped output
+// (tests, redirection) stays plain so styling is never baked into captured text.
+// Fixed-width has no SGR code — a terminal is already monospace, so it is a no-op
+// (fail-silently). An unknown style maps to nothing and is dropped.
+const ANSI_SGR = { bold: 1, italic: 3 };
+function renderStyledSegment(value, styles, isTty) {
+    if (!isTty || !styles || styles.length === 0) return value;
+    const codes = styles.map((s) => ANSI_SGR[s]).filter((c) => c != null);
+    if (codes.length === 0) return value;
+    return `\x1b[${codes.join(";")}m${value}\x1b[0m`;
+}
+
 function playFile(generatedPath, { out = process.stdout, err = process.stderr } = {}) {
     const workerPath = path.join(__dirname, "worker.js");
     const inputBuffer = new SharedArrayBuffer(INPUT_BUFFER_BYTES);
@@ -91,7 +103,7 @@ function playFile(generatedPath, { out = process.stdout, err = process.stderr } 
 
         worker.on("message", (msg) => {
             if (msg.type === "write") {
-                out.write(msg.value);
+                out.write(renderStyledSegment(msg.value, msg.styles, out.isTTY));
             } else if (msg.type === "log") {
                 err.write(`${msg.value}\n`);
             } else if (msg.type === "readline") {

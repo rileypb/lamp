@@ -26,6 +26,18 @@ native function string paragraph()
 native function string no_break()
 native function string par_if_printed()
 
+# Type styles (text.md I3, Slice 7). Wrap content in bold / italic / fixed-width;
+# they compose and nest — `[bold("a brass lantern")]`, `[bold(italic(x))]`. The
+# runtime tags each output segment with the active style set; a host that can't
+# honor a style silently drops it (fail-silently — e.g. fixed-width is a no-op in a
+# terminal, which is already monospace). The `value` is any string or text (a
+# template renders to text, which satisfies a string position); to style an object
+# pass its rendered form, e.g. `bold(the(lantern))`. Paired-marker sugar ([b]…[/b])
+# is a later follow-up.
+native function string bold(string value)
+native function string italic(string value)
+native function string fixed(string value)
+
 # RNG control for randomized text variation (text.md F8). The seed defaults to a
 # fixed value (so golden tests are deterministic). A game wanting cross-playthrough
 # variety calls `randomize()` at startup to seed from entropy, or `seed_random(n)`

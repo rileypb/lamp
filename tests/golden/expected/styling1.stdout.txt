@@ -1,0 +1,6 @@
+Bold sentence.
+Italic sentence.
+Fixed width 872325412.
+Plain then bold then plain again.
+Bold and italic, nested.
+Access code: R12-J noted.

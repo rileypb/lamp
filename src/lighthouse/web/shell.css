@@ -1,7 +1,9 @@
 /* Host shell styling. Deliberately minimal: a scrolling transcript over a single
-   input line, classic parser-IF terminal feel. The shell renders game output as
-   text nodes into #transcript (white-space preserved for IF column/indent
-   formatting); it never sets innerHTML from game text. */
+   input line. Prose and the input field use a proportional system font (modern
+   style); fixed-width is a per-span style (.style-fixed), not the default — that is
+   the only place columns align. The shell renders game output as text nodes into
+   #transcript (white-space preserved so intentional spacing survives); it never
+   sets innerHTML from game text. */
 
 :root {
     --bg: #1a1a1a;
@@ -19,7 +21,7 @@ html, body {
     height: 100%;
     background: var(--bg);
     color: var(--fg);
-    font: 16px/1.5 "SFMono-Regular", "Consolas", "Liberation Mono", Menlo, monospace;
+    font: 16px/1.5 system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
 }
 
 #screen {
@@ -53,6 +55,23 @@ html, body {
 
 .shell-error {
     color: #e06c5a;
+}
+
+/* Type styles (text.md I3). Prose is proportional, so .style-fixed is the monospace
+   island — the one place column/indent alignment holds (combined with the inherited
+   pre-wrap whitespace). A style the shell doesn't define renders plain
+   (fail-silently). */
+.style-bold {
+    font-weight: bold;
+}
+
+.style-italic {
+    font-style: italic;
+}
+
+.style-fixed {
+    font-family: "SFMono-Regular", "Consolas", "Liberation Mono", Menlo, monospace;
+    white-space: pre-wrap;
 }
 
 /* Inline so it flows directly after the prompt text on the same line; a generous

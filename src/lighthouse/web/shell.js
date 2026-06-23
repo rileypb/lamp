@@ -36,6 +36,22 @@
         scrollToBottom();
     }
 
+    // Game output carrying type styles (text.md I3). Each style maps to a CSS class
+    // on a span; textContent only, never innerHTML (the styles are a closed set the
+    // runtime names, not author markup). Unknown styles yield an unmatched class and
+    // render plain (fail-silently). Plain text takes the text-node fast path.
+    function appendStyled(value, styles) {
+        if (!styles || styles.length === 0) {
+            appendText(value);
+            return;
+        }
+        const span = document.createElement("span");
+        span.className = styles.map((s) => `style-${s}`).join(" ");
+        span.textContent = value;
+        transcript.insertBefore(span, inputLine);
+        scrollToBottom();
+    }
+
     function appendClassed(value, className) {
         const span = document.createElement("span");
         span.className = className;
@@ -115,7 +131,7 @@
         if (!msg) return;
         switch (msg.type) {
             case "write":
-                appendText(msg.value);
+                appendStyled(msg.value, msg.styles);
                 break;
             case "log":
                 console.log(msg.value);

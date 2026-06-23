@@ -876,7 +876,34 @@ const STREAM_LINE_BREAK = "\uE000";
 const STREAM_PAR_BREAK = "\uE001";
 const STREAM_NO_BREAK = "\uE002";
 const STREAM_PAR_IF_PRINTED = "\uE003";
-const STREAM_SENTINELS = /[\uE000-\uE003]/;
+
+// Type-style sentinels (text.md I3, Slice 7). A style function wraps its content
+// in a matched push/pop pair; the manager keeps a depth per style and tags each
+// emitted run with the set of styles active over it (the structured-segment
+// transport). Styles compose/nest via the depth counters (order-independent), and
+// are orthogonal to the break sentinels above. PUA block \uE010-\uE015.
+const STYLE_ORDER = ["bold", "italic", "fixed"];
+const STYLE_PUSH_CHAR = { bold: "\uE010", italic: "\uE012", fixed: "\uE014" };
+const STYLE_POP_CHAR = { bold: "\uE011", italic: "\uE013", fixed: "\uE015" };
+const STYLE_PUSH_BY_CHAR = { "\uE010": "bold", "\uE012": "italic", "\uE014": "fixed" };
+const STYLE_POP_BY_CHAR = { "\uE011": "bold", "\uE013": "italic", "\uE015": "fixed" };
+
+// Any in-band control char (breaks or style push/pop) \u2014 the fast-path test that
+// lets a plain run skip the char-by-char scan.
+const STREAM_CONTROL = /[\uE000-\uE003\uE010-\uE015]/;
+
+const styleDepth = { bold: 0, italic: 0, fixed: 0 };
+
+// The styles currently in force, in a stable order so a run's style set is the
+// same regardless of nesting order (bold(italic) and italic(bold) both \u2192 that
+// pair). Returns a fresh array each call; empty for unstyled text.
+function activeStyles() {
+    const out = [];
+    for (const name of STYLE_ORDER) {
+        if (styleDepth[name] > 0) out.push(name);
+    }
+    return out;
+}
 
 let streamPending = 0;
 let streamPrintedSinceBreak = false;
@@ -924,10 +951,12 @@ function streamRequestBreak(n) {
     if (n > streamPending) streamPending = n;
 }
 
-function streamEmitRun(run, applyRuleA) {
+function streamEmitRun(run, applyRuleA, styles) {
     if (run.length === 0) return;
     streamFlushPending();
-    writeImpl(run);
+    // styles ride out-of-band as a second arg (structured-segment transport); a
+    // plain run passes undefined so unstyled output keeps the bare write contract.
+    writeImpl(run, styles && styles.length ? styles : undefined);
     streamTrailingNewlines = trailingNewlineCount(run);
     streamPrintedSinceBreak = true;
     streamPrintCount += 1;
@@ -952,24 +981,44 @@ function streamNoteInputLine() {
 // each break request in order. `applyRuleA` is on for print (sentence-end auto line
 // break), off for raw write.
 function streamWrite(s, applyRuleA) {
-    if (!STREAM_SENTINELS.test(s)) {
-        streamEmitRun(s, applyRuleA);
+    if (!STREAM_CONTROL.test(s)) {
+        streamEmitRun(s, applyRuleA, activeStyles());
         return;
     }
     let run = "";
     for (const ch of s) {
-        if (ch >= STREAM_LINE_BREAK && ch <= STREAM_PAR_IF_PRINTED) {
-            streamEmitRun(run, applyRuleA);
+        if (ch === STREAM_LINE_BREAK || ch === STREAM_PAR_BREAK || ch === STREAM_NO_BREAK || ch === STREAM_PAR_IF_PRINTED) {
+            // Emit the pending run under the styles active *over it* before the break.
+            streamEmitRun(run, applyRuleA, activeStyles());
             run = "";
             if (ch === STREAM_LINE_BREAK) streamRequestBreak(1);
             else if (ch === STREAM_PAR_BREAK) streamRequestBreak(2);
             else if (ch === STREAM_NO_BREAK) streamPending = 0;
             else if (streamPrintedSinceBreak) streamRequestBreak(2);
+        } else if (STYLE_PUSH_BY_CHAR[ch] !== undefined) {
+            streamEmitRun(run, applyRuleA, activeStyles());
+            run = "";
+            styleDepth[STYLE_PUSH_BY_CHAR[ch]] += 1;
+        } else if (STYLE_POP_BY_CHAR[ch] !== undefined) {
+            streamEmitRun(run, applyRuleA, activeStyles());
+            run = "";
+            const name = STYLE_POP_BY_CHAR[ch];
+            styleDepth[name] = Math.max(0, styleDepth[name] - 1);
         } else {
             run += ch;
         }
     }
-    streamEmitRun(run, applyRuleA);
+    streamEmitRun(run, applyRuleA, activeStyles());
+}
+
+// Wraps a value in a type style (text.md I3). Renders the content now and brackets
+// it with the style's push/pop sentinels, so concatenation preserves the style run
+// and styles nest (bold(italic(x))). An unknown style name renders bare
+// (fail-silently). The lib/sys bold/italic/fixed functions are thin wrappers.
+function styled(name, value) {
+    const push = STYLE_PUSH_CHAR[name];
+    if (!push) return renderText(value);
+    return push + renderText(value) + STYLE_POP_CHAR[name];
 }
 
 // Materialize any pending break at program end so the final line is terminated.
@@ -1873,6 +1922,7 @@ module.exports = {
     write,
     setWrite,
     outputMarker,
+    styled,
     flushOutput,
     setPromptChannel,
     promptLine,

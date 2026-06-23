@@ -424,9 +424,9 @@ either the trailing sugar word or the function's mode argument.
   space. **Lamp:** prefer literal UTF-8 in source plus a few `\`-escapes
   (`\—`-style) over bracket words; only add `[entity]` words if literals prove
   awkward.
-- **I3. Type styles.** DESIGN LOCKED (2026-06-22) → see **Slice 7** for the full
-  decision record. Surface is **wrapping functions** `bold(…)`/`italic(…)`/`fixed(…)`
-  in `lib/sys` (not Inform's stateful `[bold type]`/`[roman type]` toggles); paired
+- **I3. Type styles.** FIRST CUT DONE (2026-06-22) → see **Slice 7** for the full
+  record. Surface is **wrapping functions** `bold(…)`/`italic(…)`/`fixed(…)` in
+  `lib/sys` (not Inform's stateful `[bold type]`/`[roman type]` toggles); paired
   `[b]…[/b]` sugar queued next. Transport is **structured segments** (`{value, styles}`
   per `write` message), preserving the web shell's text-nodes-only / never-innerHTML
   rule (`devdocs/lighthouse.md`).
@@ -907,6 +907,22 @@ Fixtures `list1` / `numbers1` / `plural1` + goldens; parser unit tests
   author requests a style and the shell falls back to a safe default when it can't
   honor it. Needs Lighthouse-shell + stdio-host work and a channel design; gated on
   finishing the core substitution slices.
+
+  **First cut — DONE (2026-06-22).** bold / italic / fixed-width shipped.
+  `bold(value)` / `italic(value)` / `fixed(value)` live in `lib/sys` (param typed
+  `string`, so a `text`/template argument works via the string↔text rule; to style an
+  object pass its rendered form, `bold(the(obj))`). The runtime brackets the rendered
+  content with per-style PUA push/pop sentinels (`–`); the output-stream
+  manager keeps a depth per style and tags each emitted run with the active set in a
+  stable order (`styled()` + `activeStyles()` in `src/lamplighter/index.js`).
+  `writeImpl(run, styles)` carries the set out-of-band: the worker adds a `styles`
+  array to the `{type:"write"}` message only when non-empty, so plain text keeps the
+  bare shape. stdio host → ANSI SGR on a TTY (bold=1, italic=3; fixed has no code — a
+  no-op), plain on a pipe; web shell → a `span` with `style-*` classes (`shell.css`),
+  `textContent` only. Fixture `styling1` (golden is plain text — styles dropped in a
+  pipe, proving fail-silently); sandbox tests assert the styled segments and the
+  ANSI/plain split; 136 goldens. **Remaining:** paired-marker sugar (`[b]…[/b]`) —
+  next follow-up; true fixed letter-spacing / table layout (I4).
 
   **Decisions taken (2026-06-22).** First cut covers **bold, italic, fixed-width**.
   - **Surface = wrapping functions.** `bold("…")`, `italic("…")`, `fixed("…")` (in

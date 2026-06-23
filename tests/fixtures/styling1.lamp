@@ -1,0 +1,18 @@
+# Slice 7 (I3): type styles via wrapping functions. bold / italic / fixed wrap their
+# content; the runtime carries the active style set on each output segment (the
+# structured-segment transport) and a host renders it or silently drops it. They
+# compose and nest. In a non-TTY pipe (this golden) styles are dropped, so the text
+# renders plain — proving the fail-silently policy; the sandbox test asserts the
+# styled segments themselves. See devdocs/text.md I3 / Slice 7.
+game Styling:
+    author "Lamp"
+
+global string code = "R12-J"
+
+on startup:
+    print bold("Bold sentence.")
+    print italic("Italic sentence.")
+    print fixed("Fixed width 872325412.")
+    print "Plain then " + bold("bold") + " then plain again."
+    print bold(italic("Bold and italic, nested."))
+    print "Access code: [fixed(code)] noted."

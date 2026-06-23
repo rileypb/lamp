@@ -106,6 +106,46 @@ async function workerTests() {
         ]);
     });
 
+    await run("styled print carries the active style set out-of-band", async () => {
+        // text.md I3: a styled run adds a `styles` array; plain text omits it. The
+        // trailing newline (rule A, sentence-ending punctuation) is a plain segment.
+        const f = writeTempGame('lamplighter.print(lamplighter.styled("bold", "bold text."));');
+        const msgs = await runWorker(f);
+        assert.deepStrictEqual(msgs, [
+            { type: "write", value: "bold text.", styles: ["bold"] },
+            { type: "write", value: "\n" },
+            { type: "done" },
+        ]);
+    });
+
+    await run("nested styles emit a stable, combined style set", async () => {
+        // bold(italic(x)) tags the inner run with both, in canonical order
+        // (bold, italic) regardless of nesting order.
+        const f = writeTempGame(
+            'lamplighter.print(lamplighter.styled("bold", lamplighter.styled("italic", "x.")));',
+        );
+        const msgs = await runWorker(f);
+        assert.deepStrictEqual(msgs, [
+            { type: "write", value: "x.", styles: ["bold", "italic"] },
+            { type: "write", value: "\n" },
+            { type: "done" },
+        ]);
+    });
+
+    await run("plain runs around a styled run are unstyled segments", async () => {
+        const f = writeTempGame(
+            'lamplighter.print("a " + lamplighter.styled("italic", "b") + " c.");',
+        );
+        const msgs = await runWorker(f);
+        assert.deepStrictEqual(msgs, [
+            { type: "write", value: "a " },
+            { type: "write", value: "b", styles: ["italic"] },
+            { type: "write", value: " c." },
+            { type: "write", value: "\n" },
+            { type: "done" },
+        ]);
+    });
+
     await run("game error sends error message", async () => {
         const f = writeTempGame('throw new Error("something broke");');
         const msgs = await runWorker(f);
@@ -243,6 +283,29 @@ async function hostTests() {
         out = mockStream();
         await playFile(writeTempGame(broken), { out, err: mockStream() });
         assert.strictEqual(out.output, "line one\nline two\n");
+    });
+
+    await run("styles map to ANSI on a TTY, stay plain on a pipe", async () => {
+        // text.md I3 fail-silently: the host emits SGR codes only to a TTY; piped
+        // output (the default mock, no isTTY) drops styling so captured text is clean.
+        const f = writeTempGame('lamplighter.print(lamplighter.styled("bold", "hi."));');
+
+        const piped = mockStream();
+        await playFile(f, { out: piped, err: mockStream() });
+        assert.strictEqual(piped.output, "hi.\n");
+
+        const tty = mockStream();
+        tty.isTTY = true;
+        await playFile(f, { out: tty, err: mockStream() });
+        assert.strictEqual(tty.output, "\x1b[1mhi.\x1b[0m\n");
+    });
+
+    await run("fixed-width is a no-op in the terminal (already monospace)", async () => {
+        const f = writeTempGame('lamplighter.print(lamplighter.styled("fixed", "cols."));');
+        const tty = mockStream();
+        tty.isTTY = true;
+        await playFile(f, { out: tty, err: mockStream() });
+        assert.strictEqual(tty.output, "cols.\n");
     });
 
     await run("log output goes to err stream", async () => {
