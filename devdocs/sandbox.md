@@ -157,7 +157,7 @@ Worker → host (each blocks for one reply):
 
 | Message | Payload | Reply | Timing | Status |
 | --- | --- | --- | --- | --- |
-| `save_write` | `{ key, data, meta }` | `ok` / `-2` | inline | built (`meta` new) |
+| `save_write` | `{ key, data, meta }` | `ok` / `error` | inline | built (incl. `meta` sidecar) |
 | `save_read` | `{ key }` | blob text / `-1` | inline | built |
 | `save_list` | `{ prefix }` | rows JSON / `[]` | inline | **new** |
 | `save_prompt` | `{ prefix }` | `{ name }` text / `-1` | deferred | new (browser UX) |
@@ -171,10 +171,11 @@ Worker → host (each blocks for one reply):
   it from each returned `name`. Filtering is mandatory: the store is shared across all
   games on an origin (see `devdocs/state.md`, the `save_list` filtering note). An empty
   store returns `[]`, not a sentinel.
-- **Metadata (`meta`) and where it lives.** `save_write` gains a `meta` field
+- **Metadata (`meta`) and where it lives. (Built.)** `save_write` carries a `meta` field
   (`{ savedAt, turns }`, extensible) written as an **unobfuscated sidecar** beside the
-  opaque blob (e.g. `<key>` holds the blob, `<key>#meta` holds the JSON). The picker's
-  columns come from the sidecar, so the host renders labels without decoding the blob
+  opaque blob: the CLI host writes `<key>.meta`, the browser shell writes localStorage
+  `<key>#meta`. The picker's columns come from the sidecar, so the host renders labels
+  without decoding the blob
   (which it cannot — it is XOR/base64). `savedAt` is host-or-runtime time; `turns` is
   game-derived and passed in from `captureSave`. **The turn counter is built** — a
   minimal engine-internal counter (`advanceTurn`/`turnsTaken`) incremented at the
@@ -182,8 +183,8 @@ Worker → host (each blocks for one reply):
   disambiguation continuations do not count), captured by its own `turns` state provider
   so a restored game keeps the right count. It is a small forerunner of the Parser v2
   turn clock, not the full clock; v2's every-turn rules reuse the same counter rather
-  than introducing a second. What remains is the `meta` sidecar that exposes it to the
-  host without decoding the blob. `save_list` reads sidecars, never blobs.
+  than introducing a second. The `meta` sidecar that exposes it to the host (above) is
+  built. `save_list` reads sidecars, never blobs.
 - **`save_prompt` / `restore_prompt`** are the host-rendered UX seam: the runtime
   hands the host the game `prefix` and the host runs its modal. `restore_prompt`
   returns the *chosen blob directly* (the host already holds it), collapsing

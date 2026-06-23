@@ -146,6 +146,11 @@
             case "save_write":
                 try {
                     localStorage.setItem(SAVE_KEY_PREFIX + msg.key, msg.data);
+                    // Unobfuscated metadata sidecar: a save picker reads it to label
+                    // slots without decoding the blob. See devdocs/sandbox.md.
+                    if (msg.meta) {
+                        localStorage.setItem(SAVE_KEY_PREFIX + msg.key + "#meta", JSON.stringify(msg.meta));
+                    }
                     replySave("ok");
                 } catch (e) {
                     replySave(`error: ${e && e.message ? e.message : "save failed"}`);

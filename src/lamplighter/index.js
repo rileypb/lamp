@@ -1822,7 +1822,8 @@ function restoreSave(save) {
 }
 
 // Storage seam: the host injects a save channel so the engine stays
-// host-agnostic. write(key, text) persists; read(key) returns text or null.
+// host-agnostic. write(key, text, meta) persists the opaque blob plus an
+// unobfuscated metadata sidecar (see performSave); read(key) returns text or null.
 let saveChannel = null;
 function setSaveChannel(channel) {
     saveChannel = channel;
@@ -1846,10 +1847,16 @@ function performSave() {
         return;
     }
     try {
+        const save = captureSave();
         // Obfuscate the blob so a casual peeker can't read or hand-edit the save.
         // Same reversible XOR+base64 codec as --encode-strings: it discourages
         // snooping, it is not security (the key ships in the runtime).
-        saveChannel.write(saveSlotKey(slot), encodeText(JSON.stringify(captureSave())));
+        // The metadata rides alongside *unobfuscated* so a save picker can label
+        // slots without decoding the blob (devdocs/sandbox.md → "Save/restore
+        // broker protocol"): savedAt mirrors the blob header, turns is the count
+        // at save time.
+        const meta = { savedAt: save.savedAt, turns: turnsTaken() };
+        saveChannel.write(saveSlotKey(slot), encodeText(JSON.stringify(save)), meta);
         print("Game saved.");
     } catch (err) {
         print("Save failed.");

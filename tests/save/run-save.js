@@ -63,6 +63,32 @@ test("restore refuses an unrecognized format", () => {
     assert.deepStrictEqual(lamp.restoreSave({ ...save, format: 99 }), { ok: false, reason: "format" });
 });
 
+test("performSave passes an unobfuscated meta sidecar (savedAt + turns)", () => {
+    // Drive the `save` out-of-world verb end-to-end through the runtime seams: a
+    // recording save channel captures the (key, data, meta) the engine emits, and a
+    // prompt stub supplies the slot name. The blob stays obfuscated; meta does not.
+    let recorded = null;
+    lamp.setWrite(() => {});
+    lamp.setPromptChannel(() => "slot1");
+    lamp.setSaveChannel({
+        write(key, data, meta) { recorded = { key, data, meta }; },
+        read() { return null; },
+    });
+
+    const before = lamp.turnsTaken();
+    lamp.advanceTurn();
+    lamp.advanceTurn();
+    lamp.runCommand("save");
+
+    assert.ok(recorded, "save channel write was called");
+    assert.strictEqual(recorded.key, "MyGame__slot1");
+    assert.strictEqual(recorded.meta.turns, before + 2);
+    assert.strictEqual(typeof recorded.meta.savedAt, "string");
+    // meta is plaintext; the blob is obfuscated but decodes to the same savedAt.
+    const blob = JSON.parse(lamp.decode(recorded.data));
+    assert.strictEqual(blob.savedAt, recorded.meta.savedAt);
+});
+
 if (failures > 0) {
     console.error(`\n${failures} test(s) failed`);
     process.exit(1);

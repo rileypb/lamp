@@ -279,9 +279,10 @@ triggers that hand off to the host seam, instead of driving an in-game `promptLi
   minimal engine-internal counter (`advanceTurn`/`turnsTaken`) incremented at the
   `runCommand` checkpoint site, captured by the `turns` state provider so it survives
   undo/restore (a forerunner of the Parser v2 turn clock; see "State-provider
-  registry"). What remains is surfacing it host-readably via the `meta` sidecar (the
-  broker work) — it already rides inside the captured `state`. The CLI list (`^L` at the
-  name prompt) prints the same columns.
+  registry"). It is surfaced host-readably via the **`meta` sidecar** (built — both hosts
+  write `{ savedAt, turns }` beside the blob; see `devdocs/sandbox.md`); what remains is a
+  reader (`save_list` + the picker). The CLI list (`^L` at the name prompt) prints the
+  same columns.
 
 **Broker protocol growth.** The wire protocol is specified in `devdocs/sandbox.md`
 → "Save/restore broker protocol" (message catalog, reply/sentinel encoding, the

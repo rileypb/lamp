@@ -98,9 +98,9 @@ function installSaveChannel(saveBuffer) {
     }
 
     lamplighter.setSaveChannel({
-        write(key, text) {
+        write(key, text, meta) {
             Atomics.store(ctrl, 0, 0);
-            self.postMessage({ type: "save_write", key, data: text });
+            self.postMessage({ type: "save_write", key, data: text, meta });
             const status = blockForReply();
             if (status !== "ok") throw new Error(status || "save failed");
         },

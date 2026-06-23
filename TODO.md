@@ -42,14 +42,15 @@ and never needs the slot list itself. Full design recorded in `devdocs/state.md`
   text prompts (with `^L`-lists + overwrite-confirmation). Reuse the input channel's
   *deferred-reply* pattern (`requestInput`→`deliverLine`) for the async modal — the
   save broker currently replies inline, which only suits synchronous localStorage.
-- **Broker protocol growth.** Wire protocol now specified in `devdocs/sandbox.md`
-  → "Save/restore broker protocol": `save_list` (host enumerates this game's slots by
-  prefix → name/timestamp/turns), a `meta` sidecar on `save_write` so the picker can
-  label slots, `save_prompt`/`restore_prompt` (deferred-reply host modals),
-  `save_delete`, and the `-1`/`-2` cancel/error sentinels. Implementation pending.
+- **Broker protocol growth.** Wire protocol specified in `devdocs/sandbox.md`
+  → "Save/restore broker protocol". **Done:** the `meta` sidecar on `save_write`
+  (`{ savedAt, turns }` written unobfuscated beside the blob by both hosts; unit test
+  in `tests/save`, e2e in the `save1` golden). **Pending:** `save_list` (host enumerates
+  this game's slots by prefix → name/timestamp/turns), `save_prompt`/`restore_prompt`
+  (deferred-reply host modals), `save_delete`, and the `-1`/`-2` cancel/error sentinels.
 - **Turn counter — built** (`advanceTurn`/`turnsTaken` + `turns` state provider, commit
-  95c4810; round-trip test in `tests/state`). It already rides inside the save `state`;
-  only the host-readable `meta` sidecar remains (the broker work above).
+  95c4810; round-trip test in `tests/state`). Rides inside the save `state` and is now
+  also exposed host-readably via the `meta` sidecar above.
 - Optional browser **file export/import** (download/upload) layered over localStorage.
 This shares the out-of-world-verb hook with Parser v2 (item 2) and RESTART (item 3).
 Reconciles with item 2's "move prompting into `lib`": lib owns the verbs + the

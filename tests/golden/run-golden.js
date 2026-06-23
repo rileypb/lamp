@@ -56,6 +56,19 @@ function main() {
         }
     }
 
+    // End-to-end: the `save1` fixture saves slot "slot1" before any turn is taken,
+    // so the real CLI host must have written an unobfuscated metadata sidecar next
+    // to the blob (devdocs/sandbox.md → "Save/restore broker protocol").
+    if (!updateMode) {
+        try {
+            const meta = JSON.parse(fs.readFileSync(path.join(saveDir, "Save_Demo__slot1.meta"), "utf8"));
+            if (typeof meta.savedAt !== "string" || !meta.savedAt) throw new Error("sidecar missing savedAt");
+            if (meta.turns !== 0) throw new Error(`sidecar turns: expected 0, got ${meta.turns}`);
+        } catch (error) {
+            failures.push({ name: "save1 metadata sidecar", message: error.message });
+        }
+    }
+
     if (updateMode) {
         console.log(`Updated ${cases.length} golden(s).${failures.length ? ` ${failures.length} error(s):` : ""}`);
         for (const { name, message } of failures) {

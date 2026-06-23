@@ -127,6 +127,11 @@ function playFile(generatedPath, { out = process.stdout, err = process.stderr } 
                 try {
                     fs.mkdirSync(SAVE_DIR, { recursive: true });
                     fs.writeFileSync(path.join(SAVE_DIR, `${msg.key}.sav`), msg.data, "utf8");
+                    // Unobfuscated metadata sidecar: a save picker reads it to label
+                    // slots without decoding the blob. See devdocs/sandbox.md.
+                    if (msg.meta) {
+                        fs.writeFileSync(path.join(SAVE_DIR, `${msg.key}.meta`), JSON.stringify(msg.meta), "utf8");
+                    }
                     replySave("ok");
                 } catch (e) {
                     replySave(`error: ${e.message}`);
