@@ -1848,11 +1848,21 @@ function performSave() {
         print("Saving isn't available here.");
         return;
     }
-    const slot = promptLine("Name for saved game: ");
-    if (!slot || !slot.trim()) {
+    // A host with a native save UI (the browser shell) collects the name through its
+    // own modal; a text host (CLI) falls back to the line prompt. The host gets the
+    // game key-prefix so it can show this game's existing slots for overwrite.
+    let slot;
+    if (typeof saveChannel.promptSave === "function") {
+        const choice = saveChannel.promptSave(gameKeyPrefix());
+        slot = choice && choice.name;
+    } else {
+        slot = promptLine("Name for saved game: ");
+    }
+    if (!slot || !String(slot).trim()) {
         print("Save cancelled.");
         return;
     }
+    slot = String(slot);
     try {
         const save = captureSave();
         // Obfuscate the blob so a casual peeker can't read or hand-edit the save.
@@ -1871,21 +1881,9 @@ function performSave() {
     }
 }
 
-function performRestore() {
-    if (!saveChannel) {
-        print("Restoring isn't available here.");
-        return;
-    }
-    const slot = promptLine("Name of saved game: ");
-    if (!slot || !slot.trim()) {
-        print("Restore cancelled.");
-        return;
-    }
-    const stored = saveChannel.read(saveSlotKey(slot));
-    if (stored == null) {
-        print("There is no saved game by that name.");
-        return;
-    }
+// Decode a stored blob, gate it on build compatibility, and report. Shared by the
+// host-picker path (blob handed back directly) and the text-prompt path.
+function applyRestoreBlob(stored) {
     let save;
     try {
         save = JSON.parse(decode(stored));
@@ -1903,6 +1901,36 @@ function performRestore() {
     } else {
         print("That saved game is in an unrecognized format.");
     }
+}
+
+function performRestore() {
+    if (!saveChannel) {
+        print("Restoring isn't available here.");
+        return;
+    }
+    // A host with a native picker (the browser shell) shows this game's slots and
+    // returns the chosen blob directly (one round-trip), or null on cancel.
+    if (typeof saveChannel.promptRestore === "function") {
+        const stored = saveChannel.promptRestore(gameKeyPrefix());
+        if (stored == null) {
+            print("Restore cancelled.");
+            return;
+        }
+        applyRestoreBlob(stored);
+        return;
+    }
+    // Text host (CLI): prompt for a slot name and read it by key.
+    const slot = promptLine("Name of saved game: ");
+    if (!slot || !slot.trim()) {
+        print("Restore cancelled.");
+        return;
+    }
+    const stored = saveChannel.read(saveSlotKey(slot));
+    if (stored == null) {
+        print("There is no saved game by that name.");
+        return;
+    }
+    applyRestoreBlob(stored);
 }
 
 // Enumerate this game's saved slots via the host (which owns the store and reads

@@ -36,22 +36,19 @@ the chosen blob (or cancel)"; the runtime validates against `buildId` and applie
 and never needs the slot list itself. Full design recorded in `devdocs/state.md`
 → "Save/restore UX: a host seam (Slice 3b)"; UX mockup at
 `src/lighthouse/web/mockup-save-restore.html` (throwaway).
+**Built so far** (host-seam, via the broker protocol in `devdocs/sandbox.md`): the
+turn counter; the `meta` sidecar on `save_write` (`{ name, savedAt, turns }`,
+unobfuscated, both hosts); `save_list`/`listSaves()` (this game's slots, newest first);
+and the **browser save dialog + restore picker** (`save_prompt`/`restore_prompt`
+deferred modals in `shell.js`/`shell.css`; runtime detects them by `promptSave`/
+`promptRestore` on the channel and otherwise uses the CLI text prompt). Unit tests in
+`tests/save`, e2e sidecar in the `save1` golden; the browser modals are source-grep +
+manual only (the headless gap).
 **Remaining:**
-- **Save-UX host seam.** Define a host-agnostic save/restore-UX seam; browser shell
-  implements name-entry + restore-picker + delete with native widgets; CLI keeps
-  text prompts (with `^L`-lists + overwrite-confirmation). Reuse the input channel's
-  *deferred-reply* pattern (`requestInput`→`deliverLine`) for the async modal — the
-  save broker currently replies inline, which only suits synchronous localStorage.
-- **Broker protocol growth.** Wire protocol specified in `devdocs/sandbox.md`
-  → "Save/restore broker protocol". **Done:** the `meta` sidecar on `save_write`
-  (`{ name, savedAt, turns }` written unobfuscated beside the blob by both hosts) and
-  **`save_list`** (`listSaves()` → this game's slots, newest first; both hosts enumerate;
-  unit tests in `tests/save`, e2e sidecar in the `save1` golden). **Pending:**
-  `save_prompt`/`restore_prompt` (deferred-reply host modals), `save_delete`, and the
-  `-1`/`-2` cancel/error sentinels.
-- **Turn counter — built** (`advanceTurn`/`turnsTaken` + `turns` state provider, commit
-  95c4810; round-trip test in `tests/state`). Rides inside the save `state` and is now
-  also exposed host-readably via the `meta` sidecar above.
+- **CLI text-host polish:** `^L`-lists-saves at the name prompt + overwrite-confirmation
+  (uses `save_list` + the in-`lib` prompt flow), and a CLI `save_delete`. Rides on item 2.
+- **Cancel/error sentinels** (`-1`/`-2`): generalize `save_write`'s `ok`/`error` text
+  reply so cancel and failure are distinguishable on every message.
 - Optional browser **file export/import** (download/upload) layered over localStorage.
 This shares the out-of-world-verb hook with Parser v2 (item 2) and RESTART (item 3).
 Reconciles with item 2's "move prompting into `lib`": lib owns the verbs + the

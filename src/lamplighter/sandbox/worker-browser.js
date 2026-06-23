@@ -120,6 +120,26 @@ function installSaveChannel(saveBuffer) {
                 return [];
             }
         },
+        // Native save/restore UX: the shell renders a modal and replies only when the
+        // player resolves it (deferred reply); the worker stays blocked on Atomics.wait
+        // throughout, exactly as for readline. Presence of these methods is how the
+        // runtime detects a host with a native save UI. See devdocs/sandbox.md.
+        promptSave(prefix) {
+            Atomics.store(ctrl, 0, 0);
+            self.postMessage({ type: "save_prompt", prefix });
+            const text = blockForReply();
+            if (text == null) return null;
+            try {
+                return JSON.parse(text);
+            } catch (e) {
+                return null;
+            }
+        },
+        promptRestore(prefix) {
+            Atomics.store(ctrl, 0, 0);
+            self.postMessage({ type: "restore_prompt", prefix });
+            return blockForReply();
+        },
     });
 }
 

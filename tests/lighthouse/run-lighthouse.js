@@ -73,6 +73,10 @@ try {
             shell.includes("save_write") && shell.includes("save_read") && shell.includes("save_list"),
             "shell save handlers missing",
         );
+        assert.ok(
+            shell.includes("save_prompt") && shell.includes("restore_prompt"),
+            "shell save/restore modal handlers missing",
+        );
         assert.ok(shell.includes("localStorage"), "shell localStorage backing missing");
         assert.ok(shell.includes("saveBuffer"), "shell save buffer missing");
     });

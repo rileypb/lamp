@@ -9,6 +9,7 @@ const fs = require("fs");
 const os = require("os");
 const path = require("path");
 const lamp = require("../../src/lamplighter");
+const { encode: encodeText } = require("../../src/strcodec");
 const { listSaveMeta } = require("../../src/lamplighter/sandbox/host");
 
 let failures = 0;
@@ -157,6 +158,63 @@ test("listSaveMeta (CLI host) filters by prefix, sorts newest-first, skips non-m
 
 test("listSaveMeta returns [] for a missing directory", () => {
     assert.deepStrictEqual(listSaveMeta(path.join(os.tmpdir(), "lamp-nope-xyz-404"), "MyGame__"), []);
+});
+
+test("performSave uses the host picker (promptSave) when present, over the line prompt", () => {
+    let promptedPrefix = null;
+    let written = null;
+    lamp.setWrite(() => {});
+    lamp.setPromptChannel(() => { throw new Error("text prompt must not be used when promptSave exists"); });
+    lamp.setSaveChannel({
+        promptSave(prefix) { promptedPrefix = prefix; return { name: "from picker" }; },
+        write(key, data, meta) { written = { key, meta }; },
+        read() { return null; },
+    });
+    lamp.runCommand("save");
+    assert.strictEqual(promptedPrefix, "MyGame__");
+    assert.strictEqual(written.key, "MyGame__from_picker");
+    assert.strictEqual(written.meta.name, "from picker");
+});
+
+test("performSave: a cancelled picker writes nothing", () => {
+    let written = false;
+    lamp.setWrite(() => {});
+    lamp.setSaveChannel({
+        promptSave() { return null; },
+        write() { written = true; },
+        read() { return null; },
+    });
+    lamp.runCommand("save");
+    assert.strictEqual(written, false);
+});
+
+test("performRestore uses the host picker (promptRestore) and applies the chosen blob", () => {
+    lamp.setWrite(() => {});
+    lamp.setBuildId("build-picker");
+    const coin = lamp.getObject("coin");
+    lamp.setField(coin, "held", false);
+    const blob = encodeText(JSON.stringify(lamp.captureSave()));
+    lamp.setField(coin, "held", true);
+    lamp.setSaveChannel({
+        promptRestore() { return blob; },
+        write() {},
+        read() { throw new Error("read must not be used when promptRestore exists"); },
+    });
+    lamp.runCommand("restore");
+    assert.strictEqual(lamp.getObject("coin").held, false);
+});
+
+test("performRestore: a cancelled picker leaves state untouched", () => {
+    lamp.setWrite(() => {});
+    const coin = lamp.getObject("coin");
+    lamp.setField(coin, "held", true);
+    lamp.setSaveChannel({
+        promptRestore() { return null; },
+        write() {},
+        read() { return null; },
+    });
+    lamp.runCommand("restore");
+    assert.strictEqual(lamp.getObject("coin").held, true);
 });
 
 if (failures > 0) {

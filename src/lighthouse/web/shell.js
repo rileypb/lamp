@@ -124,6 +124,27 @@
         Atomics.notify(sctrl, 0);
     }
 
+    // Enumerate this game's saved slots from the metadata sidecars (keys
+    // "<prefix>…#meta"), newest first. Reads only the unobfuscated meta, never the
+    // blobs. Each row carries the blob storage key (the sidecar key minus the prefix
+    // and the "#meta" suffix) so the restore picker can fetch the chosen blob.
+    function listLocalSaves(prefix) {
+        const metaPrefix = SAVE_KEY_PREFIX + prefix;
+        const rows = [];
+        for (let i = 0; i < localStorage.length; i++) {
+            const k = localStorage.key(i);
+            if (!k || !k.startsWith(metaPrefix) || !k.endsWith("#meta")) continue;
+            try {
+                const meta = JSON.parse(localStorage.getItem(k));
+                rows.push({ key: k.slice(SAVE_KEY_PREFIX.length, -"#meta".length), meta });
+            } catch (e) {
+                // Skip a corrupt sidecar rather than fail the whole list.
+            }
+        }
+        rows.sort((a, b) => String(b.meta.savedAt).localeCompare(String(a.meta.savedAt)));
+        return rows;
+    }
+
     const worker = new Worker(WORKER_URL);
 
     worker.addEventListener("message", (event) => {
@@ -159,24 +180,15 @@
             case "save_read":
                 replySave(localStorage.getItem(SAVE_KEY_PREFIX + msg.key));
                 break;
-            case "save_list": {
-                // Enumerate this game's metadata sidecars (keys "<prefix>…#meta"),
-                // newest first; read only the unobfuscated meta, never the blobs.
-                const metaPrefix = SAVE_KEY_PREFIX + msg.prefix;
-                const rows = [];
-                for (let i = 0; i < localStorage.length; i++) {
-                    const k = localStorage.key(i);
-                    if (!k || !k.startsWith(metaPrefix) || !k.endsWith("#meta")) continue;
-                    try {
-                        rows.push(JSON.parse(localStorage.getItem(k)));
-                    } catch (e) {
-                        // Skip a corrupt sidecar rather than fail the whole list.
-                    }
-                }
-                rows.sort((a, b) => String(b.savedAt).localeCompare(String(a.savedAt)));
-                replySave(JSON.stringify(rows));
+            case "save_list":
+                replySave(JSON.stringify(listLocalSaves(msg.prefix).map((r) => r.meta)));
                 break;
-            }
+            case "save_prompt":
+                showSaveModal(msg.prefix);
+                break;
+            case "restore_prompt":
+                showRestoreModal(msg.prefix);
+                break;
             case "done":
                 endGame(null);
                 break;
@@ -220,6 +232,237 @@
         } else {
             appendClassed("\n[The game has ended.]\n", "shell-notice");
         }
+    }
+
+    // --- Save / restore modals (deferred-reply host UX) ---------------------
+    // The worker blocks on Atomics.wait while a modal is open; we replySave only
+    // when the player resolves it (confirm → payload, cancel → null sentinel). At
+    // most one save-channel request is outstanding, so a single modal suffices.
+    let activeModal = null;
+
+    function closeModal() {
+        if (activeModal) {
+            activeModal.remove();
+            activeModal = null;
+        }
+    }
+
+    function resolveModal(payload) {
+        closeModal();
+        if (awaitingInput) inputLine.focus();
+        replySave(payload);
+    }
+
+    function fmtMeta(meta) {
+        let when = meta.savedAt;
+        try {
+            when = new Date(meta.savedAt).toLocaleString();
+        } catch (e) {
+            // Fall back to the raw ISO string.
+        }
+        const turns = meta.turns;
+        return `${when} · ${turns} turn${turns === 1 ? "" : "s"}`;
+    }
+
+    function buildDialog(titleText) {
+        const overlay = document.createElement("div");
+        overlay.className = "modal-overlay";
+        const dialog = document.createElement("div");
+        dialog.className = "modal-dialog";
+        dialog.setAttribute("role", "dialog");
+        dialog.setAttribute("aria-modal", "true");
+        const title = document.createElement("h2");
+        title.textContent = titleText;
+        dialog.appendChild(title);
+        overlay.appendChild(dialog);
+        return { overlay, dialog };
+    }
+
+    function slotRow(row, onSelect, onDelete) {
+        const item = document.createElement("div");
+        item.className = "modal-slot";
+        const name = document.createElement("span");
+        name.className = "slot-name";
+        name.textContent = row.meta.name;
+        const meta = document.createElement("span");
+        meta.className = "slot-meta";
+        meta.textContent = fmtMeta(row.meta);
+        item.appendChild(name);
+        item.appendChild(meta);
+        item.addEventListener("click", (e) => {
+            if (e.target.closest(".slot-del")) return;
+            onSelect();
+        });
+        if (onDelete) {
+            const del = document.createElement("button");
+            del.className = "slot-del";
+            del.type = "button";
+            del.title = "Delete save";
+            del.setAttribute("aria-label", `Delete save ${row.meta.name}`);
+            del.textContent = "🗑";
+            del.addEventListener("click", (e) => {
+                e.stopPropagation();
+                onDelete();
+            });
+            item.appendChild(del);
+        }
+        return item;
+    }
+
+    function presentModal(overlay, onEscape, focusEl) {
+        overlay.addEventListener("keydown", (e) => {
+            if (e.key === "Escape") {
+                e.preventDefault();
+                onEscape();
+            }
+        });
+        document.body.appendChild(overlay);
+        activeModal = overlay;
+        if (focusEl) focusEl.focus();
+    }
+
+    function showSaveModal(prefix) {
+        closeModal();
+        const existing = listLocalSaves(prefix);
+        const { overlay, dialog } = buildDialog("Save game");
+
+        const field = document.createElement("input");
+        field.type = "text";
+        field.className = "modal-field";
+        field.setAttribute("aria-label", "Name for this save");
+        field.autocomplete = "off";
+        field.spellcheck = false;
+        dialog.appendChild(field);
+
+        const actions = document.createElement("div");
+        actions.className = "modal-actions";
+        const cancel = document.createElement("button");
+        cancel.className = "modal-btn";
+        cancel.type = "button";
+        cancel.textContent = "Cancel";
+        const confirm = document.createElement("button");
+        confirm.className = "modal-btn primary";
+        confirm.type = "button";
+
+        function syncLabel() {
+            const typed = field.value.trim().toLowerCase();
+            const overwrite = existing.some((r) => String(r.meta.name).trim().toLowerCase() === typed);
+            confirm.textContent = overwrite ? "Overwrite" : "Save";
+        }
+
+        if (existing.length) {
+            const label = document.createElement("div");
+            label.className = "modal-list-label";
+            label.textContent = "Existing saves — click to overwrite:";
+            dialog.appendChild(label);
+            const list = document.createElement("div");
+            list.className = "modal-slots";
+            for (const row of existing) {
+                list.appendChild(slotRow(row, () => {
+                    field.value = row.meta.name;
+                    syncLabel();
+                    field.focus();
+                }));
+            }
+            dialog.appendChild(list);
+        }
+
+        actions.appendChild(cancel);
+        actions.appendChild(confirm);
+        dialog.appendChild(actions);
+
+        function submit() {
+            const name = field.value.trim();
+            if (!name) {
+                field.focus();
+                return;
+            }
+            resolveModal(JSON.stringify({ name }));
+        }
+        confirm.addEventListener("click", submit);
+        cancel.addEventListener("click", () => resolveModal(null));
+        field.addEventListener("input", syncLabel);
+        field.addEventListener("keydown", (e) => {
+            if (e.key === "Enter") {
+                e.preventDefault();
+                submit();
+            }
+        });
+
+        syncLabel();
+        presentModal(overlay, () => resolveModal(null), field);
+    }
+
+    function showRestoreModal(prefix) {
+        closeModal();
+        const existing = listLocalSaves(prefix);
+        const { overlay, dialog } = buildDialog("Restore game");
+
+        const actions = document.createElement("div");
+        actions.className = "modal-actions";
+        const cancel = document.createElement("button");
+        cancel.className = "modal-btn";
+        cancel.type = "button";
+
+        if (!existing.length) {
+            const empty = document.createElement("div");
+            empty.className = "modal-empty";
+            empty.textContent = "No saved games for this story yet.";
+            dialog.appendChild(empty);
+            cancel.textContent = "OK";
+            cancel.className = "modal-btn primary";
+            cancel.addEventListener("click", () => resolveModal(null));
+            actions.appendChild(cancel);
+            dialog.appendChild(actions);
+            presentModal(overlay, () => resolveModal(null), cancel);
+            return;
+        }
+
+        let selected = existing[0];
+        const rowEls = new Map();
+        const list = document.createElement("div");
+        list.className = "modal-slots";
+
+        function select(row) {
+            selected = row;
+            for (const [r, el] of rowEls) el.classList.toggle("selected", r === row);
+        }
+        function deleteRow(row) {
+            localStorage.removeItem(SAVE_KEY_PREFIX + row.key);
+            localStorage.removeItem(SAVE_KEY_PREFIX + row.key + "#meta");
+            // Rebuild from the now-smaller store (falls to the empty state if last).
+            showRestoreModal(prefix);
+        }
+        for (const row of existing) {
+            const el = slotRow(row, () => select(row), () => deleteRow(row));
+            rowEls.set(row, el);
+            list.appendChild(el);
+        }
+        dialog.appendChild(list);
+
+        const confirm = document.createElement("button");
+        confirm.className = "modal-btn primary";
+        confirm.type = "button";
+        confirm.textContent = "Restore";
+        cancel.textContent = "Cancel";
+
+        function submit() {
+            if (!selected) return;
+            resolveModal(localStorage.getItem(SAVE_KEY_PREFIX + selected.key));
+        }
+        confirm.addEventListener("click", submit);
+        cancel.addEventListener("click", () => resolveModal(null));
+        list.addEventListener("dblclick", (e) => {
+            if (e.target.closest(".slot-del")) return;
+            if (e.target.closest(".modal-slot")) submit();
+        });
+
+        actions.appendChild(cancel);
+        actions.appendChild(confirm);
+        dialog.appendChild(actions);
+
+        select(selected);
+        presentModal(overlay, () => resolveModal(null), confirm);
     }
 
     // Hand the worker the shared buffers; the bootstrap starts the game on receipt.

@@ -160,9 +160,9 @@ Worker → host (each blocks for one reply):
 | `save_write` | `{ key, data, meta }` | `ok` / `error` | inline | built (incl. `meta` sidecar) |
 | `save_read` | `{ key }` | blob text / `-1` | inline | built |
 | `save_list` | `{ prefix }` | rows JSON / `[]` | inline | built |
-| `save_prompt` | `{ prefix }` | `{ name }` text / `-1` | deferred | new (browser UX) |
-| `restore_prompt` | `{ prefix }` | chosen blob / `-1` | deferred | new (browser UX) |
-| `save_delete` | `{ key }` | `ok` / `-2` | inline | new |
+| `save_prompt` | `{ prefix }` | `{ name }` text / `-1` | deferred | built (browser) |
+| `restore_prompt` | `{ prefix }` | chosen blob / `-1` | deferred | built (browser) |
+| `save_delete` | `{ key }` | `ok` / `-2` | inline | browser: done host-side; CLI pending |
 
 - **`save_list { prefix }` → metadata rows. (Built.)** The host reads the metadata
   sidecars (never the blobs) for keys under `prefix` and returns a JSON array of the
@@ -188,12 +188,18 @@ Worker → host (each blocks for one reply):
   turn clock, not the full clock; v2's every-turn rules reuse the same counter rather
   than introducing a second. The `meta` sidecar that exposes it to the host (above) is
   built. `save_list` reads sidecars, never blobs.
-- **`save_prompt` / `restore_prompt`** are the host-rendered UX seam: the runtime
-  hands the host the game `prefix` and the host runs its modal. `restore_prompt`
-  returns the *chosen blob directly* (the host already holds it), collapsing
-  restore to one round-trip — the runtime then validates `buildId` and applies, or
-  prints the standard refusal. `save_prompt` returns just the chosen *name*; the
-  runtime then `captureSave`s and posts `save_write`.
+- **`save_prompt` / `restore_prompt` (built, browser).** The host-rendered UX seam:
+  the runtime hands the host the game `prefix` and the host runs its modal.
+  `restore_prompt` returns the *chosen blob directly* (the host already holds it),
+  collapsing restore to one round-trip — the runtime then validates `buildId` and
+  applies (`applyRestoreBlob`), or prints the standard refusal. `save_prompt` returns
+  just the chosen *name*; the runtime then `captureSave`s and posts `save_write`. The
+  runtime detects this capability by the **presence of `promptSave`/`promptRestore`**
+  on the save channel (the browser worker installs them; the CLI worker does not, so it
+  falls back to the text prompt). The shell builds the modals in `shell.js`/`shell.css`
+  (no static markup), with the save dialog folding overwrite into its existing-slots
+  list and the restore picker offering per-row delete done **host-side** (it owns
+  localStorage — no `save_delete` message needed in the browser).
 
 #### CLI vs. browser: same protocol, two renderings
 

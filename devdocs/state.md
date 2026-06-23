@@ -282,8 +282,11 @@ triggers that hand off to the host seam, instead of driving an in-game `promptLi
   registry"). It is surfaced host-readably via the **`meta` sidecar** (built — both hosts
   write `{ name, savedAt, turns }` beside the blob; see `devdocs/sandbox.md`) and read
   back by **`save_list`** (built — `listSaves()` enumerates this game's slots, most-recent
-  first). What remains is the UI that consumes them: the browser restore picker and the
-  CLI `^L`-list at the name prompt. Both print the same columns.
+  first). The **browser restore picker and save dialog are built** (`save_prompt`/
+  `restore_prompt` deferred modals in `shell.js`; the runtime detects the capability by
+  `promptSave`/`promptRestore` on the channel and otherwise falls back to the CLI text
+  prompt). What remains is the CLI-side polish: the `^L`-list at the name prompt and an
+  overwrite-confirmation, which ride on the in-`lib` prompt flow (item 2).
 
 **Broker protocol growth.** The wire protocol is specified in `devdocs/sandbox.md`
 → "Save/restore broker protocol" (message catalog, reply/sentinel encoding, the
