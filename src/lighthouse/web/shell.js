@@ -114,9 +114,6 @@
         const msg = event.data;
         if (!msg) return;
         switch (msg.type) {
-            case "print":
-                appendText(`${msg.value}\n`);
-                break;
             case "write":
                 appendText(msg.value);
                 break;

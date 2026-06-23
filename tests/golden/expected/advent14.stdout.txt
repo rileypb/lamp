@@ -2,6 +2,7 @@ room1
 A small room.
 
 > lose
+
 *** Game over, friend. ***
 
 Please type QUIT to exit.

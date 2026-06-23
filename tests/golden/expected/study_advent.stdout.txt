@@ -21,6 +21,7 @@ The oak door is firmly set in its frame.
 
 > take key
 The key is cold to the touch.
+
 You tuck it carefully away.
 
 > go north

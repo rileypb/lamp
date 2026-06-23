@@ -62,10 +62,9 @@ const ANY = Symbol("relation-wildcard");
 // explicitly (no `player` global is assumed). Each site that depends on a contract
 // name is tagged "world-model contract" below.
 
-let printImpl = (value) => {
-    console.log(String(value));
-};
-
+// All game output flows through the output-stream manager (paragraph control,
+// text.md H) to this raw sink, which owns newlines. The sandbox worker swaps it for
+// a message poster via setWrite; print no longer has its own channel.
 let writeImpl = (value) => {
     process.stdout.write(String(value));
 };
@@ -442,34 +441,51 @@ function runRulebook(name, args) {
 // World-model contract: the outcome values `succeeded`/`failed` are runtime-owned
 // (mirrored by the `outcome` kind in lib/sys/kinds.lamp); `failed` triggers the
 // `report failed` band.
+// Action-pipeline nesting depth, so paragraph breaking only fires for the top-level
+// command, not for implicit/nested `try` actions (whose output is part of the same
+// paragraph). See devdocs/text.md H6 (rule B, per-band).
+let actionDepth = 0;
+
 function runAction(actionName, instance, opts = {}) {
     const bands = actionRuleRegistry.get(actionName);
     if (!bands) {
         return "succeeded";
     }
-    let outcome = "succeeded";
-    outer: for (const band of ACTION_BANDS) {
-        if (opts.silent && band === "report") break outer;
-        for (const { rule } of orderedRules(bands[band])) {
-            const result = rule(instance);
-            if (result === HALT) {
-                break outer;
+    actionDepth += 1;
+    try {
+        let outcome = "succeeded";
+        outer: for (const band of ACTION_BANDS) {
+            if (opts.silent && band === "report") break outer;
+            const printsBefore = streamMark();
+            for (const { rule } of orderedRules(bands[band])) {
+                const result = rule(instance);
+                if (result === HALT) {
+                    break outer;
+                }
+                if (result !== undefined) {
+                    outcome = result;
+                    break outer;
+                }
             }
-            if (result !== undefined) {
-                outcome = result;
-                break outer;
+            // Rule B (H6): a paragraph break after a top-level action's `after` band,
+            // but only if that band itself printed — separates its output from the
+            // `report` band without intruding on `do`-band parentheticals.
+            if (band === "after" && actionDepth === 1 && streamMark() > printsBefore) {
+                streamRequestBreak(2);
             }
         }
-    }
-    if (outcome === "failed" && !opts.silent) {
-        for (const { rule } of orderedRules(bands.report_failed)) {
-            const result = rule(instance);
-            if (result === HALT || result !== undefined) {
-                break;
+        if (outcome === "failed" && !opts.silent) {
+            for (const { rule } of orderedRules(bands.report_failed)) {
+                const result = rule(instance);
+                if (result === HALT || result !== undefined) {
+                    break;
+                }
             }
         }
+        return outcome;
+    } finally {
+        actionDepth -= 1;
     }
-    return outcome;
 }
 
 // --- Game Parser (v0) -------------------------------------------------------
@@ -864,6 +880,16 @@ const STREAM_SENTINELS = /[\uE000-\uE003]/;
 
 let streamPending = 0;
 let streamPrintedSinceBreak = false;
+// Monotonic count of text runs emitted — lets a caller detect whether a span of code
+// (e.g. one action band) produced any output, for finer breaking than the coarse
+// `streamPrintedSinceBreak` flag.
+let streamPrintCount = 0;
+// Newlines already at the stream tail. A break "ensures at least N newlines" before
+// the next text, so only `N - streamTrailingNewlines` are actually emitted — this is
+// what lets a paragraph break after a prompt (whose echoed input already ended the
+// line) add one blank line rather than two. Initialized high so leading breaks before
+// any output emit nothing (no blank line at the very top).
+let streamTrailingNewlines = 2;
 
 // Rule A (auto line break): a run "ends a sentence" when its last non-space char,
 // past any trailing closing quotes / parens / brackets, is `.` `?` or `!`.
@@ -876,9 +902,19 @@ function outputMarker(kind) {
         : STREAM_PAR_IF_PRINTED;
 }
 
+function trailingNewlineCount(run) {
+    let n = 0;
+    for (let i = run.length - 1; i >= 0 && run[i] === "\n"; i -= 1) n += 1;
+    return n;
+}
+
 function streamFlushPending() {
     if (streamPending > 0) {
-        writeImpl("\n".repeat(streamPending));
+        const need = streamPending - streamTrailingNewlines;
+        if (need > 0) {
+            writeImpl("\n".repeat(need));
+            streamTrailingNewlines += need;
+        }
         streamPending = 0;
         streamPrintedSinceBreak = false;
     }
@@ -892,8 +928,24 @@ function streamEmitRun(run, applyRuleA) {
     if (run.length === 0) return;
     streamFlushPending();
     writeImpl(run);
+    streamTrailingNewlines = trailingNewlineCount(run);
     streamPrintedSinceBreak = true;
+    streamPrintCount += 1;
     if (applyRuleA && SENTENCE_END.test(run)) streamRequestBreak(1);
+}
+
+// Snapshot of the run counter, for "did this span print anything?" boundary checks.
+function streamMark() {
+    return streamPrintCount;
+}
+
+// The host writes the prompt and echoes the player's input directly, bypassing this
+// manager; that input line ends with a newline (echoed in piped mode, or the user's
+// Enter on a TTY), so the stream is at line-start afterward. Record that so the next
+// break accounts for it. Called by promptLine / readLine.
+function streamNoteInputLine() {
+    streamTrailingNewlines = 1;
+    streamPrintedSinceBreak = false;
 }
 
 // Emit a rendered string: split on break sentinels, writing text runs and applying
@@ -947,10 +999,6 @@ function getGlobal(name) {
     return globalRegistry.get(name);
 }
 
-function setPrint(nextPrintImpl) {
-    printImpl = nextPrintImpl;
-}
-
 function write(value) {
     streamWrite(String(value), false);
 }
@@ -979,7 +1027,9 @@ function readLine() {
         throw new Error("no input channel installed; run the game through the sandbox launcher");
     }
     streamFlushPending();
-    return requestLineImpl();
+    const line = requestLineImpl();
+    streamNoteInputLine();
+    return line;
 }
 
 // Like readLine but also writes `promptText` to the output before blocking,
@@ -990,7 +1040,9 @@ function promptLine(promptText) {
         throw new Error("no prompt channel installed; run the game through the sandbox launcher");
     }
     streamFlushPending();
-    return promptLineImpl(promptText);
+    const line = promptLineImpl(promptText);
+    streamNoteInputLine();
+    return line;
 }
 
 function error(message) {
@@ -1818,7 +1870,6 @@ module.exports = {
     dispatch: fireEvent,
     run,
     print,
-    setPrint,
     write,
     setWrite,
     outputMarker,

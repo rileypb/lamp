@@ -5,7 +5,7 @@
 // builds with `vm.runInContext` — there is no `vm`, `fs`, `worker_threads`, or
 // `require` to withhold. This bootstrap therefore only has to: strip the
 // network/code-loading globals the browser does grant a worker, drive the same
-// Lamplighter transport seam the stdio host drives (`setPrint`/`setWrite`/
+// Lamplighter transport seam the stdio host drives (`setWrite`/
 // `setInputChannel`/`setPromptChannel`), and hand author code the same
 // throwing `require` shim and bridged `console` it gets in dev.
 //
@@ -126,7 +126,6 @@ function startIfReady() {
     if (started || !gameFactory || pendingInputBuffer === null) return;
     started = true;
 
-    lamplighter.setPrint((value) => self.postMessage({ type: "print", value: String(value) }));
     lamplighter.setWrite((value) => self.postMessage({ type: "write", value: String(value) }));
     installInputChannel(pendingInputBuffer);
     installSaveChannel(pendingSaveBuffer);

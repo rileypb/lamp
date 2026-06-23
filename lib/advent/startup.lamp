@@ -20,7 +20,7 @@ on startup:
 	# End-of-story sequence: print the win/lose banner, then accept only QUIT.
 	# (RESTART is not yet supported.)
 	if not (story == ongoing):
-		print "[par if printed]"
+		print "[par]"
 		follow end_story_rules()
 		print "[par]"
 		print "Please type QUIT to exit."

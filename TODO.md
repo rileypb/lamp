@@ -15,8 +15,10 @@ prerequisite lists in `devdocs/game_parser.md`, `devdocs/rulebooks.md`, and
 > design + 7-slice Action list (Inform-7-style `"[We] [drop] [the velvet_cloak]"`).
 > **Slices 1–6 DONE** (Slice 6: H1/H2/H3/H6 paragraph control, I1 Unicode escape,
 > J1/K1/K3 misc-output — runtime now owns newlines; non-punctuated prints run on,
-> `[line break]`/`[par]`/`[no break]`/`[run on]`/`[par if printed]` markers). Slice 7
-> (text styling) is next. `lurking_todo.md` still awaits triage.
+> `[line break]`/`[par]`/`[no break]`/`[run on]`/`[par if printed]` markers). **Slice 7
+> (text styling) is next — design LOCKED 2026-06-22** (wrapping functions
+> `bold`/`italic`/`fixed`, structured-segment transport; see item 1 / `text.md`).
+> `lurking_todo.md` still awaits triage.
 
 ## 1. Text substitution — Slices 1–5 DONE; Slice 6 next
 **Slice 1 (complete):** bracket substitution + quote convention + lazy `text`/`freeze`.
@@ -114,12 +116,15 @@ sugar words). World-model→locale person contract (`grammatical_person`/`gender
   lib/advent + value fixtures got explicit `[line break]` where output must hold its
   own line; rebaseline was output-compatible (one cosmetic blank changed, `advent14`).
   Fixture `para1` + golden; parser test; all 11 suites green (135 goldens).
-  - *Known refinements (not blocking):* (a) the host-written prompt/echo bypasses the
-    manager, so the end-of-story leading break can't see it's at line-start — `advent14`
-    loses one blank in that narrow case; fix by tracking trailing-newline count across
-    the prompt path. (b) Rule B is turn-boundary, not per-`report`/`after` band;
-    per-band separation is a later refinement. (c) The legacy `"print"` worker/host/shell
-    message path is now unused (print routes through `"write"`); remove when convenient.
+  - *Follow-ups — all DONE (2026-06-22):* (a) **prompt spacing** — the manager now
+    tracks trailing-newline count and `promptLine`/`readLine` mark the stream
+    line-start (`streamNoteInputLine`), so a paragraph break after a prompt adds one
+    blank line not two; the end-of-story break is unconditional `[par]`. `advent14`
+    regained its blank line. (b) **per-band rule B** — the engine (`runAction`) requests
+    a paragraph break after a top-level action's `after` band when it printed,
+    separating `after` from `report` (exercised by `study`/`study_advent`); the turn
+    boundary remains for the prompt and non-action output. (c) the dead `"print"`
+    message path is removed (`setPrint`/`printImpl` + worker/host/shell handlers).
 - **6c (complete) — J1/K1/K3 misc output:** J1 `[player_command()]` echoes the
   player's last raw input (original casing, trimmed) — retained by the runtime in
   `runCommand`, exposed as `native function string player_command()` in lib/sys (call
@@ -128,7 +133,25 @@ sugar words). World-model→locale person contract (`grammatical_person`/`gender
   type; a `text` global renders lazily against the *caller's* render context
   (`[regarding x][snippet]` adapts pronouns/verbs at the use site). Fixture `slice6c`
   (+ stdin) + golden; 134 goldens.
-- **6b remains** the only open Slice 6 item — see the H paragraph-control entry above.
+- **Slice 6 is complete** — all of H/I/J/K landed (paragraph control, Unicode escape,
+  misc output).
+**Slice 7 (next) — text styling (I3/I4). DESIGN LOCKED 2026-06-22; awaiting go.**
+First cut: **bold, italic, fixed-width.** Decisions (full record in
+`devdocs/text.md` → Slice 7): (1) **surface = wrapping functions** `bold(…)`/
+`italic(…)`/`fixed(…)` in `lib/sys` (compose/nest, no reset bug); **paired-marker
+sugar** `[b]…[/b]`/`[i]…[/i]`/`[fixed]…[/fixed]` queued as the immediate follow-up.
+(2) **transport = structured segments** — runtime owns the style stack, each
+`{type:"write"}` message carries its resolved `styles:[…]`; hosts stay dumb.
+(3) **per-host fail-silently, no handshake** — stdio→ANSI SGR on a TTY (fixed-width
+a no-op, terminal is monospace), web shell→`span` class + `textContent` (existing
+markup-safe channel), unknown styles dropped. **New plumbing:** `text` values must
+carry style runs and preserve them across concatenation (value type stops being a
+plain string); style stack is orthogonal to break sentinels and does not survive a
+`[par]` unless still open. **Where:** `src/lamplighter/index.js` (stream manager +
+`text` value algebra), `lib/sys/index.js` + `functions.lamp` (style fns),
+`host.js`/`worker*.js`/`shell.js` (segment rendering). Fixture + golden; sandbox
+test asserting `{value, styles}` messages.
+  - *Follow-up after the first cut:* paired-marker sugar in the template parser.
 **Prose-concat → templates (done 2026-06-22):** advent's report prose now uses
 substitution templates instead of string concatenation — e.g. the non-player branch
 `self.actor + " drops " + self.dropped + "."` → `"[The self.actor] [drop] [the
@@ -235,24 +258,6 @@ lets the base `action` type move out of the runtime bootstrap. No code until the
 direction is chosen. **Where:** `src/lantern/*` (pipeline), `src/lamplighter/index.js`.
 
 ## Smaller / opportunistic
-- **Slice 6 paragraph-control follow-ups (queued next).** Refinements deferred from
-  the H1/H2/H3/H6 build (devdocs/text.md → H6):
-  1. **Prompt-spacing / line-start tracking.** The host writes the prompt+echo
-     directly, bypassing the output-stream manager, so after a command that printed
-     nothing the end-of-story leading break can't tell the stream is already at
-     line-start — `advent14` loses one blank line. Fix: track a trailing-newline count
-     and have the prompt path tell the manager it's at line-start (so "ensure N
-     newlines" subtracts what the echo already emitted). **Where:**
-     `src/lamplighter/index.js` (output-stream manager + `promptLine`).
-  2. **Per-band rule B.** The automatic paragraph break currently lands once at the
-     lib/advent turn boundary; move it to per-`report`/`report failed`/`after` band so
-     multi-band output (e.g. `after` + `report`) is separated. Decide engine
-     `runAction` hook vs. catch-all lib/advent rules. **Where:** `lib/advent` and/or
-     `src/lamplighter/index.js` (`runAction`).
-  3. **Remove the dead `"print"` message path.** `print` now routes through the
-     `"write"` channel, so the worker/host/shell `"print"` handlers (and the `setPrint`
-     poster) are unused. Remove for clarity. **Where:** `sandbox/{worker,worker-browser,
-     host}.js`, `lighthouse/web/shell.js`, `src/lamplighter/index.js` (`printImpl`/`setPrint`).
 - **Reassigning a multi-word (underscore) global fails the checker.** `global int
   my_score = 0` then `my_score = 5` reports "assignment to undeclared name
   `my_score`", while a single-word global (`score = 5`) works. The assignment-target

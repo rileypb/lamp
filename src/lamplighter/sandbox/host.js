@@ -90,9 +90,7 @@ function playFile(generatedPath, { out = process.stdout, err = process.stderr } 
         });
 
         worker.on("message", (msg) => {
-            if (msg.type === "print") {
-                out.write(`${msg.value}\n`);
-            } else if (msg.type === "write") {
+            if (msg.type === "write") {
                 out.write(msg.value);
             } else if (msg.type === "log") {
                 err.write(`${msg.value}\n`);

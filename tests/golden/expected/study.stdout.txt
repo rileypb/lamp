@@ -3,6 +3,7 @@ A bare foyer. A door leads north to the study.
 That's not something you can pick up.
 (reaching out...)
 (a faint click as it leaves the shelf)
+
 Taken.
 The lock turns and the door swings open.
 The study, walls lined with books.

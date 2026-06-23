@@ -387,23 +387,20 @@ either the trailing sugar word or the function's mode argument.
     that held only for a boundary-break-only reading.)*
   - **Implementation.** The runtime output-stream manager (`src/lamplighter/index.js`)
     routes `print`/`write` through `streamWrite`, owning newlines (emitted via the
-    `write` channel; the host/shell add none). Rule A fires in `streamEmitRun`
-    (`SENTENCE_END`); markers travel as private-use sentinels and are processed in
-    stream order; `flushOutput` (worker exit) materializes the final break. Rule B is
-    a **lib/advent convention** — `print "[par if printed]"` at the turn boundary
-    (`startup.lamp`) and a paragraph break between supporter groups
-    (`describe_supporters`). Per the decision, output that should occupy its own line
-    without sentence punctuation uses an explicit `[line break]` (banners, room names,
-    inventory rows, parentheticals). Fixture `para1` + golden; parser test. Rebaseline
-    was output-compatible (only one fixture's cosmetic blank changed — see below).
-  - **Known refinement.** The host writes the prompt/echo directly, bypassing the
-    manager, so after a command that printed nothing the end-of-story leading break
-    can't tell it is already at line-start (the manager doesn't count the host's
-    newline). One golden (`advent14`) loses a single blank line in that narrow case.
-    A future fix: have the prompt path tell the manager the stream is at line-start
-    (track trailing-newline count).
-  - **Boundary granularity (later).** Rule B currently lands at the turn boundary, not
-    per `report`/`after` band; once-per-band separation is the noted refinement.
+    `write` channel; the host/shell add none — the old `print`-message path is gone).
+    Rule A fires in `streamEmitRun` (`SENTENCE_END`); markers travel as private-use
+    sentinels and are processed in stream order; `flushOutput` (worker exit)
+    materializes the final break. A break "ensures at least N newlines" before the next
+    text, subtracting `streamTrailingNewlines` already at the tail — so after a prompt
+    (whose echoed input ended the line; `streamNoteInputLine`) a paragraph break adds
+    one blank line, not two. Rule B is **per-band**: the engine (`runAction`) requests a
+    paragraph break after a top-level action's `after` band when that band printed
+    (separating `after` from `report`), and lib/advent requests `[par if printed]` at
+    the turn boundary (`startup.lamp`) for the prompt + a break between supporter groups
+    (`describe_supporters`). Output that should occupy its own line without sentence
+    punctuation uses an explicit `[line break]` (banners, room names, inventory rows,
+    parentheticals). Fixtures `para1`; the `after`+`report` separation is exercised by
+    `study`/`study_advent`. Parser test; output-compatible rebaseline.
 - **H4. Spacing normalization** — collapse/avoid double spaces and stray blank
   lines from composed substitutions (a real pain point in IF output). Engine-side
   output filter, no surface syntax.
@@ -427,14 +424,19 @@ either the trailing sugar word or the function's mode argument.
   space. **Lamp:** prefer literal UTF-8 in source plus a few `\`-escapes
   (`\—`-style) over bracket words; only add `[entity]` words if literals prove
   awkward.
-- **I3. Type styles** — `[bold type]`/`[italic type]`/`[roman type]`. **Gated by the
-  output channel:** the web shell renders **text nodes only, never innerHTML**
-  (`devdocs/lighthouse.md`), so styling needs a structured/markup-safe channel, not
-  raw HTML in prose. Likely deferred; note the constraint now.
-  - Let's figure this out soon. I'm a big fan of text styling, and I'll want to add it to a much greater degree than Inform does, as it's constrained by the Z-machine, and Lamp is not.
+- **I3. Type styles.** DESIGN LOCKED (2026-06-22) → see **Slice 7** for the full
+  decision record. Surface is **wrapping functions** `bold(…)`/`italic(…)`/`fixed(…)`
+  in `lib/sys` (not Inform's stateful `[bold type]`/`[roman type]` toggles); paired
+  `[b]…[/b]` sugar queued next. Transport is **structured segments** (`{value, styles}`
+  per `write` message), preserving the web shell's text-nodes-only / never-innerHTML
+  rule (`devdocs/lighthouse.md`).
+  - Author wants styling to a much greater degree than Inform's Z-machine-constrained
+    set; Lamp is not so constrained.
 - **I4. Fixed vs. variable letter spacing** (Inform's `[fixed letter spacing]`),
-  for ASCII art/tables — depends on shell capability.
-  - ditto here. For style and spacing, etc., we need to have a fail-silently policy. The author can specify a script font, for instance, and if the outer shell can't comply, it will fallback to the safe alternative.
+  for ASCII art/tables — depends on shell capability. First cut folds fixed-width in
+  as a style (monospace); true letter-spacing/table layout deferred.
+  - **Fail-silently policy:** the author can request a style (e.g. a script font);
+    if the outer shell can't comply it falls back to the safe alternative.
 
 ## J. Player/parser-derived text
 
@@ -884,12 +886,12 @@ Fixtures `list1` / `numbers1` / `plural1` + goldens; parser unit tests
 
 1. **H1/H2/H3/H6 — DONE.** `[par]` / `[line break]` / `[no break]` / `[run on]` /
    `[par if printed]` markers + the two composing auto-break rules (A: a print ending
-   in `.?!` ends its line; B: a conditional paragraph break at the lib/advent turn
-   boundary). Newline ownership moved off the host into a runtime output-stream
-   manager. Output that needs its own line without sentence punctuation uses an
-   explicit `[line break]`. Fixture `para1` + golden; parser test; rebaseline was
-   output-compatible (one cosmetic blank changed). See the H6 entry for the
-   implementation, the prompt-spacing refinement, and the per-band granularity note.
+   in `.?!` ends its line; B: a conditional paragraph break — per-band after a
+   top-level action's `after` band, plus the lib/advent turn boundary). Newline
+   ownership moved off the host into a runtime output-stream manager with
+   trailing-newline tracking (correct prompt spacing). Output that needs its own line
+   without sentence punctuation uses an explicit `[line break]`. Fixtures `para1`,
+   `study`/`study_advent` (after+report); parser test; output-compatible rebaseline.
 2. **I1** `\u{…}` escape — DONE (`tokenizer.js`, fixture `typography1`). **I2**
    typographic entities — covered by literal UTF-8 + `\u{…}`; no new syntax.
 3. **J1** `[player_command()]` — DONE (`lib/sys`, fixture `slice6c`). **J3** is
@@ -905,6 +907,31 @@ Fixtures `list1` / `numbers1` / `plural1` + goldens; parser unit tests
   author requests a style and the shell falls back to a safe default when it can't
   honor it. Needs Lighthouse-shell + stdio-host work and a channel design; gated on
   finishing the core substitution slices.
+
+  **Decisions taken (2026-06-22).** First cut covers **bold, italic, fixed-width**.
+  - **Surface = wrapping functions.** `bold("…")`, `italic("…")`, `fixed("…")` (in
+    `lib/sys`, language-agnostic — styles are not locale data). They return styled
+    `text` values, so they **compose/nest** (`bold(italic(x))`) and have no
+    forgot-to-reset failure mode. **Paired-marker sugar** (`[b]…[/b]`, `[i]…[/i]`,
+    `[fixed]…[/fixed]`) is queued as the next follow-up over these primitives.
+  - **Transport = structured segments.** The runtime owns the style stack; each
+    `{type:"write"}` message carries its **resolved style set**
+    (`{type:"write", value, styles:[…]}`). Hosts stay dumb — every message is
+    self-describing, no host-side stack or sentinel protocol to reconstruct. (The
+    in-band PUA sentinels may still be the *internal* carrier inside `text` values,
+    but only flat run + active style set crosses the transport.)
+  - **Per-host mapping, fail-silently (no capability handshake in v1).**
+    stdio host → ANSI SGR (bold/italic) when a TTY, else drop; **fixed-width is a
+    no-op** (terminal is already monospace). web shell → `createElement("span")` +
+    `className` + `textContent` (the existing markup-safe channel); fixed-width →
+    a monospace class (where it actually matters, for tables/ASCII art). Unknown
+    styles are silently dropped.
+  - **Style stack is orthogonal to break sentinels;** a style does not survive a
+    `[par]`/`[line break]` unless still open. `text`-value concatenation must
+    **preserve style runs** — the one genuinely new bit of plumbing (the value type
+    stops being a plain string).
+  - **Fixed-width is folded in as a third style** (monospace class) for the first
+    cut; true fixed letter-spacing / table layout (I4) is deferred.
 
 ### Deferred (revisit when the prerequisite lands)
 
@@ -924,11 +951,12 @@ Fixtures `list1` / `numbers1` / `plural1` + goldens; parser unit tests
 
 - **H6 automatic breaks (the 6b design).** RESOLVED & DONE. Decisions taken:
   (1) non-punctuated prints run on; output needing its own line uses explicit
-  `[line break]` / `[par]`. (2) Rule B is a lib/advent convention at the turn boundary
-  (per-band granularity is a later refinement). (3) Built, with the rebaseline (it came
-  out output-compatible). (4) No per-band default-off exceptions for now — `[run on]`
-  is the escape hatch. See the H6 entry above for the implementation and the one known
-  prompt-spacing refinement.
+  `[line break]` / `[par]`. (2) Rule B is **per-band** — the engine breaks after a
+  top-level action's `after` band (when it printed), and lib/advent breaks at the turn
+  boundary for the prompt. (3) Built and rebaselined (output-compatible apart from the
+  intended `after`/`report` separation). (4) No per-band default-off exceptions —
+  `[run on]` is the escape hatch. Prompt spacing is handled by trailing-newline
+  tracking; the dead `print`-message transport path was removed. See the H6 entry.
 - Bracket vs. escape choice for literal `[` `]` (A2) — `\[` reads better with the
   existing escape model; `[bracket]` matches Inform. Pick one.
   - use the `\[`
@@ -973,7 +1001,9 @@ Fixtures `list1` / `numbers1` / `plural1` + goldens; parser unit tests
     too (tracked under G1).
 - Markup/type styles (I3): introduce a structured output channel, or defer styling
   entirely for v1?
-  - We'll do at least the core of the text substitution work before tackling this.
+  - RESOLVED (2026-06-22). Core substitution (Slices 1–6) is done; Slice 7 now
+    adopts a **structured-segment** channel (`{value, styles}` per `write` message)
+    with **wrapping-function** surface (`bold`/`italic`/`fixed`). See Slice 7.
 
 ## Non-goals (for now)
 

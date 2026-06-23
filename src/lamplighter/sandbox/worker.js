@@ -83,7 +83,6 @@ function main() {
     const { generatedPath } = workerData;
     const code = fs.readFileSync(generatedPath, "utf8");
 
-    lamplighter.setPrint((value) => parentPort.postMessage({ type: "print", value: String(value) }));
     lamplighter.setWrite((value) => parentPort.postMessage({ type: "write", value: String(value) }));
 
     installInputChannel(workerData.inputBuffer);
