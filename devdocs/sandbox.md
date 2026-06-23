@@ -97,6 +97,115 @@ channels:
 Output and lifecycle are asynchronous messages; input uses the shared buffer so
 Lamp's synchronous semantics are preserved without any language change.
 
+### Save/restore broker protocol
+
+The persistent-save capability (channel 3) is the first fully-built broker beyond
+input. Like input, it is **synchronous from the game's point of view**: a `save`/
+`restore` verb blocks until the host has serviced it. It uses a *second*
+`SharedArrayBuffer` (distinct from the input buffer) with the same two-word control
+header + data region; the worker posts a request message and blocks on
+`Atomics.wait`, the host services it and fills the buffer, the worker reads the
+reply and resumes. The seam is installed by `setSaveChannel` and brokered by the
+worker adapters (`worker.js`, `worker-browser.js`) to the host (`host.js`,
+`src/lighthouse/web/shell.js`).
+
+The runtime owns the **blob** (`captureSave`/`restoreSave`, the `buildId` gate,
+obfuscation, `saveSlotKey` namespacing); the host owns the **store and the UX**
+(localStorage / app-data dir; name entry and the restore picker). See
+`devdocs/state.md` → "Save/restore UX: a host seam (Slice 3b)" for that split. This
+section is the wire protocol that connects them.
+
+#### Reply encoding (shared by every save message)
+
+The save buffer carries one length-prefixed reply: control word 1 is a byte length
+`n`, the data region holds `n` UTF-8 bytes, control word 0 is set to 1 and notified
+to release the waiting worker. Two reserved lengths are **sentinels**, never a real
+payload:
+
+- `-1` — **absent / cancelled**: no such save (`save_read`), or the player dismissed
+  a host modal (`save_prompt`/`restore_prompt`). The worker treats both as "the
+  player declined"; the verb prints its cancel line and takes no checkpoint.
+- `-2` — **error**: the host operation failed (quota exceeded, storage unavailable).
+  Distinct from `-1` so the verb can print "Save failed." rather than "cancelled."
+
+(Today's code overloads a `"ok"`/`"error: …"` *text* reply for `save_write` and a
+`null`→`-1` for `save_read`; this generalizes that to a numeric sentinel space so
+cancel and error are distinguishable. Existing inline behavior is unchanged.)
+
+#### Inline vs. deferred replies (the contract)
+
+A save message's reply may come back two ways, and the worker must not care which:
+
+- **Inline** — the host services the request synchronously and fills the buffer
+  before its message handler returns. Suits pure storage ops over synchronous
+  localStorage: `save_write`, `save_read`, `save_list`.
+- **Deferred** — the host cannot answer until a later user event (a modal the player
+  must type into or pick from). The handler returns *without* filling the buffer; a
+  subsequent event handler (button click, `keydown`) fills and notifies it. This is
+  the exact shape input already uses (`requestInput` → later `deliverLine`); the
+  worker is blocked on `Atomics.wait` the whole time, so an arbitrarily long modal is
+  fine. Suits the host-rendered UX messages: `save_prompt`, `restore_prompt`.
+
+**Contract:** every save request is answered *exactly once*, with a payload or a
+sentinel, whether inline or deferred. The worker blocks until that single reply
+arrives. A host that renders no native UI simply never sends the deferred messages
+and uses the inline primitives instead (see CLI vs. browser below).
+
+#### Message catalog
+
+Worker → host (each blocks for one reply):
+
+| Message | Payload | Reply | Timing | Status |
+| --- | --- | --- | --- | --- |
+| `save_write` | `{ key, data, meta }` | `ok` / `-2` | inline | built (`meta` new) |
+| `save_read` | `{ key }` | blob text / `-1` | inline | built |
+| `save_list` | `{ prefix }` | rows JSON / `[]` | inline | **new** |
+| `save_prompt` | `{ prefix }` | `{ name }` text / `-1` | deferred | new (browser UX) |
+| `restore_prompt` | `{ prefix }` | chosen blob / `-1` | deferred | new (browser UX) |
+| `save_delete` | `{ key }` | `ok` / `-2` | inline | new |
+
+- **`save_list { prefix }` → metadata rows.** The host enumerates its store for keys
+  under `prefix` and returns a JSON array of `{ name, ts, turns }`, most-recent first.
+  `prefix` is the game's key-namespace (`<safeGameName>__`), supplied by the runtime
+  because **only the runtime knows the game name** — the host filters by it and strips
+  it from each returned `name`. Filtering is mandatory: the store is shared across all
+  games on an origin (see `devdocs/state.md`, the `save_list` filtering note). An empty
+  store returns `[]`, not a sentinel.
+- **Metadata (`meta`) and where it lives.** `save_write` gains a `meta` field
+  (`{ savedAt, turns }`, extensible) written as an **unobfuscated sidecar** beside the
+  opaque blob (e.g. `<key>` holds the blob, `<key>#meta` holds the JSON). The picker's
+  columns come from the sidecar, so the host renders labels without decoding the blob
+  (which it cannot — it is XOR/base64). `savedAt` is host-or-runtime time; `turns` is
+  game-derived and passed in from `captureSave`. **The turn counter is built** — a
+  minimal engine-internal counter (`advanceTurn`/`turnsTaken`) incremented at the
+  `runCommand` checkpoint site (the one-per-fresh-turn boundary; out-of-world verbs and
+  disambiguation continuations do not count), captured by its own `turns` state provider
+  so a restored game keeps the right count. It is a small forerunner of the Parser v2
+  turn clock, not the full clock; v2's every-turn rules reuse the same counter rather
+  than introducing a second. What remains is the `meta` sidecar that exposes it to the
+  host without decoding the blob. `save_list` reads sidecars, never blobs.
+- **`save_prompt` / `restore_prompt`** are the host-rendered UX seam: the runtime
+  hands the host the game `prefix` and the host runs its modal. `restore_prompt`
+  returns the *chosen blob directly* (the host already holds it), collapsing
+  restore to one round-trip — the runtime then validates `buildId` and applies, or
+  prints the standard refusal. `save_prompt` returns just the chosen *name*; the
+  runtime then `captureSave`s and posts `save_write`.
+
+#### CLI vs. browser: same protocol, two renderings
+
+The protocol supports both host-seam renderings without divergence:
+
+- **Browser/Electron (native UX):** the runtime sends `save_prompt`/`restore_prompt`;
+  the shell renders the modal/picker, enumerating slots itself (it owns localStorage),
+  and replies deferred. The shell may never send `save_list` at all — listing is
+  internal to its modal.
+- **CLI (text UX):** the thin stdio host has no modal. The library renders the prompt
+  via `promptLine` and drives the **inline primitives** directly — `save_list` to back
+  `^L`-lists-saves, `save_read`/`save_write`/`save_delete` by key. The host stays
+  thin; the wording lives in `lib` (the layering-smell fix). Both paths share
+  `save_write`/`save_read`/`save_list`/`save_delete`; only the prompt messages are
+  browser-only.
+
 ## Host Environments
 
 Each environment that runs a game is a pairing of two layers, which must not be

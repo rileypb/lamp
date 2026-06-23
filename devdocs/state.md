@@ -138,9 +138,9 @@ providers resolve `$ref`s against already-restored instances:
 4. `pronoun` — the `it` antecedent.
 
 **This is the contract for future features:** any subsystem that introduces new
-mutable state outside an object field, global, or relation (e.g. a future
-turn-clock counter, scene tracker, or daemon schedule held in a module-level
-variable) registers its own provider. The snapshot core is never edited; the new
+mutable state outside an object field, global, or relation (e.g. the **turn
+counter** added for save metadata — a module-level count not held in any field or
+global — or a future scene tracker or daemon schedule) registers its own provider. The snapshot core is never edited; the new
 state is captured because its provider was registered. (Most features won't need
 this at all — score, turn counter, and the like are just globals/fields, captured
 automatically by the built-in providers.)
@@ -179,6 +179,10 @@ mutate, restore, and assert the state matches the capture.
   callback**, so `lib/advent` defines the verbs and owns the prompting/wording.
   This needs the runtime→Lamp out-of-world hook that the deferred out-of-world
   *actions* work builds — so it is folded into Parser v2 rather than built twice.
+  **Refinement (2026-06-22):** the wording moves to `lib` only for hosts *without*
+  a native save UI; the *rendering* of the prompt/picker is a host seam (see
+  "Save/restore UX: a host seam" below). So `lib` owns the verbs + text-host prose;
+  a richer host (browser) renders its own widgets through the seam.
 
 The library turn loop is unchanged — `undo` typed by the player simply falls
 through to `run_command`, which recognizes it. No `lib/` change is required for
@@ -236,6 +240,92 @@ Windows `%APPDATA%/lamp/saves`); `LAMP_SAVE_DIR` overrides it (the golden tests 
 it to a throwaway dir so they never touch the real location). The browser host
 wires the same seam to its own persistence (Slice 3).
 
+## Save/restore UX: a host seam (Slice 3b)
+
+> Status: **design** (2026-06-22). The blob lifecycle (Slice 2) is built; this is
+> the UX layer over it. Mockup: `src/lighthouse/web/mockup-save-restore.html`.
+
+Decision: the save/restore **UX is a host seam**, parallel to `promptLine` — not
+hardcoded engine prose, and not a wholesale move into the host. The split:
+
+- **Runtime keeps the blob lifecycle** — `captureSave`/`restoreSave`, the `buildId`
+  compatibility gate, obfuscation, `saveSlotKey` namespacing. None of this can leave
+  the runtime; it needs the live registries, build id, and game identity.
+- **The host renders the UX** — name entry, the restore picker, slot listing, delete.
+  Each host implements the seam its own way: the browser shell with native widgets,
+  the CLI with a text name-prompt (the `lib`-side wording of TODO item 2). The
+  *store* already lives host-side (browser localStorage; CLI app-data dir), so
+  enumeration and deletion are naturally host operations on data the host owns.
+- **The runtime never lists saves.** Restore is "host, let the player choose a slot,
+  return the chosen blob (or cancel)"; the runtime validates it against `buildId` and
+  applies. So there is **no `saves` verb** — enumeration is an affordance *inside* the
+  restore flow, matching the IF-traditional model where `RESTORE` opens the
+  interpreter's picker rather than a game command listing files.
+
+**Verb role.** `save`/`restore` (and optional shell Save/Restore buttons) become thin
+triggers that hand off to the host seam, instead of driving an in-game `promptLine`.
+
+**Browser UX (the two modals).**
+- *Save* — a name field plus the existing-saves list. Clicking an existing slot fills
+  the name and flips the primary button **Save → Overwrite**; the list *is* the
+  overwrite-confirmation surface, so there is no second dialog. (On a fresh game the
+  list is empty and collapses.)
+- *Restore* — a selectable picker (↑/↓/click, Enter/double-click restores), per-row
+  delete, and the standard refusal messages (different game / different version /
+  corrupted) still printed to the transcript by the runtime after a failed validate.
+- Slot metadata columns: **name · timestamp · turn count**. Timestamp is
+  host-derived (localStorage write time); **turn count is game-derived and rides along
+  in the capture** — see the protocol note below. The turn count itself is **built**: a
+  minimal engine-internal counter (`advanceTurn`/`turnsTaken`) incremented at the
+  `runCommand` checkpoint site, captured by the `turns` state provider so it survives
+  undo/restore (a forerunner of the Parser v2 turn clock; see "State-provider
+  registry"). What remains is surfacing it host-readably via the `meta` sidecar (the
+  broker work) — it already rides inside the captured `state`. The CLI list (`^L` at the
+  name prompt) prints the same columns.
+
+**Broker protocol growth.** The wire protocol is specified in `devdocs/sandbox.md`
+→ "Save/restore broker protocol" (message catalog, reply/sentinel encoding, the
+inline-vs-deferred contract). In brief: today's channel carries only
+`save_write(key,text)` / `save_read(key)` and replies *inline synchronously* (suited
+to synchronous localStorage). The seam adds:
+- `save_list` — host enumerates **this game's** slots and returns `{ name, ts, turns }`
+  rows. **Filtering is mandatory, not incidental:** the `lamp:save:` localStorage
+  namespace is shared by every Lamp game on the same origin, so a naive scan of the
+  whole prefix would surface other games' saves (origin isolation hides this when each
+  bundle is its own origin, but a shared-origin portal or local dev would leak). The
+  host doesn't know the game name — only the runtime does (`gameInfo().name` /
+  `saveSlotKey`) — so the request must carry the game's key-prefix
+  (`<safeGameName>__`) from the runtime; the host filters localStorage to
+  `SAVE_KEY_PREFIX + that prefix` and strips it back off for the displayed slot name.
+  (Caveat: `safe()` sanitization can collapse distinct names to one prefix, and two
+  different games sharing name+author share a namespace — `buildId` separates
+  *versions*, not *games*; consider a stronger namespace key if a shared origin is ever
+  expected.)
+- **Metadata visibility.** The picker's timestamp/turn-count columns live in the
+  *obfuscated* blob header (`savedAt` + the added turn count), which the host can't
+  read. So either store an **unobfuscated metadata sidecar** beside each blob (host
+  renders the picker with no runtime round-trip — preferred, at one extra key per slot)
+  or have the runtime decode for the list.
+- a **save-with-metadata** variant so game-derived metadata (turn count, and room/score
+  if wanted) travels with the blob and the picker can label slots.
+- a **deferred-reply** contract for the async modal: a name-entry or picker modal waits
+  on a user event, so the host must reply *after* the interaction (the input channel's
+  `requestInput`→`deliverLine` shape) rather than inline. The worker is already blocked
+  on `Atomics.wait`, exactly as it is during `readline`, so no new blocking primitive is
+  needed — only the deferred-reply shape on the save channel.
+
+**Reconciliation with the layering-smell fix (TODO item 2).** That fix moves the verb
+words and prompting wording into `lib`. It still holds, refined: `lib` owns the *verbs*
+and the *text-host wording*, but the *rendering* of the prompt/picker is the host seam —
+so a host with a native save UI (the browser) supplies its own widgets while a text host
+(CLI) gets the `lib` prose. The two plans agree once "move prompting into `lib`" is read
+as "for hosts without a native save UI."
+
+**Where:** `src/lamplighter/index.js` (verbs → seam dispatch; metadata in `captureSave`),
+`src/lamplighter/sandbox/{worker-browser,worker,host}.js` + `src/lighthouse/web/shell.js`
+(protocol + deferred replies), `src/lighthouse/web/{shell.js,shell.css,index.html}`
+(modals).
+
 ## Inputs and Outputs
 
 - **Input (capture):** the live registries.
@@ -279,24 +369,30 @@ wires the same seam to its own persistence (Slice 3).
   Named slots persist per game across reloads. The durable CLI save location is
   also done (per-user app-data dir + `LAMP_SAVE_DIR`). Build-smoke coverage in
   `tests/lighthouse`; the live browser loop is manually verified (the headless
-  test gap is the same one already noted for input). Still open: save-slot
-  **listing/metadata** (a `saves` verb), optional **file export/import** in the
-  browser (the native-file-UI path), and the CLI save-name-prompt conveniences
-  above. A native CLI file dialog is deliberately *not* pursued (it breaks the
-  headless/piped path).
+  test gap is the same one already noted for input).
+- **Slice 3b — save/restore UX as a host seam. (Design, 2026-06-22.)** Browser
+  name-entry + restore-picker modals (mockup:
+  `src/lighthouse/web/mockup-save-restore.html`); the `save_list`/metadata protocol
+  additions and the deferred-reply contract; no `saves` verb (enumeration lives in
+  the restore flow). See "Save/restore UX: a host seam" above. Optional browser
+  **file export/import** (the native download/upload path) layers on top. A native
+  CLI file dialog is deliberately *not* pursued (it breaks the headless/piped path).
 
 ## Open questions
 
 - **Undo depth.** Bounded stack, depth = the author-settable `undo_limit` global
   (default 32; `0` disables). Single-level (classic Z-machine) or unbounded are
   just other `undo_limit` values; no further decision needed.
-- **Save slots & metadata.** Named slots, timestamps, per-save descriptions.
+- **Save slots & metadata.** Named slots, timestamps, turn count; **resolved** to
+  name · timestamp · turn count for the picker (see "Save/restore UX: a host seam").
+  Per-save free-text descriptions remain optional/future.
 - **CLI save-name-prompt UX (deferred to the out-of-world verb move).** Once the
   `save`/`restore` verbs and their prompting live in `lib` rather than the engine
-  (see "Known layering smell"), the CLI name prompt can offer: `^L` to **list**
-  this game's existing saves, and an **overwrite-confirmation** before clobbering
-  an existing slot. Both need a save-slot listing/exists primitive and the in-`lib`
-  prompt flow. Tracked in TODO item 1 (Slice 3) / item 4 (Parser v2).
+  (see "Known layering smell"), the CLI name prompt — the text-host rendering of the
+  same host seam — can offer: `^L` to **list** this game's existing saves, and an
+  **overwrite-confirmation** before clobbering an existing slot. Both need a
+  save-slot listing/exists primitive and the in-`lib` prompt flow. Tracked in TODO
+  item 1 (Slice 3) / item 2 (Parser v2).
 - **Schema drift across saves.** A save from an older build loaded into a newer
   one (added/removed globals or fields). Tolerated loosely today (missing keys
   ignored); a versioning policy is a Slice 2/3 question.

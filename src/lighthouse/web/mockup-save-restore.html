@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<!-- THROWAWAY UX MOCKUP — not wired to the worker, not shipped. Static dummy data
+     to iterate on the save/restore host-seam UI before building it. Open directly
+     in a browser. Delete once the real modal/picker (shell.js + shell.css) lands.
+     States: Save (name entry + overwrite list), Restore (picker), Restore empty.
+     See devdocs/state.md item 1 and TODO.md. -->
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Lamp — save/restore UX mockup</title>
+    <style>
+        /* Palette + type borrowed from shell.css so the mockup reads true. */
+        :root {
+            --bg: #1a1a1a;
+            --fg: #e6e6e6;
+            --dim: #8a8a8a;
+            --accent: #cda434;
+            --panel: #242424;
+            --panel-line: #3a3a3a;
+            --row-sel: #2f2a18;
+            --danger: #e06c5a;
+        }
+        * { box-sizing: border-box; }
+        html, body {
+            margin: 0;
+            height: 100%;
+            background: var(--bg);
+            color: var(--fg);
+            font: 16px/1.5 system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+        }
+
+        /* Mockup-only control bar to flip between states. Not part of the real UI. */
+        #mockbar {
+            position: fixed;
+            top: 0; left: 0; right: 0;
+            display: flex;
+            gap: .5rem;
+            align-items: center;
+            padding: .5rem 1rem;
+            background: #111;
+            border-bottom: 1px solid var(--panel-line);
+            font-size: 13px;
+            z-index: 10;
+        }
+        #mockbar span { color: var(--dim); margin-right: .5rem; }
+        #mockbar button {
+            font: inherit;
+            background: #222;
+            color: var(--fg);
+            border: 1px solid var(--panel-line);
+            border-radius: 4px;
+            padding: .25rem .6rem;
+            cursor: pointer;
+        }
+        #mockbar button.active { border-color: var(--accent); color: var(--accent); }
+
+        /* Faux transcript behind the modal, so the dialog reads in-context. */
+        #screen {
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+            max-width: 80ch;
+            margin: 0 auto;
+            padding: 3.5rem 1rem 1rem;
+            white-space: pre-wrap;
+        }
+        #screen .echo { color: var(--accent); }
+
+        /* Modal overlay. */
+        .overlay {
+            position: fixed;
+            inset: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(0, 0, 0, 0.55);
+            z-index: 5;
+        }
+        .overlay[hidden] { display: none; }
+
+        .dialog {
+            width: min(30rem, 92vw);
+            background: var(--panel);
+            border: 1px solid var(--panel-line);
+            border-radius: 8px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+            padding: 1.25rem;
+        }
+        .dialog h2 {
+            margin: 0 0 1rem;
+            font-size: 1.05rem;
+            font-weight: 600;
+        }
+
+        .field {
+            width: 100%;
+            background: #1c1c1c;
+            border: 1px solid var(--panel-line);
+            border-radius: 5px;
+            color: var(--accent);
+            caret-color: var(--accent);
+            font: inherit;
+            padding: .5rem .65rem;
+            outline: none;
+        }
+        .field:focus { border-color: var(--accent); }
+
+        .list-label {
+            color: var(--dim);
+            font-size: .85rem;
+            margin: 1rem 0 .4rem;
+        }
+
+        .slots {
+            border: 1px solid var(--panel-line);
+            border-radius: 5px;
+            max-height: 11rem;
+            overflow-y: auto;
+        }
+        .slot {
+            display: flex;
+            align-items: center;
+            gap: .5rem;
+            padding: .45rem .6rem .45rem .5rem;
+            border-left: 3px solid transparent;
+            cursor: pointer;
+        }
+        .slot + .slot { border-top: 1px solid var(--panel-line); }
+        .slot:hover { background: #2a2a2a; }
+        .slot.selected {
+            background: var(--row-sel);
+            border-left-color: var(--accent);
+        }
+        .slot .name { flex: 1 1 auto; }
+        .slot .meta {
+            color: var(--dim);
+            font-size: .82rem;
+            white-space: nowrap;
+        }
+        .slot .del {
+            visibility: hidden;
+            background: none;
+            border: none;
+            color: var(--dim);
+            cursor: pointer;
+            font-size: .95rem;
+            padding: 0 .2rem;
+        }
+        .slot:hover .del, .slot.selected .del { visibility: visible; }
+        .slot .del:hover { color: var(--danger); }
+
+        .empty {
+            color: var(--dim);
+            font-style: italic;
+            padding: 1.25rem .25rem;
+            text-align: center;
+        }
+
+        .actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: .5rem;
+            margin-top: 1.25rem;
+        }
+        .btn {
+            font: inherit;
+            border-radius: 5px;
+            padding: .4rem 1rem;
+            cursor: pointer;
+            border: 1px solid var(--panel-line);
+            background: transparent;
+            color: var(--fg);
+        }
+        .btn:hover { border-color: var(--dim); }
+        .btn.primary {
+            background: var(--accent);
+            border-color: var(--accent);
+            color: #1a1a1a;
+            font-weight: 600;
+        }
+        .btn.primary:hover { filter: brightness(1.08); }
+    </style>
+</head>
+<body>
+    <div id="mockbar">
+        <span>mockup states:</span>
+        <button data-state="save" class="active">Save</button>
+        <button data-state="restore">Restore</button>
+        <button data-state="restore-empty">Restore (empty)</button>
+    </div>
+
+    <main id="screen">> take brass lantern
+Taken.
+> save</main>
+
+    <!-- STATE A: Save (name entry + overwrite list) -->
+    <div class="overlay" id="ov-save">
+        <div class="dialog" role="dialog" aria-modal="true" aria-labelledby="save-title">
+            <h2 id="save-title">Save game</h2>
+            <input class="field" id="save-name" type="text" value="before the cellar"
+                   aria-label="Name for this save" autocomplete="off" spellcheck="false">
+            <div class="list-label">Existing saves — click to overwrite:</div>
+            <div class="slots" id="save-slots"></div>
+            <div class="actions">
+                <button class="btn" data-close>Cancel</button>
+                <button class="btn primary" id="save-confirm">Save</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- STATE B: Restore (picker) -->
+    <div class="overlay" id="ov-restore" hidden>
+        <div class="dialog" role="dialog" aria-modal="true" aria-labelledby="restore-title">
+            <h2 id="restore-title">Restore game</h2>
+            <div class="slots" id="restore-slots"></div>
+            <div class="actions">
+                <button class="btn" data-close>Cancel</button>
+                <button class="btn primary">Restore</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- STATE B (empty): Restore with no saves -->
+    <div class="overlay" id="ov-restore-empty" hidden>
+        <div class="dialog" role="dialog" aria-modal="true" aria-labelledby="restore-empty-title">
+            <h2 id="restore-empty-title">Restore game</h2>
+            <div class="empty">No saved games for this story yet.</div>
+            <div class="actions">
+                <button class="btn primary" data-close>OK</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Dummy slot data: name + host-derived timestamp + game-derived turn count.
+        // Sorted most-recent first, as the real picker would default.
+        const SLOTS = [
+            { name: "outside the house", ts: "Jun 22, 14:11", turns: 37 },
+            { name: "start of game",     ts: "Jun 22, 14:02", turns: 4 },
+            { name: "before the cellar", ts: "Jun 21, 22:40", turns: 12 },
+        ];
+
+        function meta(s) { return `${s.ts} · ${s.turns} turn${s.turns === 1 ? "" : "s"}`; }
+
+        function renderSlots(container, { selectable }) {
+            container.innerHTML = "";
+            SLOTS.forEach((s, i) => {
+                const row = document.createElement("div");
+                row.className = "slot" + (selectable && i === 0 ? " selected" : "");
+                row.innerHTML =
+                    `<span class="name"></span><span class="meta"></span>` +
+                    `<button class="del" title="Delete save" aria-label="Delete save">🗑</button>`;
+                row.querySelector(".name").textContent = s.name;
+                row.querySelector(".meta").textContent = meta(s);
+                row.addEventListener("click", (e) => {
+                    if (e.target.closest(".del")) return;
+                    container.querySelectorAll(".slot").forEach(n => n.classList.remove("selected"));
+                    row.classList.add("selected");
+                    if (container.id === "save-slots") {
+                        document.getElementById("save-name").value = s.name;
+                        syncSaveLabel();
+                    }
+                });
+                container.appendChild(row);
+            });
+        }
+
+        // When the typed name matches an existing slot, the primary action is an
+        // overwrite — the list is the confirmation surface, so the label flips.
+        function syncSaveLabel() {
+            const name = document.getElementById("save-name").value.trim().toLowerCase();
+            const exists = SLOTS.some(s => s.name.toLowerCase() === name);
+            document.getElementById("save-confirm").textContent = exists ? "Overwrite" : "Save";
+        }
+
+        renderSlots(document.getElementById("save-slots"), { selectable: false });
+        renderSlots(document.getElementById("restore-slots"), { selectable: true });
+        document.getElementById("save-name").addEventListener("input", syncSaveLabel);
+        syncSaveLabel();
+
+        // Mockup-only state switching.
+        const overlays = {
+            "save": document.getElementById("ov-save"),
+            "restore": document.getElementById("ov-restore"),
+            "restore-empty": document.getElementById("ov-restore-empty"),
+        };
+        function show(state) {
+            for (const [k, el] of Object.entries(overlays)) el.hidden = (k !== state);
+            document.querySelectorAll("#mockbar button").forEach(b =>
+                b.classList.toggle("active", b.dataset.state === state));
+        }
+        document.querySelectorAll("#mockbar button").forEach(b =>
+            b.addEventListener("click", () => show(b.dataset.state)));
+        document.querySelectorAll("[data-close]").forEach(b =>
+            b.addEventListener("click", () => { /* mockup: leave overlay up */ }));
+    </script>
+</body>
+</html>
