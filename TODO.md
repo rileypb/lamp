@@ -11,8 +11,8 @@ Sourced from the staged roadmaps and prerequisite lists in
 
 > Feature backlog awaiting triage: `lurking_todo.md` catalogs candidate verbs,
 > grammar, world-model traits, turn-cycle/daemon, and message ideas mined from
-> `lurkinghorror.txt`. `devdocs/text.md` holds the full text-substitution design
-> record (Slices 1–7, all DONE — see "Completed" below).
+> `lurkinghorror.txt`. Text substitution (Slices 1–7) is **all DONE**; the full
+> per-slice record lives in `devdocs/text.md`.
 
 ## Active
 
@@ -47,14 +47,9 @@ and never needs the slot list itself. Full design recorded in `devdocs/state.md`
   prefix → name/timestamp/turns), a `meta` sidecar on `save_write` so the picker can
   label slots, `save_prompt`/`restore_prompt` (deferred-reply host modals),
   `save_delete`, and the `-1`/`-2` cancel/error sentinels. Implementation pending.
-- **Turn counter — DONE.** Minimal engine-internal counter (`turnCount`/`advanceTurn`/
-  `turnsTaken` in `src/lamplighter/index.js`), incremented once per fresh turn just
-  after the `runCommand` checkpoint (out-of-world verbs + disambiguation continuations
-  excluded), captured by a `turns` state provider so it survives undo/restore.
-  Engine-internal, not a public global, so Parser v2 (item 2) owns the author-facing
-  turn clock and reuses this counter. Round-trip test in `tests/state`. **Remaining for
-  the picker:** surface it host-readably via the `meta` sidecar (the broker work above);
-  it already rides inside the save `state`.
+- **Turn counter — built** (`advanceTurn`/`turnsTaken` + `turns` state provider, commit
+  95c4810; round-trip test in `tests/state`). It already rides inside the save `state`;
+  only the host-readable `meta` sidecar remains (the broker work above).
 - Optional browser **file export/import** (download/upload) layered over localStorage.
 This shares the out-of-world-verb hook with Parser v2 (item 2) and RESTART (item 3).
 Reconciles with item 2's "move prompting into `lib`": lib owns the verbs + the
@@ -134,46 +129,11 @@ direction is chosen. **Where:** `src/lantern/*` (pipeline), `src/lamplighter/ind
   letting the game (not just the player) set the antecedent when it describes
   an object. **See:** `devdocs/game_parser.md` (Pronoun `it`; Open questions →
   Pronouns).
-- **Nicer diagnostic for a leading unknown name in a rule head.** A selector or
-  rulebook contribution that *begins* with an unknown atom (`instead manipulatoin …`,
-  `rule no_such_rulebook:`) isn't recognized as a rule, so it reports a generic
-  parse error rather than "unknown action or tag" / "unknown rulebook". Heads that
-  start with a known name report the precise error. Consider a fallback that
-  recognizes `BAND <ident> …` / `rule <ident> …` and surfaces the better message.
 - **Named-rule replacement.** Override suppression works via bare-`stop` +
   author-before-library ordering (now shared by actions and rulebook
   contributions). Replacing *one* library rule out of several (without depending
   on registration order) needs named rules. See `devdocs/rulebooks.md` roadmap
   (*Next — identity & ergonomics*).
-- **Reserved words as member names — assignment/handler asymmetry.** Expression
-  property access now allows keyword field names (`self.action`), but assignment
-  targets (`readTargetSegment`) and `on TYPE.field change` headers still require a
-  plain IDENT. Align them if a keyword-named writable field ever appears.
 - **`list<T>` field types end-to-end.** Parsing is now covered by a parser unit
   test, but no fixture declares a `list<T>` field and exercises it through
   emit/runtime. Add one to lock in end-to-end behaviour.
-
-## Completed
-
-### Text substitution (Slices 1–7) — DONE
-All seven slices shipped; the full per-slice record lives in `devdocs/text.md`.
-In brief: bracket substitution + lazy `text`/`freeze`; names/articles/case; the
-adaptive render-context engine (pronouns, verb agreement, `[regarding]`);
-conditionals & variation (`[if]`, `[one of]`, `[first time]`, seeded RNG); lists &
-numbers (`.size`, `in_words`/`ordinal`, `[s]`, grouped lists, `[is LIST]`
-agreement); layout & misc output (paragraph control, `\u{…}`, `[player_command()]`);
-and text styling (bold/italic/fixed wrapping functions + `[bold]…[/bold]` sugar +
-structured-segment transport, fail-silently per host). All 11 suites green (137
-goldens).
-
-**Deferred follow-ups (add on demand):**
-- Arbitrary explicit per-alternative weights for `[one of]` (only the "decreasing"
-  scheme is built).
-- Author-overridable grouping key for G5 grouped lists.
-- Companion agreement helpers `that_those(n)` / `a_an(x)` (unbuilt).
-- Text styling **I4**: true fixed letter-spacing / table layout; capability handshake
-  + author-specified fallbacks (e.g. script fonts).
-- **Per-locale sugar words + locale swapping** — the sugar sets (`the`/`a`/`an`,
-  pronouns, `regarding`) are hardcoded English in the parser and `lib/en-US` is
-  hard-auto-loaded; generalize when a non-English locale lands. **Where:**
-  `src/lantern/{parser_rd,prescan}.js`, `lib/en-US/`.
