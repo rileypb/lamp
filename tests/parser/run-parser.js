@@ -364,6 +364,41 @@ const cases = [
         },
     },
     {
+        name: "style sugar: [bold]/[italic]/[fixed] build nestable style nodes; mismatch/unterminated errors",
+        run() {
+            const [h] = parse(["on startup:", '    print "a [bold]heavy [italic]both[/italic][/bold] z"'].join("\n"));
+            const parts = h.body[0].expr.parts;
+            assert.deepStrictEqual(parts[0], { kind: "text", value: "a " });
+            const boldNode = parts[1];
+            assert.strictEqual(boldNode.kind, "style");
+            assert.strictEqual(boldNode.name, "bold");
+            assert.deepStrictEqual(boldNode.parts[0], { kind: "text", value: "heavy " });
+            const italNode = boldNode.parts[1];
+            assert.strictEqual(italNode.kind, "style");
+            assert.strictEqual(italNode.name, "italic");
+            assert.deepStrictEqual(italNode.parts[0], { kind: "text", value: "both" });
+            assert.deepStrictEqual(parts[2], { kind: "text", value: " z" });
+
+            // [fixed] span and the [fixed(EXPR)] call form (parens) coexist.
+            const [g] = parse(["on startup:", '    print "[fixed]y[/fixed][fixed(code)]"'].join("\n"), ["code"]);
+            const gparts = g.body[0].expr.parts;
+            assert.strictEqual(gparts[0].kind, "style");
+            assert.strictEqual(gparts[0].name, "fixed");
+            assert.strictEqual(gparts[1].kind, "expr");
+
+            // A single-letter [i] stays a bare variable print, not a style marker.
+            const [v] = parse(["on startup:", '    print "[i]"'].join("\n"), ["i"]);
+            assert.strictEqual(v.body[0].expr.parts[0].kind, "expr");
+
+            // A control block may sit inside a style span (style is not a control block).
+            assert.doesNotThrow(() => parse(["on startup:", '    print "[bold][if dark]x[end][/bold]"'].join("\n"), ["dark"]));
+
+            assert.throws(() => parse(["on startup:", '    print "[/bold]"'].join("\n")), /'\[\/bold\]' without a matching '\[bold\]'/);
+            assert.throws(() => parse(["on startup:", '    print "[bold]x[/italic]"'].join("\n")), /'\[\/italic\]' does not match the open '\[bold\]' style/);
+            assert.throws(() => parse(["on startup:", '    print "[bold]x"'].join("\n")), /unterminated '\[bold\]' style \(missing '\[\/bold\]'\)/);
+        },
+    },
+    {
         name: "[s] plural suffix: splits the preceding word into a pluralSuffix part; rejects when not after a word",
         run() {
             const [h] = parse(["on startup:", '    print "[n] bullet[s]!"'].join("\n"), ["n"]);

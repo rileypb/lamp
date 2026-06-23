@@ -132,6 +132,19 @@ function classifyControl(src) {
     if (/^cycling$/.test(src)) return { type: "mode", mode: "cycling" };
     if (/^stopping$/.test(src)) return { type: "mode", mode: "stopping" };
     if (/^as\s+decreasingly\s+likely\s+outcomes$/.test(src)) return { type: "mode", mode: "decreasing" };
+    // Type-style spans (I3, Slice 7): [bold]…[/bold] / [italic]…[/italic] /
+    // [fixed]…[/fixed] desugar to the bold/italic/fixed wrapping functions. Unlike the
+    // conditional/variation blocks, these nest — their named close tags keep the
+    // pairing readable. Long-form spellings only: single-letter [b]/[i] would collide
+    // with bare variable prints ([i] is the obvious loop index), so they are not sugar.
+    // The explicit call form `[fixed(x)]` is unaffected (it carries parens, so it never
+    // reaches here). See devdocs/text.md I3.
+    if (/^bold$/.test(src)) return { type: "styleOpen", name: "bold" };
+    if (/^italic$/.test(src)) return { type: "styleOpen", name: "italic" };
+    if (/^fixed$/.test(src)) return { type: "styleOpen", name: "fixed" };
+    if (/^\/bold$/.test(src)) return { type: "styleClose", name: "bold" };
+    if (/^\/italic$/.test(src)) return { type: "styleClose", name: "italic" };
+    if (/^\/fixed$/.test(src)) return { type: "styleClose", name: "fixed" };
     // [s] plural suffix (G7): pluralizes the preceding word by the governing count.
     if (/^s$/.test(src)) return { type: "plural" };
     return null;
@@ -1489,6 +1502,11 @@ function createParser(tokens, filePath, globalNames, functionNames = new Set(), 
         const root = [];
         const stack = [{ items: root, block: null }];
         const top = () => stack[stack.length - 1];
+        // A conditional/variation block ([if]/[first time]/[one of]) is open somewhere
+        // in the stack. Those may not nest (the marker pairing is unreadable without
+        // indentation); style spans are exempt — they have named close tags — so they
+        // are not counted here and may nest freely, inside or around a control block.
+        const inControlBlock = () => stack.some((f) => f.block && f.block.kind !== "style");
         for (const p of parts) {
             if (p.kind === "text") {
                 top().items.push({ kind: "text", value: p.value });
@@ -1512,8 +1530,25 @@ function createParser(tokens, filePath, globalNames, functionNames = new Set(), 
                 items.push({ kind: "pluralSuffix", word });
                 continue;
             }
+            if (ctrl.type === "styleOpen") {
+                const styleNode = { kind: "style", name: ctrl.name, parts: [] };
+                top().items.push(styleNode);
+                stack.push({ items: styleNode.parts, block: styleNode });
+                continue;
+            }
+            if (ctrl.type === "styleClose") {
+                const frame = top();
+                if (!frame.block || frame.block.kind !== "style") {
+                    throw fail(`'[/${ctrl.name}]' without a matching '[${ctrl.name}]' in template`);
+                }
+                if (frame.block.name !== ctrl.name) {
+                    throw fail(`'[/${ctrl.name}]' does not match the open '[${frame.block.name}]' style in template`);
+                }
+                stack.pop();
+                continue;
+            }
             if (ctrl.type === "if" || ctrl.type === "firsttime" || ctrl.type === "oneof") {
-                if (top().block !== null) {
+                if (inControlBlock()) {
                     const what = ctrl.type === "if" ? "[if]" : ctrl.type === "firsttime" ? "[first time]" : "[one of]";
                     throw fail(`nested '${what}' is not allowed in a template (the marker pairing would be unreadable without indentation); compute the inner text as a separate value and interpolate it`);
                 }
@@ -1563,12 +1598,14 @@ function createParser(tokens, filePath, globalNames, functionNames = new Set(), 
             }
         }
         if (stack.length !== 1) {
-            const kind = top().block.kind;
-            throw fail(kind === "cond"
+            const block = top().block;
+            throw fail(block.kind === "cond"
                 ? "unterminated '[if]' (missing '[end]') in template"
-                : kind === "firstTime"
+                : block.kind === "firstTime"
                     ? "unterminated '[first time]' (missing '[only]') in template"
-                    : "unterminated '[one of]' (missing a mode like '[at random]' or '[cycling]') in template");
+                    : block.kind === "style"
+                        ? `unterminated '[${block.name}]' style (missing '[/${block.name}]') in template`
+                        : "unterminated '[one of]' (missing a mode like '[at random]' or '[cycling]') in template");
         }
         return root;
     }

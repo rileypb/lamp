@@ -16,9 +16,9 @@ prerequisite lists in `devdocs/game_parser.md`, `devdocs/rulebooks.md`, and
 > **Slices 1–6 DONE** (Slice 6: H1/H2/H3/H6 paragraph control, I1 Unicode escape,
 > J1/K1/K3 misc-output — runtime now owns newlines; non-punctuated prints run on,
 > `[line break]`/`[par]`/`[no break]`/`[run on]`/`[par if printed]` markers). **Slice 7
-> (text styling) first cut DONE 2026-06-22** — bold/italic/fixed wrapping functions +
-> structured-segment transport (see item 1 / `text.md`); paired-marker sugar is the
-> next follow-up. `lurking_todo.md` still awaits triage.
+> (text styling) DONE 2026-06-22** — bold/italic/fixed wrapping functions +
+> structured-segment transport + paired-marker sugar `[bold]…[/bold]` etc. (long-form
+> only; see item 1 / `text.md`). `lurking_todo.md` still awaits triage.
 
 ## 1. Text substitution — Slices 1–5 DONE; Slice 6 next
 **Slice 1 (complete):** bracket substitution + quote convention + lazy `text`/`freeze`.
@@ -148,8 +148,12 @@ plain on a pipe; web shell→`span.style-*` classes (`shell.css`), `textContent`
 unknown styles dropped. Fixture `styling1` (+ golden, plain text proving
 fail-silently); sandbox tests assert styled segments + ANSI/plain split; all 11 suites
 green (136 goldens).
-  - *Follow-up (next):* **paired-marker sugar** `[b]…[/b]`/`[i]…[/i]`/`[fixed]…[/fixed]`
-    in the template parser, desugaring to the `bold`/`italic`/`fixed` calls.
+  - *Paired-marker sugar — DONE 2026-06-22:* `[bold]…[/bold]`/`[italic]…[/italic]`/
+    `[fixed]…[/fixed]` desugar to the calls (parser `style` block node → emitter
+    `name(renderTemplate([…]))`); style spans nest, inside or around a control block.
+    **Long-form only** — single-letter `[b]`/`[i]` dropped because `[i]` collides with a
+    bare loop-index print (`example13`–`21`). Fixture `styling2` + golden + parser test;
+    137 goldens, all 11 suites green.
   - *Deferred (I4):* true fixed letter-spacing / table layout; capability handshake +
     author-specified fallbacks (e.g. script fonts).
 **Prose-concat → templates (done 2026-06-22):** advent's report prose now uses

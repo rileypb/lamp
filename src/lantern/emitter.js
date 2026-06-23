@@ -914,6 +914,14 @@ function emitTemplateFrag(part, globalNames) {
     if (part.kind === "expr") return `lamplighter.interp(${emitExpression(part.expr, globalNames)})`;
     // [s] plural suffix (G7): pluralize the captured word by the governing count.
     if (part.kind === "pluralSuffix") return `plural_suffix(${JSON.stringify(part.word)})`;
+    if (part.kind === "style") {
+        // [b]…[/b] / [i]…[/i] / [fixed]…[/fixed] (I3): wrap the rendered inner parts
+        // in the matching style function. The call nests because the inner parts may
+        // themselves contain style nodes. bold/italic/fixed are lib/sys functions,
+        // bare-callable in the emitted module like the other native helpers.
+        const rendered = `lamplighter.renderTemplate([${emitTemplateFrags(part.parts, globalNames)}])`;
+        return `${part.name}(${rendered})`;
+    }
     if (part.kind === "firstTime") {
         // [first time]…[only] (F9): render the enclosed parts the first time this
         // site is reached, then nothing. variationAdvance returns the pre-visit

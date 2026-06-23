@@ -1,0 +1,18 @@
+# Slice 7 (I3): paired-marker style sugar. [bold]…[/bold] / [italic]…[/italic] /
+# [fixed]…[/fixed] desugar to the bold/italic/fixed wrapping functions. Unlike
+# conditional/variation markers, style spans nest — their named close tags keep the
+# pairing readable. Long-form spellings only (single-letter [b]/[i] would collide with
+# bare variable prints). The explicit call form [fixed(x)] still works (parens
+# distinguish it). In a non-TTY pipe (this golden) styles drop to plain text. See
+# devdocs/text.md I3.
+game StyleSugar:
+    author "Lamp"
+
+global string code = "R12-J"
+
+on startup:
+    print "A [bold]bold[/bold] word and an [italic]italic[/italic] word."
+    print "Nested [bold]bold with [italic]italic[/italic] inside[/bold] and back."
+    print "Long forms: [bold]heavy[/bold] and [italic]slanted[/italic]."
+    print "Access code [fixed]872325412[/fixed] noted."
+    print "Sugar [fixed]R12-J[/fixed] equals call [fixed(code)]."

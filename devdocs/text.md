@@ -426,8 +426,10 @@ either the trailing sugar word or the function's mode argument.
   awkward.
 - **I3. Type styles.** FIRST CUT DONE (2026-06-22) → see **Slice 7** for the full
   record. Surface is **wrapping functions** `bold(…)`/`italic(…)`/`fixed(…)` in
-  `lib/sys` (not Inform's stateful `[bold type]`/`[roman type]` toggles); paired
-  `[b]…[/b]` sugar queued next. Transport is **structured segments** (`{value, styles}`
+  `lib/sys` (not Inform's stateful `[bold type]`/`[roman type]` toggles), plus the
+  paired-marker sugar `[bold]…[/bold]`/`[italic]…[/italic]`/`[fixed]…[/fixed]` (DONE;
+  long-form only — `[i]` would collide with a loop-index print). Transport is
+  **structured segments** (`{value, styles}`
   per `write` message), preserving the web shell's text-nodes-only / never-innerHTML
   rule (`devdocs/lighthouse.md`).
   - Author wants styling to a much greater degree than Inform's Z-machine-constrained
@@ -921,8 +923,23 @@ Fixtures `list1` / `numbers1` / `plural1` + goldens; parser unit tests
   no-op), plain on a pipe; web shell → a `span` with `style-*` classes (`shell.css`),
   `textContent` only. Fixture `styling1` (golden is plain text — styles dropped in a
   pipe, proving fail-silently); sandbox tests assert the styled segments and the
-  ANSI/plain split; 136 goldens. **Remaining:** paired-marker sugar (`[b]…[/b]`) —
-  next follow-up; true fixed letter-spacing / table layout (I4).
+  ANSI/plain split.
+
+  **Paired-marker sugar — DONE (2026-06-22).** `[bold]…[/bold]` / `[italic]…[/italic]`
+  / `[fixed]…[/fixed]` desugar to the `bold`/`italic`/`fixed` calls. `classifyControl`
+  recognizes the open/close words; `buildTemplateParts` lifts them into a `style` block
+  node (`{kind, name, parts}`); the emitter renders `name(renderTemplate([…inner]))`.
+  Unlike the conditional/variation blocks, style spans **nest** (their named close tags
+  keep the pairing readable) and may sit inside or around a control block — only
+  `[if]`/`[first time]`/`[one of]` are still barred from nesting each other.
+  **Long-form spellings only:** the single-letter `[b]`/`[i]` from the original sketch
+  were dropped — `[i]` collides with the universal loop-index variable (`[i]` is a bare
+  variable print, exercised by the `example13`–`21` fixtures), so short forms are unsafe
+  sugar. `[fixed(x)]` (with parens) stays the explicit call form, distinct from the
+  `[fixed]` span. Fixture `styling2` (+ golden), parser unit test; 137 goldens.
+
+  **Remaining:** true fixed letter-spacing / table layout (I4); capability handshake +
+  author-specified fallbacks.
 
   **Decisions taken (2026-06-22).** First cut covers **bold, italic, fixed-width**.
   - **Surface = wrapping functions.** `bold("…")`, `italic("…")`, `fixed("…")` (in
