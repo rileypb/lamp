@@ -74,12 +74,13 @@ the host).
 ## CLI TUI — polish
 
 Done: styled transcript text (bold/italic via a span model), in-line cursor editing
-(←/→, Home/End, Delete, mid-line insert), ↑/↓ command history, and mouse-wheel scroll
+(←/→, Home/End, Delete, mid-line insert), ↑/↓ command history, mouse-wheel scroll
 of the transcript (SGR mouse reporting; new output snaps back to the bottom; hold Shift
-for the terminal's native text selection, which mouse reporting otherwise suppresses).
-Still deferred (see TODO item 7): batched redraws, preserving the transcript on exit
-(the alternate screen clears it today, like `less`/`nano`), wrapping a single typed
-command longer than the terminal width, and multi-byte/emoji input.
+for the terminal's native text selection, which mouse reporting otherwise suppresses),
+and wrapping a typed command longer than the terminal width (hard-wrapped by column so
+the caret tracks across rows). Still deferred (see TODO item 7): batched redraws,
+preserving the transcript on exit (the alternate screen clears it today, like
+`less`/`nano`), and multi-byte/emoji input.
 
 ## Open questions
 

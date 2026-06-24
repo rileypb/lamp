@@ -84,6 +84,27 @@ function wrapSpans(spans, cols) {
     return rows;
 }
 
+// Wrap a line (array of spans) to `cols` by column position — a hard break every
+// `cols` chars, never at spaces. Used for the command echo so it breaks exactly
+// where the live input row did (word-wrap would orphan the prompt on its own row,
+// since the space after "> " is a break point). Regroups runs back into spans.
+function hardWrapSpans(spans, cols) {
+    const chars = [];
+    for (const sp of spans) for (const ch of sp.text) chars.push({ ch, bold: sp.bold, italic: sp.italic });
+    if (chars.length === 0) return [[]];
+    const rows = [];
+    for (let i = 0; i < chars.length; i += cols) {
+        const row = [];
+        for (const c of chars.slice(i, i + cols)) {
+            const last = row[row.length - 1];
+            if (last && last.bold === c.bold && last.italic === c.italic) last.text += c.ch;
+            else row.push({ text: c.ch, bold: c.bold, italic: c.italic });
+        }
+        rows.push(row);
+    }
+    return rows;
+}
+
 // Plain-text convenience used by tests: wrap a string to an array of strings.
 function wrapLine(text, cols) {
     return wrapSpans([{ text, bold: false, italic: false }], cols).map((row) => rowToString(row, cols));
@@ -155,14 +176,33 @@ function createTuiBackend({ out, err, input, exit } = {}) {
         const viewH = Math.max(1, rows - 2); // game area: rows 3..rows
 
         const displayRows = [];
-        for (const ln of lines) for (const r of wrapSpans(ln, cols)) displayRows.push(r);
+        for (const ln of lines) {
+            const wrapped = ln.hardWrap ? hardWrapSpans(ln, cols) : wrapSpans(ln, cols);
+            for (const r of wrapped) displayRows.push(r);
+        }
         if (pending.length > 0) for (const r of wrapSpans(pending, cols)) displayRows.push(r);
 
-        // The input line flows as the last line of the content, so it sits right
+        // The input line flows as the last line(s) of the content, so it sits right
         // below the text while the area isn't full and only pins to the bottom once
-        // the transcript fills it. The whole stack is bottom-anchored.
-        const inputRow = awaiting ? [{ text: currentPrompt + inputBuf, bold: false, italic: false }] : null;
-        const combined = inputRow ? displayRows.concat([inputRow]) : displayRows;
+        // the transcript fills it. The whole stack is bottom-anchored. A command
+        // longer than the terminal width hard-wraps across rows — by column, not at
+        // spaces — so the caret maps cleanly to a (row, col), and a caret resting one
+        // past a full row opens the next row to hold it.
+        const inputRows = [];
+        let caretRow = 0;
+        let caretCol = 0;
+        if (awaiting) {
+            const full = currentPrompt + inputBuf;
+            const caretAbs = currentPrompt.length + cursorPos;
+            caretRow = Math.floor(caretAbs / cols);
+            caretCol = caretAbs % cols;
+            const textRows = full.length === 0 ? 1 : Math.ceil(full.length / cols);
+            const nRows = Math.max(textRows, caretRow + 1);
+            for (let r = 0; r < nRows; r += 1) {
+                inputRows.push([{ text: full.slice(r * cols, r * cols + cols), bold: false, italic: false }]);
+            }
+        }
+        const combined = awaiting ? displayRows.concat(inputRows) : displayRows;
 
         const maxOffset = Math.max(0, combined.length - viewH);
         if (scrollOffset > maxOffset) scrollOffset = maxOffset;
@@ -175,9 +215,9 @@ function createTuiBackend({ out, err, input, exit } = {}) {
         for (let i = 0; i < viewH; i += 1) {
             buf += moveTo(gameTop + i, 1) + CLEAR_LINE + (slice[i] != null ? rowToString(slice[i], cols) : "");
         }
-        const inputVis = awaiting ? combined.length - 1 - startIdx : -1;
-        if (inputVis >= 0 && inputVis < viewH) {
-            buf += moveTo(gameTop + inputVis, Math.min(cols, currentPrompt.length + cursorPos + 1));
+        const caretVis = awaiting ? displayRows.length + caretRow - startIdx : -1;
+        if (caretVis >= 0 && caretVis < viewH) {
+            buf += moveTo(gameTop + caretVis, Math.min(cols, caretCol + 1));
             buf += CURSOR_SHOW;
         }
         out.write(buf);
@@ -230,7 +270,9 @@ function createTuiBackend({ out, err, input, exit } = {}) {
     function submit() {
         const line = inputBuf;
         flushPending();
-        lines.push([{ text: currentPrompt + line, bold: false, italic: false }]); // echo
+        const echo = [{ text: currentPrompt + line, bold: false, italic: false }]; // echo
+        echo.hardWrap = true; // break by column like the live input row, not at spaces
+        lines.push(echo);
         if (line.length > 0 && history[history.length - 1] !== line) history.push(line);
         historyIdx = history.length;
         draft = "";

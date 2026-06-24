@@ -121,9 +121,10 @@ reverse-video bar, and the **CLI** renders it via an interactive **TUI render ba
 Design in `devdocs/windows.md`; backend seam in `devdocs/sandbox.md`. Branch
 `CLI-status-bar`.
 **CLI TUI:** styled transcript text, in-line editing (←/→, Home/End, Delete), ↑/↓
-command history, and mouse-wheel scroll (SGR reporting; Shift for native selection) are
-**done**. Still deferred: batched redraws, keeping the transcript on exit (alt-screen
-clears it now), wrapping an over-long typed command, and multi-byte/emoji input.
+command history, mouse-wheel scroll (SGR reporting; Shift for native selection), and
+wrapping an over-long typed command (hard-wrapped by column) are **done**. Still
+deferred: batched redraws, keeping the transcript on exit (alt-screen clears it now),
+and multi-byte/emoji input.
 **Bigger (deferred):** generalize to arbitrary named content windows (the status line
 collapses into one), a host capability handshake + headless fallback, and author
 override of the status content (e.g. score games). **Where:**

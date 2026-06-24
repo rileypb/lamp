@@ -172,6 +172,27 @@ test("command history recalls previous lines with ↑/↓", () => {
     b.stop();
 });
 
+test("an over-long typed command wraps onto a second row instead of truncating", () => {
+    const out = mockOut(10, 10); // 10-column terminal
+    const input = mockIn();
+    const b = createTuiBackend({ out, input, exit() {} });
+    b.start();
+    let delivered = null;
+    b.requestLine("> ", (line) => { delivered = line; });
+    out.buf = ""; // capture only the render after typing
+    // prompt "> " (2) + 12 chars = 14 columns, must wrap across two 10-col rows
+    input.emit("data", Buffer.from("abcdefghijkl"));
+    assert.ok(out.buf.includes("> abcdefgh"), "first row holds the prompt + head");
+    assert.ok(out.buf.includes("ijkl"), "the tail wraps onto the next row, not truncated");
+    out.buf = ""; // capture the render after submit (the echo)
+    input.emit("data", Buffer.from("\r"));
+    assert.strictEqual(delivered, "abcdefghijkl", "the full command is still delivered");
+    // The echo hard-wraps by column, so the prompt keeps its command on the same row
+    // (word-wrap would break at the space after "> ", orphaning the prompt).
+    assert.ok(out.buf.includes("> abcdefgh"), "echo keeps the command next to the prompt");
+    b.stop();
+});
+
 test("mouse wheel scrolls the transcript back and snaps forward", () => {
     const out = mockOut(20, 5); // viewH = rows - 2 = 3 visible transcript rows
     const input = mockIn();
