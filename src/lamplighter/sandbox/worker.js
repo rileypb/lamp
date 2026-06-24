@@ -103,6 +103,12 @@ function main() {
         parentPort.postMessage(msg);
     });
 
+    // Status line: forward the runtime's two structured segments. A host with a
+    // status region (the TUI backend) renders them; the plain backend ignores them.
+    lamplighter.setStatusChannel((left, right) => {
+        parentPort.postMessage({ type: "status", left, right });
+    });
+
     installInputChannel(workerData.inputBuffer);
     installSaveChannel(workerData.saveBuffer);
 

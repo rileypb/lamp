@@ -9,6 +9,7 @@ const { Worker } = require("worker_threads");
 const fs = require("fs");
 const os = require("os");
 const path = require("path");
+const { createPlainBackend } = require("./backends/plain");
 
 // Shared input buffer: 8-byte header (ready flag + byte length) then UTF-8 line
 // data. 64 KiB comfortably holds a line of player input.
@@ -62,39 +63,6 @@ function listSaveMeta(dir, prefix) {
     return rows;
 }
 
-// Read one line from the host's stdin, character by character. The host is
-// trusted and owns fd 0; the sandboxed game cannot touch it directly.
-function readStdinLine() {
-    const buf = Buffer.alloc(1);
-    let line = "";
-    while (true) {
-        let n;
-        try {
-            n = fs.readSync(0, buf, 0, 1);
-        } catch (err) {
-            if (err.code === "EAGAIN") continue;
-            throw err;
-        }
-        if (n === 0) break;
-        const ch = buf.toString("utf8", 0, 1);
-        if (ch === "\n") break;
-        line += ch;
-    }
-    return line;
-}
-
-// Type-style → ANSI SGR mapping (text.md I3). Only applied to a TTY; piped output
-// (tests, redirection) stays plain so styling is never baked into captured text.
-// Fixed-width has no SGR code — a terminal is already monospace, so it is a no-op
-// (fail-silently). An unknown style maps to nothing and is dropped.
-const ANSI_SGR = { bold: 1, italic: 3 };
-function renderStyledSegment(value, styles, isTty) {
-    if (!isTty || !styles || styles.length === 0) return value;
-    const codes = styles.map((s) => ANSI_SGR[s]).filter((c) => c != null);
-    if (codes.length === 0) return value;
-    return `\x1b[${codes.join(";")}m${value}\x1b[0m`;
-}
-
 function playFile(generatedPath, { out = process.stdout, err = process.stderr } = {}) {
     const workerPath = path.join(__dirname, "worker.js");
     const inputBuffer = new SharedArrayBuffer(INPUT_BUFFER_BYTES);
@@ -122,6 +90,22 @@ function playFile(generatedPath, { out = process.stdout, err = process.stderr } 
         Atomics.notify(sctrl, 0);
     }
 
+    // Deliver one line of player input into the shared buffer, releasing the worker
+    // (blocked on Atomics.wait). A render backend calls this when a line is ready.
+    function deliverLine(line) {
+        const bytes = encoder.encode(line);
+        const len = Math.min(bytes.length, dataCapacity);
+        data.set(bytes.subarray(0, len), 0);
+        Atomics.store(ctrl, 1, len);
+        Atomics.store(ctrl, 0, 1);
+        Atomics.notify(ctrl, 0);
+    }
+
+    // The render backend owns all terminal I/O. Plain stdio for now; Phase 2 selects
+    // an interactive TUI backend when out/stdin are a TTY (and LAMP_NO_TUI is unset).
+    const backend = createPlainBackend({ out, err, fs });
+    backend.start();
+
     return new Promise((resolve, reject) => {
         const worker = new Worker(workerPath, {
             workerData: { generatedPath: path.resolve(generatedPath), inputBuffer, saveBuffer },
@@ -129,26 +113,15 @@ function playFile(generatedPath, { out = process.stdout, err = process.stderr } 
 
         worker.on("message", (msg) => {
             if (msg.type === "write") {
-                out.write(renderStyledSegment(msg.value, msg.styles, out.isTTY));
+                backend.write(msg.value, msg.styles);
             } else if (msg.type === "log") {
-                err.write(`${msg.value}\n`);
+                backend.log(msg.value);
+            } else if (msg.type === "status") {
+                backend.setStatus(msg.left, msg.right);
             } else if (msg.type === "readline") {
-                const bytes = encoder.encode(readStdinLine());
-                const len = Math.min(bytes.length, dataCapacity);
-                data.set(bytes.subarray(0, len), 0);
-                Atomics.store(ctrl, 1, len);
-                Atomics.store(ctrl, 0, 1);
-                Atomics.notify(ctrl, 0);
+                backend.requestLine(null, deliverLine);
             } else if (msg.type === "prompt_readline") {
-                out.write(msg.prompt);
-                const line = readStdinLine();
-                if (!process.stdin.isTTY) out.write(`${line}\n`);
-                const bytes = encoder.encode(line);
-                const len = Math.min(bytes.length, dataCapacity);
-                data.set(bytes.subarray(0, len), 0);
-                Atomics.store(ctrl, 1, len);
-                Atomics.store(ctrl, 0, 1);
-                Atomics.notify(ctrl, 0);
+                backend.requestLine(msg.prompt, deliverLine);
             } else if (msg.type === "save_write") {
                 try {
                     fs.mkdirSync(SAVE_DIR, { recursive: true });
@@ -168,13 +141,18 @@ function playFile(generatedPath, { out = process.stdout, err = process.stderr } 
             } else if (msg.type === "save_list") {
                 replySave(JSON.stringify(listSaveMeta(SAVE_DIR, msg.prefix)));
             } else if (msg.type === "error") {
+                backend.stop();
                 worker.terminate();
                 reject(new Error(msg.message));
             }
         });
 
-        worker.on("error", reject);
+        worker.on("error", (e) => {
+            backend.stop();
+            reject(e);
+        });
         worker.on("exit", (code) => {
+            backend.stop();
             if (code === 0) resolve();
             else reject(new Error(`sandbox worker exited with code ${code}`));
         });
