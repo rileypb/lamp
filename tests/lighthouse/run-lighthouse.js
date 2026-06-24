@@ -81,6 +81,19 @@ try {
         assert.ok(shell.includes("saveBuffer"), "shell save buffer missing");
     });
 
+    test("status line: worker forwards it and the shell renders it", () => {
+        const worker = fs.readFileSync(path.join(outDir, "game.worker.js"), "utf8");
+        assert.ok(worker.includes("setStatusChannel") && worker.includes('"status"'),
+            "worker status channel missing");
+        const shell = fs.readFileSync(path.join(outDir, "shell.js"), "utf8");
+        assert.ok(shell.includes('case "status"') && shell.includes("status-left"),
+            "shell status handler missing");
+        const html = fs.readFileSync(path.join(outDir, "index.html"), "utf8");
+        assert.ok(html.includes('id="status-bar"'), "status bar element missing");
+        const css = fs.readFileSync(path.join(outDir, "shell.css"), "utf8");
+        assert.ok(css.includes("#status-bar"), "status bar styling missing");
+    });
+
     test("service worker parses and sets isolation headers", () => {
         const code = fs.readFileSync(path.join(outDir, "sw.js"), "utf8");
         assertParses(code, "sw.js");

@@ -24,6 +24,9 @@
 
     const transcript = document.getElementById("transcript");
     const inputLine = document.getElementById("input-line");
+    const statusBar = document.getElementById("status-bar");
+    const statusLeft = document.getElementById("status-left");
+    const statusRight = document.getElementById("status-right");
 
     const encoder = new TextEncoder();
 
@@ -153,6 +156,13 @@
         switch (msg.type) {
             case "write":
                 appendStyled(msg.value, msg.styles);
+                break;
+            case "status":
+                // Runtime-composed content; the shell only lays it out (left/right
+                // in a fixed-width reverse bar). textContent only, never innerHTML.
+                statusLeft.textContent = msg.left || "";
+                statusRight.textContent = msg.right || "";
+                statusBar.hidden = !(msg.left || msg.right);
                 break;
             case "log":
                 console.log(msg.value);

@@ -165,6 +165,11 @@ function startIfReady() {
         if (styles && styles.length) msg.styles = styles;
         self.postMessage(msg);
     });
+    // Status bar: ship the structured segments; the shell lays them out. The CLI
+    // worker installs no status channel, so there the runtime no-ops (web-only).
+    lamplighter.setStatusChannel((left, right) => {
+        self.postMessage({ type: "status", left, right });
+    });
     installInputChannel(pendingInputBuffer);
     installSaveChannel(pendingSaveBuffer);
 

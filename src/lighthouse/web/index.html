@@ -32,6 +32,11 @@
          input at a time, and brokers it to the game worker. Contains no game
          logic. See devdocs/sandbox.md and devdocs/lighthouse.md. -->
     <main id="screen">
+        <!-- Traditional status line: room name (left) and turn count (right) in a
+             fixed-width reverse-video bar. Content comes from the runtime via the
+             `status` message; hidden until the first update. See devdocs/windows.md. -->
+        <div id="status-bar" role="status" aria-live="off" hidden><span
+            id="status-left"></span><span id="status-right"></span></div>
         <!-- The input lives at the tail of the transcript; output is inserted
              before it, so the input always sits inline right after the last
              output (no separate bottom-pinned prompt). -->

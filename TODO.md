@@ -112,6 +112,16 @@ plugin* owning the action/IF constructs (no third-party grammar yet), which also
 lets the base `action` type move out of the runtime bootstrap. No code until the
 direction is chosen. **Where:** `src/lantern/*` (pipeline), `src/lamplighter/index.js`.
 
+### 7. Content windows (status line is the first cut)
+The traditional **status line is built (web)**: `lib/advent` composes room + turn
+count and pushes it via the `status_line`/`turns_taken` primitives; the runtime ships
+`{ left, right }` over a `status` message; the web shell renders a fixed-width,
+reverse-video bar (CLI no-ops). Design in `devdocs/windows.md`. **Next (deferred):**
+generalize to arbitrary named content windows (the status line collapses into one),
+a host capability handshake + CLI fallback, author override of the status content
+(e.g. score games), and the darkness-vs-room-name question. **Where:**
+`src/lighthouse/web/`, `src/lamplighter/`, `lib/sys`, `lib/advent`.
+
 ## Smaller / opportunistic
 - **Reassigning a multi-word (underscore) global fails the checker.** `global int
   my_score = 0` then `my_score = 5` reports "assignment to undeclared name

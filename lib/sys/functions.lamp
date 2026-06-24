@@ -14,6 +14,17 @@ native function void run_command(string line, object actor)
 # \"[player_command()]\"." Empty before the first command. See devdocs/text.md J1.
 native function string player_command()
 
+# Turns taken so far (the engine's turn counter; see devdocs/state.md). Available to
+# narration as `[turns_taken()]` and used by the library to fill the status line.
+native function int turns_taken()
+
+# Set the host status line's two segments. The library composes the content (it
+# knows the world model); this is only the transport. A host with a status bar (the
+# web shell) renders `left` flush-left and `right` flush-right in a fixed-width,
+# reverse-video bar; a host without one (the CLI) ignores it. A forerunner of
+# general content windows. See devdocs/windows.md.
+native function void status_line(string left, string right)
+
 # Paragraph-control markers (text.md H). Each returns an output-stream control token
 # meant to be printed in place; the bare-word sugar [line break] / [par] / [no break]
 # / [run on] / [par if printed] desugars to these calls. line_break/paragraph request

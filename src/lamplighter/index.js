@@ -1057,6 +1057,20 @@ function setWrite(nextWriteImpl) {
     writeImpl = nextWriteImpl;
 }
 
+// Status-line channel. A host with a status bar (the web shell) installs a sink
+// and renders the two structured segments ({left, right}); a host without one (the
+// CLI) installs nothing, so setStatusLine is a silent no-op. This is only the
+// transport — the *content* is composed by the library, which knows the world
+// model (see lib/advent update_status_line). A forerunner of general content
+// windows; see devdocs/windows.md.
+let statusImpl = null;
+function setStatusChannel(nextStatusImpl) {
+    statusImpl = nextStatusImpl;
+}
+function setStatusLine(left, right) {
+    if (statusImpl) statusImpl(String(left), String(right));
+}
+
 // Player input is a brokered host capability. The host owns stdin and the worker
 // installs an input channel via setInputChannel; readLine blocks on that channel.
 // A game run outside the sandbox has no channel and cannot read input — the
@@ -2027,4 +2041,6 @@ module.exports = {
     restoreSave,
     setSaveChannel,
     listSaves,
+    setStatusChannel,
+    setStatusLine,
 };

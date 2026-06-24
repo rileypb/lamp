@@ -1,3 +1,12 @@
+# Traditional status line: the current room (left) and the turn count (right). The
+# host lays the two segments out in a fixed-width, reverse-video bar; a host without
+# a status bar ignores it. Redrawn at the top of each turn. See devdocs/windows.md.
+function void update_status_line():
+	if in_darkness(player):
+		status_line(freeze "Darkness", freeze "[turns_taken()] turns")
+	else:
+		status_line(freeze "[player.holder]", freeze "[turns_taken()] turns")
+
 on startup:
 	# Title banner, printed before any startup_rules contributions. A game opts in
 	# by setting `tagline`; games that leave it blank get no banner.
@@ -12,6 +21,7 @@ on startup:
 	# Command loop. Exits when the player quits or a command ends the story (sets
 	# `story` away from `ongoing`).
 	while story == ongoing:
+		update_status_line()
 		print "[par if printed]"
 		input = prompt("> ")
 		if to_lower(input) == "quit":
