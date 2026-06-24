@@ -71,12 +71,13 @@ the host).
 - Multiple/arbitrary windows, a window lifecycle API, or graphics. The status line is
   deliberately a special creature until the window model is designed.
 
-## CLI TUI — deferred polish
+## CLI TUI — polish
 
-The interactive TUI is a lean first cut. Deferred (see TODO item 7): styled transcript
-text (bold/italic are currently dropped in the TUI only), in-line ←/→ cursor editing,
-↑/↓ command history, mouse-wheel scroll, batched redraws, and whether to preserve the
-transcript on exit (the alternate screen clears it today, like `less`/`nano`).
+Done: styled transcript text (bold/italic via a span model), in-line cursor editing
+(←/→, Home/End, Delete, mid-line insert), and ↑/↓ command history. Still deferred (see
+TODO item 7): mouse-wheel scroll, batched redraws, preserving the transcript on exit
+(the alternate screen clears it today, like `less`/`nano`), wrapping a single typed
+command longer than the terminal width, and multi-byte/emoji input.
 
 ## Open questions
 
