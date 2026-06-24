@@ -108,6 +108,70 @@ test("Backspace deletes the last typed character", () => {
     b.stop();
 });
 
+test("styled output renders bold/italic SGR in the transcript", () => {
+    const out = mockOut(40, 10);
+    const input = mockIn();
+    const b = createTuiBackend({ out, input, exit() {} });
+    b.start();
+    b.write("a ", []);
+    b.write("brass", ["bold"]);
+    b.write(" lantern\n", []);
+    assert.ok(out.buf.includes("\x1b[1mbrass\x1b[0m"), "bold span rendered");
+    assert.ok(out.buf.includes("a "), "plain text preserved");
+    b.stop();
+});
+
+test("in-line editing: ← then insert puts the character mid-word", () => {
+    const out = mockOut(40, 10);
+    const input = mockIn();
+    const b = createTuiBackend({ out, input, exit() {} });
+    b.start();
+    let delivered = null;
+    b.requestLine("> ", (line) => { delivered = line; });
+    input.emit("data", Buffer.from("lok"));     // caret after "lok"
+    input.emit("data", Buffer.from("\x1b[D"));   // ← (caret between o and k)
+    input.emit("data", Buffer.from("o"));        // insert → "look"
+    input.emit("data", Buffer.from("\r"));
+    assert.strictEqual(delivered, "look");
+    b.stop();
+});
+
+test("Delete and Home/End edit within the line", () => {
+    const out = mockOut(40, 10);
+    const input = mockIn();
+    const b = createTuiBackend({ out, input, exit() {} });
+    b.start();
+    let delivered = null;
+    b.requestLine("> ", (line) => { delivered = line; });
+    input.emit("data", Buffer.from("xlook"));
+    input.emit("data", Buffer.from("\x1b[H"));   // Home → caret at start
+    input.emit("data", Buffer.from("\x1b[3~"));  // Delete → removes leading x
+    input.emit("data", Buffer.from("\r"));
+    assert.strictEqual(delivered, "look");
+    b.stop();
+});
+
+test("command history recalls previous lines with ↑/↓", () => {
+    const out = mockOut(40, 10);
+    const input = mockIn();
+    const b = createTuiBackend({ out, input, exit() {} });
+    b.start();
+    const delivered = [];
+    function ask() {
+        b.requestLine("> ", (line) => { delivered.push(line); });
+    }
+    ask();
+    input.emit("data", Buffer.from("look\r"));
+    ask();
+    input.emit("data", Buffer.from("north\r"));
+    ask();
+    input.emit("data", Buffer.from("\x1b[A")); // ↑ → "north"
+    input.emit("data", Buffer.from("\x1b[A")); // ↑ → "look"
+    input.emit("data", Buffer.from("\r"));
+    assert.deepStrictEqual(delivered, ["look", "north", "look"]);
+    b.stop();
+});
+
 test("Ctrl-C restores the terminal and exits via the injected exit", () => {
     const out = mockOut();
     const input = mockIn();

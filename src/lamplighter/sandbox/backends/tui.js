@@ -5,10 +5,11 @@
 // render-backend interface (see plain.js): a pinned top status row, a scrollable
 // transcript, and a bottom input line, on the alternate screen in raw mode.
 //
-// Lean v1 scope: printable + Backspace + Enter input; PageUp/PageDown scrollback;
-// Ctrl-C quits. Deferred (Phase 3): in-line cursor movement, command history,
-// mouse-wheel scroll, styled transcript text, and batched redraws. The terminal is
-// always restored on exit/error/signal. See devdocs/windows.md, devdocs/sandbox.md.
+// Input: printable + Backspace/Delete + Enter, in-line cursor editing (←/→, Home/
+// End), and ↑/↓ command history; PageUp/PageDown scrollback; Ctrl-C quits. The
+// transcript carries bold/italic styling. Deferred: mouse-wheel scroll, batched
+// redraws, preserving the transcript on exit. The terminal is always restored on
+// exit/error/signal. See devdocs/windows.md, devdocs/sandbox.md.
 
 const ALT_ON = "\x1b[?1049h";
 const ALT_OFF = "\x1b[?1049l";
@@ -19,25 +20,67 @@ const REVERSE = "\x1b[7m";
 const RESET = "\x1b[0m";
 const moveTo = (row, col) => `\x1b[${row};${col}H`;
 
-// Wrap one logical line to `cols`, breaking at the last space within the window
-// (falling back to a hard break for an over-long word). Slices by position so
-// intentional internal spacing/indentation is preserved. An empty line yields one
-// blank display line so paragraph spacing survives.
-function wrapLine(text, cols) {
-    if (text.length === 0) return [""];
-    const result = [];
-    let i = 0;
-    while (i < text.length) {
-        let end = Math.min(i + cols, text.length);
-        if (end < text.length) {
-            const lastSpace = text.lastIndexOf(" ", end);
-            if (lastSpace > i) end = lastSpace;
-        }
-        result.push(text.slice(i, end));
-        i = end;
-        if (text[i] === " ") i += 1; // consume the break space
+// A transcript line is an array of spans: { text, bold, italic }. "fixed" needs no
+// SGR (a terminal is already monospace), so only bold/italic affect rendering.
+function spanSgr(span) {
+    const codes = [];
+    if (span.bold) codes.push("1");
+    if (span.italic) codes.push("3");
+    return codes.length ? `\x1b[${codes.join(";")}m` : "";
+}
+
+// Render one wrapped row (array of spans) to a string, truncated to `cols` visible
+// columns. Each styled span self-closes, so rows need no cross-row SGR state.
+function rowToString(row, cols) {
+    let s = "";
+    let vis = 0;
+    for (const span of row) {
+        if (vis >= cols) break;
+        let text = span.text;
+        if (vis + text.length > cols) text = text.slice(0, cols - vis);
+        vis += text.length;
+        const open = spanSgr(span);
+        s += open ? open + text + RESET : text;
     }
-    return result;
+    return s;
+}
+
+// Wrap a line (array of spans) to `cols`, breaking at the last space within the
+// window (hard break for an over-long word). Expands to styled chars, wraps by
+// position so intentional spacing survives, then regroups runs back into spans. An
+// empty line yields one blank row so paragraph spacing is preserved.
+function wrapSpans(spans, cols) {
+    const chars = [];
+    for (const sp of spans) for (const ch of sp.text) chars.push({ ch, bold: sp.bold, italic: sp.italic });
+    if (chars.length === 0) return [[]];
+    const rows = [];
+    let i = 0;
+    while (i < chars.length) {
+        let end = Math.min(i + cols, chars.length);
+        if (end < chars.length) {
+            let sp = -1;
+            for (let j = end; j > i; j -= 1) {
+                if (chars[j].ch === " ") { sp = j; break; }
+            }
+            if (sp > i) end = sp;
+        }
+        const rowChars = chars.slice(i, end);
+        const row = [];
+        for (const c of rowChars) {
+            const last = row[row.length - 1];
+            if (last && last.bold === c.bold && last.italic === c.italic) last.text += c.ch;
+            else row.push({ text: c.ch, bold: c.bold, italic: c.italic });
+        }
+        rows.push(row);
+        i = end;
+        if (chars[i] && chars[i].ch === " ") i += 1; // consume the break space
+    }
+    return rows;
+}
+
+// Plain-text convenience used by tests: wrap a string to an array of strings.
+function wrapLine(text, cols) {
+    return wrapSpans([{ text, bold: false, italic: false }], cols).map((row) => rowToString(row, cols));
 }
 
 function createTuiBackend({ out, err, input, exit } = {}) {
@@ -46,16 +89,21 @@ function createTuiBackend({ out, err, input, exit } = {}) {
     const stdin = input || process.stdin;
     const doExit = exit || ((code) => process.exit(code));
 
-    const lines = []; // committed transcript lines (no embedded newlines)
-    let pending = ""; // partial output line not yet terminated by "\n"
+    const lines = []; // committed transcript lines, each an array of spans
+    let pending = []; // spans of the partial line not yet terminated by "\n"
     let statusLeft = "";
     let statusRight = "";
     let scrollOffset = 0; // lines scrolled up from the bottom (0 = at bottom)
 
     let awaiting = false; // an input request is open
     let inputBuf = "";
+    let cursorPos = 0; // caret index within inputBuf
     let currentPrompt = "";
     let deliverCb = null;
+
+    const history = []; // submitted command lines
+    let historyIdx = 0; // cursor into history; === history.length means "current draft"
+    let draft = ""; // the in-progress line, stashed while browsing history
 
     let started = false;
     let stopped = false;
@@ -66,14 +114,21 @@ function createTuiBackend({ out, err, input, exit } = {}) {
     function flushPending() {
         if (pending.length > 0) {
             lines.push(pending);
-            pending = "";
+            pending = [];
         }
     }
 
-    function appendOutput(value) {
-        const parts = (pending + String(value)).split("\n");
-        pending = parts.pop();
-        for (const p of parts) lines.push(p);
+    function appendOutput(value, styles) {
+        const bold = !!(styles && styles.includes("bold"));
+        const italic = !!(styles && styles.includes("italic"));
+        const push = (text) => { if (text.length > 0) pending.push({ text, bold, italic }); };
+        const parts = String(value).split("\n");
+        push(parts[0]);
+        for (let k = 1; k < parts.length; k += 1) {
+            lines.push(pending);
+            pending = [];
+            push(parts[k]);
+        }
     }
 
     function statusBar(cols) {
@@ -93,15 +148,15 @@ function createTuiBackend({ out, err, input, exit } = {}) {
         const gameTop = 3; // after status (1) + blank spacer (2)
         const viewH = Math.max(1, rows - 2); // game area: rows 3..rows
 
-        const display = [];
-        for (const ln of lines) for (const w of wrapLine(ln, cols)) display.push(w);
-        if (pending.length > 0) for (const w of wrapLine(pending, cols)) display.push(w);
+        const displayRows = [];
+        for (const ln of lines) for (const r of wrapSpans(ln, cols)) displayRows.push(r);
+        if (pending.length > 0) for (const r of wrapSpans(pending, cols)) displayRows.push(r);
 
         // The input line flows as the last line of the content, so it sits right
         // below the text while the area isn't full and only pins to the bottom once
         // the transcript fills it. The whole stack is bottom-anchored.
-        const inputText = awaiting ? currentPrompt + inputBuf : null;
-        const combined = inputText != null ? display.concat([inputText]) : display;
+        const inputRow = awaiting ? [{ text: currentPrompt + inputBuf, bold: false, italic: false }] : null;
+        const combined = inputRow ? displayRows.concat([inputRow]) : displayRows;
 
         const maxOffset = Math.max(0, combined.length - viewH);
         if (scrollOffset > maxOffset) scrollOffset = maxOffset;
@@ -112,24 +167,71 @@ function createTuiBackend({ out, err, input, exit } = {}) {
         buf += moveTo(1, 1) + CLEAR_LINE + REVERSE + statusBar(cols) + RESET;
         buf += moveTo(2, 1) + CLEAR_LINE; // blank spacer between status and transcript
         for (let i = 0; i < viewH; i += 1) {
-            buf += moveTo(gameTop + i, 1) + CLEAR_LINE + (slice[i] != null ? slice[i].slice(0, cols) : "");
+            buf += moveTo(gameTop + i, 1) + CLEAR_LINE + (slice[i] != null ? rowToString(slice[i], cols) : "");
         }
-        // Place the cursor on the input line when it is on screen (not scrolled away).
         const inputVis = awaiting ? combined.length - 1 - startIdx : -1;
         if (inputVis >= 0 && inputVis < viewH) {
-            buf += moveTo(gameTop + inputVis, Math.min(cols, currentPrompt.length + inputBuf.length + 1));
+            buf += moveTo(gameTop + inputVis, Math.min(cols, currentPrompt.length + cursorPos + 1));
             buf += CURSOR_SHOW;
         }
         out.write(buf);
     }
 
+    function afterEdit() {
+        scrollOffset = 0; // editing snaps the view back to the input line
+        render();
+    }
+
+    function insertChar(c) {
+        inputBuf = inputBuf.slice(0, cursorPos) + c + inputBuf.slice(cursorPos);
+        cursorPos += c.length;
+        afterEdit();
+    }
+    function backspace() {
+        if (cursorPos > 0) {
+            inputBuf = inputBuf.slice(0, cursorPos - 1) + inputBuf.slice(cursorPos);
+            cursorPos -= 1;
+        }
+        afterEdit();
+    }
+    function deleteChar() {
+        if (cursorPos < inputBuf.length) inputBuf = inputBuf.slice(0, cursorPos) + inputBuf.slice(cursorPos + 1);
+        afterEdit();
+    }
+    function cursorLeft() { if (cursorPos > 0) cursorPos -= 1; afterEdit(); }
+    function cursorRight() { if (cursorPos < inputBuf.length) cursorPos += 1; afterEdit(); }
+    function cursorHome() { cursorPos = 0; afterEdit(); }
+    function cursorEnd() { cursorPos = inputBuf.length; afterEdit(); }
+
+    function historyPrev() {
+        if (historyIdx > 0) {
+            if (historyIdx === history.length) draft = inputBuf; // stash the draft
+            historyIdx -= 1;
+            inputBuf = history[historyIdx];
+            cursorPos = inputBuf.length;
+            afterEdit();
+        }
+    }
+    function historyNext() {
+        if (historyIdx < history.length) {
+            historyIdx += 1;
+            inputBuf = historyIdx === history.length ? draft : history[historyIdx];
+            cursorPos = inputBuf.length;
+            afterEdit();
+        }
+    }
+
     function submit() {
         const line = inputBuf;
         flushPending();
-        lines.push(currentPrompt + line); // echo the command into the transcript
+        lines.push([{ text: currentPrompt + line, bold: false, italic: false }]); // echo
+        if (line.length > 0 && history[history.length - 1] !== line) history.push(line);
+        historyIdx = history.length;
+        draft = "";
         const deliver = deliverCb;
         awaiting = false;
         inputBuf = "";
+        cursorPos = 0;
         deliverCb = null;
         currentPrompt = "";
         scrollOffset = 0;
@@ -142,11 +244,30 @@ function createTuiBackend({ out, err, input, exit } = {}) {
         scrollOffset += Math.max(1, viewH - 1);
         render();
     }
-
     function pageDown() {
         const viewH = Math.max(1, (out.rows || 24) - 2);
         scrollOffset = Math.max(0, scrollOffset - Math.max(1, viewH - 1));
         render();
+    }
+
+    function handleEscape(params, final) {
+        if (final === "~" && params === "5") { pageUp(); return; } // PageUp
+        if (final === "~" && params === "6") { pageDown(); return; } // PageDown
+        if (!awaiting) return; // the rest edit the input line
+        switch (final) {
+            case "D": cursorLeft(); break; // ←
+            case "C": cursorRight(); break; // →
+            case "A": historyPrev(); break; // ↑
+            case "B": historyNext(); break; // ↓
+            case "H": cursorHome(); break;
+            case "F": cursorEnd(); break;
+            case "~":
+                if (params === "1" || params === "7") cursorHome();
+                else if (params === "4" || params === "8") cursorEnd();
+                else if (params === "3") deleteChar();
+                break;
+            default: break;
+        }
     }
 
     function onData(chunk) {
@@ -154,28 +275,23 @@ function createTuiBackend({ out, err, input, exit } = {}) {
         let i = 0;
         while (i < s.length) {
             const c = s[i];
-            if (c === "\x03") { // Ctrl-C
-                stop();
-                doExit(130);
-                return;
-            }
-            if (c === "\x1b") { // escape sequence
-                const rest = s.slice(i);
-                if (rest.startsWith("\x1b[5~")) { pageUp(); i += 4; continue; }
-                if (rest.startsWith("\x1b[6~")) { pageDown(); i += 4; continue; }
-                const m = rest.match(/^\x1b\[[0-9;]*[A-Za-z~]/); // consume any other CSI
-                i += m ? m[0].length : 1;
+            if (c === "\x03") { stop(); doExit(130); return; } // Ctrl-C
+            if (c === "\x1b") {
+                const m = s.slice(i).match(/^\x1b(\[|O)([0-9;]*)([A-Za-z~])/);
+                if (!m) { i += 1; continue; } // lone/unknown ESC
+                i += m[0].length;
+                handleEscape(m[2], m[3]);
                 continue;
             }
             if (!awaiting) { i += 1; continue; } // ignore typing until input is requested
             if (c === "\r" || c === "\n") { submit(); i += 1; continue; }
-            if (c === "\x7f" || c === "\b") { inputBuf = inputBuf.slice(0, -1); scrollOffset = 0; render(); i += 1; continue; }
+            if (c === "\x7f" || c === "\b") { backspace(); i += 1; continue; }
             if (c === "\x04") { // Ctrl-D at empty input = quit
                 if (inputBuf.length === 0) { stop(); doExit(0); return; }
                 i += 1;
                 continue;
             }
-            if (c >= " ") { inputBuf += c; scrollOffset = 0; render(); i += 1; continue; } // typing snaps to bottom
+            if (c >= " ") { insertChar(c); i += 1; continue; }
             i += 1; // ignore other control characters
         }
     }
@@ -216,8 +332,8 @@ function createTuiBackend({ out, err, input, exit } = {}) {
             render();
         },
         stop,
-        write(value) {
-            appendOutput(value); // styles dropped in v1 (Phase 3 restores them)
+        write(value, styles) {
+            appendOutput(value, styles);
             scrollOffset = 0; // snap to bottom on new output
             render();
         },
@@ -234,8 +350,11 @@ function createTuiBackend({ out, err, input, exit } = {}) {
             currentPrompt = prompt == null ? "" : String(prompt);
             deliverCb = deliver;
             inputBuf = "";
+            cursorPos = 0;
             awaiting = true;
             scrollOffset = 0;
+            historyIdx = history.length;
+            draft = "";
             render();
         },
     };
