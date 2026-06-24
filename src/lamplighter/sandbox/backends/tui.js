@@ -14,6 +14,14 @@
 // Enabling mouse reporting captures clicks/drags too, so the terminal's native
 // click-to-select is suppressed while running (hold Shift to bypass and select). We
 // use it only for the wheel; other mouse events are ignored.
+//
+// Multi-byte input: a StringDecoder reassembles UTF-8 sequences split across stdin
+// chunks; editing and the caret work in code points (so an emoji/surrogate pair is
+// one unit); and column math uses an approximate East-Asian/emoji display width
+// (wide = 2 cols, combining/zero-width = 0) so wrapping and the caret stay aligned
+// with what the terminal actually draws.
+
+const { StringDecoder } = require("string_decoder");
 
 const ALT_ON = "\x1b[?1049h";
 const ALT_OFF = "\x1b[?1049l";
@@ -26,6 +34,58 @@ const REVERSE = "\x1b[7m";
 const RESET = "\x1b[0m";
 const moveTo = (row, col) => `\x1b[${row};${col}H`;
 
+// Approximate terminal display width of a code point: 0 for control/combining/
+// zero-width marks, 2 for East-Asian-wide and emoji, 1 otherwise. A compact stand-in
+// for a full wcwidth table — covers the common CJK/Hangul/fullwidth/emoji ranges so
+// the caret and wrapping line up with the terminal without an external dependency.
+function charWidth(cp) {
+    if (cp === 0) return 0;
+    if (cp < 0x20 || (cp >= 0x7f && cp < 0xa0)) return 0; // C0/C1 controls
+    if (
+        (cp >= 0x0300 && cp <= 0x036f) || // combining diacritical marks
+        (cp >= 0x200b && cp <= 0x200f) || // zero-width space / directional marks
+        (cp >= 0xfe00 && cp <= 0xfe0f) || // variation selectors
+        cp === 0xfeff // zero-width no-break space (BOM)
+    ) return 0;
+    if (
+        (cp >= 0x1100 && cp <= 0x115f) || // Hangul Jamo
+        (cp >= 0x2e80 && cp <= 0x303e) || // CJK radicals, Kangxi, punctuation
+        (cp >= 0x3041 && cp <= 0x33ff) || // Hiragana … CJK compatibility
+        (cp >= 0x3400 && cp <= 0x4dbf) || // CJK extension A
+        (cp >= 0x4e00 && cp <= 0x9fff) || // CJK unified ideographs
+        (cp >= 0xa000 && cp <= 0xa4cf) || // Yi
+        (cp >= 0xac00 && cp <= 0xd7a3) || // Hangul syllables
+        (cp >= 0xf900 && cp <= 0xfaff) || // CJK compatibility ideographs
+        (cp >= 0xfe30 && cp <= 0xfe4f) || // CJK compatibility forms
+        (cp >= 0xff00 && cp <= 0xff60) || // fullwidth forms
+        (cp >= 0xffe0 && cp <= 0xffe6) ||
+        (cp >= 0x1f300 && cp <= 0x1faff) || // emoji & pictographs
+        (cp >= 0x20000 && cp <= 0x3fffd) // CJK extensions B+
+    ) return 2;
+    return 1;
+}
+
+// Sum of display widths over the code points of a string.
+function textWidth(str) {
+    let w = 0;
+    for (const ch of str) w += charWidth(ch.codePointAt(0));
+    return w;
+}
+
+// Truncate a string to at most `max` display columns (never splitting a code point;
+// a wide char that would straddle the edge is dropped).
+function truncateToWidth(str, max) {
+    let out = "";
+    let w = 0;
+    for (const ch of str) {
+        const cw = charWidth(ch.codePointAt(0));
+        if (w + cw > max) break;
+        out += ch;
+        w += cw;
+    }
+    return out;
+}
+
 // A transcript line is an array of spans: { text, bold, italic }. "fixed" needs no
 // SGR (a terminal is already monospace), so only bold/italic affect rendering.
 function spanSgr(span) {
@@ -35,74 +95,114 @@ function spanSgr(span) {
     return codes.length ? `\x1b[${codes.join(";")}m` : "";
 }
 
-// Render one wrapped row (array of spans) to a string, truncated to `cols` visible
+// Regroup a run of styled chars ({ ch, bold, italic }) back into spans.
+function charsToRow(chars) {
+    const row = [];
+    for (const c of chars) {
+        const last = row[row.length - 1];
+        if (last && last.bold === c.bold && last.italic === c.italic) last.text += c.ch;
+        else row.push({ text: c.ch, bold: c.bold, italic: c.italic });
+    }
+    return row;
+}
+
+// Explode spans into styled code points, each carrying its display width.
+function spansToChars(spans) {
+    const chars = [];
+    for (const sp of spans) for (const ch of sp.text) chars.push({ ch, w: charWidth(ch.codePointAt(0)), bold: sp.bold, italic: sp.italic });
+    return chars;
+}
+
+// Render one wrapped row (array of spans) to a string, truncated to `cols` display
 // columns. Each styled span self-closes, so rows need no cross-row SGR state.
 function rowToString(row, cols) {
     let s = "";
     let vis = 0;
     for (const span of row) {
         if (vis >= cols) break;
-        let text = span.text;
-        if (vis + text.length > cols) text = text.slice(0, cols - vis);
-        vis += text.length;
+        let text = "";
+        for (const ch of span.text) {
+            const cw = charWidth(ch.codePointAt(0));
+            if (vis + cw > cols) break;
+            text += ch;
+            vis += cw;
+        }
         const open = spanSgr(span);
         s += open ? open + text + RESET : text;
+        if (vis >= cols) break;
     }
     return s;
 }
 
-// Wrap a line (array of spans) to `cols`, breaking at the last space within the
-// window (hard break for an over-long word). Expands to styled chars, wraps by
-// position so intentional spacing survives, then regroups runs back into spans. An
-// empty line yields one blank row so paragraph spacing is preserved.
+// Wrap a line (array of spans) to `cols` display columns, breaking at the last space
+// within the window (hard break for an over-long word). Works in code points carrying
+// display width, so wide chars count as 2; intentional spacing survives; runs are
+// regrouped back into spans. An empty line yields one blank row so paragraph spacing
+// is preserved.
 function wrapSpans(spans, cols) {
-    const chars = [];
-    for (const sp of spans) for (const ch of sp.text) chars.push({ ch, bold: sp.bold, italic: sp.italic });
+    const chars = spansToChars(spans);
     if (chars.length === 0) return [[]];
     const rows = [];
     let i = 0;
     while (i < chars.length) {
-        let end = Math.min(i + cols, chars.length);
+        let end = i;
+        let w = 0;
+        while (end < chars.length && w + chars[end].w <= cols) { w += chars[end].w; end += 1; }
+        if (end === i) end = i + 1; // a single char wider than the row: take it anyway
         if (end < chars.length) {
-            let sp = -1;
             for (let j = end; j > i; j -= 1) {
-                if (chars[j].ch === " ") { sp = j; break; }
+                if (chars[j].ch === " ") { end = j; break; }
             }
-            if (sp > i) end = sp;
         }
-        const rowChars = chars.slice(i, end);
-        const row = [];
-        for (const c of rowChars) {
-            const last = row[row.length - 1];
-            if (last && last.bold === c.bold && last.italic === c.italic) last.text += c.ch;
-            else row.push({ text: c.ch, bold: c.bold, italic: c.italic });
-        }
-        rows.push(row);
+        rows.push(charsToRow(chars.slice(i, end)));
         i = end;
         if (chars[i] && chars[i].ch === " ") i += 1; // consume the break space
     }
     return rows;
 }
 
-// Wrap a line (array of spans) to `cols` by column position — a hard break every
-// `cols` chars, never at spaces. Used for the command echo so it breaks exactly
-// where the live input row did (word-wrap would orphan the prompt on its own row,
-// since the space after "> " is a break point). Regroups runs back into spans.
+// Wrap a line (array of spans) by column position — a hard break at `cols` display
+// columns, never at spaces. Used for the command echo so it breaks exactly where the
+// live input row did (word-wrap would orphan the prompt on its own row, since the
+// space after "> " is a break point).
 function hardWrapSpans(spans, cols) {
-    const chars = [];
-    for (const sp of spans) for (const ch of sp.text) chars.push({ ch, bold: sp.bold, italic: sp.italic });
+    const chars = spansToChars(spans);
     if (chars.length === 0) return [[]];
     const rows = [];
-    for (let i = 0; i < chars.length; i += cols) {
-        const row = [];
-        for (const c of chars.slice(i, i + cols)) {
-            const last = row[row.length - 1];
-            if (last && last.bold === c.bold && last.italic === c.italic) last.text += c.ch;
-            else row.push({ text: c.ch, bold: c.bold, italic: c.italic });
-        }
-        rows.push(row);
+    let i = 0;
+    while (i < chars.length) {
+        let end = i;
+        let w = 0;
+        while (end < chars.length && w + chars[end].w <= cols) { w += chars[end].w; end += 1; }
+        if (end === i) end = i + 1; // a single char wider than the row: take it anyway
+        rows.push(charsToRow(chars.slice(i, end)));
+        i = end;
     }
     return rows;
+}
+
+// Lay out the live input line (prompt + buffer) into hard-wrapped rows by display
+// width, and locate the caret. `cursorPos` is a code-point index into `buf`. Walks
+// code points so wide chars take 2 columns and surrogate pairs stay intact; wraps
+// before a char (or the end-caret) that would overflow, so a caret resting one past a
+// full row appears at the start of the next row.
+function layoutInput(prompt, buf, cursorPos, cols) {
+    const full = Array.from(prompt + buf);
+    const caretAbs = Array.from(prompt).length + cursorPos;
+    const rows = [""];
+    let r = 0;
+    let w = 0;
+    let caretRow = 0;
+    let caretCol = 0;
+    for (let k = 0; k <= full.length; k += 1) {
+        const cw = k < full.length ? charWidth(full[k].codePointAt(0)) : 1;
+        if (w + cw > cols) { rows.push(""); r += 1; w = 0; } // wrap before this char/end-caret
+        if (k === caretAbs) { caretRow = r; caretCol = w; }
+        if (k === full.length) break;
+        rows[r] += full[k];
+        w += cw;
+    }
+    return { rows, caretRow, caretCol };
 }
 
 // Plain-text convenience used by tests: wrap a string to an array of strings.
@@ -124,7 +224,7 @@ function createTuiBackend({ out, err, input, exit } = {}) {
 
     let awaiting = false; // an input request is open
     let inputBuf = "";
-    let cursorPos = 0; // caret index within inputBuf
+    let cursorPos = 0; // caret position as a code-point index into inputBuf
     let currentPrompt = "";
     let deliverCb = null;
 
@@ -132,6 +232,7 @@ function createTuiBackend({ out, err, input, exit } = {}) {
     let historyIdx = 0; // cursor into history; === history.length means "current draft"
     let draft = ""; // the in-progress line, stashed while browsing history
 
+    const decoder = new StringDecoder("utf8"); // reassembles UTF-8 split across chunks
     let started = false;
     let stopped = false;
     let onResize = null;
@@ -161,11 +262,11 @@ function createTuiBackend({ out, err, input, exit } = {}) {
     function statusBar(cols) {
         let l = statusLeft || "";
         const r = statusRight || "";
-        if (l.length + r.length + 1 > cols) l = l.slice(0, Math.max(0, cols - r.length - 1));
-        const gap = Math.max(1, cols - l.length - r.length);
+        if (textWidth(l) + textWidth(r) + 1 > cols) l = truncateToWidth(l, Math.max(0, cols - textWidth(r) - 1));
+        const gap = Math.max(1, cols - textWidth(l) - textWidth(r));
         let bar = l + " ".repeat(gap) + r;
-        bar = bar.length > cols ? bar.slice(0, cols) : bar + " ".repeat(cols - bar.length);
-        return bar;
+        if (textWidth(bar) > cols) bar = truncateToWidth(bar, cols);
+        return bar + " ".repeat(Math.max(0, cols - textWidth(bar)));
     }
 
     function render() {
@@ -192,15 +293,10 @@ function createTuiBackend({ out, err, input, exit } = {}) {
         let caretRow = 0;
         let caretCol = 0;
         if (awaiting) {
-            const full = currentPrompt + inputBuf;
-            const caretAbs = currentPrompt.length + cursorPos;
-            caretRow = Math.floor(caretAbs / cols);
-            caretCol = caretAbs % cols;
-            const textRows = full.length === 0 ? 1 : Math.ceil(full.length / cols);
-            const nRows = Math.max(textRows, caretRow + 1);
-            for (let r = 0; r < nRows; r += 1) {
-                inputRows.push([{ text: full.slice(r * cols, r * cols + cols), bold: false, italic: false }]);
-            }
+            const lay = layoutInput(currentPrompt, inputBuf, cursorPos, cols);
+            caretRow = lay.caretRow;
+            caretCol = lay.caretCol;
+            for (const rs of lay.rows) inputRows.push([{ text: rs, bold: false, italic: false }]);
         }
         const combined = awaiting ? displayRows.concat(inputRows) : displayRows;
 
@@ -228,33 +324,43 @@ function createTuiBackend({ out, err, input, exit } = {}) {
         render();
     }
 
+    // Editing works in code points (Array.from splits on code-point boundaries, so a
+    // surrogate-pair emoji is one element), keeping inputBuf valid and cursorPos a
+    // code-point index.
+    const cpLen = (s) => Array.from(s).length;
+
     function insertChar(c) {
-        inputBuf = inputBuf.slice(0, cursorPos) + c + inputBuf.slice(cursorPos);
-        cursorPos += c.length;
+        const a = Array.from(inputBuf);
+        a.splice(cursorPos, 0, c);
+        inputBuf = a.join("");
+        cursorPos += 1;
         afterEdit();
     }
     function backspace() {
         if (cursorPos > 0) {
-            inputBuf = inputBuf.slice(0, cursorPos - 1) + inputBuf.slice(cursorPos);
+            const a = Array.from(inputBuf);
+            a.splice(cursorPos - 1, 1);
+            inputBuf = a.join("");
             cursorPos -= 1;
         }
         afterEdit();
     }
     function deleteChar() {
-        if (cursorPos < inputBuf.length) inputBuf = inputBuf.slice(0, cursorPos) + inputBuf.slice(cursorPos + 1);
+        const a = Array.from(inputBuf);
+        if (cursorPos < a.length) { a.splice(cursorPos, 1); inputBuf = a.join(""); }
         afterEdit();
     }
     function cursorLeft() { if (cursorPos > 0) cursorPos -= 1; afterEdit(); }
-    function cursorRight() { if (cursorPos < inputBuf.length) cursorPos += 1; afterEdit(); }
+    function cursorRight() { if (cursorPos < cpLen(inputBuf)) cursorPos += 1; afterEdit(); }
     function cursorHome() { cursorPos = 0; afterEdit(); }
-    function cursorEnd() { cursorPos = inputBuf.length; afterEdit(); }
+    function cursorEnd() { cursorPos = cpLen(inputBuf); afterEdit(); }
 
     function historyPrev() {
         if (historyIdx > 0) {
             if (historyIdx === history.length) draft = inputBuf; // stash the draft
             historyIdx -= 1;
             inputBuf = history[historyIdx];
-            cursorPos = inputBuf.length;
+            cursorPos = cpLen(inputBuf);
             afterEdit();
         }
     }
@@ -262,7 +368,7 @@ function createTuiBackend({ out, err, input, exit } = {}) {
         if (historyIdx < history.length) {
             historyIdx += 1;
             inputBuf = historyIdx === history.length ? draft : history[historyIdx];
-            cursorPos = inputBuf.length;
+            cursorPos = cpLen(inputBuf);
             afterEdit();
         }
     }
@@ -323,7 +429,7 @@ function createTuiBackend({ out, err, input, exit } = {}) {
     }
 
     function onData(chunk) {
-        const s = chunk.toString("utf8");
+        const s = decoder.write(chunk); // holds back any incomplete trailing bytes
         let i = 0;
         while (i < s.length) {
             const c = s[i];
@@ -352,7 +458,13 @@ function createTuiBackend({ out, err, input, exit } = {}) {
                 i += 1;
                 continue;
             }
-            if (c >= " ") { insertChar(c); i += 1; continue; }
+            const cp = s.codePointAt(i);
+            if (cp >= 0x20) { // printable: take the whole code point (emoji = 2 units)
+                const ch = String.fromCodePoint(cp);
+                insertChar(ch);
+                i += ch.length;
+                continue;
+            }
             i += 1; // ignore other control characters
         }
     }
@@ -421,4 +533,4 @@ function createTuiBackend({ out, err, input, exit } = {}) {
     };
 }
 
-module.exports = { createTuiBackend, wrapLine };
+module.exports = { createTuiBackend, wrapLine, textWidth };

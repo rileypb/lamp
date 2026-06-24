@@ -6,7 +6,7 @@
 
 const assert = require("assert");
 const { EventEmitter } = require("events");
-const { createTuiBackend, wrapLine } = require("../../src/lamplighter/sandbox/backends/tui");
+const { createTuiBackend, wrapLine, textWidth } = require("../../src/lamplighter/sandbox/backends/tui");
 
 let failures = 0;
 function test(name, fn) {
@@ -51,6 +51,21 @@ test("wrapLine: hard-breaks an over-long word", () => {
 });
 test("wrapLine: preserves leading/internal spacing", () => {
     assert.deepStrictEqual(wrapLine("  indented", 20), ["  indented"]);
+});
+
+// --- display width (pure) --------------------------------------------------
+test("textWidth: ASCII and accented (single code point) are width 1 each", () => {
+    assert.strictEqual(textWidth("café"), 4); // é is U+00E9, one code point, width 1
+});
+test("textWidth: CJK and emoji count as width 2", () => {
+    assert.strictEqual(textWidth("你好"), 4);
+    assert.strictEqual(textWidth("😀"), 2); // surrogate pair, one wide glyph
+});
+test("textWidth: combining marks are zero-width", () => {
+    assert.strictEqual(textWidth("é"), 1); // e + combining acute
+});
+test("wrapLine: wraps on display width, not code-unit count", () => {
+    assert.deepStrictEqual(wrapLine("你好世界", 5), ["你好", "世界"]); // 2 cols each → 2 per row of 5
 });
 
 // --- backend lifecycle + rendering -----------------------------------------
@@ -190,6 +205,51 @@ test("an over-long typed command wraps onto a second row instead of truncating",
     // The echo hard-wraps by column, so the prompt keeps its command on the same row
     // (word-wrap would break at the space after "> ", orphaning the prompt).
     assert.ok(out.buf.includes("> abcdefgh"), "echo keeps the command next to the prompt");
+    b.stop();
+});
+
+test("a multi-byte char split across chunks is reassembled, not corrupted", () => {
+    const out = mockOut(40, 10);
+    const input = mockIn();
+    const b = createTuiBackend({ out, input, exit() {} });
+    b.start();
+    let delivered = null;
+    b.requestLine("> ", (line) => { delivered = line; });
+    // "café": the é is UTF-8 0xC3 0xA9 — deliver it split across two data events.
+    input.emit("data", Buffer.from([0x63, 0x61, 0x66, 0xc3]));
+    input.emit("data", Buffer.from([0xa9]));
+    input.emit("data", Buffer.from("\r"));
+    assert.strictEqual(delivered, "café");
+    b.stop();
+});
+
+test("an emoji is inserted and deleted as a single unit", () => {
+    const out = mockOut(40, 10);
+    const input = mockIn();
+    const b = createTuiBackend({ out, input, exit() {} });
+    b.start();
+    let delivered = null;
+    b.requestLine("> ", (line) => { delivered = line; });
+    input.emit("data", Buffer.from("ab😀")); // surrogate pair
+    input.emit("data", Buffer.from("\x7f")); // backspace removes the whole emoji
+    input.emit("data", Buffer.from("c"));
+    input.emit("data", Buffer.from("\r"));
+    assert.strictEqual(delivered, "abc");
+    b.stop();
+});
+
+test("← moves over an emoji by a whole code point", () => {
+    const out = mockOut(40, 10);
+    const input = mockIn();
+    const b = createTuiBackend({ out, input, exit() {} });
+    b.start();
+    let delivered = null;
+    b.requestLine("> ", (line) => { delivered = line; });
+    input.emit("data", Buffer.from("a😀"));    // caret after the emoji
+    input.emit("data", Buffer.from("\x1b[D")); // ← skips the whole emoji
+    input.emit("data", Buffer.from("X"));       // insert between a and 😀
+    input.emit("data", Buffer.from("\r"));
+    assert.strictEqual(delivered, "aX😀");
     b.stop();
 });
 

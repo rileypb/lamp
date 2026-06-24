@@ -77,10 +77,13 @@ Done: styled transcript text (bold/italic via a span model), in-line cursor edit
 (←/→, Home/End, Delete, mid-line insert), ↑/↓ command history, mouse-wheel scroll
 of the transcript (SGR mouse reporting; new output snaps back to the bottom; hold Shift
 for the terminal's native text selection, which mouse reporting otherwise suppresses),
-and wrapping a typed command longer than the terminal width (hard-wrapped by column so
-the caret tracks across rows). Still deferred (see TODO item 7): batched redraws,
-preserving the transcript on exit (the alternate screen clears it today, like
-`less`/`nano`), and multi-byte/emoji input.
+wrapping a typed command longer than the terminal width (hard-wrapped by column so the
+caret tracks across rows), and multi-byte/emoji input (a `StringDecoder` reassembles
+UTF-8 split across stdin chunks; editing and the caret work in code points; column math
+uses an approximate East-Asian/emoji display width — wide = 2, combining/zero-width = 0
+— so wrapping and the caret align with what the terminal draws). Still deferred (see
+TODO item 7): batched redraws and preserving the transcript on exit (the alternate
+screen clears it today, like `less`/`nano`).
 
 ## Open questions
 
