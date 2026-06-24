@@ -6,15 +6,21 @@
 // transcript, and a bottom input line, on the alternate screen in raw mode.
 //
 // Input: printable + Backspace/Delete + Enter, in-line cursor editing (←/→, Home/
-// End), and ↑/↓ command history; PageUp/PageDown scrollback; Ctrl-C quits. The
-// transcript carries bold/italic styling. Deferred: mouse-wheel scroll, batched
-// redraws, preserving the transcript on exit. The terminal is always restored on
+// End), and ↑/↓ command history; PageUp/PageDown and mouse-wheel scrollback; Ctrl-C
+// quits. The transcript carries bold/italic styling. Deferred: batched redraws,
+// preserving the transcript on exit. The terminal is always restored on
 // exit/error/signal. See devdocs/windows.md, devdocs/sandbox.md.
+//
+// Enabling mouse reporting captures clicks/drags too, so the terminal's native
+// click-to-select is suppressed while running (hold Shift to bypass and select). We
+// use it only for the wheel; other mouse events are ignored.
 
 const ALT_ON = "\x1b[?1049h";
 const ALT_OFF = "\x1b[?1049l";
 const CURSOR_HIDE = "\x1b[?25l";
 const CURSOR_SHOW = "\x1b[?25h";
+const MOUSE_ON = "\x1b[?1000h\x1b[?1006h"; // button tracking + SGR coordinates
+const MOUSE_OFF = "\x1b[?1006l\x1b[?1000l";
 const CLEAR_LINE = "\x1b[2K";
 const REVERSE = "\x1b[7m";
 const RESET = "\x1b[0m";
@@ -249,6 +255,10 @@ function createTuiBackend({ out, err, input, exit } = {}) {
         scrollOffset = Math.max(0, scrollOffset - Math.max(1, viewH - 1));
         render();
     }
+    function scrollLines(n) {
+        scrollOffset = Math.max(0, scrollOffset + n); // render() clamps the top
+        render();
+    }
 
     function handleEscape(params, final) {
         if (final === "~" && params === "5") { pageUp(); return; } // PageUp
@@ -277,7 +287,16 @@ function createTuiBackend({ out, err, input, exit } = {}) {
             const c = s[i];
             if (c === "\x03") { stop(); doExit(130); return; } // Ctrl-C
             if (c === "\x1b") {
-                const m = s.slice(i).match(/^\x1b(\[|O)([0-9;]*)([A-Za-z~])/);
+                const rest = s.slice(i);
+                const mouse = rest.match(/^\x1b\[<(\d+);\d+;\d+[Mm]/); // SGR mouse
+                if (mouse) {
+                    i += mouse[0].length;
+                    const b = parseInt(mouse[1], 10);
+                    if (b === 64) scrollLines(3); // wheel up
+                    else if (b === 65) scrollLines(-3); // wheel down
+                    continue; // other mouse events ignored
+                }
+                const m = rest.match(/^\x1b(\[|O)([0-9;]*)([A-Za-z~])/);
                 if (!m) { i += 1; continue; } // lone/unknown ESC
                 i += m[0].length;
                 handleEscape(m[2], m[3]);
@@ -311,7 +330,7 @@ function createTuiBackend({ out, err, input, exit } = {}) {
             process.removeListener("SIGINT", onSignal);
             process.removeListener("SIGTERM", onSignal);
         }
-        out.write(CURSOR_SHOW + ALT_OFF);
+        out.write(MOUSE_OFF + CURSOR_SHOW + ALT_OFF);
     }
 
     return {
@@ -321,7 +340,7 @@ function createTuiBackend({ out, err, input, exit } = {}) {
             if (stdin.setRawMode) stdin.setRawMode(true);
             stdin.resume();
             stdin.on("data", onData);
-            out.write(ALT_ON + CURSOR_HIDE);
+            out.write(ALT_ON + CURSOR_HIDE + MOUSE_ON);
             onResize = () => render();
             out.on("resize", onResize);
             onExit = () => stop(); // safety net: always restore the terminal

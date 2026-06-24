@@ -172,6 +172,24 @@ test("command history recalls previous lines with ↑/↓", () => {
     b.stop();
 });
 
+test("mouse wheel scrolls the transcript back and snaps forward", () => {
+    const out = mockOut(20, 5); // viewH = rows - 2 = 3 visible transcript rows
+    const input = mockIn();
+    const b = createTuiBackend({ out, input, exit() {} });
+    b.start();
+    assert.ok(out.buf.includes("\x1b[?1000h"), "mouse reporting enabled on start");
+    for (let n = 0; n < 10; n += 1) b.write(`L${n}\n`); // L0..L9
+    out.buf = ""; // capture only the next render
+    input.emit("data", Buffer.from("\x1b[<64;1;1M")); // wheel up (button 64)
+    assert.ok(out.buf.includes("L4"), "scrolled up to show earlier lines");
+    assert.ok(!out.buf.includes("L9"), "newest line scrolled off");
+    out.buf = "";
+    input.emit("data", Buffer.from("\x1b[<65;1;1M")); // wheel down (button 65)
+    assert.ok(out.buf.includes("L9"), "scrolled back toward the bottom");
+    b.stop();
+    assert.ok(out.buf.includes("\x1b[?1000l"), "mouse reporting disabled on stop");
+});
+
 test("Ctrl-C restores the terminal and exits via the injected exit", () => {
     const out = mockOut();
     const input = mockIn();
