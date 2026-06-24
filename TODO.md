@@ -113,14 +113,20 @@ lets the base `action` type move out of the runtime bootstrap. No code until the
 direction is chosen. **Where:** `src/lantern/*` (pipeline), `src/lamplighter/index.js`.
 
 ### 7. Content windows (status line is the first cut)
-The traditional **status line is built (web)**: `lib/advent` composes room + turn
-count and pushes it via the `status_line`/`turns_taken` primitives; the runtime ships
-`{ left, right }` over a `status` message; the web shell renders a fixed-width,
-reverse-video bar (CLI no-ops). Design in `devdocs/windows.md`. **Next (deferred):**
-generalize to arbitrary named content windows (the status line collapses into one),
-a host capability handshake + CLI fallback, author override of the status content
-(e.g. score games), and the darkness-vs-room-name question. **Where:**
-`src/lighthouse/web/`, `src/lamplighter/`, `lib/sys`, `lib/advent`.
+The traditional **status line is built on both hosts**: `lib/advent` composes room +
+turn count and pushes it via the `status_line`/`turns_taken` primitives; the runtime
+ships `{ left, right }` over a `status` message; the **web shell** renders a fixed-width
+reverse-video bar, and the **CLI** renders it via an interactive **TUI render backend**
+(alt-screen + raw mode; plain stdio for pipes/tests; `LAMP_NO_TUI` forces plain).
+Design in `devdocs/windows.md`; backend seam in `devdocs/sandbox.md`. Branch
+`CLI-status-bar`.
+**CLI TUI deferred polish:** styled transcript text (bold/italic dropped in the TUI
+only), in-line ←/→ editing, ↑/↓ command history, mouse-wheel scroll, batched redraws,
+and whether to keep the transcript on exit (alt-screen clears it now).
+**Bigger (deferred):** generalize to arbitrary named content windows (the status line
+collapses into one), a host capability handshake + headless fallback, and author
+override of the status content (e.g. score games). **Where:**
+`src/lighthouse/web/`, `src/lamplighter/sandbox/backends/`, `lib/sys`, `lib/advent`.
 
 ## Smaller / opportunistic
 - **Reassigning a multi-word (underscore) global fails the checker.** `global int

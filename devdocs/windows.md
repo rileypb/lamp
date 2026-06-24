@@ -1,6 +1,6 @@
 # Content Windows & the Status Line
 
-> Status: **status line implemented (web)**; general content windows are a
+> Status: **status line implemented (web + CLI TUI)**; general content windows are a
 > deferred design direction. The status line is built as its own special-purpose
 > mechanism now, to be re-expressed as a window once that model lands.
 
@@ -17,18 +17,18 @@ consistent with the output (`print`) and save channels (see `devdocs/sandbox.md`
 
 - **In scope:** the transport for pushing structured, non-transcript content from
   the worker to the host; the status-line content (composed by the library) and its
-  web rendering.
+  rendering on both the web shell and the interactive CLI (TUI).
 - **Out of scope (for now):** a general window-creation API (open/close, sizing,
-  multiple named windows), window content beyond the status line, and any CLI
-  rendering of windows — the CLI ignores the status message today.
+  multiple named windows) and window content beyond the status line.
 
 ## Inputs and Outputs
 
 - **Input:** library-composed content. The status line is two strings, `left` and
   `right`, recomputed each turn (`update_status_line` in `lib/advent/startup.lamp`).
-- **Output:** a `status` worker→host message `{ left, right }`; the web shell renders
-  it. A host without a status bar (the CLI) installs no status channel, so the
-  runtime primitive is a silent no-op there.
+- **Output:** a `status` worker→host message `{ left, right }`. Both the browser
+  worker and the CLI worker emit it; the host's render backend decides what to do
+  with it. The runtime primitive (`setStatusLine`) is a silent no-op when no status
+  channel is installed (e.g. a future headless host).
 
 ## The status line (first cut)
 
@@ -39,18 +39,26 @@ consistent with the output (`print`) and save channels (see `devdocs/sandbox.md`
   room); `lib/sys` provides only the general primitives `status_line` and
   `turns_taken`.
 - **Transport (runtime):** `setStatusLine(left, right)` ships the pair through an
-  installed status channel (`setStatusChannel`); no channel ⇒ no-op. The browser worker
-  installs the channel and posts `{ type: "status", left, right }`; the CLI worker does
-  not.
-- **Rendering (host):** the web shell renders a `#status-bar` with **reverse-video**
+  installed status channel (`setStatusChannel`); no channel ⇒ no-op. Both the browser
+  worker and the CLI worker (`src/lamplighter/sandbox/worker.js`) install the channel
+  and post `{ type: "status", left, right }`.
+- **Rendering (web host):** the shell renders a `#status-bar` with **reverse-video**
   colors (foreground/background swapped from the main area), a **fixed-width
   (monospace)** font, the `left` segment flush-left and `right` flush-right via flexbox
   `space-between` — so the host owns justification without needing a column count.
   Hidden until the first update and whenever both segments are empty.
+- **Rendering (CLI host):** the dev/CLI host has two interchangeable **render backends**
+  behind one interface (`src/lamplighter/sandbox/backends/`): a **plain** stdio backend
+  (the default for pipes/redirection/tests — it *ignores* the status message so captured
+  output is unchanged) and an **interactive TUI** backend selected when stdout/stdin are
+  a TTY (`LAMP_NO_TUI` forces plain). The TUI renders the status as a pinned top row in
+  reverse video, justified left/right to the terminal width — the same two-segment
+  content, laid out by the host. See `devdocs/sandbox.md` ("render backends").
 
 Why structured fields rather than a pre-padded string: the runtime can't know the
-responsive browser width, so it sends content and lets the host justify. This is also
-the shape a general window API wants (content in, layout at the host).
+host's width (responsive browser, terminal columns), so it sends content and lets each
+host justify. This is also the shape a general window API wants (content in, layout at
+the host).
 
 ## Assumptions
 
@@ -60,9 +68,15 @@ the shape a general window API wants (content in, layout at the host).
 
 ## Non-goals (now)
 
-- Multiple/arbitrary windows, a window lifecycle API, graphics, or CLI status
-  rendering. The status line is deliberately a special creature until the window model
-  is designed.
+- Multiple/arbitrary windows, a window lifecycle API, or graphics. The status line is
+  deliberately a special creature until the window model is designed.
+
+## CLI TUI — deferred polish
+
+The interactive TUI is a lean first cut. Deferred (see TODO item 7): styled transcript
+text (bold/italic are currently dropped in the TUI only), in-line ←/→ cursor editing,
+↑/↓ command history, mouse-wheel scroll, batched redraws, and whether to preserve the
+transcript on exit (the alternate screen clears it today, like `less`/`nano`).
 
 ## Open questions
 

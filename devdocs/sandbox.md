@@ -310,6 +310,22 @@ Built (in `src/lamplighter/sandbox/` and `src/lamplighter/play.js`, run via
 - The emitter produces a body-only module (no shebang, no runtime require); the
   launcher injects `lamplighter` as a context global.
 
+**Render backends.** The CLI host's terminal I/O lives behind a small **render-backend
+interface** (`src/lamplighter/sandbox/backends/`) so the display can vary without
+touching the worker protocol: `start`/`stop`/`write`/`log`/`setStatus`/`requestLine`
+(where `requestLine(prompt, deliver)` obtains one line — synchronously for plain,
+event-driven for the TUI). Two backends:
+
+- **plain** (`backends/plain.js`) — the original scrolling stdio behavior; selected
+  whenever stdout/stdin are **not** a TTY (pipes, redirection, the golden harness), so
+  captured output stays deterministic. It ignores the `status` message.
+- **tui** (`backends/tui.js`) — a hand-rolled, dependency-free interactive terminal UI
+  (alternate screen + raw mode): a pinned reverse-video status row, a scrollable
+  transcript, and an input line that flows under the text. Selected when stdout/stdin
+  are a TTY; `LAMP_NO_TUI=1` forces plain. The terminal is always restored on
+  exit/error/signal. Unit-tested via mock stdin/stdout (`tests/tui`); on-screen
+  rendering is verified manually. See `devdocs/windows.md` for the status line it shows.
+
 ### Input is currently a raw-capability native function
 
 Player input is not part of Lamplighter. It is supplied by a native library that
