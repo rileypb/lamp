@@ -10,6 +10,7 @@ const fs = require("fs");
 const os = require("os");
 const path = require("path");
 const { createPlainBackend } = require("./backends/plain");
+const { createTuiBackend } = require("./backends/tui");
 
 // Shared input buffer: 8-byte header (ready flag + byte length) then UTF-8 line
 // data. 64 KiB comfortably holds a line of player input.
@@ -101,9 +102,11 @@ function playFile(generatedPath, { out = process.stdout, err = process.stderr } 
         Atomics.notify(ctrl, 0);
     }
 
-    // The render backend owns all terminal I/O. Plain stdio for now; Phase 2 selects
-    // an interactive TUI backend when out/stdin are a TTY (and LAMP_NO_TUI is unset).
-    const backend = createPlainBackend({ out, err, fs });
+    // The render backend owns all terminal I/O. An interactive TUI when out/stdin are
+    // a TTY (and LAMP_NO_TUI is unset); otherwise plain stdio — so pipes, redirection,
+    // and the golden harness stay on the deterministic plain path.
+    const useTui = out.isTTY && process.stdin.isTTY && !process.env.LAMP_NO_TUI;
+    const backend = useTui ? createTuiBackend({ out, err }) : createPlainBackend({ out, err, fs });
     backend.start();
 
     return new Promise((resolve, reject) => {
