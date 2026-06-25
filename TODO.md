@@ -146,7 +146,39 @@ collapses into one), a host capability handshake + headless fallback, and author
 override of the status content (e.g. score games). **Where:**
 `src/lighthouse/web/`, `src/lamplighter/sandbox/backends/`, `lib/sys`, `lib/advent`.
 
+## Active (design decided 2026-06-25)
+
+### Containment as a `contains` relation (replaces the `holder` field)
+**Decision (2026-06-25):** make containment a one-to-many relation `contains`
+(`from physical place` → `to physical contained unique`), the *single source of
+truth*; `holder` becomes a query helper, not a stored field. This **reverses
+world-model.md D1** (containment was the `holder` field; `scopeOf` walked
+`inst.holder`) and the "world-iterating consumers never walk graph edges" note
+(`index.js:7`) — relation IS now canonical. Per-decision choices: write via a new
+core **`move X to Y`** statement (desugars to an assert of `contains Y X`); the
+one-container invariant enforced by a **relation-level `unique` cardinality
+modifier** on the `to` endpoint (asserting auto-evicts the prior edge); the
+`supports` relation **stays separate** (still synced on containment change).
+Only `scopeOf` reads `holder` in the runtime (buildVocabIndex does not), so the
+core edit is contained. Names (default): `contains`/`place`/`contained`, keyword
+`unique`. **Sequence:**
+1. ~~Relation `unique` cardinality modifier — parser tag + `addRelation` auto-eviction + unit tests.~~ **DONE (2026-06-25):** `unique` contextual tag in `parseRelationBody` (combines with `inverted` in any order) → AST `uniqueFields` → emitter 7th `defineRelation` arg → runtime `addRelation` evicts colliding edges via `removeRelation` (remove handlers fire, names drop) before insert; dedup still short-circuits identical asserts. Tests: parser units + golden `relation24` (eviction, `?only` one-container invariant, move fires remove+add). Docs: specs.md (decl grammar, `defineRelation`/`addRelation` contract, contextual-keyword lists), relations.md (Cardinality section).
+2. `move X to Y` — tokenizer/parser/emitter/checker, desugars to a `contains` assertion.
+3. Rewrite `scopeOf` (`src/lamplighter/index.js:543`) to walk `contains`; update D1 + the line-7 note + item 6's guard (assert `contains` relation, not `holder` field).
+4. `lib/advent` migration: declare `contains`, add `function container holder(physical x)`, rewrite all `.holder` reads → `holder(x)` and writes → `move`, convert `on *.holder change` → `on contains add/remove`, port `contents_of`/`describe_supporters` to `queryRelation`; regenerate `cloak` golden.
+5. Nesting syntax (below) on top — desugars `room R:`/`item hook:` to `contains R hook`.
+**Where:** `src/lantern/{tokenizer,parser_rd,emitter,checker}.js`, `src/lamplighter/index.js`, `lib/advent/*`, `devdocs/{relations,world-model}.md`.
+
 ## Smaller / opportunistic
+- **Nested/reference object-in-room syntax.** Author sugar for placing items in rooms:
+  nested decl (`room R:` → `item hook:` …) and/or a reference form (`item hammer` inside
+  a room body). Desugar target **now decided**: the `contains` relation (above) — nesting
+  emits `contains <enclosing> <inner>`, layering-clean. Still needs: (a) a **type-name
+  prescan set** (prescan collects no types today, object names only at `depth===0`,
+  `prescan.js:152`) to tell a nested/reference decl from a field assignment (lexically
+  identical: `IDENT IDENT`); (b) a `parseObjectBody` branch (`parser_rd.js:745`) emitting
+  the `contains` assertion when the leading token is a known type. Ships as sequence step 5
+  of the containment work. **Where:** `src/lantern/prescan.js`, `src/lantern/parser_rd.js`.
 - **Output pagination ("[more]") — done, with one gap.** All three interactive hosts
   pause long output a screenful at a time (plain on a TTY, the TUI, and the web shell;
   design in `devdocs/sandbox.md` → "Output pagination"). Known gap: it relies on the

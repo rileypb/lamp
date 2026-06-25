@@ -1,0 +1,38 @@
+game Relation_24:
+    author "Test Author"
+    version 1
+    release dev
+
+type room
+type item
+
+room kitchen
+room attic
+item lamp
+item coin
+
+# `unique` on the target makes containment one-to-many: each contained item is in
+# at most one place, so asserting a new edge evicts the prior one. The add/remove
+# handlers confirm a "move" fires both (release then acquire).
+relation contains:
+    from room place
+    to item contained unique
+    syntax "contains [place] [contained]"
+
+on contains add:
+    print "added: [self.place] holds [self.contained][line break]"
+
+on contains remove:
+    print "removed: [self.place] released [self.contained][line break]"
+
+on startup:
+    contains kitchen lamp
+    print "lamp in: [contains ?only lamp][line break]"
+    # Re-assert with a different place: the unique key evicts the kitchen edge.
+    contains attic lamp
+    print "lamp in: [contains ?only lamp][line break]"
+    print "kitchen has: [contains kitchen ?all][line break]"
+    print "attic has: [contains attic ?all][line break]"
+    # A different item coexists — the constraint is per-item, not per-place.
+    contains kitchen coin
+    print "kitchen has: [contains kitchen ?all][line break]"

@@ -10,8 +10,8 @@ function createObjectDecl(typeName, objectName, fields) {
     return { kind: "ObjectDecl", typeName, objectName, fields };
 }
 
-function createRelationDecl(name, fields, syntax, invertedFields, sourceField, targetField, filePath, lineNumber) {
-    return { kind: "RelationDecl", name, fields, syntax, invertedFields, sourceField, targetField, filePath, lineNumber };
+function createRelationDecl(name, fields, syntax, invertedFields, sourceField, targetField, uniqueFields, filePath, lineNumber) {
+    return { kind: "RelationDecl", name, fields, syntax, invertedFields, sourceField, targetField, uniqueFields, filePath, lineNumber };
 }
 
 function createRelationAssert(relationName, fields, instanceName, filePath, lineNumber) {

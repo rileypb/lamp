@@ -131,7 +131,7 @@ function defineType(name, parents, fields, defaults = {}) {
 // field schema and optional syntax template for later phases (assertion,
 // querying). Its edges live in relationInstanceRegistry, not the world-object
 // instance registry, so we drop the empty instance list defineType created.
-function defineRelation(name, fields, syntaxTemplate = null, invertedFields = [], sourceField = "source", targetField = "target") {
+function defineRelation(name, fields, syntaxTemplate = null, invertedFields = [], sourceField = "source", targetField = "target", uniqueFields = []) {
     defineType(name, [], fields);
     instanceRegistry.delete(name);
     relationInstanceRegistry.set(name, []);
@@ -140,6 +140,7 @@ function defineRelation(name, fields, syntaxTemplate = null, invertedFields = []
         fields: { ...fields },
         syntax: syntaxTemplate,
         invertedFields: [...invertedFields],
+        uniqueFields: [...uniqueFields],
         sourceField,
         targetField,
     });
@@ -164,6 +165,20 @@ function addRelation(typeName, fields, options = {}) {
             existing.bidi = true;
         }
         return existing;
+    }
+
+    // Cardinality: a field tagged `unique` is a key — at most one edge per distinct
+    // value of that field. Asserting an edge that shares its value in a unique field
+    // evicts the prior edge (each unique field is an independent key). Eviction goes
+    // through removeRelation so remove-handlers fire and any name is unregistered.
+    const relationDef = relationRegistry.get(typeName);
+    for (const uniqueField of relationDef.uniqueFields) {
+        if (!(uniqueField in fields)) continue;
+        const evictQuery = {};
+        for (const key of Object.keys(relationDef.fields)) {
+            evictQuery[key] = key === uniqueField ? fields[uniqueField] : ANY;
+        }
+        removeRelation(typeName, evictQuery);
     }
 
     const instance = {

@@ -90,11 +90,12 @@ Lantern-generated JavaScript targets the following Lamplighter API surface:
     - Returns a type handle.
     - Type handle exposes `all`, which includes instances of the type and all subtypes.
     - `all.first` returns the first element in that list.
-- `defineRelation(name, fields, syntaxTemplate?, invertedFields?, sourceField?, targetField?)`
-    - Registers a relation type. It is registered as a type (so `name.all` and `isTypeOrSubtype` dispatch work) but its edges live in a **separate relation-instance store**, not the world-object instance registry — so scope/vocabulary iteration never walks relation edges. Records the field schema, optional syntax template, the list of `inverted`-tagged field names, and the canonical source and target field names (used by `relationInverse` to derive the mechanical inverse). See `devdocs/architecture.md` issue F.
+- `defineRelation(name, fields, syntaxTemplate?, invertedFields?, sourceField?, targetField?, uniqueFields?)`
+    - Registers a relation type. It is registered as a type (so `name.all` and `isTypeOrSubtype` dispatch work) but its edges live in a **separate relation-instance store**, not the world-object instance registry — so scope/vocabulary iteration never walks relation edges. Records the field schema, optional syntax template, the list of `inverted`-tagged field names, the list of `unique`-tagged field names (cardinality keys; see `addRelation`), and the canonical source and target field names (used by `relationInverse` to derive the mechanical inverse). See `devdocs/architecture.md` issue F.
 - `addRelation(typeName, fields, options?)`
     - Creates a relation instance from a field-value mapping.
     - Deduplicates by field values (object fields by identity, value fields by equality); asserting an identical instance returns the existing one. For a `bidi` instance, an assertion that matches its mechanical inverse also deduplicates against it.
+    - **Cardinality eviction.** For each `unique`-tagged field on the relation type, before inserting a non-duplicate instance, removes any existing edge whose value in that field equals the new edge's (via `removeRelation`, so remove handlers fire and names are unregistered). This enforces the one-edge-per-key invariant that makes a `unique` `to` endpoint a one-to-many relation.
     - `options` may carry `name` (registers the instance for `getObject`) and `bidi` (marks the instance bidirectional, upgrading an existing match in place).
     - The edge is stored in the relation-instance store (separate from world objects); it still appears in the relation type's `all` (the two stores are unioned only there).
 - `queryRelation(typeName, query)`
@@ -234,7 +235,7 @@ Local variables (introduced by `let`) and loop variables (introduced by `for`) a
 
 Free text that contains spaces or punctuation is written as a double-quoted string literal, not a bare identifier (for example, `author "Phil Riley"`).
 
-The following words are **reserved** and may not be used as a name (object, type, kind, global, field, event, or local): `type`, `kind`, `global`, `on`, `for`, `in`, `while`, `if`, `else`, `let`, `print`, `error`, `dispatch`, `break`, `lib`, `from`, `to`, `step`, `change`, `function`, `native`, `freeze`, `return`, `when`, `and`, `or`, `not`, `relation`, `bidi`, `remove`, `disconnect`, `rulebook`, `stop`, `follow`, `action`, `try`, `verb`. (`freeze EXPR` forces a `text` value to a `string`; see the `text` primitive type. `verb WORD, …` registers conjugation-sugar words for text substitution; see the `text` type. `syntax` and `inverted` are contextual keywords recognized only inside a `relation` body; `tags` is contextual only inside an `action` body; `default` is a contextual keyword recognized only inside a `rulebook` body; the band words `before`, `instead`, `check`, `do`, `after`, and `report` are contextual keywords recognized only as the leading token of a phase rule; `any` and `except` are contextual only in a phase-rule action selector; `rule` is contextual only when followed by a declared rulebook name; `silently` is contextual only immediately before `try`; `understand` and `as` are contextual only in a top-level `understand "TEMPLATE" as ACTION` grammar contribution; none of these are globally reserved.) A reservation applies only to a whole identifier: a reserved word appearing *inside* a longer identifier is unrestricted, so `move_to_room` (which denotes the name `move to room`) is a valid identifier even though `to` is reserved.
+The following words are **reserved** and may not be used as a name (object, type, kind, global, field, event, or local): `type`, `kind`, `global`, `on`, `for`, `in`, `while`, `if`, `else`, `let`, `print`, `error`, `dispatch`, `break`, `lib`, `from`, `to`, `step`, `change`, `function`, `native`, `freeze`, `return`, `when`, `and`, `or`, `not`, `relation`, `bidi`, `remove`, `disconnect`, `rulebook`, `stop`, `follow`, `action`, `try`, `verb`. (`freeze EXPR` forces a `text` value to a `string`; see the `text` primitive type. `verb WORD, …` registers conjugation-sugar words for text substitution; see the `text` type. `syntax`, `inverted`, and `unique` are contextual keywords recognized only inside a `relation` body; `tags` is contextual only inside an `action` body; `default` is a contextual keyword recognized only inside a `rulebook` body; the band words `before`, `instead`, `check`, `do`, `after`, and `report` are contextual keywords recognized only as the leading token of a phase rule; `any` and `except` are contextual only in a phase-rule action selector; `rule` is contextual only when followed by a declared rulebook name; `silently` is contextual only immediately before `try`; `understand` and `as` are contextual only in a top-level `understand "TEMPLATE" as ACTION` grammar contribution; none of these are globally reserved.) A reservation applies only to a whole identifier: a reserved word appearing *inside* a longer identifier is unrestricted, so `move_to_room` (which denotes the name `move to room`) is a valid identifier even though `to` is reserved.
 
 ### Objects and types
 
@@ -722,14 +723,16 @@ The full relation design and roadmap live in `devdocs/relations.md`. This sectio
 relation TYPE_NAME:
     from ENDPOINT_TYPE SOURCE_FIELD_NAME
     to ENDPOINT_TYPE TARGET_FIELD_NAME
-    FIELD_TYPE FIELD_NAME [inverted]
+    FIELD_TYPE FIELD_NAME [inverted] [unique]
     ...
     syntax "TEMPLATE"
 ```
 
-`relation` declares a relation type — a directed **binary** edge. Every relation must have exactly one `from`-prefixed field (the source endpoint) and one `to`-prefixed field (the target endpoint). These prefixes fix the relation's canonical orientation; the field names themselves are user-chosen. Any number of additional labelled fields may follow (`FIELD_TYPE FIELD_NAME`), each optionally tagged `inverted`. The optional `syntax` line gives a custom assertion template (see below).
+`relation` declares a relation type — a directed **binary** edge. Every relation must have exactly one `from`-prefixed field (the source endpoint) and one `to`-prefixed field (the target endpoint). These prefixes fix the relation's canonical orientation; the field names themselves are user-chosen. Any number of additional labelled fields may follow (`FIELD_TYPE FIELD_NAME`), each optionally tagged `inverted` and/or `unique` (in either order; the `from`/`to` endpoint fields may also carry these tags). The optional `syntax` line gives a custom assertion template (see below).
 
-`from` and `to` are **globally reserved keywords** and cannot be used as object names, field names, or variables. `syntax` and `inverted` are contextual keywords: they are special only inside a `relation` body and are otherwise ordinary identifiers.
+A field tagged **`unique`** is a **cardinality key**: at most one edge may exist per distinct value of that field. Asserting an edge whose value in a unique field equals an existing edge's **evicts** the prior edge (firing its remove handlers and unregistering any name) before inserting the new one. Tagging the `to` endpoint `unique` therefore models a **one-to-many** relation — many sources may share a target's slot over time, but each target participates in at most one edge at once (e.g. `contains`: an object is in exactly one place). Each unique field is an independent key; the early-return deduplication still applies, so re-asserting an identical edge is a no-op and does not self-evict.
+
+`from` and `to` are **globally reserved keywords** and cannot be used as object names, field names, or variables. `syntax`, `inverted`, and `unique` are contextual keywords: they are special only inside a `relation` body and are otherwise ordinary identifiers.
 
 ```lamp
 relation connects:

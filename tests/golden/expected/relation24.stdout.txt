@@ -1,0 +1,9 @@
+added: kitchen holds lamp
+lamp in: kitchen
+removed: kitchen released lamp
+added: attic holds lamp
+lamp in: attic
+kitchen has: nothing
+attic has: lamp
+added: kitchen holds coin
+kitchen has: coin

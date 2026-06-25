@@ -473,7 +473,7 @@ function emitRelationDecl(node) {
         fields[field.fieldName] = field.typeName;
     }
     const syntaxArg = node.syntax === null ? "null" : emitStringLiteral(node.syntax);
-    return `lamplighter.defineRelation(${emitName(node.name)}, ${emitFieldSchema(fields)}, ${syntaxArg}, ${JSON.stringify(node.invertedFields || [])}, ${JSON.stringify(node.sourceField)}, ${JSON.stringify(node.targetField)});`;
+    return `lamplighter.defineRelation(${emitName(node.name)}, ${emitFieldSchema(fields)}, ${syntaxArg}, ${JSON.stringify(node.invertedFields || [])}, ${JSON.stringify(node.sourceField)}, ${JSON.stringify(node.targetField)}, ${JSON.stringify(node.uniqueFields || [])});`;
 }
 
 function emitRelationAssert(node, globalNames = new Set()) {

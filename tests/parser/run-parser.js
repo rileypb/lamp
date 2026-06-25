@@ -639,6 +639,25 @@ const cases = [
             });
         },
     },
+    {
+        name: "relation decl: `unique` tag collected into uniqueFields",
+        run() {
+            const [rel] = parse(["relation contains:", "    from room place", "    to item contained unique", '    syntax "contains [place] [contained]"'].join("\n"));
+            assert.strictEqual(rel.kind, "RelationDecl");
+            assert.deepStrictEqual(rel.uniqueFields, ["contained"]);
+            assert.deepStrictEqual(rel.invertedFields, []);
+            assert.strictEqual(rel.sourceField, "place");
+            assert.strictEqual(rel.targetField, "contained");
+        },
+    },
+    {
+        name: "relation decl: `inverted` and `unique` combine in either order",
+        run() {
+            const [rel] = parse(["relation r:", "    from room a", "    to direction b inverted unique", '    syntax "r [a] [b]"'].join("\n"));
+            assert.deepStrictEqual(rel.invertedFields, ["b"]);
+            assert.deepStrictEqual(rel.uniqueFields, ["b"]);
+        },
+    },
 ];
 
 // The parser must reject these with a clear error.

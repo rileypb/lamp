@@ -36,10 +36,11 @@ Every relation is a directed binary edge. Exactly one field must be prefixed `fr
 
 `from` and `to` are **globally reserved keywords** (in the tokenizer keyword set). They cannot be used as object names, field names, or variable names.
 
-Additional **labelled fields** with no `from`/`to` prefix may follow, each optionally tagged `inverted`:
+Additional **labelled fields** with no `from`/`to` prefix may follow, each optionally tagged `inverted` and/or `unique` (the `from`/`to` endpoint fields may also carry these tags):
 
 - `inverted` — when the edge is reversed (see Bidirectional Relations), this field is replaced by its own inverse. Its type must itself declare an `inverse` field of that same type (so `direction dir inverted` requires the `direction` type to have a `direction inverse` field, e.g. `north.inverse = south`).
-- *(untagged)* — copied unchanged when reversing.
+- `unique` — a **cardinality key**: at most one edge exists per distinct value of this field (see Cardinality below).
+- *(untagged)* — copied unchanged when reversing; no cardinality constraint.
 
 ```lamp
 relation connects:
@@ -49,7 +50,25 @@ relation connects:
     syntax "connects [source] [dir] [target]"
 ```
 
-`inverted` and `syntax` are contextual keywords recognized only inside a `relation` body.
+`inverted`, `unique`, and `syntax` are contextual keywords recognized only inside a `relation` body. The two tags combine in either order (`... inverted unique` or `... unique inverted`).
+
+### Cardinality (`unique`)
+
+A field tagged `unique` is a **key**: the relation holds at most one edge per distinct value of that field. When a new edge is asserted whose value in a unique field equals an existing edge's (object fields compared by identity, value fields by equality), the **prior edge is evicted** — removed via the normal removal path, so its remove handlers fire and any registered name is dropped — and then the new edge is inserted. Deduplication still runs first, so re-asserting an *identical* edge is a no-op and never self-evicts.
+
+Each unique field is an **independent** key: with two unique fields, an assertion evicts any edge colliding on *either* one.
+
+Tagging the **`to` endpoint** `unique` models a **one-to-many** relation: one source may be associated with many targets, but each target participates in at most one edge at a time. This is the basis for **containment** — the world model represents "X is in Y" as `contains` with a unique contained endpoint, so asserting a new container for an object automatically removes it from its old one (a "move" is a single assertion). See `devdocs/world-model.md`.
+
+```lamp
+relation contains:
+    from physical place
+    to physical contained unique
+    syntax "contains [place] [contained]"
+
+contains kitchen lamp     # lamp is in the kitchen
+contains attic lamp       # evicts the kitchen edge; lamp is now in the attic
+```
 
 Canonical orientation matters even for relations that are never made bidirectional. It is what lets a future reasoning layer relate one relation to another — e.g. "if `father(a, b)` then `older_than(a, b)`" — by knowing which endpoint is head and which is tail. An asymmetric relation like `father` uses `from`/`to` for exactly this reason; its reverse is a *different* relation (`child`), so it is not a `bidi` candidate.
 

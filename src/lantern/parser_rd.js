@@ -430,20 +430,25 @@ function createParser(tokens, filePath, globalNames, functionNames = new Set(), 
         const name = plainName("relation name");
         expect("COLON", "Expected ':' after relation name");
         expectNewline();
-        const { fields, syntax, invertedFields, sourceField, targetField } = parseRelationBody(keyword.line);
-        return ast.createRelationDecl(name, fields, syntax, invertedFields, sourceField, targetField, filePath, keyword.line);
+        const { fields, syntax, invertedFields, uniqueFields, sourceField, targetField } = parseRelationBody(keyword.line);
+        return ast.createRelationDecl(name, fields, syntax, invertedFields, sourceField, targetField, uniqueFields, filePath, keyword.line);
     }
 
     // A relation body holds field declarations plus an optional `syntax "..."`
     // line. Each field line may be prefixed with `from` (marks the source endpoint)
     // or `to` (marks the target endpoint); exactly one of each is required.
-    // `inverted` and `syntax` are contextual keywords (tokenize as IDENTs).
-    // A field marked `inverted` must have a type that declares an `inverse` field,
-    // used when computing the mechanical reverse of a bidi relation.
+    // `inverted`, `unique`, and `syntax` are contextual keywords (tokenize as
+    // IDENTs). A field marked `inverted` must have a type that declares an
+    // `inverse` field, used when computing the mechanical reverse of a bidi
+    // relation. A field marked `unique` is a cardinality key: at most one edge may
+    // exist per distinct value of that field, so asserting a new edge evicts any
+    // existing edge sharing the value (one-to-many containment). Both tags may
+    // follow the field name in either order.
     function parseRelationBody(declLine) {
         expect("INDENT", "Expected an indented block");
         const fields = [];
         const invertedFields = [];
+        const uniqueFields = [];
         let syntax = null;
         let sourceField = null;
         let targetField = null;
@@ -466,9 +471,9 @@ function createParser(tokens, filePath, globalNames, functionNames = new Set(), 
             }
             const fieldType = parseFieldType();
             const fieldName = plainName("field name");
-            if (at("IDENT") && peek().value === "inverted") {
-                next();
-                invertedFields.push(fieldName);
+            while (at("IDENT") && (peek().value === "inverted" || peek().value === "unique")) {
+                if (next().value === "inverted") invertedFields.push(fieldName);
+                else uniqueFields.push(fieldName);
             }
             expectNewline();
             if (isSource) sourceField = fieldName;
@@ -479,7 +484,7 @@ function createParser(tokens, filePath, globalNames, functionNames = new Set(), 
         if (sourceField === null || targetField === null) {
             throw err("a relation must declare exactly one 'from' field and one 'to' field", declLine);
         }
-        return { fields, syntax, invertedFields, sourceField, targetField };
+        return { fields, syntax, invertedFields, uniqueFields, sourceField, targetField };
     }
 
     // `bidi RELATION ...` — a bidirectional assertion. Parses the following
