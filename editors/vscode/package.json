@@ -1,0 +1,35 @@
+{
+    "name": "lamp-language",
+    "displayName": "Lamp Language",
+    "description": "Syntax highlighting for the Lamp interactive-fiction authoring language.",
+    "version": "0.0.1",
+    "publisher": "lamp",
+    "engines": {
+        "vscode": "^1.75.0"
+    },
+    "categories": [
+        "Programming Languages"
+    ],
+    "contributes": {
+        "languages": [
+            {
+                "id": "lamp",
+                "aliases": [
+                    "Lamp",
+                    "lamp"
+                ],
+                "extensions": [
+                    ".lamp"
+                ],
+                "configuration": "./language-configuration.json"
+            }
+        ],
+        "grammars": [
+            {
+                "language": "lamp",
+                "scopeName": "source.lamp",
+                "path": "./syntaxes/lamp.tmLanguage.json"
+            }
+        ]
+    }
+}

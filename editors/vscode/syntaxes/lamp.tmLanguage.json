@@ -1,0 +1,91 @@
+{
+    "$schema": "https://raw.githubusercontent.com/martinring/tmlanguage/master/tmlanguage.json",
+    "name": "Lamp",
+    "scopeName": "source.lamp",
+    "patterns": [
+        { "include": "#comments" },
+        { "include": "#strings" },
+        { "include": "#phase-rules" },
+        { "include": "#declarations" },
+        { "include": "#keywords" },
+        { "include": "#constants" },
+        { "include": "#numbers" },
+        { "include": "#operators" }
+    ],
+    "repository": {
+        "comments": {
+            "match": "#.*$",
+            "name": "comment.line.number-sign.lamp"
+        },
+        "strings": {
+            "name": "string.quoted.double.lamp",
+            "begin": "\"",
+            "end": "\"",
+            "patterns": [
+                {
+                    "name": "constant.character.escape.lamp",
+                    "match": "\\\\(u\\{[0-9A-Fa-f]{1,6}\\}|[\\\\\"ntr_])"
+                },
+                {
+                    "name": "meta.substitution.lamp",
+                    "begin": "\\[",
+                    "end": "\\]",
+                    "beginCaptures": {
+                        "0": { "name": "punctuation.definition.template-expression.begin.lamp" }
+                    },
+                    "endCaptures": {
+                        "0": { "name": "punctuation.definition.template-expression.end.lamp" }
+                    },
+                    "contentName": "support.function.substitution.lamp"
+                }
+            ]
+        },
+        "declarations": {
+            "comment": "Top-level object/kind declarations: `room Foyer:` or `item velvet_cloak:`. The kind word is contextual (lib-defined), the second token is the object name.",
+            "match": "^\\s*([a-z][A-Za-z0-9_-]*)\\s+([A-Za-z_][A-Za-z0-9_-]*)\\s*:",
+            "captures": {
+                "1": { "name": "storage.type.lamp" },
+                "2": { "name": "entity.name.type.lamp" }
+            }
+        },
+        "phase-rules": {
+            "comment": "Action-rule bands recognized by the parser at line start (PHASE_WORDS), plus `rule` and `understand`.",
+            "match": "^\\s*(before|after|instead|check|report|do|rule|understand)\\b",
+            "captures": {
+                "1": { "name": "keyword.other.phase.lamp" }
+            }
+        },
+        "keywords": {
+            "patterns": [
+                {
+                    "name": "keyword.control.lamp",
+                    "match": "\\b(if|else|while|for|in|return|break|stop|when|from|to|step|try|follow|dispatch|on)\\b"
+                },
+                {
+                    "name": "storage.type.lamp",
+                    "match": "\\b(type|kind|global|relation|bidi|rulebook|action|verb|function|native|lib|change|freeze|let)\\b"
+                },
+                {
+                    "name": "keyword.other.lamp",
+                    "match": "\\b(print|error|remove|disconnect|understand|as|except|any|elif)\\b"
+                },
+                {
+                    "name": "keyword.operator.word.lamp",
+                    "match": "\\b(and|or|not)\\b"
+                }
+            ]
+        },
+        "constants": {
+            "name": "constant.language.lamp",
+            "match": "\\b(true|false|none)\\b"
+        },
+        "numbers": {
+            "name": "constant.numeric.lamp",
+            "match": "\\b\\d+(\\.\\d+)?\\b"
+        },
+        "operators": {
+            "name": "keyword.operator.lamp",
+            "match": "(==|<=|>=|<|>|=|\\+|-|\\*|/|\\^|\\?)"
+        }
+    }
+}

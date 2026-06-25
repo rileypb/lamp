@@ -132,6 +132,15 @@ override of the status content (e.g. score games). **Where:**
 `src/lighthouse/web/`, `src/lamplighter/sandbox/backends/`, `lib/sys`, `lib/advent`.
 
 ## Smaller / opportunistic
+- **VS Code syntax highlighting (scaffolded).** A declarative TextMate-grammar
+  extension lives in `editors/vscode/` (manifest + `language-configuration.json` +
+  `syntaxes/lamp.tmLanguage.json`); no deps, loads via `F5`/`--extensionDevelopmentPath`.
+  Token model is derived from `tokenizer.js` `KEYWORDS` and `parser_rd.js` `PHASE_WORDS`.
+  **Next:** (a) add grammar snapshot tests (e.g. `vscode-tmgrammar-test`, dev-only) so
+  the scopes don't silently drift from the compiler; (b) resolve the multi-line-string
+  question (tokenizer is single-line, samples span lines — the grammar is currently
+  tolerant); (c) optionally a Language Server reusing the tokenizer/parser for
+  diagnostics + go-to-definition. **Where:** `editors/vscode/`.
 - **Reassigning a multi-word (underscore) global fails the checker.** `global int
   my_score = 0` then `my_score = 5` reports "assignment to undeclared name
   `my_score`", while a single-word global (`score = 5`) works. The assignment-target
