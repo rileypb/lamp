@@ -71,27 +71,33 @@ function tokenize(sourceText, filePath) {
     const rawLines = sourceText.split(/\r?\n/);
     const tokens = [];
     const indentStack = [0];
-    let lineNumber = 0;
+    let lastLine = 0;
+    let li = 0;
 
-    for (const rawLine of rawLines) {
-        lineNumber += 1;
-        const codeLine = stripComment(rawLine);
+    while (li < rawLines.length) {
+        const lineNumber = li + 1;
+        const codeLine = stripComment(rawLines[li]);
 
         if (codeLine.trim() === "") {
+            li += 1;
             continue;
         }
 
         const indent = computeIndent(codeLine);
         emitIndentation(tokens, indentStack, indent, filePath, lineNumber);
-        tokenizeLine(codeLine, lineNumber, filePath, tokens);
-        tokens.push({ type: "NEWLINE", line: lineNumber });
+        // A multi-line string literal consumes raw lines past `li`; tokenizeLine
+        // returns the index of the last line it consumed so we resume after it.
+        const lastLi = tokenizeLine(codeLine, lineNumber, filePath, tokens, rawLines, li);
+        lastLine = lastLi + 1;
+        tokens.push({ type: "NEWLINE", line: lastLine });
+        li = lastLi + 1;
     }
 
     while (indentStack.length > 1) {
         indentStack.pop();
-        tokens.push({ type: "DEDENT", line: lineNumber });
+        tokens.push({ type: "DEDENT", line: lastLine });
     }
-    tokens.push({ type: "EOF", line: lineNumber });
+    tokens.push({ type: "EOF", line: lastLine });
     return tokens;
 }
 
@@ -111,8 +117,11 @@ function emitIndentation(tokens, indentStack, indent, filePath, lineNumber) {
     }
 }
 
-function tokenizeLine(s, lineNumber, filePath, tokens) {
+// Tokenizes one logical line, returning the index of the last raw line it consumed
+// (equal to `li` unless a multi-line string literal pulled in continuation lines).
+function tokenizeLine(s, lineNumber, filePath, tokens, rawLines, li) {
     let i = 0;
+    let curLi = li;
 
     const isIdentChar = (ch) => ch !== undefined && /[A-Za-z0-9_]/.test(ch);
 
@@ -125,16 +134,37 @@ function tokenizeLine(s, lineNumber, filePath, tokens) {
         }
 
         if (ch === '"') {
-            let j = i + 1;
-            while (j < s.length && s[j] !== '"') {
-                if (s[j] === "\\") j += 1;
-                j += 1;
+            const close = findCloseQuote(s, i + 1);
+            if (close !== -1) {
+                tokens.push({ type: "STRING", value: unescapeString(s.slice(i + 1, close)), line: lineNumber });
+                i = close + 1;
+                continue;
             }
-            if (j >= s.length) {
+            // No close quote on this line: gather raw continuation lines verbatim
+            // (no comment-stripping, blank lines kept) until one closes the string.
+            const segments = [s.slice(i + 1)];
+            let k = curLi + 1;
+            let closePos = -1;
+            while (k < rawLines.length) {
+                closePos = findCloseQuote(rawLines[k], 0);
+                if (closePos === -1) {
+                    segments.push(rawLines[k]);
+                    k += 1;
+                    continue;
+                }
+                segments.push(rawLines[k].slice(0, closePos));
+                break;
+            }
+            if (closePos === -1) {
                 throw syntaxError(filePath, lineNumber, "Unterminated string literal");
             }
-            tokens.push({ type: "STRING", value: unescapeString(s.slice(i + 1, j)), line: lineNumber });
-            i = j + 1;
+            tokens.push({ type: "STRING", value: unescapeString(dedentSegments(segments)), line: lineNumber });
+            // Resume after the close quote on the closing line, with the right line
+            // number; the remainder may carry more tokens and/or a comment.
+            curLi = k;
+            lineNumber = k + 1;
+            s = stripComment(rawLines[k].slice(closePos + 1));
+            i = 0;
             continue;
         }
 
@@ -220,6 +250,38 @@ function tokenizeLine(s, lineNumber, filePath, tokens) {
 
         throw syntaxError(filePath, lineNumber, `Unexpected character: ${JSON.stringify(ch)}`);
     }
+    return curLi;
+}
+
+// Index of the next unescaped `"` in `line` at/after `from`, or -1 if none. A `\`
+// escapes the following character (so `\"` is not a close), matching unescapeString.
+function findCloseQuote(line, from) {
+    for (let k = from; k < line.length; k += 1) {
+        if (line[k] === "\\") {
+            k += 1;
+            continue;
+        }
+        if (line[k] === '"') return k;
+    }
+    return -1;
+}
+
+// Joins the raw source segments of a multi-line string with literal newlines after
+// stripping their common leading indentation (the dedent policy: authors may indent
+// continuation lines for readability without it appearing in the value). The first
+// segment is the text after the opening quote on the opening line and is left as-is;
+// the common indent is measured over the remaining non-blank lines.
+function dedentSegments(segments) {
+    if (segments.length <= 1) return segments.join("\n");
+    const cont = segments.slice(1);
+    let common = Infinity;
+    for (const line of cont) {
+        if (line.trim() === "") continue;
+        const lead = line.length - line.replace(/^[ \t]+/, "").length;
+        if (lead < common) common = lead;
+    }
+    if (!Number.isFinite(common)) common = 0;
+    return [segments[0], ...cont.map((line) => line.slice(common))].join("\n");
 }
 
 // Resolves an identifier's raw source spelling to its canonical display/name

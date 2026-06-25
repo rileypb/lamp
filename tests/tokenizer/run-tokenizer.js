@@ -107,6 +107,26 @@ const tokenCases = [
         src: 'print "x\\u{wxyz}y"',
         expect: "KEYWORD(print) STRING(x\\u{wxyz}y) NEWLINE EOF",
     },
+    {
+        name: "multi-line string: dedents continuation lines, keeps blank lines",
+        src: ['print "First.', "", "  Second.", '  Third."'].join("\n"),
+        expect: "KEYWORD(print) STRING(First.\n\nSecond.\nThird.) NEWLINE EOF",
+    },
+    {
+        name: "multi-line string: tokens after the close quote stay on the line",
+        src: ['let x = "a', 'b" + 1'].join("\n"),
+        expect: "KEYWORD(let) IDENT(x) EQUALS STRING(a\nb) PLUS NUMBER(1) NEWLINE EOF",
+    },
+    {
+        name: "multi-line string: a # inside is content, not a comment",
+        src: ['print "line one', '  has a # hash"'].join("\n"),
+        expect: "KEYWORD(print) STRING(line one\nhas a # hash) NEWLINE EOF",
+    },
+    {
+        name: "multi-line string: relative extra indent is preserved past the common dedent",
+        src: ['print "A', "    B", '  C"'].join("\n"),
+        expect: "KEYWORD(print) STRING(A\n  B\nC) NEWLINE EOF",
+    },
     // New single-char tokens and priority ordering
     {
         name: "MINUS SLASH CARET tokenize as infix operators",

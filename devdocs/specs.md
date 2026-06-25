@@ -307,7 +307,16 @@ Built-in primitive types:
   (newline), `\t` (tab), `\r` (carriage return), `\\` (literal backslash), and
   `\u{HEX}` (a Unicode code point, 1–6 hex digits — `\u{e9}` → "é",
   `\u{1f600}` → an emoji). Any other `\X` (including a malformed `\u{…}`) is left
-  as-is (the backslash is kept), so a stray backslash in prose is never lost. A string literal used as a **value** (a `print`/`let`/field
+  as-is (the backslash is kept), so a stray backslash in prose is never lost.
+  A literal may span **multiple source lines**: a `"` that is not closed on its
+  line continues until the next unescaped `"`, with each source newline becoming a
+  literal newline in the value. Inside a multi-line literal, `#` is content (not a
+  comment) and blank lines are preserved. The continuation lines are **dedented** —
+  their common leading whitespace is stripped — so prose can be indented under the
+  statement for readability without that indentation appearing in the value (the
+  first line, being the text after the opening quote, is left as written; blank
+  lines are ignored when measuring the common indent, and any indentation beyond the
+  common amount is kept). A string literal used as a **value** (a `print`/`let`/field
   or global default/argument/return — *not* a grammar/`syntax`/`understand`
   template, whose `[slot]` markers stay literal) also gets two transformations:
   - **Quote convention** (Inform-style): a `'` flanked by letters/digits on both
