@@ -10,10 +10,8 @@ type container < physical
 type room < container:
 	string description
 type item < physical:
-	container holder
 	string description
-type person < physical:
-	container holder
+type person < physical
 
 person yourself
 
@@ -21,12 +19,23 @@ room Kitchen:
 	description "A small kitchen."
 
 item apple:
-	holder Kitchen
 	description "A shiny red apple."
 
 item knife:
-	holder Kitchen
 	description "A sharp knife."
+
+# Containment as a relation — the runtime computes scope over `contains`.
+relation contains:
+	from physical place
+	to physical contained unique
+	syntax "contains [place] [contained]"
+
+# An object's container: the source of its `contains` edge.
+function physical holder(physical x):
+	return contains ?only x
+
+contains Kitchen apple
+contains Kitchen knife
 
 global person player = yourself
 
@@ -48,24 +57,24 @@ action examine:
 		"x [target]"
 
 check take:
-	if self.taken.holder == player:
+	if holder(self.taken) == player:
 		print "You already have that."
 		stop failed
 
 do take:
-	self.taken.holder = player
+	move self.taken to player
 	print "Taken."
 
 do drop:
-	self.taken.holder = player.holder
+	move self.taken to holder(player)
 	print "Dropped."
 
 do examine:
 	print self.target.description
 
 on startup:
-	player.holder = Kitchen
-	print player.holder.description
+	move player to Kitchen
+	print holder(player).description
 	while true:
 		let line = readline()
 		if line == "quit":

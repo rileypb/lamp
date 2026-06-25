@@ -15,8 +15,9 @@ room hall:
 
 bidi connects cell north hall
 
-item pebble:
-	holder cell
+item pebble
+
+contains cell pebble
 
 # Two custom actions sharing a tag.
 action shout:
@@ -37,7 +38,7 @@ report hum:
 
 # Tag selector + self.action branching: vocal actions are muffled in the cell,
 # and the message names which action was attempted.
-instead vocal when self.actor.holder == cell:
+instead vocal when holder(self.actor) == cell:
 	if self.action == shout:
 		print "The cell muffles your shout."
 	else:
@@ -46,5 +47,5 @@ instead vocal when self.actor.holder == cell:
 
 # `any except` chain over the standard library actions, using only the universal
 # `actor` slot: any non-movement, non-looking, non-vocal action stirs dust.
-before any except go except look except shout except hum when self.actor.holder == cell:
+before any except go except look except shout except hum when holder(self.actor) == cell:
 	print "Dust swirls."

@@ -7,16 +7,17 @@ game NPC_Test:
 room hall:
 	description "A hall."
 
-person npc:
-	holder hall
+person npc
 
 item hat:
 	wearable true
-	holder hall
 
 item coat:
 	wearable true
-	holder npc
+
+contains hall npc
+contains hall hat
+contains npc coat
 
 action npc_act:
 	syntax:

@@ -13,9 +13,10 @@ room Lab:
 	description "A small lab."
 
 item brass_lamp:
-	holder Lab
 	understand "lantern/brass/lamp"
 
 item golden_key:
-	holder Lab
 	understand "key/golden"
+
+contains Lab brass_lamp
+contains Lab golden_key

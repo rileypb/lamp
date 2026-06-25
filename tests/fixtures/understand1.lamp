@@ -10,10 +10,10 @@ game Understand_Grammar:
 room hall:
     description "A plain hall."
 
-item coin:
-    holder hall
+item coin
+item key
 
-item key:
-    holder hall
+contains hall coin
+contains hall key
 
 understand "grab [taken]" as take

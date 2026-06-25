@@ -13,11 +13,12 @@ room hall:
 item table:
     scenery true
     supporter true
-    holder hall
 
 item rock:
     scenery true
-    holder hall
 
-item coin:
-    holder yourself
+item coin
+
+contains hall table
+contains hall rock
+contains yourself coin

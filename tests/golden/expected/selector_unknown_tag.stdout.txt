@@ -1,3 +1,3 @@
 Compile error: tests/fixtures/selector_unknown_tag.lamp:14: type error: unknown action or tag "manipulatoin"
-  14 | instead take or manipulatoin when self.actor.holder == room1:
+  14 | instead take or manipulatoin when holder(self.actor) == room1:
     | ^

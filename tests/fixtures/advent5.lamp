@@ -13,9 +13,10 @@ room Foyer:
 	description "A foyer."
 
 item brass_lamp:
-	holder Foyer
 	understand "lamp/brass"
 
 item clay_lamp:
-	holder Foyer
 	understand "lamp/clay"
+
+contains Foyer brass_lamp
+contains Foyer clay_lamp

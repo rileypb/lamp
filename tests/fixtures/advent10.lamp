@@ -9,7 +9,8 @@ room hall:
 
 item hat:
     wearable true
-    holder hall
 
-item book:
-    holder hall
+item book
+
+contains hall hat
+contains hall book

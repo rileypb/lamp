@@ -49,16 +49,17 @@ bidi connects foyer north study
 type door < item:
     bool locked
 
-item brass_key:
-    holder foyer
+item brass_key
 item statue:
     scenery true
-    holder foyer
-item idol:
-    holder foyer
+item idol
 door oak_door:
     locked true
-    holder foyer
+
+contains foyer brass_key
+contains foyer statue
+contains foyer idol
+contains foyer oak_door
 
 # Game-defined reasons — advent's `stop_reason` is an open type, so no library
 # edit is needed to add these.

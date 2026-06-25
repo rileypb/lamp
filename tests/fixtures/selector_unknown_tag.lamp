@@ -11,6 +11,6 @@ game Bad_Selector:
 room room1:
 	description "A room."
 
-instead take or manipulatoin when self.actor.holder == room1:
+instead take or manipulatoin when holder(self.actor) == room1:
 	print "nope"
 	stop failed

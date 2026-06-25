@@ -14,11 +14,11 @@ game Test_Reasons:
 room Shrine:
 	description "A quiet shrine."
 
-item coin:
-	holder Shrine
+item coin
+item idol
 
-item idol:
-	holder Shrine
+contains Shrine coin
+contains Shrine idol
 
 # A new reason, declared in the game — the open `stop_reason` type is extensible.
 stop_reason too_sacred

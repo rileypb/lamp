@@ -12,8 +12,8 @@ undo_limit = 1
 room hall:
     description "A plain hall."
 
-item coin:
-    holder hall
+item coin
+item gem
 
-item gem:
-    holder hall
+contains hall coin
+contains hall gem

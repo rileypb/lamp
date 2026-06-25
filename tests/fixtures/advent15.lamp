@@ -10,18 +10,17 @@ room hall:
 item shelf:
     scenery true
     supporter true
-    holder hall
 
 item hook:
     scenery true
     supporter true
-    holder hall
 
-item ball:
-    holder shelf
+item ball
+item trumpet
+item cloak
 
-item trumpet:
-    holder shelf
-
-item cloak:
-    holder hook
+contains hall shelf
+contains hall hook
+contains shelf ball
+contains shelf trumpet
+contains hook cloak

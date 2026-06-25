@@ -17,9 +17,9 @@ room Forest:
 
 bidi connects West_of_House north Forest
 
-item lamp:
-	holder West_of_House
-
+item lamp
 item rock:
 	scenery true
-	holder West_of_House
+
+contains West_of_House lamp
+contains West_of_House rock

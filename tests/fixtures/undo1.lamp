@@ -9,5 +9,6 @@ game Undo_Demo:
 room hall:
     description "A plain hall."
 
-item coin:
-    holder hall
+item coin
+
+contains hall coin
