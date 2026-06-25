@@ -42,6 +42,17 @@ const cases = [
         },
     },
     {
+        name: "object field: bare name is boolean shorthand for `= true`",
+        run() {
+            const [obj] = parse(["item cloak:", "    wearable", "    scenery false"].join("\n"));
+            assert.strictEqual(obj.kind, "ObjectDecl");
+            assert.deepStrictEqual(obj.fields.map((f) => [f.fieldName, f.value]), [
+                ["wearable", { kind: "BooleanLiteral", value: true }],
+                ["scenery", { kind: "BooleanLiteral", value: false }],
+            ]);
+        },
+    },
+    {
         name: "object decl: no body",
         run() {
             const [obj] = parse("person yourself");

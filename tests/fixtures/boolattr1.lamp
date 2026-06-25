@@ -1,0 +1,20 @@
+# Bare boolean-attribute shorthand: `wearable` / `scenery` (no value) mean `= true`.
+# Wearing the cloak proves `wearable` took effect; the scenery rock refusing to be
+# taken proves `scenery` did. An explicit `false` still works (the lamp is takeable).
+
+lib advent
+
+game Bool_Attr:
+	author "Test Author"
+	start hall
+
+room hall:
+	description "A plain hall."
+	item cloak:
+		wearable
+	item rock:
+		scenery
+	item lamp:
+		scenery false
+
+bidi connects hall north hall

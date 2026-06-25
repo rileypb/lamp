@@ -175,6 +175,14 @@ core edit is contained. Names (default): `contains`/`place`/`contained`, keyword
 **Where:** `src/lantern/{tokenizer,parser_rd,emitter,checker}.js`, `src/lamplighter/index.js`, `lib/advent/*`, `devdocs/{relations,world-model}.md`.
 
 ## Smaller / opportunistic
+- ~~**Bare boolean-attribute shorthand — `wearable` for `wearable true`.**~~ **DONE (2026-06-25):**
+  one line in `parseObjectBody` — a field name with no value desugars to `= true`
+  (`at("NEWLINE") ? createBooleanLiteral(true) : parseSimpleValue()`). Purely additive (a bare
+  field line was a parse error before); no emitter change; no collision with the nested-object
+  branch (needs a `:`). Validation is free — a bare non-bool field errors as "expects string,
+  got bool" via `checkObjectDecl` (kept the borrowed message; didn't add a tailored one). Tests:
+  parser unit + golden `boolattr1` (wear a `wearable` cloak, scenery rock refuses take, explicit
+  `scenery false` lamp still takeable). Docs: specs.md object-declarations.
 - ~~**Parser: allow property access on a call/parenthesized result — `holder(p).lighted`, `(EXPR).field`.**~~ **DONE (2026-06-25):** factored a `collectTrailingFields()` helper in `parser_rd.js`; the call-result branch of `parseIdentExpr` now wraps a `CallExpr` with trailing dots in a `MemberAccess` (parenthesized branch refactored onto the same helper). Emitter already emits `(inner).field`; checker's `applyFieldToType` resolves the field off the call's return type (tolerant/unknown otherwise — no error). Simplified advent `in_darkness` back to `not holder(p).lighted`. Tests: two parser units (call result, chained + parenthesized). `go`'s `let here` stays — that's a *different* restriction (function calls disallowed in relation-query slots, by design). All 141 golden + parser green.
 - ~~**Nested object-in-room syntax (step 5).**~~ **DONE (2026-06-25):** a `TYPE NAME:`
   body line (leading token a declared type, with a `:` body) inside an object body

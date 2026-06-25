@@ -777,7 +777,10 @@ function createParser(tokens, filePath, globalNames, functionNames = new Set(), 
             }
             const nameToken = peek();
             const fieldName = plainName("field name");
-            const value = parseSimpleValue();
+            // Bare boolean shorthand: `wearable` (a field name with no value) means
+            // `wearable true`. A non-bool field given the bare form is rejected by the
+            // checker (it sees `= true` against, e.g., a string field).
+            const value = at("NEWLINE") ? ast.createBooleanLiteral(true) : parseSimpleValue();
             expectNewline();
             fields.push(ast.createFieldAssign(fieldName, value, filePath, nameToken.line));
         }

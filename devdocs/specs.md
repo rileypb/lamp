@@ -251,6 +251,14 @@ TYPE_NAME OBJECT_NAME:
 
 `TYPE_NAME OBJECT_NAME:` declares an object named `OBJECT_NAME` of type `TYPE_NAME`. A trailing `:` starts the body. Each indented line is a field assignment `FIELD_NAME VALUE`. A `VALUE` is a literal (number, double-quoted string, `true`, `false`, or `none`) or an object reference written as an identifier. Free text containing spaces is written as a quoted string; multi-word object names use the underscore convention described in Names and identifiers.
 
+A field line may omit the value entirely as a **boolean shorthand**: a bare `FIELD_NAME` (a field name with no value) means `FIELD_NAME true`. This is intended for flag fields — `wearable` is `wearable true`. The bare form on a non-boolean field is a type error (the implied `true` fails the field's value-compatibility check), so it is only useful for `bool` fields.
+
+```lamp
+item velvet_cloak:
+    description "A handsome cloak."
+    wearable          # same as `wearable true`
+```
+
 ```lamp
 game Minimal:
     author "Phil Riley"

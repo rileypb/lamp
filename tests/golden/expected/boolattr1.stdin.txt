@@ -1,0 +1,4 @@
+wear cloak
+take rock
+take lamp
+quit
