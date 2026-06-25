@@ -53,11 +53,74 @@ function readStdinLine(fs) {
 }
 
 function createPlainBackend({ out, err, fs }) {
+    // Paginate ("[more]") only on an interactive terminal. Piped/redirected/test runs
+    // (no TTY on either side) stream straight through, so captured output is unchanged
+    // and nothing blocks waiting for a keypress.
+    const paginate = !!(out.isTTY && process.stdin.isTTY);
+    // Track the cursor's screen position so the page counter reflects *wrapped* rows,
+    // not just newlines — phobos's paragraphs are single long lines that wrap to many
+    // rows, so counting newlines alone wildly overshoots a screen.
+    let col = 0;
+    let rowsOnPage = 0;
+
+    function pageLimit() {
+        // Reserve two rows: one for the [more] line, one for the scroll the bottom-row
+        // Enter causes in cooked mode (otherwise the first content row scrolls off).
+        return Math.max(1, (out.rows || 24) - 2);
+    }
+
+    // Wait at a full page: show [more], block for Enter (cooked mode — no raw keypress
+    // on this path), then erase the prompt line and reset the page counter. `freshLine`
+    // is true when the cursor already sits at the start of a blank row (after a "\n");
+    // when false (we paused at a wrap boundary, cursor at the row's end) emit the break
+    // first — it lands exactly where the terminal would have wrapped, so it is invisible.
+    function morePause(freshLine) {
+        if (!freshLine) out.write("\n");
+        out.write("[more]");
+        readStdinLine(fs);
+        out.write("\x1b[1A\r\x1b[2K"); // up over the echoed newline, clear the [more] line
+        col = 0;
+        rowsOnPage = 0;
+    }
+
+    function endRow(freshLine) {
+        rowsOnPage += 1;
+        col = 0;
+        if (rowsOnPage >= pageLimit()) morePause(freshLine);
+    }
+
+    function writePaged(value, styles) {
+        if (!paginate) {
+            out.write(renderStyledSegment(value, styles, out.isTTY));
+            return;
+        }
+        const cols = Math.max(1, out.columns || 80);
+        const s = String(value);
+        let chunkStart = 0;
+        const flush = (end) => {
+            if (end > chunkStart) out.write(renderStyledSegment(s.slice(chunkStart, end), styles, out.isTTY));
+            chunkStart = end;
+        };
+        for (let i = 0; i < s.length; i += 1) {
+            if (s[i] === "\n") {
+                flush(i + 1); // include the newline; cursor is now at a fresh row start
+                endRow(true);
+            } else {
+                if (col >= cols) { // the terminal will autowrap before this char
+                    flush(i);
+                    endRow(false);
+                }
+                col += 1;
+            }
+        }
+        flush(s.length);
+    }
+
     return {
         start() {},
         stop() {},
         write(value, styles) {
-            out.write(renderStyledSegment(value, styles, out.isTTY));
+            writePaged(value, styles);
         },
         log(value) {
             err.write(`${value}\n`);
@@ -66,6 +129,8 @@ function createPlainBackend({ out, err, fs }) {
             // Plain stdio has no status region; the status update is ignored.
         },
         requestLine(prompt, deliver) {
+            col = 0; // the prompt/echo leaves the cursor on a fresh line
+            rowsOnPage = 0; // a new turn starts a fresh page budget
             if (prompt != null) {
                 out.write(prompt);
                 const line = readStdinLine(fs);
