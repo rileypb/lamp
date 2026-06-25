@@ -38,5 +38,4 @@ on contains add:
 	self.contained.holder = self.place
 
 function bool in_darkness(person p):
-	let here = holder(p)
-	return not here.lighted
+	return not holder(p).lighted

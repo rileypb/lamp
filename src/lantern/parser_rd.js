@@ -1678,15 +1678,8 @@ function createParser(tokens, filePath, globalNames, functionNames = new Set(), 
             // `(connects foyer _ ?all).size` (G2). Collect the trailing dotted
             // names into a MemberAccess; with no trailing '.' the value passes
             // through unchanged.
-            if (at("DOT")) {
-                const fields = [];
-                while (at("DOT")) {
-                    next();
-                    fields.push(plainName("field name"));
-                }
-                return ast.createMemberAccess(expr, fields);
-            }
-            return expr;
+            const fields = collectTrailingFields();
+            return fields.length === 0 ? expr : ast.createMemberAccess(expr, fields);
         }
         throw err(`Unexpected token in expression: ${token.type}`, token.line);
     }
@@ -1712,6 +1705,24 @@ function createParser(tokens, filePath, globalNames, functionNames = new Set(), 
         throw err(`Unexpected operator: ${op.type}`, op.line);
     }
 
+    // Collect a run of trailing `.field` accesses. A member name after `.` may be
+    // a reserved word (e.g. `self.action`), mirroring JS member access — the
+    // leading-identifier reservation does not apply in field position. Returns the
+    // field-name list (possibly empty).
+    function collectTrailingFields() {
+        const fields = [];
+        while (at("DOT")) {
+            next();
+            const fieldTok = peek();
+            if (fieldTok.type !== "IDENT" && fieldTok.type !== "KEYWORD") {
+                throw err("Expected field name after '.'", fieldTok.line);
+            }
+            next();
+            fields.push(fieldTok.value);
+        }
+        return fields;
+    }
+
     function parseIdentExpr(token, localNames) {
         const raw = token.value;
         if (raw === "true") return ast.createBooleanLiteral(true);
@@ -1729,22 +1740,13 @@ function createParser(tokens, filePath, globalNames, functionNames = new Set(), 
                 }
             }
             expect("RPAREN", "Expected ')'");
-            return ast.createCallExpr(raw, args, filePath, token.line);
+            const call = ast.createCallExpr(raw, args, filePath, token.line);
+            // Postfix field access on the call result, e.g. `holder(p).lighted`.
+            const callFields = collectTrailingFields();
+            return callFields.length === 0 ? call : ast.createMemberAccess(call, callFields);
         }
 
-        const fields = [];
-        while (at("DOT")) {
-            next();
-            // A member name after `.` may be a reserved word (e.g. `self.action`),
-            // mirroring JS member access; the leading-identifier reservation does
-            // not apply in field position.
-            const fieldTok = peek();
-            if (fieldTok.type !== "IDENT" && fieldTok.type !== "KEYWORD") {
-                throw err("Expected field name after '.'", fieldTok.line);
-            }
-            next();
-            fields.push(fieldTok.value);
-        }
+        const fields = collectTrailingFields();
 
         if (fields.length === 0) {
             if (localNames.has(raw)) return ast.createVariableExpr(raw);

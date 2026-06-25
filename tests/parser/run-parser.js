@@ -680,6 +680,33 @@ const cases = [
             assert.strictEqual(stmt.container.kind, "PropertyAccess");
         },
     },
+    {
+        name: "property access on a call result: holder(p).lighted",
+        run() {
+            const [handler] = parse(["on startup:", "    let y = holder(p).lighted"].join("\n"));
+            const expr = handler.body[0].expr;
+            assert.strictEqual(expr.kind, "MemberAccess");
+            assert.deepStrictEqual(expr.fields, ["lighted"]);
+            assert.strictEqual(expr.object.kind, "CallExpr");
+            assert.strictEqual(expr.object.name, "holder");
+        },
+    },
+    {
+        name: "property access on a call result: chained fields and parenthesized",
+        run() {
+            const [a] = parse(["on startup:", "    let y = f(x).a.b"].join("\n"));
+            const m = a.body[0].expr;
+            assert.strictEqual(m.kind, "MemberAccess");
+            assert.deepStrictEqual(m.fields, ["a", "b"]);
+            assert.strictEqual(m.object.kind, "CallExpr");
+            // The user's parenthesized form parses to the same MemberAccess.
+            const [b] = parse(["on startup:", "    let y = (holder(p).lighted)"].join("\n"));
+            const p = b.body[0].expr;
+            assert.strictEqual(p.kind, "MemberAccess");
+            assert.deepStrictEqual(p.fields, ["lighted"]);
+            assert.strictEqual(p.object.kind, "CallExpr");
+        },
+    },
 ];
 
 // The parser must reject these with a clear error.

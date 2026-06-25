@@ -398,8 +398,10 @@ Built-in primitive types:
 - `list<T>` (generic list of elements of type `T`). A list value exposes the
   accessors `.first` (the first element, or `none` if empty, type `T`) and
   `.size` / `.count` (the element count, type `int`). These work on a list-typed
-  name (`stuff.size`) and on a parenthesized expression — `(connects here _ ?all).size`
-  — the latter being postfix field access on a computed value. The locale provides
+  name (`stuff.size`) and on a computed value — a parenthesized expression
+  (`(connects here _ ?all).size`) or a function-call result (`holder(p).lighted`) — the
+  latter being **postfix field access**: a `.field` chain may follow a `(…)` group or a
+  `name(args)` call, not only a bare name. The locale provides
   `a_list(xs)` / `the_list(xs)` (render a list with indefinite / definite articles)
   and `is_empty(xs)`. Count-driven copula agreement (G3): `are(n)` returns "is"/"are"
   by a raw count (singular only at exactly 1), and the sugar `[is LIST]` /
