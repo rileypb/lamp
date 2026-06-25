@@ -111,9 +111,10 @@ builds. **Where:** `src/lighthouse/`.
 
 ### 6. Malformed-world startup check (optional hardening)
 Carryover from arch issue C. When the parser is used, assert at startup that a
-`physical` type and a `holder` field exist, so a world library missing the
-runtime↔world contract names fails loudly instead of on `undefined.holder` deep
-in `scopeOf`. Low priority. **Where:** `src/lamplighter/index.js` (`run`).
+`physical` type and a containment representation (a `contains` relation, or — until
+the migration completes — a `holder` field) exist, so a world library missing the
+runtime↔world contract names fails loudly instead of resolving nothing deep in
+`scopeOf`/`containerOf`. Low priority. **Where:** `src/lamplighter/index.js` (`run`).
 
 ## Design (not scheduled)
 
@@ -164,8 +165,8 @@ core edit is contained. Names (default): `contains`/`place`/`contained`, keyword
 `unique`. **Sequence:**
 1. ~~Relation `unique` cardinality modifier — parser tag + `addRelation` auto-eviction + unit tests.~~ **DONE (2026-06-25):** `unique` contextual tag in `parseRelationBody` (combines with `inverted` in any order) → AST `uniqueFields` → emitter 7th `defineRelation` arg → runtime `addRelation` evicts colliding edges via `removeRelation` (remove handlers fire, names drop) before insert; dedup still short-circuits identical asserts. Tests: parser units + golden `relation24` (eviction, `?only` one-container invariant, move fires remove+add). Docs: specs.md (decl grammar, `defineRelation`/`addRelation` contract, contextual-keyword lists), relations.md (Cardinality section).
 2. ~~`move X to Y` — tokenizer/parser/emitter/checker, desugars to a `contains` assertion.~~ **DONE (2026-06-25):** `move` is a reserved keyword (tokenizer KEYWORDS); `parseMoveStatement` parses `move EXPR to EXPR` → AST `MoveStatement{contained,container}` → emitter `lamplighter.moveObject(contained, container)` → runtime `moveObject` asserts `contains` with container=source/contained=target (endpoint names read from the registry; errors if no `contains` relation), relying on `unique` to evict the prior container. Checker threads both operands into call-checking. Tests: parser units + golden `move1` (orientation + relocate-evicts). Docs: specs.md (reserved words, `moveObject` API, `move` statement section). Note: `move` is now reserved (can't name a function/action `move`); updated a prescan test that used it as a sample name.
-3. Rewrite `scopeOf` (`src/lamplighter/index.js:543`) to walk `contains`; update D1 + the line-7 note + item 6's guard (assert `contains` relation, not `holder` field). The `contains` contract relation name is already referenced by `moveObject` (step 2) — generalize/centralize it here.
-4. `lib/advent` migration: declare `contains`, add `function container holder(physical x)`, rewrite all `.holder` reads → `holder(x)` and writes → `move`, convert `on *.holder change` → `on contains add/remove`, port `contents_of`/`describe_supporters` to `queryRelation`; regenerate `cloak` golden.
+3. ~~Rewrite `scopeOf` to walk `contains`; update D1 + the line-7 note.~~ **DONE (2026-06-25):** new `containerOf(inst)` seam reads containment from the `contains` relation (endpoint names from the registry), **per-object falling back to the legacy `holder` field** when an object has no `contains` edge (transitional dual-read, chosen to keep all holder-based fixtures green). `scopeOf` rewritten to walk `containerOf`. Updated the registry comment (`index.js:7`), the D1 contract block (`index.js` + world-model.md: containment is now the `contains` relation, transitionally holder). Test: golden `scope_contains` (item placed via `contains`, no `holder`, resolves by scope; unplaced control rejected). All 141 golden green — no existing fixture touched. **Remaining for step 4:** remove the holder fallback once advent + fixtures migrate.
+4. `lib/advent` migration: declare `contains`, add `function container holder(physical x)`, rewrite all `.holder` reads → `holder(x)` and writes → `move`, convert `on *.holder change` → `on contains add/remove`, port `contents_of`/`describe_supporters` to `queryRelation`; migrate the ~25 holder-based fixtures + 3 samples; **drop the `containerOf` holder fallback** (step 3); regenerate goldens.
 5. Nesting syntax (below) on top — desugars `room R:`/`item hook:` to `contains R hook`.
 **Where:** `src/lantern/{tokenizer,parser_rd,emitter,checker}.js`, `src/lamplighter/index.js`, `lib/advent/*`, `devdocs/{relations,world-model}.md`.
 

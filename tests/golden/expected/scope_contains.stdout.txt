@@ -1,0 +1,10 @@
+Lab
+A bare test lab.
+
+> examine widget
+A small widget.
+
+> examine gadget
+You can't see any such thing.
+
+> quit

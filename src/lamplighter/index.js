@@ -4,8 +4,11 @@
 const { encode: encodeText, decode } = require("../strcodec");
 
 const typeRegistry = new Map();
-// World objects only. Relation edges live in relationInstanceRegistry so that
-// world-iterating consumers (scopeOf, buildVocabIndex) never walk graph edges.
+// World objects only. Relation edges live in relationInstanceRegistry, kept out
+// of this registry so that world iteration (buildVocabIndex, and scopeOf's
+// instance sweep) never accidentally walks graph edges. scopeOf does consult
+// containment via an explicit `contains` query (containerOf) — a targeted lookup,
+// not edge-iteration of this registry.
 const instanceRegistry = new Map();
 // relationTypeName -> edge instances. Kept separate from instanceRegistry; the
 // only place the two are unioned is getInstancesForTypeAndSubtypes (so a
@@ -46,8 +49,14 @@ const ANY = Symbol("relation-wildcard");
 // world library (e.g. lib/advent) must provide them; the engine references them
 // by these exact names:
 //
-//   - field `holder`     — an object's container. scopeOf walks reachability over
-//                          it; an object with no `holder` is out of scope.
+//   - relation `contains` — an object's container is the source of its `contains`
+//                          edge (the object is the target; the `to` endpoint is
+//                          `unique`, so each object is in at most one place).
+//                          scopeOf walks reachability over it (containerOf); an
+//                          uncontained object is out of scope. Transitional: an
+//                          object with no `contains` edge falls back to the legacy
+//                          `holder` field (the holder->contains migration).
+//                          `moveObject`/`move X to Y` asserts a `contains` edge.
 //   - type  `physical`   — the scope-root type. Only `physical` objects are
 //                          scoped by location and can be pronoun antecedents;
 //                          non-physical nameables (e.g. directions) are global.
@@ -565,29 +574,51 @@ function matchGrammar(parts, tokens) {
     return ti === tokens.length ? slots : null;
 }
 
+// An object's container — the world-model containment contract. Canonically the
+// container is the source of the object's `contains` edge (the object is the
+// target). During the holder->contains migration this is read per object: an
+// object with no `contains` edge falls back to the legacy `holder` field, so a
+// holder-based world (lib/advent today) and a contains-based world both resolve.
+// Returns null when uncontained. See devdocs/world-model.md.
+function containerOf(inst) {
+    const def = relationRegistry.get("contains");
+    if (def) {
+        const query = {};
+        for (const key of Object.keys(def.fields)) query[key] = ANY;
+        query[def.targetField] = inst;
+        const edges = queryRelation("contains", query);
+        if (edges.length > 0) return edges[0][def.sourceField];
+    }
+    return inst.holder ?? null;
+}
+
 // The objects the actor can currently refer to: contents of the actor's location
-// and the actor's own contents, plus anything transitively held by those objects
-// (items resting on surfaces, contents of containers, etc.), via `holder`.
-// World-model contract: reachability is computed over the `holder` field.
+// and the actor's own contents, plus anything transitively contained by those
+// objects (items resting on surfaces, contents of containers, etc.). Reachability
+// is computed over containment (containerOf): the `contains` relation, falling
+// back to the legacy `holder` field during migration.
 function scopeOf(actor) {
-    const location = actor.holder;
+    const location = containerOf(actor);
     const inScope = new Set();
 
     for (const instances of instanceRegistry.values()) {
         for (const inst of instances) {
-            if (inst.holder === location || inst.holder === actor) {
+            const container = containerOf(inst);
+            if (container === location || container === actor) {
                 inScope.add(inst);
             }
         }
     }
 
-    // Expand to fixpoint: if an item's holder is in scope, the item is too.
+    // Expand to fixpoint: if an object's container is in scope, the object is too.
     let changed = true;
     while (changed) {
         changed = false;
         for (const instances of instanceRegistry.values()) {
             for (const inst of instances) {
-                if (!inScope.has(inst) && inst.holder && inScope.has(inst.holder)) {
+                if (inScope.has(inst)) continue;
+                const container = containerOf(inst);
+                if (container && inScope.has(container)) {
                     inScope.add(inst);
                     changed = true;
                 }

@@ -1,0 +1,30 @@
+# Step-3 proof: scopeOf resolves an object placed via the `contains` relation
+# (not the legacy `holder` field). `widget` is put in the Lab with `contains`, so
+# `examine widget` succeeds only if scope walks containment over `contains`.
+# `gadget` is placed nowhere, so it stays out of scope (the negative control).
+
+lib advent
+
+game Scope_Contains:
+	author "Test Author"
+	version 1
+	release dev
+	start Lab
+
+room Lab:
+	description "A bare test lab."
+
+item widget:
+	scenery true
+	description "A small widget."
+
+item gadget:
+	scenery true
+	description "A small gadget."
+
+relation contains:
+	from container place
+	to physical contained unique
+	syntax "contains [place] [contained]"
+
+contains Lab widget
