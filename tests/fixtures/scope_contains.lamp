@@ -22,9 +22,5 @@ item gadget:
 	scenery true
 	description "A small gadget."
 
-relation contains:
-	from container place
-	to physical contained unique
-	syntax "contains [place] [contained]"
-
+# Placed via advent's `contains` relation (not the `holder` field).
 contains Lab widget

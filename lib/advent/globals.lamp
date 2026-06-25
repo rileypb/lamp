@@ -73,6 +73,16 @@ relation wears:
 	to item worn
 	syntax "wears [wearer] [worn]"
 
+# Containment: the canonical "X is in/on Y" graph. One-to-many — the `unique`
+# target means each physical thing is in exactly one place, so `move X to Y`
+# (which asserts this) relocates with a single statement. The runtime reads scope
+# over this relation (see devdocs/world-model.md); `from physical` (not `container`)
+# lets a person hold inventory.
+relation contains:
+	from physical place
+	to physical contained unique
+	syntax "contains [place] [contained]"
+
 rulebook bool startup_rules():
 	default true
 

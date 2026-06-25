@@ -14,7 +14,7 @@ action look:
 
 # look changes nothing; its whole effect is to describe, so it lives in report.
 report look:
-	describe_room(self.actor.holder)
+	describe_room(holder(self.actor))
 
 action take:
 	direct item taken
@@ -23,7 +23,7 @@ action take:
 		"get [taken]"
 
 check take:
-	if self.taken.holder == self.actor:
+	if holder(self.taken) == self.actor:
 		stop failed already_carrying
 
 check take:
@@ -31,7 +31,7 @@ check take:
 		stop failed cant_take_that
 
 do take:
-	self.taken.holder = self.actor
+	move self.taken to self.actor
 
 report take:
 	if self.actor == player:
@@ -57,7 +57,7 @@ action inventory:
 report inventory:
 	let found = false
 	for x in item.all:
-		if x.holder == self.actor:
+		if holder(x) == self.actor:
 			if not found:
 				print "You are carrying:[line break]"
 				found = true
@@ -74,7 +74,7 @@ action drop:
 		"drop [dropped]"
 
 check drop:
-	if not (self.dropped.holder == self.actor):
+	if not (holder(self.dropped) == self.actor):
 		stop failed not_carrying
 
 do drop:
@@ -86,7 +86,7 @@ do drop:
 			actor self.actor
 		if wears self.actor self.dropped:
 			stop failed
-	self.dropped.holder = self.actor.holder
+	move self.dropped to holder(self.actor)
 
 report drop:
 	if self.actor == player:
@@ -113,13 +113,13 @@ check wear:
 		stop failed already_worn
 
 do wear:
-	if not (self.clothing.holder == self.actor):
+	if not (holder(self.clothing) == self.actor):
 		if (self.actor == player):
 			print "(first taking [the self.clothing])[line break]"
 		try take:
 			taken self.clothing
 			actor self.actor
-		if not (self.clothing.holder == self.actor):
+		if not (holder(self.clothing) == self.actor):
 			stop failed
 	wears self.actor self.clothing
 
@@ -185,20 +185,24 @@ action go:
 		"go [way]"
 		"[way]"
 
+# `here` binds the actor's location first: a relation-query slot may hold a value,
+# variable, or property chain, but not a function call like `holder(self.actor)`.
 check go:
-	if not connects self.actor.holder self.way _:
+	let here = holder(self.actor)
+	if not connects here self.way _:
 		stop failed cant_go_that_way
 
 do go:
-	self.actor.holder = connects self.actor.holder self.way ?first
+	let here = holder(self.actor)
+	move self.actor to connects here self.way ?first
 
 report failed go:
 	if self.reason == cant_go_that_way:
 		print "You can't go that way."
 		stop
 
-# go needs no report: moving the actor fires the `person.holder change` handler,
-# which describes the room on arrival.
+# go needs no report: moving the actor fires the `contains add` handler, which
+# describes the room on arrival.
 
 # Tracks items resting on a surface (e.g. a hook or shelf). Asserted by `do hang`.
 relation supports:
@@ -206,12 +210,13 @@ relation supports:
 	to item supported
 	syntax "supports [support] [supported]"
 
-# Keep `supports` consistent with `holder`: an item rests on a supporter only
-# while its holder is that supporter. Any holder change (taken, dropped, or
-# re-hung elsewhere) drops the stale edge; `do hang` re-asserts the new one
-# right after it sets the holder.
-on item.holder change:
-	remove supports _ self
+# Keep `supports` consistent with containment: an item rests on a supporter only
+# while it is contained by that supporter. When an item leaves its container
+# (taken, dropped, or re-placed — `move` evicts the old `contains` edge, firing
+# `contains remove`), drop the stale edge; `do put_on` re-asserts the new one right
+# after the move.
+on contains remove:
+	remove supports _ self.contained
 
 action put_on:
 	direct item put_item
@@ -220,7 +225,7 @@ action put_on:
 		"put [put_item] on [destination]"
 
 check put_on:
-	if not (self.put_item.holder == self.actor):
+	if not (holder(self.put_item) == self.actor):
 		stop failed not_carrying
 
 check put_on:
@@ -236,7 +241,7 @@ do put_on:
 			actor self.actor
 		if wears self.actor self.put_item:
 			stop failed
-	self.put_item.holder = self.destination
+	move self.put_item to self.destination
 	supports self.destination self.put_item
 
 report put_on:

@@ -2029,6 +2029,7 @@ module.exports = {
     removeRelation,
     removeRelationByName,
     moveObject,
+    containerOf,
     queryRelation,
     queryRelationValue,
     ANY,

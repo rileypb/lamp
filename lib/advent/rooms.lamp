@@ -2,6 +2,10 @@ native function list<string> contents_of(room r)
 native function string with_article(physical x)
 native function void describe_supporters(room r)
 
+# An object's container (the `contains` relation, with a transitional holder-field
+# fallback). Author code reads containment through this, never the raw field.
+native function container holder(physical x)
+
 # All of the printing for room description is in here, including
 # listing contents, and whatever else we may want to add.
 function void describe_room(room r):
@@ -19,8 +23,20 @@ function void list_room_contents(room r):
 		print "[par]You see [contents] here."
 	describe_supporters(r)
 
-on person.holder change:
-	describe_room(player.holder)
+# Describe the room the player arrives in. Containment changes fire `contains add`
+# (a `move`/`contains` assertion); we re-describe only when the player is the thing
+# placed, using the new container (`self.place`).
+on contains add:
+	if self.contained == player:
+		describe_room(self.place)
+
+# Transitional bridge (holder->contains migration): keep the legacy `holder` field
+# in sync with containment so any code still reading `.holder` directly (samples,
+# fixtures not yet ported) sees the right value. Removed once nothing reads the
+# field. See devdocs/world-model.md.
+on contains add:
+	self.contained.holder = self.place
 
 function bool in_darkness(person p):
-	return not p.holder.lighted
+	let here = holder(p)
+	return not here.lighted
