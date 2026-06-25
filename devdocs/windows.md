@@ -82,8 +82,15 @@ caret tracks across rows), and multi-byte/emoji input (a `StringDecoder` reassem
 UTF-8 split across stdin chunks; editing and the caret work in code points; column math
 uses an approximate East-Asian/emoji display width — wide = 2, combining/zero-width = 0
 — so wrapping and the caret align with what the terminal draws). Still deferred (see
-TODO item 7): batched redraws and preserving the transcript on exit (the alternate
+TODO item 8): batched redraws and preserving the transcript on exit (the alternate
 screen clears it today, like `less`/`nano`).
+
+## Output pagination ("[more]")
+
+All three interactive hosts pause a long passage with a `[more]` prompt and reveal it a
+screenful at a time, so it isn't scrolled past unread. Pagination is a host concern (the
+host knows its viewport/width; the runtime emits a turn's whole output then blocks at the
+prompt) — the full per-host design is in `devdocs/sandbox.md` ("Output pagination").
 
 ## Open questions
 

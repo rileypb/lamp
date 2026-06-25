@@ -326,6 +326,27 @@ event-driven for the TUI). Two backends:
   exit/error/signal. Unit-tested via mock stdin/stdout (`tests/tui`); on-screen
   rendering is verified manually. See `devdocs/windows.md` for the status line it shows.
 
+**Output pagination ("[more]").** When a turn's output overflows the viewport, each
+interactive host pauses with a `[more]` prompt and reveals the text a screenful at a
+time — so a long passage (e.g. a multi-paragraph intro) isn't scrolled past unread. This
+is a **host** concern: the runtime emits a turn's whole output and then blocks at the
+input prompt, so the host has all the text and knows its own viewport/width; the runtime
+never counts lines. Each host implements it over the same seam:
+- **plain** paginates only on a TTY (piped/test runs stream straight through, so captured
+  output is unchanged). It tracks the cursor column to count *wrapped* rows; Enter
+  advances (cooked mode has no single-key read). Pauses at `rows − 2`.
+- **tui** tracks `seenRows` (acknowledged wrapped rows); at a pause it renders one page +
+  a reverse-video `[more]`, and any key advances (mouse ignored, Ctrl-C quits). An input
+  request arriving mid-page is held until the player catches up.
+- **web shell** is pixel-based: output still appends to the DOM, and an `ackHeight` marks
+  the seen content height; `[more]` (a reverse-video flex row) shows when more than a
+  viewport is unseen. A key, a click, or scrolling to the bottom advances; the deferred
+  prompt appears once caught up.
+
+This depends on the worker blocking at the prompt; a game that emits a screenful and then
+*ends* (no trailing prompt) can't be paged in the event-driven hosts (the end message
+clears the pause). See `devdocs/windows.md`.
+
 ### Input is currently a raw-capability native function
 
 Player input is not part of Lamplighter. It is supplied by a native library that

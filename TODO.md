@@ -147,6 +147,14 @@ override of the status content (e.g. score games). **Where:**
 `src/lighthouse/web/`, `src/lamplighter/sandbox/backends/`, `lib/sys`, `lib/advent`.
 
 ## Smaller / opportunistic
+- **Output pagination ("[more]") — done, with one gap.** All three interactive hosts
+  pause long output a screenful at a time (plain on a TTY, the TUI, and the web shell;
+  design in `devdocs/sandbox.md` → "Output pagination"). Known gap: it relies on the
+  worker blocking at the next prompt, so a game that prints a screenful and then *ends*
+  with no trailing prompt can't be paged in the event-driven hosts (TUI/web) — the end
+  message clears the pause. If that matters, have the runtime emit an explicit
+  "end-of-output" checkpoint the host can pause on, or page on `done`. **Where:**
+  `src/lamplighter/sandbox/backends/`, `src/lighthouse/web/shell.js`.
 - **VS Code syntax highlighting (scaffolded).** A declarative TextMate-grammar
   extension lives in `editors/vscode/` (manifest + `language-configuration.json` +
   `syntaxes/lamp.tmLanguage.json`); no deps, loads via `F5`/`--extensionDevelopmentPath`.
