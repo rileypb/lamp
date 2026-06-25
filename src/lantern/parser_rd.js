@@ -24,16 +24,16 @@ function getInfixBP(token) {
 
 const PHASE_WORDS = new Set(["before", "instead", "check", "do", "after", "report"]);
 
-function parseSource(sourceText, filePath, globalNames = new Set(), functionNames = new Set(), relationNames = new Set(), relationTemplates = new Map(), actionNames = new Set(), objectNames = new Set(), tagNames = new Set(), rulebookParams = new Map(), verbNames = new Set()) {
+function parseSource(sourceText, filePath, globalNames = new Set(), functionNames = new Set(), relationNames = new Set(), relationTemplates = new Map(), actionNames = new Set(), objectNames = new Set(), tagNames = new Set(), rulebookParams = new Map(), verbNames = new Set(), typeNames = new Set()) {
     const tokens = tokenize(sourceText, filePath);
-    return parseTokens(tokens, filePath, globalNames, functionNames, relationNames, relationTemplates, actionNames, objectNames, tagNames, rulebookParams, verbNames);
+    return parseTokens(tokens, filePath, globalNames, functionNames, relationNames, relationTemplates, actionNames, objectNames, tagNames, rulebookParams, verbNames, typeNames);
 }
 
 // Parses an already-tokenized file. The driver (src/lantern/index.js) tokenizes
 // each file once, runs the token-level prescan over those tokens, then parses
 // from the same tokens — so tokenization happens exactly once per file.
-function parseTokens(tokens, filePath, globalNames = new Set(), functionNames = new Set(), relationNames = new Set(), relationTemplates = new Map(), actionNames = new Set(), objectNames = new Set(), tagNames = new Set(), rulebookParams = new Map(), verbNames = new Set()) {
-    return createParser(tokens, filePath, globalNames, functionNames, relationNames, relationTemplates, actionNames, objectNames, tagNames, rulebookParams, verbNames).parseProgram();
+function parseTokens(tokens, filePath, globalNames = new Set(), functionNames = new Set(), relationNames = new Set(), relationTemplates = new Map(), actionNames = new Set(), objectNames = new Set(), tagNames = new Set(), rulebookParams = new Map(), verbNames = new Set(), typeNames = new Set()) {
+    return createParser(tokens, filePath, globalNames, functionNames, relationNames, relationTemplates, actionNames, objectNames, tagNames, rulebookParams, verbNames, typeNames).parseProgram();
 }
 
 // Applies Inform's single-quote convention to a literal text run: a `'` flanked
@@ -254,8 +254,13 @@ function splitTemplate(rawValue, fail) {
     return { parts, hasSub };
 }
 
-function createParser(tokens, filePath, globalNames, functionNames = new Set(), relationNames = new Set(), relationTemplates = new Map(), actionNames = new Set(), objectNames = new Set(), tagNames = new Set(), rulebookParams = new Map(), verbNames = new Set()) {
+function createParser(tokens, filePath, globalNames, functionNames = new Set(), relationNames = new Set(), relationTemplates = new Map(), actionNames = new Set(), objectNames = new Set(), tagNames = new Set(), rulebookParams = new Map(), verbNames = new Set(), typeNames = new Set()) {
     let pos = 0;
+    // Nested/reference object placements (`item hook:` inside a room body) parse to
+    // hoisted top-level nodes — the nested ObjectDecl plus a `contains` placement —
+    // collected here and drained into the program by parseProgram after each
+    // top-level declaration. See parseObjectBody.
+    const hoisted = [];
 
     const peek = (offset = 0) => tokens[pos + offset];
     const next = () => tokens[pos++];
@@ -328,6 +333,9 @@ function createParser(tokens, filePath, globalNames, functionNames = new Set(), 
         const nodes = [];
         while (!at("EOF")) {
             nodes.push(parseDeclaration());
+            // Nested object declarations + their `contains` placements parsed inside
+            // the just-finished declaration's body are hoisted to top level here.
+            while (hoisted.length > 0) nodes.push(hoisted.shift());
         }
         return ast.createProgram(nodes);
     }
@@ -740,17 +748,33 @@ function createParser(tokens, filePath, globalNames, functionNames = new Set(), 
         if (at("COLON")) {
             next();
             expectNewline();
-            fields = parseObjectBody();
+            fields = parseObjectBody(objectName);
         } else {
             expectNewline();
         }
         return ast.createObjectDecl(typeName, objectName, fields);
     }
 
-    function parseObjectBody() {
+    // An object body is a list of `FIELD VALUE` lines. A `TYPE NAME:` line (leading
+    // token a known type, followed by a `:` body) is instead a **nested object
+    // declaration**, placed inside `containerName` via the `contains` relation: it
+    // declares a fresh object (whose body may nest further) and desugars to a hoisted
+    // nested ObjectDecl plus a hoisted `contains containerName NAME` placement. The
+    // trailing `:` is what distinguishes nesting from a field assignment whose name
+    // happens to be a type (e.g. `article proper`, where `article` is also a type) —
+    // a field line never has a `:`.
+    function parseObjectBody(containerName) {
         expect("INDENT", "Expected an indented block");
         const fields = [];
         while (!at("DEDENT")) {
+            const head = peek();
+            if (head.type === "IDENT" && typeNames.has(head.value) && peek(2) && peek(2).type === "COLON") {
+                const headLine = head.line;
+                const decl = parseObjectDecl();
+                hoisted.push(decl);
+                hoisted.push(buildContainsPlacement(containerName, decl.objectName, headLine));
+                continue;
+            }
             const nameToken = peek();
             const fieldName = plainName("field name");
             const value = parseSimpleValue();
@@ -759,6 +783,26 @@ function createParser(tokens, filePath, globalNames, functionNames = new Set(), 
         }
         next();
         return fields;
+    }
+
+    // Builds the `contains containerName childName` assertion that places a nested
+    // object. Uses the registered `contains` template's two slots (container first,
+    // contained second — the conventional `contains [place] [contained]` order), so
+    // the emitted node is identical to a hand-written `contains` assertion.
+    function buildContainsPlacement(containerName, childName, line) {
+        const template = relationTemplates.get("contains");
+        if (!template || template.relationName !== "contains") {
+            throw err("nested object placement requires a 'contains' relation in scope", line);
+        }
+        const slots = template.parts.filter((part) => part.kind !== "literal");
+        if (slots.length !== 2) {
+            throw err("nested placement needs a 'contains' relation with exactly two slots", line);
+        }
+        const fields = [
+            ast.createFieldAssign(slots[0].field, ast.createStringLiteral(containerName), filePath, line),
+            ast.createFieldAssign(slots[1].field, ast.createStringLiteral(childName), filePath, line),
+        ];
+        return ast.createRelationAssert("contains", fields, null, filePath, line);
     }
 
     // Like parseObjectBody but accepts property-access chains (e.g. `self.actor`)
@@ -1639,7 +1683,7 @@ function createParser(tokens, filePath, globalNames, functionNames = new Set(), 
         } catch (e) {
             throw err(`invalid substitution "[${src}]": ${e.message}`, line);
         }
-        const sub = createParser(subTokens, filePath, globalNames, functionNames, relationNames, relationTemplates, actionNames, objectNames, tagNames, rulebookParams, verbNames);
+        const sub = createParser(subTokens, filePath, globalNames, functionNames, relationNames, relationTemplates, actionNames, objectNames, tagNames, rulebookParams, verbNames, typeNames);
         try {
             return sub.parseWholeExpression(localNames);
         } catch (e) {

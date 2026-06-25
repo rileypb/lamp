@@ -176,15 +176,20 @@ core edit is contained. Names (default): `contains`/`place`/`contained`, keyword
 
 ## Smaller / opportunistic
 - ~~**Parser: allow property access on a call/parenthesized result — `holder(p).lighted`, `(EXPR).field`.**~~ **DONE (2026-06-25):** factored a `collectTrailingFields()` helper in `parser_rd.js`; the call-result branch of `parseIdentExpr` now wraps a `CallExpr` with trailing dots in a `MemberAccess` (parenthesized branch refactored onto the same helper). Emitter already emits `(inner).field`; checker's `applyFieldToType` resolves the field off the call's return type (tolerant/unknown otherwise — no error). Simplified advent `in_darkness` back to `not holder(p).lighted`. Tests: two parser units (call result, chained + parenthesized). `go`'s `let here` stays — that's a *different* restriction (function calls disallowed in relation-query slots, by design). All 141 golden + parser green.
-- **Nested/reference object-in-room syntax.** Author sugar for placing items in rooms:
-  nested decl (`room R:` → `item hook:` …) and/or a reference form (`item hammer` inside
-  a room body). Desugar target **now decided**: the `contains` relation (above) — nesting
-  emits `contains <enclosing> <inner>`, layering-clean. Still needs: (a) a **type-name
-  prescan set** (prescan collects no types today, object names only at `depth===0`,
-  `prescan.js:152`) to tell a nested/reference decl from a field assignment (lexically
-  identical: `IDENT IDENT`); (b) a `parseObjectBody` branch (`parser_rd.js:745`) emitting
-  the `contains` assertion when the leading token is a known type. Ships as sequence step 5
-  of the containment work. **Where:** `src/lantern/prescan.js`, `src/lantern/parser_rd.js`.
+- ~~**Nested object-in-room syntax (step 5).**~~ **DONE (2026-06-25):** a `TYPE NAME:`
+  body line (leading token a declared type, with a `:` body) inside an object body
+  declares a nested object placed via `contains ENCLOSING NAME`. Implemented: a
+  cross-file **type-name prescan** (`prescanTypeNames`, merged in index.js before the
+  main prescan so a game can nest a type from lib/advent) + nested **object-name**
+  collection (colon-form only, so forward refs to nested objects resolve); a
+  `parseObjectBody` branch that hoists the nested ObjectDecl + a `contains` RelationAssert
+  (identical to hand-written placement; recurses for deep nesting). The trailing `:` is
+  the disambiguator — a body-less `TYPE NAME` stays a field assignment (so `article proper`
+  works where `article` is also a type). **Reference form deferred** (body-less `TYPE NAME`
+  is ambiguous with field assignment); use a top-level `contains`/`move` to place an
+  existing object. Tests: golden `nest1` (scope/take/examine through nesting) + parser &
+  prescan units. Docs: specs.md "Nested object declarations". **Where:**
+  `src/lantern/{prescan,index,parser_rd}.js`.
 - **Output pagination ("[more]") — done, with one gap.** All three interactive hosts
   pause long output a screenful at a time (plain on a TTY, the TUI, and the web shell;
   design in `devdocs/sandbox.md` → "Output pagination"). Known gap: it relies on the

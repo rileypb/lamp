@@ -65,7 +65,20 @@ function paramNamesFromSpan(span) {
         .filter(Boolean);
 }
 
-function prescanDeclarations(tokens) {
+// Type names declared in one file's tokens (`type NAME ...`). The driver collects
+// these across *all* files first, then passes the merged set to
+// `prescanDeclarations` so a nested object declaration in one file can be
+// recognized by a type declared in another (e.g. a game nesting an `item` whose
+// type lives in lib/advent).
+function prescanTypeNames(tokens) {
+    const typeNames = new Set();
+    eachLogicalLine(tokens, (line) => {
+        if (isKeyword(line[0], "type") && isIdent(line[1])) typeNames.add(line[1].value);
+    });
+    return typeNames;
+}
+
+function prescanDeclarations(tokens, knownTypeNames = new Set()) {
     const globalNames = new Set();
     const functionNames = new Set();
     const relationNames = new Set();
@@ -76,6 +89,12 @@ function prescanDeclarations(tokens) {
     const rulebookParams = new Map();
     const relationTemplates = [];
     let currentRelation = null;
+
+    // Types for nested-object detection: this file's own type names unioned with
+    // the cross-file set the driver passes in (single-file callers, e.g. tests,
+    // pass none and rely on the local scan).
+    const typeNames = prescanTypeNames(tokens);
+    const nestingTypes = new Set([...typeNames, ...knownTypeNames]);
 
     eachLogicalLine(tokens, (line, depth) => {
         const head = line[0];
@@ -149,15 +168,26 @@ function prescanDeclarations(tokens) {
             return;
         }
 
-        // Top-level object declaration: `TYPE NAME` or `TYPE NAME:` — exactly two
-        // identifiers (plus an optional trailing colon), no `=`, leading token not
-        // a band word. The object name is coerced (underscores → spaces) to match
-        // how it is referenced.
-        if (depth === 0 && isIdent(head) && !BAND_WORDS.has(head.value)) {
+        // Object declaration: `TYPE NAME` or `TYPE NAME:` — exactly two identifiers
+        // (plus an optional trailing colon), no `=`, leading token not a band word.
+        // The object name is coerced (underscores → spaces) to match how it is
+        // referenced. At top level any such line counts; a *nested* declaration (a
+        // `TYPE NAME:` object inside an object body) is recognized at depth > 0 only
+        // when the leading token is a known type AND the line has a body (`:`). The
+        // colon requirement excludes field lines (object fields and type-body field
+        // declarations have no colon), so no block-kind tracking is needed. A bare
+        // `TYPE NAME` at depth > 0 is a *reference* (placement of an existing
+        // object), not a new name, so it is not collected here.
+        if (isIdent(head) && !BAND_WORDS.has(head.value)) {
             if (line.some((t) => t.type === "EQUALS")) return;
             const significant = line.filter((t) => t.type !== "COLON");
+            const hasColon = line.some((t) => t.type === "COLON");
             if (significant.length === 2 && significant[0].type === "IDENT" && significant[1].type === "IDENT") {
-                objectNames.add(coerceName(significant[1].value));
+                if (depth === 0) {
+                    objectNames.add(coerceName(significant[1].value));
+                } else if (hasColon && nestingTypes.has(significant[0].value)) {
+                    objectNames.add(coerceName(significant[1].value));
+                }
             }
         }
     });
@@ -168,6 +198,7 @@ function prescanDeclarations(tokens) {
         relationNames,
         actionNames,
         objectNames,
+        typeNames,
         tagNames,
         verbNames,
         rulebookParams,
@@ -177,4 +208,5 @@ function prescanDeclarations(tokens) {
 
 module.exports = {
     prescanDeclarations,
+    prescanTypeNames,
 };

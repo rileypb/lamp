@@ -22,6 +22,22 @@ const cases = [
         },
     },
     {
+        name: "nested object name collected; bare reference and type-field are not",
+        run() {
+            const d = scan([
+                "type room",
+                "type item",
+                "room Cloakroom:",          // top-level object
+                "    description \"x\"",     // field (not nested)
+                "    item hook:",            // nested declaration -> collect `hook`
+                "        description \"y\"",
+                "    item lamp",             // bare reference (no body) -> NOT collected
+            ].join("\n"));
+            assert.deepStrictEqual([...d.objectNames].sort(), ["Cloakroom", "hook"]);
+            assert.deepStrictEqual([...d.typeNames].sort(), ["item", "room"]);
+        },
+    },
+    {
         name: "function names: native and plain, including list<T> return type",
         run() {
             const d = scan([

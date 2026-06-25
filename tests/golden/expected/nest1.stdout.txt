@@ -1,0 +1,33 @@
+Cloakroom
+A small cloakroom.
+
+You see a lamp here.
+
+> look
+Cloakroom
+A small cloakroom.
+
+You see a lamp here.
+
+> examine hook
+A small brass hook.
+
+> take lamp
+Taken.
+
+> i
+You are carrying:
+  a lamp
+
+> north
+Hall
+A grand hall.
+
+> look
+Hall
+A grand hall.
+
+> examine painting
+An old portrait.
+
+> quit

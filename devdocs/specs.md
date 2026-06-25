@@ -273,6 +273,40 @@ game One-Room_Game:
 
 Object-typed fields are resolved after all objects have been created, so the referenced object may be declared anywhere in the source — before or after the object that references it.
 
+#### Nested object declarations (containment)
+
+Inside an object body, a line shaped `TYPE NAME:` (a body line whose leading token is a **declared type** and which opens its own `:` block) declares a **nested object** placed inside the enclosing object via the `contains` relation. It is sugar for declaring the object at top level and asserting `contains ENCLOSING NAME`:
+
+```lamp
+room Cloakroom:
+    description "A small cloakroom."
+    item hook:
+        description "A small brass hook."
+        scenery true
+    item lamp:
+        description "A shiny brass lamp."
+```
+
+is exactly equivalent to:
+
+```lamp
+room Cloakroom:
+    description "A small cloakroom."
+
+item hook:
+    description "A small brass hook."
+    scenery true
+item lamp:
+    description "A shiny brass lamp."
+
+contains Cloakroom hook
+contains Cloakroom lamp
+```
+
+The nested object is hoisted to top level (its name is globally referenceable, like any object — forward references work), and a `contains` placement is emitted. Nesting may recurse (an object nested in an object nested in a room). The enclosing program must have a `contains` relation in scope (e.g. via `lib advent`); the placement uses its two slots, container first.
+
+The trailing `:` is required and is what disambiguates a nested declaration from a field assignment whose **field name happens to be a type** — for example `article proper` sets the `article` field (even though `article` is also a type), because a field line never has a `:`. Consequently the **bare-reference** form (`TYPE NAME` with no body, to place an already-declared object) is **not** supported: a body-less `TYPE NAME` line is always parsed as a field assignment. To place an existing object, write a top-level `contains` assertion (or `move`).
+
 #### Type declarations
 
 ```lamp

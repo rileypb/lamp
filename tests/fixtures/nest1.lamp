@@ -1,0 +1,26 @@
+# Nested object syntax: an `item` declared inside a `room` body is placed in that
+# room via `contains`. Exercises scope (take/examine resolve the nested items),
+# multiple items per room, items in different rooms, and a field whose name is a
+# type (`article`) staying a field assignment, not a nesting.
+
+lib advent
+
+game Nest_Test:
+	author "Test Author"
+	start Cloakroom
+
+room Cloakroom:
+	description "A small cloakroom."
+	item hook:
+		description "A small brass hook."
+		scenery true
+	item lamp:
+		description "A shiny brass lamp."
+
+room Hall:
+	description "A grand hall."
+	item painting:
+		description "An old portrait."
+		scenery true
+
+bidi connects Cloakroom north Hall

@@ -692,6 +692,38 @@ const cases = [
         },
     },
     {
+        name: "nested object: hoists child ObjectDecl + `contains` placement, not a field",
+        run() {
+            const containsTemplate = new Map([["contains", {
+                relationName: "contains",
+                parts: [
+                    { kind: "literal", text: "contains" },
+                    { kind: "slot", field: "place" },
+                    { kind: "slot", field: "contained" },
+                ],
+            }]]);
+            const nodes = parseSource(
+                ["room Cloakroom:", "    description \"a room\"", "    item hook:", "        description \"a hook\""].join("\n"),
+                "t.lamp",
+                new Set(), new Set(), new Set(["contains"]), containsTemplate,
+                new Set(), new Set(["Cloakroom", "hook"]), new Set(), new Map(), new Set(),
+                new Set(["room", "item"]),
+            ).nodes;
+            const [room, hook, placement] = nodes;
+            assert.strictEqual(room.kind, "ObjectDecl");
+            assert.strictEqual(room.objectName, "Cloakroom");
+            assert.deepStrictEqual(room.fields.map((f) => f.fieldName), ["description"]); // hook is NOT a field
+            assert.strictEqual(hook.kind, "ObjectDecl");
+            assert.strictEqual(hook.objectName, "hook");
+            assert.strictEqual(placement.kind, "RelationAssert");
+            assert.strictEqual(placement.relationName, "contains");
+            assert.deepStrictEqual(
+                placement.fields.map((f) => [f.fieldName, f.value]),
+                [["place", { kind: "StringLiteral", value: "Cloakroom" }], ["contained", { kind: "StringLiteral", value: "hook" }]],
+            );
+        },
+    },
+    {
         name: "property access on a call result: chained fields and parenthesized",
         run() {
             const [a] = parse(["on startup:", "    let y = f(x).a.b"].join("\n"));

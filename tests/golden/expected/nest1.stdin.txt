@@ -1,0 +1,8 @@
+look
+examine hook
+take lamp
+i
+north
+look
+examine painting
+quit
