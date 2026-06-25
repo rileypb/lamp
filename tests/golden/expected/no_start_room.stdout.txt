@@ -1,0 +1,1 @@
+Runtime error: This game has no starting room. Declare one in the game block with `start <Room>` (for example, `start Foyer`).

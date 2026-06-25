@@ -1,0 +1,10 @@
+# A game that declares no starting room. At startup the advent library detects the
+# missing `start` and raises a clear Lamp error instead of a raw JS dereference of an
+# undefined room (see devdocs/errors.md). Regression guard for that message.
+
+lib advent
+
+game No_Start_Room:
+	author "Test"
+	version 0
+	release dev

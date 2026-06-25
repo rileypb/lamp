@@ -11,7 +11,9 @@ type article
 type stop_reason
 
 type game:
-	room start
+	# Defaults to none so a game that omits `start` is caught with a clear error at
+	# startup, rather than reading back as an unset (undefined) field. See startup.lamp.
+	room start = none
 
 type physical < thing:
 	string description

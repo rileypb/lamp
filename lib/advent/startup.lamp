@@ -16,7 +16,9 @@ on startup:
 		print "[this_game.tagline] by [this_game.author][line break]"
 		print "Version [this_game.version] [this_game.release][par]"
 	follow startup_rules()
-	player.holder = game.all.first.start
+	if this_game.start == none:
+		error "This game has no starting room. Declare one in the game block with `start <Room>` (for example, `start Foyer`)."
+	player.holder = this_game.start
 	dispatch started
 	# Command loop. Exits when the player quits or a command ends the story (sets
 	# `story` away from `ongoing`).

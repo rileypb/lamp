@@ -7,7 +7,7 @@ Sourced from the staged roadmaps and prerequisite lists in
 
 > The 2026-06-19/20 architecture review (issues A–G) is **fully resolved** — see
 > `devdocs/architecture.md` → "Known Architectural Issues" for the per-issue
-> record. The only optional remnant is item 5 below.
+> record. The only optional remnant is item 6 below.
 
 > Feature backlog awaiting triage: `lurking_todo.md` catalogs candidate verbs,
 > grammar, world-model traits, turn-cycle/daemon, and message ideas mined from
@@ -83,9 +83,24 @@ Alternative (messier): a runtime-wide `reset()` + re-run. **Where:**
 `src/lamplighter/sandbox/host.js` + `worker.js`, `lib/advent/startup.lamp`.
 Shares the out-of-world-verb hook with item 2.
 
+### 4. Runtime error diagnostics — Lamp-ish failures, not JS stacks
+Make a failure during play trace back to a precise Lamp line (where available) or a
+clear Lamp-ish cause, instead of a raw JS exception. **Done (first cut):** a clear
+"no starting room" error (seam guard in `lib/advent/startup.lamp`; `game.start`
+defaults to `none` so the check fires) and `exe.js` no longer prints `execFileSync`'s
+"Command failed" wrapper. **Next:** a `LampError` class with tagged propagation across
+the worker boundary + one `formatDiagnostic` shared by all hosts (separate authoring
+errors from engine bugs); more seam guards (move-to-none, describe none-room, unfilled
+action slot, bad `start` target, list-index range); then either a `--debug-locations`
+breadcrumb or **source maps** (recommended) to attach a `.lamp` line to *any* throw,
+and debug-mode `field`/`index` accessors that turn raw `none` dereferences into
+messages like "tried to read 'lighted' of nothing". Full design + roadmap in
+`devdocs/errors.md`. Relates to item 6 (malformed-world startup check) — a core-runtime
+guard needs that world contract.
+
 ## Optional / hardening
 
-### 4. Lighthouse web bundle — headless CI test (optional)
+### 5. Lighthouse web bundle — headless CI test (optional)
 Web v1 is **built, verified live, shell-polished, and hardened for distribution**
 (string encoding + esbuild minify, both covered by `npm run test:lighthouse` /
 `npm run test:encode`). **Remaining (optional):** a *headless* browser test that
@@ -94,7 +109,7 @@ automation gap but needs a heavy Playwright/Puppeteer dep; decide if worth it fo
 CI. Also still open: whether to default `--encode-strings` on for distribution
 builds. **Where:** `src/lighthouse/`.
 
-### 5. Malformed-world startup check (optional hardening)
+### 6. Malformed-world startup check (optional hardening)
 Carryover from arch issue C. When the parser is used, assert at startup that a
 `physical` type and a `holder` field exist, so a world library missing the
 runtime↔world contract names fails loudly instead of on `undefined.holder` deep
@@ -102,7 +117,7 @@ in `scopeOf`. Low priority. **Where:** `src/lamplighter/index.js` (`run`).
 
 ## Design (not scheduled)
 
-### 6. Core-vs-plugin: actions as core and/or an extensible compiler
+### 7. Core-vs-plugin: actions as core and/or an extensible compiler
 Proposal recorded in `devdocs/compiler-extensibility.md`: resolve the
 "IF baked into the compiler" coupling (arch doc → "Layer boundaries and IF
 coupling") by (1) promoting actions+bands to first-class general core, and/or
@@ -112,7 +127,7 @@ plugin* owning the action/IF constructs (no third-party grammar yet), which also
 lets the base `action` type move out of the runtime bootstrap. No code until the
 direction is chosen. **Where:** `src/lantern/*` (pipeline), `src/lamplighter/index.js`.
 
-### 7. Content windows (status line is the first cut)
+### 8. Content windows (status line is the first cut)
 The traditional **status line is built on both hosts**: `lib/advent` composes room +
 turn count and pushes it via the `status_line`/`turns_taken` primitives; the runtime
 ships `{ left, right }` over a `status` message; the **web shell** renders a fixed-width

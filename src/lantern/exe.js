@@ -15,9 +15,16 @@ const tmpFile = path.join(buildDir, `${path.basename(inputFile, ".lamp")}.genera
 const lanternCli = path.join(__dirname, "index.js");
 const playCli = path.join(__dirname, "..", "lamplighter", "play.js");
 
+// Both child steps inherit stdio and report their own errors; a non-zero exit
+// surfaces there, so swallow execFileSync's own "Command failed" wrapper (with its
+// JS stack) and just propagate the status.
 try {
     execFileSync("node", [lanternCli, inputFile, tmpFile], { stdio: "inherit" });
 } catch (_) {
     process.exit(1);
 }
-execFileSync("node", [playCli, tmpFile], { stdio: "inherit" });
+try {
+    execFileSync("node", [playCli, tmpFile], { stdio: "inherit" });
+} catch (_) {
+    process.exit(1);
+}
