@@ -27,16 +27,26 @@
     const statusBar = document.getElementById("status-bar");
     const statusLeft = document.getElementById("status-left");
     const statusRight = document.getElementById("status-right");
+    const moreBar = document.getElementById("more-bar");
 
     const encoder = new TextEncoder();
+
+    // Pagination ("[more]"): when a turn's output overflows the transcript viewport,
+    // pause and reveal it a screenful at a time. `ackHeight` is the content height (px)
+    // the player has acknowledged seeing; `paged` is the paused state; an input request
+    // arriving mid-page is held until the player catches up. Output keeps appending to
+    // the DOM below the fold while paused — paging only controls scroll + the prompt.
+    let ackHeight = 0;
+    let paged = false;
+    let promptDeferred = false;
+    let deferredPromptText = null;
 
     // The input element is the permanent tail of the transcript; all output is
     // inserted before it so the input always sits inline after the last output.
     // Output renders as text nodes only — never innerHTML — even though the text
     // is the author's own. Defense in depth, per the sandbox output channel rule.
     function appendText(value) {
-        transcript.insertBefore(document.createTextNode(value), inputLine);
-        scrollToBottom();
+        insertOutput(document.createTextNode(value));
     }
 
     // Game output carrying type styles (text.md I3). Each style maps to a CSS class
@@ -51,20 +61,83 @@
         const span = document.createElement("span");
         span.className = styles.map((s) => `style-${s}`).join(" ");
         span.textContent = value;
-        transcript.insertBefore(span, inputLine);
-        scrollToBottom();
+        insertOutput(span);
+    }
+
+    // Insert one run of game output, then decide whether to keep scrolling to the
+    // bottom or pause: if more than a viewport of output is unseen (and we are not
+    // awaiting input), enter the [more] pause. While paused, output keeps appending
+    // below the fold — the player scrolls down through it a page at a time.
+    function insertOutput(node) {
+        transcript.insertBefore(node, inputLine);
+        if (paged) return;
+        if (!awaitingInput && transcript.scrollHeight - ackHeight > transcript.clientHeight) {
+            enterPaged();
+        } else {
+            scrollToBottom();
+        }
     }
 
     function appendClassed(value, className) {
         const span = document.createElement("span");
         span.className = className;
-        span.textContent = value;
         transcript.insertBefore(span, inputLine);
-        scrollToBottom();
+        span.textContent = value;
+        if (!paged) scrollToBottom();
     }
 
     function scrollToBottom() {
         transcript.scrollTop = transcript.scrollHeight;
+    }
+
+    // Show the [more] bar and scroll so the first unseen page sits at the top of the
+    // viewport. Showing the bar shrinks the scroll area, so read the viewport after.
+    function enterPaged() {
+        paged = true;
+        moreBar.hidden = false;
+        transcript.scrollTop = ackHeight;
+    }
+
+    // Advance one screenful at a [more] pause. When the player catches up, leave paged
+    // mode and, if an input request was deferred, show it now.
+    function advancePage() {
+        if (!paged) return;
+        ackHeight = Math.min(transcript.scrollHeight, ackHeight + transcript.clientHeight);
+        if (transcript.scrollHeight - ackHeight > transcript.clientHeight) {
+            transcript.scrollTop = ackHeight; // next page
+        } else {
+            resumeFromPager();
+        }
+    }
+
+    // Leave paged mode: hide [more], mark everything seen, and release any deferred
+    // input request. Called when the player advances to the end or scrolls there.
+    function resumeFromPager() {
+        paged = false;
+        moreBar.hidden = true;
+        ackHeight = transcript.scrollHeight;
+        scrollToBottom();
+        if (promptDeferred) {
+            promptDeferred = false;
+            if (deferredPromptText != null) appendClassed(deferredPromptText, "prompt-text");
+            deferredPromptText = null;
+            ackHeight = transcript.scrollHeight;
+            requestInput();
+        }
+    }
+
+    // Show an input request, unless the turn's output is still being paged through — in
+    // that case hold it until the player catches up. `promptText` is the prompt string
+    // to echo (prompt_readline) or null (bare readline).
+    function requestInputPaged(promptText) {
+        if (paged) {
+            promptDeferred = true;
+            deferredPromptText = promptText;
+            return;
+        }
+        if (promptText != null) appendClassed(promptText, "prompt-text");
+        ackHeight = transcript.scrollHeight; // everything shown is now seen
+        requestInput();
     }
 
     // Cross-origin isolation is required for SharedArrayBuffer. Without it (no
@@ -168,11 +241,10 @@
                 console.log(msg.value);
                 break;
             case "readline":
-                requestInput();
+                requestInputPaged(null);
                 break;
             case "prompt_readline":
-                appendClassed(msg.prompt, "prompt-text");
-                requestInput();
+                requestInputPaged(msg.prompt);
                 break;
             case "save_write":
                 try {
@@ -228,13 +300,41 @@
         deliverLine(line);
     });
 
-    // Clicking anywhere in the transcript focuses the input while it is awaited,
-    // so the player does not have to aim for the inline field.
+    // At a [more] pause, any key advances a page (the input field is disabled then, so
+    // a document-level listener is needed). A modal owns its own keys, so ignore keys
+    // while one is open.
+    document.addEventListener("keydown", (event) => {
+        if (!paged || activeModal) return;
+        event.preventDefault();
+        advancePage();
+    });
+    moreBar.addEventListener("click", advancePage);
+
+    // If the player scrolls (wheel/drag) to the very bottom on their own, they've seen
+    // it all — dismiss [more]. While paged the auto-scroll always leaves the content
+    // bottom below the viewport, so only a deliberate scroll-to-end trips this.
+    transcript.addEventListener("scroll", () => {
+        if (!paged) return;
+        if (transcript.scrollTop + transcript.clientHeight >= transcript.scrollHeight - 2) {
+            resumeFromPager();
+        }
+    });
+
+    // Clicking the transcript advances the pager while paused, otherwise focuses the
+    // input while it is awaited (so the player need not aim for the inline field).
     transcript.addEventListener("click", () => {
-        if (awaitingInput && window.getSelection().isCollapsed) inputLine.focus();
+        if (paged) {
+            advancePage();
+        } else if (awaitingInput && window.getSelection().isCollapsed) {
+            inputLine.focus();
+        }
     });
 
     function endGame(errorMessage) {
+        // Drop any [more] pause so the final message is shown, not hidden below a fold.
+        paged = false;
+        promptDeferred = false;
+        moreBar.hidden = true;
         awaitingInput = false;
         inputLine.disabled = true;
         if (errorMessage) {

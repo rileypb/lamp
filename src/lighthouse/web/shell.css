@@ -70,6 +70,24 @@ html, body {
     white-space: nowrap;
 }
 
+/* "[more]" pager bar: a reverse-video, full-width row below the transcript, shown
+   only while paused. Being a flex row (not an overlay) it shrinks the scroll area, so
+   it never covers transcript text. Any key or a click advances a page. */
+#more-bar {
+    flex: 0 0 auto;
+    margin-top: 0.5rem;
+    padding: 0.1rem 0.5rem;
+    background: var(--fg);
+    color: var(--bg);
+    font-family: "SFMono-Regular", "Consolas", "Liberation Mono", Menlo, monospace;
+    text-align: center;
+    cursor: pointer;
+    user-select: none;
+}
+#more-bar[hidden] {
+    display: none;
+}
+
 .prompt-text {
     color: var(--accent);
 }

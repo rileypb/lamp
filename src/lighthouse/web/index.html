@@ -43,6 +43,12 @@
         <div id="transcript" aria-live="polite"><input id="input-line" type="text"
             aria-label="Enter a command" autocomplete="off" autocapitalize="off"
             autocorrect="off" spellcheck="false" disabled></div>
+        <!-- "[more]" pager: shown when a turn's output overflows the transcript
+             viewport. A flex row below the transcript (so it shrinks the scroll area
+             rather than covering text); any key or a click reveals the next page. See
+             devdocs/windows.md. -->
+        <div id="more-bar" role="button" tabindex="0" aria-label="Show more output"
+            hidden>[more]</div>
     </main>
     <!-- The service worker that synthesizes COOP/COEP is added in step (d). Until
          then the page is not cross-origin isolated and the shell shows a notice
