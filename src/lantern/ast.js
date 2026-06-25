@@ -30,6 +30,10 @@ function createDisconnectStatement(instanceName, filePath, lineNumber) {
     return { kind: "DisconnectStatement", instanceName, filePath, lineNumber };
 }
 
+function createMoveStatement(contained, container, filePath, lineNumber) {
+    return { kind: "MoveStatement", contained, container, filePath, lineNumber };
+}
+
 function createWildcardExpr() {
     return { kind: "WildcardExpr" };
 }
@@ -351,6 +355,7 @@ module.exports = {
     createRelationQuery,
     createRelationRemove,
     createDisconnectStatement,
+    createMoveStatement,
     createWildcardExpr,
     createOutputSlot,
     createGlobalDecl,

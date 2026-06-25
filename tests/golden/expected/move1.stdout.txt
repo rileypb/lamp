@@ -1,0 +1,5 @@
+lamp -> kitchen
+lamp is in: kitchen
+removed lamp from kitchen
+lamp -> attic
+lamp is in: attic

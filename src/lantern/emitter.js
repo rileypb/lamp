@@ -856,6 +856,11 @@ function emitStatementLines(statement, indentLevel, globalNames = new Set(), bar
     if (statement.kind === "DisconnectStatement") {
         return [`${indent}${emitDisconnect(statement)}`];
     }
+    if (statement.kind === "MoveStatement") {
+        const contained = emitExpression(statement.contained, globalNames);
+        const container = emitExpression(statement.container, globalNames);
+        return [`${indent}lamplighter.moveObject(${contained}, ${container});`];
+    }
     if (statement.kind === "CallStatement") {
         const argExprs = emitCallArgs(statement.name, statement.args, globalNames, statement.filePath, statement.lineNumber);
         return [`${indent}${statement.name}(${argExprs});`];

@@ -26,10 +26,10 @@ const cases = [
         run() {
             const d = scan([
                 "native function string with_article(physical x)",
-                "function void move(item a, room b)",
+                "function void relocate(item a, room b)",
                 "function list<string> names()",
             ].join("\n"));
-            assert.deepStrictEqual([...d.functionNames].sort(), ["move", "names", "with_article"]);
+            assert.deepStrictEqual([...d.functionNames].sort(), ["names", "relocate", "with_article"]);
         },
     },
     {

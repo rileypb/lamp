@@ -658,6 +658,28 @@ const cases = [
             assert.deepStrictEqual(rel.uniqueFields, ["b"]);
         },
     },
+    {
+        name: "move statement: parses contained and container operands",
+        run() {
+            // Bare single-word names parse as coerced strings here (resolved to
+            // objects at emit time via the prescan object-name set).
+            const [handler] = parse(["on startup:", "    move lamp to kitchen"].join("\n"));
+            const stmt = handler.body[0];
+            assert.strictEqual(stmt.kind, "MoveStatement");
+            assert.deepStrictEqual(stmt.contained, { kind: "StringLiteral", value: "lamp" });
+            assert.deepStrictEqual(stmt.container, { kind: "StringLiteral", value: "kitchen" });
+        },
+    },
+    {
+        name: "move statement: operands may be property-access chains",
+        run() {
+            const [handler] = parse(["on startup:", "    move self.taken to self.actor"].join("\n"));
+            const stmt = handler.body[0];
+            assert.strictEqual(stmt.kind, "MoveStatement");
+            assert.strictEqual(stmt.contained.kind, "PropertyAccess");
+            assert.strictEqual(stmt.container.kind, "PropertyAccess");
+        },
+    },
 ];
 
 // The parser must reject these with a clear error.

@@ -1,0 +1,31 @@
+game Move_1:
+    author "Test Author"
+    version 1
+    release dev
+
+type room
+type item
+
+room kitchen
+room attic
+item lamp
+
+# Containment as a one-to-many relation: the unique target makes each item live in
+# exactly one place, so `move` is a single assertion that evicts the prior edge.
+relation contains:
+    from room place
+    to item contained unique
+    syntax "contains [place] [contained]"
+
+on contains add:
+    print "[self.contained] -> [self.place][line break]"
+
+on contains remove:
+    print "removed [self.contained] from [self.place][line break]"
+
+on startup:
+    move lamp to kitchen
+    print "lamp is in: [contains ?only lamp][line break]"
+    # A second move relocates: the unique target evicts the kitchen edge.
+    move lamp to attic
+    print "lamp is in: [contains ?only lamp][line break]"

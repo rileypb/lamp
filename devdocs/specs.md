@@ -106,6 +106,8 @@ Lantern-generated JavaScript targets the following Lamplighter API surface:
     - Removes all instances matching `query` (using `ANY` as wildcard). For `bidi` instances, a match via the mechanical inverse also removes the entire underlying instance (both index entries). Unregisters any name the removed instance held.
 - `removeRelationByName(name)`
     - Removes the named relation instance and unregisters its name. Runtime error if the name is not found or refers to a non-relation object.
+- `moveObject(contained, container)`
+    - Relocates `contained` into `container` by asserting the world-model containment relation **`contains`** with `container` as its source (`from`) endpoint and `contained` as its target (`to`) endpoint. The relation's `to` endpoint is tagged `unique`, so the assertion evicts `contained`'s prior container automatically (a move is a single assertion). Endpoint field names are read from the relation registry, so the world library may name them freely. Runtime error if no `contains` relation is defined. The emit target of the `move X to Y` statement.
 - `ANY`
     - The wildcard sentinel used in query and remove slots, distinct from `null`/`none`.
 - `onEvent(eventName, handler)`
@@ -235,7 +237,7 @@ Local variables (introduced by `let`) and loop variables (introduced by `for`) a
 
 Free text that contains spaces or punctuation is written as a double-quoted string literal, not a bare identifier (for example, `author "Phil Riley"`).
 
-The following words are **reserved** and may not be used as a name (object, type, kind, global, field, event, or local): `type`, `kind`, `global`, `on`, `for`, `in`, `while`, `if`, `else`, `let`, `print`, `error`, `dispatch`, `break`, `lib`, `from`, `to`, `step`, `change`, `function`, `native`, `freeze`, `return`, `when`, `and`, `or`, `not`, `relation`, `bidi`, `remove`, `disconnect`, `rulebook`, `stop`, `follow`, `action`, `try`, `verb`. (`freeze EXPR` forces a `text` value to a `string`; see the `text` primitive type. `verb WORD, …` registers conjugation-sugar words for text substitution; see the `text` type. `syntax`, `inverted`, and `unique` are contextual keywords recognized only inside a `relation` body; `tags` is contextual only inside an `action` body; `default` is a contextual keyword recognized only inside a `rulebook` body; the band words `before`, `instead`, `check`, `do`, `after`, and `report` are contextual keywords recognized only as the leading token of a phase rule; `any` and `except` are contextual only in a phase-rule action selector; `rule` is contextual only when followed by a declared rulebook name; `silently` is contextual only immediately before `try`; `understand` and `as` are contextual only in a top-level `understand "TEMPLATE" as ACTION` grammar contribution; none of these are globally reserved.) A reservation applies only to a whole identifier: a reserved word appearing *inside* a longer identifier is unrestricted, so `move_to_room` (which denotes the name `move to room`) is a valid identifier even though `to` is reserved.
+The following words are **reserved** and may not be used as a name (object, type, kind, global, field, event, or local): `type`, `kind`, `global`, `on`, `for`, `in`, `while`, `if`, `else`, `let`, `print`, `error`, `dispatch`, `break`, `lib`, `from`, `to`, `step`, `change`, `function`, `native`, `freeze`, `return`, `when`, `and`, `or`, `not`, `relation`, `bidi`, `remove`, `disconnect`, `rulebook`, `stop`, `follow`, `action`, `try`, `verb`, `move`. (`freeze EXPR` forces a `text` value to a `string`; see the `text` primitive type. `verb WORD, …` registers conjugation-sugar words for text substitution; see the `text` type. `syntax`, `inverted`, and `unique` are contextual keywords recognized only inside a `relation` body; `tags` is contextual only inside an `action` body; `default` is a contextual keyword recognized only inside a `rulebook` body; the band words `before`, `instead`, `check`, `do`, `after`, and `report` are contextual keywords recognized only as the leading token of a phase rule; `any` and `except` are contextual only in a phase-rule action selector; `rule` is contextual only when followed by a declared rulebook name; `silently` is contextual only immediately before `try`; `understand` and `as` are contextual only in a top-level `understand "TEMPLATE" as ACTION` grammar contribution; none of these are globally reserved.) A reservation applies only to a whole identifier: a reserved word appearing *inside* a longer identifier is unrestricted, so `move_to_room` (which denotes the name `move to room`) is a valid identifier even though `to` is reserved.
 
 ### Objects and types
 
@@ -851,6 +853,14 @@ disconnect north_door
 ```
 
 A runtime error if no relation instance is registered under that name. `remove` and `disconnect` may appear at the top level or inside event handlers, change handlers, and function bodies.
+
+#### Moving an object (`move`)
+
+```lamp
+move CONTAINED to CONTAINER
+```
+
+`move X to Y` relocates `X` into `Y`. Both operands are full expressions (object references, property-access chains such as `self.taken`, or query results). It is the author surface for **containment**: it desugars to an assertion of the world-model `contains` relation (`Y` as the container/source endpoint, `X` as the contained/target endpoint). Because `contains` tags its target endpoint `unique`, the assertion automatically evicts `X`'s previous container — so a move is a single statement with no explicit removal, and the old container's `contains remove` handler fires before the new one's `contains add`. `move` may appear at the top level or inside event handlers, change handlers, and function bodies. (`move` is a reserved keyword; the `contains` relation is the runtime↔world containment contract — see `devdocs/world-model.md`.)
 
 #### Printing relation instances
 

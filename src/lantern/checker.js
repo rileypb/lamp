@@ -794,6 +794,8 @@ function directSubExprs(stmt) {
         case "CallStatement":
         case "FollowStatement":
             return stmt.args;
+        case "MoveStatement":
+            return [stmt.contained, stmt.container];
         default:
             return [];
     }

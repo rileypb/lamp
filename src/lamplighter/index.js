@@ -201,6 +201,20 @@ function addRelation(typeName, fields, options = {}) {
 // An instance matches `fields` if its own field values match, or — for a
 // bidirectional instance — if its mechanically computed inverse matches (so the
 // reverse edge of a `bidi` deduplicates against it).
+// `move X to Y` desugars here: assert the containment relation with Y as the
+// container (source/`from` endpoint) and X as the contained (target/`to`
+// endpoint). The relation's `unique` target evicts X's prior container, so a move
+// is a single assertion. `contains` is the world-model containment contract (see
+// devdocs/world-model.md); its endpoint field names are read from the registry so
+// the world library is free to name them.
+function moveObject(contained, container) {
+    const def = relationRegistry.get("contains");
+    if (!def) {
+        throw new Error("Cannot 'move': the world model declares no 'contains' relation.");
+    }
+    return addRelation("contains", { [def.sourceField]: container, [def.targetField]: contained });
+}
+
 function findMatchingRelation(typeName, fields) {
     const keys = Object.keys(relationRegistry.get(typeName).fields);
     const matches = (mapping) => keys.every((key) => mapping[key] === fields[key]);
@@ -1983,6 +1997,7 @@ module.exports = {
     addRelation,
     removeRelation,
     removeRelationByName,
+    moveObject,
     queryRelation,
     queryRelationValue,
     ANY,

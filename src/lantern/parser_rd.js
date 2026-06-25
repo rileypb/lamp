@@ -1221,6 +1221,7 @@ function createParser(tokens, filePath, globalNames, functionNames = new Set(), 
                 case "stop": return parseStop(localNames);
                 case "follow": return parseFollowStatement(localNames);
                 case "try": return parseTryStatement(localNames);
+                case "move": return parseMoveStatement(localNames);
                 case "break":
                     next();
                     expectNewline();
@@ -1257,6 +1258,19 @@ function createParser(tokens, filePath, globalNames, functionNames = new Set(), 
         expect("RPAREN", "Expected ')'");
         expectNewline();
         return ast.createCallStatement(name, args, filePath, nameToken.line);
+    }
+
+    // `move X to Y` — relocate X into container Y. Desugars to an assertion of the
+    // world-model containment relation (`contains`); the relation's `unique` target
+    // endpoint evicts X's prior container, so a move is a single assertion. Both
+    // operands are full expressions (object references, `self.taken`, query results).
+    function parseMoveStatement(localNames) {
+        const keyword = expectKeyword("move");
+        const contained = parseExpression(0, localNames);
+        expectKeyword("to");
+        const container = parseExpression(0, localNames);
+        expectNewline();
+        return ast.createMoveStatement(contained, container, filePath, keyword.line);
     }
 
     function parseReturn(localNames) {
