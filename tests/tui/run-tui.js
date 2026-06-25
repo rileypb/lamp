@@ -259,7 +259,10 @@ test("mouse wheel scrolls the transcript back and snaps forward", () => {
     const b = createTuiBackend({ out, input, exit() {} });
     b.start();
     assert.ok(out.buf.includes("\x1b[?1000h"), "mouse reporting enabled on start");
-    for (let n = 0; n < 10; n += 1) b.write(`L${n}\n`); // L0..L9
+    for (let n = 0; n < 10; n += 1) b.write(`L${n}\n`); // L0..L9 → overflows, pauses at [more]
+    // Page past the [more] pauses (any key advances) so the lines land in scrollback;
+    // with no prompt pending, surplus keypresses are ignored.
+    for (let n = 0; n < 8; n += 1) input.emit("data", Buffer.from(" "));
     out.buf = ""; // capture only the next render
     input.emit("data", Buffer.from("\x1b[<64;1;1M")); // wheel up (button 64)
     assert.ok(out.buf.includes("L4"), "scrolled up to show earlier lines");
@@ -269,6 +272,25 @@ test("mouse wheel scrolls the transcript back and snaps forward", () => {
     assert.ok(out.buf.includes("L9"), "scrolled back toward the bottom");
     b.stop();
     assert.ok(out.buf.includes("\x1b[?1000l"), "mouse reporting disabled on stop");
+});
+
+test("output longer than the screen pauses with [more] and pages on a keypress", () => {
+    const out = mockOut(20, 5); // viewH = rows - 2 = 3
+    const input = mockIn();
+    let delivered = null;
+    const b = createTuiBackend({ out, input, exit() {} });
+    b.start();
+    for (let n = 0; n < 6; n += 1) b.write(`line ${n}\n`); // 6 rows > 3 → pauses
+    assert.ok(out.buf.includes("[more]"), "[more] shown when output overflows the screen");
+    b.requestLine("> ", (line) => { delivered = line; });
+    input.emit("data", Buffer.from(" ")); // page 2 — still paging, prompt held back
+    out.buf = "";
+    input.emit("data", Buffer.from(" ")); // caught up → the held prompt appears
+    assert.ok(out.buf.includes("> "), "the deferred prompt appears once paging completes");
+    assert.ok(!out.buf.includes("[more]"), "[more] is cleared on the last page");
+    input.emit("data", Buffer.from("look\r"));
+    assert.strictEqual(delivered, "look", "input is delivered normally after paging");
+    b.stop();
 });
 
 test("Ctrl-C restores the terminal and exits via the injected exit", () => {

@@ -222,6 +222,14 @@ function createTuiBackend({ out, err, input, exit } = {}) {
     let statusRight = "";
     let scrollOffset = 0; // lines scrolled up from the bottom (0 = at bottom)
 
+    // Pagination ("[more]"): when a turn's output exceeds the game area, pause and
+    // reveal it a screenful at a time. `seenRows` is how many wrapped content rows the
+    // player has acknowledged; `more` is the paused state; an input request that
+    // arrives mid-page is held in `pendingPrompt` until the player catches up.
+    let seenRows = 0;
+    let more = false;
+    let pendingPrompt = null;
+
     let awaiting = false; // an input request is open
     let inputBuf = "";
     let cursorPos = 0; // caret position as a code-point index into inputBuf
@@ -269,6 +277,78 @@ function createTuiBackend({ out, err, input, exit } = {}) {
         return bar + " ".repeat(Math.max(0, cols - textWidth(bar)));
     }
 
+    // Wrapped content rows (committed lines + the partial pending line), the unit both
+    // the viewport and the pager measure in. The live input row is added separately.
+    function contentRows(cols) {
+        const rows = [];
+        for (const ln of lines) {
+            const wrapped = ln.hardWrap ? hardWrapSpans(ln, cols) : wrapSpans(ln, cols);
+            for (const r of wrapped) rows.push(r);
+        }
+        if (pending.length > 0) for (const r of wrapSpans(pending, cols)) rows.push(r);
+        return rows;
+    }
+
+    // After new output, pause if more than a screenful is unseen. The runtime sends a
+    // turn's output before it blocks for input, so the host has it all; we reveal it a
+    // page at a time. No-op while an input prompt is showing (we don't paginate input).
+    function maybePage() {
+        if (!awaiting) {
+            const viewH = Math.max(1, (out.rows || 24) - 2);
+            if (contentRows(out.columns || 80).length - seenRows > viewH) more = true;
+        }
+        render();
+    }
+
+    // Advance one screenful at a [more] pause. When the player catches up, leave paged
+    // mode and, if an input request was deferred, show it now.
+    function advancePage() {
+        const viewH = Math.max(1, (out.rows || 24) - 2);
+        seenRows += Math.max(1, viewH - 1);
+        const total = contentRows(out.columns || 80).length;
+        if (total - seenRows > viewH) {
+            render();
+            return;
+        }
+        more = false;
+        seenRows = total;
+        if (pendingPrompt) activatePendingPrompt();
+        else render();
+    }
+
+    function activatePendingPrompt() {
+        const p = pendingPrompt;
+        pendingPrompt = null;
+        currentPrompt = p.prompt;
+        deliverCb = p.deliver;
+        inputBuf = "";
+        cursorPos = 0;
+        awaiting = true;
+        scrollOffset = 0;
+        historyIdx = history.length;
+        draft = "";
+        seenRows = contentRows(out.columns || 80).length; // everything output is now seen
+        render();
+    }
+
+    // Paged view: one screenful of unseen content from `seenRows`, with a reverse-video
+    // [more] pinned on the bottom game row (no input row, cursor hidden).
+    function renderMore(displayRows, cols, gameTop, viewH) {
+        const pageRows = displayRows.slice(seenRows, seenRows + Math.max(0, viewH - 1));
+        let buf = CURSOR_HIDE;
+        buf += moveTo(1, 1) + CLEAR_LINE + REVERSE + statusBar(cols) + RESET;
+        buf += moveTo(2, 1) + CLEAR_LINE;
+        for (let i = 0; i < viewH; i += 1) {
+            buf += moveTo(gameTop + i, 1) + CLEAR_LINE;
+            if (i < viewH - 1) {
+                if (pageRows[i] != null) buf += rowToString(pageRows[i], cols);
+            } else {
+                buf += REVERSE + "[more]" + RESET;
+            }
+        }
+        out.write(buf);
+    }
+
     function render() {
         if (stopped) return;
         const cols = out.columns || 80;
@@ -276,12 +356,12 @@ function createTuiBackend({ out, err, input, exit } = {}) {
         const gameTop = 3; // after status (1) + blank spacer (2)
         const viewH = Math.max(1, rows - 2); // game area: rows 3..rows
 
-        const displayRows = [];
-        for (const ln of lines) {
-            const wrapped = ln.hardWrap ? hardWrapSpans(ln, cols) : wrapSpans(ln, cols);
-            for (const r of wrapped) displayRows.push(r);
+        const displayRows = contentRows(cols);
+
+        if (more) {
+            renderMore(displayRows, cols, gameTop, viewH);
+            return;
         }
-        if (pending.length > 0) for (const r of wrapSpans(pending, cols)) displayRows.push(r);
 
         // The input line flows as the last line(s) of the content, so it sits right
         // below the text while the area isn't full and only pins to the bottom once
@@ -430,6 +510,14 @@ function createTuiBackend({ out, err, input, exit } = {}) {
 
     function onData(chunk) {
         const s = decoder.write(chunk); // holds back any incomplete trailing bytes
+        if (more) {
+            // At a [more] pause: any key advances one page; Ctrl-C still quits; mouse
+            // events are ignored so the wheel doesn't accidentally page.
+            if (s.indexOf("\x03") !== -1) { stop(); doExit(130); return; }
+            if (/^\x1b\[<\d+;\d+;\d+[Mm]/.test(s)) return;
+            advancePage();
+            return;
+        }
         let i = 0;
         while (i < s.length) {
             const c = s[i];
@@ -508,11 +596,11 @@ function createTuiBackend({ out, err, input, exit } = {}) {
         write(value, styles) {
             appendOutput(value, styles);
             scrollOffset = 0; // snap to bottom on new output
-            render();
+            maybePage();
         },
         log(value) {
             appendOutput(`${value}\n`);
-            render();
+            maybePage();
         },
         setStatus(left, right) {
             statusLeft = String(left == null ? "" : left);
@@ -520,15 +608,11 @@ function createTuiBackend({ out, err, input, exit } = {}) {
             render();
         },
         requestLine(prompt, deliver) {
-            currentPrompt = prompt == null ? "" : String(prompt);
-            deliverCb = deliver;
-            inputBuf = "";
-            cursorPos = 0;
-            awaiting = true;
-            scrollOffset = 0;
-            historyIdx = history.length;
-            draft = "";
-            render();
+            pendingPrompt = { prompt: prompt == null ? "" : String(prompt), deliver };
+            // If the turn's output is still being paged through, hold the prompt until
+            // the player catches up; otherwise show it immediately.
+            if (more) render();
+            else activatePendingPrompt();
         },
     };
 }
