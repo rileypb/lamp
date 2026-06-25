@@ -30,17 +30,19 @@ what it means to be a Lamp IF game, not configuration:
 | action outcomes | `succeeded` / `failed` | `runAction` (the `failed` value triggers the `report failed` band) |
 
 **Containment is the `contains` relation, not a field (revised).** Containment was
-originally the `holder` *field*, with `scopeOf` walking `inst.holder`. It is being
-moved to a one-to-many `contains` **relation** (the source endpoint is the
-container; the `to` endpoint is `unique`, so an object is in at most one place).
-`scopeOf` now reads containment through `containerOf`, and the `move X to Y`
-statement asserts a `contains` edge (evicting the prior one via `unique`). The
-runtime owns the **relation name `contains`** and reads its endpoint field names
-from the registry, so a world library may name the endpoints freely. **Transitional
-(holder→contains migration):** `containerOf` falls back to the legacy `holder`
-field per object when an object has no `contains` edge, so a not-yet-migrated
-holder-based world (lib/advent today) still resolves. The fallback is removed once
-`lib/advent` and the fixtures move to `contains`.
+originally the `holder` *field*, with `scopeOf` walking `inst.holder`. It is now a
+one-to-many `contains` **relation** (the source endpoint is the container; the `to`
+endpoint is `unique`, so an object is in at most one place). `scopeOf` reads
+containment through `containerOf`, and the `move X to Y` statement asserts a
+`contains` edge (evicting the prior one via `unique`). The runtime owns the
+**relation name `contains`** and reads its endpoint field names from the registry,
+so a world library may name the endpoints freely; `lib/advent` exposes the read side
+to authors as the `holder(x)` helper. The `holder`-field representation and the
+migration's transitional bridge (a `containerOf` fallback plus an advent
+field-sync handler) have been removed — `contains` is the sole containment
+representation. (A self-contained game that never drives `run_command`/scope is
+free to model location however it likes; the contract binds only the parser/scope
+path.)
 
 We considered and **rejected** two alternatives:
 
@@ -52,10 +54,9 @@ We considered and **rejected** two alternatives:
   layer). Out of scope; the runtime is an IF runtime by design.
 
 A world library (and any program that drives `run_command` itself) must define a
-`physical` type and a containment representation — canonically a `contains`
-relation (transitionally still satisfiable by a `holder` field, see above) — and
-its `outcome` kind (`lib/sys/kinds.lamp`) must use the labels `succeeded`/`failed`
-to match the runtime. These are the contract.
+`physical` type and a `contains` relation (the containment representation
+`scopeOf`/`containerOf` read), and its `outcome` kind (`lib/sys/kinds.lamp`) must
+use the labels `succeeded`/`failed` to match the runtime. These are the contract.
 
 ## Decision on library structure — keep `lib/sys` and the IF library split
 

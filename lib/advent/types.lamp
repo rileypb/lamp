@@ -28,14 +28,12 @@ type room < container:
 type item < physical:
 	bool scenery
 	bool wearable
-	container holder
 
 type box < item, container:
 	bool closable
 	bool closed
 
-type person < physical:
-	container holder
+type person < physical
 
 type direction < thing:
 	direction inverse

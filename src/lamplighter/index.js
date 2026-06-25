@@ -53,9 +53,7 @@ const ANY = Symbol("relation-wildcard");
 //                          edge (the object is the target; the `to` endpoint is
 //                          `unique`, so each object is in at most one place).
 //                          scopeOf walks reachability over it (containerOf); an
-//                          uncontained object is out of scope. Transitional: an
-//                          object with no `contains` edge falls back to the legacy
-//                          `holder` field (the holder->contains migration).
+//                          uncontained object is out of scope.
 //                          `moveObject`/`move X to Y` asserts a `contains` edge.
 //   - type  `physical`   — the scope-root type. Only `physical` objects are
 //                          scoped by location and can be pronoun antecedents;
@@ -574,22 +572,18 @@ function matchGrammar(parts, tokens) {
     return ti === tokens.length ? slots : null;
 }
 
-// An object's container — the world-model containment contract. Canonically the
-// container is the source of the object's `contains` edge (the object is the
-// target). During the holder->contains migration this is read per object: an
-// object with no `contains` edge falls back to the legacy `holder` field, so a
-// holder-based world (lib/advent today) and a contains-based world both resolve.
-// Returns null when uncontained. See devdocs/world-model.md.
+// An object's container — the world-model containment contract. The container is
+// the source of the object's `contains` edge (the object is the target); the `to`
+// endpoint is `unique`, so there is at most one. Returns null when uncontained (or
+// when the world declares no `contains` relation). See devdocs/world-model.md.
 function containerOf(inst) {
     const def = relationRegistry.get("contains");
-    if (def) {
-        const query = {};
-        for (const key of Object.keys(def.fields)) query[key] = ANY;
-        query[def.targetField] = inst;
-        const edges = queryRelation("contains", query);
-        if (edges.length > 0) return edges[0][def.sourceField];
-    }
-    return inst.holder ?? null;
+    if (!def) return null;
+    const query = {};
+    for (const key of Object.keys(def.fields)) query[key] = ANY;
+    query[def.targetField] = inst;
+    const edges = queryRelation("contains", query);
+    return edges.length > 0 ? edges[0][def.sourceField] : null;
 }
 
 // The objects the actor can currently refer to: contents of the actor's location
