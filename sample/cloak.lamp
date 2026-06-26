@@ -122,13 +122,21 @@ before look when holder(self.actor) == Bar and in_darkness(self.actor):
 
 # ========== Custom actions ==========
 
-# `stop` suppresses advent's default examine report (which would otherwise also
-# print the sawdust's empty description). The "disturbed" line shows only when the
-# bar has actually been disturbed; otherwise the message is simply there to read.
+# `read` is absorbed into `examine` (the common IF convention): a bare `understand`
+# makes "read X" a synonym, so there is no separate read action. The message is the
+# goal of Cloak of Darkness, so examining (or reading) the sawdust ends the story —
+# a clean read when the bar was never disturbed, a trampled one otherwise. `stop`
+# suppresses advent's default examine report.
+understand "read [target]" as examine
+
 report examine when self.target == sawdust:
-    if not (disturbance == 0):
-        print "The sawdust on the floor has been disturbed.[line break]"
-    print "Something is written there.[line break]"
+    if disturbance == 0:
+        print "The message, neatly marked in the sawdust, reads...[line break]"
+        story = won
+    else:
+        print "The message has been carelessly trampled, making it difficult to read.[line break]"
+        print "You can just distinguish the words...[line break]"
+        story = lost
     stop
 
 # "hang ... on ..." is just a cloak-flavored phrasing for the generic advent
@@ -138,23 +146,3 @@ understand "hang [put_item] on [destination]" as put_on
 report put_on when self.put_item == velvet_cloak:
     print "You hang the cloak neatly on the hook.[line break]"
     stop
-
-# --- read ---
-action read:
-    item target
-    syntax:
-        "read [target]"
-
-check read:
-    if not (self.target == sawdust):
-        print "There's nothing to read there.[line break]"
-        stop failed
-
-report read when self.target == sawdust:
-    if disturbance == 0:
-        print "The message, neatly marked in the sawdust, reads...[line break]"
-        story = won
-    else:
-        print "The message has been carelessly trampled, making it difficult to read.[line break]"
-        print "You can just distinguish the words...[line break]"
-        story = lost

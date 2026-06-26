@@ -124,13 +124,21 @@ before look when holder(self.actor) == Bar and in_darkness(self.actor):
 
 # ========== Actions personnalisées ==========
 
-# `stop` supprime le rapport d'examen par défaut d'advent (qui afficherait sinon
-# aussi la description vide de la sciure). La ligne « dérangée » n'apparaît que si
-# le bar a réellement été dérangé ; sinon le message est simplement là, à lire.
+# « lire » est absorbé dans « examiner » (convention courante en fiction
+# interactive) : un simple `understand` fait de « lire X » un synonyme, sans action
+# distincte. Le message est le but du jeu, donc examiner (ou lire) la sciure termine
+# l'histoire — message clair si le bar n'a jamais été dérangé, piétiné sinon. `stop`
+# supprime le rapport d'examen par défaut d'advent.
+understand "lire [target]" as examine
+
 report examine when self.target == sawdust:
-	if not (disturbance == 0):
-		print "La sciure sur le sol a été dérangée.[line break]"
-	print "Quelque chose y est écrit.[line break]"
+	if disturbance == 0:
+		print "Le message, soigneusement tracé dans la sciure, dit…[line break]"
+		story = won
+	else:
+		print "Le message a été piétiné sans soin, ce qui le rend difficile à lire.[line break]"
+		print "Vous distinguez tout juste les mots…[line break]"
+		story = lost
 	stop
 
 # « accrocher … à … » n'est qu'une formulation imagée pour l'action générique
@@ -140,23 +148,3 @@ understand "accrocher [put_item] à [destination]" as put_on
 report put_on when self.put_item == velvet_cloak:
 	print "Vous accrochez soigneusement le manteau au crochet.[line break]"
 	stop
-
-# --- lire ---
-action read:
-	item target
-	syntax:
-		"lire [target]"
-
-check read:
-	if not (self.target == sawdust):
-		print "Il n'y a rien à lire ici.[line break]"
-		stop failed
-
-report read when self.target == sawdust:
-	if disturbance == 0:
-		print "Le message, soigneusement tracé dans la sciure, dit…[line break]"
-		story = won
-	else:
-		print "Le message a été piétiné sans soin, ce qui le rend difficile à lire.[line break]"
-		print "Vous distinguez tout juste les mots…[line break]"
-		story = lost
