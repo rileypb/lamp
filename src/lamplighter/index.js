@@ -98,14 +98,46 @@ function bootstrapBuiltins() {
     builtinsInitialized = true;
 }
 
-function collectDefaults(typeName) {
+// A field's zero value by primitive type. A declared field with no author
+// default reads as its zero (not undefined), so an unset string prints "" rather
+// than the literal "undefined". Reference-typed fields (object/other types) are
+// left unset — their absence is meaningful "none", and the convention is to
+// declare an explicit `= none` where that matters (e.g. `room start = none`).
+const PRIMITIVE_ZEROS = { string: "", int: 0, real: 0, bool: false };
+
+// The merged field->type schema for a type, including inherited fields.
+function collectFieldSchema(typeName) {
     const typeInfo = typeRegistry.get(typeName);
     if (!typeInfo) return {};
     const result = {};
     for (const parent of typeInfo.parents) {
-        Object.assign(result, collectDefaults(parent));
+        Object.assign(result, collectFieldSchema(parent));
+    }
+    Object.assign(result, typeInfo.fields);
+    return result;
+}
+
+// Author-declared defaults only (own + inherited), nearest definition winning.
+function collectAuthorDefaults(typeName) {
+    const typeInfo = typeRegistry.get(typeName);
+    if (!typeInfo) return {};
+    const result = {};
+    for (const parent of typeInfo.parents) {
+        Object.assign(result, collectAuthorDefaults(parent));
     }
     Object.assign(result, typeInfo.defaults);
+    return result;
+}
+
+function collectDefaults(typeName) {
+    const result = collectAuthorDefaults(typeName);
+    // Backfill a primitive zero for any declared field the author left without a
+    // default, so unset primitives are well-defined values rather than undefined.
+    for (const [field, fieldType] of Object.entries(collectFieldSchema(typeName))) {
+        if (!(field in result) && Object.prototype.hasOwnProperty.call(PRIMITIVE_ZEROS, fieldType)) {
+            result[field] = PRIMITIVE_ZEROS[fieldType];
+        }
+    }
     return result;
 }
 

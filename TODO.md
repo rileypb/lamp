@@ -87,8 +87,12 @@ Shares the out-of-world-verb hook with item 2.
 Make a failure during play trace back to a precise Lamp line (where available) or a
 clear Lamp-ish cause, instead of a raw JS exception. **Done (first cut):** a clear
 "no starting room" error (seam guard in `lib/advent/startup.lamp`; `game.start`
-defaults to `none` so the check fires) and `exe.js` no longer prints `execFileSync`'s
-"Command failed" wrapper. **Next:** a `LampError` class with tagged propagation across
+defaults to `none` so the check fires); `exe.js` no longer prints `execFileSync`'s
+"Command failed" wrapper; and unset **primitive** fields now read as their zero
+(`string`→`""`, `int`/`real`→`0`, `bool`→`false`) instead of JS `undefined`, so an
+unset `string` prints "" not the literal "undefined" (`collectDefaults` backfills
+zeros from the field schema; specs.md "Unset field values"). **Next:** a `LampError`
+class with tagged propagation across
 the worker boundary + one `formatDiagnostic` shared by all hosts (separate authoring
 errors from engine bugs); more seam guards (move-to-none, describe none-room, unfilled
 action slot, bad `start` target, list-index range); then either a `--debug-locations`

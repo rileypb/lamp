@@ -258,6 +258,8 @@ TYPE_NAME OBJECT_NAME:
 
 A field line may omit the value entirely as a **boolean shorthand**: a bare `FIELD_NAME` (a field name with no value) means `FIELD_NAME true`. This is intended for flag fields — `wearable` is `wearable true`. The bare form on a non-boolean field is a type error (the implied `true` fails the field's value-compatibility check), so it is only useful for `bool` fields.
 
+**Unset field values.** A field an object does not set takes its type's declared default if one was given (`string description = "n/a"`), else a **primitive zero**: `string` → `""`, `int`/`real` → `0`, `bool` → `false`. So an unset string reads as the empty string (printing nothing), never the literal `undefined`. Reference-typed fields (an object type, `list<T>`) have no zero — an unset reference is `none`, and a type that needs to distinguish "not yet set" declares an explicit `= none`.
+
 ```lamp
 item velvet_cloak:
     description "A handsome cloak."
