@@ -1,0 +1,4 @@
+examine coin
+examine locket
+north
+quit

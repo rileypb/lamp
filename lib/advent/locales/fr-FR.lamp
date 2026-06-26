@@ -40,6 +40,10 @@ doff_report_other: "[The act.actor] enlève [the act.clothing]."
 doff_not_worn: "Vous ne portez pas cela."
 
 # --- examine ---
+# Phrased to avoid a "de/à + le/les" contraction (du/des), which the() can't
+# produce — it doesn't see the preceding preposition. "[The act.target] n'a rien…"
+# sidesteps it: "Le caillou n'a rien d'inhabituel."
+examine_nothing: "[The act.target] n'a rien d'inhabituel."
 examine_too_dark: "Il fait trop sombre pour voir cela."
 
 # --- go ---

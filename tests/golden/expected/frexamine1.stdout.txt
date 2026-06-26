@@ -1,0 +1,12 @@
+salle
+Une petite salle voûtée.
+
+Vous voyez un caillou ici.
+
+> examiner caillou
+Le caillou n'a rien d'inhabituel.
+
+> nord
+couloir
+
+> quit

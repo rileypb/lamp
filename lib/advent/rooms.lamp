@@ -10,7 +10,9 @@ native function container holder(physical x)
 function void describe_room(room r):
 	if r.lighted:
 		print "[r][line break]"
-		print "[r.description][line break]"
+		# A room with no description shows just its name (an unset string reads as "").
+		if not (r.description == ""):
+			print "[r.description][line break]"
 		list_room_contents(r)
 	else:
 		print darkness_name:"Darkness[line break]"

@@ -1,0 +1,23 @@
+# fr-FR: the examine_nothing default overridden in French ("[The act.target] n'a
+# rien d'inhabituel."), and a French room with no description (shows just its
+# name). The phrasing avoids a "de/à + le" contraction the() can't produce. See
+# lib/advent/locales/fr-FR.lamp and devdocs/i18n.md.
+
+locale "fr-FR"
+lib advent
+
+game Examen_FR:
+    author "Lamp"
+    start salle
+
+room salle:
+    description "Une petite salle voûtée."
+
+item caillou:
+    understand "caillou"
+
+contains salle caillou
+
+room couloir
+
+bidi connects salle north couloir

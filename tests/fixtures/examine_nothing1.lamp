@@ -1,0 +1,25 @@
+# Default action messages (lib/advent): examining an object with no `description`
+# prints the examine_nothing default ("[We] [see] nothing unusual about ..."),
+# and a room with no description shows just its name (no blank line, no
+# "undefined"). An object/room that does have a description is unaffected.
+
+lib advent
+
+game Examine_Nothing:
+    author "Lamp"
+    start study
+
+room study:
+    description "A small panelled study."
+
+item coin
+
+item locket:
+    description "A silver locket."
+
+contains study coin
+contains study locket
+
+room closet
+
+bidi connects study north closet

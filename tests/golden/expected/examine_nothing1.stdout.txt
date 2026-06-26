@@ -1,0 +1,15 @@
+study
+A small panelled study.
+
+You see a coin and a locket here.
+
+> examine coin
+You see nothing unusual about the coin.
+
+> examine locket
+A silver locket.
+
+> north
+closet
+
+> quit

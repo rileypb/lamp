@@ -223,6 +223,12 @@ core edit is contained. Names (default): `contains`/`place`/`contained`, keyword
   runtime values (need interpolable message values); out-of-world meta-verbs (quit/undo/save/restore)
   are English-keyed (rides on TODO item 2's "move out-of-world verbs into lib"). **Where:** `sample/`,
   `src/lamplighter/index.js`, `lib/advent/`.
+  **Follow-up (2026-06-26):** default action messages when none is defined — `examine` of an object
+  with no description prints `examine_nothing` ("[We] [see] nothing unusual about [the act.target]."),
+  and a room with no description shows just its name (describe_room skips the empty line). Added `see`
+  to the locale verb vocab for the `[see]` sugar; French override `examine_nothing` phrased to avoid
+  the `de`/`à`+article contraction gap (see i18n.md Pending). Tests: goldens `examine_nothing1`
+  (en-US) + `frexamine1` (fr-FR); 155 golden green.
 - ~~**Named messages: convert advent's non-action strings.**~~ **DONE (2026-06-26):** all of
   advent's non-action player prose is now named (for the French translation, see the localization
   item above + `devdocs/messages.md`): the darkness line + room-contents frame (`rooms.lamp`), the
