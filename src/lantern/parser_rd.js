@@ -742,6 +742,7 @@ function createParser(tokens, filePath, globalNames, functionNames = new Set(), 
     }
 
     function parseObjectDecl() {
+        const headLine = peek().line;
         const typeName = plainName("object type");
         const objectName = coercedName("object name");
         let fields = [];
@@ -752,7 +753,7 @@ function createParser(tokens, filePath, globalNames, functionNames = new Set(), 
         } else {
             expectNewline();
         }
-        return ast.createObjectDecl(typeName, objectName, fields);
+        return ast.createObjectDecl(typeName, objectName, fields, filePath, headLine);
     }
 
     // An object body is a list of `FIELD VALUE` lines. A `TYPE NAME:` line (leading

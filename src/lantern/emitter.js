@@ -110,7 +110,23 @@ function emitProgram(programAst, options = {}) {
     const kindNodes = programAst.nodes.filter((node) => node.kind === "KindDecl");
     const typeNodes = programAst.nodes.filter((node) => node.kind === "TypeDecl");
     const relationNodes = programAst.nodes.filter((node) => node.kind === "RelationDecl");
-    const objectNodes = programAst.nodes.filter((node) => node.kind === "ObjectDecl");
+    // Merge reopened object declarations: multiple ObjectDecl nodes with the same
+    // name become one `createObject` whose fields are the union (a field set in more
+    // than one block takes the last value in source order — libraries are emitted
+    // before the user file, so a game's reopen overrides a library object's field).
+    // All blocks must declare the same type. Mirrors the TypeDecl merge below.
+    const mergedObjects = new Map();
+    for (const objectNode of programAst.nodes.filter((node) => node.kind === "ObjectDecl")) {
+        const existing = mergedObjects.get(objectNode.objectName);
+        if (!existing) {
+            mergedObjects.set(objectNode.objectName, { ...objectNode, fields: [...objectNode.fields] });
+        } else if (existing.typeName !== objectNode.typeName) {
+            throw new Error(`${objectNode.filePath}:${objectNode.lineNumber}: object "${objectNode.objectName}" reopened as type "${objectNode.typeName}", but first declared as type "${existing.typeName}"`);
+        } else {
+            existing.fields.push(...objectNode.fields);
+        }
+    }
+    const objectNodes = [...mergedObjects.values()];
     const eventNodes = programAst.nodes.filter((node) => node.kind === "EventHandler");
     const functionNodes = programAst.nodes.filter((node) => node.kind === "FunctionDecl");
 

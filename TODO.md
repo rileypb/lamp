@@ -175,6 +175,14 @@ core edit is contained. Names (default): `contains`/`place`/`contained`, keyword
 **Where:** `src/lantern/{tokenizer,parser_rd,emitter,checker}.js`, `src/lamplighter/index.js`, `lib/advent/*`, `devdocs/{relations,world-model}.md`.
 
 ## Smaller / opportunistic
+- ~~**Object reopening (merge same-named `ObjectDecl`s) — reopen e.g. `yourself`.**~~ **DONE
+  (2026-06-25):** emitter merges same-named ObjectDecls into one `createObject` with unioned
+  fields (mirrors the `mergedTypes` merge). Decisions implemented as agreed: **implicit** (any
+  duplicate name merges), **type must agree** (mismatch → located compile error; added
+  `filePath`/`lineNumber` to ObjectDecl for it), **last-wins** field conflict in source order
+  (so a game reopen overrides a library object's field). Tests: golden `doublecontainment`
+  (reopen `yourself` to add a nested hat; deep coin-in-crate containment) + compile-error golden
+  `reopen_type_mismatch`. Docs: specs.md "Reopening an object".
 - ~~**Bare boolean-attribute shorthand — `wearable` for `wearable true`.**~~ **DONE (2026-06-25):**
   one line in `parseObjectBody` — a field name with no value desugars to `= true`
   (`at("NEWLINE") ? createBooleanLiteral(true) : parseSimpleValue()`). Purely additive (a bare

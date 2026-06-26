@@ -6,8 +6,8 @@ function createTypeDecl(name, parents, fields, filePath, lineNumber) {
     return { kind: "TypeDecl", name, parents, fields, filePath, lineNumber };
 }
 
-function createObjectDecl(typeName, objectName, fields) {
-    return { kind: "ObjectDecl", typeName, objectName, fields };
+function createObjectDecl(typeName, objectName, fields, filePath, lineNumber) {
+    return { kind: "ObjectDecl", typeName, objectName, fields, filePath, lineNumber };
 }
 
 function createRelationDecl(name, fields, syntax, invertedFields, sourceField, targetField, uniqueFields, filePath, lineNumber) {

@@ -1,0 +1,3 @@
+Compile error: tests/fixtures/reopen_type_mismatch.lamp:13: object "spot" reopened as type "item", but first declared as type "room"
+  13 | item spot:
+    | ^

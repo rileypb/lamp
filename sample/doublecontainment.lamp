@@ -1,0 +1,17 @@
+lib advent
+
+game Double_Containment:
+	author "Test Author"
+	start hall	
+
+room hall:
+	description "A plain hall."
+	item crate:
+		description "A crate."
+		item coin:
+			description "A coin."
+
+person yourself:
+	item hat:
+		description "A hat."
+		wearable true

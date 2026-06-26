@@ -315,6 +315,24 @@ The nested object is hoisted to top level (its name is globally referenceable, l
 
 The trailing `:` is required and is what disambiguates a nested declaration from a field assignment whose **field name happens to be a type** — for example `article proper` sets the `article` field (even though `article` is also a type), because a field line never has a `:`. Consequently the **bare-reference** form (`TYPE NAME` with no body, to place an already-declared object) is **not** supported: a body-less `TYPE NAME` line is always parsed as a field assignment. To place an existing object, write a top-level `contains` assertion (or `move`).
 
+#### Reopening an object
+
+An object may be declared in **more than one block** with the same name; the blocks **merge** into a single object. This is the instance-level analogue of reopening a type, and works across files — a game can reopen an object a library defines (e.g. advent's `yourself`) to add fields or nested objects:
+
+```lamp
+person yourself:          # adds to advent's `yourself`, does not redeclare it
+    item hat:
+        description "A hat."
+        wearable
+```
+
+Rules:
+- **The type must agree.** Every block declaring a given name must use the same `TYPE`; a mismatch (`item yourself:` when `yourself` is a `person`) is a compile error.
+- **Fields union, last-wins.** Disjoint fields combine. A field set in more than one block takes the **last** value in source order; because libraries are compiled before the user file, a game's reopen **overrides** a library object's field (parallel to global override).
+- Nested objects (above) contributed by any block are placed in the merged object.
+
+There is no separate keyword: any second `TYPE NAME:` block with an existing name reopens it. (Beware that an accidental duplicate name therefore merges rather than erroring.)
+
 #### Type declarations
 
 ```lamp

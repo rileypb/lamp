@@ -1,0 +1,14 @@
+# Reopening an object with a different type is a compile error: every block that
+# declares a given object name must agree on the type.
+
+lib advent
+
+game Reopen_Mismatch:
+	author "Test Author"
+	start spot
+
+room spot:
+	description "A spot."
+
+item spot:
+	scenery

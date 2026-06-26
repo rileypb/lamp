@@ -56,7 +56,7 @@ const cases = [
         name: "object decl: no body",
         run() {
             const [obj] = parse("person yourself");
-            assert.deepStrictEqual(obj, { kind: "ObjectDecl", typeName: "person", objectName: "yourself", fields: [] });
+            assert.deepStrictEqual(obj, { kind: "ObjectDecl", typeName: "person", objectName: "yourself", fields: [], filePath: "t.lamp", lineNumber: 1 });
         },
     },
     {

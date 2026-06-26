@@ -1,0 +1,22 @@
+hall
+A plain hall.
+
+You see a crate here.
+
+> i
+You are carrying:
+  a hat
+
+> look
+hall
+A plain hall.
+
+You see a crate here.
+
+> examine coin
+A coin.
+
+> examine hat
+A hat.
+
+> quit
