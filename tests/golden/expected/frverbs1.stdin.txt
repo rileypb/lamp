@@ -1,0 +1,12 @@
+regarder
+prendre clé
+inventaire
+porter manteau
+enlever manteau
+poser manteau
+aller sud
+nord
+examiner clé
+prendre licorne
+xyzzy
+quit

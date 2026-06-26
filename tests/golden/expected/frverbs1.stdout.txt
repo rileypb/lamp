@@ -1,0 +1,49 @@
+salon
+Un petit salon, simplement meublé.
+
+Vous voyez une clé et un manteau ici.
+
+> regarder
+salon
+Un petit salon, simplement meublé.
+
+Vous voyez une clé et un manteau ici.
+
+> prendre clé
+Pris.
+
+> inventaire
+Vous portez :
+  une clé
+
+> porter manteau
+(vous prenez d'abord le manteau)
+Pris.
+Vous mettez le manteau.
+
+> enlever manteau
+Vous enlevez le manteau.
+
+> poser manteau
+Laissé.
+
+> aller sud
+Obscurité
+Il fait nuit noire, et vous n'y voyez rien.
+
+> nord
+salon
+Un petit salon, simplement meublé.
+
+Vous voyez un manteau ici.
+
+> examiner clé
+Une petite clé en laiton.
+
+> prendre licorne
+Vous ne voyez rien de tel ici.
+
+> xyzzy
+Je ne comprends pas cela.
+
+> quit

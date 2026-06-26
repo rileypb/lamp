@@ -200,9 +200,18 @@ core edit is contained. Names (default): `contains`/`place`/`contained`, keyword
   "(in which is …)", fr-FR the gender-agreed "(dans laquelle se trouve …)". Tests: goldens
   `fradvent1` (end-to-end French responses) + `frnested1` (nested containers/supporter, gendered
   relative pronoun + dans/sur + se trouve(nt)); 151 golden green, en-US byte-invariant.
-  **Remaining:** (3-layer) French command verbs — advent's `syntax` templates are English, so commands
-  are still typed in English (a French parser pack is follow-up); (4) a forked French Cloak source.
-  **Where:** `lib/advent/locales/`, `sample/`.
+  **Layer 3 DONE (2026-06-26):** French command grammar in the same pack — verb synonyms via
+  `understand "…" as ACTION` (additive: English still matches) and direction words by reopening the
+  `direction` objects. Two general fixes: UTF-8 stdin in the plain host (`plain.js` read a byte at a
+  time and decoded each alone, mangling "clé"; now decodes the whole line) and routing the engine's
+  parser feedback ("You can't see any such thing." / "I don't understand that.") through the
+  `message` registry so a pack overrides them (`parser_cant_see`/`parser_no_understand`). Test:
+  golden `frverbs1` (French commands → French responses + localized parser failures + accented noun
+  match); 152 golden green, en-US byte-invariant.
+  **Remaining:** (4) a forked French Cloak source; engine English not yet localizable — the
+  disambiguation prompt + unbound-pronoun message (interpolate runtime values) and the out-of-world
+  meta-verbs (quit/undo/save/restore, English-keyed; rides on TODO item 2's "move out-of-world verbs
+  into lib"). **Where:** `sample/`, `src/lamplighter/index.js`, `lib/advent/startup.lamp`.
 - **Named messages: convert advent's non-action strings (optional).** All of advent's
   *action* messages are now named (`devdocs/messages.md`); what's left is non-action prose —
   the darkness line in `rooms.lamp` and the startup banner/quit prompt in `startup.lamp`.

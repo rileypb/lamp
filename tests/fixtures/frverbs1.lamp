@@ -1,0 +1,36 @@
+# Layer 3: French command verbs. The fr-FR advent pack (lib/advent/locales/
+# fr-FR.lamp) adds French `understand` grammar for the standard actions and French
+# words to the direction objects, so the player types French commands and gets
+# French responses. The game supplies `understand` synonyms for its own accented
+# nouns (the parser matches an object by name/understand, not printed_name). See
+# devdocs/i18n.md (layer 3).
+
+locale "fr-FR"
+lib advent
+
+game Verbes_FR:
+    author "Lamp"
+    start salon
+
+room salon:
+    description "Un petit salon, simplement meublé."
+
+room cave:
+    description "Une cave humide et sombre."
+    lighted false
+
+bidi connects salon south cave
+
+item cle:
+    printed_name "clé"
+    understand "clé/cle"
+    description "Une petite clé en laiton."
+    gender "feminine"
+
+item manteau:
+    understand "manteau"
+    description "Un manteau de velours noir."
+    wearable
+
+contains salon cle
+contains salon manteau

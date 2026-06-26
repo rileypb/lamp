@@ -30,26 +30,29 @@ function renderStyledSegment(value, styles, isTty) {
     return `\x1b[${codes.join(";")}m${value}\x1b[0m`;
 }
 
-// Read one line from the host's stdin, character by character. The host is
-// trusted and owns fd 0; the sandboxed game cannot touch it directly. The
-// terminal's own cooked mode handles echo and line editing on a TTY.
+// Read one line from the host's stdin, byte by byte. The host is trusted and
+// owns fd 0; the sandboxed game cannot touch it directly. The terminal's own
+// cooked mode handles echo and line editing on a TTY. Bytes are accumulated and
+// decoded as UTF-8 once at end of line — decoding each byte alone would mangle a
+// multi-byte character (e.g. "é"). A newline (0x0A) never occurs inside a UTF-8
+// multi-byte sequence (continuation bytes are 0x80-0xBF), so scanning for it
+// byte-wise is safe.
 function readStdinLine(fs) {
-    const buf = Buffer.alloc(1);
-    let line = "";
+    const byte = Buffer.alloc(1);
+    const bytes = [];
     while (true) {
         let n;
         try {
-            n = fs.readSync(0, buf, 0, 1);
+            n = fs.readSync(0, byte, 0, 1);
         } catch (err) {
             if (err.code === "EAGAIN") continue;
             throw err;
         }
         if (n === 0) break;
-        const ch = buf.toString("utf8", 0, 1);
-        if (ch === "\n") break;
-        line += ch;
+        if (byte[0] === 0x0a) break;
+        bytes.push(byte[0]);
     }
-    return line;
+    return Buffer.from(bytes).toString("utf8");
 }
 
 function createPlainBackend({ out, err, fs }) {

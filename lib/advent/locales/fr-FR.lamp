@@ -52,8 +52,69 @@ put_on_report_other: "[The act.actor] pose [the act.put_item] sur [the act.desti
 put_on_not_carrying: "Vous ne portez pas cela."
 put_on_cant: "Vous ne pouvez rien poser là-dessus."
 
+# --- parser feedback (engine messages, routed through the message registry) ---
+parser_cant_see: "Vous ne voyez rien de tel ici."
+parser_no_understand: "Je ne comprends pas cela."
+
 # --- room description: darkness and the contents frame ---
 darkness_name: "Obscurité[line break]"
 darkness_description: "Il fait nuit noire, et vous n'y voyez rien."
 room_contents_intro: "[par]Vous voyez "
 room_contents_outro: " ici."
+
+# --- French command grammar (layer 3) ---
+#
+# `understand "…" as ACTION` adds a surface template to an existing action (the
+# same mechanism a game uses for synonyms). These are *additive*: the English
+# templates still match, so under fr-FR the player may type either language. A
+# game supplies `understand` synonyms for its own accented nouns (the parser
+# matches an object by its name/understand tokens, not its printed_name).
+
+understand "regarder" as look
+
+understand "prendre [taken]" as take
+understand "prends [taken]" as take
+understand "ramasser [taken]" as take
+
+understand "inventaire" as inventory
+
+understand "poser [dropped]" as drop
+understand "laisser [dropped]" as drop
+understand "lâcher [dropped]" as drop
+
+understand "porter [clothing]" as wear
+understand "mettre [clothing]" as wear
+understand "enfiler [clothing]" as wear
+
+understand "enlever [clothing]" as doff
+understand "retirer [clothing]" as doff
+understand "ôter [clothing]" as doff
+
+understand "examiner [target]" as examine
+understand "observer [target]" as examine
+understand "regarder [target]" as examine
+
+understand "aller [way]" as go
+
+understand "poser [put_item] sur [destination]" as put_on
+understand "mettre [put_item] sur [destination]" as put_on
+
+# French direction words, added to advent's direction objects (reopening merges
+# with their `inverse` declarations in globals.lamp). The bare `[way]` grammar
+# lets the player type a direction alone; `understand` splits synonyms on "/".
+direction north:
+	understand "nord/n"
+direction south:
+	understand "sud/s"
+direction east:
+	understand "est/e"
+direction west:
+	understand "ouest/o"
+direction northeast:
+	understand "nord-est/ne"
+direction northwest:
+	understand "nord-ouest/no"
+direction southeast:
+	understand "sud-est/se"
+direction southwest:
+	understand "sud-ouest/so"

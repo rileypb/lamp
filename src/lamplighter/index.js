@@ -844,7 +844,7 @@ function runCommand(line, actor) {
             } else if (status === "unresolved") {
                 // Already committed to this action — no backtracking here.
                 const unbound = unboundPronounIn(remainingSlots.map(([, span]) => span));
-                print(unbound ? `I don't know what "${unbound}" refers to.` : "You can't see any such thing.");
+                print(unbound ? `I don't know what "${unbound}" refers to.` : message("parser_cant_see", "You can't see any such thing."));
             }
             return;
         }
@@ -908,7 +908,9 @@ function runCommand(line, actor) {
         print(`I don't know what "${unbound}" refers to.`);
         return;
     }
-    print(sawVerbMatch ? "You can't see any such thing." : "I don't understand that.");
+    print(sawVerbMatch
+        ? message("parser_cant_see", "You can't see any such thing.")
+        : message("parser_no_understand", "I don't understand that."));
 }
 
 // World-model contract: fires the `startup` event, which the world library hooks
