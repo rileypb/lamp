@@ -3,9 +3,10 @@
 Status: **mechanism complete; advent's action messages converted.** Part 1 (the
 `act` global), Part 2 (the named-message mechanism), and Part 3 for all of advent's
 **action** messages (take/drop/wear/doff/examine/go/put_on reports + failures and the
-implicit-action parentheticals; inventory header/empty) are implemented. The
-inventory item rows stay plain prints because they reference a loop-local (`x`), not
-the action — a message can only reference `act`/globals. **Remaining (optional):** the
+implicit-action parentheticals; inventory header/empty + the `(worn)` marker) are
+implemented. Only the inventory item *name* stays a plain print — it references the
+loop-local `x`, and a message can reference only `act`/globals — but it is split out
+so the `(worn)` marker beside it is still a named message. **Remaining (optional):** the
 non-action strings (the darkness line in rooms.lamp, the startup banner/quit prompt);
 a `lib/advent_fr` translation pack as a worked example.
 

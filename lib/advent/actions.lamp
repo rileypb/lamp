@@ -66,12 +66,14 @@ report inventory:
 			if not found:
 				print inventory_header:"You are carrying:[line break]"
 				found = true
-			# The item rows reference the loop variable `x` (not the action), so they
-			# stay plain prints — a message can only reference `act`/globals.
+			# The item name references the loop variable `x` (not the action), so it
+			# stays a plain print (a message may only reference `act`/globals); the
+			# "(worn)" marker carries no local reference, so it is a named message. The
+			# name runs on (no sentence punctuation), so the parts join on one line.
+			print "  [with_article(x)]"
 			if wears self.actor x:
-				print "  [with_article(x)] (worn)[line break]"
-			else:
-				print "  [with_article(x)][line break]"
+				print inventory_worn:" (worn)"
+			print "[line break]"
 	if not found:
 		print inventory_empty:"You are carrying nothing."
 
