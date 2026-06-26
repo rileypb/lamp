@@ -175,6 +175,14 @@ core edit is contained. Names (default): `contains`/`place`/`contained`, keyword
 **Where:** `src/lantern/{tokenizer,parser_rd,emitter,checker}.js`, `src/lamplighter/index.js`, `lib/advent/*`, `devdocs/{relations,world-model}.md`.
 
 ## Smaller / opportunistic
+- **Drop advent's duplicated `display_name` / `with_article` (layering smell).** `lib/advent/
+  index.js` defines `display_name` (less defensive — bare `String(x.name)`, surfaced the
+  "the undefined" confusion) which shadows the locale's `lib/en-US` one; advent's
+  `with_article` overlaps the locale's `indefinite`/`a_list`. Now that `contents_of` returns
+  objects + `a_list`, advent's `with_article` is used only by the inventory rows
+  (`actions.lamp` report inventory) — move those to the locale helper and delete advent's
+  `display_name`/`with_article` so the locale owns naming/articles. **Where:** `lib/advent/
+  index.js`, `lib/advent/actions.lamp`.
 - ~~**Object reopening (merge same-named `ObjectDecl`s) — reopen e.g. `yourself`.**~~ **DONE
   (2026-06-25):** emitter merges same-named ObjectDecls into one `createObject` with unioned
   fields (mirrors the `mergedTypes` merge). Decisions implemented as agreed: **implicit** (any
