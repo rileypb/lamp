@@ -1,0 +1,35 @@
+# End-to-end fr-FR advent: the locale switch (`locale "fr-FR"`) loads the French
+# grammar pack (lib/fr-FR) AND lib/advent's French message pack
+# (lib/advent/locales/fr-FR.lamp) automatically. The driver below issues the
+# (still English) commands and the responses come back in French — take/drop/wear/
+# remove reports, the inventory, the "you can't go that way" refusal, the darkness
+# line, and the room-contents frame with gendered articles. Command verbs are not
+# yet localized (layer 3, deferred): only the responses are French. See devdocs/i18n.md.
+
+locale "fr-FR"
+lib advent
+
+game Aventure_FR:
+    author "Lamp"
+    start salon
+
+room salon:
+    description "Un petit salon, simplement meublé."
+
+room cave:
+    description "Une cave humide et sombre."
+    lighted false
+
+bidi connects salon south cave
+
+item cle:
+    printed_name "clé"
+    description "Une petite clé en laiton."
+    gender "feminine"
+
+item manteau:
+    description "Un manteau de velours noir."
+    wearable
+
+contains salon cle
+contains salon manteau

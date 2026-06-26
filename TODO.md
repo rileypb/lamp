@@ -189,11 +189,16 @@ core edit is contained. Names (default): `contains`/`place`/`contained`, keyword
   transforms. Defines every native `lib/en-US` does; verbs aren't conjugated (translation spells
   them out — `conjugate` is identity, vocab mirrors en-US so English default templates parse).
   Test: golden `frlocale1` (selected via a `locale "fr-FR"` declaration; 149 golden green).
-  **Remaining:** (3) `lib/advent/locales/fr-FR.lamp` French overrides for advent's named action
-  messages — needs advent's non-action prose (darkness line, "You see … here", "in which is")
-  converted to named messages first so Cloak reads fully French; (4) a forked French Cloak source.
-  French command verbs (parser, layer 3) deferred. **Where:** `lib/advent/{locales,rooms,startup}.lamp`,
-  `sample/`.
+  **Part 3 DONE (2026-06-26):** `lib/advent/locales/fr-FR.lamp` — French overrides for every named
+  advent message (take/drop/wear/doff/put-on reports + failures + parentheticals, inventory
+  header/empty/`(worn)`, darkness line, room-contents frame). Supporting: named the darkness line +
+  contents frame in `rooms.lamp` (en-US invariant); inventory row now uses the locale's `indefinite`
+  not advent's English-only `with_article` (en-US invariant; localizes to "une clé"); added a
+  `gender` field on advent's `physical` type (default masculine). Test: golden `fradvent1` (locale
+  declaration + lib advent + stdin driver → French responses end to end; 150 golden green).
+  **Remaining:** (3-layer) French command verbs — advent's `syntax` templates are English, so commands
+  are still typed in English (a French parser pack is follow-up); (4) a forked French Cloak source.
+  **Where:** `lib/advent/locales/`, `sample/`.
 - **Named messages: convert advent's non-action strings (optional).** All of advent's
   *action* messages are now named (`devdocs/messages.md`); what's left is non-action prose —
   the darkness line in `rooms.lamp` and the startup banner/quit prompt in `startup.lamp`.

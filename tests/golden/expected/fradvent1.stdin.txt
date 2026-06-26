@@ -1,0 +1,12 @@
+examine cle
+take cle
+i
+wear manteau
+remove manteau
+drop manteau
+drop cle
+i
+east
+south
+north
+quit

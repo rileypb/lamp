@@ -1,0 +1,46 @@
+salon
+Un petit salon, simplement meublé.
+
+Vous voyez une clé et un manteau ici.
+
+> examine cle
+Une petite clé en laiton.
+
+> take cle
+Pris.
+
+> i
+Vous portez :
+  une clé
+
+> wear manteau
+(vous prenez d'abord le manteau)
+Pris.
+Vous mettez le manteau.
+
+> remove manteau
+Vous enlevez le manteau.
+
+> drop manteau
+Laissé.
+
+> drop cle
+Laissé.
+
+> i
+Vous ne portez rien.
+
+> east
+Vous ne pouvez pas aller par là.
+
+> south
+Obscurité
+Il fait nuit noire, et vous n'y voyez rien.
+
+> north
+salon
+Un petit salon, simplement meublé.
+
+Vous voyez une clé et un manteau ici.
+
+> quit

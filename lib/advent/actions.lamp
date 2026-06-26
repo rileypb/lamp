@@ -70,7 +70,9 @@ report inventory:
 			# stays a plain print (a message may only reference `act`/globals); the
 			# "(worn)" marker carries no local reference, so it is a named message. The
 			# name runs on (no sentence punctuation), so the parts join on one line.
-			print "  [with_article(x)]"
+			# Render the article through the locale's `indefinite` (not advent's
+			# English-only `with_article`) so the row localizes — "une clé" under fr-FR.
+			print "  [indefinite(x)]"
 			if wears self.actor x:
 				print inventory_worn:" (worn)"
 			print "[line break]"

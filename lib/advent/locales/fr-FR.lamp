@@ -1,0 +1,59 @@
+# French (fr-FR) translation of lib/advent's player-facing messages.
+#
+# Loaded automatically after lib/advent's own files when the fr-FR locale is
+# active (--locale fr-FR or `locale "fr-FR"`), so these `NAME: "…"` overrides win
+# last-wins over the English defaults declared at each message's use site (a game
+# file, loaded last, can still override them). See devdocs/i18n.md.
+#
+# Top-level overrides compile in top-level scope, so substitutions reference the
+# running action through the `act` global (never a lexical `self`). Verbs are
+# spelled out — the locale pack does not conjugate French (see lib/fr-FR).
+# The "_other" variants render only for a non-player actor.
+
+# --- take ---
+take_report: "Pris."
+take_report_other: "[The act.actor] prend [the act.taken]."
+take_already_carrying: "Vous portez déjà cela."
+take_cant_take: "Ce n'est pas quelque chose que vous pouvez prendre."
+
+# --- inventory ---
+inventory_header: "Vous portez :[line break]"
+inventory_worn: " (porté)"
+inventory_empty: "Vous ne portez rien."
+
+# --- drop ---
+drop_first_doff: "(vous enlevez d'abord [the act.dropped])[line break]"
+drop_report: "Laissé."
+drop_report_other: "[The act.actor] laisse [the act.dropped]."
+drop_not_carrying: "Vous ne portez pas cela."
+
+# --- wear ---
+wear_first_take: "(vous prenez d'abord [the act.clothing])[line break]"
+wear_report: "Vous mettez [the act.clothing]."
+wear_report_other: "[The act.actor] met [the act.clothing]."
+wear_not_wearable: "Ce n'est pas quelque chose que vous pouvez porter."
+wear_already_worn: "Vous portez déjà cela."
+
+# --- doff (remove) ---
+doff_report: "Vous enlevez [the act.clothing]."
+doff_report_other: "[The act.actor] enlève [the act.clothing]."
+doff_not_worn: "Vous ne portez pas cela."
+
+# --- examine ---
+examine_too_dark: "Il fait trop sombre pour voir cela."
+
+# --- go ---
+go_cant: "Vous ne pouvez pas aller par là."
+
+# --- put on ---
+put_on_first_doff: "(vous enlevez d'abord [the act.put_item])[line break]"
+put_on_report: "Vous posez [the act.put_item] sur [the act.destination]."
+put_on_report_other: "[The act.actor] pose [the act.put_item] sur [the act.destination]."
+put_on_not_carrying: "Vous ne portez pas cela."
+put_on_cant: "Vous ne pouvez rien poser là-dessus."
+
+# --- room description: darkness and the contents frame ---
+darkness_name: "Obscurité[line break]"
+darkness_description: "Il fait nuit noire, et vous n'y voyez rien."
+room_contents_intro: "[par]Vous voyez "
+room_contents_outro: " ici."

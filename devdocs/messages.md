@@ -7,8 +7,11 @@ implicit-action parentheticals; inventory header/empty + the `(worn)` marker) ar
 implemented. Only the inventory item *name* stays a plain print — it references the
 loop-local `x`, and a message can reference only `act`/globals — but it is split out
 so the `(worn)` marker beside it is still a named message. **Remaining (optional):** the
-non-action strings (the darkness line in rooms.lamp, the startup banner/quit prompt);
-a `lib/advent_fr` translation pack as a worked example.
+non-action strings: the startup banner/quit prompt in startup.lamp. (The darkness
+line and the room-contents frame in rooms.lamp are now named — `darkness_name`/
+`darkness_description`, `room_contents_intro`/`room_contents_outro` — for the
+French translation; see devdocs/i18n.md.) A worked French pack now exists at
+`lib/advent/locales/fr-FR.lamp`.
 
 ## Problem
 

@@ -19,6 +19,10 @@ type physical < thing:
 	string description
 	article article
 	bool supporter
+	# Grammatical gender for locales with gendered articles (fr-FR's le/la,
+	# un/une). Gender-neutral locales like en-US ignore it; default masculine, a
+	# game sets `gender "feminine"` on a feminine-named object. See devdocs/i18n.md.
+	string gender = "masculine"
 
 type container < physical
 
