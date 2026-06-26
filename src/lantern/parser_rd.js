@@ -353,6 +353,7 @@ function createParser(tokens, filePath, globalNames, functionNames = new Set(), 
                 case "global": return parseGlobalDecl();
                 case "on": return parseOnHandler();
                 case "lib": return parseLibImport();
+                case "locale": return parseLocaleDecl();
                 case "function": return parseFunctionDecl();
                 case "native": return parseNativeFunctionDecl();
                 case "rulebook": return parseRulebookDecl();
@@ -971,6 +972,16 @@ function createParser(tokens, filePath, globalNames, functionNames = new Set(), 
         const name = plainName("library name");
         expectNewline();
         return ast.createLibImport(name);
+    }
+
+    // `locale "fr-FR"` — the tag is a quoted string (locale tags carry a hyphen,
+    // which is not a valid identifier). Compile-time only; the --locale flag
+    // overrides it. The directive node is inert at emit.
+    function parseLocaleDecl() {
+        expectKeyword("locale");
+        const tag = expect("STRING", "Expected a quoted locale tag after 'locale'");
+        expectNewline();
+        return ast.createLocaleDecl(tag.value);
     }
 
     function parseNativeFunctionDecl() {

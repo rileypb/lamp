@@ -179,6 +179,14 @@ function createLibImport(name) {
     return { kind: "LibImport", name };
 }
 
+// A compile-time directive selecting the locale pack (e.g. `locale "fr-FR"`).
+// Carries no runtime effect: the emitter filters by node kind and never selects
+// it. The compiler reads the tag in a pre-pass to choose the locale dir; the
+// --locale flag overrides this declaration.
+function createLocaleDecl(tag) {
+    return { kind: "LocaleDecl", tag };
+}
+
 function createDispatchStatement(eventName) {
     return { kind: "DispatchStatement", eventName };
 }
@@ -398,6 +406,7 @@ module.exports = {
     createParenNameExpr,
     createNoneLiteral,
     createLibImport,
+    createLocaleDecl,
     createDispatchStatement,
     createWhileStatement,
     createLessThanExpr,

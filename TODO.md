@@ -175,11 +175,24 @@ core edit is contained. Names (default): `contains`/`place`/`contained`, keyword
 **Where:** `src/lantern/{tokenizer,parser_rd,emitter,checker}.js`, `src/lamplighter/index.js`, `lib/advent/*`, `devdocs/{relations,world-model}.md`.
 
 ## Smaller / opportunistic
+- **Localization to French — in progress (`devdocs/i18n.md`).** Goal: a playable French
+  Cloak of Darkness. **Part 1 DONE (2026-06-26):** the compile-time **locale switch** —
+  `--locale <tag>` flag (also `--locale=<tag>`) > a `locale "<tag>"` source declaration >
+  the `en-US` default; picks the locale dir filling the post-`sys` slot. New `locale` keyword
+  → inert `LocaleDecl` (read in a pre-pass, mirroring `lib` gathering); a library may ship
+  per-locale override files `lib/<lib>/locales/<tag>.lamp` (loaded after its defaults, so
+  `NAME:"…"` message overrides win last-wins; en-US default unchanged). Clear "pack not found"
+  error. Tests: parser units (LocaleDecl + reject unquoted); 148 golden invariant.
+  **Remaining:** (2) build `lib/fr-FR` grammar pack — French articles (le/la/l'/les, un/une/des),
+  capitalization, list prose ("et"), defining every native `lib/en-US` does; (3)
+  `lib/advent/locales/fr-FR.lamp` French overrides for advent's named action messages;
+  (4) a forked French Cloak source. French command verbs (parser, layer 3) deferred. **Where:**
+  `lib/fr-FR/`, `lib/advent/locales/`, `sample/`.
 - **Named messages: convert advent's non-action strings (optional).** All of advent's
   *action* messages are now named (`devdocs/messages.md`); what's left is non-action prose —
-  the darkness line in `rooms.lamp` and the startup banner/quit prompt in `startup.lamp`. Plus
-  an optional `lib/advent_fr` translation pack as a worked example. (The inventory item rows
-  stay plain — they reference a loop-local, not `act`.) **Where:** `lib/advent/{rooms,startup}.lamp`.
+  the darkness line in `rooms.lamp` and the startup banner/quit prompt in `startup.lamp`.
+  (The inventory item rows stay plain — they reference a loop-local, not `act`.) **Where:**
+  `lib/advent/{rooms,startup}.lamp`.
 - ~~**Nested objects need a body / reference form (step-5 limitations).**~~ **DONE (2026-06-26):**
   **smart disambiguation** — a line in an object body is a nested placement when its leading
   token is a known **type** that is **not** a known **field name** (so `item hook` nests but

@@ -795,6 +795,13 @@ const cases = [
             assert.strictEqual(p.object.kind, "CallExpr");
         },
     },
+    {
+        name: "locale declaration: quoted tag -> inert LocaleDecl node",
+        run() {
+            const [node] = parse('locale "fr-FR"');
+            assert.deepStrictEqual(node, { kind: "LocaleDecl", tag: "fr-FR" });
+        },
+    },
 ];
 
 // The parser must reject these with a clear error.
@@ -808,6 +815,7 @@ const rejectCases = [
     { name: "empty substitution in template", src: 'on startup:\n    print "bad []"', message: /empty '\[\]' substitution/ },
     { name: "unterminated substitution in template", src: 'on startup:\n    print "bad [score"', message: /unterminated '\[' substitution/ },
     { name: "malformed expression in substitution", src: 'on startup:\n    print "bad [1 +]"', message: /invalid substitution/ },
+    { name: "locale declaration requires a quoted tag", src: "locale fr-FR", message: /quoted locale tag/ },
 ];
 
 let failures = 0;
