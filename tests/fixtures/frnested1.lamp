@@ -45,6 +45,23 @@ item livre:
 item chapeau:
     description "Un chapeau de paille."
 
+# A scenery supporter is listed by describe_supporters (locale prose), not by the
+# nested-contents parenthetical: "Sur l'étagère se trouvent …" (elision + plural).
+item etagere:
+    printed_name "étagère"
+    description "Une étagère poussiéreuse."
+    gender "feminine"
+    scenery
+    supporter
+
+item fiole:
+    printed_name "fiole"
+    description "Une petite fiole."
+    gender "feminine"
+
+item crayon:
+    description "Un crayon mâché."
+
 contains salle coffre
 contains coffre boite
 contains boite bille
@@ -52,3 +69,6 @@ contains boite perle
 contains salle table
 contains table livre
 contains salle chapeau
+contains salle etagere
+contains etagere fiole
+contains etagere crayon

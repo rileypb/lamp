@@ -248,15 +248,13 @@ core edit is contained. Names (default): `contains`/`place`/`contained`, keyword
   if strict). Tests: golden box/pedestal example + empty container + singular/plural copula;
   flat-case goldens stay invariant. **Where:** `lib/sys/{functions.lamp,index.js}`,
   `lib/advent/rooms.lamp`.
-- **Drop advent's duplicated `display_name` / `with_article` (layering smell).** `lib/advent/
-  index.js` defines `display_name` (less defensive — bare `String(x.name)`, surfaced the
-  "the undefined" confusion) which shadows the locale's `lib/en-US` one; advent's
-  `with_article` overlaps the locale's `indefinite`/`a_list`. The inventory row was moved to the
-  locale's `indefinite` (2026-06-26, for fr-FR localization), so `with_article` now has just **one
-  caller left**: `describe_supporters` in `lib/advent/index.js` (which builds "On the X is/are …"
-  prose in JS — itself English-only and a localization gap). Move that listing onto the locale
-  helpers (or a native like `contained_phrase`) and delete advent's `display_name`/`with_article`
-  so the locale owns naming/articles. **Where:** `lib/advent/index.js`.
+- ~~**Drop advent's duplicated `display_name` / `with_article` (layering smell).**~~ **DONE
+  (2026-06-26):** advent's `display_name`/`with_article` (which shadowed/overlapped the locale's
+  `display_name`/`indefinite`) are deleted; the locale now owns all naming/articles. The two
+  callers were retired during fr-FR localization: the inventory row → the locale's `indefinite`;
+  the supporter listing → a new locale helper `supporter_phrase` (en-US "On the hook is a cloak.",
+  fr-FR "Sur l'étagère se trouvent …"). `describe_supporters` now decides only which supporters
+  and what rests on them. en-US byte-invariant; French covered by the `frnested1` golden.
 - ~~**Object reopening (merge same-named `ObjectDecl`s) — reopen e.g. `yourself`.**~~ **DONE
   (2026-06-25):** emitter merges same-named ObjectDecls into one `createObject` with unioned
   fields (mirrors the `mergedTypes` merge). Decisions implemented as agreed: **implicit** (any

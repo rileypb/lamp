@@ -1,5 +1,4 @@
 native function list<item> contents_of(physical r)
-native function string with_article(physical x)
 native function void describe_supporters(room r)
 
 # An object's container (the source of its `contains` edge). Author code reads
