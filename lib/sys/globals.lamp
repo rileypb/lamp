@@ -7,3 +7,12 @@ global bool oxford_comma = false
 global int undo_limit = 32
 
 global real PI = 3.141592653
+
+# The action currently running (set by the action pipeline for the duration of an
+# action; `none` when no action is running). It exposes the action's slots and the
+# universal `actor`/`action`/`reason` fields, so narration can reference the action
+# from anywhere it is rendered — e.g. a default/overridable message `[the act.taken]`
+# — without a lexical `self`. Typed `object` because the base `action` type is a
+# reserved keyword; slot access (`act.taken`) is loosely typed. Transient: not part
+# of save/undo state. See devdocs/messages.md.
+global object act = none

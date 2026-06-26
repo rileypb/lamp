@@ -488,6 +488,12 @@ function runAction(actionName, instance, opts = {}) {
         return "succeeded";
     }
     actionDepth += 1;
+    // Expose the running action as the `act` global for the duration of the action
+    // (saved/restored so a nested `try` leaves `act` at the innermost action and
+    // pops back). Direct registry access — `act` is transient execution state.
+    const hasAct = globalRegistry.has("act");
+    const savedAct = hasAct ? globalRegistry.get("act") : undefined;
+    if (hasAct) globalRegistry.set("act", instance);
     try {
         let outcome = "succeeded";
         outer: for (const band of ACTION_BANDS) {
@@ -520,6 +526,7 @@ function runAction(actionName, instance, opts = {}) {
         }
         return outcome;
     } finally {
+        if (hasAct) globalRegistry.set("act", savedAct);
         actionDepth -= 1;
     }
 }
@@ -1555,7 +1562,10 @@ registerStateProvider({
     key: "globals",
     capture() {
         const out = {};
-        for (const [name, value] of globalRegistry) out[name] = encodeValue(value);
+        // `act` is transient execution state (the running action), not world state.
+        for (const [name, value] of globalRegistry) {
+            if (name !== "act") out[name] = encodeValue(value);
+        }
         return out;
     },
     restore(data) {
