@@ -175,6 +175,13 @@ core edit is contained. Names (default): `contains`/`place`/`contained`, keyword
 **Where:** `src/lantern/{tokenizer,parser_rd,emitter,checker}.js`, `src/lamplighter/index.js`, `lib/advent/*`, `devdocs/{relations,world-model}.md`.
 
 ## Smaller / opportunistic
+- **Finish converting advent's messages to named messages (mechanical).** The message
+  mechanism is built (`act` global + `NAME:"DEFAULT"` / `NAME: "TEXT"`; devdocs/messages.md),
+  and advent's `take` action is converted as the pattern. Remaining: drop/wear/doff/examine/go/
+  put_on reports + failures, `report inventory`, the darkness line (rooms.lamp), and startup
+  strings → named messages referencing `act` (not `self`). Output stays invariant (defaults
+  unchanged). Optional: a `lib/advent_fr` translation pack as a worked example. **Where:**
+  `lib/advent/{actions,rooms,startup}.lamp`.
 - ~~**Nested objects need a body / reference form (step-5 limitations).**~~ **DONE (2026-06-26):**
   **smart disambiguation** — a line in an object body is a nested placement when its leading
   token is a known **type** that is **not** a known **field name** (so `item hook` nests but

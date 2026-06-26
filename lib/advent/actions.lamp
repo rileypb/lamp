@@ -33,20 +33,25 @@ check take:
 do take:
 	move self.taken to self.actor
 
+# Player-facing text is written as named, overridable messages (see
+# devdocs/messages.md): the English default lives inline, and a game or translation
+# pack can retheme it by name (`take_report: "…"`). Messages reference the running
+# action via the `act` global rather than the lexical `self`, so an override authored
+# elsewhere renders against the current action.
 report take:
 	if self.actor == player:
-		print "Taken."
+		print take_report:"Taken."
 	else:
-		print "[The self.actor] [take] [the self.taken]."
+		print take_report_other:"[The act.actor] [take] [the act.taken]."
 
 # Failure text lives here, keyed by reason, so a game can retheme a refusal
 # without restating the `check` condition (see devdocs/rulebooks.md).
 report failed take:
 	if self.reason == already_carrying:
-		print "You're already carrying that."
+		print take_already_carrying:"You're already carrying that."
 		stop
 	if self.reason == cant_take_that:
-		print "That's not something you can take."
+		print take_cant_take:"That's not something you can take."
 		stop
 
 action inventory:

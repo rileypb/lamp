@@ -1,8 +1,11 @@
 # Default messages and localization (design)
 
-Status: **in progress.** Part 1 (the `act` global) and Part 2 (the named-message
-mechanism) are implemented; Part 3 (converting advent's messages + an `advent_fr`
-override golden) is next.
+Status: **mechanism complete.** Part 1 (the `act` global), Part 2 (the named-message
+mechanism), and the first cut of Part 3 (advent's `take` action converted to named
+messages + an override golden) are implemented. **Remaining (mechanical):** convert
+the rest of advent's player-facing strings (drop/wear/doff/examine/go/put_on,
+inventory, the darkness line, startup) to named messages on the same pattern; an
+optional `lib/advent_fr` translation pack as a worked example.
 
 ## Problem
 

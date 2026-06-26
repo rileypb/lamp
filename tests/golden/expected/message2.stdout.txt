@@ -1,0 +1,9 @@
+hall
+A plain hall.
+
+You see a lamp here.
+
+> take lamp
+You deftly pocket the lamp.
+
+> quit

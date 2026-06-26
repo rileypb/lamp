@@ -1,0 +1,16 @@
+# Overriding a library (advent) message by name. Advent's `report take` prints the
+# named default `take_report:"Taken."`; this game overrides it — exactly what a
+# translation pack would do — referencing the action via the `act` global.
+
+lib advent
+
+game Message_2:
+	author "Test Author"
+	start hall
+
+room hall:
+	description "A plain hall."
+	item lamp:
+		description "A lamp."
+
+take_report: "You deftly pocket [the act.taken]."
