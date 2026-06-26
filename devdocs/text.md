@@ -1014,14 +1014,33 @@ Fixtures `list1` / `numbers1` / `plural1` + goldens; parser unit tests
     leaked into a native name, doesn't exist in English (so a shared template can't
     use it), proliferates per-preposition/per-case, and can't express the German
     no-preposition genitive. Wrong level of abstraction.
-  - **Forward-compatible shape (when a game needs it).** Add a fourth render-local
-    context item, *governing case/role* (above): a governing marker sets a pending
-    role, the next `the`/`a` consumes it. Author-facing as either a role-tagged
-    article (`[the X | of]`) or semantic combinators (`[of_the X]`). Each locale
-    realizes the role its own way — English ignores it (`the coin`), French
-    contracts (`du caillou`), German selects case (`der Münze`) — exactly like the
-    subject/agreement mechanism (D) but flowing inward. This is a deliberate
-    architecture extension, not a quick native.
+  - **Forward-compatible shape (when a game needs it).** Two complementary
+    mechanisms for two subclasses:
+    - *Romance fusion (no markup) — recommended for this subclass.* Give the
+      article resolver the **preceding rendered text** (or just the last token) and
+      let it **consume a matched preposition**: seeing the buffer end with `de `/
+      `à `, French `the(château)` emits `du château` and trims the `de `. The
+      decision must live in the resolver, not a post-render regex, because `le` is
+      ambiguous — `de` + article `le` contracts (`du château`) but `de` + object
+      pronoun `le` does not (`content de le faire`), and only the article function
+      knows it is emitting the *article*. It also already knows when it elides
+      (`de l'hôtel` stays) or is feminine (`de la tour` stays). No template markup:
+      a French override just writes `… de [the château]`. Cost: the render contract
+      gains a bounded left-rewrite (a substitution may trim a trailing preposition
+      it matched), plus sentence-start capitalization (`De [the X]` → `Du château`).
+      The same mechanism extends to Italian/Spanish/Portuguese fusion. (Idea due to
+      a 2026-06-26 suggestion: pass the resolver its preceding words.)
+    - *Case government (needs markup) — for German/Slavic.* Preceding-words does
+      **not** reach this: there is often no preposition token (German genitive
+      `der Münze` = "of the X"), and the article form is set by the grammatical role
+      assigned by a governing word, not its surface neighbor. Here add a fourth
+      render-local context item, *governing case/role* (above): a governing marker
+      sets a pending role, the next `the`/`a` consumes it. Author-facing as a
+      role-tagged article (`[the X | of]`) or a semantic combinator (`[of_the X]`);
+      English no-ops it (`the coin`), German selects case (`der Münze`). Mirrors the
+      subject/agreement mechanism (D) but flows inward from context.
+    Both are deliberate extensions, not quick natives; the fusion mechanism is the
+    smaller first increment and covers the common (Romance) case.
   - **Until then:** phrase French (and other) overrides to avoid a `de`/`à` +
     `le`/`les` boundary. There is almost always a natural rewording — e.g.
     `examine_nothing` is "[The act.target] n'a rien d'inhabituel." not "… à propos
