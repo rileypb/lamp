@@ -64,14 +64,16 @@ report inventory:
 	for x in item.all:
 		if holder(x) == self.actor:
 			if not found:
-				print "You are carrying:[line break]"
+				print inventory_header:"You are carrying:[line break]"
 				found = true
+			# The item rows reference the loop variable `x` (not the action), so they
+			# stay plain prints — a message can only reference `act`/globals.
 			if wears self.actor x:
 				print "  [with_article(x)] (worn)[line break]"
 			else:
 				print "  [with_article(x)][line break]"
 	if not found:
-		print "You are carrying nothing."
+		print inventory_empty:"You are carrying nothing."
 
 action drop:
 	direct item dropped
@@ -85,7 +87,7 @@ check drop:
 do drop:
 	if wears self.actor self.dropped:
 		if (self.actor == player):
-			print "(first taking off [the self.dropped])[line break]"
+			print drop_first_doff:"(first taking off [the act.dropped])[line break]"
 		try doff:
 			clothing self.dropped
 			actor self.actor
@@ -95,13 +97,13 @@ do drop:
 
 report drop:
 	if self.actor == player:
-		print "Dropped."
+		print drop_report:"Dropped."
 	else:
-		print "[The self.actor] [drop] [the self.dropped]."
+		print drop_report_other:"[The act.actor] [drop] [the act.dropped]."
 
 report failed drop:
 	if self.reason == not_carrying:
-		print "You aren't carrying that."
+		print drop_not_carrying:"You aren't carrying that."
 		stop
 
 action wear:
@@ -120,7 +122,7 @@ check wear:
 do wear:
 	if not (holder(self.clothing) == self.actor):
 		if (self.actor == player):
-			print "(first taking [the self.clothing])[line break]"
+			print wear_first_take:"(first taking [the act.clothing])[line break]"
 		try take:
 			taken self.clothing
 			actor self.actor
@@ -130,16 +132,16 @@ do wear:
 
 report wear:
 	if self.actor == player:
-		print "You put on [the self.clothing]."
+		print wear_report:"You put on [the act.clothing]."
 	else:
-		print "[The self.actor] [put] on [the self.clothing]."
+		print wear_report_other:"[The act.actor] [put] on [the act.clothing]."
 
 report failed wear:
 	if self.reason == not_wearable:
-		print "That's not something you can wear."
+		print wear_not_wearable:"That's not something you can wear."
 		stop
 	if self.reason == already_worn:
-		print "You're already wearing that."
+		print wear_already_worn:"You're already wearing that."
 		stop
 
 action doff:
@@ -157,13 +159,13 @@ do doff:
 
 report doff:
 	if self.actor == player:
-		print "You take off [the self.clothing]."
+		print doff_report:"You take off [the act.clothing]."
 	else:
-		print "[The self.actor] [take] off [the self.clothing]."
+		print doff_report_other:"[The act.actor] [take] off [the act.clothing]."
 
 report failed doff:
 	if self.reason == not_worn:
-		print "You're not wearing that."
+		print doff_not_worn:"You're not wearing that."
 		stop
 
 action examine:
@@ -177,11 +179,11 @@ check examine:
 		stop failed too_dark
 
 report examine:
-	print "[self.target.description][line break]"
+	print examine_report:"[act.target.description][line break]"
 
 report failed examine:
 	if self.reason == too_dark:
-		print "It's too dark to see that."
+		print examine_too_dark:"It's too dark to see that."
 		stop
 
 action go:
@@ -203,7 +205,7 @@ do go:
 
 report failed go:
 	if self.reason == cant_go_that_way:
-		print "You can't go that way."
+		print go_cant:"You can't go that way."
 		stop
 
 # go needs no report: moving the actor fires the `contains add` handler, which
@@ -240,7 +242,7 @@ check put_on:
 do put_on:
 	if wears self.actor self.put_item:
 		if (self.actor == player):
-			print "(first taking off [the self.put_item])[line break]"
+			print put_on_first_doff:"(first taking off [the act.put_item])[line break]"
 		silently try doff:
 			clothing self.put_item
 			actor self.actor
@@ -251,14 +253,14 @@ do put_on:
 
 report put_on:
 	if self.actor == player:
-		print "You put [the self.put_item] on [the self.destination]."
+		print put_on_report:"You put [the act.put_item] on [the act.destination]."
 	else:
-		print "[The self.actor] [put] [the self.put_item] on [the self.destination]."
+		print put_on_report_other:"[The act.actor] [put] [the act.put_item] on [the act.destination]."
 
 report failed put_on:
 	if self.reason == not_carrying:
-		print "You aren't carrying that."
+		print put_on_not_carrying:"You aren't carrying that."
 		stop
 	if self.reason == cant_put_on_that:
-		print "You can't put things on that."
+		print put_on_cant:"You can't put things on that."
 		stop
