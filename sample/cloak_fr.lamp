@@ -124,8 +124,14 @@ before look when holder(self.actor) == Bar and in_darkness(self.actor):
 
 # ========== Actions personnalisées ==========
 
+# `stop` supprime le rapport d'examen par défaut d'advent (qui afficherait sinon
+# aussi la description vide de la sciure). La ligne « dérangée » n'apparaît que si
+# le bar a réellement été dérangé ; sinon le message est simplement là, à lire.
 report examine when self.target == sawdust:
-	print "La sciure sur le sol a été dérangée. Quelque chose y est écrit.[line break]"
+	if not (disturbance == 0):
+		print "La sciure sur le sol a été dérangée.[line break]"
+	print "Quelque chose y est écrit.[line break]"
+	stop
 
 # « accrocher … à … » n'est qu'une formulation imagée pour l'action générique
 # `put_on` d'advent (le crochet est un supporter, donc le check de put_on l'accepte).

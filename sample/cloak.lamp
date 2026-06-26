@@ -122,8 +122,14 @@ before look when holder(self.actor) == Bar and in_darkness(self.actor):
 
 # ========== Custom actions ==========
 
+# `stop` suppresses advent's default examine report (which would otherwise also
+# print the sawdust's empty description). The "disturbed" line shows only when the
+# bar has actually been disturbed; otherwise the message is simply there to read.
 report examine when self.target == sawdust:
-    print "The sawdust on the floor has been disturbed. Something is written there.[line break]"
+    if not (disturbance == 0):
+        print "The sawdust on the floor has been disturbed.[line break]"
+    print "Something is written there.[line break]"
+    stop
 
 # "hang ... on ..." is just a cloak-flavored phrasing for the generic advent
 # `put_on` action (the hook is a supporter, so put_on's check accepts it).
