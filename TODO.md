@@ -183,11 +183,17 @@ core edit is contained. Names (default): `contains`/`place`/`contained`, keyword
   per-locale override files `lib/<lib>/locales/<tag>.lamp` (loaded after its defaults, so
   `NAME:"…"` message overrides win last-wins; en-US default unchanged). Clear "pack not found"
   error. Tests: parser units (LocaleDecl + reject unquoted); 148 golden invariant.
-  **Remaining:** (2) build `lib/fr-FR` grammar pack — French articles (le/la/l'/les, un/une/des),
-  capitalization, list prose ("et"), defining every native `lib/en-US` does; (3)
-  `lib/advent/locales/fr-FR.lamp` French overrides for advent's named action messages;
-  (4) a forked French Cloak source. French command verbs (parser, layer 3) deferred. **Where:**
-  `lib/fr-FR/`, `lib/advent/locales/`, `sample/`.
+  **Part 2 DONE (2026-06-26):** `lib/fr-FR` grammar pack — gendered articles (le/la/l'/les,
+  un/une/des, elision before vowel/h via a `gender` field), French list prose (" et ", no serial
+  comma), copula est/sont, metropolitan number words (soixante-dix/quatre-vingts), case
+  transforms. Defines every native `lib/en-US` does; verbs aren't conjugated (translation spells
+  them out — `conjugate` is identity, vocab mirrors en-US so English default templates parse).
+  Test: golden `frlocale1` (selected via a `locale "fr-FR"` declaration; 149 golden green).
+  **Remaining:** (3) `lib/advent/locales/fr-FR.lamp` French overrides for advent's named action
+  messages — needs advent's non-action prose (darkness line, "You see … here", "in which is")
+  converted to named messages first so Cloak reads fully French; (4) a forked French Cloak source.
+  French command verbs (parser, layer 3) deferred. **Where:** `lib/advent/{locales,rooms,startup}.lamp`,
+  `sample/`.
 - **Named messages: convert advent's non-action strings (optional).** All of advent's
   *action* messages are now named (`devdocs/messages.md`); what's left is non-action prose —
   the darkness line in `rooms.lamp` and the startup banner/quit prompt in `startup.lamp`.

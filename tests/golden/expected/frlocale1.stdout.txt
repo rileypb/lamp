@@ -1,0 +1,9 @@
+Défini : le crochet, la lampe, l'armoire, l'horloge, les clés, Alice.
+Indéfini : un crochet, une lampe, une armoire, des clés, Alice.
+Capitale : Le crochet brille ; L'armoire aussi.
+Liste définie : le crochet, la lampe, l'armoire, l'horloge, les clés et Alice.
+Liste indéfinie : un crochet, une lampe, une armoire, une horloge, des clés et Alice.
+Copule : un objet est là, deux objets sont là.
+Nombres : vingt et un, soixante et onze, quatre-vingts, quatre-vingt-dix, quatre-vingt-dix-sept, cent, deux cents, mille.
+Ordinaux : premier, deuxième, cinquième, neuvième.
+Casse : Lampe ; CROCHET ; alice.

@@ -1,0 +1,96 @@
+# fr-FR locale pack — French language layer for text substitution.
+#
+# A worked translation of lib/en-US (see devdocs/i18n.md). The substitution
+# *mechanism* (bracket parsing, the `text` type, render-time dispatch) lives in
+# the engine / lib/sys; this library is the swappable *language data* (articles,
+# case, list prose). Selected at compile time with `--locale fr-FR` or a
+# `locale "fr-FR"` source declaration, replacing lib/en-US in the post-lib/sys
+# slot. See devdocs/text.md (three-layer split).
+#
+# The native *declarations* below are language-neutral (identical signatures to
+# lib/en-US); only their implementations in index.js differ. The verb vocabulary
+# matches en-US so a world model whose default message templates use English
+# verb sugar (`[take]`, `[drop]`) still parses — a French translation pack spells
+# the verb out in its override, so conjugate() is not exercised for those.
+
+# Case transforms (Unicode case handles accented letters).
+native function string cap(string s)
+native function string upper(string s)
+native function string lower(string s)
+native function string title(string s)
+
+# Articles. French agreement is grammatical: an object's `gender` field
+# ("feminine"/"masculine", default masculine) and `plural` select le/la/l'/les
+# (definite) and un/une/des (indefinite). `the(x)`/`indefinite(x)` elide le/la to
+# l' before a vowel or h. `an` has no French counterpart and maps to the
+# indefinite. The bare-word sugar `[the X]` / `[a X]` desugars to these.
+native function string the(object x)
+native function string indefinite(object x)
+native function string an(object x)
+
+# Plural display name: an author-set `plural_name` wins; otherwise the head word
+# is pluralized via French rules (-s, -x after -au/-eu, -aux for -al; -s/-x/-z
+# invariable).
+native function string pluralize(object x)
+
+# Adaptive pronouns and verbs. The we/us/our/ours family is the player viewpoint
+# (default "vous"); the they/them/their/theirs/themself family is the render
+# context subject. See lib/en-US for the full contract (text.md D).
+native function string we()
+native function string us()
+native function string our()
+native function string ours()
+native function string they()
+native function string them()
+native function string their()
+native function string theirs()
+native function string themself()
+
+# `[regarding EXPR]` sets the subject following pronouns/verbs adapt to; renders
+# to the empty string.
+native function string regarding(object x)
+
+# `conjugate(word)` returns a verb's surface form agreeing with the context
+# subject. French conjugation is out of scope for this worked pack: a translation
+# spells the verb out in its override, so this returns the word unchanged (the
+# verb vocabulary below only keeps `[take]`-style sugar parsing).
+native function string conjugate(string word)
+
+# List rendering with articles and the empty test. a_list / the_list map each
+# element through the indefinite / definite article and join as French prose
+# ("a, b et c"; empty -> "rien").
+native function string a_list(list<object> xs)
+native function string the_list(list<object> xs)
+native function bool is_empty(list<object> xs)
+
+# Join a list of already-rendered strings as French prose (", " then " et ";
+# empty -> "rien"). The primitive behind a_list / the_list.
+native function string format_list(list<string> xs)
+
+# Count-driven copula agreement: are(n) is "est" when the count is exactly 1,
+# else "sont". The [is LIST] sugar forms render the verb agreeing with the list
+# size followed by the list itself.
+native function string are(int n)
+native function string is_are_list(list<object> xs)
+native function string is_are_the_list(list<object> xs)
+native function string is_are_a_list(list<object> xs)
+
+# Grouped lists: collapse indistinguishable objects (same display name) into a
+# counted entry — "deux lanternes et une clé". a_group uses indefinite articles
+# for singletons, the_group definite.
+native function string a_group(list<object> xs)
+native function string the_group(list<object> xs)
+
+# Numbers in words: in_words(42) -> "quarante-deux"; ordinal(2) -> "deuxième".
+native function string in_words(int n)
+native function string ordinal(int n)
+
+# Plural suffix: the `[s]` sugar desugars to plural_suffix on the preceding word,
+# returning its French plural unless the governing count is 1.
+native function string plural_suffix(string word)
+
+# The locale's default verb vocabulary — mirrors lib/en-US so a world model's
+# English default templates parse. A translation pack overrides the message, so
+# these conjugate to themselves (see conjugate above).
+verb is, are, has, have, does, do, goes, go
+verb drop, take, get, put, look, examine, open, close, wear, carry, hold
