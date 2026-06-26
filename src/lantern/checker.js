@@ -759,7 +759,7 @@ function checkExprCalls(expr, typeSchema, kindSchema, localTypes, functionSchema
     } else if (expr.kind === "TryExpr") {
         checkTryStatement(expr, typeSchema, kindSchema, localTypes, functionSchema);
     }
-    for (const key of ["left", "right", "expr", "target", "index"]) {
+    for (const key of ["left", "right", "expr", "target", "index", "defaultExpr", "overrideExpr"]) {
         if (expr[key]) checkExprCalls(expr[key], typeSchema, kindSchema, localTypes, functionSchema);
     }
     if (Array.isArray(expr.args)) {
@@ -861,6 +861,9 @@ function inferExprType(expr, typeSchema, kindSchema, localTypes, functionSchema 
     }
     if (expr.kind === "TemplateLiteral") {
         return "text";
+    }
+    if (expr.kind === "MessageExpr") {
+        return inferExprType(expr.defaultExpr, typeSchema, kindSchema, localTypes, functionSchema);
     }
     if (expr.kind === "FreezeExpr") {
         return "string";

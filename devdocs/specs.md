@@ -136,6 +136,10 @@ Lantern-generated JavaScript targets the following Lamplighter API surface:
       deduplicated and flushed before the next text, a prompt, or at program exit.
 - `setPrint(fn)`
     - Replaces the output implementation used by `print`.
+- `message(name, default)`
+    - Returns the registered override text for the named message, else `default`. The emit target of the inline message form `NAME:"DEFAULT"` (a localizable message whose default lives at the use site). See `devdocs/messages.md`.
+- `registerMessageOverride(name, text)`
+    - Registers an override text (a string or lazy `text` value) for a named message; a later registration wins. The emit target of a top-level `NAME: "TEXT"` declaration (e.g. a translation pack). Overrides reference the running action via the `act` global, so they render against it.
 - `defineGlobal(name, value)`
     - Registers a named global with an initial value.
 - `setGlobal(name, value)`

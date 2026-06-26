@@ -34,6 +34,17 @@ function createMoveStatement(contained, container, filePath, lineNumber) {
     return { kind: "MoveStatement", contained, container, filePath, lineNumber };
 }
 
+// Named message: `NAME:"DEFAULT"`. Evaluates to the override registered for NAME,
+// else the inline default. The override (a top-level `NAME: "TEXT"`) is the
+// MessageOverride below.
+function createMessageExpr(name, defaultExpr, filePath, lineNumber) {
+    return { kind: "MessageExpr", name, defaultExpr, filePath, lineNumber };
+}
+
+function createMessageOverride(name, overrideExpr, filePath, lineNumber) {
+    return { kind: "MessageOverride", name, overrideExpr, filePath, lineNumber };
+}
+
 function createWildcardExpr() {
     return { kind: "WildcardExpr" };
 }
@@ -356,6 +367,8 @@ module.exports = {
     createRelationRemove,
     createDisconnectStatement,
     createMoveStatement,
+    createMessageExpr,
+    createMessageOverride,
     createWildcardExpr,
     createOutputSlot,
     createGlobalDecl,

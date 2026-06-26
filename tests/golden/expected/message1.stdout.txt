@@ -1,0 +1,12 @@
+hall
+A plain hall.
+
+You see a lamp here.
+
+> take lamp
+You snag the lamp.
+
+> drop lamp
+Dropped.
+
+> quit

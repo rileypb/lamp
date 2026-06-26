@@ -1092,6 +1092,18 @@ function print(value) {
     streamWrite(formatValue(value), true);
 }
 
+// Named messages (devdocs/messages.md): a localizable string whose default lives at
+// the use site (`NAME:"DEFAULT"`) and whose override is registered at load time
+// (`NAME: "TEXT"`, e.g. a translation pack). Stored as text values (lazy closures),
+// so an override referencing the `act` global renders against the current action.
+const messageOverrides = new Map();
+function registerMessageOverride(name, textValue) {
+    messageOverrides.set(name, textValue);
+}
+function message(name, defaultValue) {
+    return messageOverrides.has(name) ? messageOverrides.get(name) : defaultValue;
+}
+
 function defineGlobal(name, value) {
     if (globalRegistry.has(name)) {
         throw new Error(`Global already defined: ${name}`);
@@ -2080,6 +2092,8 @@ module.exports = {
     dispatch: fireEvent,
     run,
     print,
+    message,
+    registerMessageOverride,
     write,
     setWrite,
     outputMarker,

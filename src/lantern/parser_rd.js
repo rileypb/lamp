@@ -362,6 +362,9 @@ function createParser(tokens, filePath, globalNames, functionNames = new Set(), 
             }
         }
         if (token.type === "IDENT") {
+            // Message override: `NAME: "TEXT"` at top level overrides the named
+            // message (e.g. a translation pack). See devdocs/messages.md.
+            if (peek(1).type === "COLON" && peek(2).type === "STRING") return parseMessageOverride();
             if (token.value === "rule" && peek(1).type === "IDENT" && rulebookParams.has(peek(1).value)) return parseRulebookRule();
             if (PHASE_WORDS.has(token.value) && selectorStartsAt(1)) return parsePhaseRule();
             // `report failed SELECTOR:` — the failure-reporting band.
@@ -390,6 +393,18 @@ function createParser(tokens, filePath, globalNames, functionNames = new Set(), 
         const actionName = plainName("action name");
         expectNewline();
         return ast.createUnderstandDecl(template.value, actionName, filePath, kw.line);
+    }
+
+    // `NAME: "TEXT"` — overrides the named message's text (e.g. a translation pack).
+    // The text is a template like any other; it compiles in top-level scope, so it
+    // may reference `act`/globals/objects but not a lexical `self`/local.
+    function parseMessageOverride() {
+        const nameTok = next();
+        expect("COLON", "Expected ':' in message override");
+        const strTok = next();
+        const overrideExpr = parseStringExpr(strTok, new Set());
+        expectNewline();
+        return ast.createMessageOverride(nameTok.value, overrideExpr, filePath, nameTok.line);
     }
 
     function parseTypeDecl() {
@@ -1712,6 +1727,14 @@ function createParser(tokens, filePath, globalNames, functionNames = new Set(), 
         if (token.type === "STRING") return parseStringExpr(token, localNames);
         if (token.type === "NUMBER") return ast.createNumberLiteral(token.value);
         if (token.type === "IDENT") {
+            // Named message: `NAME:"DEFAULT"` — an overridable message whose default
+            // text is inline. Evaluates to the override registered for NAME, else the
+            // default. See devdocs/messages.md.
+            if (at("COLON") && peek(1).type === "STRING") {
+                next(); // ':'
+                const strTok = next();
+                return ast.createMessageExpr(token.value, parseStringExpr(strTok, localNames), filePath, token.line);
+            }
             // A relation query in expression position (`connects foyer north hall`).
             // Guard on `!at("DOT")` so the type handle (`connects.all`) stays a
             // property access rather than being parsed as a query.

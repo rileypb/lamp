@@ -1,7 +1,8 @@
 # Default messages and localization (design)
 
-Status: **in progress.** Part 1 (the `act` global) is implemented; the named-message
-mechanism (Parts 2–3) is being built.
+Status: **in progress.** Part 1 (the `act` global) and Part 2 (the named-message
+mechanism) are implemented; Part 3 (converting advent's messages + an `advent_fr`
+override golden) is next.
 
 ## Problem
 
@@ -64,6 +65,20 @@ Because messages reference only `act`/globals (context-free), an override can be
 compiled in its own pack and registered last-wins; no use-site deferral is needed.
 Selection is by **which pack you import** (`lib advent` + `lib advent_fr`), so no
 runtime `locale` global is required for compile-time translation.
+
+**Mechanism (implemented).** The inline form provides the default *at the use site*,
+so the override registry holds only overrides:
+
+- `NAME:"DEFAULT"` (an `IDENT : STRING` expression) emits
+  `lamplighter.message("NAME", <default text>)`, where `message(name, default) =
+  override(name) ?? default`. The default compiles in the use-site scope (so it may
+  use `self`, though `act` is preferred for override-compatibility).
+- `NAME: "TEXT"` (a top-level `IDENT : STRING` declaration) emits
+  `lamplighter.registerMessageOverride("NAME", <text>)` at load time. It compiles in
+  top-level scope (no `self`), so its substitutions must use `act`/globals.
+
+No hoisting or AST-walking is needed: the default is inline, the override is a
+load-time registration, and `message()` prefers the override regardless of order.
 
 Deferred: runtime-set messages with arbitrary computed text (needs a runtime
 substitution evaluator); runtime locale switching.

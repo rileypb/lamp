@@ -310,6 +310,16 @@ function emitProgram(programAst, options = {}) {
     const relationRemoveHandlerNodes = programAst.nodes.filter((node) => node.kind === "RelationRemoveHandler");
     const globalNames = new Set(globalDeclNodes.map((n) => n.name));
 
+    // Message overrides (e.g. translation packs) register their text at load time,
+    // before any message is used at runtime; the override wins over the inline default.
+    const messageOverrideNodes = programAst.nodes.filter((node) => node.kind === "MessageOverride");
+    for (const node of messageOverrideNodes) {
+        lines.push(`lamplighter.registerMessageOverride(${JSON.stringify(node.name)}, ${emitExpression(node.overrideExpr, globalNames)});`);
+    }
+    if (messageOverrideNodes.length > 0) {
+        lines.push("");
+    }
+
     const functionGroups = new Map();
     for (let i = 0; i < functionNodes.length; i++) {
         const node = functionNodes[i];
@@ -1070,6 +1080,10 @@ function emitExpression(expr, globalNames = new Set()) {
     }
     if (expr.kind === "FollowExpr") {
         return `${expr.name}(${emitCallArgs(expr.name, expr.args, globalNames, expr.filePath, expr.lineNumber)})`;
+    }
+    if (expr.kind === "MessageExpr") {
+        // The registered override for this name, else the inline default (both text).
+        return `lamplighter.message(${JSON.stringify(expr.name)}, ${emitExpression(expr.defaultExpr, globalNames)})`;
     }
     if (expr.kind === "TryExpr") {
         return emitTryCall(expr, globalNames);

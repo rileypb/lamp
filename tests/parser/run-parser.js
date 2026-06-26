@@ -670,6 +670,21 @@ const cases = [
         },
     },
     {
+        name: "named message: inline default expression and top-level override",
+        run() {
+            const [handler] = parse(["on startup:", "    print taken:\"Taken.\""].join("\n"));
+            const stmt = handler.body[0];
+            assert.strictEqual(stmt.kind, "PrintStatement");
+            assert.strictEqual(stmt.expr.kind, "MessageExpr");
+            assert.strictEqual(stmt.expr.name, "taken");
+            assert.deepStrictEqual(stmt.expr.defaultExpr, { kind: "StringLiteral", value: "Taken." });
+            const [override] = parse("taken: \"Pris.\"");
+            assert.strictEqual(override.kind, "MessageOverride");
+            assert.strictEqual(override.name, "taken");
+            assert.deepStrictEqual(override.overrideExpr, { kind: "StringLiteral", value: "Pris." });
+        },
+    },
+    {
         name: "move statement: parses contained and container operands",
         run() {
             // Bare single-word names parse as coerced strings here (resolved to

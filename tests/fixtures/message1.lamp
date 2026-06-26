@@ -1,0 +1,26 @@
+# Named messages: a default lives inline (`NAME:"DEFAULT"`), overridable by name. A
+# translation/retheme pack overrides at top level (`NAME: "TEXT"`); the override
+# references the running action via the `act` global, so it renders against it.
+# Here `taken` is overridden, `dropped` is not (falls back to its default).
+
+lib advent
+
+game Message_1:
+	author "Test Author"
+	start hall
+
+room hall:
+	description "A plain hall."
+	item lamp:
+		description "A lamp."
+
+report take:
+	print taken:"Taken."
+	stop
+
+report drop:
+	print dropped:"Dropped."
+	stop
+
+# Override `taken` only; `dropped` keeps its inline default.
+taken: "You snag [the act.taken]."
