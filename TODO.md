@@ -208,15 +208,25 @@ core edit is contained. Names (default): `contains`/`place`/`contained`, keyword
   `message` registry so a pack overrides them (`parser_cant_see`/`parser_no_understand`). Test:
   golden `frverbs1` (French commands → French responses + localized parser failures + accented noun
   match); 152 golden green, en-US byte-invariant.
-  **Remaining:** (4) a forked French Cloak source; engine English not yet localizable — the
-  disambiguation prompt + unbound-pronoun message (interpolate runtime values) and the out-of-world
-  meta-verbs (quit/undo/save/restore, English-keyed; rides on TODO item 2's "move out-of-world verbs
-  into lib"). **Where:** `sample/`, `src/lamplighter/index.js`, `lib/advent/startup.lamp`.
-- **Named messages: convert advent's non-action strings (optional).** All of advent's
-  *action* messages are now named (`devdocs/messages.md`); what's left is non-action prose —
-  the darkness line in `rooms.lamp` and the startup banner/quit prompt in `startup.lamp`.
-  (The inventory item rows stay plain — they reference a loop-local, not `act`.) **Where:**
-  `lib/advent/{rooms,startup}.lamp`.
+  **Layer 4 DONE (2026-06-26):** `sample/cloak_fr.lamp` — a forked French Cloak of Darkness (inline
+  prose translated, objects given `gender` + `understand` synonyms, custom French verbs `lire`/
+  `accrocher … à …`). Plays fully in French. To finish the banner, advent's startup/end prose moved
+  to named messages (en-US byte-invariant), overridden in French: `banner_by`/`banner_version`
+  (split around game-field interpolations), `story_won`/`story_lost` (end_story_rules), `quit_prompt`.
+  Test: golden `cloak_fr` (winning path); 153 golden green. **i18n COMPLETE** across all four layers.
+  **Remaining gaps (minor):** game title can't be localized (banner prints the ASCII identifier — needs
+  a title field on the `game` type); the disambiguation prompt + unbound-pronoun message interpolate
+  runtime values (need interpolable message values); out-of-world meta-verbs (quit/undo/save/restore)
+  are English-keyed (rides on TODO item 2's "move out-of-world verbs into lib"). **Where:** `sample/`,
+  `src/lamplighter/index.js`, `lib/advent/`.
+- ~~**Named messages: convert advent's non-action strings.**~~ **DONE (2026-06-26):** all of
+  advent's non-action player prose is now named (for the French translation, see the localization
+  item above + `devdocs/messages.md`): the darkness line + room-contents frame (`rooms.lamp`), the
+  title-banner connectives + `quit_prompt` (`startup.lamp`), the end-of-story banner (`globals.lamp`
+  `story_won`/`story_lost`), and the engine's parser feedback (`parser_cant_see`/
+  `parser_no_understand`). (The inventory item rows stay plain — they reference a loop-local, not
+  `act`.) Remaining un-named: the host-rendered status line and the ASCII game-title banner (needs a
+  `game` title field) — both noted under the localization item.
 - ~~**Nested objects need a body / reference form (step-5 limitations).**~~ **DONE (2026-06-26):**
   **smart disambiguation** — a line in an object body is a nested placement when its leading
   token is a known **type** that is **not** a known **field name** (so `item hook` nests but

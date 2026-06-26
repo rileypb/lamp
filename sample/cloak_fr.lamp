@@ -1,0 +1,156 @@
+# ============================================================================
+# Le Manteau de l'Obscurité (Cloak of Darkness)
+# À l'origine de Roger Firth.
+# Portage français — un exemple de localisation complète (devdocs/i18n.md).
+#
+# This is the French (layer 4) counterpart of sample/cloak.lamp: the game's own
+# prose is translated inline, its objects carry a grammatical `gender` and
+# `understand` synonyms for their accented names, and the custom verbs use French
+# syntax. The `locale "fr-FR"` declaration selects the French grammar pack and
+# advent's French message/command pack; lib/advent provides the standard French
+# verbs (prendre, poser, aller, …) and direction words (nord, sud, est, ouest).
+# ============================================================================
+
+locale "fr-FR"
+lib advent
+
+game Manteau_de_l_obscurite:
+	author "Roger Firth"
+	tagline "Un portage Lamp du classique de l'aventure textuelle"
+	version 0
+	release dev
+	start Foyer
+
+# ========== Texte d'introduction ==========
+
+rule startup_rules:
+	print "Pressé dans la nuit pluvieuse de novembre, vous êtes heureux de voir les lumières éclatantes de l'Opéra. C'est surprenant qu'il n'y ait pas plus de monde, mais bon, à quoi vous attendiez-vous dans un petit jeu de démonstration… ?"
+	print "[par]"
+
+# ========== Lieux ==========
+
+room Foyer:
+	printed_name "Foyer"
+	description "Vous vous tenez dans un hall spacieux, splendidement décoré de rouge et d'or, avec des lustres scintillants au-dessus de vous. L'entrée depuis la rue est au nord, et il y a des portes au sud et à l'ouest."
+
+room Bar:
+	printed_name "Bar"
+	description "Le bar, bien plus rustique que vous ne l'auriez imaginé après l'opulence du foyer au nord, est complètement vide. Il semble y avoir une sorte de message griffonné dans la sciure sur le sol."
+	lighted false
+	item sawdust:
+		printed_name "sciure"
+		gender "feminine"
+		scenery
+		understand "sciure/message/écrit/sol"
+
+room Cloakroom:
+	printed_name "Vestiaire"
+	description "Les murs de cette petite pièce étaient clairement autrefois garnis de crochets, mais il n'en reste plus qu'un seul. La sortie est une porte à l'est."
+	item hook:
+		printed_name "crochet"
+		understand "crochet/patère"
+		description "Ce n'est qu'un petit crochet en laiton, vissé au mur."
+		scenery
+		supporter
+
+bidi connects Foyer south Bar
+bidi connects Foyer west Cloakroom
+
+# ========== Objets ==========
+
+item velvet_cloak:
+	printed_name "manteau de velours"
+	understand "manteau/cape/velours"
+	description "Un beau manteau, de velours bordé de satin, légèrement éclaboussé de gouttes de pluie. Sa noirceur est si profonde qu'il semble presque aspirer la lumière de la pièce."
+	wearable
+
+wears yourself velvet_cloak
+contains yourself velvet_cloak
+
+# ========== Compteur de perturbation du bar obscur ==========
+
+global int disturbance = 0
+
+# ========== Éclairage dynamique du bar ==========
+#
+# Le bar est obscur quand le manteau est avec le joueur à l'intérieur du bar.
+# On met à jour Bar.lighted juste avant qu'une action `go` n'y fasse entrer le
+# joueur, pour que describe_room voie le bon état.
+
+before go:
+	let here = holder(self.actor)
+	let dest = connects here self.way ?first
+	if dest == Bar:
+		Bar.lighted = not (holder(velvet_cloak) == player)
+
+# `put_on` et `drop` peuvent aussi changer l'emplacement du manteau dans le
+# vestiaire. Après l'une ou l'autre, on rafraîchit l'éclairage du bar.
+
+after put_on when self.put_item == velvet_cloak:
+	Bar.lighted = not (holder(velvet_cloak) == player)
+
+after drop when self.dropped == velvet_cloak:
+	Bar.lighted = not (holder(velvet_cloak) == player)
+
+# ========== Le manteau ne peut être laissé que dans le vestiaire ==========
+
+instead drop when self.dropped == velvet_cloak and not (holder(self.actor) == Cloakroom):
+	print "Ce n'est pas le meilleur endroit pour laisser traîner un manteau aussi élégant.[line break]"
+	stop failed
+
+# ========== La sortie nord du foyer est bloquée ==========
+
+instead go when self.way == north and holder(self.actor) == Foyer:
+	print "Vous venez tout juste d'arriver, et de plus, le temps dehors semble empirer.[line break]"
+	stop failed
+
+# ========== Interception dans le bar obscur ==========
+
+instead any except go except look when holder(self.actor) == Bar and in_darkness(self.actor):
+	print "Dans le noir ? Vous pourriez facilement déranger quelque chose.[line break]"
+	disturbance = disturbance + 1
+	stop failed
+
+# Aller dans une direction autre que le nord, dans l'obscurité, dérange aussi.
+instead go when holder(self.actor) == Bar and in_darkness(self.actor) and not (self.way == north):
+	print "Tâtonner dans le noir n'est pas une bonne idée ![line break]"
+	disturbance = disturbance + 1
+	stop failed
+
+# `look` montre toujours le texte d'obscurité (describe_room s'en charge), mais
+# cela compte comme déranger le bar.
+before look when holder(self.actor) == Bar and in_darkness(self.actor):
+	disturbance = disturbance + 1
+
+# ========== Actions personnalisées ==========
+
+report examine when self.target == sawdust:
+	print "La sciure sur le sol a été dérangée. Quelque chose y est écrit.[line break]"
+
+# « accrocher … à … » n'est qu'une formulation imagée pour l'action générique
+# `put_on` d'advent (le crochet est un supporter, donc le check de put_on l'accepte).
+understand "accrocher [put_item] à [destination]" as put_on
+
+report put_on when self.put_item == velvet_cloak:
+	print "Vous accrochez soigneusement le manteau au crochet.[line break]"
+	stop
+
+# --- lire ---
+action read:
+	item target
+	syntax:
+		"lire [target]"
+
+check read:
+	if not (self.target == sawdust):
+		print "Il n'y a rien à lire ici.[line break]"
+		stop failed
+
+report read when self.target == sawdust:
+	if disturbance == 0:
+		print "Le message, soigneusement tracé dans la sciure, dit…[line break]"
+		story = won
+	else:
+		print "Le message a été piétiné sans soin, ce qui le rend difficile à lire.[line break]"
+		print "Vous distinguez tout juste les mots…[line break]"
+		story = lost

@@ -12,9 +12,16 @@ on startup:
 	# by setting `tagline`; games that leave it blank get no banner.
 	let this_game = game.all.first
 	if not (this_game.tagline == ""):
+		# The banner interpolates game fields (locals), which a named message may
+		# not reference, so the translatable connectives ("by", "Version") split
+		# out as named messages around the plain interpolating prints (the same
+		# split as the room-contents frame). A translation overrides the words.
 		print "[this_game.name][line break]"
-		print "[this_game.tagline] by [this_game.author][line break]"
-		print "Version [this_game.version] [this_game.release][par]"
+		print "[this_game.tagline]"
+		print banner_by:" by "
+		print "[this_game.author][line break]"
+		print banner_version:"Version "
+		print "[this_game.version] [this_game.release][par]"
 	follow startup_rules()
 	if this_game.start == none:
 		error "This game has no starting room. Declare one in the game block with `start <Room>` (for example, `start Foyer`)."
@@ -35,7 +42,7 @@ on startup:
 		print "[par]"
 		follow end_story_rules()
 		print "[par]"
-		print "Please type QUIT to exit."
+		print quit_prompt:"Please type QUIT to exit."
 		while true:
 			input = prompt("> ")
 			if to_lower(input) == "quit":

@@ -52,6 +52,15 @@ put_on_report_other: "[The act.actor] pose [the act.put_item] sur [the act.desti
 put_on_not_carrying: "Vous ne portez pas cela."
 put_on_cant: "Vous ne pouvez rien poser là-dessus."
 
+# --- title banner, end-of-story banner, and quit prompt (startup prose) ---
+# The game name in the banner is the identifier ("Manteau de l obscurite"); a
+# proper accented/apostrophed title needs a title field on the game type (not yet
+# available). "Version" is the same word in French, so it is left at its default.
+banner_by: " par "
+story_won: "*** Vous avez gagné ***[line break]"
+story_lost: "*** Vous avez perdu ***[line break]"
+quit_prompt: "Tapez QUIT pour quitter le jeu."
+
 # --- parser feedback (engine messages, routed through the message registry) ---
 parser_cant_see: "Vous ne voyez rien de tel ici."
 parser_no_understand: "Je ne comprends pas cela."

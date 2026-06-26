@@ -1,0 +1,39 @@
+Manteau de l obscurite
+Un portage Lamp du classique de l'aventure textuelle par Roger Firth
+Version 0 dev
+
+Pressé dans la nuit pluvieuse de novembre, vous êtes heureux de voir les lumières éclatantes de l'Opéra. C'est surprenant qu'il n'y ait pas plus de monde, mais bon, à quoi vous attendiez-vous dans un petit jeu de démonstration… ?
+
+Foyer
+Vous vous tenez dans un hall spacieux, splendidement décoré de rouge et d'or, avec des lustres scintillants au-dessus de vous. L'entrée depuis la rue est au nord, et il y a des portes au sud et à l'ouest.
+
+> inventaire
+Vous portez :
+  un manteau de velours (porté)
+
+> examiner manteau
+Un beau manteau, de velours bordé de satin, légèrement éclaboussé de gouttes de pluie. Sa noirceur est si profonde qu'il semble presque aspirer la lumière de la pièce.
+
+> ouest
+Vestiaire
+Les murs de cette petite pièce étaient clairement autrefois garnis de crochets, mais il n'en reste plus qu'un seul. La sortie est une porte à l'est.
+
+> accrocher manteau à crochet
+(vous enlevez d'abord le manteau de velours)
+Vous accrochez soigneusement le manteau au crochet.
+
+> est
+Foyer
+Vous vous tenez dans un hall spacieux, splendidement décoré de rouge et d'or, avec des lustres scintillants au-dessus de vous. L'entrée depuis la rue est au nord, et il y a des portes au sud et à l'ouest.
+
+> sud
+Bar
+Le bar, bien plus rustique que vous ne l'auriez imaginé après l'opulence du foyer au nord, est complètement vide. Il semble y avoir une sorte de message griffonné dans la sciure sur le sol.
+
+> lire sciure
+Le message, soigneusement tracé dans la sciure, dit…
+
+*** Vous avez gagné ***
+
+Tapez QUIT pour quitter le jeu.
+> quit

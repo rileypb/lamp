@@ -1,0 +1,8 @@
+inventaire
+examiner manteau
+ouest
+accrocher manteau à crochet
+est
+sud
+lire sciure
+quit
