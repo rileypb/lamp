@@ -350,29 +350,37 @@ either the trailing sugar word or the function's mode argument.
   — requests a paragraph break only if text was printed since the last break (the
   dedup that prevents leading/stacked blank lines). lib/advent uses it at the turn
   boundary before the prompt.
-- **H6. Automatic breaks — two composing rules.** DONE. The standard blank-line-
-  before-prompt comes from **two rules that add together**, each contributing one
-  newline:
+- **H6. Automatic breaks — two rules, resolved by strength.** DONE. The standard
+  blank-line-before-prompt comes from **two rules that each request a break**. The
+  requests are **not summed** — the stronger one wins (see the pending-break model
+  below):
   - **A. Sentence punctuation.** A printed string ending in sentence-ending
     punctuation (`.` `?` `!`, skipping trailing closing quotes / parens / whitespace)
-    ends its line — i.e. requests a line break. Text **not** so terminated does *not*
-    (it runs on into the next output).
+    ends its line — i.e. requests a **line** break (≥1 newline). Text **not** so
+    terminated does *not* (it runs on into the next output).
   - **B. Rulebook boundary.** At the end of certain rulebooks — `report` /
-    `report failed`, `after` (and the turn boundary before the prompt) — a paragraph
-    break is requested, **conditional and deduplicated** (only if text was printed
-    since the last break; never stacks). This is H3 `[par if printed]` invoked
-    automatically.
+    `report failed`, `after` (and the turn boundary before the prompt) — a
+    **paragraph** break (≥2 newlines) is requested, **conditional and deduplicated**
+    (only if text was printed since the last break; never stacks). This is H3
+    `[par if printed]` invoked automatically.
 
   Worked example — a `report take` whose only message is `Taken.`:
   ```
-  Taken.   <- A: the "." ends the line          (newline 1)
-           <- B: the report rulebook ends, paragraph break (newline 2)
+  Taken.   <- A requests a line break (≥1); B requests a paragraph break (≥2)
+           <- the paragraph break wins → blank line before the prompt
   >        <- prompt
   ```
-  i.e. `Taken.\n\n>`. Drop rule A (message lacks end punctuation) **or** rule B (no
-  boundary break) and only one newline remains — the text is smashed against the
-  prompt. `[run on]` / `[no break]` (H2/H1) cancel a pending break for the cases where
-  the default is wrong ("usually right, though not always").
+  i.e. `Taken.\n\n>` — the two newlines come from **B's paragraph break (≥2)**, not
+  from A and B adding 1 + 1. Drop rule B (no boundary break) and only A's single
+  newline remains, smashing the text against the prompt; drop rule A too and the text
+  runs straight on. `[run on]` / `[no break]` (H2/H1) cancel a pending break where the
+  default is wrong ("usually right, though not always").
+
+  **Corollary — same-strength breaks do not stack.** Two `[line break]`s (or an
+  automatic line break from `.?!` plus an explicit `[line break]`) collapse to a
+  **single** newline, because both are line-strength and the manager keeps only the
+  strongest pending request. A blank line therefore needs a **paragraph** break
+  (`[par]`), never a second line break.
   - **Pending-break model:** a break request *ensures at least* N newlines before the
     next visible text (line break ⇒ ≥1, paragraph break ⇒ ≥2); the manager keeps the
     strongest pending request and flushes it before the next text / prompt / at exit,
