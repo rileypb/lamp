@@ -175,6 +175,39 @@ core edit is contained. Names (default): `contains`/`place`/`contained`, keyword
 **Where:** `src/lantern/{tokenizer,parser_rd,emitter,checker}.js`, `src/lamplighter/index.js`, `lib/advent/*`, `devdocs/{relations,world-model}.md`.
 
 ## Smaller / opportunistic
+- **Nested objects need a body (step-5 limitation, surfaced 2026-06-26).** A bodyless nested
+  line `item marble` is parsed as a *field assignment* (the deferred reference-form ambiguity),
+  not a nested declaration — so a fieldless object can't be nested (`item marble:` with an empty
+  body is also a parse error: `:` requires an INDENT). Workaround: give the leaf a field (a
+  `description`). Real fix is the deferred reference form, or allowing an empty `:` body.
+  **Where:** `src/lantern/parser_rd.js` (parseObjectBody nested detection).
+- ~~**Recursive contents listing for nested containers (pure-Lamp via `map_strings`).**~~ **DONE
+  (2026-06-26):** added `map_strings` (lib/sys) + exposed `format_list` to Lamp (lib/en-US,
+  normalized via listItems so a_list/the_list still pass arrays); pure-Lamp `render_thing`/
+  `render_contents`/`prep_for` in `lib/advent/rooms.lamp`; `contents_of` generalized room→
+  `physical`. Output e.g. `a chest (in which is a thimble (in which is a marble))`, supporters
+  "on which", plural copula via `are`. Tests: golden `nestlist1` (deep nesting + supporter +
+  plural); `doublecontainment` golden updated (now shows the nested coin); flat-case room
+  listings invariant; 146 golden green. Decisions as planned (D2 closed deferred, D6 tree
+  assumption).
+  **Enabling primitive (lib/sys):** `native function list<string> map_strings(list<object> xs,
+  function fn)` → `makeList(listItems(xs).map(x => fn(x)))`. General, reusable, sidesteps
+  generics (object→string), and proves natives can call Lamp function refs.
+  **Lister (pure Lamp, lib/advent):** `render_contents(holder) = format_list(map_strings(
+  contents_of(holder), render_thing))`; `render_thing(x) = indefinite(x)` plus
+  `" (" + prep_for(x) + " which " + are(inner.size) + " " + render_contents(x) + ")"` when
+  `contents_of(x)` is non-empty (mutually recursive; `render_thing` passed by name). `prep_for`:
+  `x.supporter ? "on" : "in"`. Wire `list_room_contents` → `[render_contents(r)]`; generalize
+  `contents_of` room→`physical`. Prose stays in the locale (`indefinite`/`format_list`/`are`).
+  **Decisions:** D1 prep from `supporter` flag (dual-nature deferred); D2 closed containers
+  deferred (no open/close actions yet; `closed` is box-only); D3 exclude scenery (contents_of
+  already does); D4 keep `describe_supporters` separate; **D5 = pure Lamp + `map_strings`** (no
+  advent renderer native); D6 assume containment is a tree (pure-Lamp visited-set can't thread
+  through `map_strings`; cycle would loop — matches Inform, note limitation). **Watch:**
+  `list<item>`→`list<object>` element-subtyping at the `map_strings` call (type `list<physical>`
+  if strict). Tests: golden box/pedestal example + empty container + singular/plural copula;
+  flat-case goldens stay invariant. **Where:** `lib/sys/{functions.lamp,index.js}`,
+  `lib/advent/rooms.lamp`.
 - **Drop advent's duplicated `display_name` / `with_article` (layering smell).** `lib/advent/
   index.js` defines `display_name` (less defensive — bare `String(x.name)`, surfaced the
   "the undefined" confusion) which shadows the locale's `lib/en-US` one; advent's

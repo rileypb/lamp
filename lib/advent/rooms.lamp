@@ -1,4 +1,4 @@
-native function list<item> contents_of(room r)
+native function list<item> contents_of(physical r)
 native function string with_article(physical x)
 native function void describe_supporters(room r)
 
@@ -17,10 +17,29 @@ function void describe_room(room r):
 		print "Darkness[line break]"
 		print "It is pitch dark, and you can't see a thing."
 
+# Recursive content listing: each visible thing is rendered with the things it
+# holds in a parenthetical — "a box (in which is a thimble (in which is a marble))".
+# `render_contents` joins a holder's visible contents as prose; `render_thing`
+# renders one thing plus its own nested contents. They are mutually recursive;
+# containment is assumed acyclic (a tree), as it structurally is.
+function string prep_for(physical x):
+	if x.supporter:
+		return "on"
+	return "in"
+
+function string render_thing(physical x):
+	let inner = contents_of(x)
+	if inner.first == none:
+		return indefinite(x)
+	return indefinite(x) + " (" + prep_for(x) + " which " + are(inner.size) + " " + render_contents(x) + ")"
+
+function string render_contents(physical holder):
+	return format_list(map_strings(contents_of(holder), render_thing))
+
 function void list_room_contents(room r):
 	let contents = contents_of(r)
 	if not (contents.first == none):
-		print "[par]You see [a_list(contents)] here."
+		print "[par]You see [render_contents(r)] here."
 	describe_supporters(r)
 
 # Describe the room the player arrives in. Containment changes fire `contains add`

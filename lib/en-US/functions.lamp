@@ -65,6 +65,12 @@ native function string a_list(list<object> xs)
 native function string the_list(list<object> xs)
 native function bool is_empty(list<object> xs)
 
+# Join a list of already-rendered strings as prose (serial comma, honoring
+# `oxford_comma`; empty -> "nothing"). The lower-level primitive behind a_list /
+# the_list — use it when each element is rendered by the caller (e.g. nested-content
+# listings): `format_list(map_strings(things, describe))`.
+native function string format_list(list<string> xs)
+
 # Count-driven copula agreement (G3). are(n) is the bare primitive: "is" when the
 # count is exactly 1, else "are" (so are(0) -> "are 0 bullets"). The [is LIST] sugar
 # forms render the verb agreeing with the list's size followed by the list itself —

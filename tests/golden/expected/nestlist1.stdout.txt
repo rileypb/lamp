@@ -1,0 +1,6 @@
+vault
+A treasure vault.
+
+You see a chest (in which is a thimble (in which is a marble)), a pedestal (on which is a crate (in which is a ball)) and a bag (in which are a coin and a gem) here.
+
+> quit

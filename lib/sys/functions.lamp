@@ -4,6 +4,13 @@ native function void write(string s)
 native function list<string> split(string input)
 native function string to_lower(string input)
 
+# Apply an object->string function to each element of a list, returning the list of
+# results. The general list-transform primitive (Lamp has no list literal/append, so
+# building a derived list needs a native); `fn` is any single-argument function
+# passed by name. Used e.g. to render a list of objects to prose:
+# `format_list(map_strings(things, describe))`.
+native function list<string> map_strings(list<object> xs, function fn)
+
 # Parse one line of input and run the matched action on behalf of `actor` (see
 # devdocs/game_parser.md). The actor is supplied by the caller — typically the
 # world library's player — so this base function names no world-specific global.
