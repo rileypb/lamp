@@ -1,9 +1,14 @@
 name: Deploy Cloak of Darkness to GitHub Pages
 
-# Builds the Cloak of Darkness sample with Lighthouse and publishes the web
-# bundle to GitHub Pages. The bundle ships a service worker that synthesizes the
-# cross-origin-isolation headers (COOP/COEP), so it runs on plain Pages with no
-# server configuration. See devdocs/lighthouse.md.
+# Builds the Cloak of Darkness samples with Lighthouse and publishes them to
+# GitHub Pages. GitHub serves one Pages site per repo, so both games ship in one
+# deployment as subdirectories of a single artifact:
+#   <pages>/cloak/      — English (sample/cloak.lamp)
+#   <pages>/cloak_fr/   — French  (sample/cloak_fr.lamp, locale "fr-FR")
+#   <pages>/            — a small landing page linking to both
+# The bundles use only relative URLs and each registers its own service worker
+# (scoped to its subdirectory) to synthesize the COOP/COEP isolation headers, so
+# they run on plain Pages with no server config. See devdocs/lighthouse.md.
 
 on:
   push:
@@ -34,14 +39,45 @@ jobs:
 
       - run: npm ci
 
-      - name: Build the web bundle
+      - name: Build the English bundle (cloak)
         run: node src/lighthouse/build.js sample/cloak.lamp dist/cloak --encode-strings
+
+      - name: Build the French bundle (cloak_fr)
+        run: node src/lighthouse/build.js sample/cloak_fr.lamp dist/cloak_fr --encode-strings
+
+      - name: Write the landing page
+        run: |
+          cat > dist/index.html <<'HTML'
+          <!doctype html>
+          <html lang="en">
+          <head>
+            <meta charset="utf-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1">
+            <title>Cloak of Darkness — Lamp</title>
+            <style>
+              body { font: 16px/1.5 system-ui, sans-serif; max-width: 32rem;
+                     margin: 4rem auto; padding: 0 1rem; }
+              h1 { font-size: 1.4rem; }
+              ul { list-style: none; padding: 0; }
+              li { margin: 0.5rem 0; }
+              a { font-size: 1.1rem; }
+            </style>
+          </head>
+          <body>
+            <h1>Cloak of Darkness — built with Lamp</h1>
+            <ul>
+              <li><a href="./cloak/">Play in English</a></li>
+              <li><a href="./cloak_fr/">Jouer en français</a></li>
+            </ul>
+          </body>
+          </html>
+          HTML
 
       - uses: actions/configure-pages@v5
 
       - uses: actions/upload-pages-artifact@v3
         with:
-          path: dist/cloak
+          path: dist
 
   deploy:
     needs: build

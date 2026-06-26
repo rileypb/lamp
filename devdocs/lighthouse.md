@@ -96,13 +96,22 @@ Default output directory is `dist/<game-name>/`.
 
 ## Continuous deployment (GitHub Pages)
 
-`.github/workflows/deploy-pages.yml` builds the Cloak of Darkness sample and
-publishes the bundle to GitHub Pages on every push to `main` (and on manual
-`workflow_dispatch`). It runs `node src/lighthouse/build.js sample/cloak.lamp
-dist/cloak --encode-strings` (the published build hides prose/spoilers from
-view-source), then uploads `dist/cloak` via `actions/upload-pages-artifact` and
-publishes it with `actions/deploy-pages`. No server header configuration is
-needed: the bundle's own service worker synthesizes the cross-origin-isolation
+`.github/workflows/deploy-pages.yml` builds the Cloak of Darkness samples and
+publishes them to GitHub Pages on every push to `main` (and on manual
+`workflow_dispatch`). GitHub serves one Pages site per repo, so **multiple games
+ship in a single deployment as subdirectories of one artifact** rather than as
+separate deployments. The workflow builds each game into its own subdirectory of
+`dist/` — `sample/cloak.lamp` → `dist/cloak` (served at `<pages>/cloak/`) and
+`sample/cloak_fr.lamp` → `dist/cloak_fr` (`<pages>/cloak_fr/`) — writes a small
+`dist/index.html` landing page linking to both, then uploads the whole `dist/`
+via `actions/upload-pages-artifact` and publishes it with `actions/deploy-pages`.
+Both builds pass `--encode-strings` (the published build hides prose/spoilers from
+view-source). This works because a bundle uses only **relative** URLs and
+registers its service worker at `./sw.js`, so its scope is its own
+subdirectory — each game gets isolation headers within its subpath and the two
+service workers don't collide. To add another game, add a build step into a new
+`dist/<name>` and a link on the landing page. No server header configuration is
+needed: each bundle's service worker synthesizes the cross-origin-isolation
 headers (see below), so `SharedArrayBuffer` is available on plain Pages. Pages
 must be enabled for the repo with **Build and deployment → Source: GitHub
 Actions**.
