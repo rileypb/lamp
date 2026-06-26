@@ -194,8 +194,12 @@ core edit is contained. Names (default): `contains`/`place`/`contained`, keyword
   header/empty/`(worn)`, darkness line, room-contents frame). Supporting: named the darkness line +
   contents frame in `rooms.lamp` (en-US invariant); inventory row now uses the locale's `indefinite`
   not advent's English-only `with_article` (en-US invariant; localizes to "une clé"); added a
-  `gender` field on advent's `physical` type (default masculine). Test: golden `fradvent1` (locale
-  declaration + lib advent + stdin driver → French responses end to end; 150 golden green).
+  `gender` field on advent's `physical` type (default masculine). Also moved the recursive
+  nested-contents parenthetical out of advent into a locale native `contained_phrase(container,
+  inner, count)` (replacing the English-built `render_thing` concat + `prep_for`): en-US builds
+  "(in which is …)", fr-FR the gender-agreed "(dans laquelle se trouve …)". Tests: goldens
+  `fradvent1` (end-to-end French responses) + `frnested1` (nested containers/supporter, gendered
+  relative pronoun + dans/sur + se trouve(nt)); 151 golden green, en-US byte-invariant.
   **Remaining:** (3-layer) French command verbs — advent's `syntax` templates are English, so commands
   are still typed in English (a French parser pack is follow-up); (4) a forked French Cloak source.
   **Where:** `lib/advent/locales/`, `sample/`.
@@ -247,11 +251,12 @@ core edit is contained. Names (default): `contains`/`place`/`contained`, keyword
 - **Drop advent's duplicated `display_name` / `with_article` (layering smell).** `lib/advent/
   index.js` defines `display_name` (less defensive — bare `String(x.name)`, surfaced the
   "the undefined" confusion) which shadows the locale's `lib/en-US` one; advent's
-  `with_article` overlaps the locale's `indefinite`/`a_list`. Now that `contents_of` returns
-  objects + `a_list`, advent's `with_article` is used only by the inventory rows
-  (`actions.lamp` report inventory) — move those to the locale helper and delete advent's
-  `display_name`/`with_article` so the locale owns naming/articles. **Where:** `lib/advent/
-  index.js`, `lib/advent/actions.lamp`.
+  `with_article` overlaps the locale's `indefinite`/`a_list`. The inventory row was moved to the
+  locale's `indefinite` (2026-06-26, for fr-FR localization), so `with_article` now has just **one
+  caller left**: `describe_supporters` in `lib/advent/index.js` (which builds "On the X is/are …"
+  prose in JS — itself English-only and a localization gap). Move that listing onto the locale
+  helpers (or a native like `contained_phrase`) and delete advent's `display_name`/`with_article`
+  so the locale owns naming/articles. **Where:** `lib/advent/index.js`.
 - ~~**Object reopening (merge same-named `ObjectDecl`s) — reopen e.g. `yourself`.**~~ **DONE
   (2026-06-25):** emitter merges same-named ObjectDecls into one `createObject` with unioned
   fields (mirrors the `mergedTypes` merge). Decisions implemented as agreed: **implicit** (any

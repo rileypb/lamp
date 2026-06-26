@@ -67,6 +67,12 @@ native function bool is_empty(list<object> xs)
 # empty -> "rien"). The primitive behind a_list / the_list.
 native function string format_list(list<string> xs)
 
+# The parenthetical describing a container's nested contents, phrased in French —
+# "(dans laquelle se trouve une bille)" / "(sur lequel se trouvent un chapeau et
+# une écharpe)". The relative pronoun agrees in gender with the container; the
+# verb agrees with the item count. Same signature as lib/en-US.
+native function string contained_phrase(object container, string inner, int count)
+
 # Count-driven copula agreement: are(n) is "est" when the count is exactly 1,
 # else "sont". The [is LIST] sugar forms render the verb agreeing with the list
 # size followed by the list itself.

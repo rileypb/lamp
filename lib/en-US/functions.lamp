@@ -71,6 +71,14 @@ native function bool is_empty(list<object> xs)
 # listings): `format_list(map_strings(things, describe))`.
 native function string format_list(list<string> xs)
 
+# The parenthetical describing a container's nested contents — "(in which is a
+# marble)" / "(on which are a hat and a scarf)". The phrasing (preposition,
+# relative pronoun, copula agreement, word order) is language-specific, so it
+# lives in the locale rather than in a world model: the caller passes the
+# container, its already-rendered contents, and the item count. The leading space
+# and parentheses are included so it appends directly after the container's name.
+native function string contained_phrase(object container, string inner, int count)
+
 # Count-driven copula agreement (G3). are(n) is the bare primitive: "is" when the
 # count is exactly 1, else "are" (so are(0) -> "are 0 bullets"). The [is LIST] sugar
 # forms render the verb agreeing with the list's size followed by the list itself —

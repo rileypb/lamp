@@ -1,0 +1,6 @@
+salle
+Une salle voûtée.
+
+Vous voyez une table (sur laquelle se trouve un livre), un chapeau et un coffre (dans lequel se trouve une boîte (dans laquelle se trouvent une bille et une perle)) ici.
+
+> quit

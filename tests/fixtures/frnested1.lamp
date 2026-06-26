@@ -1,0 +1,54 @@
+# fr-FR nested-container listing: the recursive contents parenthetical is now a
+# locale native (contained_phrase), so it localizes. This exercises the French
+# phrasing — relative pronoun agreeing with the container gender (lequel /
+# laquelle), the preposition from the supporter flag (dans / sur), and the verb
+# agreeing with the item count (se trouve / se trouvent) — through nesting. The
+# opening room description lists the contents, so no commands are needed.
+
+locale "fr-FR"
+lib advent
+
+game Imbrication_FR:
+    author "Lamp"
+    start salle
+
+room salle:
+    description "Une salle voûtée."
+
+box coffre:
+    description "Un coffre en bois."
+
+box boite:
+    printed_name "boîte"
+    description "Une petite boîte."
+    gender "feminine"
+
+item bille:
+    printed_name "bille"
+    description "Une bille de verre."
+    gender "feminine"
+
+item perle:
+    printed_name "perle"
+    description "Une perle nacrée."
+    gender "feminine"
+
+item table:
+    printed_name "table"
+    description "Une table basse."
+    gender "feminine"
+    supporter
+
+item livre:
+    description "Un vieux livre relié."
+
+item chapeau:
+    description "Un chapeau de paille."
+
+contains salle coffre
+contains coffre boite
+contains boite bille
+contains boite perle
+contains salle table
+contains table livre
+contains salle chapeau

@@ -21,17 +21,14 @@ function void describe_room(room r):
 # holds in a parenthetical — "a box (in which is a thimble (in which is a marble))".
 # `render_contents` joins a holder's visible contents as prose; `render_thing`
 # renders one thing plus its own nested contents. They are mutually recursive;
-# containment is assumed acyclic (a tree), as it structurally is.
-function string prep_for(physical x):
-	if x.supporter:
-		return "on"
-	return "in"
-
+# containment is assumed acyclic (a tree), as it structurally is. The article
+# (`indefinite`) and the parenthetical (`contained_phrase`) are both locale
+# natives, so the whole listing localizes — the world model assembles no prose.
 function string render_thing(physical x):
 	let inner = contents_of(x)
 	if inner.first == none:
 		return indefinite(x)
-	return indefinite(x) + " (" + prep_for(x) + " which " + are(inner.size) + " " + render_contents(x) + ")"
+	return indefinite(x) + contained_phrase(x, render_contents(x), inner.size)
 
 function string render_contents(physical holder):
 	return format_list(map_strings(contents_of(holder), render_thing))
