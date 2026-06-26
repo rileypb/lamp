@@ -514,6 +514,13 @@ is the "render context" proper.
      from the action's actor, overridden by `[regarding EXPR]` (D5).
    - **governing count** — the most recently interpolated number, read by `[s]`
      (G7) and the `is`/`are` agreement helpers (G3).
+   - **governing case/role** *(future, not built)* — the grammatical role a
+     governing word to the *left* (a preposition or verb) imposes on the next noun
+     phrase, so the article function can realize it (French `de`+`le`→`du`, German
+     case). The mirror image of *current subject*: agreement flows outward from the
+     noun, government flows inward from context. Set by a governing marker (like
+     `[regarding]` sets the subject), consumed by the next `the`/`a`. See
+     "Preposition + article contraction / case government" under Open questions.
 
    Created at the **outermost** render boundary (a `print` of a template, or a
    top-level template value) and threaded into every nested substitution, so a
@@ -990,6 +997,35 @@ Fixtures `list1` / `numbers1` / `plural1` + goldens; parser unit tests
 
 ## Open questions
 
+- **Preposition + article contraction / case government** *(known limitation; no
+  fix scheduled).* `the(x)` produces one fixed definite phrase ("the coin", "le
+  caillou"), and the preposition before it is a literal in the template. At that
+  boundary some languages *fuse* the preposition with the article, governed by the
+  preposition — which neither the literal nor `the(x)` can see:
+  - French: `de`+`le`→`du`, `de`+`les`→`des`, `à`+`le`→`au`, `à`+`les`→`aux` (no
+    contraction before `la`/`l'`). So a French message "… de [the X]" wrongly
+    renders "de le caillou" instead of "du caillou".
+  - Wider: German `von dem`→`vom`, `zu dem`→`zum`, *plus* the article changes by
+    case (`der/den/dem/des`); Italian `di/a/da/in/su` × `il/lo/la/…` →
+    `del/dello/al/dal/nel/sul/…`; Spanish/Portuguese `de el`→`del`, `em o`→`no`.
+    German genitive realizes "of the X" as `der Münze` with **no preposition word
+    at all** — so this is grammatical *case government*, not a syntactic quirk.
+  - **Why not a `de_()`/`à_()` helper.** Rejected (2026-06-26): it's French-syntax
+    leaked into a native name, doesn't exist in English (so a shared template can't
+    use it), proliferates per-preposition/per-case, and can't express the German
+    no-preposition genitive. Wrong level of abstraction.
+  - **Forward-compatible shape (when a game needs it).** Add a fourth render-local
+    context item, *governing case/role* (above): a governing marker sets a pending
+    role, the next `the`/`a` consumes it. Author-facing as either a role-tagged
+    article (`[the X | of]`) or semantic combinators (`[of_the X]`). Each locale
+    realizes the role its own way — English ignores it (`the coin`), French
+    contracts (`du caillou`), German selects case (`der Münze`) — exactly like the
+    subject/agreement mechanism (D) but flowing inward. This is a deliberate
+    architecture extension, not a quick native.
+  - **Until then:** phrase French (and other) overrides to avoid a `de`/`à` +
+    `le`/`les` boundary. There is almost always a natural rewording — e.g.
+    `examine_nothing` is "[The act.target] n'a rien d'inhabituel." not "… à propos
+    de [the act.target]". See `devdocs/i18n.md` (Pending).
 - **H6 automatic breaks (the 6b design).** RESOLVED & DONE. Decisions taken:
   (1) non-punctuated prints run on; output needing its own line uses explicit
   `[line break]` / `[par]`. (2) Rule B is **per-band** — the engine breaks after a
