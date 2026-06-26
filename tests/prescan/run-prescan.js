@@ -22,19 +22,21 @@ const cases = [
         },
     },
     {
-        name: "nested object name collected; bare reference and type-field are not",
+        name: "nested object names collected (bodied + bodyless); a field named like a type stays a field",
         run() {
             const d = scan([
-                "type room",
-                "type item",
-                "room Cloakroom:",          // top-level object
-                "    description \"x\"",     // field (not nested)
-                "    item hook:",            // nested declaration -> collect `hook`
+                "type article",
+                "type item:",
+                "    article article",        // `item` has an `article` field (type article)
+                "room Cloakroom:",
+                "    description \"x\"",       // field (not nested)
+                "    item hook:",             // bodied nested decl -> hook
                 "        description \"y\"",
-                "    item lamp",             // bare reference (no body) -> NOT collected
+                "    item lamp",              // bodyless placement -> lamp (now collected)
+                "    article proper",         // field assignment (article is a field) -> NOT an object
             ].join("\n"));
-            assert.deepStrictEqual([...d.objectNames].sort(), ["Cloakroom", "hook"]);
-            assert.deepStrictEqual([...d.typeNames].sort(), ["item", "room"]);
+            assert.deepStrictEqual([...d.objectNames].sort(), ["Cloakroom", "hook", "lamp"]);
+            assert.deepStrictEqual([...d.typeNames].sort(), ["article", "item"]);
         },
     },
     {

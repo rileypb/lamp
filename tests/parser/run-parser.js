@@ -735,6 +735,36 @@ const cases = [
         },
     },
     {
+        name: "smart disambiguation: bodyless placement emits empty ObjectDecl; field-named-type stays a field",
+        run() {
+            const containsTemplate = new Map([["contains", {
+                relationName: "contains",
+                parts: [
+                    { kind: "literal", text: "contains" },
+                    { kind: "slot", field: "place" },
+                    { kind: "slot", field: "contained" },
+                ],
+            }]]);
+            const nodes = parseSource(
+                ["room Vault:", "    article proper", "    item gizmo"].join("\n"),
+                "t.lamp",
+                new Set(), new Set(), new Set(["contains"]), containsTemplate,
+                new Set(), new Set(["Vault", "gizmo"]), new Set(), new Map(), new Set(),
+                new Set(["room", "item", "article"]),   // typeNames
+                new Set(["article"]),                    // fieldNames — `article` is also a type
+            ).nodes;
+            const [vault, gizmo, placement] = nodes;
+            // `article proper` stays a field (article is a field name), not a placement.
+            assert.deepStrictEqual(vault.fields.map((f) => f.fieldName), ["article"]);
+            // `item gizmo` (bodyless) → an empty ObjectDecl + a contains placement.
+            assert.strictEqual(gizmo.kind, "ObjectDecl");
+            assert.strictEqual(gizmo.objectName, "gizmo");
+            assert.deepStrictEqual(gizmo.fields, []);
+            assert.strictEqual(placement.kind, "RelationAssert");
+            assert.strictEqual(placement.relationName, "contains");
+        },
+    },
+    {
         name: "property access on a call result: chained fields and parenthesized",
         run() {
             const [a] = parse(["on startup:", "    let y = f(x).a.b"].join("\n"));

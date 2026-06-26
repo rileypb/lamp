@@ -284,7 +284,7 @@ Object-typed fields are resolved after all objects have been created, so the ref
 
 #### Nested object declarations (containment)
 
-Inside an object body, a line shaped `TYPE NAME:` (a body line whose leading token is a **declared type** and which opens its own `:` block) declares a **nested object** placed inside the enclosing object via the `contains` relation. It is sugar for declaring the object at top level and asserting `contains ENCLOSING NAME`:
+Inside an object body, a line whose leading token is a **declared type** that is **not** a **field name** places a **nested object** inside the enclosing object via the `contains` relation. It is sugar for declaring the object at top level and asserting `contains ENCLOSING NAME`:
 
 ```lamp
 room Cloakroom:
@@ -314,7 +314,18 @@ contains Cloakroom lamp
 
 The nested object is hoisted to top level (its name is globally referenceable, like any object — forward references work), and a `contains` placement is emitted. Nesting may recurse (an object nested in an object nested in a room). The enclosing program must have a `contains` relation in scope (e.g. via `lib advent`); the placement uses its two slots, container first.
 
-The trailing `:` is required and is what disambiguates a nested declaration from a field assignment whose **field name happens to be a type** — for example `article proper` sets the `article` field (even though `article` is also a type), because a field line never has a `:`. Consequently the **bare-reference** form (`TYPE NAME` with no body, to place an already-declared object) is **not** supported: a body-less `TYPE NAME` line is always parsed as a field assignment. To place an existing object, write a top-level `contains` assertion (or `move`).
+**Smart disambiguation.** A nested-placement line and a field assignment are both `TOKEN VALUE`; they are told apart by whether the leading token is a **type name** vs. a **field name**. A token that is both (e.g. `article` is a type *and* a field on `physical`) is treated as a **field**, so `article proper` sets the `article` field rather than placing a `proper`. (Edge case: a type whose name is also used as a field name somewhere cannot be nested by this rule — give it a body or place it with a top-level `contains`.)
+
+**With or without a body.** A nested line may carry a `:` body (declaring a fresh object, which may nest further) or be **bodyless**:
+
+```lamp
+room vault:
+    item chest:           # bodied — a fresh nested object
+        item marble       # bodyless — a fieldless nested object
+    item lantern          # bodyless — a reference to an object declared elsewhere
+```
+
+A bodyless `TYPE NAME` emits an *empty* declaration plus the placement; **object reopening** (below) then merges it with the object's real declaration if one exists elsewhere — so the same form serves both a **fieldless leaf** (no other declaration) and a **reference** to an existing object (merges into it; the type must agree). (An empty `:` body is not allowed — use the bodyless form for a fieldless object.)
 
 #### Reopening an object
 

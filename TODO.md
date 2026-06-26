@@ -175,12 +175,19 @@ core edit is contained. Names (default): `contains`/`place`/`contained`, keyword
 **Where:** `src/lantern/{tokenizer,parser_rd,emitter,checker}.js`, `src/lamplighter/index.js`, `lib/advent/*`, `devdocs/{relations,world-model}.md`.
 
 ## Smaller / opportunistic
-- **Nested objects need a body (step-5 limitation, surfaced 2026-06-26).** A bodyless nested
-  line `item marble` is parsed as a *field assignment* (the deferred reference-form ambiguity),
-  not a nested declaration — so a fieldless object can't be nested (`item marble:` with an empty
-  body is also a parse error: `:` requires an INDENT). Workaround: give the leaf a field (a
-  `description`). Real fix is the deferred reference form, or allowing an empty `:` body.
-  **Where:** `src/lantern/parser_rd.js` (parseObjectBody nested detection).
+- ~~**Nested objects need a body / reference form (step-5 limitations).**~~ **DONE (2026-06-26):**
+  **smart disambiguation** — a line in an object body is a nested placement when its leading
+  token is a known **type** that is **not** a known **field name** (so `item hook` nests but
+  `article proper` stays a field). Drops the `:`-body requirement: a bodyless `TYPE NAME` emits
+  an empty ObjectDecl + `contains`, which **object reopening** merges with the object's real
+  declaration if one exists — so the same form is both a fieldless leaf *and* the reference
+  form. Prescan now collects field names (light type-body tracking) + an object/other block
+  stack for nested-name registration; both type names and field names thread to the parser.
+  Remaining edge: a type whose name is also used as a field name can't be smart-nested (give it
+  a body or use top-level `contains`). Tests: prescan + parser units; `nestlist1` now uses
+  bodyless leaves (output invariant); 146 golden green. Dual-nature containers (per-placement
+  in/on) remain deferred — orthogonal, additive later. **Where:** `src/lantern/{prescan,index,
+  parser_rd}.js`.
 - ~~**Recursive contents listing for nested containers (pure-Lamp via `map_strings`).**~~ **DONE
   (2026-06-26):** added `map_strings` (lib/sys) + exposed `format_list` to Lamp (lib/en-US,
   normalized via listItems so a_list/the_list still pass arrays); pure-Lamp `render_thing`/

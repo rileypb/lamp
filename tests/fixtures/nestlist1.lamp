@@ -1,7 +1,7 @@
 # Recursive contents listing: nested containers/supporters render with parenthetical
 # contents. Exercises deep nesting (chest>thimble>marble), a supporter ("on which"),
-# and plural copula ("in which are a coin and a gem"). Note: a nested object needs a
-# body, so the leaf items carry a description.
+# and plural copula ("in which are a coin and a gem"). The leaf items are bodyless
+# nested objects (smart disambiguation: `item marble` nests without a body).
 
 lib advent
 
@@ -13,15 +13,11 @@ room vault:
 	description "A treasure vault."
 	item chest:
 		item thimble:
-			item marble:
-				description "A small marble."
+			item marble
 	item pedestal:
 		supporter
 		item crate:
-			item ball:
-				description "A rubber ball."
+			item ball
 	item bag:
-		item coin:
-			description "A gold coin."
-		item gem:
-			description "A green gem."
+		item coin
+		item gem
