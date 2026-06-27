@@ -1,9 +1,7 @@
-# Hacking (the KIM) — slice 1: the tool, the HACK verb, and the green door.
-#
-# The KIM ("Kovert Infiltration Matrix") is Galaxy's hacking tool. HACK <thing>
-# attaches it; for most doors that opens a button mini-game (deferred — needs the
-# modal `press <n>` mechanic, see PORTING.md), but the green door is a simple
-# instant bypass. Ported from KIM.i7x. (Scoring + the handprint-scanner parts are
+# Hacking (the KIM). The KIM ("Kovert Infiltration Matrix") is Galaxy's hacking
+# tool. HACK <thing> attaches it; the green door is a simple instant bypass, while
+# the others open a button mini-game with hidden, per-door rules the player must
+# reverse-engineer. Ported from KIM.i7x. (Scoring + the handprint-scanner parts are
 # deferred, so we hack the door directly.)
 
 item KIM:
@@ -11,6 +9,10 @@ item KIM:
 	description "The Kovert Infiltration Matrix, or KIM, is the state-of-the-art in breaching high-security facilities. Just HACK your target, and a few steps later, you'll be in! The KIM is a featureless black slab, roughly 4x5 inches in dimension, and an eighth of an inch thick."
 
 contains yourself KIM
+
+# What the KIM is currently adhered to (none = not mid-hack). While adhered, PRESS
+# drives that target's puzzle.
+global physical adhered = none
 
 action hack:
 	item target
@@ -25,11 +27,13 @@ before hack:
 		print "Galaxy needs to be carrying the KIM to hack something."
 		stop failed
 
-# The green door: a trivial lock the KIM bypasses on its own. Opening it clears the
-# `closed` flag, so `go north` from Passage End now succeeds.
-# Use `self.target` (the guard proves it is the green door) for the field writes:
-# assigning to a bare-object-name target (`green_door.closed = …`) hits an emitter
-# bug — it emits the name as an undefined JS identifier. See TODO.
+before hack:
+	if not (adhered == none):
+		print "The KIM is already attached to [the adhered]."
+		stop failed
+
+# The green door: a trivial lock the KIM bypasses on its own. (`self.target` for the
+# field writes dodges the bare-object-name-assignment emitter bug — see TODO.)
 instead hack when self.target == green_door:
 	if self.target.locked:
 		print "Galaxy attaches the KIM to the green door. The door's lock is a simple one, and the KIM quickly bypasses it without manual intervention. The door opens, revealing a corridor north.[par]Galaxy retrieves the KIM."
@@ -39,7 +43,89 @@ instead hack when self.target == green_door:
 		print "Galaxy has already opened the door."
 	stop succeeded
 
-# Every other hackable target opens a button puzzle that isn't ported yet.
+# The yellow door: a Lights-Out keypad (see below).
+instead hack when self.target == yellow_door:
+	if not self.target.locked:
+		print "The door is already unlocked."
+		stop succeeded
+	adhered = yellow_door
+	keypad = [false, false, false, false, false, false, false, false, false]
+	print "Galaxy attaches the KIM to the yellow door.[par]"
+	show_keypad_9()
+	print "Galaxy mutters to herself. 'Never seen a hacking interface like this before. What do I press? 1? 2?'"
+	stop succeeded
+
+# Every other hackable target opens a puzzle that isn't ported yet.
 instead hack:
 	print "Galaxy attempts to attach the KIM to [the act.target], but it fails to activate. Perhaps [the act.target] is not hackable?"
 	stop failed
+
+
+# --- Yellow door: a "Lights Out" keypad --------------------------------------
+# 9 buttons, each red or blue; start all red, goal all blue. Pressing a button
+# flips a fixed, hidden set of the nine (the rule the player must work out).
+# Re-pressing a button undoes it, so no RESET is needed (RESET deferred).
+global list<bool> keypad = none
+
+function bool yellow_solved():
+	for i = 0 to 8:
+		if not keypad[i]:
+			return false
+	return true
+
+# The keypad display: a red button shows as [N], a blue one as <N>.
+function void show_keypad_9():
+	for i = 1 to 9:
+		if keypad[i - 1]:
+			print "<[i]>"
+		else:
+			print "\[[i]\]"
+	print "[line break]\[\] = red, <> = blue[par]"
+
+action press:
+	int n
+	syntax:
+		"press [n]"
+
+before press:
+	if adhered == none:
+		print "Galaxy isn't hacking anything right now."
+		stop failed
+
+do press when adhered == yellow_door:
+	if self.n < 1 or self.n > 9:
+		print "Use the digits 1-9."
+		stop failed
+	# Per-key flip-sets (the hidden rule). Pressing flips each listed button.
+	let flip = [0]
+	if self.n == 1:
+		flip = [1]
+	if self.n == 2:
+		flip = [2, 3]
+	if self.n == 3:
+		flip = [3, 4]
+	if self.n == 4:
+		flip = [1, 2, 4]
+	if self.n == 5:
+		flip = [5, 6]
+	if self.n == 6:
+		flip = [1, 2, 3, 6]
+	if self.n == 7:
+		flip = [7, 8]
+	if self.n == 8:
+		flip = [1, 2, 4, 8]
+	if self.n == 9:
+		flip = [1, 3, 9]
+	for x in flip:
+		keypad[x - 1] = not keypad[x - 1]
+	if yellow_solved():
+		let yd = yellow_door
+		yd.locked = false
+		yd.closed = false
+
+report press when adhered == yellow_door:
+	print "Galaxy presses button [self.n].[par]"
+	show_keypad_9()
+	if yellow_solved():
+		print "As the final button lights up blue, the yellow door to the west swings open! Galaxy retrieves the KIM."
+		adhered = none

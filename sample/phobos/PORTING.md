@@ -137,16 +137,17 @@ description already in `base.lamp` predates this and will be revisited.
    KIM/scanning gameplay layer (item 7).
 4. **`feels` property + FEEL/TOUCH action** — nearly every object has a `feels`
    string. From `Can't Touch This.i7x`.
-5. **HACK / the KIM — in progress** (from `KIM.i7x`). The KIM tool + `hack` verb +
-   the green door's instant bypass are done (`lib/phobos/hacking.lamp`): hacking it
-   opens it and `go north` works — but **only partly**: the real hack also runs
-   `score 1`, i.e. the Galaxy Banner + score notification (deferred with scoring;
-   see the Scoring note above). Each other door is a *different* modal button
-   mini-game (rules not explained): Lights-Out (yellow/red), sort-by-swap (blue),
-   4-toggle (locker), pick-5-of-16 (purple, needs the scan/control-code system).
-   **Blocked on the `press <n>` input** — the key is a number, but Lamp's parser
-   only resolves slots to in-scope objects (number/text slots are roadmap). Fork:
-   keys-as-objects (game-level) vs. number slots in the parser (engine).
+5. **HACK / the KIM — in progress** (from `KIM.i7x`). The KIM tool + `hack` verb,
+   the green door (instant bypass), and the **yellow door (Lights-Out keypad)** are
+   done (`lib/phobos/hacking.lamp`): `press [n]` flips a hidden per-key set of the 9
+   buttons (red `[N]`/blue `<N>`), solving opens the door. Built on the new number
+   slots + mutable `list` state. Edge cases handled (press-when-idle, re-press
+   undoes, hack-while-adhered). **Remaining doors:** red (another Lights-Out, diff
+   flip-sets + start state), blue (sort-by-swap permutation), locker (4-button
+   toggle), purple (pick-5-of-16, needs the scan/control-code system — deferred).
+   **Still partial:** every solve also runs `score 1` (Galaxy Banner + notification)
+   — deferred with scoring (see the Scoring note above). RESET button deferred
+   (re-pressing a button undoes it, so it's not required to solve).
 6. **Parts / components** — `X is a part of Y` (handprint scanners, screens,
    buttons, levers). advent has no part-of relation.
 7. **KIM / scanning** — `textual`, `scanning level N`, `content "…"`, the SCAN

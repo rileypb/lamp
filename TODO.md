@@ -230,16 +230,17 @@ core edit is contained. Names (default): `contains`/`place`/`contained`, keyword
 - **Hacking subsystem (Phobos port) — in progress.** The KIM tool + `hack` verb +
   green-door instant bypass are done (`sample/phobos/lib/phobos/hacking.lamp`):
   `hack green door` opens it and `go north` then works. **`press <n>` input
-  unblocked (option B DONE):** primitive-typed action slots are implemented in the
-  parser (`resolveSlots`/`literalSlotValue`; golden `numslot1`; specs.md +
-  game_parser.md) — a slot declared `int`/`string`/etc. is filled from the input
-  tokens, so `press [n]` with `int n` works. **Next: build the puzzles** — a `press`
-  action gated on the KIM being adhered, plus per-target state + rules: Lights-Out
-  (yellow/red — per-door flip-sets + start state), sort-by-swap (blue), 4-toggle
-  (locker), pick-5-of-16 (purple — needs the scan/control-code system, deferred).
-  **Button-state storage UNBLOCKED:** mutable lists are now in the language (list
-  literals + element assignment, durable across undo/save), so the button state is a
-  `list` global mirroring the I7 (`Nine Button Colors`, `number order`) directly.
+  unblocked (option B DONE):** primitive-typed action slots are implemented
+  (`resolveSlots`/`literalSlotValue`; golden `numslot1`). **Yellow door DONE:** the
+  `press` action (gated on `adhered`), the 9-button `list` state, the per-key
+  flip-sets, the keypad display, and solve→open all work end-to-end
+  (`lib/phobos/hacking.lamp`); dogfoods number slots + list literals + element
+  assignment. **Remaining doors:** red (Lights-Out, different flip-sets/start),
+  blue (sort-by-swap permutation), locker (4-button toggle), purple (pick-5-of-16,
+  needs the scan/control-code system — deferred). Also deferred: `score 1` per solve
+  (Galaxy Banner + notification, with scoring); the RESET button (re-press undoes,
+  so not required). **Hit the known multi-word-global checker bug** — globals must
+  be single-word (`adhered`, `keypad`) until that's fixed (see below).
 - **Library file ordering / cross-file type topo-sort.** Lantern emits type
   definitions in file-glob (alphabetical) order with no cross-file topological
   sort, so a subtype declared in an alphabetically-earlier file than its parent
