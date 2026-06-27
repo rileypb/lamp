@@ -145,8 +145,15 @@ description already in `base.lamp` predates this and will be revisited.
    different (harder) flip-set — the shared all-blue goal check is `nine_solved()`.
    Built on the new number slots + mutable `list` state. Edge cases handled
    (press-when-idle, re-press undoes, hack-while-adhered). Red solution: 1,2,3,5,7.
-   **Remaining doors:** blue (sort-by-swap permutation), locker (4-button
-   toggle), purple (pick-5-of-16, needs the scan/control-code system — deferred).
+   The **blue door** is a different mechanic — a *sort-by-swap*: the nine buttons
+   carry shuffled Siriusian digit-glyph labels (`number_order` list), pressing two
+   lights+swaps their labels, goal is to sort them (`number_order == 1..9`). Its
+   random start shuffle dogfooded a **new general `random(n)` native** (lib/sys,
+   reusing the engine's seeded/save-captured RNG); the shuffle is a forward
+   Fisher-Yates in Lamp (the `for` loop is ascending-only). Under the fixed test
+   seed the start is `[4,2,7,9,5,3,6,8,1]`, solved by pressing 1 9 3 6 4 9 6 7.
+   **Remaining doors:** locker (4-button toggle), purple (pick-5-of-16, needs the
+   scan/control-code system — deferred).
    **Still partial:** every solve also runs `score 1` (Galaxy Banner + notification)
    — deferred with scoring (see the Scoring note above). RESET button deferred
    (re-pressing a button undoes it, so it's not required to solve).

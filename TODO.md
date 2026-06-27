@@ -238,8 +238,12 @@ core edit is contained. Names (default): `contains`/`place`/`contained`, keyword
   assignment. **Red door DONE:** a second nine-button Lights-Out reusing the same
   engine (shared `nine_solved()` goal) but starting with button 6 lit and a distinct
   harder flip-set; solves end-to-end (sequence 1,2,3,5,7) and opens south to the
-  armory. **Remaining doors:** blue (sort-by-swap permutation), locker (4-button
-  toggle), purple (pick-5-of-16, needs the scan/control-code system — deferred).
+  armory. **Blue door DONE:** a *sort-by-swap* (different mechanic) — nine shuffled
+  Siriusian digit-glyph labels (`number_order`), press two to swap their labels, goal
+  is to sort. Dogfooded a **new general `random(n)` native** (lib/sys, reusing the
+  engine's seeded/save-captured RNG; golden `random1`); shuffle is a forward
+  Fisher-Yates in Lamp. **Remaining doors:** locker (4-button toggle), purple
+  (pick-5-of-16, needs the scan/control-code system — deferred).
   Also deferred: `score 1` per solve
   (Galaxy Banner + notification, with scoring); the RESET button (re-press undoes,
   so not required). Globals use natural multi-word names (`kim_adhered_to`,
