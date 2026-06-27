@@ -36,7 +36,7 @@ rule startup_rules:
 	# I7: "Before looking for the first time". Prints right before the first room
 	# description (startup_rules runs, then the player is moved into the start room,
 	# which auto-describes it). I7's [bold type]…[roman type] → Lamp's [bold]…[/bold].
-	print "The Moon Sled's hatch opens, and out steps a tall, athletic woman in a black jumpsuit: [bold]Galaxy Jones[/bold]."
+	print "[par]The Moon Sled's hatch opens, and out steps a tall, athletic woman in a black jumpsuit: [bold]Galaxy Jones[/bold].[par]"
 
 # Informational verbs (story.ni: abouting / helping). These are "out of world"
 # in I7 (no turn passes). advent has no game-defined out-of-world hook yet, so
