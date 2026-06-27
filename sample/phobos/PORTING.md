@@ -138,12 +138,14 @@ description already in `base.lamp` predates this and will be revisited.
 4. **`feels` property + FEEL/TOUCH action** — nearly every object has a `feels`
    string. From `Can't Touch This.i7x`.
 5. **HACK / the KIM — in progress** (from `KIM.i7x`). The KIM tool + `hack` verb,
-   the green door (instant bypass), and the **yellow door (Lights-Out keypad)** are
-   done (`lib/phobos/hacking.lamp`): `press [n]` flips a hidden per-key set of the 9
-   buttons (red `[N]`/blue `<N>`), solving opens the door. Built on the new number
-   slots + mutable `list` state. Edge cases handled (press-when-idle, re-press
-   undoes, hack-while-adhered). **Remaining doors:** red (another Lights-Out, diff
-   flip-sets + start state), blue (sort-by-swap permutation), locker (4-button
+   the green door (instant bypass), and the **yellow and red doors (Lights-Out
+   keypads)** are done (`lib/phobos/hacking.lamp`): `press [n]` flips a hidden
+   per-key set of the 9 buttons (red `[N]`/blue `<N>`), solving opens the door.
+   Yellow starts all-red; red starts with button 6 already blue and uses a
+   different (harder) flip-set — the shared all-blue goal check is `nine_solved()`.
+   Built on the new number slots + mutable `list` state. Edge cases handled
+   (press-when-idle, re-press undoes, hack-while-adhered). Red solution: 1,2,3,5,7.
+   **Remaining doors:** blue (sort-by-swap permutation), locker (4-button
    toggle), purple (pick-5-of-16, needs the scan/control-code system — deferred).
    **Still partial:** every solve also runs `score 1` (Galaxy Banner + notification)
    — deferred with scoring (see the Scoring note above). RESET button deferred

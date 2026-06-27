@@ -55,6 +55,19 @@ instead hack when self.target == yellow_door:
 	print "Galaxy mutters to herself. 'Never seen a hacking interface like this before. What do I press? 1? 2?'"
 	stop succeeded
 
+# The red door: another nine-button Lights-Out, but it starts with button 6 already
+# blue and uses a different (harder) set of hidden flip rules.
+instead hack when self.target == red_door:
+	if not self.target.locked:
+		print "The door is already unlocked."
+		stop succeeded
+	kim_adhered_to = red_door
+	nine_buttons = [false, false, false, false, false, true, false, false, false]
+	print "Galaxy attaches the KIM to the red door.[par]"
+	show_keypad_9()
+	print "Galaxy frowns. 'One's already lit. That's new.'"
+	stop succeeded
+
 # Every other hackable target opens a puzzle that isn't ported yet.
 instead hack:
 	print "Galaxy attempts to attach the KIM to [the act.target], but it fails to activate. Perhaps [the act.target] is not hackable?"
@@ -68,7 +81,8 @@ instead hack:
 # (RESET deferred).
 global list<bool> nine_buttons = none
 
-function bool yellow_solved():
+# Shared goal for every nine-button door: all nine lit blue (true).
+function bool nine_solved():
 	for i = 0 to 8:
 		if not nine_buttons[i]:
 			return false
@@ -119,7 +133,7 @@ do press when kim_adhered_to == yellow_door:
 		flip = [1, 3, 9]
 	for x in flip:
 		nine_buttons[x - 1] = not nine_buttons[x - 1]
-	if yellow_solved():
+	if nine_solved():
 		let yd = yellow_door
 		yd.locked = false
 		yd.closed = false
@@ -127,6 +141,46 @@ do press when kim_adhered_to == yellow_door:
 report press when kim_adhered_to == yellow_door:
 	print "Galaxy presses button [self.n].[par]"
 	show_keypad_9()
-	if yellow_solved():
+	if nine_solved():
 		print "As the final button lights up blue, the yellow door to the west swings open! Galaxy retrieves the KIM."
+		kim_adhered_to = none
+
+
+# --- Red door: a second nine-button keypad with its own hidden flip-sets ------
+do press when kim_adhered_to == red_door:
+	if self.n < 1 or self.n > 9:
+		print "Use the digits 1-9."
+		stop failed
+	# Per-key flip-sets (the hidden rule, distinct from the yellow door's).
+	let flip = [0]
+	if self.n == 1:
+		flip = [1]
+	if self.n == 2:
+		flip = [1, 3, 5, 7, 9]
+	if self.n == 3:
+		flip = [1, 2, 4, 5, 7, 8]
+	if self.n == 4:
+		flip = [1, 3, 5, 7, 9]
+	if self.n == 5:
+		flip = [1, 2, 3, 4, 6, 7, 8, 9]
+	if self.n == 6:
+		flip = [1, 5, 7, 9]
+	if self.n == 7:
+		flip = [1, 2, 3, 4, 5, 6, 8, 9]
+	if self.n == 8:
+		flip = [1, 3, 5, 7, 9]
+	if self.n == 9:
+		flip = [1, 2, 4, 5, 7, 8]
+	for x in flip:
+		nine_buttons[x - 1] = not nine_buttons[x - 1]
+	if nine_solved():
+		let rd = red_door
+		rd.locked = false
+		rd.closed = false
+
+report press when kim_adhered_to == red_door:
+	print "Galaxy presses button [self.n].[par]"
+	show_keypad_9()
+	if nine_solved():
+		print "As the final button lights up blue, the red door to the south swings open! Galaxy retrieves the KIM."
 		kim_adhered_to = none

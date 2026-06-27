@@ -235,9 +235,12 @@ core edit is contained. Names (default): `contains`/`place`/`contained`, keyword
   `press` action (gated on `adhered`), the 9-button `list` state, the per-key
   flip-sets, the keypad display, and solve→open all work end-to-end
   (`lib/phobos/hacking.lamp`); dogfoods number slots + list literals + element
-  assignment. **Remaining doors:** red (Lights-Out, different flip-sets/start),
-  blue (sort-by-swap permutation), locker (4-button toggle), purple (pick-5-of-16,
-  needs the scan/control-code system — deferred). Also deferred: `score 1` per solve
+  assignment. **Red door DONE:** a second nine-button Lights-Out reusing the same
+  engine (shared `nine_solved()` goal) but starting with button 6 lit and a distinct
+  harder flip-set; solves end-to-end (sequence 1,2,3,5,7) and opens south to the
+  armory. **Remaining doors:** blue (sort-by-swap permutation), locker (4-button
+  toggle), purple (pick-5-of-16, needs the scan/control-code system — deferred).
+  Also deferred: `score 1` per solve
   (Galaxy Banner + notification, with scoring); the RESET button (re-press undoes,
   so not required). Globals use natural multi-word names (`kim_adhered_to`,
   `nine_buttons`) now that the multi-word-global bug is fixed (see below).
