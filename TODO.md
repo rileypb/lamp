@@ -230,8 +230,18 @@ core edit is contained. Names (default): `contains`/`place`/`contained`, keyword
   escapes the word-final possessives). **Remaining:** more documents across the other
   tiers to reach full translation; the `obscure`/`revealed` real-name swap; the
   friendlier non-textual-scan message.
-  **Migration:** after this, port `lib/phobos/index.js` natives to Lamp where possible
-  (memory `phobos-native-to-lamp-migration`). **Test gap:** the filter is
+  **Migration (native phobos JS → Lamp; memory `phobos-native-to-lamp-migration`):**
+  **Phase 1 DONE** — added general string-character primitives to lib/sys (`length`,
+  `char_at`, `code_at`, `substring`; codepoint-based, 0-indexed; golden `strops1`),
+  which were the blocker for expressing the Siriusian cipher in Lamp. **Phase 2 (next,
+  reassess first):** rewrite `siriusian_word`/`siriusian`/`token_difficulty`/
+  `print_translated` in `.lamp` on the primitives, verifying byte-identical glyph output
+  vs the current native before deleting the JS (build the cipher's intermediate via
+  string concat — prepend `out = ch + out` — so no list-append is needed). **Design decided
+  (Phil):** **reopen `item` in Phobos** (not advent) to add the `textual` bool +
+  `content`/`scan_level` — verified cross-lib type reopening works, advent stays clean,
+  the `document` type is dropped, and `is_textual` becomes pure Lamp (`self.target.textual`
+  off examine's `item` target). **`x is Type`** operator deferred (useful later, not now). **Test gap:** the filter is
   phobos-lib-specific, so no golden yet (the Phobos sample isn't golden-discoverable —
   would need extending golden discovery to `sample/<dir>/`). See `sample/phobos/PORTING.md`.
 - **BUG: assignment to a bare object-name field target emits undefined JS.**

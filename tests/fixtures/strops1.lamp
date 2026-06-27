@@ -1,0 +1,23 @@
+# String-character primitives (lib/sys): length / char_at / code_at / substring.
+# All codepoint-based and 0-indexed. The astral character 𝔘 (U+1D518) counts as one
+# character — proving codepoint, not UTF-16-code-unit, semantics. Out-of-range char_at
+# is "" and code_at is -1; substring is the half-open range [start, end).
+
+lib advent
+
+game StrOps:
+	start Room
+
+room Room:
+	description "A bare room."
+
+action probe:
+	syntax:
+		"probe"
+
+report probe:
+	let s = "Hi 𝔘!"
+	print "length=[length(s)][line break]"
+	print "char0=[char_at(s, 0)] char3=[char_at(s, 3)] oob=\"[char_at(s, 99)]\"[line break]"
+	print "code0=[code_at(s, 0)] code3=[code_at(s, 3)] oob=[code_at(s, 99)][line break]"
+	print "sub=[substring(s, 0, 2)] tail=[substring(s, 3, length(s))]"
