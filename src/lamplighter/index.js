@@ -637,6 +637,23 @@ function registerScopeProvider(provider) {
     scopeProviders.push(provider);
 }
 
+// Scope-barrier registry: the complement of a scope provider. A barrier predicate is
+// asked, for a container already in scope, whether scope should expand INTO its
+// contents. Returning true seals the container — its contents stay out of scope even
+// though the container itself is referable. A world library registers one for closed
+// containers (a shut box's contents aren't reachable until opened); core stays
+// generic and never names the `closed` field itself.
+const scopeBarriers = [];
+function registerScopeBarrier(barrier) {
+    scopeBarriers.push(barrier);
+}
+function sealsContents(container) {
+    for (const barrier of scopeBarriers) {
+        if (barrier(container)) return true;
+    }
+    return false;
+}
+
 // The objects the actor can currently refer to: contents of the actor's location
 // and the actor's own contents, plus anything transitively contained by those
 // objects (items resting on surfaces, contents of containers, etc.), plus whatever
@@ -668,7 +685,7 @@ function scopeOf(actor) {
             for (const inst of instances) {
                 if (inScope.has(inst)) continue;
                 const container = containerOf(inst);
-                if (container && inScope.has(container)) {
+                if (container && inScope.has(container) && !sealsContents(container)) {
                     inScope.add(inst);
                     changed = true;
                 }
@@ -2200,6 +2217,7 @@ module.exports = {
     restoreState,
     registerStateProvider,
     registerScopeProvider,
+    registerScopeBarrier,
     advanceTurn,
     turnsTaken,
     registerOutOfWorld,

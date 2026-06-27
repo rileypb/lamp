@@ -1,0 +1,8 @@
+look
+examine gem
+take gem
+pry
+look
+examine gem
+take gem
+quit

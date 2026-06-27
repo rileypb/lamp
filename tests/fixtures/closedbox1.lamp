@@ -1,0 +1,31 @@
+# A closed container seals its contents: while `closed`, the gem inside the crate is
+# hidden from the room listing AND out of scope (can't be examined or taken). Opening
+# the crate (here via a custom `pry` action) reveals and unseals it. Exercises both the
+# contents_of closed-check and the core scope-barrier seam.
+
+lib advent
+
+game ClosedBox:
+	start Room
+
+room Room:
+	description "A bare room."
+
+box crate:
+	closed true
+	description "A sturdy wooden crate."
+
+item gem:
+	description "A glittering gem."
+
+contains crate gem
+contains Room crate
+
+action pry:
+	syntax:
+		"pry"
+
+report pry:
+	let c = crate
+	c.closed = false
+	print "You pry the crate open."

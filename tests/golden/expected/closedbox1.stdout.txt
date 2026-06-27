@@ -1,0 +1,33 @@
+Room
+A bare room.
+
+You see a crate here.
+
+> look
+Room
+A bare room.
+
+You see a crate here.
+
+> examine gem
+You can't see any such thing.
+
+> take gem
+You can't see any such thing.
+
+> pry
+You pry the crate open.
+
+> look
+Room
+A bare room.
+
+You see a crate (in which is a gem) here.
+
+> examine gem
+A glittering gem.
+
+> take gem
+Taken.
+
+> quit
