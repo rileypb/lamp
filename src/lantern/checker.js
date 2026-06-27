@@ -975,6 +975,17 @@ function inferExprType(expr, typeSchema, kindSchema, localTypes, functionSchema 
         const listMatch = targetType && targetType.match(/^list<(.+)>$/);
         return listMatch ? listMatch[1] : null;
     }
+    if (expr.kind === "ListLiteral") {
+        // Element type from the first element whose type is inferable; an empty or
+        // all-unknown literal is `list<unknown>` (still a list, so a let-binding
+        // registers and indexing/iteration resolve leniently).
+        let elemType = "unknown";
+        for (const el of expr.elements) {
+            const t = inferExprType(el, typeSchema, kindSchema, localTypes, functionSchema);
+            if (t) { elemType = t; break; }
+        }
+        return `list<${elemType}>`;
+    }
     return null;
 }
 

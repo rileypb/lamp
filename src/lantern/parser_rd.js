@@ -1533,10 +1533,17 @@ function createParser(tokens, filePath, globalNames, functionNames = new Set(), 
             next();
             chain.push(readTargetSegment());
         }
+        // Indexed assignment target: `xs[i] = v` (the chain resolves to a list).
+        let index = null;
+        if (at("LBRACKET")) {
+            next();
+            index = parseExpression(0, localNames);
+            expect("RBRACKET", "Expected ']' in indexed assignment target");
+        }
         expect("EQUALS", "Expected '=' in assignment");
         const expr = parseExpression(0, localNames);
         expectNewline();
-        return ast.createAssignStatement(chain, expr, filePath, headToken.line);
+        return ast.createAssignStatement(chain, expr, filePath, headToken.line, index);
     }
 
     function readTargetSegment() {
@@ -1774,6 +1781,20 @@ function createParser(tokens, filePath, globalNames, functionNames = new Set(), 
             // through unchanged.
             const fields = collectTrailingFields();
             return fields.length === 0 ? expr : ast.createMemberAccess(expr, fields);
+        }
+        // List literal `[a, b, c]` (or `[]`). In prefix position `[` is a literal;
+        // in infix position it is indexing (LBRACKET led), so the two never collide.
+        if (token.type === "LBRACKET") {
+            const elements = [];
+            if (!at("RBRACKET")) {
+                elements.push(parseExpression(0, localNames));
+                while (at("COMMA")) {
+                    next();
+                    elements.push(parseExpression(0, localNames));
+                }
+            }
+            expect("RBRACKET", "Expected ']' to close list literal");
+            return ast.createListLiteral(elements, filePath, token.line);
         }
         throw err(`Unexpected token in expression: ${token.type}`, token.line);
     }

@@ -74,8 +74,11 @@ function createPrintStatement(expr) {
     return { kind: "PrintStatement", expr };
 }
 
-function createAssignStatement(targetChain, expr, filePath, lineNumber) {
-    return { kind: "AssignStatement", targetChain, expr, filePath, lineNumber };
+function createAssignStatement(targetChain, expr, filePath, lineNumber, index = null) {
+    return { kind: "AssignStatement", targetChain, expr, filePath, lineNumber, index };
+}
+function createListLiteral(elements, filePath, lineNumber) {
+    return { kind: "ListLiteral", elements, filePath, lineNumber };
 }
 
 function createErrorStatement(expr) {
@@ -447,4 +450,5 @@ module.exports = {
     createOrExpr,
     createNotExpr,
     createIndexExpr,
+    createListLiteral,
 };

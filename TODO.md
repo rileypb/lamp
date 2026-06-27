@@ -237,10 +237,9 @@ core edit is contained. Names (default): `contains`/`place`/`contained`, keyword
   action gated on the KIM being adhered, plus per-target state + rules: Lights-Out
   (yellow/red — per-door flip-sets + start state), sort-by-swap (blue), 4-toggle
   (locker), pick-5-of-16 (purple — needs the scan/control-code system, deferred).
-  **Modeling note:** the button state (9/4/16 red-or-blue buttons) needs mutable
-  per-element storage; Lamp lists aren't element-assignable, so model buttons as
-  **objects** with a `bool` (toggle via `setField`) or use per-button globals. See
-  `sample/phobos/PORTING.md`.
+  **Button-state storage UNBLOCKED:** mutable lists are now in the language (list
+  literals + element assignment, durable across undo/save), so the button state is a
+  `list` global mirroring the I7 (`Nine Button Colors`, `number order`) directly.
 - **Library file ordering / cross-file type topo-sort.** Lantern emits type
   definitions in file-glob (alphabetical) order with no cross-file topological
   sort, so a subtype declared in an alphabetically-earlier file than its parent
@@ -438,6 +437,16 @@ core edit is contained. Names (default): `contains`/`place`/`contained`, keyword
   contributions). Replacing *one* library rule out of several (without depending
   on registration order) needs named rules. See `devdocs/rulebooks.md` roadmap
   (*Next — identity & ergonomics*).
-- **`list<T>` field types end-to-end.** Parsing is now covered by a parser unit
-  test, but no fixture declares a `list<T>` field and exercises it through
-  emit/runtime. Add one to lock in end-to-end behaviour.
+- ~~**`list<T>` field types end-to-end.**~~ Exercised now via mutable lists
+  (golden `listmut1`): a `list<int>` global, literal init, element read/write, undo
+  durability.
+- ~~**List literals + element assignment (mutable lists).**~~ **DONE.** `[a, b, c]`
+  literal (parser nud on `[`; `ListLiteral` → `makeList`; checker infers `list<T>`)
+  and `xs[i] = v` element assignment (indexed `AssignStatement` target → mutate
+  `.items[i]` in place, mirroring the `IndexExpr` read). Durable across undo/save —
+  `encodeValue` deep-copies list items at capture (verified by golden `listmut1`).
+  Built to unblock the Phobos hacking button puzzles. Docs: specs.md. **Two limits
+  found:** (1) a `[…]` **index inside a text substitution** isn't supported (the
+  substitution scanner matches the first `]`; bind to a `let` first) — a tokenizer
+  fix if wanted; (2) the pre-existing emitter bug (assignment to a bare object-name
+  target) is unrelated but adjacent.

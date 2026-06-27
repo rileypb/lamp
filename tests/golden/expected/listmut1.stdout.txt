@@ -1,0 +1,18 @@
+Room
+A room.
+
+> show
+nums = 10, 20, 30 (size 3).
+local last = 9.
+
+> set 99
+set first = 99.
+
+> undo
+[Previous turn undone.]
+
+> show
+nums = 10, 20, 30 (size 3).
+local last = 9.
+
+> quit

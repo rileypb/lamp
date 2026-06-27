@@ -14,7 +14,7 @@
 - `lib/sys/` is the system library. Every invocation of Lantern automatically parses all `.lamp` files in `lib/sys/` — no explicit import is required. The sys library's `index.js` provides native implementations for the following built-in functions available to all Lamp programs:
     - `readline() → string` — reads one line of player input, blocking until the player submits. Input is brokered through the sandbox's input channel; `readline` is not available outside the sandbox.
     - `split(string) → list<string>` — splits a string on whitespace and returns the words as a list.
-    - `map_strings(list<object>, function) → list<string>` — applies an object→string function (passed by name) to each element, returning the list of results. The general list-transform primitive (Lamp has no list literal/append, so deriving a list needs a native); pairs with the locale's `format_list` to render a list of objects to prose (`format_list(map_strings(things, describe))`).
+    - `map_strings(list<object>, function) → list<string>` — applies an object→string function (passed by name) to each element, returning the list of results. The general list-transform primitive (Lamp has list literals `[…]` but no append, so *deriving* a transformed list still needs a native); pairs with the locale's `format_list` to render a list of objects to prose (`format_list(map_strings(things, describe))`).
     - `run_command(string) → void` — parses one line of player input against registered action templates, resolves slot objects in scope, and runs the matched action. Uses the `player` global as the actor.
 - `lib/en-US/` is the **default locale pack** — English *language data* for the text-substitution layer (article functions `the`/`a`/`an`, case functions `cap`/`upper`/`lower`/`title`, and the list-to-prose formatter `format_list` with its "and"/Oxford comma). Like `lib/sys`, it auto-loads on every invocation, inserted **immediately after `lib/sys/` and before any imported library**. It is the swappable language layer (a future `lib/en-GB`/`lib/fr-FR` replaces it) — `lib/sys` holds only language-agnostic mechanism. See `devdocs/text.md` (three-layer split).
 - Other subdirectories of `lib/` (e.g. `lib/test/`, `lib/advent/`) are optional libraries that must be imported explicitly with `lib LIBNAME`.
@@ -1612,6 +1612,13 @@ apply(5, double)
 
 - **Bare identifiers** in expressions are resolved in this order: local variable (introduced by `let`), declared global, declared function (producing a function reference), declared object (producing an object reference), then string literal. The object-reference step lets a bare single-word object name compare by identity (`x == statue`); the string-literal fallback supports enum-label comparisons such as `== final`. (A multi-word object name already resolves to an object reference via the underscore convention.)
 
+- **List literal** — `[E0, E1, …]` constructs a list value from element expressions (`[]` is the empty list). The element type is inferred from the elements (`[1, 2, 3]` is `list<int>`). In prefix position `[` opens a literal; in infix position it is indexing, so the two never collide.
+
+```lamp
+let primes = [2, 3, 5, 7]
+nums = [10, 20, 30]
+```
+
 - **List indexing** — `LIST_EXPRESSION[INDEX]` retrieves the element at a zero-based integer index:
 
 ```lamp
@@ -1619,7 +1626,14 @@ let words = split(line)
 let first_word = words[0]
 ```
 
-Indexing into an out-of-bounds position returns `undefined` (no runtime error).
+Indexing into an out-of-bounds position returns `undefined` (no runtime error). (A `[…]` index inside a **text substitution** is not yet supported — the substitution scanner matches the first `]`; bind to a `let` first.)
+
+- **Element assignment** — `TARGET[INDEX] = VALUE` mutates one element of a list in place. The target resolves to a list (a local or a list-typed global/field); the mutation is durable (captured by undo/save):
+
+```lamp
+nums[0] = 99
+order[i] = order[j]
+```
 
 - **Follow expression** — `follow NAME(args)` invokes a rulebook and produces its result value (see Rulebooks):
 
