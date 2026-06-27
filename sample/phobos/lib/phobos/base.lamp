@@ -37,11 +37,20 @@ box locker:
 
 # A textual thing (see lib/phobos/linguistics.lamp): reading it renders the content
 # through the Siriusian translation filter, alien until scanned. `/` marks a paragraph
-# break; `!` marks an always-alien proper noun. (A short excerpt for now — the full
-# diary text is a content follow-up.)
+# break; `!` marks an always-alien proper noun (these stay alien even fully scanned);
+# `[']` forces a literal apostrophe where the quote convention would otherwise convert
+# a word-final `'`. Full diary text ported from Texts.i7x (content1 + content2).
 document diary:
-	scan_level 3
-	content "Phobos is bleak even for a moon. The horizon is so close it seems you could reach out and touch it. / Without an atmosphere like we have on !MyHomeworld, there is no sky, just the infinite blackness of space."
+	scan_level 2
+	content "Phobos is bleak even for a moon. The horizon is so close it seems like you could reach out and touch it. Without an atmosphere like we have on !MyHomeworld, there is no sky, just the infinite blackness of space. The only sights to see here are the great crater that dominates the landscape, and the oppressive bulk of Mars in the sky above. /
+		!x34agclw, my commander, has tasked me with final watch, when only I stay on to watch over the base before launch. They think it is a punishment, but I don't mind. I like the quiet. I like the solitude. By myself, I can think and remember. /
+		Oh !MyHomeworld, how I miss you. The rolling red hills, the violet skies. The sweet smell of the flowers in the fields. The sound of the wind in the trees. Playing cyborg games with my friends, running through the fields, laughing and shouting, breaking my carapace and leaking oil all over the house. /
+		But when I was eight years old, the end of it all. Our star Sirius breathed out the strongest solar flare in recorded history. It was so powerful that it fried !SiriusI, !TheirVersionOfMars, and !MyHomeworld -- every settlement in the solar system -- destroying everything in a moment. The devastation was unimaginable. /
+		But what I remember most these days are the humans. Their kindness and compassion in the face of such tragedy. They barely knew us, but they came to help us rebuild. They shared their technology and their resources with us. They showed us that they were not our enemies, but our friends. /
+		Yet when I was an adult of fifteen, I found myself constrained -- even oppressed -- by those same humans. Years went by and we rebuilt with their help, but the humans always seemed to keep us from standing by ourselves. Those who had once been our saviors now seemed our masters. On !MyHomeworld, we faced years of depression, which the humans clicked their tongues at yet prolonged with their austerity policies. I was poor and rarely employed, and I saw my friends suffer the same. I was angry, and just waiting to be radicalized. So when my love !Cleopatra was killed in a protest, I was ripe for the Sirius Syndicate's recruitment pitch. They promised us a new life free from the humans['] oppression, where we could prosper and thrive. They promised us a new home, a new future, a new beginning. They promised us vengeance. /
+		So I joined the Syndicate, determined to free Sirius from the humans['] control. And when the Phobos mission was announced, I was one of the first to volunteer. I thought we would be heroes, forces of liberation, bringing freedom to our people. But when I realized our mission was to destroy Mars, I was horrified. I want to free Sirius, not to destroy humankind. /
+		I am a Siriusian cyborg, bound by oath to the Syndicate. The fact that I do not wish to destroy Mars does not mean that I absolve humankind of its sins. So I must continue to serve the Syndicate, even though I know it is wrong. /
+		But still, I hunger for a sign that there is hope for a better future. A sign that the humans are not as evil as the Syndicate claims. A sign that we can find a way to live together in peace."
 
 contains locker diary
 contains South_Barracks locker

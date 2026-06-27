@@ -140,7 +140,10 @@ description already in `base.lamp` predates this and will be revisited.
    = proper-noun/control tiers 15/16/20, else a 1-5 char-sum hash) is in the global
    `scan_levels`, otherwise it shows as fixed-width Siriusian; `/` = paragraph break.
    Emitted via `write()` so only `/` breaks the prose (no per-sentence auto-break). The
-   diary is the first `document` (short excerpt; full text is a content follow-up).
+   diary is the first `document` — its **full text is ported** from Texts.i7x (content1 +
+   content2, 9 paragraphs); `!`-proper-nouns stay alien even fully scanned, and word-final
+   possessives use the `[']` escape so the quote convention doesn't turn `humans'` into a
+   typographic `"`.
    **Scanning DONE (slice 2):** the **SCAN verb + Linguistic Module item** (carried from
    start). `scan [document]` (target typed `document`, so only textual things qualify and
    their fields are read directly — *no new natives*) marks the text `scanned` and flips

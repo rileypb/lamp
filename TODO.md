@@ -226,8 +226,10 @@ core edit is contained. Names (default): `contains`/`place`/`contained`, keyword
   `scan_levels` (a fixed five-slot `list<bool>`, so adding a tier is element assignment —
   no append, no new natives; the scan target is typed `document` so it reads fields
   directly). Guards: already-scanned, not-carrying-Module. Undo reverts scan state.
-  **Remaining:** content (documents across all 5 tiers to reach full translation); the
-  `obscure`/`revealed` real-name swap; the friendlier non-textual-scan message.
+  The diary's **full text is ported** (Texts.i7x content1+content2, 9 paragraphs; `[']`
+  escapes the word-final possessives). **Remaining:** more documents across the other
+  tiers to reach full translation; the `obscure`/`revealed` real-name swap; the
+  friendlier non-textual-scan message.
   **Migration:** after this, port `lib/phobos/index.js` natives to Lamp where possible
   (memory `phobos-native-to-lamp-migration`). **Test gap:** the filter is
   phobos-lib-specific, so no golden yet (the Phobos sample isn't golden-discoverable —
