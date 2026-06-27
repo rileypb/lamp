@@ -242,8 +242,13 @@ core edit is contained. Names (default): `contains`/`place`/`contained`, keyword
   Siriusian digit-glyph labels (`number_order`), press two to swap their labels, goal
   is to sort. Dogfooded a **new general `random(n)` native** (lib/sys, reusing the
   engine's seeded/save-captured RNG; golden `random1`); shuffle is a forward
-  Fisher-Yates in Lamp. **Remaining doors:** locker (4-button toggle), purple
-  (pick-5-of-16, needs the scan/control-code system — deferred).
+  Fisher-Yates in Lamp. **Locker DONE:** a four-button toggle (each press flips only
+  itself; start `{red,blue,blue,red}` → press 1 and 4) that opens a **container** and
+  reveals the **diary** sealed inside. Dogfooded a general advent feature — a **closed
+  container hides + seals its contents** (`contents_of` closed-check + core
+  **`registerScopeBarrier`** seam; golden `closedbox1`); South Barracks ported in full.
+  **Remaining doors:** purple (pick-5-of-16, needs the scan/control-code system —
+  deferred). Locker deferreds: reading the diary (READ verb + text), pod scenery, synonyms.
   Also deferred: `score 1` per solve
   (Galaxy Banner + notification, with scoring); the RESET button (re-press undoes,
   so not required). Globals use natural multi-word names (`kim_adhered_to`,

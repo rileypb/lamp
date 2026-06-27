@@ -152,8 +152,17 @@ description already in `base.lamp` predates this and will be revisited.
    reusing the engine's seeded/save-captured RNG); the shuffle is a forward
    Fisher-Yates in Lamp (the `for` loop is ascending-only). Under the fixed test
    seed the start is `[4,2,7,9,5,3,6,8,1]`, solved by pressing 1 9 3 6 4 9 6 7.
-   **Remaining doors:** locker (4-button toggle), purple (pick-5-of-16, needs the
-   scan/control-code system — deferred).
+   The **locker** (in South Barracks, the one room ported in full — its description
+   has no Siriusian markup) is a four-button toggle (each press flips only itself;
+   start `{red,blue,blue,red}`, goal all-blue → press 1 and 4). Unlike the doors it
+   opens a **container** and reveals the **diary** sealed inside — which dogfooded a
+   general advent feature: a **closed container hides + seals its contents** (the
+   `contents_of` closed-check for listings + a core **scope-barrier seam**
+   `registerScopeBarrier` so closed contents are out of scope; golden `closedbox1`).
+   Chosen (author): the KIM.i7x 4-button puzzle, not Base.i7x's simple bypass.
+   **Remaining doors:** purple (pick-5-of-16, needs the scan/control-code system —
+   deferred). Deferred for the locker: reading the diary (READ verb + text), the
+   sleeping-pod scenery, and the `personal/effects/chest/trunk` synonyms.
    **Still partial:** every solve also runs `score 1` (Galaxy Banner + notification)
    — deferred with scoring (see the Scoring note above). RESET button deferred
    (re-pressing a button undoes it, so it's not required to solve).

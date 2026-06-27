@@ -21,7 +21,25 @@ room Western_Spoke
 room Science_Lab
 room Eastern_Spoke
 room North_Barracks
-room South_Barracks
+
+# Ported in full (unlike its neighbours): its description carries no Siriusian markup,
+# only door/locker-state conditionals. The locker is the locker-puzzle's container.
+room South_Barracks:
+	description "Like most of the base, it's been cleared out. By one of the sleeping pods stands what could only be a storage locker, which is [if locker.closed]closed[else]open[end if][if not locker.closed and holder(diary) == locker]. A diary is inside the locker[end if]. The exit is to the north."
+
+# A scenery container, starts closed+sealed; the KIM's four-button puzzle opens it
+# (see lib/phobos/hacking.lamp). Closed, its contents (the diary) are hidden from both
+# the room listing and scope until the puzzle is solved.
+box locker:
+	scenery
+	closed true
+	description "In any language, it's pretty clear that this is a container meant to hold personal effects. It is labeled '[siriusian(\"!mfk5plas\")]'. [if locker.closed]It is closed.[else]It is open.[end if]"
+
+item diary:
+	description "A slim personal diary, its cover worn. The writing inside is dense Siriusian script."
+
+contains locker diary
+contains South_Barracks locker
 
 # Reached through a locked door (wired below).
 room Reactor_Room

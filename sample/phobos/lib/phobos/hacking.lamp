@@ -83,6 +83,19 @@ instead hack when self.target == blue_door:
 	print "Galaxy studies the scrambled symbols. 'These want sorting, I think.'"
 	stop succeeded
 
+# The locker: a four-button toggle (see below). Unlike the doors, success opens a
+# container and reveals its contents (the diary), rather than clearing a path.
+instead hack when self.target == locker:
+	if not self.target.closed:
+		print "Galaxy has already opened the locker."
+		stop succeeded
+	kim_adhered_to = locker
+	four_buttons = [false, true, true, false]
+	print "Galaxy attaches the KIM to the locker.[par]"
+	show_keypad_4()
+	print "Galaxy mutters to herself. 'Some already lit. What do I press? 1? 2?'"
+	stop succeeded
+
 # Every other hackable target opens a puzzle that isn't ported yet.
 instead hack:
 	print "Galaxy attempts to attach the KIM to [the act.target], but it fails to activate. Perhaps [the act.target] is not hackable?"
@@ -289,3 +302,47 @@ report press when kim_adhered_to == blue_door:
 	else:
 		print "[par]"
 		show_keypad_blue()
+
+
+# --- Locker: a four-button toggle --------------------------------------------
+# The simplest mechanic: four buttons, each press toggles only itself. Start
+# {red, blue, blue, red}, goal all blue (so: press 1 and 4). Solving opens the
+# locker, which reveals the diary that was sealed inside.
+global list<bool> four_buttons = none
+
+function bool four_solved():
+	for i = 0 to 3:
+		if not four_buttons[i]:
+			return false
+	return true
+
+# A red button shows as [N], a blue one as <N> (RESET deferred, as on the keypads).
+function void show_keypad_4():
+	for i = 1 to 4:
+		if four_buttons[i - 1]:
+			print "<[i]>"
+		else:
+			print "\[[i]\]"
+	print "[line break]\[\] = red, <> = blue[par]"
+
+do press when kim_adhered_to == locker:
+	if self.n < 1 or self.n > 4:
+		print "Use the digits 1-4."
+		stop failed
+	four_buttons[self.n - 1] = not four_buttons[self.n - 1]
+	if four_solved():
+		let lk = locker
+		lk.closed = false
+
+report press when kim_adhered_to == locker:
+	print "Galaxy presses button [self.n]. [run on]"
+	if four_buttons[self.n - 1]:
+		print "Button [self.n] turns blue."
+	else:
+		print "Button [self.n] turns red."
+	if four_solved():
+		print "[par]As the final button lights up blue, the locker swings open, revealing a diary. Galaxy retrieves the KIM."
+		kim_adhered_to = none
+	else:
+		print "[par]"
+		show_keypad_4()
