@@ -66,3 +66,22 @@ action credits:
 report credits:
 	print "Playtesting by Mike Russo, Drew Cook, John Ayliff, hidnook, Tabitha, and Leon Lin."
 	print "Invaluable assistance from Laura Taalman."
+
+# --- Third-person presentation (I7 Third Person Narration) -------------------
+# The player is "Galaxy", referred to by name. (Full third-person viewpoint /
+# action-report rewording is deferred; for now only the room heading is reshaped.)
+person yourself:
+	printed_name "Galaxy"
+
+# Replace advent's room-name heading with the name-embedded, third-person intro
+# that runs on into the description: "Galaxy is in the passage end. <description>".
+# This is in the author file, so it runs before advent's default rule and stops it.
+# The room name is lowercased (advent display names are capitalized) and bold.
+rule room_heading_rules:
+	# [run on] cancels the auto paragraph-break after the trailing ". " so the room
+	# description continues the same paragraph.
+	if r.always_indefinite:
+		print "Galaxy is [r.preposition] [bold(lower(indefinite(r)))]. [run on]"
+	else:
+		print "Galaxy is [r.preposition] [bold(lower(the(r)))]. [run on]"
+	stop true

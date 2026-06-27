@@ -10,7 +10,8 @@ room Passage_End:
 # Rooms reachable only through a door are declared but not yet connected.
 
 room Southern_Spoke
-room Storeroom            # I7 "always-indefinite" (article nuance deferred)
+room Storeroom:
+	always_indefinite true   # I7 "a storeroom"
 room Hub_Junction
 room Western_Spoke
 room Science_Lab
@@ -20,11 +21,13 @@ room South_Barracks
 
 # Reached through a locked door (wired below).
 room Reactor_Room
-room armory               # I7 "always-indefinite"
+room armory:
+	always_indefinite true   # I7 "an armory"
 room Commanders_Quarters:
 	printed_name "Commander's Quarters"
 room Control_Room
-room Flight_Deck          # I7 "outdoors" + preposition "on" (deferred)
+room Flight_Deck:
+	preposition "on"         # "Galaxy is on the flight deck" (I7 "outdoors" deferred)
 
 # Door-free connections.
 bidi connects Southern_Spoke west Storeroom

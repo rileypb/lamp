@@ -1,0 +1,12 @@
+You are in the lab. A bare lab.
+
+> east
+You are in a closet. A cramped closet.
+
+> west
+You are in the lab. A bare lab.
+
+> north
+You are in the hall. A long hall.
+
+> quit

@@ -1699,7 +1699,7 @@ described below.
 |---|---|---|
 | `thing` | — | `string printed_name`, `string understand` |
 | `physical` | `thing` | `article article` |
-| `room` | `container` | `string description`, `bool lighted` (default `true`) |
+| `room` | `container` | `string description`, `bool lighted` (default `true`), `string preposition` (default `"in"`), `bool always_indefinite` |
 | `item` | `physical` | `bool scenery`, `bool wearable`, `container holder` |
 | `box` | `item, container` | `bool closable`, `bool closed` |
 | `person` | `physical` | `container holder` |
@@ -1743,6 +1743,19 @@ The banner is **gated on `tagline`**: a game opts in by setting it; games that
 leave it blank (the `""` default) get no banner. The base `game` type
 (`lib/sys/types.lamp`) defaults the banner fields — `tagline = ""`,
 `version = 0`, `release = dev` — so a game need only set the ones it cares about.
+
+### Room description heading
+
+`describe_room` prints the room-name heading through an overridable rulebook,
+**`room_heading_rules(room r)`** (`bool`, default `true`), whose default rule prints
+the bare room name on its own line (`"[r][line break]"`) — so default output is
+unchanged. A game replaces the heading by contributing a rule **from its author
+file** (so it runs before the library default and `stop`s it); printing without a
+trailing line break makes the description run on into the same paragraph. This is
+how a game gets a third-person, name-embedded intro — e.g. "Galaxy is in **the
+passage end**. <description>" — using the room's `preposition` ("in"/"on") and
+`always_indefinite` (render the name with "a"/"an" rather than "the"). See
+`sample/phobos/`.
 
 ### Ending the story
 

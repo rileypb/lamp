@@ -199,17 +199,21 @@ core edit is contained. Names (default): `contains`/`place`/`contained`, keyword
   OPEN/CLOSE/LOCK/UNLOCK door verbs; door **parts** (handprint scanners) as
   `contains` vs. a distinct `part_of` relation; door-closed message is a plain
   print (i18n gap — names a non-slot local).
-- **Phobos third-person presentation + Siriusian cipher (port).** Phobos is
-  third-person / name-based ("Galaxy is in …", never "you") with the room name
-  **embedded in prose, not a heading**, and uses a `[Siriusian]…[English]` glyph
-  cipher in every room/sign description. Both gate porting any room/object
-  description. Needs: reshape `describe_room` (no heading; "Galaxy is in the
-  <room>. <desc>"; name-based 3rd-person subject) — **engine-vs-game fork** (advent
-  viewpoint feature vs. phobos-lib override, like doors); and a Siriusian native
-  string function (lift the mapping from `Texts.i7x` / `Siriusian.i7x`). Concrete
-  first milestone: render Passage End exactly like the I7 transcript. See
-  `sample/phobos/PORTING.md` + memory `phobos-presentation`. **Where:**
-  `lib/advent/rooms.lamp` and/or `sample/phobos/lib/phobos/`.
+- **Phobos third-person presentation + Siriusian cipher (port) — in progress.**
+  **Room heading DONE:** advent factors the heading into an overridable
+  `room_heading_rules(room r)` rulebook (default byte-identical) + `room`
+  `preposition`/`always_indefinite` fields; Phobos contributes a name-embedded
+  third-person intro that runs on into the description ("Galaxy is in **the passage
+  end**. <desc>"). Golden `room_heading1`; 158 green; docs in specs.md. **Remaining
+  for presentation:** (a) contents reword "Also here is/are …" — needs a parallel
+  **contents seam** (advent's frame can't add the copula from a message override
+  alone, like the heading); (b) deferred (agreed): `[We]`-as-name viewpoint feature
+  + third-person **action reports** — but NOT take/drop (Phobos leaves "Taken."/
+  "Dropped." as-is); examine-undescribed / parser-error rewordings; disguise
+  variant; nested-location parenthetical. **Siriusian cipher** (next, separate): a
+  native string function from the `Texts.i7x` / `Siriusian.i7x` mapping — gates the
+  full Passage End description (door label + door-state conditional). See
+  `sample/phobos/PORTING.md` + memory `phobos-presentation`.
 - **Library file ordering / cross-file type topo-sort.** Lantern emits type
   definitions in file-glob (alphabetical) order with no cross-file topological
   sort, so a subtype declared in an alphabetically-earlier file than its parent

@@ -1,0 +1,27 @@
+# Room-heading seam: a game replaces advent's default room-name heading via a
+# `room_heading_rules` contribution (author file → runs before the library default
+# and stops it), embedding the room name in prose that runs on into the
+# description. Exercises `preposition`, `always_indefinite`, and the [run on] cancel.
+
+lib advent
+
+game HeadingTest:
+	start Lab
+
+room Lab:
+	description "A bare lab."
+room Hall:
+	description "A long hall."
+room Closet:
+	always_indefinite true
+	description "A cramped closet."
+
+bidi connects Lab north Hall
+bidi connects Lab east Closet
+
+rule room_heading_rules:
+	if r.always_indefinite:
+		print "You are [r.preposition] [bold(lower(indefinite(r)))]. [run on]"
+	else:
+		print "You are [r.preposition] [bold(lower(the(r)))]. [run on]"
+	stop true

@@ -97,10 +97,13 @@ description already in `base.lamp` predates this and will be revisited.
    — there's no unlock/HACK verb yet, so only Passage End is reachable. *(Next
    real progression blocker is HACK, item 5.)* Door **descriptions** and the
    handprint-**scanner parts** are still deferred (Siriusian markup + parts).
-2. **Third-person room presentation** — reshape `describe_room`: no heading, embed
-   the lowercased room name in prose with a name-based third-person subject
-   ("Galaxy is in the <room>. <description>"). Foundational — every room uses it.
-   Engine-vs-game fork like doors (advent viewpoint feature vs. phobos override).
+2. ~~**Third-person room presentation**~~ **Heading DONE.** advent factors the
+   heading into an overridable `room_heading_rules` rulebook (default unchanged) +
+   `room` `preposition`/`always_indefinite` fields; Phobos's author-file rule
+   prints the name-embedded intro that runs on into the description ("Galaxy is in
+   **the passage end**. <desc>"). Remaining: contents reword "Also here is/are …"
+   (needs a parallel contents seam), and the deferred third-person *action reports*
+   / `[We]`-as-name (not take/drop) per the agreed scope.
 3. **`[Siriusian]…[English]` glyph cipher** — a character-substitution that renders
    text as unreadable alien glyphs (Latin-Extended), readable only after
    translation (helmet/KIM). Pervasive in every description. A self-contained
