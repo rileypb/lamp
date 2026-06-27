@@ -199,6 +199,17 @@ core edit is contained. Names (default): `contains`/`place`/`contained`, keyword
   OPEN/CLOSE/LOCK/UNLOCK door verbs; door **parts** (handprint scanners) as
   `contains` vs. a distinct `part_of` relation; door-closed message is a plain
   print (i18n gap — names a non-slot local).
+- **Phobos third-person presentation + Siriusian cipher (port).** Phobos is
+  third-person / name-based ("Galaxy is in …", never "you") with the room name
+  **embedded in prose, not a heading**, and uses a `[Siriusian]…[English]` glyph
+  cipher in every room/sign description. Both gate porting any room/object
+  description. Needs: reshape `describe_room` (no heading; "Galaxy is in the
+  <room>. <desc>"; name-based 3rd-person subject) — **engine-vs-game fork** (advent
+  viewpoint feature vs. phobos-lib override, like doors); and a Siriusian native
+  string function (lift the mapping from `Texts.i7x` / `Siriusian.i7x`). Concrete
+  first milestone: render Passage End exactly like the I7 transcript. See
+  `sample/phobos/PORTING.md` + memory `phobos-presentation`. **Where:**
+  `lib/advent/rooms.lamp` and/or `sample/phobos/lib/phobos/`.
 - **Library file ordering / cross-file type topo-sort.** Lantern emits type
   definitions in file-glob (alphabetical) order with no cross-file topological
   sort, so a subtype declared in an alphabetically-earlier file than its parent

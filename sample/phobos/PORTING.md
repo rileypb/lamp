@@ -10,6 +10,25 @@ I7 sources:
 - Extensions: `Phobos.materials/Extensions/Philip Riley/*.i7x` (third-party
   extensions handled later)
 
+## Presentation / house style (read first)
+
+Phobos departs from advent's defaults in ways that affect almost all output, so
+descriptions can't be ported verbatim. (Durable note also in agent memory
+`phobos-presentation`.)
+
+- **Third-person, name-based POV.** The protagonist is "Galaxy", with third-person
+  verbs — never "you" ("Galaxy is in the passage end"; "it is north that Galaxy
+  must go"). I7 *Third Person Narration* extension. The subject is the **name**,
+  not a bare "she".
+- **Room name embedded in prose, no heading.** No bold room-name line; the
+  description paragraph opens "Galaxy is in the <room>. <description>" (room name
+  lowercased, inline). `describe_room` must be **reshaped**, not just re-themed.
+- **Siriusian is a glyph cipher.** `[Siriusian]…[English]` renders as unreadable
+  Latin-Extended glyphs (e.g. `ſĺĺļĿŀĹıŧĹŁĽ`) until translated (helmet/KIM). In
+  every room/sign description. Mapping lives in `Siriusian.i7x` / `Texts.i7x`.
+- **Banner:** standard Inform format (title / "<headline> by <author>" / "Release N
+  / serial / build"), not advent's "Version N <release>".
+
 ## story.ni walkthrough
 
 | I7 element (story.ni) | What it does | Status |
@@ -76,30 +95,37 @@ description already in `base.lamp` predates this and will be revisited.
    from both rooms (scope-provider seam). Phobos's 6 doors are wired in `base.lamp`
    with their I7 closed/locked/not-lockable state. **The base is currently SEALED**
    — there's no unlock/HACK verb yet, so only Passage End is reachable. *(Next
-   real progression blocker is HACK, item 4.)* Door **descriptions** and the
+   real progression blocker is HACK, item 5.)* Door **descriptions** and the
    handprint-**scanner parts** are still deferred (Siriusian markup + parts).
-2. **`[Siriusian]…[English]` markup** — renders text as the untranslated alien
-   language (the player can't read it without the helmet/KIM). Pervasive in every
-   description. From `Siriusian.i7x` + `Texts.i7x`.
-3. **`feels` property + FEEL/TOUCH action** — nearly every object has a `feels`
+2. **Third-person room presentation** — reshape `describe_room`: no heading, embed
+   the lowercased room name in prose with a name-based third-person subject
+   ("Galaxy is in the <room>. <description>"). Foundational — every room uses it.
+   Engine-vs-game fork like doors (advent viewpoint feature vs. phobos override).
+3. **`[Siriusian]…[English]` glyph cipher** — a character-substitution that renders
+   text as unreadable alien glyphs (Latin-Extended), readable only after
+   translation (helmet/KIM). Pervasive in every description. A self-contained
+   native string function once we lift the mapping from `Siriusian.i7x` /
+   `Texts.i7x`.
+4. **`feels` property + FEEL/TOUCH action** — nearly every object has a `feels`
    string. From `Can't Touch This.i7x`.
-4. **`hackable` + HACK action** — the lock-bypass verb that drives progression.
-   From `Actions.i7x` / `GJ Basics`.
-5. **Parts / components** — `X is a part of Y` (handprint scanners, screens,
+5. **`hackable` + HACK action** — the lock-bypass verb that drives progression
+   (and unseals the doors). From `Actions.i7x` / `GJ Basics`.
+6. **Parts / components** — `X is a part of Y` (handprint scanners, screens,
    buttons, levers). advent has no part-of relation.
-6. **KIM / scanning** — `textual`, `scanning level N`, `content "…"`, the SCAN
+7. **KIM / scanning** — `textual`, `scanning level N`, `content "…"`, the SCAN
    verb + Linguistic Module. From `KIM.i7x`.
-7. **Open/close actions** for containers (cabinet, locker); advent's `box` has
+8. **Open/close actions** for containers (cabinet, locker); advent's `box` has
    `closed`/`closable` fields but no open/close *actions*.
-8. **Vehicles / ENTER / enterable supporters** — Moon Sled, Siriusian ship,
+9. **Vehicles / ENTER / enterable supporters** — Moon Sled, Siriusian ship,
    chair, pilot's seat; the ENTER verb, vehicles, sitting on supporters.
-9. **Scope/backdrop tricks** — `far away` (Mars, Stickney Crater), "place X in
-   scope", "reaching inside" rules.
-10. **Custom actions** — flying / ship-flying / simply-flying, listening,
+10. **Scope/backdrop tricks** — `far away` (Mars, Stickney Crater), "place X in
+    scope", "reaching inside" rules. (The scope-provider seam from doors is the
+    hook.)
+11. **Custom actions** — flying / ship-flying / simply-flying, listening,
     pulling, searching.
-11. **`end the story saying "…"`** — advent has `story = won/lost` +
+12. **`end the story saying "…"`** — advent has `story = won/lost` +
     `end_story_rules`; the custom final line needs a hook.
-12. **Misc object properties** — `outdoors`, per-room `preposition`, `edificial`,
+13. **Misc object properties** — `outdoors`, per-room `preposition`, `edificial`,
     `indescribable`, `always-indefinite`, `privately-named`.
 
 Implication: Base content can't be finished until this infrastructure exists.
