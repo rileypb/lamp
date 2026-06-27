@@ -1,0 +1,10 @@
+Room
+A room.
+
+> bump
+turn 1 for Hero.
+
+> bump
+turn 2 for Hero.
+
+> quit

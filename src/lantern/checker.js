@@ -1,3 +1,5 @@
+const { coerceName } = require("./tokenizer");
+
 const PRIMITIVE_TYPES = new Set(["string", "int", "bool", "real", "text"]);
 
 // Relation field schemas (relationName -> Map(fieldName -> typeName)), set at the
@@ -102,7 +104,7 @@ function checkProgram(programAst, options = {}) {
             checkStatements(node.body, typeSchema, kindSchema, localTypes, functionSchema, null, globalNames);
         } else if (node.kind === "FunctionDecl") {
             for (const p of node.params) {
-                if (globalNames.has(p.name)) {
+                if (globalNames.has(coerceName(p.name))) {
                     throw typeError(node.filePath, node.lineNumber, `parameter "${p.name}" shadows global "${p.name}"`);
                 }
             }
@@ -250,7 +252,7 @@ function collectPropertyAccess(node, acc) {
 
 function checkRulebookDecl(node, typeSchema, kindSchema, functionSchema, globalNames) {
     for (const p of node.params) {
-        if (globalNames.has(p.name)) {
+        if (globalNames.has(coerceName(p.name))) {
             throw typeError(node.filePath, node.lineNumber, `parameter "${p.name}" shadows global "${p.name}"`);
         }
     }
@@ -567,7 +569,7 @@ function checkStatements(statements, typeSchema, kindSchema, localTypes, functio
             checkExprCalls(subExpr, typeSchema, kindSchema, localTypes, functionSchema);
         }
         if (stmt.kind === "LetStatement") {
-            if (globalNames.has(stmt.name)) {
+            if (globalNames.has(coerceName(stmt.name))) {
                 throw typeError(stmt.filePath, stmt.lineNumber, `local "${stmt.name}" shadows global "${stmt.name}"`);
             }
             const varType = inferExprType(stmt.expr, typeSchema, kindSchema, localTypes, functionSchema);
@@ -576,7 +578,7 @@ function checkStatements(statements, typeSchema, kindSchema, localTypes, functio
             }
         } else if (stmt.kind === "AssignStatement") {
             const head = stmt.targetChain[0];
-            if (stmt.targetChain.length === 1 && !localTypes.has(head) && !globalNames.has(head)) {
+            if (stmt.targetChain.length === 1 && !localTypes.has(head) && !globalNames.has(coerceName(head))) {
                 throw typeError(stmt.filePath, stmt.lineNumber, `assignment to undeclared name "${head}"`);
             }
             checkAssignStatement(stmt, typeSchema, kindSchema, localTypes);
@@ -588,14 +590,14 @@ function checkStatements(statements, typeSchema, kindSchema, localTypes, functio
         } else if (stmt.kind === "WhileStatement") {
             checkStatements(stmt.body, typeSchema, kindSchema, new Map(localTypes), functionSchema, expectedReturnType, globalNames);
         } else if (stmt.kind === "ForStatement") {
-            if (globalNames.has(stmt.varName)) {
+            if (globalNames.has(coerceName(stmt.varName))) {
                 throw typeError(stmt.filePath, stmt.lineNumber, `for loop variable "${stmt.varName}" shadows global "${stmt.varName}"`);
             }
             const bodyTypes = new Map(localTypes);
             bodyTypes.set(stmt.varName, "int");
             checkStatements(stmt.body, typeSchema, kindSchema, bodyTypes, functionSchema, expectedReturnType, globalNames);
         } else if (stmt.kind === "ForEachStatement") {
-            if (globalNames.has(stmt.varName)) {
+            if (globalNames.has(coerceName(stmt.varName))) {
                 throw typeError(stmt.filePath, stmt.lineNumber, `for loop variable "${stmt.varName}" shadows global "${stmt.varName}"`);
             }
             const listType = inferExprType(stmt.listExpr, typeSchema, kindSchema, localTypes, functionSchema);

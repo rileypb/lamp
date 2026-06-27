@@ -12,7 +12,7 @@ contains yourself KIM
 
 # What the KIM is currently adhered to (none = not mid-hack). While adhered, PRESS
 # drives that target's puzzle.
-global physical adhered = none
+global physical kim_adhered_to = none
 
 action hack:
 	item target
@@ -28,8 +28,8 @@ before hack:
 		stop failed
 
 before hack:
-	if not (adhered == none):
-		print "The KIM is already attached to [the adhered]."
+	if not (kim_adhered_to == none):
+		print "The KIM is already attached to [the kim_adhered_to]."
 		stop failed
 
 # The green door: a trivial lock the KIM bypasses on its own. (`self.target` for the
@@ -48,8 +48,8 @@ instead hack when self.target == yellow_door:
 	if not self.target.locked:
 		print "The door is already unlocked."
 		stop succeeded
-	adhered = yellow_door
-	keypad = [false, false, false, false, false, false, false, false, false]
+	kim_adhered_to = yellow_door
+	nine_buttons = [false, false, false, false, false, false, false, false, false]
 	print "Galaxy attaches the KIM to the yellow door.[par]"
 	show_keypad_9()
 	print "Galaxy mutters to herself. 'Never seen a hacking interface like this before. What do I press? 1? 2?'"
@@ -62,21 +62,22 @@ instead hack:
 
 
 # --- Yellow door: a "Lights Out" keypad --------------------------------------
-# 9 buttons, each red or blue; start all red, goal all blue. Pressing a button
-# flips a fixed, hidden set of the nine (the rule the player must work out).
-# Re-pressing a button undoes it, so no RESET is needed (RESET deferred).
-global list<bool> keypad = none
+# 9 buttons (shared across the nine-button doors), each red or blue; start all red,
+# goal all blue. Pressing a button flips a fixed, hidden set of the nine (the rule
+# the player must work out). Re-pressing a button undoes it, so no RESET is needed
+# (RESET deferred).
+global list<bool> nine_buttons = none
 
 function bool yellow_solved():
 	for i = 0 to 8:
-		if not keypad[i]:
+		if not nine_buttons[i]:
 			return false
 	return true
 
 # The keypad display: a red button shows as [N], a blue one as <N>.
 function void show_keypad_9():
 	for i = 1 to 9:
-		if keypad[i - 1]:
+		if nine_buttons[i - 1]:
 			print "<[i]>"
 		else:
 			print "\[[i]\]"
@@ -88,11 +89,11 @@ action press:
 		"press [n]"
 
 before press:
-	if adhered == none:
+	if kim_adhered_to == none:
 		print "Galaxy isn't hacking anything right now."
 		stop failed
 
-do press when adhered == yellow_door:
+do press when kim_adhered_to == yellow_door:
 	if self.n < 1 or self.n > 9:
 		print "Use the digits 1-9."
 		stop failed
@@ -117,15 +118,15 @@ do press when adhered == yellow_door:
 	if self.n == 9:
 		flip = [1, 3, 9]
 	for x in flip:
-		keypad[x - 1] = not keypad[x - 1]
+		nine_buttons[x - 1] = not nine_buttons[x - 1]
 	if yellow_solved():
 		let yd = yellow_door
 		yd.locked = false
 		yd.closed = false
 
-report press when adhered == yellow_door:
+report press when kim_adhered_to == yellow_door:
 	print "Galaxy presses button [self.n].[par]"
 	show_keypad_9()
 	if yellow_solved():
 		print "As the final button lights up blue, the yellow door to the west swings open! Galaxy retrieves the KIM."
-		adhered = none
+		kim_adhered_to = none

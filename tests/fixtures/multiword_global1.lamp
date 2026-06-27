@@ -1,0 +1,26 @@
+# Multi-word (underscore) globals work at compile AND runtime: reassigning one
+# (`turn_count = turn_count + 1`) and reading a field off one (`main_actor.printed_name`)
+# both resolve to the coerced global key, not a dead bare identifier.
+
+lib advent
+
+game MWGlobal:
+	start Room
+
+room Room:
+	description "A room."
+
+person yourself:
+	printed_name "Hero"
+
+global int turn_count = 0
+global person main_actor = yourself
+
+action bump:
+	syntax:
+		"bump"
+
+report bump:
+	turn_count = turn_count + 1
+	let who = main_actor.printed_name
+	print "turn [turn_count] for [who]."

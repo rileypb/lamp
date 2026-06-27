@@ -1,4 +1,5 @@
 const { encode } = require("../strcodec");
+const { coerceName } = require("./tokenizer");
 
 // Expressions whose emitted form is already self-delimiting (literals, variable
 // names, property-access chains, function calls) and never need extra parens.
@@ -815,19 +816,25 @@ function emitStatementLines(statement, indentLevel, globalNames = new Set(), bar
     }
     if (statement.kind === "AssignStatement") {
         const [head, ...tail] = statement.targetChain;
+        // Globals are keyed by their *coerced* name (`my_score` → "my score"); the
+        // raw identifier names a local. Coerce for the global lookup + setGlobal key,
+        // but keep the raw head for the local-assignment emit. (No-shadow guarantees
+        // a local never collides with a global's coerced name.)
+        const chead = coerceName(head);
+        const isGlobal = globalNames.has(chead);
         const valueExpr = emitExpression(statement.expr, globalNames);
         // Indexed assignment `xs[i] = v`: the chain resolves to a list value;
         // mutate its element in place (mirrors the IndexExpr read `xs.items[i]`),
         // so a list held in a global/field is mutated durably.
         if (statement.index != null) {
-            let listExpr = globalNames.has(head) ? `lamplighter.getGlobal(${emitName(head)})` : head;
+            let listExpr = isGlobal ? `lamplighter.getGlobal(${emitName(chead)})` : head;
             if (tail.length > 0) listExpr += `.${tail.join(".")}`;
             return [`${indent}${listExpr}.items[${emitExpression(statement.index, globalNames)}] = ${valueExpr};`];
         }
-        if (tail.length === 0 && globalNames.has(head)) {
-            return [`${indent}lamplighter.setGlobal(${emitName(head)}, ${valueExpr});`];
+        if (tail.length === 0 && isGlobal) {
+            return [`${indent}lamplighter.setGlobal(${emitName(chead)}, ${valueExpr});`];
         }
-        const headExpr = globalNames.has(head) ? `lamplighter.getGlobal(${emitName(head)})` : head;
+        const headExpr = isGlobal ? `lamplighter.getGlobal(${emitName(chead)})` : head;
         if (tail.length === 0) {
             return [`${indent}${head} = ${valueExpr};`];
         }
@@ -1031,7 +1038,8 @@ function emitExpression(expr, globalNames = new Set()) {
     }
     if (expr.kind === "PropertyAccess") {
         const [head, ...tail] = expr.chain;
-        const headExpr = globalNames.has(head) ? `lamplighter.getGlobal(${emitName(head)})` : head;
+        const chead = coerceName(head);
+        const headExpr = globalNames.has(chead) ? `lamplighter.getGlobal(${emitName(chead)})` : head;
         return tail.length === 0 ? headExpr : `${headExpr}.${tail.join(".")}`;
     }
     if (expr.kind === "MemberAccess") {

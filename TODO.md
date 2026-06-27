@@ -239,8 +239,8 @@ core edit is contained. Names (default): `contains`/`place`/`contained`, keyword
   blue (sort-by-swap permutation), locker (4-button toggle), purple (pick-5-of-16,
   needs the scan/control-code system — deferred). Also deferred: `score 1` per solve
   (Galaxy Banner + notification, with scoring); the RESET button (re-press undoes,
-  so not required). **Hit the known multi-word-global checker bug** — globals must
-  be single-word (`adhered`, `keypad`) until that's fixed (see below).
+  so not required). Globals use natural multi-word names (`kim_adhered_to`,
+  `nine_buttons`) now that the multi-word-global bug is fixed (see below).
 - **Library file ordering / cross-file type topo-sort.** Lantern emits type
   definitions in file-glob (alphabetical) order with no cross-file topological
   sort, so a subtype declared in an alphabetically-earlier file than its parent
@@ -418,13 +418,15 @@ core edit is contained. Names (default): `contains`/`place`/`contained`, keyword
   string across lines and doesn't treat a `#` inside it as a comment); (c) optionally a
   Language Server reusing the tokenizer/parser for diagnostics + go-to-definition.
   **Where:** `editors/vscode/`.
-- **Reassigning a multi-word (underscore) global fails the checker.** `global int
-  my_score = 0` then `my_score = 5` reports "assignment to undeclared name
-  `my_score`", while a single-word global (`score = 5`) works. The assignment-target
-  name coercion (underscore→space) doesn't line up with the global-name set the
-  checker holds for multi-word names. Found while wiring `viewpoint_person`
-  (Slice 3) — declaring it works, only *reassignment* is blocked. **Where:**
-  `src/lantern/checker.js` (assignment-target lookup) + the global-name coercion.
+- ~~**Reassigning a multi-word (underscore) global fails.**~~ **FIXED.** Globals are
+  keyed by their coerced name ("my score"), but an assignment target's head is the
+  raw identifier ("my_score") — so both the **checker** (rejected the assignment) and
+  the **emitter** (silently emitted a dead bare `my_score = …`) missed the global.
+  Both now coerce the head at the six `globalNames.has` sites (checker) and the
+  AssignStatement / PropertyAccess heads (emitter); `setGlobal` uses the coerced key.
+  Locals keep the raw name (no-shadow guarantees no collision). Regression golden
+  `multiword_global1` (reassignment + multi-word global field read run at runtime).
+  The two `coerceName` imports were added to checker.js/emitter.js.
 - **Remaining pronouns (`him`/`her`/`them`).** `it` is implemented with
   explicit `direct` slot marking (the `direct item NAME` annotation on action
   field declarations sets the antecedent; at most one per action; enforced at
