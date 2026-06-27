@@ -521,6 +521,12 @@ function getAllFields(typeName, typeSchema) {
     return result;
 }
 
+// The directional fields of an advent-style door (mirrors lib/advent directions).
+// A door is identified by carrying all of these as `room` fields, so the door
+// consistency check below keys on structure, not the type name.
+const DOOR_DIRECTION_FIELDS = ["north", "northeast", "east", "southeast", "south",
+                               "southwest", "west", "northwest", "up", "down"];
+
 function checkObjectDecl(node, typeSchema, kindSchema) {
     const allFields = getAllFields(node.typeName, typeSchema);
     for (const fieldAssign of node.fields) {
@@ -537,6 +543,21 @@ function checkObjectDecl(node, typeSchema, kindSchema) {
             fieldAssign.lineNumber,
             `field "${fieldAssign.fieldName}"`,
         );
+    }
+
+    // Consistency check: an advent-style door connects exactly two rooms. A door is
+    // a type carrying all ten directional `room` fields; it declares its two sides as
+    // `<direction> <room>` lines (those fields), so require exactly two set. Keyed on
+    // field structure, not the type name, so an unrelated user type named `door` is
+    // unaffected. (The accepted "option A" trade-off — a general library-contributed
+    // consistency pass would own this rule; see TODO "Door subsystem".)
+    if (DOOR_DIRECTION_FIELDS.every((d) => allFields.get(d) === "room")) {
+        const sides = node.fields.filter((f) =>
+            DOOR_DIRECTION_FIELDS.includes(f.fieldName) && f.value.kind !== "NoneLiteral");
+        if (sides.length !== 2) {
+            throw typeError(node.filePath, node.lineNumber,
+                `door "${node.objectName}" must connect exactly two rooms (found ${sides.length})`);
+        }
     }
 }
 

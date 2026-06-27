@@ -1,0 +1,40 @@
+# Door subsystem: a closed door blocks `go` and reports as closed; a door is in
+# scope (examinable) from BOTH rooms it joins; opening it (here via a test `force`
+# action that clears `closed`) lets the actor pass; an already-open door traverses.
+
+lib advent
+
+game DoorTest:
+	start RoomA
+
+room RoomA:
+	description "The first room."
+room RoomB:
+	description "The second room."
+room RoomC:
+	description "The third room."
+
+door north_door:
+	north RoomB
+	south RoomA
+	scenery
+	description "A heavy north door."
+
+door east_door:
+	east RoomC
+	west RoomA
+	closed false
+	scenery
+	description "An open east door."
+
+# Test-only verb to open a door without a standard OPEN action (deferred).
+action force:
+	door target
+	syntax:
+		"force [target]"
+
+do force:
+	self.target.closed = false
+
+report force:
+	print "You force [the act.target] open."

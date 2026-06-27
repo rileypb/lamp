@@ -1,0 +1,68 @@
+# Phobos: A Galaxy Jones Story by Phil Riley
+# Ported to Lamp (partially)
+
+lib advent
+lib phobos
+
+game Phobos:
+  author "Phil Riley"
+  tagline "A Looming Disaster"
+  version 0
+  release dev
+  start Passage_End
+
+rule startup_rules:
+	print "Phobos, 2245.
+  
+  Something -- just a fraction of a speck -- detaches itself from the great bulk of Mars and speeds towards Phobos. Anyone on that moon watching Mars would miss it. Unless they were looking for it, of course. 
+
+  Which they're not. But we get ahead of ourselves.
+
+  Let's get back to the speck: it's Galaxy Jones, on a race to stop the destruction of Mars. And someone is indeed not looking for her: the alien cyborgs of the Sirius Syndicate. And we're ahead of ourselves again. Let's just let Beck tell it, shall we?
+
+  Three hours earlier: Galaxy's handler Beck briefs her at Galaxy Base. 'Jones, we have credible intelligence that the Syndicate has nearly completed converting Phobos into a giant missile. Already they have finished turning Stickney Crater into a massive thruster, and it's only a matter of hours before the moon lines up properly to assault the Martian surface. We have detected a series of tunnels leading under the crater, which we believe will allow access to their base. We need you to get in there, break into the base, and find a way to stop them. Fortunately, most of the Syndicate cyborgs should be off the moon by now.
+
+  'You should take the Moon Sled. It's small enough that you'll be mistaken for a harmless asteroid, so you'll be able to get right up in their base without them noticing. They won't be looking for something that small.' (Told you.) 
+  
+  Anyway, he continues:
+
+  'We'll have to do this on radio silence, so I won't be able to help you out when you're on the moon. You should take a look at your equipment as we've made some upgrades and you'll want to know what they do.
+
+  'And Galaxy -- don't kill anyone unnecessarily. Save who you can.'
+
+  Back to the present: close to Stickney Crater, it's evident what the Syndicate has been up to. While still natural-looking at a distance, at close range one can clearly see that the crater's bottom has been converted into massive doors, ready to open when the thruster is activated.
+
+  The Moon Sled dives for the surface, autopilot nimbly navigating a miniscule opening just beyond the crater. Within, it winds through a series of tunnels, finally landing just inside the base's atmospheric containment field, next to a security door. And not a moment too soon -- the Sled is out of fuel."
+	# I7: "Before looking for the first time". Prints right before the first room
+	# description (startup_rules runs, then the player is moved into the start room,
+	# which auto-describes it). I7's [bold type]…[roman type] → Lamp's [bold]…[/bold].
+	print "The Moon Sled's hatch opens, and out steps a tall, athletic woman in a black jumpsuit: [bold]Galaxy Jones[/bold]."
+
+# Informational verbs (story.ni: abouting / helping). These are "out of world"
+# in I7 (no turn passes). advent has no game-defined out-of-world hook yet, so
+# for now they are ordinary actions that take a turn. See PORTING.md.
+action about:
+	syntax:
+		"about"
+
+report about:
+	print "It's not a sequel; it's a stand-alone story starring Galaxy Jones!"
+
+action help:
+	syntax:
+		"help"
+
+report help:
+	print "This is a game of interactive fiction, where you play the role of Galaxy Jones, the solar system's greatest hero. To accomplish this mission you will need to explore the base, solve puzzles, and interact with the environment and characters. You can type commands like 'LOOK', 'EXAMINE <something>', 'TAKE <something>', 'ASK <someone> ABOUT <something>', 'TELL <someone> ABOUT <something>', 'SAY <something>', 'GIVE <something> TO <someone>', 'SHOW <something> TO <someone>', 'HACK <something>', 'WEAR <something>', 'REMOVE <something>', 'ATTACK <something>', 'SHOOT <something>', 'READ <something>', 'SCAN <something>', and more. Don't forget to use the inventory command (I) to check what Galaxy is carrying."
+
+# I7's "crediting" verb. The body opens with "the list of extension credits",
+# which I7 auto-collects from included extensions — no source until the
+# extensions are ported, so the dynamic list is omitted for now (see PORTING.md).
+action credits:
+	syntax:
+		"credits"
+		"credit"
+
+report credits:
+	print "Playtesting by Mike Russo, Drew Cook, John Ayliff, hidnook, Tabitha, and Leon Lin."
+	print "Invaluable assistance from Laura Taalman."

@@ -1,0 +1,51 @@
+# Doors — a barrier between two rooms that can be closed and/or locked.
+#
+# A door declares its two sides as `<direction> <room>` lines (the "destination"
+# reading: `north RoomB` means RoomB lies to the north, reached by going north):
+#
+#     door green_door:
+#         north Southern_Spoke
+#         south Passage_End
+#         scenery
+#         description "A heavy green door."
+#
+# `wire_doors` (called once at startup) reads each door's directional fields and
+# materializes the map: two directed `connects` edges (so `go` can traverse) and
+# two `doorway` edges (the side->door index that `go` and the scope provider read).
+# A door is present in both rooms it joins but contained in neither, so the
+# containment-based scope misses it; the scope provider registered in index.js
+# surfaces the current room's doors. Exactly-two-sides is enforced at compile time
+# (checker.js). The `door` type itself is declared in types.lamp (so it is emitted
+# after its parent `item`); everything else for doors lives here.
+# See devdocs/world-model.md.
+
+# Side -> guarding-door index, materialized by `wire_doors`. Plain (not bidi): the
+# native asserts one edge per traversable (room, direction).
+relation doorway:
+	from room side
+	direction dir
+	to door barrier
+	syntax "doorway [side] [dir] [barrier]"
+
+stop_reason door_closed
+
+native function void wire_doors()
+
+# A closed door blocks movement through it. Order-independent vs. the cant-go check:
+# a missing exit has no doorway edge and falls through to `cant_go_that_way`; a real
+# but closed door stops here.
+check go:
+	let here = holder(self.actor)
+	let barrier = doorway here self.way ?first
+	if not (barrier == none):
+		if barrier.closed:
+			stop failed door_closed
+
+# Plain print (not a named message): it names the blocking door, a non-slot local,
+# which a named message may not reference. (i18n gap noted in PORTING.md.)
+report failed go:
+	if self.reason == door_closed:
+		let here = holder(self.actor)
+		let barrier = doorway here self.way ?first
+		print "[The barrier] is closed."
+		stop

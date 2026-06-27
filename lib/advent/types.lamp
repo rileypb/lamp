@@ -33,6 +33,24 @@ type item < physical:
 	bool scenery
 	bool wearable
 
+# A door between two rooms; see lib/advent/doors.lamp for the full subsystem. Lives
+# here (not doors.lamp) so it is emitted after its parent `item` — Lantern emits
+# types in source order with no cross-file topological sort.
+type door < item:
+	bool closed = true
+	bool locked = false
+	bool lockable = true
+	room north = none
+	room northeast = none
+	room east = none
+	room southeast = none
+	room south = none
+	room southwest = none
+	room west = none
+	room northwest = none
+	room up = none
+	room down = none
+
 type box < item, container:
 	bool closable
 	bool closed

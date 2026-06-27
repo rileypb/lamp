@@ -625,11 +625,23 @@ function containerOf(inst) {
     return edges.length > 0 ? edges[0][def.sourceField] : null;
 }
 
+// Scope-provider registry. Containment (`contains`) is the runtime's only built-in
+// notion of presence; a world library that has objects present without being
+// contained — doors (in two rooms, contained in neither), backdrops, "place X in
+// scope" — registers a provider that contributes extra in-scope objects for an
+// actor. Providers run after the containment sweep and before the fixpoint
+// expansion, so a provided object's contained parts (e.g. a door's handprint
+// scanner) are pulled into scope too. Mirrors the state-provider registry.
+const scopeProviders = [];
+function registerScopeProvider(provider) {
+    scopeProviders.push(provider);
+}
+
 // The objects the actor can currently refer to: contents of the actor's location
 // and the actor's own contents, plus anything transitively contained by those
-// objects (items resting on surfaces, contents of containers, etc.). Reachability
-// is computed over containment (containerOf): the `contains` relation, falling
-// back to the legacy `holder` field during migration.
+// objects (items resting on surfaces, contents of containers, etc.), plus whatever
+// registered scope providers contribute. Reachability is computed over containment
+// (containerOf): the `contains` relation.
 function scopeOf(actor) {
     const location = containerOf(actor);
     const inScope = new Set();
@@ -641,6 +653,11 @@ function scopeOf(actor) {
                 inScope.add(inst);
             }
         }
+    }
+
+    for (const provider of scopeProviders) {
+        const extra = provider(actor, location);
+        if (extra) for (const obj of extra) if (obj) inScope.add(obj);
     }
 
     // Expand to fixpoint: if an object's container is in scope, the object is too.
@@ -2145,6 +2162,7 @@ module.exports = {
     captureState,
     restoreState,
     registerStateProvider,
+    registerScopeProvider,
     advanceTurn,
     turnsTaken,
     registerOutOfWorld,

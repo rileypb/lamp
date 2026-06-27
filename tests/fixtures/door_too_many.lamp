@@ -1,0 +1,17 @@
+# Consistency check (compile-time): a door must connect exactly two rooms. This
+# one sets three directional fields, so Lantern rejects it.
+
+lib advent
+
+game DoorErr:
+	start RoomA
+
+room RoomA
+room RoomB
+room RoomC
+
+door bad_door:
+	north RoomB
+	south RoomA
+	east RoomC
+	scenery

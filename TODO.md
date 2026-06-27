@@ -179,6 +179,41 @@ core edit is contained. Names (default): `contains`/`place`/`contained`, keyword
 **Where:** `src/lantern/{tokenizer,parser_rd,emitter,checker}.js`, `src/lamplighter/index.js`, `lib/advent/*`, `devdocs/{relations,world-model}.md`.
 
 ## Smaller / opportunistic
+- ~~**Door subsystem for advent (Phobos port).**~~ **DONE.** A `door` type (in
+  `types.lamp`, after its parent `item`) declares its two sides as `<direction>
+  <room>` fields (destination semantics — `north RoomB` = "go north to reach it");
+  the `wire_doors` native (called at startup) materializes two directed `connects`
+  edges + two `doorway` edges. Scope via a general **scope-provider seam**
+  (`registerScopeProvider` + `scopeOf` union) — advent registers a provider
+  surfacing the current room's doors (also the seam for future backdrops /
+  `place-in-scope`). Closed door blocks `go` (`door_closed` reason). **Option A
+  consistency check** in `checker.js`: a door must set exactly two directional
+  `room` fields (keyed on field signature, not the type name, so a user `door` is
+  unaffected). Tests: golden `doors1` (block / two-sided scope / open+pass /
+  traverse) + `door_too_many` (compile error); 157 golden + state + save green.
+  Phobos's 6 doors wired in `sample/phobos/lib/phobos/base.lamp` (base sealed until
+  a HACK/unlock verb exists). Docs: specs.md (Doors section, `door`/`doorway`,
+  `registerScopeProvider`, `door_closed`). **Follow-ups:** (B) a general
+  library-contributed consistency pass (decoupled; reusable for room-reachability /
+  edge-collision / action-slot invariants — first slice of item 7); standard
+  OPEN/CLOSE/LOCK/UNLOCK door verbs; door **parts** (handprint scanners) as
+  `contains` vs. a distinct `part_of` relation; door-closed message is a plain
+  print (i18n gap — names a non-slot local).
+- **Library file ordering / cross-file type topo-sort.** Lantern emits type
+  definitions in file-glob (alphabetical) order with no cross-file topological
+  sort, so a subtype declared in an alphabetically-earlier file than its parent
+  fails at load (`Parent type is not defined: …`). Hit while adding `doors.lamp`
+  (worked around by putting the `door` type in `types.lamp`). Fix options: (a)
+  **topologically sort type declarations by inheritance before emit** (automatic,
+  robust — the only ordering constraint is parent-before-subtype; objects /
+  relations / globals already resolve order-independently); or (b) a **library
+  manifest** declaring file order. Lean (a). **Where:** `src/lantern/{index,emitter}.js`. See `sample/phobos/PORTING.md`. **Where:** `lib/advent/`,
+  `src/lantern/*`, `src/lamplighter/index.js`, devdocs.
+- **Scoring / rank subsystem (motivated by the Phobos port).** advent has no
+  score or rank system; the Phobos I7 game uses `Use scoring` + Score.i7x +
+  Rank.i7x. Would need a `score` global, a points-award surface, and a
+  rank-from-score lookup, plus a status-line/`SCORE` verb surface. *Not yet
+  designed.* Surfaced by `sample/phobos/PORTING.md`. **Where:** `lib/advent/`.
 - **Localization to French — in progress (`devdocs/i18n.md`).** Goal: a playable French
   Cloak of Darkness. **Part 1 DONE (2026-06-26):** the compile-time **locale switch** —
   `--locale <tag>` flag (also `--locale=<tag>`) > a `locale "<tag>"` source declaration >

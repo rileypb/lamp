@@ -8,6 +8,9 @@ function void update_status_line():
 		status_line(freeze "[holder(player)]", freeze "[turns_taken()] turns")
 
 on startup:
+	# Materialize door connectivity from each door's directional fields before any
+	# navigation (see lib/advent/doors.lamp).
+	wire_doors()
 	# Title banner, printed before any startup_rules contributions. A game opts in
 	# by setting `tagline`; games that leave it blank get no banner.
 	let this_game = game.all.first

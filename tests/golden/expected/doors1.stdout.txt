@@ -1,0 +1,31 @@
+RoomA
+The first room.
+
+> examine north door
+A heavy north door.
+
+> north
+The north door is closed.
+
+> force north door
+You force the north door open.
+
+> examine north door
+A heavy north door.
+
+> north
+RoomB
+The second room.
+
+> examine north door
+A heavy north door.
+
+> south
+RoomA
+The first room.
+
+> east
+RoomC
+The third room.
+
+> quit

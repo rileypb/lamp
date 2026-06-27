@@ -1,0 +1,79 @@
+lib advent
+
+room Passage_End:
+	description "South of here a maze of passages leads back to the surface. But it is north that Galaxy must go, into the heart of the base, to stop the Siriusian plot to destroy Mars. The Moon Sled is parked here, out of fuel."
+
+# --- Rooms (Base.i7x "Volume - Rooms") -------------------------------------
+# Skeleton only: names + the door-free connections. Full descriptions are
+# DEFERRED — every one embeds [Siriusian]…[English] markup and a door-state
+# conditional, neither of which exists yet (see PORTING.md / Base.i7x notes).
+# Rooms reachable only through a door are declared but not yet connected.
+
+room Southern_Spoke
+room Storeroom            # I7 "always-indefinite" (article nuance deferred)
+room Hub_Junction
+room Western_Spoke
+room Science_Lab
+room Eastern_Spoke
+room North_Barracks
+room South_Barracks
+
+# Reached through a locked door (wired below).
+room Reactor_Room
+room armory               # I7 "always-indefinite"
+room Commanders_Quarters:
+	printed_name "Commander's Quarters"
+room Control_Room
+room Flight_Deck          # I7 "outdoors" + preposition "on" (deferred)
+
+# Door-free connections.
+bidi connects Southern_Spoke west Storeroom
+bidi connects Southern_Spoke north Hub_Junction
+bidi connects Hub_Junction west Western_Spoke
+bidi connects Western_Spoke north Science_Lab
+bidi connects Hub_Junction east Eastern_Spoke
+bidi connects Eastern_Spoke north North_Barracks
+bidi connects Eastern_Spoke south South_Barracks
+
+# Doors (advent door subsystem). Reading: `<direction> <room>` = the room reached
+# by going that direction. closed (default) + locked + not lockable, matching the
+# I7 base. The base is currently SEALED — there's no unlock/HACK verb yet, so only
+# Passage End is reachable until HACK lands (see PORTING.md). Door descriptions are
+# deferred ([Siriusian] markup + door-state conditionals). Handprint scanners
+# (parts of each door) are deferred too.
+door green_door:
+	north Southern_Spoke
+	south Passage_End
+	scenery
+	locked true
+	lockable false
+door yellow_door:
+	west Reactor_Room
+	east Western_Spoke
+	scenery
+	locked true
+	lockable false
+door red_door:
+	south armory
+	north Western_Spoke
+	scenery
+	locked true
+	lockable false
+door blue_door:
+	east Commanders_Quarters
+	west Eastern_Spoke
+	scenery
+	locked true
+	lockable false
+door purple_door:
+	north Control_Room
+	south Hub_Junction
+	scenery
+	locked true
+	lockable false
+door flight_deck_door:
+	north Flight_Deck
+	south Control_Room
+	scenery
+	locked true
+	lockable false

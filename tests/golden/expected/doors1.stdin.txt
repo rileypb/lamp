@@ -1,0 +1,9 @@
+examine north door
+north
+force north door
+examine north door
+north
+examine north door
+south
+east
+quit

@@ -1,0 +1,3 @@
+Compile error: tests/fixtures/door_too_many.lamp:13: type error: door "bad door" must connect exactly two rooms (found 3)
+  13 | door bad_door:
+    | ^

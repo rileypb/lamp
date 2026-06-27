@@ -168,6 +168,8 @@ Lantern-generated JavaScript targets the following Lamplighter API surface:
     - Registers a surface template string for an action with the Game Parser. Used by the emitter for each syntax line in an action declaration.
 - `runCommand(line, actor)`
     - Parses `line` against registered grammar templates, resolves each slot to an in-scope object of the slot's declared type, and runs the matched action. `actor` supplies the scope (actor's location contents and inventory). Prints `"I don't understand that."` on no match; `"You can't see any such thing."` on a failed slot resolve. The commanding actor is **passed in** — the Lamp-level `run_command(line, actor)` native threads it through (the advent loop passes `player`), so the runtime reads no `player` global itself. Before dispatching a fresh command it takes an **undo checkpoint** (see *State, undo, and save*); a registered **out-of-world** verb (`undo`/`save`/`restore`) bypasses the turn and takes no checkpoint.
+- `registerScopeProvider(provider)`
+    - Registers a `provider(actor, location)` that contributes extra in-scope objects, unioned into `scopeOf` after the containment sweep and before the fixpoint expansion (so a provided object's contained parts are pulled in too). Containment (`contains`) is the runtime's only built-in notion of presence; a provider supplies presence that isn't containment — e.g. advent's doors (present in two rooms, contained in neither), and later backdrops / `place-in-scope`. Mirrors `registerStateProvider`.
 - `registerRelationAddHandler(relationName, handler)`
     - Registers a handler called whenever a new instance of the named relation is asserted. The handler receives the new instance as its argument (`self`). Used by the emitter for `on RELATION add:` blocks.
 - `registerRelationRemoveHandler(relationName, handler)`
@@ -1702,6 +1704,7 @@ described below.
 | `box` | `item, container` | `bool closable`, `bool closed` |
 | `person` | `physical` | `container holder` |
 | `direction` | `thing` | `direction inverse`, `string understand` |
+| `door` | `item` | `bool closed=true`, `bool locked=false`, `bool lockable=true`, one `room` field per direction |
 
 `article` is an enum kind with values `count`, `definite`, `proper`, `plural`.
 `stop_reason` is an open object type; lib/advent declares the reasons listed
@@ -1784,11 +1787,44 @@ reset primitive a RESTART would build on.
   [target]`. Assert with `bidi` for two-way exits.
 - **`wears`** — worn items. `from person wearer`, `to item worn`. Custom syntax:
   `wears [wearer] [worn]`. The `wear` action asserts this; `doff` retracts it.
+- **`doorway`** — the side→guarding-door index for the door subsystem (below).
+  `from room side`, `direction dir`, `to door barrier`. Materialized at startup by
+  `wire_doors` from each door's directional fields; read by `go` (to block a closed
+  door) and by the door scope provider. Not authored directly.
+
+### Doors
+
+A **`door`** is a barrier between two rooms that can be `closed` and/or `locked`. A
+door declares its two sides in-body as `<direction> <room>` lines — the
+**destination** reading: `north RoomB` means *RoomB lies to the north, reached by
+going north*:
+
+```lamp
+door green_door:
+    north Southern_Spoke
+    south Passage_End
+    scenery
+    description "A heavy green door."
+```
+
+At startup, the native `wire_doors` reads each door's directional fields and
+materializes the map: two directed `connects` edges (so `go` traverses) and two
+`doorway` edges. A door is present in both rooms it joins but contained in neither,
+so a **scope provider** (registered via the runtime's `registerScopeProvider` seam)
+surfaces the current room's doors for command resolution; a door's contained parts
+come along via scope's existing fixpoint. A closed door blocks `go` with the
+`door_closed` reason ("[The door] is closed."). **Consistency:** a door must connect
+exactly two rooms — Lantern rejects a door object that sets other than two
+directional fields at compile time (keyed on the directional-field signature, so an
+unrelated user type named `door` is unaffected). Only the ten built-in directions
+are supported as door sides; standard OPEN/CLOSE/LOCK/UNLOCK verbs are not yet
+provided (a game drives door state itself).
 
 ### Stop reasons
 
 `already_carrying`, `cant_take_that`, `not_carrying`, `cant_put_on_that`,
-`cant_go_that_way`, `not_wearable`, `already_worn`, `not_worn`, `too_dark`.
+`cant_go_that_way`, `not_wearable`, `already_worn`, `not_worn`, `too_dark`,
+`door_closed`.
 
 ### Actions
 

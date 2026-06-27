@@ -43,17 +43,18 @@ room study:
 
 bidi connects foyer north study
 
-# A lockable door needs a `locked` field advent's `item` doesn't have, so the
-# game declares a subtype. advent's actions and `item.all` are subtype-inclusive,
-# so a `door` behaves as an `item` everywhere.
-type door < item:
+# A lockable door needs a `locked` field advent's `item` doesn't have, so the game
+# declares a subtype. (Named `portal`, not `door`, since advent now ships its own
+# spatial `door` type — see lib/advent/doors.lamp.) advent's actions and `item.all`
+# are subtype-inclusive, so a `portal` behaves as an `item` everywhere.
+type portal < item:
     bool locked
 
 item brass_key
 item statue:
     scenery true
 item idol
-door oak_door:
+portal oak_door:
     locked true
 
 contains foyer brass_key
@@ -69,13 +70,13 @@ stop_reason door_locked
 # A non-spatial relation pairing a key with the door it opens.
 relation unlocks:
     from item source
-    to door target
+    to portal target
     syntax "unlocks [source] [target]"
 
 unlocks brass_key oak_door
 
 # A general rulebook, read with `follow` inside a report message below.
-rulebook string door_state(door d):
+rulebook string door_state(portal d):
     default "shut"
     when d.locked:
         stop "locked"
@@ -104,7 +105,7 @@ report failed take:
 # --- a custom action driven by the `unlocks` relation -----------------------
 
 action unlock:
-    door target
+    portal target
     item with
     syntax:
         "unlock [target] with [with]"
