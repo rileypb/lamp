@@ -1,4 +1,5 @@
 examine coin
 examine locket
+read locket
 north
 quit

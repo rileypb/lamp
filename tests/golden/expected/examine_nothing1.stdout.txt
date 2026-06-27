@@ -9,6 +9,9 @@ You see nothing unusual about the coin.
 > examine locket
 A silver locket.
 
+> read locket
+A silver locket.
+
 > north
 closet
 

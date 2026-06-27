@@ -248,7 +248,8 @@ core edit is contained. Names (default): `contains`/`place`/`contained`, keyword
   container hides + seals its contents** (`contents_of` closed-check + core
   **`registerScopeBarrier`** seam; golden `closedbox1`); South Barracks ported in full.
   **Remaining doors:** purple (pick-5-of-16, needs the scan/control-code system —
-  deferred). Locker deferreds: reading the diary (READ verb + text), pod scenery, synonyms.
+  deferred). `read` is now an advent synonym for `examine` (reading the diary shows its
+  description). Locker deferreds: pod scenery, locker synonyms.
   Also deferred: `score 1` per solve
   (Galaxy Banner + notification, with scoring); the RESET button (re-press undoes,
   so not required). Globals use natural multi-word names (`kim_adhered_to`,

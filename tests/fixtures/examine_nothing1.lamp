@@ -2,6 +2,7 @@
 # prints the examine_nothing default ("[We] [see] nothing unusual about ..."),
 # and a room with no description shows just its name (no blank line, no
 # "undefined"). An object/room that does have a description is unaffected.
+# `read` is a synonym for `examine` (same report).
 
 lib advent
 

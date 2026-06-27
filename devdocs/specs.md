@@ -1863,7 +1863,7 @@ provided (a game drives door state itself).
 | Action | Slots | Player syntax | Notes |
 |---|---|---|---|
 | `look` | — | `look`, `l` | Describes the current room. |
-| `examine` | `item target` | `examine [target]`, `x [target]` | Prints `self.target.description`. |
+| `examine` | `item target` | `examine [target]`, `x [target]`, `read [target]` | Prints `self.target.description`. |
 | `take` | `item taken` | `take [taken]`, `get [taken]` | Moves item to actor. |
 | `drop` | `item dropped` | `drop [dropped]` | Moves item to actor's location; implicitly calls `doff` if item is worn (printing `(first taking off X)` for the player). |
 | `inventory` | — | `inventory`, `i` | Lists carried items; marks worn items with `(worn)`. |

@@ -161,8 +161,9 @@ description already in `base.lamp` predates this and will be revisited.
    `registerScopeBarrier` so closed contents are out of scope; golden `closedbox1`).
    Chosen (author): the KIM.i7x 4-button puzzle, not Base.i7x's simple bypass.
    **Remaining doors:** purple (pick-5-of-16, needs the scan/control-code system —
-   deferred). Deferred for the locker: reading the diary (READ verb + text), the
-   sleeping-pod scenery, and the `personal/effects/chest/trunk` synonyms.
+   deferred). `read` is now a synonym for `examine` (advent), so reading the diary
+   shows its description. Deferred for the locker: the sleeping-pod scenery and the
+   `personal/effects/chest/trunk` synonyms.
    **Still partial:** every solve also runs `score 1` (Galaxy Banner + notification)
    — deferred with scoring (see the Scoring note above). RESET button deferred
    (re-pressing a button undoes it, so it's not required to solve).
