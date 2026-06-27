@@ -44,10 +44,11 @@ function siriusian(text) {
 
 // --- Linguistic Module: progressive translation (ported from Siriusian.i7x) ------
 // A textual thing's `content` is rendered word by word. Each word has a difficulty
-// tier; a word translates to English once its tier has been scanned (its tier is in
-// the SiriusianLevels list), otherwise it shows as Siriusian glyphs. With nothing
-// scanned the whole text is alien — exactly the all-untranslated form siriusian()
-// already produces. Scanning (a later slice) is the only thing that adds tiers.
+// tier (1-5); a word translates to English once its tier has been scanned, otherwise
+// it shows as Siriusian glyphs. The scan state is a fixed list<bool> of length 5 —
+// `levels[t-1]` is true once tier t has been scanned (an in-Lamp representation that
+// needs only element assignment, no list append). With nothing scanned the whole text
+// is alien — the all-untranslated form siriusian() already produces.
 
 function is_textual(x) {
     return !!(x && x.textual);
@@ -77,8 +78,9 @@ function token_difficulty(word) {
 // so only the `/` markers break the prose into paragraphs.
 function print_translated(x, levels) {
     const tokens = String((x && x.content) || "").split(/\s+/).filter((w) => w.length > 0);
-    const scanned = lamplighter.listItems(levels).map(Number);
-    const numLevels = scanned.length;
+    // levels[t-1] === true once tier t is scanned; numLevels counts tiers scanned.
+    const scanned = levels ? lamplighter.listItems(levels).map(Boolean) : [];
+    const numLevels = scanned.filter(Boolean).length;
     const len = tokens.length;
     let out = "";
     let lastSiriusian = false;
@@ -101,7 +103,7 @@ function print_translated(x, levels) {
         } else if (cdl === 16 || (cdl === 20 && numLevels < 5)) {
             out += lamplighter.styled("fixed", glyph);
             lastSiriusian = true;
-        } else if (scanned.includes(cdl) || cdl === 20) {
+        } else if ((cdl >= 1 && cdl <= 5 && scanned[cdl - 1]) || cdl === 20) {
             const englishWord = w.charAt(0) === "#" ? w.slice(1) : w;
             if (lastSiriusian) out += " ";
             out += lamplighter.styled("bold", englishWord);

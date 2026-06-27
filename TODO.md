@@ -221,11 +221,17 @@ core edit is contained. Names (default): `contains`/`place`/`contained`, keyword
   word-by-word — each word translates to English once its difficulty tier is in the
   global `scan_levels`, else fixed-width Siriusian (`!`/`$`/`#` = proper-noun/control
   tiers that stay alien; `/` = paragraph break); emitted via `write()` so only `/`
-  breaks the prose. **Remaining (slice 2):** the **SCAN verb + Linguistic Module item**
-  that fills `scan_levels` (a temporary `reveal N` lever stands in now) + per-text
-  `scanned` guard. **Test gap:** the filter is phobos-lib-specific, so no golden yet
-  (the Phobos sample isn't golden-discoverable — would need extending golden discovery
-  to `sample/<dir>/`). See `sample/phobos/PORTING.md` + memory `phobos-presentation`.
+  breaks the prose. **Scanning DONE (slice 2):** the **SCAN verb + Linguistic Module
+  item** (carried from start) marks a `document` `scanned` and flips its tier on in
+  `scan_levels` (a fixed five-slot `list<bool>`, so adding a tier is element assignment —
+  no append, no new natives; the scan target is typed `document` so it reads fields
+  directly). Guards: already-scanned, not-carrying-Module. Undo reverts scan state.
+  **Remaining:** content (documents across all 5 tiers to reach full translation); the
+  `obscure`/`revealed` real-name swap; the friendlier non-textual-scan message.
+  **Migration:** after this, port `lib/phobos/index.js` natives to Lamp where possible
+  (memory `phobos-native-to-lamp-migration`). **Test gap:** the filter is
+  phobos-lib-specific, so no golden yet (the Phobos sample isn't golden-discoverable —
+  would need extending golden discovery to `sample/<dir>/`). See `sample/phobos/PORTING.md`.
 - **BUG: assignment to a bare object-name field target emits undefined JS.**
   `SomeObject.field = value` (where `SomeObject` is a bare object reference, not a
   local/global/`self`) emits `lamplighter.setField(SomeObject, …)` with

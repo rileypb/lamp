@@ -6,51 +6,60 @@ lib advent
 # index.js). Words translate only once their difficulty tier has been scanned; with
 # nothing scanned the whole text reads as untranslated Siriusian glyphs.
 #
-# SLICE 1 (reading): the filter + the examine/read surface. SCAN (the verb + the
-# Module item that adds tiers) is the next slice. Until then, the temporary `reveal`
-# lever below stands in for scanning so partial translation can be exercised.
+# READ a document to see it at the current translation state; SCAN it (while carrying
+# the Linguistic Module) to add its tier and translate more across every text.
 
 native function bool is_textual(item x)
-native function void print_translated(item x, list<int> levels)
+native function void print_translated(item x, list<bool> levels)
 
 # A readable Siriusian text. `scan_level` is its difficulty tier (1-5); the prose in
-# `content` is space-separated words, with `/` marking a paragraph break and a
-# leading `!` marking an always-alien proper noun.
+# `content` is space-separated words, with `/` marking a paragraph break and a leading
+# `!` marking an always-alien proper noun. `scanned` guards re-scanning.
 type document < item:
 	string content = ""
 	int scan_level = 1
 	bool textual = true
+	bool scanned = false
 
-# The difficulty tiers scanned so far (empty until the player scans). Reading consults
-# it to decide which words have become translatable. `none` reads as "nothing scanned".
-global list<int> scan_levels = none
+# Which difficulty tiers have been scanned: scan_levels[t-1] is true once tier t is
+# scanned. A fixed five-slot list (one per tier) so adding a tier is a plain element
+# assignment — no list append needed. Initialised in startup_rules.
+global list<bool> scan_levels = none
+
+# The tool that does the translating. Galaxy carries it from the start.
+item linguistic_module:
+	printed_name "Linguistic Module"
+	description "Looking like a typical media reader — a small, flat, rectangular device with a screen and a few buttons — the Linguistic Module can scan text in any language, building a model of the language in the process. It can then translate that language into English. To use it, SCAN the text, then READ it."
+
+contains yourself linguistic_module
 
 # Reading a textual thing shows its translated content instead of a plain description.
 instead examine when is_textual(self.target):
 	print_translated(self.target, scan_levels)
 	stop succeeded
 
-# --- TEMPORARY (remove when SCAN lands) --------------------------------------
-# Stands in for scanning: `reveal N` marks tiers 1..N as scanned so partial and full
-# translation can be tested before the real Linguistic Module exists.
-action reveal:
-	int n
+# SCAN adds a text's tier to the model, so every text with that tier reads more
+# clearly afterwards. The target is typed `document`, so only textual things are
+# scannable and their fields are read directly (no accessor natives).
+action scan:
+	document target
 	syntax:
-		"reveal [n]"
+		"scan [target]"
 
-do reveal:
-	if self.n <= 0:
-		scan_levels = []
-	if self.n == 1:
-		scan_levels = [1]
-	if self.n == 2:
-		scan_levels = [1, 2]
-	if self.n == 3:
-		scan_levels = [1, 2, 3]
-	if self.n == 4:
-		scan_levels = [1, 2, 3, 4]
-	if self.n >= 5:
-		scan_levels = [1, 2, 3, 4, 5]
+check scan:
+	if self.target.scanned:
+		print "The Linguistic Module has already scanned that."
+		stop failed
 
-report reveal:
-	print "\[Linguistic model now covers tiers 1-[self.n].\]"
+check scan:
+	if not (holder(linguistic_module) == self.actor):
+		print "Galaxy needs to be carrying the Linguistic Module to scan something."
+		stop failed
+
+do scan:
+	self.target.scanned = true
+	let tier = self.target.scan_level
+	scan_levels[tier - 1] = true
+
+report scan:
+	print "The Linguistic Module scans the text, augmenting its model of the language. It can translate more accurately now — the scanned text should read more clearly."

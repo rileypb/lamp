@@ -141,9 +141,17 @@ description already in `base.lamp` predates this and will be revisited.
    `scan_levels`, otherwise it shows as fixed-width Siriusian; `/` = paragraph break.
    Emitted via `write()` so only `/` breaks the prose (no per-sentence auto-break). The
    diary is the first `document` (short excerpt; full text is a content follow-up).
-   **Deferred to slice 2:** the **SCAN verb + Linguistic Module item** that actually
-   fills `scan_levels` (a *temporary* `reveal N` debug lever stands in for now), and
-   the `obscure`/`revealed` real-name/real-description swap on examine.
+   **Scanning DONE (slice 2):** the **SCAN verb + Linguistic Module item** (carried from
+   start). `scan [document]` (target typed `document`, so only textual things qualify and
+   their fields are read directly — *no new natives*) marks the text `scanned` and flips
+   its tier on in `scan_levels`, so every text of that tier reads more clearly afterward.
+   Guards: already-scanned, and not-carrying-the-Module. `scan_levels` is a fixed
+   five-slot `list<bool>` (one per tier) so adding a tier is plain element assignment — no
+   list append. The temporary `reveal` lever is gone. Undo reverts scan state. **Deferred:**
+   the `obscure`/`revealed` real-name/real-description swap on examine; the friendlier
+   "needs more text than available on [noun]" message for scanning a non-textual thing
+   (today the `document`-typed slot just yields "can't see any such thing"); reaching full
+   translation needs documents of every tier (content follow-up).
 4. **`feels` property + FEEL/TOUCH action** — nearly every object has a `feels`
    string. From `Can't Touch This.i7x`.
 5. **HACK / the KIM — in progress** (from `KIM.i7x`). The KIM tool + `hack` verb,
@@ -178,10 +186,10 @@ description already in `base.lamp` predates this and will be revisited.
    (re-pressing a button undoes it, so it's not required to solve).
 6. **Parts / components** — `X is a part of Y` (handprint scanners, screens,
    buttons, levers). advent has no part-of relation.
-7. **KIM / scanning** — reading half DONE (item 3 above: `document`/`textual`,
-   `content`, `scan_level`, the per-tier translation filter, examine/read surface).
-   **Remaining:** the **SCAN verb + Linguistic Module item** that fills `scan_levels`
-   (replacing the temporary `reveal` lever) + `scanned` per-text guard. From `KIM.i7x`.
+7. ~~**KIM / scanning (Linguistic Module)**~~ **DONE** (item 3 above): `document`/
+   `textual`, `content`, `scan_level`, `scanned`; the per-tier translation filter +
+   examine/read surface (slice 1) and the SCAN verb + Linguistic Module item (slice 2).
+   Remaining is content (more `document`s across tiers) + the deferreds noted in item 3.
 8. **Open/close actions** for containers (cabinet, locker); advent's `box` has
    `closed`/`closable` fields but no open/close *actions*.
 9. **Vehicles / ENTER / enterable supporters** — Moon Sled, Siriusian ship,
