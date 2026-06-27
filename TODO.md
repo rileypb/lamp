@@ -210,10 +210,14 @@ core edit is contained. Names (default): `contains`/`place`/`contained`, keyword
   alone, like the heading); (b) deferred (agreed): `[We]`-as-name viewpoint feature
   + third-person **action reports** — but NOT take/drop (Phobos leaves "Taken."/
   "Dropped." as-is); examine-undescribed / parser-error rewordings; disguise
-  variant; nested-location parenthetical. **Siriusian cipher** (next, separate): a
-  native string function from the `Texts.i7x` / `Siriusian.i7x` mapping — gates the
-  full Passage End description (door label + door-state conditional). See
-  `sample/phobos/PORTING.md` + memory `phobos-presentation`.
+  variant; nested-location parenthetical. **Siriusian display cipher DONE:**
+  `siriusian(text)` native in `sample/phobos/lib/phobos/index.js` (non-invertible:
+  drop odd chars / shift-by-len / reverse / many-to-one glyphs); used as
+  `[siriusian("…")]`; **the full Passage End description renders byte-for-byte like
+  the I7 transcript** (label + door-state conditional). Deferred: the **progressive
+  scan-level reveal** (Linguistic Module / KIM) and a regression test (the Phobos
+  sample isn't golden-discoverable — would need extending golden discovery to
+  `sample/<dir>/`). See `sample/phobos/PORTING.md` + memory `phobos-presentation`.
 - **Library file ordering / cross-file type topo-sort.** Lantern emits type
   definitions in file-glob (alphabetical) order with no cross-file topological
   sort, so a subtype declared in an alphabetically-earlier file than its parent

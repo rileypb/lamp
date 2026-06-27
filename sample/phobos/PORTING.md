@@ -104,11 +104,15 @@ description already in `base.lamp` predates this and will be revisited.
    **the passage end**. <desc>"). Remaining: contents reword "Also here is/are …"
    (needs a parallel contents seam), and the deferred third-person *action reports*
    / `[We]`-as-name (not take/drop) per the agreed scope.
-3. **`[Siriusian]…[English]` glyph cipher** — a character-substitution that renders
-   text as unreadable alien glyphs (Latin-Extended), readable only after
-   translation (helmet/KIM). Pervasive in every description. A self-contained
-   native string function once we lift the mapping from `Siriusian.i7x` /
-   `Texts.i7x`.
+3. ~~**`[Siriusian]…[English]` glyph cipher**~~ **Display cipher DONE.** Ported the
+   `siriusian(text)` algorithm to a phobos-lib native (`lib/phobos/index.js`): a
+   deterministic, deliberately **non-invertible** cipher (drops odd-position chars;
+   shift-by-length; reverse; many-to-one glyph table). Used in descriptions as
+   `[siriusian("…")]`. Verified: `siriusian("This way to the secret base")` ===
+   `"ſĺĺļĿŀĹıŧĹŁĽ"`, and **the full Passage End description now renders byte-for-byte
+   like the transcript.** Deferred: the **progressive per-word, scan-level reveal**
+   (the Linguistic Module / KIM shows English for scanned words) — that's the
+   KIM/scanning gameplay layer (item 7).
 4. **`feels` property + FEEL/TOUCH action** — nearly every object has a `feels`
    string. From `Can't Touch This.i7x`.
 5. **`hackable` + HACK action** — the lock-bypass verb that drives progression
