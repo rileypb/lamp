@@ -1,0 +1,56 @@
+lib advent
+
+# The Linguistic Module / Siriusian translation system (ported from Siriusian.i7x).
+# A `document` is a textual thing: its `content` is English prose seeded with alien
+# proper nouns, rendered through a progressive translation filter (see lib/phobos/
+# index.js). Words translate only once their difficulty tier has been scanned; with
+# nothing scanned the whole text reads as untranslated Siriusian glyphs.
+#
+# SLICE 1 (reading): the filter + the examine/read surface. SCAN (the verb + the
+# Module item that adds tiers) is the next slice. Until then, the temporary `reveal`
+# lever below stands in for scanning so partial translation can be exercised.
+
+native function bool is_textual(item x)
+native function void print_translated(item x, list<int> levels)
+
+# A readable Siriusian text. `scan_level` is its difficulty tier (1-5); the prose in
+# `content` is space-separated words, with `/` marking a paragraph break and a
+# leading `!` marking an always-alien proper noun.
+type document < item:
+	string content = ""
+	int scan_level = 1
+	bool textual = true
+
+# The difficulty tiers scanned so far (empty until the player scans). Reading consults
+# it to decide which words have become translatable. `none` reads as "nothing scanned".
+global list<int> scan_levels = none
+
+# Reading a textual thing shows its translated content instead of a plain description.
+instead examine when is_textual(self.target):
+	print_translated(self.target, scan_levels)
+	stop succeeded
+
+# --- TEMPORARY (remove when SCAN lands) --------------------------------------
+# Stands in for scanning: `reveal N` marks tiers 1..N as scanned so partial and full
+# translation can be tested before the real Linguistic Module exists.
+action reveal:
+	int n
+	syntax:
+		"reveal [n]"
+
+do reveal:
+	if self.n <= 0:
+		scan_levels = []
+	if self.n == 1:
+		scan_levels = [1]
+	if self.n == 2:
+		scan_levels = [1, 2]
+	if self.n == 3:
+		scan_levels = [1, 2, 3]
+	if self.n == 4:
+		scan_levels = [1, 2, 3, 4]
+	if self.n >= 5:
+		scan_levels = [1, 2, 3, 4, 5]
+
+report reveal:
+	print "\[Linguistic model now covers tiers 1-[self.n].\]"

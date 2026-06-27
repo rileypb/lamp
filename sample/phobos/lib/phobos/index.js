@@ -41,3 +41,77 @@ function siriusian_word(word) {
 function siriusian(text) {
     return String(text).split(/\s+/).filter((w) => w.length > 0).map(siriusian_word).join("");
 }
+
+// --- Linguistic Module: progressive translation (ported from Siriusian.i7x) ------
+// A textual thing's `content` is rendered word by word. Each word has a difficulty
+// tier; a word translates to English once its tier has been scanned (its tier is in
+// the SiriusianLevels list), otherwise it shows as Siriusian glyphs. With nothing
+// scanned the whole text is alien — exactly the all-untranslated form siriusian()
+// already produces. Scanning (a later slice) is the only thing that adds tiers.
+
+function is_textual(x) {
+    return !!(x && x.textual);
+}
+
+// The difficulty tier of a content word (Siriusian.i7x "the difficulty of"). The
+// !/$/# prefixes mark proper-noun and control tiers (15/16/20) that fall outside the
+// 1-5 scan range; every other word hashes to a 1-5 tier by the sum of its lowercased
+// character codes, mod 5.
+function token_difficulty(word) {
+    const c0 = word.charAt(0);
+    if (c0 === "!") return 15;
+    if (c0 === "$") return 16;
+    if (c0 === "#") return 20;
+    let sum = 0;
+    const s = word.toLowerCase();
+    for (let i = 0; i < s.length; i += 1) sum += s.charCodeAt(i);
+    return (sum % 5) + 1;
+}
+
+// Render `x.content` through the translation filter at the current scan state
+// (English words bold, untranslated runs in fixed-width Siriusian). `/` tokens are
+// paragraph breaks; `*`-prefixed tokens are literal. Mirrors "print translated form
+// of (T - a thing)" — Siriusian words run together (no separating spaces), English
+// words are spaced, and `lastSiriusian` inserts the space when the stream switches
+// from a glyph run back to English. Emitted via write() (no per-sentence auto-break),
+// so only the `/` markers break the prose into paragraphs.
+function print_translated(x, levels) {
+    const tokens = String((x && x.content) || "").split(/\s+/).filter((w) => w.length > 0);
+    const scanned = lamplighter.listItems(levels).map(Number);
+    const numLevels = scanned.length;
+    const len = tokens.length;
+    let out = "";
+    let lastSiriusian = false;
+    for (let i = 0; i < len; i += 1) {
+        const w = tokens[i];
+        if (w === "/") {
+            out += lamplighter.outputMarker("par");
+            lastSiriusian = false;
+            continue;
+        }
+        if (w.charAt(0) === "*") {
+            out += lamplighter.styled("fixed", w.slice(1));
+            continue;
+        }
+        const cdl = token_difficulty(w);
+        const glyph = siriusian_word(w);
+        if (cdl === 15) {
+            out += lamplighter.styled("fixed", "<" + glyph + ">");
+            lastSiriusian = true;
+        } else if (cdl === 16 || (cdl === 20 && numLevels < 5)) {
+            out += lamplighter.styled("fixed", glyph);
+            lastSiriusian = true;
+        } else if (scanned.includes(cdl) || cdl === 20) {
+            const englishWord = w.charAt(0) === "#" ? w.slice(1) : w;
+            if (lastSiriusian) out += " ";
+            out += lamplighter.styled("bold", englishWord);
+            if (i !== len - 1) out += " ";
+            lastSiriusian = false;
+        } else {
+            out += lamplighter.styled("fixed", glyph);
+            lastSiriusian = true;
+        }
+    }
+    lamplighter.write(out);
+    lamplighter.write(lamplighter.outputMarker("line"));
+}

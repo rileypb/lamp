@@ -214,10 +214,18 @@ core edit is contained. Names (default): `contains`/`place`/`contained`, keyword
   `siriusian(text)` native in `sample/phobos/lib/phobos/index.js` (non-invertible:
   drop odd chars / shift-by-len / reverse / many-to-one glyphs); used as
   `[siriusian("…")]`; **the full Passage End description renders byte-for-byte like
-  the I7 transcript** (label + door-state conditional). Deferred: the **progressive
-  scan-level reveal** (Linguistic Module / KIM) and a regression test (the Phobos
-  sample isn't golden-discoverable — would need extending golden discovery to
-  `sample/<dir>/`). See `sample/phobos/PORTING.md` + memory `phobos-presentation`.
+  the I7 transcript** (label + door-state conditional). **Reading DONE (Linguistic
+  Module slice 1):** the **progressive scan-level reveal** is ported
+  (`lib/phobos/linguistics.lamp` + `print_translated`/`is_textual`): a `document`
+  (textual) type with `content`/`scan_level`; examine/read renders the content
+  word-by-word — each word translates to English once its difficulty tier is in the
+  global `scan_levels`, else fixed-width Siriusian (`!`/`$`/`#` = proper-noun/control
+  tiers that stay alien; `/` = paragraph break); emitted via `write()` so only `/`
+  breaks the prose. **Remaining (slice 2):** the **SCAN verb + Linguistic Module item**
+  that fills `scan_levels` (a temporary `reveal N` lever stands in now) + per-text
+  `scanned` guard. **Test gap:** the filter is phobos-lib-specific, so no golden yet
+  (the Phobos sample isn't golden-discoverable — would need extending golden discovery
+  to `sample/<dir>/`). See `sample/phobos/PORTING.md` + memory `phobos-presentation`.
 - **BUG: assignment to a bare object-name field target emits undefined JS.**
   `SomeObject.field = value` (where `SomeObject` is a bare object reference, not a
   local/global/`self`) emits `lamplighter.setField(SomeObject, …)` with
