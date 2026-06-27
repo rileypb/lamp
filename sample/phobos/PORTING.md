@@ -28,6 +28,13 @@ descriptions can't be ported verbatim. (Durable note also in agent memory
   every room/sign description. Mapping lives in `Siriusian.i7x` / `Texts.i7x`.
 - **Banner:** standard Inform format (title / "<headline> by <author>" / "Release N
   / serial / build"), not advent's "Version N <release>".
+- **Banner placement (TODO):** the starting banner appears **between the intro
+  narration and the Galaxy Jones reveal** — i.e. intro → banner → reveal → first
+  room. advent currently prints its banner *before* `startup_rules` (banner → intro
+  → reveal), so the order is wrong. Needs an advent seam: let the game trigger the
+  banner mid-narration (e.g. a callable `print_banner()` invoked from within the
+  startup sequence, with advent's auto-print made opt-out) rather than always
+  printing it first.
 
 ## story.ni walkthrough
 
