@@ -63,3 +63,9 @@ native function string fixed(string value)
 # game still restores consistently.
 native function void seed_random(int n)
 native function void randomize()
+
+# A uniform random integer in [0, n) — e.g. random(6) yields 0..5. Draws from the
+# same seeded, save/undo-captured RNG as randomized text, so a draw reproduces across
+# restore. n < 1 returns 0. The general randomness primitive; build higher-level
+# draws (dice, shuffles) in Lamp on top of it.
+native function int random(int n)

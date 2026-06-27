@@ -1,0 +1,32 @@
+# The `random(n)` native (lib/sys): a uniform int in [0, n), drawn from the engine's
+# seeded, save-captured RNG. Golden tests never reseed, so the default-seed stream is
+# deterministic and this output is stable. Also pins the edge contract: random(1) is
+# always 0, and n < 1 yields 0.
+
+lib advent
+
+game RandomTest:
+	start Room
+
+room Room:
+	description "A bare room."
+
+action roll:
+	syntax:
+		"roll"
+
+report roll:
+	let a = random(6)
+	let b = random(6)
+	let c = random(6)
+	print "Rolled [a + 1], [b + 1], [c + 1]."
+
+action edge:
+	syntax:
+		"edge"
+
+report edge:
+	let lo = random(1)
+	let zero = random(0)
+	let neg = random(0 - 5)
+	print "edge: [lo] [zero] [neg]."

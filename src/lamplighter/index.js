@@ -1865,6 +1865,14 @@ function randomizeRng() {
     rngState = (Date.now() ^ Math.floor(Math.random() * 0x100000000)) | 0;
 }
 
+// Lamp-facing bounded random: a uniform int in [0, n). Draws from the same seeded,
+// save/undo-captured stream as randomized text (so a draw is reproducible across
+// restore). n < 1 yields 0 (an empty range has no other sensible value).
+function randomInt(n) {
+    const bound = Number(n) | 0;
+    return bound < 1 ? 0 : rngInt(bound);
+}
+
 registerStateProvider({
     key: "rng",
     capture() {
@@ -2153,6 +2161,7 @@ module.exports = {
     pick,
     seedRandom,
     randomizeRng,
+    randomInt,
     divide,
     onEvent,
     registerActionRule,

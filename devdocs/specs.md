@@ -462,7 +462,10 @@ Built-in primitive types:
     modes (`MODE` optional, default no-repeat random); it returns one element. RNG
     control: **`seed_random(n)`** reseeds reproducibly, **`randomize()`** seeds from
     entropy for cross-playthrough variety (the default seed is fixed, so output is
-    deterministic until a game opts in). These read a
+    deterministic until a game opts in). **`random(n) → int`** draws a uniform integer
+    in `[0, n)` from the same seeded, save-captured stream (so a draw reproduces across
+    restore); `n < 1` yields `0`. It is the general randomness primitive — build dice,
+    shuffles, etc. in Lamp on top of it (e.g. a Fisher-Yates over a `list`). These read a
     **render-local context** that resets per render and is never saved. The
     world-model→locale contract for a referent is the optional fields
     `grammatical_person` (1/2/3, default 3), `gender` ("male"/"female"/"neuter"), and

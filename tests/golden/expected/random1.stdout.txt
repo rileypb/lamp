@@ -1,0 +1,13 @@
+Room
+A bare room.
+
+> roll
+Rolled 3, 1, 5.
+
+> roll
+Rolled 6, 1, 2.
+
+> edge
+edge: 0 0 0.
+
+> quit
