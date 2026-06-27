@@ -62,10 +62,25 @@ already on the engine roadmap in `TODO.md`.
   actions. Tracked: `TODO.md` item 2 (Parser v2 → out-of-world actions).
 - **Every-turn / timed rules** (the "autopower down rule"). Tracked: `TODO.md`
   item 2.
-- **Scoring / rank** (`Use scoring`, Score.i7x, Rank.i7x). Note: the *Galaxy
-  Banner* extension is part of this — it's **not** a title screen but an ASCII
-  graphic shown when the player scores a point. Now tracked in `TODO.md`
-  (Smaller / opportunistic).
+- **Scoring / rank** (`Use scoring`, Score.i7x, Rank.i7x). The custom phrase
+  `score N` (Score.i7x) does three things in order: **(1) prints the Galaxy
+  Banner** (a "Galaxy Jones" ASCII figlet — *not* a title screen, shown on every
+  point-gain), **(2) increases the score by N**, **(3) fires the standard score
+  notification** ("[Your score has just gone up by one point.]"). So each hack and
+  every other point lands the banner + notification. **The green-door hack is thus
+  only partly ported** — it opens the door but omits `score 1` (banner + score +
+  notification, which belong between the bypass message and "Galaxy retrieves the
+  KIM."). Deferred with scoring. Galaxy Banner.i7x also defines an **action banner**
+  and a **power banner** (other events). The galaxy banner art (Galaxy Banner.i7x):
+
+  ```
+   _________      __                     _____
+   __/ ____/___ _/ /___ __  ____  __     __/ /___  ____  ___  _____
+   _/ / __/ __ `/ / __ `/ |/ / / / /____ _/ / __ \/ __ \/ _ \/ ___/
+   / /_/ / /_/ / / /_/ />  </ /_/ / _/ /_/ / /_/ / / / /  __(__  )
+   \____/\__,_/_/\__,_/_/|_|\__, /  _\____/\____/_/ /_/\___/____/
+   _____________________________/
+  ```
 - **`search` action** and an **exit/enter** action. Not in advent.
 - **Author-named parser feedback** beyond the existing `parser_cant_see` /
   `parser_no_understand` messages (e.g. the "What should Galaxy …?" clarification).
@@ -115,8 +130,16 @@ description already in `base.lamp` predates this and will be revisited.
    KIM/scanning gameplay layer (item 7).
 4. **`feels` property + FEEL/TOUCH action** — nearly every object has a `feels`
    string. From `Can't Touch This.i7x`.
-5. **`hackable` + HACK action** — the lock-bypass verb that drives progression
-   (and unseals the doors). From `Actions.i7x` / `GJ Basics`.
+5. **HACK / the KIM — in progress** (from `KIM.i7x`). The KIM tool + `hack` verb +
+   the green door's instant bypass are done (`lib/phobos/hacking.lamp`): hacking it
+   opens it and `go north` works — but **only partly**: the real hack also runs
+   `score 1`, i.e. the Galaxy Banner + score notification (deferred with scoring;
+   see the Scoring note above). Each other door is a *different* modal button
+   mini-game (rules not explained): Lights-Out (yellow/red), sort-by-swap (blue),
+   4-toggle (locker), pick-5-of-16 (purple, needs the scan/control-code system).
+   **Blocked on the `press <n>` input** — the key is a number, but Lamp's parser
+   only resolves slots to in-scope objects (number/text slots are roadmap). Fork:
+   keys-as-objects (game-level) vs. number slots in the parser (engine).
 6. **Parts / components** — `X is a part of Y` (handprint scanners, screens,
    buttons, levers). advent has no part-of relation.
 7. **KIM / scanning** — `textual`, `scanning level N`, `content "…"`, the SCAN

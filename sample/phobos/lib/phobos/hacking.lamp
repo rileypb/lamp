@@ -1,0 +1,45 @@
+# Hacking (the KIM) — slice 1: the tool, the HACK verb, and the green door.
+#
+# The KIM ("Kovert Infiltration Matrix") is Galaxy's hacking tool. HACK <thing>
+# attaches it; for most doors that opens a button mini-game (deferred — needs the
+# modal `press <n>` mechanic, see PORTING.md), but the green door is a simple
+# instant bypass. Ported from KIM.i7x. (Scoring + the handprint-scanner parts are
+# deferred, so we hack the door directly.)
+
+item KIM:
+	printed_name "KIM"
+	description "The Kovert Infiltration Matrix, or KIM, is the state-of-the-art in breaching high-security facilities. Just HACK your target, and a few steps later, you'll be in! The KIM is a featureless black slab, roughly 4x5 inches in dimension, and an eighth of an inch thick."
+
+contains yourself KIM
+
+action hack:
+	item target
+	syntax:
+		"hack [target]"
+		"infiltrate [target]"
+		"breach [target]"
+		"break into [target]"
+
+before hack:
+	if not (holder(KIM) == self.actor):
+		print "Galaxy needs to be carrying the KIM to hack something."
+		stop failed
+
+# The green door: a trivial lock the KIM bypasses on its own. Opening it clears the
+# `closed` flag, so `go north` from Passage End now succeeds.
+# Use `self.target` (the guard proves it is the green door) for the field writes:
+# assigning to a bare-object-name target (`green_door.closed = …`) hits an emitter
+# bug — it emits the name as an undefined JS identifier. See TODO.
+instead hack when self.target == green_door:
+	if self.target.locked:
+		print "Galaxy attaches the KIM to the green door. The door's lock is a simple one, and the KIM quickly bypasses it without manual intervention. The door opens, revealing a corridor north.[par]Galaxy retrieves the KIM."
+		self.target.locked = false
+		self.target.closed = false
+	else:
+		print "Galaxy has already opened the door."
+	stop succeeded
+
+# Every other hackable target opens a button puzzle that isn't ported yet.
+instead hack:
+	print "Galaxy attempts to attach the KIM to [the act.target], but it fails to activate. Perhaps [the act.target] is not hackable?"
+	stop failed

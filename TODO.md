@@ -218,6 +218,27 @@ core edit is contained. Names (default): `contains`/`place`/`contained`, keyword
   scan-level reveal** (Linguistic Module / KIM) and a regression test (the Phobos
   sample isn't golden-discoverable — would need extending golden discovery to
   `sample/<dir>/`). See `sample/phobos/PORTING.md` + memory `phobos-presentation`.
+- **BUG: assignment to a bare object-name field target emits undefined JS.**
+  `SomeObject.field = value` (where `SomeObject` is a bare object reference, not a
+  local/global/`self`) emits `lamplighter.setField(SomeObject, …)` with
+  `SomeObject` as an undefined JS identifier → runtime `ReferenceError`. *Reads*
+  resolve correctly (`getObject(...)`); only the **assignment-target head**
+  doesn't. Fix: in `emitStatement`'s `AssignStatement` branch
+  (`src/lantern/emitter.js:822`), resolve an object-name head via `getObject` like
+  expression position does (thread the object-name set in). Workaround: bind to a
+  `let` or use `self.<slot>`. Found porting Phobos hacking.
+- **Hacking subsystem (Phobos port) — in progress.** The KIM tool + `hack` verb +
+  green-door instant bypass are done (`sample/phobos/lib/phobos/hacking.lamp`):
+  `hack green door` opens it and `go north` then works. **Blocker for the button
+  puzzles:** the modal `press <n>` input — the key is a *number*, but Lamp's parser
+  only resolves slots to in-scope **objects** (`[number]`/`[text]` slots are
+  roadmap, not built; `game_parser.md`). Decision pending: (A) model keypad keys as
+  objects (`press [key]`, key objects understanding "1".."16") — game-level, no
+  engine change; or (B) implement number/text action slots in the parser (engine,
+  general, on the roadmap). Then build the puzzle types: instant (green, done),
+  Lights-Out (yellow/red — per-door flip-sets + start state), sort-by-swap (blue),
+  4-toggle (locker), combination-select (purple — needs the scan/control-code
+  system, deferred). See `sample/phobos/PORTING.md`.
 - **Library file ordering / cross-file type topo-sort.** Lantern emits type
   definitions in file-glob (alphabetical) order with no cross-file topological
   sort, so a subtype declared in an alphabetically-earlier file than its parent
@@ -230,7 +251,14 @@ core edit is contained. Names (default): `contains`/`place`/`contained`, keyword
   `src/lantern/*`, `src/lamplighter/index.js`, devdocs.
 - **Scoring / rank subsystem (motivated by the Phobos port).** advent has no
   score or rank system; the Phobos I7 game uses `Use scoring` + Score.i7x +
-  Rank.i7x. Would need a `score` global, a points-award surface, and a
+  Rank.i7x. Phobos's `score N` phrase (Score.i7x) bundles three effects in order:
+  **print the Galaxy Banner** ("Galaxy Jones" ASCII figlet — shown on *every*
+  point-gain, e.g. each hack), **add N to the score**, **fire the score-change
+  notification** ("[Your score has just gone up by one point.]"). So a Lamp port
+  needs a `score` global + an award entry point that does banner + increment +
+  notify, plus a `SCORE` verb and rank-from-score. Galaxy Banner.i7x also has
+  action/power banners. The green-door hack is the first concrete caller (it omits
+  `score 1` today). Art + details in `sample/phobos/PORTING.md`. Would need a `score` global, a points-award surface, and a
   rank-from-score lookup, plus a status-line/`SCORE` verb surface. *Not yet
   designed.* Surfaced by `sample/phobos/PORTING.md`. **Where:** `lib/advent/`.
 - **Localization to French — in progress (`devdocs/i18n.md`).** Goal: a playable French
