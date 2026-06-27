@@ -1,0 +1,16 @@
+Room
+A bare room.
+
+> press 7
+Pressed 7 (x3 = 21).
+
+> press 100
+Pressed 100 (x3 = 300).
+
+> note hello there
+Noted: hello there.
+
+> press x
+You can't see any such thing.
+
+> quit

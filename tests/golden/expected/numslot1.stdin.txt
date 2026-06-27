@@ -1,0 +1,5 @@
+press 7
+press 100
+note hello there
+press x
+quit

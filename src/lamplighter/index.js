@@ -833,10 +833,38 @@ let pendingDisambiguation = null;
 //                   decides whether to backtrack to another grammar or report
 //                   the failure, so overlapping syntaxes (e.g. `go [way]` vs
 //                   `go to [room]`) can each get a chance to match.
+// An action slot may be a primitive type (`int`/`real`/`string`/`text`) rather
+// than an object type — `press [n]` with `int n`. Such a slot is filled from the
+// matched input tokens directly, not resolved against scope. `int`/`real` require a
+// single numeric token; a string/text slot takes the matched phrase verbatim.
+// Returns `undefined` when the tokens don't fit, so the slot reads as "unresolved"
+// and the parser falls through to the next grammar (game_parser.md typed tokens).
+const PRIMITIVE_SLOT_TYPES = new Set(["int", "real", "string", "text"]);
+
+function literalSlotValue(span, slotType) {
+    if (slotType === "string" || slotType === "text") {
+        return span.join(" ");
+    }
+    const toks = strippedPhraseTokens(span);
+    if (toks.length !== 1) return undefined;
+    if (slotType === "int") {
+        return /^-?\d+$/.test(toks[0]) ? parseInt(toks[0], 10) : undefined;
+    }
+    return /^-?\d+(\.\d+)?$/.test(toks[0]) ? parseFloat(toks[0]) : undefined;
+}
+
 function resolveSlots(slots, instance, scope, slotTypes) {
     const directSlot = (typeRegistry.get(instance.type) || {}).directSlot || null;
     for (let i = 0; i < slots.length; i++) {
         const [field, span] = slots[i];
+        if (PRIMITIVE_SLOT_TYPES.has(slotTypes[field])) {
+            const value = literalSlotValue(span, slotTypes[field]);
+            if (value === undefined) {
+                return "unresolved";
+            }
+            instance[field] = value;
+            continue;
+        }
         const candidates = resolveCandidates(span, resolvePool(slotTypes[field], scope), slotTypes[field]);
         if (candidates.length === 0) {
             return "unresolved";

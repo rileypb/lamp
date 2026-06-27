@@ -674,7 +674,12 @@ populating it.
   out-of-world actions.
 - **v3 — Inform-parity grammar.** `[things]`/`all`/`but`, multi-object actions,
   typed tokens (`[number]`, `[text]`, `[a direction]`), `Understand` synonym
-  generality, topic/conversation tokens.
+  generality, topic/conversation tokens. **Done so far:** primitive-typed slots —
+  an action slot declared `int`/`real`/`string`/`text` is filled from the matched
+  input tokens rather than resolved to an object (`int`/`real` need a single numeric
+  token; string/text take the matched phrase verbatim). Implemented in `resolveSlots`
+  (`literalSlotValue` + the `PRIMITIVE_SLOT_TYPES` branch); golden `numslot1`.
+  `[a direction]`, multi-object, and topic tokens remain.
 
 ## Worked example (target behavior)
 

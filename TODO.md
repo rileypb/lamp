@@ -229,16 +229,18 @@ core edit is contained. Names (default): `contains`/`place`/`contained`, keyword
   `let` or use `self.<slot>`. Found porting Phobos hacking.
 - **Hacking subsystem (Phobos port) — in progress.** The KIM tool + `hack` verb +
   green-door instant bypass are done (`sample/phobos/lib/phobos/hacking.lamp`):
-  `hack green door` opens it and `go north` then works. **Blocker for the button
-  puzzles:** the modal `press <n>` input — the key is a *number*, but Lamp's parser
-  only resolves slots to in-scope **objects** (`[number]`/`[text]` slots are
-  roadmap, not built; `game_parser.md`). Decision pending: (A) model keypad keys as
-  objects (`press [key]`, key objects understanding "1".."16") — game-level, no
-  engine change; or (B) implement number/text action slots in the parser (engine,
-  general, on the roadmap). Then build the puzzle types: instant (green, done),
-  Lights-Out (yellow/red — per-door flip-sets + start state), sort-by-swap (blue),
-  4-toggle (locker), combination-select (purple — needs the scan/control-code
-  system, deferred). See `sample/phobos/PORTING.md`.
+  `hack green door` opens it and `go north` then works. **`press <n>` input
+  unblocked (option B DONE):** primitive-typed action slots are implemented in the
+  parser (`resolveSlots`/`literalSlotValue`; golden `numslot1`; specs.md +
+  game_parser.md) — a slot declared `int`/`string`/etc. is filled from the input
+  tokens, so `press [n]` with `int n` works. **Next: build the puzzles** — a `press`
+  action gated on the KIM being adhered, plus per-target state + rules: Lights-Out
+  (yellow/red — per-door flip-sets + start state), sort-by-swap (blue), 4-toggle
+  (locker), pick-5-of-16 (purple — needs the scan/control-code system, deferred).
+  **Modeling note:** the button state (9/4/16 red-or-blue buttons) needs mutable
+  per-element storage; Lamp lists aren't element-assignable, so model buttons as
+  **objects** with a `bool` (toggle via `setField`) or use per-button globals. See
+  `sample/phobos/PORTING.md`.
 - **Library file ordering / cross-file type topo-sort.** Lantern emits type
   definitions in file-glob (alphabetical) order with no cross-file topological
   sort, so a subtype declared in an alphabetically-earlier file than its parent

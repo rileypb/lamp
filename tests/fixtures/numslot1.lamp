@@ -1,0 +1,27 @@
+# Primitive (non-object) action slots: a slot typed `int`/`string` is filled from
+# the matched input tokens directly, not resolved to an in-scope object.
+# (game_parser.md typed tokens — `[number]`/`[text]`.)
+
+lib advent
+
+game SlotTest:
+	start Room
+
+room Room:
+	description "A bare room."
+
+action press:
+	int n
+	syntax:
+		"press [n]"
+
+report press:
+	print "Pressed [self.n] (x3 = [self.n + self.n + self.n])."
+
+action note:
+	string words
+	syntax:
+		"note [words]"
+
+report note:
+	print "Noted: [self.words]."
