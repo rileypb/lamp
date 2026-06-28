@@ -196,6 +196,14 @@ core edit is contained. Names (default): `contains`/`place`/`contained`, keyword
 **Where:** `src/lantern/{tokenizer,parser_rd,emitter,checker}.js`, `src/lamplighter/index.js`, `lib/advent/*`, `devdocs/{relations,world-model}.md`.
 
 ## Smaller / opportunistic
+- **advent debug commands (Inform-style) — in progress** (`lib/advent/debug.lamp`).
+  Built on `out_of_world` + a new **`world_scope`** action modifier (object slots resolve
+  against every `physical` object, not just scope — parser/ast/emitter + runtime
+  `setWorldScope`; specs.md). **PURLOIN [thing] DONE:** pulls any item into inventory
+  wherever it is (another room, a closed container); golden `purloin1`. **Next debug verbs:**
+  GONEAR/GOTO (teleport), TREE/SCOPE (dump the object tree / what's in scope), SHOWME [thing]
+  (dump fields), ABSTRACT [thing] TO [holder]. **Gap:** no release-build flag yet to exclude
+  them from a shipped game (Inform's NOT-FOR-RELEASE) — they currently always load in advent.
 - ~~**Galaxy Suit + power-up (Phobos)**~~ **DONE** (`sample/phobos/lib/phobos/suit.lamp`):
   worn suit, POWER UP/DOWN, and a powered smash. The **ATTACK/HIT/SMASH/PUNCH verb is in
   advent** (any `item`; default declines via `attack_violence`; golden `attack1`); the suit

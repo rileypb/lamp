@@ -1065,14 +1065,15 @@ function createParser(tokens, filePath, globalNames, functionNames = new Set(), 
         let templates = [];
         let tags = [];
         let outOfWorld = false;
+        let worldScope = false;
         if (at("COLON")) {
             next();
             expectNewline();
-            ({ slots, templates, tags, outOfWorld } = parseActionBody());
+            ({ slots, templates, tags, outOfWorld, worldScope } = parseActionBody());
         } else {
             expectNewline();
         }
-        return ast.createActionDecl(name, slots, templates, filePath, keyword.line, tags, outOfWorld);
+        return ast.createActionDecl(name, slots, templates, filePath, keyword.line, tags, outOfWorld, worldScope);
     }
 
     // An action body holds slot field declarations, an optional `syntax:` block of
@@ -1084,6 +1085,7 @@ function createParser(tokens, filePath, globalNames, functionNames = new Set(), 
         let templates = [];
         const tags = [];
         let outOfWorld = false;
+        let worldScope = false;
         while (!at("DEDENT")) {
             if (peek().type === "IDENT" && peek().value === "syntax" && peek(1).type === "COLON") {
                 next();
@@ -1099,6 +1101,15 @@ function createParser(tokens, filePath, globalNames, functionNames = new Set(), 
                 next();
                 expectNewline();
                 outOfWorld = true;
+                continue;
+            }
+            // `world_scope` (a contextual keyword) makes the action's object slots resolve
+            // against every object in the world, not just the actor's scope — for debug
+            // verbs that reach unreachable things (PURLOIN, GONEAR, …). See specs.md.
+            if (peek().type === "IDENT" && peek().value === "world_scope") {
+                next();
+                expectNewline();
+                worldScope = true;
                 continue;
             }
             if (peek().type === "IDENT" && peek().value === "tags") {
@@ -1125,7 +1136,7 @@ function createParser(tokens, filePath, globalNames, functionNames = new Set(), 
             slots.push(ast.createFieldDecl(fieldType, fieldName, null, direct));
         }
         next();
-        return { slots, templates, tags, outOfWorld };
+        return { slots, templates, tags, outOfWorld, worldScope };
     }
 
     function parseSyntaxBlock() {

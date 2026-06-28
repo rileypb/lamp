@@ -597,6 +597,18 @@ function isOutOfWorld(actionName) {
     return !!(typeRegistry.get(actionName) || {}).outOfWorld;
 }
 
+// Mark an action `world_scope`: its object slots resolve against every object in the world
+// (all `physical` instances) rather than the actor's scope, so a debug verb can reach a
+// thing that is out of sight, sealed away, or in another room. See devdocs/specs.md.
+function setWorldScope(actionName) {
+    const type = typeRegistry.get(actionName);
+    if (!type) throw new Error(`setWorldScope: unknown action type "${actionName}"`);
+    type.worldScope = true;
+}
+function isWorldScope(actionName) {
+    return !!(typeRegistry.get(actionName) || {}).worldScope;
+}
+
 // Matches a token list against one template's parts. Literals must match
 // verbatim; a slot captures the run of tokens up to the next literal (or the
 // end). Returns a field -> token-span map, or null if the template does not
@@ -999,7 +1011,11 @@ function runCommand(line, actor) {
     for (const entry of grammarRegistry) {
         const matched = matchGrammar(entry.parts, tokens);
         if (!matched) continue;
-        const scope = scopeOf(actor);
+        // A `world_scope` action resolves its object slots against the whole world (every
+        // physical object), so a debug verb can name something out of scope.
+        const scope = isWorldScope(entry.actionName)
+            ? getInstancesForTypeAndSubtypes("physical")
+            : scopeOf(actor);
         const slotTypes = (typeRegistry.get(entry.actionName) || {}).fields || {};
         const instance = { type: entry.actionName, action: entry.actionName, actor };
         const status = resolveSlots(Object.entries(matched), instance, scope, slotTypes);
@@ -2232,6 +2248,7 @@ module.exports = {
     registerGrammar,
     setDirectSlot,
     setOutOfWorld,
+    setWorldScope,
     runCommand,
     playerCommand,
     registerChangeHandler,

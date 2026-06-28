@@ -1,0 +1,32 @@
+# PURLOIN (advent debug command): an `out_of_world` + `world_scope` action that pulls any
+# item into the player's hands, wherever it is — out of sight in another room, or sealed in
+# a closed container. Normal EXAMINE can't reach those (scope), but PURLOIN can. Being
+# out-of-world, it fires no every-turn rule (the tick advances on the in-world EXAMINE and
+# INVENTORY, never on a PURLOIN).
+
+lib advent
+
+game Purloin:
+	start Hall
+
+room Hall:
+	description "A bare hall."
+room Vault:
+	description "A locked vault."
+
+box safe:
+	closable true
+	closed true
+
+item gem
+item ledger
+
+contains Vault gem
+contains safe ledger
+contains Hall safe
+
+global int ticks = 0
+
+rule every_turn_rules:
+	ticks = ticks + 1
+	print "(tick [ticks])"

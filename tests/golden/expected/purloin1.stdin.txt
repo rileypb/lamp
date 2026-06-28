@@ -1,0 +1,6 @@
+examine gem
+purloin gem
+examine gem
+purloin ledger
+i
+quit

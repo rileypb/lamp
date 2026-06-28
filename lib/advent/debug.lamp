@@ -1,0 +1,20 @@
+# Debug commands (modeled on Inform 7's NOT-FOR-RELEASE testing verbs). They are
+# `out_of_world` (they spend no turn, take no undo checkpoint, and fire no every-turn rules)
+# and, where they name a thing, `world_scope` (they reach any object, not just what's in
+# scope). They are testing tools — a future release-build flag should exclude them.
+
+# PURLOIN [thing] — pull any item straight into the player's hands, wherever it is (out of
+# sight, sealed in a closed container, worn by someone, in another room). The standard way
+# to grab a thing a puzzle would otherwise gate.
+action purloin:
+	out_of_world
+	world_scope
+	direct item target
+	syntax:
+		"purloin [target]"
+
+do purloin:
+	move self.target to self.actor
+
+report purloin:
+	print purloin_report:"[The act.target]: purloined."

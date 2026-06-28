@@ -1,0 +1,27 @@
+Hall
+A bare hall.
+
+You see a safe here.
+
+> examine gem
+You can't see any such thing.
+
+> purloin gem
+The gem: purloined.
+
+> examine gem
+You see nothing unusual about the gem.
+
+(tick 1)
+
+> purloin ledger
+The ledger: purloined.
+
+> i
+You are carrying:
+  a gem
+  a ledger
+
+(tick 2)
+
+> quit

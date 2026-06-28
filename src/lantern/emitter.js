@@ -371,6 +371,9 @@ function emitProgram(programAst, options = {}) {
         if (actionNode.outOfWorld) {
             lines.push(`lamplighter.setOutOfWorld(${emitName(actionNode.name)});`);
         }
+        if (actionNode.worldScope) {
+            lines.push(`lamplighter.setWorldScope(${emitName(actionNode.name)});`);
+        }
     }
 
     // `understand "TEMPLATE" as ACTION` — an extra grammar phrasing for an action
