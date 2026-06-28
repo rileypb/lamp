@@ -1,0 +1,36 @@
+Hall
+A bare hall.
+
+You see a safe here.
+
+> showme gem
+gem (item)
+  location: safe
+  gender: "masculine"
+  initial_appearance: ""
+  handled: false
+  printed_name: ""
+  understand: ""
+  description: "A shiny gem."
+  supporter: false
+  scenery: false
+  wearable: false
+
+> showme safe
+safe (box)
+  location: Hall
+  gender: "masculine"
+  initial_appearance: ""
+  handled: false
+  locked: false
+  printed_name: ""
+  understand: ""
+  description: ""
+  supporter: false
+  scenery: false
+  wearable: false
+  closable: true
+  closed: true
+  contents: gem
+
+> quit

@@ -18,3 +18,19 @@ do purloin:
 
 report purloin:
 	print purloin_report:"[The act.target]: purloined."
+
+# SHOWME [thing] — dump a thing's identity, location, fields, and contents. `world_scope`,
+# so it inspects any object (a room, an item out of sight, …), and targets `physical` so it
+# reaches rooms too. The dump is a debug-formatted native string; `write` emits it verbatim.
+native function string describe_object(physical x)
+
+action showme:
+	out_of_world
+	world_scope
+	direct physical target
+	syntax:
+		"showme [target]"
+
+report showme:
+	write(describe_object(self.target))
+	write(line_break())

@@ -1,0 +1,3 @@
+showme gem
+showme safe
+quit

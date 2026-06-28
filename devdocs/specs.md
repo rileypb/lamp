@@ -1248,7 +1248,8 @@ slots then resolve against **every object in the world** (all `physical` instanc
 just the actor's scope — so the verb can name a thing that is out of sight, sealed in a
 closed container, worn by someone, or in another room. (Normal actions resolve only what is
 in scope, so `examine [thing]` can't reach those.) This is the model for debug verbs that
-manipulate arbitrary objects (**PURLOIN [thing]** moves any item into the player's hands;
+manipulate or inspect arbitrary objects (**PURLOIN [thing]** moves any item into the
+player's hands; **SHOWME [thing]** dumps an object's type, location, fields, and contents;
 GONEAR teleports). advent ships these in `lib/advent/debug.lamp` as `out_of_world` +
 `world_scope` actions; a future release-build flag should exclude them. The two modifiers
 are independent — an action may carry either, both, or neither.
