@@ -12,6 +12,9 @@ lib advent
 global bool powered_up = false
 global int charges_left = 3000
 global bool first_power_use = true
+# Set the turn POWER UP runs, so the every-turn auto-power-down skips that turn (the
+# suit must stay charged for the *next* action). Cleared by every_turn_rules.
+global bool powered_this_turn = false
 
 item galaxy_suit:
 	printed_name "Galaxy Suit"
@@ -51,9 +54,22 @@ check power_up:
 
 do power_up:
 	powered_up = true
+	powered_this_turn = true
 
 report power_up:
 	print "Galaxy powers up the Galaxy Suit."
+
+# Auto-power-down: a powered suit that isn't used powers down at the end of the turn
+# (ported from Powerup.i7x's every-turn rule). The power-up turn itself is skipped via
+# the flag, so the charge survives for the next action; ATTACK's use_charge() powers
+# down on use, so this only fires when the suit goes unused.
+rule every_turn_rules:
+	if powered_this_turn:
+		powered_this_turn = false
+	else:
+		if powered_up:
+			powered_up = false
+			print "Unused, the Galaxy Suit powers down."
 
 action power_down:
 	syntax:

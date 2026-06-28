@@ -50,7 +50,7 @@ descriptions can't be ported verbatim. (Durable note also in agent memory
 | story release / genre / description / year (L45–48) | bibliographic | **N/A for now** — no advent fields; kept `version 0 / release dev` (partial-port markers) |
 | Before looking for the first time (L85–86) | Galaxy Jones reveal beat | **Done** — appended to `startup_rules` (prints just before the first room description); `[bold type]`→`[bold]…[/bold]` |
 | `Use scoring` + Score/Rank (L5) | scoring subsystem | **Blocked** — advent has no score/rank system |
-| autopower down rule listed last (L95) | every-turn rule ordering | **Deferred** — Powerup ext ported (`suit.lamp`), but the every-turn auto-power-down still needs every-turn rules (TODO item 2); `use_charge` powers down after each smash, so the attack path is faithful |
+| autopower down rule listed last (L95) | every-turn rule ordering | **Done** — advent now has `every_turn_rules` (run_command returns turn-spent); `suit.lamp` wires the auto-power-down as an every-turn rule (skips the power-up turn via a flag) |
 | `Instead of searching: try examining` (L92) | redirect search→examine | **Blocked** — no `search` action in advent yet |
 | can't-exit response (A) (L97) | message override | **Blocked** — no exit/enter action in advent |
 | parser clarification response (E) (L119) | "What should Galaxy…" | **Blocked** — parser feedback not author-exposed by name |
@@ -178,10 +178,11 @@ not yet declared as examinable objects.
    with a force field), and anything not handled (unpowered, a non-door, an already-open
    door) falls through to advent's default. A `use_charge()` helper powers down,
    decrements, and prints the first-use no-points note. **Great for testing** — POWER UP
-   then ATTACK bypasses any door's hacking puzzle. **Deferred:** the every-turn "powers
-   down if unused" rule (needs every-turn rules — TODO item 2; `use_charge` covers the
-   attack path so power-up→attack is faithful), the power banner (with scoring), and the
-   locker-smash variant.
+   then ATTACK bypasses any door's hacking puzzle. The every-turn **auto-power-down** is
+   now wired (a powered-but-unused suit powers down next turn — "Unused, the Galaxy Suit
+   powers down."; the power-up turn is skipped via a flag), via advent's new
+   `every_turn_rules`. **Deferred:** the power banner (with scoring) and the locker-smash
+   variant.
 5. **HACK / the KIM — in progress** (from `KIM.i7x`). The KIM tool + `hack` verb,
    the green door (instant bypass), and the **yellow and red doors (Lights-Out
    keypads)** are done (`lib/phobos/hacking.lamp`): `press [n]` flips a hidden
