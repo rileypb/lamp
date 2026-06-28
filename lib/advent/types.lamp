@@ -64,8 +64,14 @@ type door < item:
 	room down = none
 
 type box < item, container:
+	# `closable` marks a container that responds to OPEN/CLOSE (a fixed-open or fixed-shut
+	# box leaves it false). `closed` is the live state; a closed box seals its contents out
+	# of scope. `locked` refuses OPEN ("seems to be locked") — there are no LOCK/UNLOCK verbs
+	# yet, so a game clears it through its own mechanism (e.g. a hack). See OPEN/CLOSE in
+	# actions.lamp.
 	bool closable
 	bool closed
+	bool locked = false
 
 type person < physical
 

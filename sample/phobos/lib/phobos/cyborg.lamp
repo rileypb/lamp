@@ -19,8 +19,8 @@ item cybercarapace:
 	initial_appearance "The sole remaining piece of equipment is a Cybercarapace."
 	description "The Cybercarapace is a piece of armor worn by Siriusian cyborgs on their torso and legs. Combined with the Cyberhelmet, it completes the transformation of the organic protocyborg into a full-fledged cyborg. This one is labeled '[siriusian(\"Cybercarapace Serial Number $NB563FFAA\")]'."
 
-# The Cyberhelmet sits in the North Barracks cabinet (opened in base.lamp, since OPEN/CLOSE
-# is deferred); the Cybercarapace is loose in the armory, behind the red door.
+# The Cyberhelmet sits in the North Barracks cabinet (OPEN it to reveal the helmet); the
+# Cybercarapace is loose in the armory, behind the red door.
 contains cabinet cyberhelmet
 contains armory cybercarapace
 

@@ -175,6 +175,73 @@ report failed doff:
 		print doff_not_worn:"You're not wearing that."
 		stop
 
+# OPEN / CLOSE for containers. The action takes any `item`; a `box` flagged `closable`
+# is openable (everything else refuses), and a `locked` box refuses to open — there are no
+# LOCK/UNLOCK verbs yet, so a game clears `locked` through its own mechanism (e.g. a hack).
+# Doors keep their own passage/hack mechanism and are not handled here. Opening reveals the
+# newly-visible contents (IF convention). The success reports use `[We] [open]/[close]`, so
+# they adapt to the story viewpoint ("You open …" / "She opens …").
+action open:
+	direct item target
+	syntax:
+		"open [target]"
+
+check open:
+	if not self.target.closable:
+		stop failed not_openable
+	if not self.target.closed:
+		stop failed already_open
+	if self.target.locked:
+		stop failed locked_shut
+
+do open:
+	self.target.closed = false
+
+report open:
+	# By report time the box is open, so contents_of returns its (now unsealed) contents.
+	let inner = contents_of(self.target)
+	if inner.first == none:
+		print open_report:"[We] [open] [the act.target]."
+	else:
+		print open_report_revealing:"[We] [open] [the act.target], revealing [render_contents(act.target)]."
+
+report failed open:
+	if self.reason == not_openable:
+		print open_not_openable:"That's not something you can open."
+		stop
+	if self.reason == already_open:
+		print open_already_open:"[The act.target] [is] already open."
+		stop
+	if self.reason == locked_shut:
+		print open_locked:"[The act.target] seems to be locked."
+		stop
+
+action close:
+	direct item target
+	syntax:
+		"close [target]"
+		"shut [target]"
+
+check close:
+	if not self.target.closable:
+		stop failed not_closable
+	if self.target.closed:
+		stop failed already_closed
+
+do close:
+	self.target.closed = true
+
+report close:
+	print close_report:"[We] [close] [the act.target]."
+
+report failed close:
+	if self.reason == not_closable:
+		print close_not_closable:"That's not something you can close."
+		stop
+	if self.reason == already_closed:
+		print close_already_closed:"[The act.target] [is] already closed."
+		stop
+
 action examine:
 	direct item target
 	syntax:

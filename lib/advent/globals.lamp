@@ -26,6 +26,11 @@ stop_reason already_worn
 stop_reason not_worn
 stop_reason too_dark
 stop_reason attack_pointless
+stop_reason not_openable
+stop_reason not_closable
+stop_reason already_open
+stop_reason already_closed
+stop_reason locked_shut
 
 # directions
 #

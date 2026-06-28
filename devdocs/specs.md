@@ -1730,8 +1730,8 @@ described below.
 | `physical` | `thing` | `article article` |
 | `room` | `container` | `string description`, `bool lighted` (default `true`), `string preposition` (default `"in"`), `bool always_indefinite` |
 | `item` | `physical` | `bool scenery`, `bool wearable`, `string initial_appearance` (default `""`), `bool handled` |
-| `box` | `item, container` | `bool closable`, `bool closed` |
-| `person` | `physical` | `container holder` |
+| `box` | `item, container` | `bool closable`, `bool closed`, `bool locked` |
+| `person` | `physical` | — |
 | `direction` | `thing` | `direction inverse`, `string understand` |
 | `door` | `item` | `bool closed=true`, `bool locked=false`, `bool lockable=true`, one `room` field per direction |
 
@@ -1796,6 +1796,22 @@ minus any not-yet-handled item that carries an `initial_appearance`; those items
 fully in **scope** (scope doesn't read `contents_of`), so they're examinable and takeable
 the whole time. The default empty `initial_appearance` leaves an item always listed
 normally, so existing games are unaffected.
+
+### Opening and closing containers
+
+advent provides **OPEN** and **CLOSE** (`shut`) actions over `box` containers. A box
+opts in with **`closable true`**; `closed` is its live state (a closed box seals its
+contents out of scope and out of listings, via the scope barrier and `contents_of`).
+The actions take any `item` and refuse a non-`closable` target ("That's not something you
+can open."). Opening **reveals** the newly-visible contents — "[We] [open] [the chest],
+revealing a coin." (an empty box just confirms; the success reports use the `[We] [open]`
+/ `[We] [close]` sugar, so they follow the story viewpoint). A **`locked`** box refuses to
+open ("[The box] seems to be locked.") — there are **no LOCK/UNLOCK verbs**; a game clears
+`locked` through its own mechanism (e.g. a hacking puzzle that unlocks a container without
+letting OPEN bypass it). Already-open/closed are reported. **Doors are out of scope** here
+— they keep their own passage/`go` and game-specific (hack) mechanism, and their
+`closed`/`locked` defaults differ from a box's. Refusal reasons:
+`not_openable`/`not_closable`/`already_open`/`already_closed`/`locked_shut`.
 
 ### Ending the story
 

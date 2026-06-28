@@ -1,0 +1,36 @@
+# OPEN / CLOSE for containers (lib/advent). A `box` flagged `closable` responds to OPEN/
+# CLOSE; opening reveals newly-visible contents and unseals them for scope, closing reseals.
+# A `locked` box refuses to open (no LOCK/UNLOCK verbs — a game clears `locked` itself); a
+# non-closable thing refuses entirely; already-open/closed are reported. The coin starts
+# sealed inside the closed chest, so it is neither listed nor reachable until the chest opens.
+
+lib advent
+
+game Open_Close:
+    author "Lamp"
+    start study
+
+room study:
+    description "A small panelled study."
+
+box chest:
+    closable true
+    closed true
+
+box strongbox:
+    closable true
+    closed true
+    locked true
+
+box crate:
+    closable true
+    closed true
+
+item coin
+item pebble
+
+contains study chest
+contains study strongbox
+contains study crate
+contains study pebble
+contains chest coin

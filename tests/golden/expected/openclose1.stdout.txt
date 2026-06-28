@@ -1,0 +1,36 @@
+study
+A small panelled study.
+
+You see a pebble, a chest, a strongbox and a crate here.
+
+> take coin
+You can't see any such thing.
+
+> open chest
+You open the chest, revealing a coin.
+
+> take coin
+Taken.
+
+> open chest
+The chest is already open.
+
+> close chest
+You close the chest.
+
+> open strongbox
+The strongbox seems to be locked.
+
+> open crate
+You open the crate.
+
+> close crate
+You close the crate.
+
+> close crate
+The crate is already closed.
+
+> open pebble
+That's not something you can open.
+
+> quit

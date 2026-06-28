@@ -333,6 +333,7 @@ do press when kim_adhered_to == locker:
 	if four_solved():
 		let lk = locker
 		lk.closed = false
+		lk.locked = false
 
 report press when kim_adhered_to == locker:
 	print "Galaxy presses button [self.n]. [run on]"

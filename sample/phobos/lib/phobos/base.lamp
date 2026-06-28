@@ -34,12 +34,15 @@ room North_Barracks:
 room South_Barracks:
 	description "Like most of the base, it's been cleared out. By one of the sleeping pods stands what could only be a storage locker, which is [if locker.closed]closed[else]open[end if][if not locker.closed and holder(diary) == locker]. A diary is inside the locker[end if]. The exit is to the north."
 
-# A scenery container, starts closed+sealed; the KIM's four-button puzzle opens it
-# (see lib/phobos/hacking.lamp). Closed, its contents (the diary) are hidden from both
-# the room listing and scope until the puzzle is solved.
+# A scenery container, starts closed + locked + sealed; the KIM's four-button puzzle opens
+# it (see lib/phobos/hacking.lamp), which clears `locked`. Closed, its contents (the diary)
+# are hidden from the room listing and scope. `closable` + `locked` so OPEN refuses it until
+# the hack unlocks it (no bypass), after which OPEN/CLOSE work normally.
 box locker:
 	scenery
+	closable true
 	closed true
+	locked true
 	description "In any language, it's pretty clear that this is a container meant to hold personal effects. It is labeled '[siriusian(\"!mfk5plas\")]'. [if locker.closed]It is closed.[else]It is open.[end if]"
 
 # A textual thing (see lib/phobos/linguistics.lamp): reading it renders the content
@@ -64,11 +67,12 @@ contains locker diary
 contains South_Barracks locker
 
 # North Barracks cabinet — a scenery container holding the Cyberhelmet (lib/phobos/
-# cyborg.lamp). It starts OPEN: OPEN/CLOSE actions aren't ported yet, and a closed box seals
-# its contents out of scope, so leaving it closed would make the helmet unreachable. Once
-# OPEN/CLOSE lands it can start closed again (the I7 default).
+# cyborg.lamp). Starts closed (sealing the helmet out of scope); the player OPENs it with
+# advent's OPEN verb, which reveals the helmet.
 box cabinet:
 	scenery
+	closable true
+	closed true
 	description "A cabinet stands against the wall, such as might hold equipment. It is [if cabinet.closed]closed[else]open[end if][if not cabinet.closed and holder(cyberhelmet) == cabinet], the silver Cyberhelmet resting inside[end if]."
 
 contains North_Barracks cabinet

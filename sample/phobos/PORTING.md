@@ -220,9 +220,8 @@ form and the Cyberhelmet are now real objects.)
    `initial_appearance`). Each `wear` is handled by an `after wear` rule that prints the
    item's own message (replacing advent's second-person default report — `after` runs before
    the report band and `stop`s it) and, once both are worn, the completion line "She is now
-   disguised as a Siriusian cyborg." The cabinet is **opened** (OPEN/CLOSE isn't ported and a
-   closed box seals its contents out of scope; the helmet is revealed in the room/cabinet
-   description). **Deferred:** the disguise *payoff* — the purple-door visual-identity gate
+   disguised as a Siriusian cyborg." The cabinet starts **closed**; the player OPENs it (see
+   the OPEN/CLOSE note below) to reveal the helmet. **Deferred:** the disguise *payoff* — the purple-door visual-identity gate
    and the guard interactions (with the endgame) — plus the helmet's translation/hearing
    effect, the examine-self disguise variants, and `feels`.
 5. **HACK / the KIM — in progress** (from `KIM.i7x`). The KIM tool + `hack` verb,
@@ -263,8 +262,12 @@ form and the Cyberhelmet are now real objects.)
    **all five textual documents** (form/diary/notebook/manual/log, tiers 1-5).
    Remaining is only the deferreds noted in item 3 (the `obscure`/`revealed` swap; the log's
    control-code tail with the purple-door system).
-8. **Open/close actions** for containers (cabinet, locker); advent's `box` has
-   `closed`/`closable` fields but no open/close *actions*.
+8. ~~**Open/close actions** for containers~~ **DONE (containers).** advent now has
+   **OPEN/CLOSE** (`shut`) over `box`es: opt in with `closable true`, opening reveals
+   newly-visible contents, a `locked` box refuses ("seems to be locked"). The cabinet
+   (`closable`/`closed`) and the locker (`closable`/`locked`, unlocked by the hack so OPEN
+   can't bypass the puzzle) use it. **Deferred:** LOCK/UNLOCK verbs, and OPEN/CLOSE on
+   **doors** (kept on their own passage/hack mechanism — revisit with the door work).
 9. **Vehicles / ENTER / enterable supporters** — Moon Sled, Siriusian ship,
    chair, pilot's seat; the ENTER verb, vehicles, sitting on supporters.
 10. **Scope/backdrop tricks** — `far away` (Mars, Stickney Crater), "place X in

@@ -201,13 +201,22 @@ core edit is contained. Names (default): `contains`/`place`/`contained`, keyword
   Barracks cabinet, carapace loose in the armory via `initial_appearance`), each with an
   `after wear` rule that prints its own message (replacing advent's 2nd-person default — `after`
   precedes and `stop`s the report band) plus the "She is now disguised as a Siriusian cyborg."
-  completion when both are worn. The cabinet is opened (no OPEN/CLOSE verb yet). **The
-  disguise payoff is the bigger Phobos blocker: the purple door → endgame** — the
+  completion when both are worn. The player OPENs the (closed) cabinet to reveal the helmet.
+  **The disguise payoff is the bigger Phobos blocker: the purple door → endgame** — the
   control-code puzzle (16-button select-5, clue from the fully-scanned commander's log + the
   Siriusian letter→button decoding), the visual-identity gate (now that the gear exists), the
   control room (launch/self-destruct/levers), and the **Guard** (60KB conversation/persuasion
   extension) that the two-lever self-destruct needs. Large; slice it. Deferred with it: the
-  helmet's translation effect, examine-self disguise variants, OPEN/CLOSE for the cabinet.
+  helmet's translation effect, examine-self disguise variants.
+- ~~**OPEN / CLOSE actions for containers (advent)**~~ **DONE**
+  (`lib/advent/actions.lamp`): OPEN/CLOSE (`shut`) over `box`es — opt in with `closable
+  true`; opening reveals newly-visible contents and unseals them for scope (closing
+  reseals), a `locked` box refuses ("seems to be locked"), already-open/closed and
+  non-openable are reported. Reports use `[We] [open]/[close]` (viewpoint-aware). Box gained
+  a `locked` field; golden `openclose1`; 170 green, byte-invariant. Phobos's cabinet and
+  locker use it (the locker stays `locked` until the hack clears it, so OPEN can't bypass the
+  puzzle). **Deferred:** LOCK/UNLOCK verbs and OPEN/CLOSE on **doors** (own go/hack
+  mechanism; different `closed`/`locked` defaults — revisit with the door work).
 - **`--encode-strings`: encode name literals inside inlined native JS (backlog).** Today
   the encoder rewrites name literals only in *emitter-emitted* code; strings inside a lib's
   `index.js` are inlined verbatim, so structural names a native references by literal stay

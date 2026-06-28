@@ -1,0 +1,11 @@
+take coin
+open chest
+take coin
+open chest
+close chest
+open strongbox
+open crate
+close crate
+close crate
+open pebble
+quit
