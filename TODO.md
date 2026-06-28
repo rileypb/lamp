@@ -202,15 +202,17 @@ core edit is contained. Names (default): `contains`/`place`/`contained`, keyword
   `after wear` rule that prints its own message (replacing advent's 2nd-person default — `after`
   precedes and `stop`s the report band) plus the "She is now disguised as a Siriusian cyborg."
   completion when both are worn. The player OPENs the (closed) cabinet to reveal the helmet.
-  **Purple door → endgame (the disguise payoff) — being sliced.** **Slice 1 DONE**
+  **Purple door → endgame (the disguise payoff) — being sliced.** **Slices 1+2 DONE**
   (`hacking.lamp`): the visual-identity gate (hacking the purple door needs both wearables)
   + the **16-button select-five keypad** (`press [n]`, toggle lit/dark, wrong-fifth resets,
-  the right five opens the door → the control room), with the control code **fixed to
-  {1,2,3,4,5}**. **Slice 2:** the random 5-number control-code generation + revealing it in
-  the fully-scanned commander's log (decode Siriusian glyphs → button numbers). **Later:**
-  the control room (launch/self-destruct/levers), and the **Guard** (60KB conversation/
-  persuasion extension) the two-lever self-destruct needs; scoring on solve. Also deferred:
-  the helmet's translation effect, examine-self disguise variants.
+  the right five opens the door → the control room). **Slice 2:** the code is **random**
+  (`ensure_control_parts` shuffles 1-16, takes five, lazily); each button has a distinct
+  Siriusian glyph, the **fully-scanned commander's log** reveals the five code glyphs, and the
+  **keypad shows every button's glyph** so the player decodes glyph → number by matching
+  (NOT-FOR-RELEASE `scanall` debug for testing). **Later:** the control room (launch/
+  self-destruct/levers), and the **Guard** (60KB conversation/persuasion extension) the
+  two-lever self-destruct needs; scoring on solve; the handprint-scanner as a real part-object.
+  Also deferred: the helmet's translation effect, examine-self disguise variants.
 - ~~**OPEN / CLOSE actions for containers (advent)**~~ **DONE**
   (`lib/advent/actions.lamp`): OPEN/CLOSE (`shut`) over `box`es — opt in with `closable
   true`; opening reveals newly-visible contents and unseals them for scope (closing
@@ -310,8 +312,8 @@ core edit is contained. Names (default): `contains`/`place`/`contained`, keyword
   (like document content) needs a string-returning translate function and would also convert
   the Passage End door label off `siriusian()`. Also: the in-prose sub-objects (signs, poster,
   reactor levers, control panel + launch/self-destruct buttons) as examinable objects; the
-  `obscure`/`revealed` real-name swap; the log's control-code tail
-  (with the purple-door system).
+  `obscure`/`revealed` real-name swap. (The log's control-code reveal is done — purple-door
+  slice 2.)
   ~~**Migration (native phobos JS → Lamp)**~~ **DONE** (memory
   `phobos-native-to-lamp-migration`). Phase 1: general lib/sys primitives `length`/
   `char_at`/`code_at`/`substring` (codepoint-based, 0-indexed) + the `mod`/`div` operators;

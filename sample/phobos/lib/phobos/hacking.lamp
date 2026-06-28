@@ -98,8 +98,8 @@ instead hack when self.target == locker:
 
 # The purple door: gated on the cyborg disguise (the scanner reads a "visual identity"),
 # then a 16-button select-five keypad (see below). The KIM only adheres while Galaxy wears
-# both the Cyberhelmet and the Cybercarapace. Slice 1 uses a fixed control code {1,2,3,4,5};
-# the random code + its commander's-log clue are a follow-up slice.
+# both the Cyberhelmet and the Cybercarapace. The control code is random; the player learns
+# it by fully scanning the commander's log (which reveals the five code glyphs).
 instead hack when self.target == purple_door:
 	if not self.target.locked:
 		print "The door is already unlocked."
@@ -109,10 +109,23 @@ instead hack when self.target == purple_door:
 		stop failed
 	kim_adhered_to = purple_door
 	sixteen_buttons = [false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false]
-	control_parts = [1, 2, 3, 4, 5]
+	ensure_control_parts()
 	print "The purple door beeps, and a voice says, '[siriusian(\"Visual identity confirmed\")].'[par]Galaxy attaches the KIM to the purple handprint scanner.[par]"
 	show_keypad_16()
 	print "Sixteen buttons, all dark. 'Light the right five,' Galaxy murmurs."
+	stop succeeded
+
+# Reading the commander's log: the textual content renders through the Linguistic filter
+# (linguistics.lamp's generic `instead examine when self.target.textual`), but once every
+# tier is scanned the log also yields the purple-door control code. This rule is more
+# specific and registers first (hacking.lamp loads before linguistics.lamp), so it handles
+# the log: it renders the prose, then — when fully scanned — prints the five code glyphs the
+# player matches against the keypad.
+instead examine when self.target == commanders_log:
+	print_translated(self.target, scan_levels)
+	if fully_scanned():
+		ensure_control_parts()
+		print "[par]The decoded security key reads: [fixed(control_code)]"
 	stop succeeded
 
 # Every other hackable target opens a puzzle that isn't ported yet.
@@ -368,11 +381,44 @@ report press when kim_adhered_to == locker:
 # Sixteen buttons, each dark (red) or lit (blue). Light exactly the five buttons whose
 # numbers are the control code (`control_parts`) to open the door. A fifth lit button that
 # doesn't complete the code beeps and resets every button to red; pressing a lit button
-# before then turns it back off. Slice 1 fixes the code to {1,2,3,4,5}.
+# before then turns it back off.
+#
+# The code is five distinct random buttons (1-16). Each button carries a distinct Siriusian
+# glyph (`button_glyphs`); the fully-scanned commander's log reveals the five code glyphs,
+# and the keypad shows every button's glyph, so the player decodes glyph → button number by
+# matching. Generated once (lazily, at the first hack or the first fully-scanned log read).
 global list<bool> sixteen_buttons = none
 global list<int> control_parts = none
+global string control_code = ""
+global bool code_generated = false
 # Whether the most recent press triggered a wrong-five reset (do → report signal).
 global bool purple_reset = false
+
+# Sixteen distinct glyphs, one per button (the keypad's "Siriusian numerals"). Drawn from
+# the cipher alphabet's non-aliasing glyphs (a-j + u-z; k-t alias a-j in siriusian_glyphs).
+global string button_glyphs = "ĹĺĻļĽľĿŀŁłЃΐſŧīı"
+
+function string button_glyph(int n):
+	return char_at(button_glyphs, n - 1)
+
+# All five tiers scanned? (the gate for revealing the code in the commander's log.)
+function bool fully_scanned():
+	for b in scan_levels:
+		if not b:
+			return false
+	return true
+
+# Pick the five-button control code once: shuffle 1-16, take the first five, and render
+# their glyphs as the code string the log will show.
+function void ensure_control_parts():
+	if not code_generated:
+		let all16 = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16]
+		shuffle(all16)
+		control_parts = [all16[0], all16[1], all16[2], all16[3], all16[4]]
+		control_code = ""
+		for i = 0 to 4:
+			control_code = control_code + button_glyph(control_parts[i])
+		code_generated = true
 
 function bool in_control_parts(int n):
 	for p in control_parts:
@@ -397,13 +443,15 @@ function int lit_count():
 			count = count + 1
 	return count
 
-# The keypad display: a dark button shows as [N], a lit one as <N>.
+# The keypad display: each button shows its number and Siriusian glyph (so the code glyphs
+# from the log can be matched to numbers). A dark button is [N glyph], a lit one <N glyph>.
 function void show_keypad_16():
 	for i = 1 to 16:
+		let g = button_glyph(i)
 		if sixteen_buttons[i - 1]:
-			print "<[i]>"
+			print "<[i] [g]>"
 		else:
-			print "\[[i]\]"
+			print "\[[i] [g]\]"
 	print "[line break]\[\] = red, <> = blue[par]"
 
 do press when kim_adhered_to == purple_door:
@@ -435,3 +483,16 @@ report press when kim_adhered_to == purple_door:
 			else:
 				print "Button [self.n] turns red.[par]"
 		show_keypad_16()
+
+# --- NOT FOR RELEASE ----------------------------------------------------------
+# Debug shortcut: complete the Linguistic Module's model (all five tiers scanned at once),
+# so the commander's log reveals the control code without collecting every document.
+action scanall:
+	syntax:
+		"scanall"
+
+do scanall:
+	scan_levels = [true, true, true, true, true]
+
+report scanall:
+	print "The Linguistic Module's model is now complete."

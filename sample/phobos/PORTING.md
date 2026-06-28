@@ -184,8 +184,11 @@ form and the Cyberhelmet are now real objects.)
    `item.initial_appearance` + a `handled` flag set on take, with `listable_contents` pulling
    not-yet-handled initial-appearance items out of the contents list (golden
    `initial_appearance1`). They stay in scope (examinable/takeable) the whole time.
-   **Deferred on the log:** the actual control-code value appended after "...is" — generated
-   by the (unported) purple-door control-code system; the sentence ends at "is" for now.
+   **Control-code reveal DONE (purple-door slice 2):** once all five tiers are scanned, the
+   log's `#`-security-key sentence resolves ("The new security key for control is") and a
+   dedicated examine rule (in `hacking.lamp`, which loads before `linguistics.lamp` so it
+   handles the log) appends "The decoded security key reads: <five glyphs>". Those glyphs are
+   the purple-door control code (see the purple-door note below).
    **Scanning DONE (slice 2):** the **SCAN verb + Linguistic Module item** (carried from
    start). `scan [target]` marks the text `scanned` and flips its tier on in `scan_levels`,
    so every text of that tier reads more clearly afterward. Guards: not-textual (a friendly
@@ -251,14 +254,18 @@ form and the Cyberhelmet are now real objects.)
    `contents_of` closed-check for listings + a core **scope-barrier seam**
    `registerScopeBarrier` so closed contents are out of scope; golden `closedbox1`).
    Chosen (author): the KIM.i7x 4-button puzzle, not Base.i7x's simple bypass.
-   **Purple door — slice 1 DONE:** a 16-button **select-five** keypad gated on the cyborg
+   **Purple door — slices 1+2 DONE:** a 16-button **select-five** keypad gated on the cyborg
    disguise. Hacking it checks that Galaxy wears both the **Cyberhelmet and Cybercarapace**
    ("Visual identity confirmed/not confirmed"); on confirm the KIM attaches and shows the
    keypad. `press [n]` (1-16) toggles a button lit/dark; lighting exactly the five
    `control_parts` opens the door (→ the control room), while a fifth wrong selection beeps
-   and resets all to red. The control code is **fixed to {1,2,3,4,5}** for now; the random
-   generation + the commander's-log clue (decode the Siriusian code glyphs → button numbers)
-   are **slice 2**. `read` is now a synonym for `examine` (advent), so reading the diary
+   and resets all to red. **Slice 2 (the clue):** the code is **random** — `ensure_control_parts`
+   shuffles 1-16 and takes five (lazily, at the first hack or fully-scanned log read). Each
+   button carries a distinct Siriusian glyph (`button_glyphs`, 16 non-aliasing cipher glyphs);
+   the **fully-scanned commander's log** reveals the five code glyphs, and the **keypad shows
+   every button's glyph**, so the player decodes glyph → button number by matching. A
+   NOT-FOR-RELEASE `scanall` debug (like `late`) completes the model for testing.
+   `read` is now a synonym for `examine` (advent), so reading the diary
    shows its description. Deferred for the locker: the sleeping-pod scenery and the
    `personal/effects/chest/trunk` synonyms.
    **Still partial:** every solve also runs `score 1` (Galaxy Banner + notification)
@@ -269,9 +276,9 @@ form and the Cyberhelmet are now real objects.)
 7. ~~**KIM / scanning (Linguistic Module) + all documents**~~ **DONE** (item 3 above):
    `textual`, `content`, `scan_level`, `scanned`; the per-tier translation filter +
    examine/read surface (slice 1), the SCAN verb + Linguistic Module item (slice 2), and
-   **all five textual documents** (form/diary/notebook/manual/log, tiers 1-5).
-   Remaining is only the deferreds noted in item 3 (the `obscure`/`revealed` swap; the log's
-   control-code tail with the purple-door system).
+   **all five textual documents** (form/diary/notebook/manual/log, tiers 1-5). The log's
+   control-code reveal is now wired (purple-door slice 2, above). Remaining is only the
+   `obscure`/`revealed` real-name swap noted in item 3.
 8. ~~**Open/close actions** for containers~~ **DONE (containers).** advent now has
    **OPEN/CLOSE** (`shut`) over `box`es: opt in with `closable true`, opening reveals
    newly-visible contents, a `locked` box refuses ("seems to be locked"). The cabinet
