@@ -213,10 +213,8 @@ action attack:
 check attack:
 	stop failed attack_pointless
 
-report failed attack:
-	if self.reason == attack_pointless:
-		print attack_violence:"Violence isn't the answer to this one."
-		stop
+report failed attack when self.reason == attack_pointless:
+	print attack_violence:"Violence isn't the answer to this one."
 
 action go:
 	direction way
