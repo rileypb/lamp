@@ -196,6 +196,18 @@ core edit is contained. Names (default): `contains`/`place`/`contained`, keyword
   **auto-power-down** is now wired (item 2's `every_turn_rules`; the power-up turn is
   skipped via a flag). Deferred: the power banner (rides on scoring) and the locker-smash
   variant.
+- ~~**Cyberhelmet + Cybercarapace (Phobos, Cyborg.i7x)**~~ **DONE (first slice)**
+  (`sample/phobos/lib/phobos/cyborg.lamp`): the two disguise wearables (helmet in the North
+  Barracks cabinet, carapace loose in the armory via `initial_appearance`), each with an
+  `after wear` rule that prints its own message (replacing advent's 2nd-person default — `after`
+  precedes and `stop`s the report band) plus the "She is now disguised as a Siriusian cyborg."
+  completion when both are worn. The cabinet is opened (no OPEN/CLOSE verb yet). **The
+  disguise payoff is the bigger Phobos blocker: the purple door → endgame** — the
+  control-code puzzle (16-button select-5, clue from the fully-scanned commander's log + the
+  Siriusian letter→button decoding), the visual-identity gate (now that the gear exists), the
+  control room (launch/self-destruct/levers), and the **Guard** (60KB conversation/persuasion
+  extension) that the two-lever self-destruct needs. Large; slice it. Deferred with it: the
+  helmet's translation effect, examine-self disguise variants, OPEN/CLOSE for the cabinet.
 - **`--encode-strings`: encode name literals inside inlined native JS (backlog).** Today
   the encoder rewrites name literals only in *emitter-emitted* code; strings inside a lib's
   `index.js` are inlined verbatim, so structural names a native references by literal stay
@@ -285,8 +297,8 @@ core edit is contained. Names (default): `contains`/`place`/`contained`, keyword
   labels are static-alien today and never translate; making them respond to `scan_levels`
   (like document content) needs a string-returning translate function and would also convert
   the Passage End door label off `siriusian()`. Also: the in-prose sub-objects (signs, poster,
-  reactor levers, control panel + launch/self-destruct buttons, the cabinet's Cyberhelmet) as
-  examinable objects; the `obscure`/`revealed` real-name swap; the log's control-code tail
+  reactor levers, control panel + launch/self-destruct buttons) as examinable objects; the
+  `obscure`/`revealed` real-name swap; the log's control-code tail
   (with the purple-door system).
   ~~**Migration (native phobos JS → Lamp)**~~ **DONE** (memory
   `phobos-native-to-lamp-migration`). Phase 1: general lib/sys primitives `length`/

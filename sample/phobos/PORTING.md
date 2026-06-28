@@ -113,9 +113,9 @@ unported purple door) all have descriptions in place.
 labels are static-alien and never translate; making them respond to scan level (like the
 diary content) needs a string-returning translate function and would also convert the
 Passage End door label off `siriusian()`. The in-prose **sub-objects** (door/west/store
-signs, the sign-out form, the poster, the reactor levers, the control panel + launch/
-self-destruct buttons, the cabinet's Cyberhelmet) are mentioned in description text but
-not yet declared as examinable objects.
+signs, the poster, the reactor levers, the control panel + launch/self-destruct buttons)
+are mentioned in description text but not yet declared as examinable objects. (The sign-out
+form and the Cyberhelmet are now real objects.)
 
 **Infrastructure Base.i7x needs that Lamp/advent lacks** (rough priority):
 
@@ -214,6 +214,17 @@ not yet declared as examinable objects.
    powers down."; the power-up turn is skipped via a flag), via advent's new
    `every_turn_rules`. **Deferred:** the power banner (with scoring) and the locker-smash
    variant.
+   ~~**Cyberhelmet + Cybercarapace (Cyborg.i7x)**~~ **DONE (first slice)**
+   (`lib/phobos/cyborg.lamp`): the two disguise wearables — the **Cyberhelmet** (in the
+   North Barracks cabinet) and **Cybercarapace** (loose in the armory, using the new
+   `initial_appearance`). Each `wear` is handled by an `after wear` rule that prints the
+   item's own message (replacing advent's second-person default report — `after` runs before
+   the report band and `stop`s it) and, once both are worn, the completion line "She is now
+   disguised as a Siriusian cyborg." The cabinet is **opened** (OPEN/CLOSE isn't ported and a
+   closed box seals its contents out of scope; the helmet is revealed in the room/cabinet
+   description). **Deferred:** the disguise *payoff* — the purple-door visual-identity gate
+   and the guard interactions (with the endgame) — plus the helmet's translation/hearing
+   effect, the examine-self disguise variants, and `feels`.
 5. **HACK / the KIM — in progress** (from `KIM.i7x`). The KIM tool + `hack` verb,
    the green door (instant bypass), and the **yellow and red doors (Lights-Out
    keypads)** are done (`lib/phobos/hacking.lamp`): `press [n]` flips a hidden

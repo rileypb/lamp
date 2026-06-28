@@ -1,0 +1,42 @@
+lib advent
+
+# The Cyberhelmet and Cybercarapace (ported from Cyborg.i7x): the two pieces of Siriusian
+# cyborg gear that, worn together, disguise Galaxy as a cyborg. This first slice ports them
+# as wearables with their wear messages and the "disguised" completion. The disguise's
+# payoff — the purple-door visual-identity gate and the guard interactions — is deferred
+# with the purple door / endgame, as is the helmet's translation/hearing effect.
+
+item cyberhelmet:
+	printed_name "Cyberhelmet"
+	understand "silver/helmet"
+	wearable
+	description "The Cyberhelmet is a silver helmet that looks just about the right size for Galaxy."
+
+item cybercarapace:
+	printed_name "Cybercarapace"
+	understand "armor/carapace"
+	wearable
+	initial_appearance "The sole remaining piece of equipment is a Cybercarapace."
+	description "The Cybercarapace is a piece of armor worn by Siriusian cyborgs on their torso and legs. Combined with the Cyberhelmet, it completes the transformation of the organic protocyborg into a full-fledged cyborg. This one is labeled '[siriusian(\"Cybercarapace Serial Number $NB563FFAA\")]'."
+
+# The Cyberhelmet sits in the North Barracks cabinet (opened in base.lamp, since OPEN/CLOSE
+# is deferred); the Cybercarapace is loose in the armory, behind the red door.
+contains cabinet cyberhelmet
+contains armory cybercarapace
+
+# Wearing either piece prints its own message and, once the pair is complete, the disguise
+# line — mirroring Cyborg.i7x's After/last-report rules. An `after` rule runs before the
+# report band and `stop`s it, so it replaces advent's default "You put on …" report (which
+# is also second-person — wrong for Phobos). At this point `do wear` has already asserted
+# the `wears` relation, so the other-piece check reflects the just-completed outfit.
+after wear when self.clothing == cyberhelmet:
+	print "Upon putting on the Cyberhelmet, Galaxy feels her mind expand. Something about her hearing is different than before."
+	if wears player cybercarapace:
+		print "[line break]She is now disguised as a Siriusian cyborg."
+	stop succeeded
+
+after wear when self.clothing == cybercarapace:
+	print "Galaxy puts on the Cybercarapace."
+	if wears player cyberhelmet:
+		print "[line break]She is now disguised as a Siriusian cyborg."
+	stop succeeded
