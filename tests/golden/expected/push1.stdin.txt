@@ -1,0 +1,5 @@
+push lever
+examine button
+push it
+push button
+quit

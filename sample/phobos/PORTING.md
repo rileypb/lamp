@@ -123,11 +123,16 @@ objects.)
 The six fixtures (central control panel, screens, control room chair, the collective buttons,
 the launch button, the self-destruct button) are scenery `item`s in `Control_Room` with their
 Base.i7x descriptions and synonyms (bare "button" disambiguates the three; "green"→launch,
-"red"→self-destruct, "controls"→panel). **Deferred:** advent has no part-of relation, so each
-is a standalone object rather than "part of" the panel; the `feels`/TOUCH strings (no TOUCH
-verb); SIT/enterable-supporter for the chair; and the **buttons' PRESS behaviour** — launch =
-the lose ending, self-destruct = the reactor-lever sequence — which ports with the Guard and
-the win/endgame (the reactor levers, flight deck, and ship are still unported).
+"red"→self-destruct, "controls"→panel). The generic **PUSH verb is in advent** (`push
+[target]`, any item, default "Nothing obvious happens."; `instead push` to respond), so the
+buttons are pushable — inert until their endgame `instead push` rules land. The Phobos keypad
+action was renamed **`press_key`** (was `press`) to keep PUSH (items) and PRESS (keypad keys)
+from colliding — faithful to Inform (KIM.i7x gates its "press [key]" to active hacking, while a
+button is pushed). **Deferred:** advent has no part-of relation, so each fixture is a standalone
+object rather than "part of" the panel; the `feels`/TOUCH strings (no TOUCH verb);
+SIT/enterable-supporter for the chair; and the buttons' specific **`instead push`** responses —
+launch = the lose ending, self-destruct = the reactor-lever sequence — which port with the Guard
+and the win/endgame (the reactor levers, flight deck, and ship are still unported).
 
 **Infrastructure Base.i7x needs that Lamp/advent lacks** (rough priority):
 

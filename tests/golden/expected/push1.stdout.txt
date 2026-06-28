@@ -1,0 +1,18 @@
+Room
+A bare room.
+
+You see a lever, a button and a hatch here.
+
+> push lever
+Nothing obvious happens.
+
+> examine button
+A red button.
+
+> push it
+The button clicks. A floor hatch slides open.
+
+> push button
+The button clicks, but nothing more happens.
+
+> quit

@@ -157,17 +157,17 @@ function void show_keypad_9():
 			print "\[[i]\]"
 	print "[line break]\[\] = red, <> = blue[par]"
 
-action press:
+action press_key:
 	int n
 	syntax:
 		"press [n]"
 
-before press:
+before press_key:
 	if kim_adhered_to == none:
 		print "Galaxy isn't hacking anything right now."
 		stop failed
 
-do press when kim_adhered_to == yellow_door:
+do press_key when kim_adhered_to == yellow_door:
 	if self.n < 1 or self.n > 9:
 		print "Use the digits 1-9."
 		stop failed
@@ -198,7 +198,7 @@ do press when kim_adhered_to == yellow_door:
 		yd.locked = false
 		yd.closed = false
 
-report press when kim_adhered_to == yellow_door:
+report press_key when kim_adhered_to == yellow_door:
 	print "Galaxy presses button [self.n].[par]"
 	show_keypad_9()
 	if nine_solved():
@@ -207,7 +207,7 @@ report press when kim_adhered_to == yellow_door:
 
 
 # --- Red door: a second nine-button keypad with its own hidden flip-sets ------
-do press when kim_adhered_to == red_door:
+do press_key when kim_adhered_to == red_door:
 	if self.n < 1 or self.n > 9:
 		print "Use the digits 1-9."
 		stop failed
@@ -238,7 +238,7 @@ do press when kim_adhered_to == red_door:
 		rd.locked = false
 		rd.closed = false
 
-report press when kim_adhered_to == red_door:
+report press_key when kim_adhered_to == red_door:
 	print "Galaxy presses button [self.n].[par]"
 	show_keypad_9()
 	if nine_solved():
@@ -290,7 +290,7 @@ function void show_keypad_blue():
 		print "  [n]  "
 	print "[line break]\[\] = red, <> = blue[par]"
 
-do press when kim_adhered_to == blue_door:
+do press_key when kim_adhered_to == blue_door:
 	if self.n < 1 or self.n > 9:
 		print "Use the digits 1-9."
 		stop failed
@@ -323,7 +323,7 @@ do press when kim_adhered_to == blue_door:
 		bd.locked = false
 		bd.closed = false
 
-report press when kim_adhered_to == blue_door:
+report press_key when kim_adhered_to == blue_door:
 	if blue_solved():
 		print "[par]As the final symbols switch places, the blue door to the east swings open! Galaxy retrieves the KIM."
 		kim_adhered_to = none
@@ -353,7 +353,7 @@ function void show_keypad_4():
 			print "\[[i]\]"
 	print "[line break]\[\] = red, <> = blue[par]"
 
-do press when kim_adhered_to == locker:
+do press_key when kim_adhered_to == locker:
 	if self.n < 1 or self.n > 4:
 		print "Use the digits 1-4."
 		stop failed
@@ -363,7 +363,7 @@ do press when kim_adhered_to == locker:
 		lk.closed = false
 		lk.locked = false
 
-report press when kim_adhered_to == locker:
+report press_key when kim_adhered_to == locker:
 	print "Galaxy presses button [self.n]. [run on]"
 	if four_buttons[self.n - 1]:
 		print "Button [self.n] turns blue."
@@ -454,7 +454,7 @@ function void show_keypad_16():
 			print "\[[i] [g]\]"
 	print "[line break]\[\] = red, <> = blue[par]"
 
-do press when kim_adhered_to == purple_door:
+do press_key when kim_adhered_to == purple_door:
 	if self.n < 1 or self.n > 16:
 		print "Use the numbers 1-16."
 		stop failed
@@ -469,7 +469,7 @@ do press when kim_adhered_to == purple_door:
 			sixteen_buttons = [false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false]
 			purple_reset = true
 
-report press when kim_adhered_to == purple_door:
+report press_key when kim_adhered_to == purple_door:
 	if purple_solved():
 		print "Galaxy presses button [self.n].[par]As the fifth button lights up blue, the purple door to the north swings open! Galaxy retrieves the KIM."
 		kim_adhered_to = none

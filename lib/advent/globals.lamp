@@ -31,6 +31,7 @@ stop_reason not_closable
 stop_reason already_open
 stop_reason already_closed
 stop_reason locked_shut
+stop_reason nothing_happens
 
 # directions
 #

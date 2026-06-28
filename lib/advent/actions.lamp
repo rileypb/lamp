@@ -286,6 +286,24 @@ check attack:
 report failed attack when self.reason == attack_pointless:
 	print attack_violence:"Violence isn't the answer to this one."
 
+# PUSH for buttons, switches and the like (Inform's "pushing a thing"). Like ATTACK, the
+# action *fails* by default — most things don't respond — so the default is a `report failed`
+# message and a game contributes `instead push` rules for the controls that do (e.g. a button
+# that fires a sequence; one that prints its own outcome stops with a bare `stop failed`,
+# leaving the default unprinted). The message is named, so a game or locale can retheme it.
+# (A game that needs a key-press grammar — "press 1" on a keypad — declares its own action;
+# see Phobos's `press_key`. PUSH stays the item verb so the two never collide.)
+action push:
+	direct item target
+	syntax:
+		"push [target]"
+
+check push:
+	stop failed nothing_happens
+
+report failed push when self.reason == nothing_happens:
+	print push_inert:"Nothing obvious happens."
+
 action go:
 	direction way
 	syntax:

@@ -253,11 +253,17 @@ core edit is contained. Names (default): `contains`/`place`/`contained`, keyword
   (`base.lamp`, Base.i7x "Book - Control Room"): the central control panel, screens, chair,
   collective buttons, and launch/self-destruct buttons ported as **scenery (EXAMINE only)** with
   their descriptions + synonyms (bare "button" disambiguates the three; green→launch,
-  red→self-destruct, controls→panel). Deferred: advent has no **part-of** relation (each is a
-  standalone object, not "part of" the panel), no **TOUCH**/`feels` verb, no **SIT**/enterable
-  supporter (the chair), and the buttons' **PRESS** behaviour (launch = the lose ending,
-  self-destruct = the reactor-lever sequence) — which ports with the endgame below. **Later:**
-  the buttons' PRESS endgame + the **reactor levers / flight deck / ship**, and the **Guard**
+  red→self-destruct, controls→panel). The generic **PUSH verb is now in advent** (`push
+  [target]`, any item; default "Nothing obvious happens."; `instead push` to respond; golden
+  `push1`) — so the control-room buttons are pushable, just inert until their endgame `instead
+  push` rules land. The Phobos keypad action was renamed **`press_key`** (was `press`) so PUSH
+  (items) and PRESS (keypad keys) never collide — faithful to Inform, where pushing understands
+  push/press but the keypad's "press [key]" is a separate, hacking-gated action. Deferred: advent
+  has no **part-of** relation (each fixture is a standalone object, not "part of" the panel), no
+  **TOUCH**/`feels` verb, no **SIT**/enterable supporter (the chair), and the buttons' specific
+  **`instead push`** responses (launch = the lose ending, self-destruct = the reactor-lever
+  sequence) — which port with the endgame below. **Later:**
+  the buttons' push endgame + the **reactor levers / flight deck / ship**, and the **Guard**
   (60KB conversation/persuasion extension) the two-lever self-destruct needs; scoring on solve;
   the handprint-scanner as a real part-object. Also deferred: the helmet's translation effect,
   examine-self disguise variants.
