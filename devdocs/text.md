@@ -544,6 +544,16 @@ is the "render context" proper.
    consistent. (This corrects the earlier offhand idea of putting "the RNG cursor" in
    the ephemeral context — an ephemeral cursor would re-shuffle after every restore.)
 
+   > **TODO — read-only render flag (not yet built).** Some renders are *inspections*,
+   > not real output, and must not advance site-durable state: SHOWME renders a field's
+   > template to display it (`lib/advent/index.js` `formatDebugValue` → `renderText`), and
+   > SAVE freezes text-thunk fields at capture (`encodeValue`). A `[first time]` or
+   > `[cycling]` field value would advance its counter/cursor as a side effect of merely
+   > looking at or saving it. Plan: a runtime global boolean (e.g. `renderReadOnly`) set
+   > around such evaluations; the site-advance helpers (`variationAdvance`/`variationPick`
+   > and the first-time counter) read the current state but **skip the mutation** when it
+   > is set. Tackle later.
+
 3. **Output-stream state.** Pending-break state (ensure-at-least N newlines) plus a
    **printed-since-break** flag for `[run on]` / `[par if printed]` (H2/H3) and the
    automatic breaks (H6: sentence punctuation + rulebook boundary) span *multiple*

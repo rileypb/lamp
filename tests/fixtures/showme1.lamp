@@ -1,8 +1,9 @@
 # SHOWME [thing] (advent debug command): dumps an object's identity, location, own fields,
 # and contents. It is `world_scope`, so it reaches a thing that is out of scope — here the
 # gem is sealed in the closed safe, yet SHOWME inspects it (and the safe lists it in
-# `contents`). Pins the dump format; an advent field-schema change will (correctly) require
-# re-running with --update.
+# `contents`). A field holding an interpolating template (the gem's `description`) is
+# rendered to its current text, not the raw thunk. Pins the dump format; an advent
+# field-schema change will (correctly) require re-running with --update.
 
 lib advent
 
@@ -17,7 +18,7 @@ box safe:
 	closed true
 
 item gem:
-	description "A shiny gem."
+	description "A shiny gem, [if safe.closed]still locked away[else]now free[end if]."
 
 contains safe gem
 contains Hall safe

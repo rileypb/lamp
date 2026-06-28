@@ -196,6 +196,15 @@ core edit is contained. Names (default): `contains`/`place`/`contained`, keyword
 **Where:** `src/lantern/{tokenizer,parser_rd,emitter,checker}.js`, `src/lamplighter/index.js`, `lib/advent/*`, `devdocs/{relations,world-model}.md`.
 
 ## Smaller / opportunistic
+- **Read-only render flag (text engine).** Some renders are *inspections*, not real output,
+  and must not advance site-durable state (`[first time]`/`[Nth time]` counters,
+  `[cycling]`/`[random]` cursors): **SHOWME** renders a field's template to display it
+  (`lib/advent/index.js` `formatDebugValue` → `renderText`), and **SAVE** freezes text-thunk
+  fields at capture (`encodeValue`). A stateful field value would advance as a side effect of
+  merely inspecting or saving it. Plan: a runtime global boolean (e.g. `renderReadOnly`) set
+  around such evaluations; the site-advance helpers (`variationAdvance`/`variationPick`, the
+  first-time counter) read state but skip the mutation when set. Surfaced by SHOWME; deferred.
+  See `devdocs/text.md` ("read-only render flag").
 - **advent debug commands (Inform-style) — in progress** (`lib/advent/debug.lamp`).
   Built on `out_of_world` + a new **`world_scope`** action modifier (object slots resolve
   against every `physical` object, not just scope — parser/ast/emitter + runtime

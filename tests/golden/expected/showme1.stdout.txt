@@ -11,7 +11,7 @@ gem (item)
   handled: false
   printed_name: ""
   understand: ""
-  description: "A shiny gem."
+  description: "A shiny gem, still locked away."
   supporter: false
   scenery: false
   wearable: false
