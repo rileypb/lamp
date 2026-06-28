@@ -249,10 +249,18 @@ core edit is contained. Names (default): `contains`/`place`/`contained`, keyword
   (`ensure_control_parts` shuffles 1-16, takes five, lazily); each button has a distinct
   Siriusian glyph, the **fully-scanned commander's log** reveals the five code glyphs, and the
   **keypad shows every button's glyph** so the player decodes glyph → number by matching
-  (NOT-FOR-RELEASE `scanall` debug for testing). **Later:** the control room (launch/
-  self-destruct/levers), and the **Guard** (60KB conversation/persuasion extension) the
-  two-lever self-destruct needs; scoring on solve; the handprint-scanner as a real part-object.
-  Also deferred: the helmet's translation effect, examine-self disguise variants.
+  (NOT-FOR-RELEASE `scanall` debug for testing). **Control Room furniture DONE**
+  (`base.lamp`, Base.i7x "Book - Control Room"): the central control panel, screens, chair,
+  collective buttons, and launch/self-destruct buttons ported as **scenery (EXAMINE only)** with
+  their descriptions + synonyms (bare "button" disambiguates the three; green→launch,
+  red→self-destruct, controls→panel). Deferred: advent has no **part-of** relation (each is a
+  standalone object, not "part of" the panel), no **TOUCH**/`feels` verb, no **SIT**/enterable
+  supporter (the chair), and the buttons' **PRESS** behaviour (launch = the lose ending,
+  self-destruct = the reactor-lever sequence) — which ports with the endgame below. **Later:**
+  the buttons' PRESS endgame + the **reactor levers / flight deck / ship**, and the **Guard**
+  (60KB conversation/persuasion extension) the two-lever self-destruct needs; scoring on solve;
+  the handprint-scanner as a real part-object. Also deferred: the helmet's translation effect,
+  examine-self disguise variants.
 - ~~**OPEN / CLOSE actions for containers (advent)**~~ **DONE**
   (`lib/advent/actions.lamp`): OPEN/CLOSE (`shut`) over `box`es — opt in with `closable
   true`; opening reveals newly-visible contents and unseals them for scope (closing
@@ -350,10 +358,11 @@ core edit is contained. Names (default): `contains`/`place`/`contained`, keyword
   so its conditional resolves. **Remaining:** **scan-aware Siriusian labels** — room/door
   labels are static-alien today and never translate; making them respond to `scan_levels`
   (like document content) needs a string-returning translate function and would also convert
-  the Passage End door label off `siriusian()`. Also: the in-prose sub-objects (signs, poster,
-  reactor levers, control panel + launch/self-destruct buttons) as examinable objects; the
-  `obscure`/`revealed` real-name swap. (The log's control-code reveal is done — purple-door
-  slice 2.)
+  the Passage End door label off `siriusian()`. Also: the remaining in-prose sub-objects (signs,
+  poster, reactor levers) as examinable objects; the `obscure`/`revealed` real-name swap. (The
+  log's control-code reveal is done — purple-door slice 2. The **Control Room furniture** —
+  central control panel, screens, chair, launch/self-destruct buttons — is now ported as
+  examinable scenery; see the cyborg/endgame item.)
   ~~**Migration (native phobos JS → Lamp)**~~ **DONE** (memory
   `phobos-native-to-lamp-migration`). Phase 1: general lib/sys primitives `length`/
   `char_at`/`code_at`/`substring` (codepoint-based, 0-indexed) + the `mod`/`div` operators;

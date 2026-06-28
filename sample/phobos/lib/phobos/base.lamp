@@ -212,3 +212,47 @@ item commanders_log:
 	content "Commander's Log, 34269 / !mfk5plas continues to be a problem. I trust them completely, but their kind of free-thinking can infect entire crews and sap their will. I spoke with them today and I believe I may have gotten through to them. I've assigned them to take final watch before launch, which they surely think of as a punishment, but which I hope they will come to understand is my gesture of faith in them as a soldier. / And my penance. May they never find out that I am the one who ordered the death of !Cleopatra. They may be loyal to the Syndicate, but loyalty has its limits. / We can't be done with this soon enough. Spending this much time in the $stupid rats['] home system makes me feel dirty. Let's wipe Mars out of existence and get out of here. / Important: #The #new #security #key #for #control #is"
 
 contains Commanders_Quarters commanders_log
+
+# --- Control Room furniture (Base.i7x "Book - Control Room") ------------------
+# The control room's fixtures, ported as plain scenery (EXAMINE only). I7 models the
+# screens/buttons/launch/self-destruct as "part of" the central control panel and the
+# chair as an enterable supporter; advent has neither part-of nor SIT yet, so each is a
+# standalone scenery item reachable by its own synonyms. The `feels`/touch strings are
+# deferred (no TOUCH verb). The buttons' PRESS behaviour — and the launch/self-destruct
+# endgame it triggers — is deferred with the Guard and the win sequence.
+#
+# Shared vocabulary mirrors I7: the bare word "button" matches all three button objects
+# (so EXAMINE BUTTON disambiguates), while "buttons" resolves to the collective, "green"
+# to launch, and "red" to self-destruct.
+item central_control_panel:
+	scenery
+	understand "controls"
+	description "This bank of buttons, switches and screens is the heart of the base's control system. A large green button marked '[siriusian(\"Launch\")]' and a large red button marked '[siriusian(\"Self-Destruct\")]' stand out among the rest."
+item screens:
+	scenery
+	understand "screen"
+	description "The screens display various information about the base's systems, including power levels, security status, and environmental controls."
+item control_room_chair:
+	scenery
+	understand "chair"
+	description "If this chair proves nothing else, it's that humans and Siriusians have very comparable buttocks."
+item buttons:
+	scenery
+	understand "switch/switches/button"
+	description "These buttons and switches are far beyond Galaxy's understanding, but they are clearly part of the base's control system. Two large buttons stand out: a green launch button and a red self-destruct button."
+item launch_button:
+	scenery
+	understand "green/button"
+	description "A big green button marked '[siriusian(\"Launch\")]'. Presumably, pressing it will fire the base's thruster, propelling Phobos towards Mars."
+item self_destruct_button:
+	printed_name "self-destruct button"
+	scenery
+	understand "red/selfdestruct/self-destruct/button"
+	description "A big red button marked '[siriusian(\"Self-Destruct\")]'. Presumably, pressing it will initiate the base's self-destruct sequence."
+
+contains Control_Room central_control_panel
+contains Control_Room screens
+contains Control_Room control_room_chair
+contains Control_Room buttons
+contains Control_Room launch_button
+contains Control_Room self_destruct_button

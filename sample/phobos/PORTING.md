@@ -113,10 +113,21 @@ descriptions in place.
 **Deferred (room-description follow-ups):** **scan-aware Siriusian labels** — today the
 labels are static-alien and never translate; making them respond to scan level (like the
 diary content) needs a string-returning translate function and would also convert the
-Passage End door label off `siriusian()`. The in-prose **sub-objects** (door/west/store
-signs, the poster, the reactor levers, the control panel + launch/self-destruct buttons)
-are mentioned in description text but not yet declared as examinable objects. (The sign-out
-form and the Cyberhelmet are now real objects.)
+Passage End door label off `siriusian()`. The remaining in-prose **sub-objects** (door/west/store
+signs, the poster, the reactor levers) are mentioned in description text but not yet declared
+as examinable objects. (The sign-out form, the Cyberhelmet, and now the **Control Room
+furniture** — central control panel, screens, chair, launch/self-destruct buttons — are real
+objects.)
+
+**Control Room furniture (Base.i7x "Book - Control Room"): ported as scenery (EXAMINE only).**
+The six fixtures (central control panel, screens, control room chair, the collective buttons,
+the launch button, the self-destruct button) are scenery `item`s in `Control_Room` with their
+Base.i7x descriptions and synonyms (bare "button" disambiguates the three; "green"→launch,
+"red"→self-destruct, "controls"→panel). **Deferred:** advent has no part-of relation, so each
+is a standalone object rather than "part of" the panel; the `feels`/TOUCH strings (no TOUCH
+verb); SIT/enterable-supporter for the chair; and the **buttons' PRESS behaviour** — launch =
+the lose ending, self-destruct = the reactor-lever sequence — which ports with the Guard and
+the win/endgame (the reactor levers, flight deck, and ship are still unported).
 
 **Infrastructure Base.i7x needs that Lamp/advent lacks** (rough priority):
 
