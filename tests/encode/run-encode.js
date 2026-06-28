@@ -93,10 +93,14 @@ for (const { game, leaks } of cases) {
         const plain = fs.readFileSync(plainPath, "utf8");
         assert.ok(enc.includes("lamplighter.decode("), "no decode() wrapping found");
         // No emitter-emitted registration/lookup call carries a plaintext first
-        // arg. Excludes getGlobal/type, which inlined native JS legitimately calls
-        // with plaintext names (the documented native-`index.js` limitation).
+        // arg. Excludes the calls that inlined native JS legitimately makes with
+        // plaintext names — the documented native-`index.js` limitation (the emitter
+        // does not rewrite native JS; see devdocs/lighthouse.md): `getGlobal`/`type`
+        // (formatter + viewpoint + contents_of), and `addRelation`/`queryRelationValue`
+        // (advent's `wire_doors`/door scope-provider use `connects`/`doorway`). The
+        // emitter-side encoding of relation names is still asserted via `defineRelation`.
         assert.ok(
-            !/(defineType|defineRelation|createObject|getObject|defineGlobal|setGlobal|registerGrammar|registerActionRule|runAction|addRelation|removeRelation|queryRelation|queryRelationValue|registerChangeHandler|registerRelationAddHandler|registerRelationRemoveHandler)\("[ -~]+"/.test(enc),
+            !/(defineType|defineRelation|createObject|getObject|defineGlobal|setGlobal|registerGrammar|registerActionRule|runAction|removeRelation|queryRelation|registerChangeHandler|registerRelationAddHandler|registerRelationRemoveHandler)\("[ -~]+"/.test(enc),
             "type/relation/object/global/action names should be encoded, not plaintext",
         );
         // Field-name keys stay plaintext (schema/object literal keys).

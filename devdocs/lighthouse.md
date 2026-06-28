@@ -127,7 +127,13 @@ phrasing) at every reference site — as `lamplighter.decode("…")` over an
 XOR+base64 payload (`src/strcodec.js`); kind names, enum labels, rulebook/event
 names, and field keys stay plaintext. Strings inside a native library's
 `index.js` are not encoded (the emitter does not rewrite native JS), so a name a
-native lib references by literal still leaks. Encoding names is safe because `decode` runs at load, so the
+native lib references by literal still leaks — in `lib/advent` today: the relation
+names `connects`/`doorway` (the door subsystem's `wire_doors`/scope-provider), the
+type names `door`/`item` (`type("…")` lookups), and the `oxford comma`/`viewpoint …`
+globals (the list formatter + viewpoint). These are framework names identical across
+every advent game, not author content, so they reveal nothing game-specific; the
+author's prose and own names are still encoded. (Closing this gap — encoding the
+name literals inside inlined native JS — is backlogged; see TODO.) Encoding names is safe because `decode` runs at load, so the
 runtime registry keys are unchanged. It is **not** security — the decoder and key
 ship in the same bundle, so it only raises the bar against casual `view-source`
 snooping (note: strings inside native `index.js` are not encoded). Off by

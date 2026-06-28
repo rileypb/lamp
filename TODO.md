@@ -179,6 +179,23 @@ core edit is contained. Names (default): `contains`/`place`/`contained`, keyword
 **Where:** `src/lantern/{tokenizer,parser_rd,emitter,checker}.js`, `src/lamplighter/index.js`, `lib/advent/*`, `devdocs/{relations,world-model}.md`.
 
 ## Smaller / opportunistic
+- **`--encode-strings`: encode name literals inside inlined native JS (backlog).** Today
+  the encoder rewrites name literals only in *emitter-emitted* code; strings inside a lib's
+  `index.js` are inlined verbatim, so structural names a native references by literal stay
+  plaintext in the encoded build (in `lib/advent`: relation names `connects`/`doorway` via
+  `wire_doors`/the door scope-provider, type names `door`/`item`, and the `oxford comma`/
+  `viewpoint …` globals). **Not a runtime bug** (names decode back to the same plaintext
+  registry keys at load, so encoded doored games run fine) and **not author content** (only
+  framework names leak; the game's prose + own names are encoded) — accepted + documented in
+  `devdocs/lighthouse.md`, and the encode test (`tests/encode/run-encode.js`) excludes the
+  native-called verbs (`getGlobal`/`type`/`addRelation`/`queryRelationValue`). **To close
+  it:** either (1) **targeted literal substitution** in the inlined native source using the
+  encoder's existing name→code map (fragile — risks matching a name in a native comment/
+  unrelated string, and breaks the "native JS is verbatim" contract; would need careful
+  scoping/tests), or (2) **runtime indirection** so natives reference relations/types by an
+  opaque handle instead of a name literal (cleaner, broader native↔runtime API refactor).
+  **Where:** `src/lantern/emitter.js` + `src/strcodec.js` (option 1), or the
+  `lamplighter` native API (option 2).
 - ~~**Door subsystem for advent (Phobos port).**~~ **DONE.** A `door` type (in
   `types.lamp`, after its parent `item`) declares its two sides as `<direction>
   <room>` fields (destination semantics — `north RoomB` = "go north to reach it");
