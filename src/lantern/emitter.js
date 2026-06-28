@@ -368,6 +368,9 @@ function emitProgram(programAst, options = {}) {
         if (directSlot) {
             lines.push(`lamplighter.setDirectSlot(${emitName(actionNode.name)}, ${JSON.stringify(directSlot.fieldName)});`);
         }
+        if (actionNode.outOfWorld) {
+            lines.push(`lamplighter.setOutOfWorld(${emitName(actionNode.name)});`);
+        }
     }
 
     // `understand "TEMPLATE" as ACTION` — an extra grammar phrasing for an action

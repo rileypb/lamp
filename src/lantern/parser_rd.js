@@ -1064,14 +1064,15 @@ function createParser(tokens, filePath, globalNames, functionNames = new Set(), 
         let slots = [];
         let templates = [];
         let tags = [];
+        let outOfWorld = false;
         if (at("COLON")) {
             next();
             expectNewline();
-            ({ slots, templates, tags } = parseActionBody());
+            ({ slots, templates, tags, outOfWorld } = parseActionBody());
         } else {
             expectNewline();
         }
-        return ast.createActionDecl(name, slots, templates, filePath, keyword.line, tags);
+        return ast.createActionDecl(name, slots, templates, filePath, keyword.line, tags, outOfWorld);
     }
 
     // An action body holds slot field declarations, an optional `syntax:` block of
@@ -1082,12 +1083,22 @@ function createParser(tokens, filePath, globalNames, functionNames = new Set(), 
         const slots = [];
         let templates = [];
         const tags = [];
+        let outOfWorld = false;
         while (!at("DEDENT")) {
             if (peek().type === "IDENT" && peek().value === "syntax" && peek(1).type === "COLON") {
                 next();
                 next();
                 expectNewline();
                 templates = parseSyntaxBlock();
+                continue;
+            }
+            // `out_of_world` (a contextual keyword, like `syntax`/`tags`) marks an action
+            // that bypasses the turn clock: it takes no turn, no undo checkpoint, and fires
+            // no every-turn rules — for meta/debug verbs (SCORE, SHOWME, …). See specs.md.
+            if (peek().type === "IDENT" && peek().value === "out_of_world") {
+                next();
+                expectNewline();
+                outOfWorld = true;
                 continue;
             }
             if (peek().type === "IDENT" && peek().value === "tags") {
@@ -1114,7 +1125,7 @@ function createParser(tokens, filePath, globalNames, functionNames = new Set(), 
             slots.push(ast.createFieldDecl(fieldType, fieldName, null, direct));
         }
         next();
-        return { slots, templates, tags };
+        return { slots, templates, tags, outOfWorld };
     }
 
     function parseSyntaxBlock() {

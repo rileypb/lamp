@@ -1,0 +1,17 @@
+Room
+A bare room.
+
+> wait
+Time passes.
+
+(tick 1)
+
+> score
+Your score is 7.
+
+> wait
+Time passes.
+
+(tick 2)
+
+> quit

@@ -1,0 +1,34 @@
+# `out of world` actions (specs.md): an action marked `out_of_world` runs normally (its
+# bands fire) but bypasses the turn clock — it spends no turn, so the command loop's
+# every-turn rules do not fire for it (and it takes no undo checkpoint). Here SCORE is
+# out-of-world and WAIT is a normal turn: the per-turn tick advances on WAIT but not on
+# SCORE, so after two WAITs the tick count is 2, not 3.
+
+lib advent
+
+game OutOfWorld:
+	start Room
+
+room Room:
+	description "A bare room."
+
+global int ticks = 0
+
+rule every_turn_rules:
+	ticks = ticks + 1
+	print "(tick [ticks])"
+
+action score:
+	out_of_world
+	syntax:
+		"score"
+
+report score:
+	print "Your score is 7."
+
+action wait:
+	syntax:
+		"wait"
+
+report wait:
+	print "Time passes."

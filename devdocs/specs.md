@@ -247,7 +247,7 @@ Local variables (introduced by `let`) and loop variables (introduced by `for`) a
 
 Free text that contains spaces or punctuation is written as a double-quoted string literal, not a bare identifier (for example, `author "Phil Riley"`).
 
-The following words are **reserved** and may not be used as a name (object, type, kind, global, field, event, or local): `type`, `kind`, `global`, `on`, `for`, `in`, `while`, `if`, `else`, `let`, `print`, `error`, `dispatch`, `break`, `lib`, `from`, `to`, `step`, `change`, `function`, `native`, `freeze`, `return`, `when`, `and`, `or`, `not`, `relation`, `bidi`, `remove`, `disconnect`, `rulebook`, `stop`, `follow`, `action`, `try`, `verb`, `move`, `mod`, `div`. (`mod` and `div` are the integer remainder / floored-division operators. `freeze EXPR` forces a `text` value to a `string`; see the `text` primitive type. `verb WORD, …` registers conjugation-sugar words for text substitution; see the `text` type. `syntax`, `inverted`, and `unique` are contextual keywords recognized only inside a `relation` body; `tags` is contextual only inside an `action` body; `default` is a contextual keyword recognized only inside a `rulebook` body; the band words `before`, `instead`, `check`, `do`, `after`, and `report` are contextual keywords recognized only as the leading token of a phase rule; `any` and `except` are contextual only in a phase-rule action selector; `rule` is contextual only when followed by a declared rulebook name; `silently` is contextual only immediately before `try`; `understand` and `as` are contextual only in a top-level `understand "TEMPLATE" as ACTION` grammar contribution; none of these are globally reserved.) A reservation applies only to a whole identifier: a reserved word appearing *inside* a longer identifier is unrestricted, so `move_to_room` (which denotes the name `move to room`) is a valid identifier even though `to` is reserved.
+The following words are **reserved** and may not be used as a name (object, type, kind, global, field, event, or local): `type`, `kind`, `global`, `on`, `for`, `in`, `while`, `if`, `else`, `let`, `print`, `error`, `dispatch`, `break`, `lib`, `from`, `to`, `step`, `change`, `function`, `native`, `freeze`, `return`, `when`, `and`, `or`, `not`, `relation`, `bidi`, `remove`, `disconnect`, `rulebook`, `stop`, `follow`, `action`, `try`, `verb`, `move`, `mod`, `div`. (`mod` and `div` are the integer remainder / floored-division operators. `freeze EXPR` forces a `text` value to a `string`; see the `text` primitive type. `verb WORD, …` registers conjugation-sugar words for text substitution; see the `text` type. `syntax`, `inverted`, and `unique` are contextual keywords recognized only inside a `relation` body; `tags` and `out_of_world` are contextual only inside an `action` body; `default` is a contextual keyword recognized only inside a `rulebook` body; the band words `before`, `instead`, `check`, `do`, `after`, and `report` are contextual keywords recognized only as the leading token of a phase rule; `any` and `except` are contextual only in a phase-rule action selector; `rule` is contextual only when followed by a declared rulebook name; `silently` is contextual only immediately before `try`; `understand` and `as` are contextual only in a top-level `understand "TEMPLATE" as ACTION` grammar contribution; none of these are globally reserved.) A reservation applies only to a whole identifier: a reserved word appearing *inside* a longer identifier is unrestricted, so `move_to_room` (which denotes the name `move to room`) is a valid identifier even though `to` is reserved.
 
 ### Objects and types
 
@@ -1218,6 +1218,30 @@ Beyond its declared slots, every action instance carries two implicit fields:
 - `self.action` — the name of the action being run. It compares against a bare
   action name, so a rule that spans several actions can branch on which fired:
   `if self.action == go: …`.
+
+#### Out-of-world actions
+
+An action body may carry an **`out_of_world`** line (a contextual keyword, like `syntax`):
+
+```lamp
+action score:
+    out_of_world
+    syntax:
+        "score"
+
+report score:
+    print "Your score is [points]."
+```
+
+An out-of-world action runs normally — its bands fire and it prints — but it **bypasses
+the turn clock**: it spends no turn, takes no undo checkpoint, and does not advance the turn
+count, so the command loop's **every-turn rules do not fire** for it (`run_command` returns
+`false`). This is the model for meta and debug verbs (SCORE, and library debug commands like
+SHOWME/GONEAR) — commands that inspect or adjust the session rather than act in the world.
+Unlike the runtime's built-in single-word meta-verbs (`undo`, `save`, `restore`), an
+`out_of_world` action carries full grammar and slots, so it can take operands
+(`showme [target]`). Distinct from a *failed* in-world command (a parse failure or a refused
+action also spends no turn, but is in-world); `out_of_world` declares the action's nature.
 
 #### Action tags
 

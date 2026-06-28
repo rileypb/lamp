@@ -66,18 +66,26 @@ Docs: specs.md "Every-turn rules". The **doom-clock** (`sample/phobos/lib/phobos
 countdown.lamp`) is the first real proof of the counter-in-an-every-turn-rule pattern: a
 turn counter ticks down, the PA announces it (Siriusian) once Galaxy is inside the base,
 and at zero it sets `story = lost` and ends the game with custom `end_story_rules` text.
+**Out-of-world actions DONE (the mechanism):** a Lamp action body may carry an
+`out_of_world` line; such an action runs its bands normally but bypasses the turn clock —
+no undo checkpoint, no turn-count advance, and `run_command` returns false so every-turn
+rules don't fire (parser/ast/emitter + runtime `setOutOfWorld`; `runCommand` checkpoints/
+advances only when an in-world action runs — so parse failures no longer advance either).
+Unlike the runtime's built-in single-word meta-verbs (`undo`/`save`/`restore`), these carry
+full grammar/slots (`showme [target]`). Golden `outofworld1`; specs.md "Out-of-world
+actions". This is the foundation for advent's **debug commands** (next) and for Phobos's
+about/help/credits (which can now drop their turn).
 **Remaining for v2:** **timed/scheduled events** (fire-once-at-turn-N — today done with a
 counter in an every-turn rule, as the doom-clock shows; a built-in scheduler is the
-convenience layer) and
-**out-of-world actions** (`save`/`undo`/`restore`/`again`). Reuse the turn counter (item
-1), don't add a second count.
+convenience layer).
 - **Fold in here:** move the `undo`/`save`/`restore` verb handling + prompting +
   wording **out of the runtime** and into `lib/advent`. Today `performUndo`/
   `performSave`/`performRestore` live in the engine and hardcode English prose —
   a layering smell (`devdocs/state.md` → "Known layering smell"). The fix needs
   `registerOutOfWorld` to accept a **Lamp callback** so the library owns the verbs
-  while the runtime keeps the save/restore/snapshot *primitives* — the same
-  runtime→Lamp out-of-world hook this item builds, so do it once here.
+  while the runtime keeps the save/restore/snapshot *primitives* — now that
+  `out_of_world` actions exist, the meta-verbs can become advent actions that call the
+  snapshot primitives.
 - **Where:** rulebook driver in `src/lamplighter/index.js`, `run_command` loop.
 - **See:** `devdocs/rulebooks.md` roadmap, `devdocs/game_parser.md` v2.
 

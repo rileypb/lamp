@@ -305,8 +305,8 @@ function createStopStatement(expr, reason, filePath, lineNumber) {
 // named slots. `templates` are the `syntax` surface forms (raw strings) the Game
 // Parser matches player input against. The six-band rulebook is built from
 // PhaseRule nodes.
-function createActionDecl(name, slots, templates, filePath, lineNumber, tags = []) {
-    return { kind: "ActionDecl", name, slots, templates, filePath, lineNumber, tags };
+function createActionDecl(name, slots, templates, filePath, lineNumber, tags = [], outOfWorld = false) {
+    return { kind: "ActionDecl", name, slots, templates, filePath, lineNumber, tags, outOfWorld };
 }
 
 // `verb a, b, c` — registers conjugation-sugar words. A declaration-only node

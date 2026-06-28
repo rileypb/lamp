@@ -585,6 +585,18 @@ function setDirectSlot(actionName, fieldName) {
     type.directSlot = fieldName;
 }
 
+// Mark an action `out of world`: it runs normally (its bands fire) but bypasses the turn
+// clock — no undo checkpoint, no turn-count advance, and runCommand returns false so the
+// caller's every-turn rules don't fire. For meta/debug verbs. See devdocs/specs.md.
+function setOutOfWorld(actionName) {
+    const type = typeRegistry.get(actionName);
+    if (!type) throw new Error(`setOutOfWorld: unknown action type "${actionName}"`);
+    type.outOfWorld = true;
+}
+function isOutOfWorld(actionName) {
+    return !!(typeRegistry.get(actionName) || {}).outOfWorld;
+}
+
 // Matches a token list against one template's parts. Literals must match
 // verbatim; a slot captures the run of tokens up to the next literal (or the
 // end). Returns a field -> token-span map, or null if the template does not
@@ -934,14 +946,21 @@ function runCommand(line, actor) {
             if (field === directSlotForDisambig) noteAntecedent(narrowed[0]);
             const status = resolveSlots(remainingSlots, instance, scope, slotTypes);
             if (status === "ok") {
+                // Checkpoint/advance here (not on the original ambiguous command, which
+                // only prompted) so undo reverts the resolved action; an out-of-world
+                // action skips the clock and spends no turn.
+                const oow = isOutOfWorld(actionName);
+                if (!oow) { checkpoint(); advanceTurn(); }
                 runAction(actionName, instance);
-            } else if (status === "unresolved") {
+                return !oow;
+            }
+            if (status === "unresolved") {
                 // Already committed to this action — no backtracking here.
                 const unbound = unboundPronounIn(remainingSlots.map(([, span]) => span));
                 print(unbound ? `I don't know what "${unbound}" refers to.` : message("parser_cant_see", "You can't see any such thing."));
             }
-            // A turn was spent only if the action actually ran.
-            return status === "ok";
+            // No action ran (unresolved, or a fresh disambiguation) — no turn.
+            return false;
         }
         if (narrowed.length > 1) {
             // Still ambiguous — re-prompt with the narrowed set.
@@ -953,16 +972,16 @@ function runCommand(line, actor) {
         pendingDisambiguation = null;
     }
 
-    // Out-of-world verbs (undo; later save/restore) bypass the turn and take no
-    // checkpoint. Otherwise checkpoint the pre-turn state so `undo` can revert
-    // this command. See devdocs/state.md.
+    // Native out-of-world verbs (undo; later save/restore) bypass the turn and take no
+    // checkpoint. See devdocs/state.md. Lamp-declared `out of world` actions are handled
+    // below (after a grammar matches), since they carry full syntax and slots.
     if (tokens.length === 1 && outOfWorldCommands.has(tokens[0])) {
         outOfWorldCommands.get(tokens[0])();
         return false;
     }
-    checkpoint();
-    advanceTurn();
 
+    // The checkpoint + turn advance happen only when an in-world action actually runs
+    // (below), so a parse failure or an out-of-world action spends no turn.
     // Try each grammar whose structure matches. A grammar that matches
     // structurally but whose nouns don't resolve ("unresolved") is not the end
     // of the road — we backtrack and try the next, so overlapping syntaxes can
@@ -985,8 +1004,12 @@ function runCommand(line, actor) {
         const instance = { type: entry.actionName, action: entry.actionName, actor };
         const status = resolveSlots(Object.entries(matched), instance, scope, slotTypes);
         if (status === "ok") {
+            // An out-of-world action runs without the turn clock and reports no turn
+            // spent; an in-world action checkpoints (for undo) and advances the turn.
+            const oow = isOutOfWorld(entry.actionName);
+            if (!oow) { checkpoint(); advanceTurn(); }
             runAction(entry.actionName, instance);
-            return true;
+            return !oow;
         }
         if (status === "ambiguous") {
             return false;
@@ -2208,6 +2231,7 @@ module.exports = {
     HALT,
     registerGrammar,
     setDirectSlot,
+    setOutOfWorld,
     runCommand,
     playerCommand,
     registerChangeHandler,

@@ -1,0 +1,4 @@
+wait
+score
+wait
+quit
