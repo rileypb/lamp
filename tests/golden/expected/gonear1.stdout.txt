@@ -1,0 +1,22 @@
+Hall
+A bare hall.
+
+> gonear vault
+Vault
+A locked vault.
+
+> gonear gem
+Attic
+A dusty attic.
+
+You see a crate (in which is a gem) here.
+
+> look
+Attic
+A dusty attic.
+
+You see a crate (in which is a gem) here.
+
+(tick 1)
+
+> quit

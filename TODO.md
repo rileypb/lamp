@@ -203,8 +203,11 @@ core edit is contained. Names (default): `contains`/`place`/`contained`, keyword
   into inventory wherever it is (another room, a closed container). **SHOWME [thing] DONE**
   (golden `showme1`): dumps an object's identity, location, own fields, and contents — via a
   `describe_object` native (the instance is a plain record, so `Object.keys` gives its
-  fields); reaches out-of-scope objects too. **Next debug verbs:** GONEAR/GOTO (teleport),
-  TREE/SCOPE (dump the object tree / what's in scope), ABSTRACT [thing] TO [holder]. **Gap:**
+  fields); reaches out-of-scope objects too. **GONEAR [room-or-thing] DONE** (golden
+  `gonear1`): teleports the player to a room, or to the room enclosing a thing (pure-Lamp
+  `room_of` walks the holder chain to the top); the destination auto-describes. One verb for
+  both (GOTO left free for authors). **Next debug verbs:** TREE/SCOPE (dump the object tree /
+  what's in scope), ABSTRACT [thing] TO [holder]. **Gap:**
   no release-build flag yet to exclude them from a shipped game (Inform's NOT-FOR-RELEASE) —
   they currently always load in advent.
 - ~~**Galaxy Suit + power-up (Phobos)**~~ **DONE** (`sample/phobos/lib/phobos/suit.lamp`):

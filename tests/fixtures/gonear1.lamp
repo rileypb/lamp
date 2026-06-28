@@ -1,0 +1,32 @@
+# GONEAR [room-or-thing] (advent debug command): teleport the player to the target. A room
+# target moves the player into it; a thing target moves the player into the room enclosing
+# that thing (walking up the holder chain). It is `world_scope` (reach any room/thing,
+# unvisited or out of sight) and `out_of_world` (no turn — the every-turn tick advances only
+# on the in-world LOOK, not on the GONEARs). The destination room auto-describes on arrival.
+
+lib advent
+
+game Gonear:
+	start Hall
+
+room Hall:
+	description "A bare hall."
+room Vault:
+	description "A locked vault."
+room Attic:
+	description "A dusty attic."
+
+box crate
+item gem:
+	description "A shiny gem."
+
+contains Attic crate
+contains crate gem
+
+bidi connects Hall north Vault
+
+global int ticks = 0
+
+rule every_turn_rules:
+	ticks = ticks + 1
+	print "(tick [ticks])"

@@ -1,0 +1,4 @@
+gonear vault
+gonear gem
+look
+quit

@@ -34,3 +34,26 @@ action showme:
 report showme:
 	write(describe_object(self.target))
 	write(line_break())
+
+# GONEAR [room-or-thing] — teleport the player to the target. A room target moves the player
+# into it; a thing target moves the player into the room enclosing that thing, so they end up
+# "near" it. (One verb for both, leaving GOTO free for an author's own use.) The destination
+# room auto-describes via advent's arrival handler, like walking in.
+#
+# `room_of` walks the holder chain to the top — a room has no holder, so it returns itself;
+# a thing returns its enclosing room.
+function physical room_of(physical x):
+	let cur = x
+	while not (holder(cur) == none):
+		cur = holder(cur)
+	return cur
+
+action gonear:
+	out_of_world
+	world_scope
+	direct physical target
+	syntax:
+		"gonear [target]"
+
+do gonear:
+	move self.actor to room_of(self.target)
