@@ -1,0 +1,5 @@
+attack rock
+hit rock
+examine statue
+smash it
+quit

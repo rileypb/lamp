@@ -196,6 +196,28 @@ report failed examine:
 		print examine_too_dark:"It's too dark to see that."
 		stop
 
+# A generic reaction to violence against any item (also ATTACK/HIT/SMASH/PUNCH). The
+# action *fails* by default (it accomplishes nothing), so any `do` is skipped and the
+# refusal is a `report failed` message. A game contributes `instead attack` rules for
+# things that do respond — e.g. a powered weapon that breaks a barrier; one that prints
+# its own refusal stops with a bare `stop failed`, so the reason guard below leaves the
+# default unprinted. The message is named, so a game or locale can retheme it.
+action attack:
+	direct item target
+	syntax:
+		"attack [target]"
+		"hit [target]"
+		"smash [target]"
+		"punch [target]"
+
+check attack:
+	stop failed attack_pointless
+
+report failed attack:
+	if self.reason == attack_pointless:
+		print attack_violence:"Violence isn't the answer to this one."
+		stop
+
 action go:
 	direction way
 	syntax:

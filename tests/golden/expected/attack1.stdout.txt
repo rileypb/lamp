@@ -1,0 +1,18 @@
+Room
+A bare room.
+
+You see a rock and a statue here.
+
+> attack rock
+Violence isn't the answer to this one.
+
+> hit rock
+Violence isn't the answer to this one.
+
+> examine statue
+A marble statue.
+
+> smash it
+Violence isn't the answer to this one.
+
+> quit

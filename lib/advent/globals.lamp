@@ -25,6 +25,7 @@ stop_reason not_wearable
 stop_reason already_worn
 stop_reason not_worn
 stop_reason too_dark
+stop_reason attack_pointless
 
 # directions
 #

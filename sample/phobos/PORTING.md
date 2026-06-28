@@ -171,14 +171,17 @@ not yet declared as examinable objects.
    ~~**Galaxy Suit + power-up (GJ Basics / Powerup / Galaxy Smash)**~~ **DONE**
    (`lib/phobos/suit.lamp`): the worn Galaxy Suit, `powered_up`/`charges_left`/
    `first_power_use` globals, POWER UP/DOWN actions (with the `--`-optional "suit"
-   variants + already-powered / out-of-charges / not-powered checks), and a powered
-   ATTACK/SMASH/PUNCH (target typed `door`) that smashes any locked door open — purple
-   resists (force field). A `use_charge()` helper powers down, decrements, and prints the
-   first-use no-points note. **Great for testing** — POWER UP then ATTACK bypasses any
-   door's hacking puzzle. **Deferred:** the every-turn "powers down if unused" rule (needs
-   every-turn rules — TODO item 2; `use_charge` covers the attack path so power-up→attack
-   is faithful) and the power banner (with scoring). Smashing the **locker** (vs the doors)
-   and PUNCH/SMASH on non-door targets are not ported (door-scoped slot).
+   variants + already-powered / out-of-charges / not-powered checks). The
+   **ATTACK/HIT/SMASH/PUNCH verb itself lives in advent** now (any `item`; default
+   declines via `attack_violence`); the suit layers the **powered smash** on top with
+   `instead attack` rules — a powered strike destroys any locked door open (purple resists
+   with a force field), and anything not handled (unpowered, a non-door, an already-open
+   door) falls through to advent's default. A `use_charge()` helper powers down,
+   decrements, and prints the first-use no-points note. **Great for testing** — POWER UP
+   then ATTACK bypasses any door's hacking puzzle. **Deferred:** the every-turn "powers
+   down if unused" rule (needs every-turn rules — TODO item 2; `use_charge` covers the
+   attack path so power-up→attack is faithful), the power banner (with scoring), and the
+   locker-smash variant.
 5. **HACK / the KIM — in progress** (from `KIM.i7x`). The KIM tool + `hack` verb,
    the green door (instant bypass), and the **yellow and red doors (Lights-Out
    keypads)** are done (`lib/phobos/hacking.lamp`): `press [n]` flips a hidden

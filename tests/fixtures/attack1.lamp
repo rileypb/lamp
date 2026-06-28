@@ -1,0 +1,19 @@
+# The generic ATTACK action (lib/advent): ATTACK/HIT/SMASH/PUNCH any item, with a
+# default refusal message. The target is `direct`, so the pronoun "it" refers back to
+# the last-named thing. A game can override the named `attack_violence` message or add
+# `instead attack` rules for things that respond.
+
+lib advent
+
+game Attack:
+	start Room
+
+room Room:
+	description "A bare room."
+
+item rock
+item statue:
+	description "A marble statue."
+
+contains Room rock
+contains Room statue

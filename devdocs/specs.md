@@ -1874,6 +1874,7 @@ provided (a game drives door state itself).
 |---|---|---|---|
 | `look` | — | `look`, `l` | Describes the current room. |
 | `examine` | `item target` | `examine [target]`, `x [target]`, `read [target]` | Prints `self.target.description`. |
+| `attack` | `direct item target` | `attack [target]`, `hit [target]`, `smash [target]`, `punch [target]` | **Fails by default** (reason `attack_pointless`, message `attack_violence`), so any `do` is skipped — it's a refusal. A game adds `instead attack` rules for things that respond (`stop succeeded` to act, or a bare `stop failed` after its own refusal — the `report failed` reason guard then suppresses the default). `target` is `direct`, so `it` refers back to it. |
 | `take` | `item taken` | `take [taken]`, `get [taken]` | Moves item to actor. |
 | `drop` | `item dropped` | `drop [dropped]` | Moves item to actor's location; implicitly calls `doff` if item is worn (printing `(first taking off X)` for the player). |
 | `inventory` | — | `inventory`, `i` | Lists carried items; marks worn items with `(worn)`. |

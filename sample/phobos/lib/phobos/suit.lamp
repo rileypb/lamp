@@ -76,31 +76,22 @@ report power_down:
 	print "Galaxy powers down the Galaxy Suit."
 
 # --- Powered ATTACK: smash a locked door open ---------------------------------
-action attack:
-	door target
-	syntax:
-		"attack [target]"
-		"smash [target]"
-		"punch [target]"
-		"hit [target]"
+# The ATTACK/SMASH/PUNCH/HIT verb itself lives in advent (any item; default declines).
+# These rules add the suit's powered smash; anything they don't handle (unpowered, a
+# non-door, an already-open door) falls through to advent's default reaction.
 
 # The purple door resists even a powered strike.
 instead attack when self.target == purple_door:
-	if not powered_up:
-		print "Galaxy can't smash the purple door bare-handed. (Power up the Galaxy Suit first.)"
-	else:
+	if powered_up:
 		print "The purple door has a force field that repels Galaxy's attempt to destroy it."
-	stop failed
+		stop failed
 
+# A powered strike destroys a locked door. A non-door target has no `locked` (reads
+# falsy), so it falls through to advent's default attack reaction.
 instead attack:
-	if not powered_up:
-		print "Galaxy can't smash [the act.target] bare-handed. (Power up the Galaxy Suit first.)"
-		stop failed
-	if not self.target.locked:
-		print "[The act.target] is already open."
-		stop failed
-	print "Galaxy uses the Galaxy Suit to attack [the act.target]. The door is destroyed, just hanging from its hinges."
-	self.target.locked = false
-	self.target.closed = false
-	use_charge()
-	stop succeeded
+	if powered_up and self.target.locked:
+		print "Galaxy uses the Galaxy Suit to attack [the act.target]. The door is destroyed, just hanging from its hinges."
+		self.target.locked = false
+		self.target.closed = false
+		use_charge()
+		stop succeeded
