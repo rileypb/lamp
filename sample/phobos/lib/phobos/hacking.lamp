@@ -228,15 +228,11 @@ function string glyph_for(int d):
 	let glyphs = [siriusian("1"), siriusian("2"), siriusian("3"), siriusian("4"), siriusian("5"), siriusian("6"), siriusian("7"), siriusian("8"), siriusian("9")]
 	return glyphs[d - 1]
 
-# Forward Fisher-Yates (Durstenfeld): the for-loop is ascending-only, so we shuffle
-# low-to-high, j drawn from the unshuffled tail [i, 8]. Reshuffle if it lands sorted.
+# Shuffle the nine digit labels into a random order (lib/sys `shuffle`). Reshuffle if it
+# happens to land already sorted (which would present the puzzle pre-solved).
 function void shuffle_labels():
 	number_order = [1, 2, 3, 4, 5, 6, 7, 8, 9]
-	for i = 0 to 7:
-		let j = i + random(9 - i)
-		let t = number_order[i]
-		number_order[i] = number_order[j]
-		number_order[j] = t
+	shuffle(number_order)
 	if blue_solved():
 		shuffle_labels()
 

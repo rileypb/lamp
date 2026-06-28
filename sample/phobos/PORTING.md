@@ -237,10 +237,11 @@ form and the Cyberhelmet are now real objects.)
    The **blue door** is a different mechanic — a *sort-by-swap*: the nine buttons
    carry shuffled Siriusian digit-glyph labels (`number_order` list), pressing two
    lights+swaps their labels, goal is to sort them (`number_order == 1..9`). Its
-   random start shuffle dogfooded a **new general `random(n)` native** (lib/sys,
-   reusing the engine's seeded/save-captured RNG); the shuffle is a forward
-   Fisher-Yates in Lamp (the `for` loop is ascending-only). Under the fixed test
-   seed the start is `[4,2,7,9,5,3,6,8,1]`, solved by pressing 1 9 3 6 4 9 6 7.
+   random start shuffle dogfooded the **general `random(n)` native** and now the general
+   **`shuffle(list)` native** (both lib/sys, on the engine's seeded/save-captured RNG);
+   `shuffle_labels()` just calls `shuffle(number_order)` and reshuffles if it lands sorted.
+   The exact start order is deterministic under the fixed test seed (and changed when the
+   shuffle moved to the lib/sys native), but no test pins it.
    The **locker** (in South Barracks, the one room ported in full — its description
    has no Siriusian markup) is a four-button toggle (each press flips only itself;
    start `{red,blue,blue,red}`, goal all-blue → press 1 and 4). Unlike the doors it

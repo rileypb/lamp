@@ -79,6 +79,11 @@ native function void randomize()
 
 # A uniform random integer in [0, n) — e.g. random(6) yields 0..5. Draws from the
 # same seeded, save/undo-captured RNG as randomized text, so a draw reproduces across
-# restore. n < 1 returns 0. The general randomness primitive; build higher-level
-# draws (dice, shuffles) in Lamp on top of it.
+# restore. n < 1 returns 0. The general randomness primitive.
 native function int random(int n)
+
+# Shuffle a list into a uniformly random order, in place (Fisher-Yates on the same
+# seeded RNG as `random`, so it reproduces across restore). The list is mutated, not
+# copied. A native rather than a Lamp function because it is generic over the element
+# type (Lamp has no generics — cf. `map_strings`); pass any `list<T>`.
+native function void shuffle(list<object> xs)

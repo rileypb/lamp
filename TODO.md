@@ -343,9 +343,10 @@ core edit is contained. Names (default): `contains`/`place`/`contained`, keyword
   harder flip-set; solves end-to-end (sequence 1,2,3,5,7) and opens south to the
   armory. **Blue door DONE:** a *sort-by-swap* (different mechanic) — nine shuffled
   Siriusian digit-glyph labels (`number_order`), press two to swap their labels, goal
-  is to sort. Dogfooded a **new general `random(n)` native** (lib/sys, reusing the
-  engine's seeded/save-captured RNG; golden `random1`); shuffle is a forward
-  Fisher-Yates in Lamp. **Locker DONE:** a four-button toggle (each press flips only
+  is to sort. Dogfooded the **general `random(n)` native** and the **general
+  `shuffle(list)` native** (both lib/sys, on the engine's seeded/save-captured RNG; goldens
+  `random1`/`shuffle1`); `shuffle_labels()` calls `shuffle(number_order)`. **Locker DONE:**
+  a four-button toggle (each press flips only
   itself; start `{red,blue,blue,red}` → press 1 and 4) that opens a **container** and
   reveals the **diary** sealed inside. Dogfooded a general advent feature — a **closed
   container hides + seals its contents** (`contents_of` closed-check + core

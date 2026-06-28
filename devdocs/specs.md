@@ -467,8 +467,11 @@ Built-in primitive types:
     entropy for cross-playthrough variety (the default seed is fixed, so output is
     deterministic until a game opts in). **`random(n) → int`** draws a uniform integer
     in `[0, n)` from the same seeded, save-captured stream (so a draw reproduces across
-    restore); `n < 1` yields `0`. It is the general randomness primitive — build dice,
-    shuffles, etc. in Lamp on top of it (e.g. a Fisher-Yates over a `list`). These read a
+    restore); `n < 1` yields `0`. It is the general randomness primitive — build dice and
+    the like in Lamp on top of it. **`shuffle(list)`** shuffles a list into a uniformly
+    random order **in place** (Fisher-Yates on the same seeded stream, so it reproduces
+    across restore); it is a native rather than Lamp because it is generic over the element
+    type (Lamp has no generics — cf. `map_strings`). These read a
     **render-local context** that resets per render and is never saved. The
     world-model→locale contract for a referent is the optional fields
     `grammatical_person` (1/2/3, default 3), `gender` ("male"/"female"/"neuter"), and

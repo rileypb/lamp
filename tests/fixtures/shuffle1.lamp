@@ -1,0 +1,35 @@
+# `shuffle` (lib/sys): Fisher-Yates in place on the engine's seeded, save-captured RNG.
+# Golden tests never reseed, so the default-seed stream is deterministic and this output is
+# stable. Shows: a 9-element deck shuffled (twice — the stream advances, so the orders
+# differ), that the result is a permutation (every element survives), and the singleton
+# edge case (no-op).
+
+lib advent
+
+game ShuffleTest:
+	start Room
+
+room Room:
+	description "A bare room."
+
+global list<int> deck = none
+
+function string show(list<int> xs):
+	let out = ""
+	for x in xs:
+		out = out + "[x] "
+	return out
+
+action mix:
+	syntax:
+		"mix"
+
+report mix:
+	deck = [1, 2, 3, 4, 5, 6, 7, 8, 9]
+	shuffle(deck)
+	print "first:  [show(deck)]"
+	shuffle(deck)
+	print "second: [show(deck)]"
+	let solo = [42]
+	shuffle(solo)
+	print "solo:   [show(solo)]"

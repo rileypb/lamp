@@ -61,7 +61,7 @@ function createPlainBackend({ out, err, fs }) {
     // and nothing blocks waiting for a keypress.
     const paginate = !!(out.isTTY && process.stdin.isTTY);
     // Track the cursor's screen position so the page counter reflects *wrapped* rows,
-    // not just newlines — phobos's paragraphs are single long lines that wrap to many
+    // not just newlines — a game's paragraphs may be single long lines that wrap to many
     // rows, so counting newlines alone wildly overshoots a screen.
     let col = 0;
     let rowsOnPage = 0;
