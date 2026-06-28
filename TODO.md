@@ -61,9 +61,14 @@ every_turn_rules()`). `run_command` now returns **true iff a turn was spent** (a
 ran), so parse failures / disambiguation prompts / out-of-world verbs fire nothing.
 Games add side-effect `rule every_turn_rules:` (don't `stop`, so all run). Golden
 `everyturn1` (countdown daemon that ends the story + the parse-failure-spends-no-turn
-case); Phobos wires the suit auto-power-down on it. Docs: specs.md "Every-turn rules".
+case); Phobos wires the suit auto-power-down **and the self-destruct doom-clock** on it.
+Docs: specs.md "Every-turn rules". The **doom-clock** (`sample/phobos/lib/phobos/
+countdown.lamp`) is the first real proof of the counter-in-an-every-turn-rule pattern: a
+turn counter ticks down, the PA announces it (Siriusian) once Galaxy is inside the base,
+and at zero it sets `story = lost` and ends the game with custom `end_story_rules` text.
 **Remaining for v2:** **timed/scheduled events** (fire-once-at-turn-N — today done with a
-counter in an every-turn rule; a built-in scheduler is the convenience layer) and
+counter in an every-turn rule, as the doom-clock shows; a built-in scheduler is the
+convenience layer) and
 **out-of-world actions** (`save`/`undo`/`restore`/`again`). Reuse the turn counter (item
 1), don't add a second count.
 - **Fold in here:** move the `undo`/`save`/`restore` verb handling + prompting +
@@ -187,9 +192,10 @@ core edit is contained. Names (default): `contains`/`place`/`contained`, keyword
   worn suit, POWER UP/DOWN, and a powered smash. The **ATTACK/HIT/SMASH/PUNCH verb is in
   advent** (any `item`; default declines via `attack_violence`; golden `attack1`); the suit
   layers the powered door-smash via `instead attack` (purple resists), falling through to
-  advent's default otherwise — a testing shortcut past the hacking puzzles. Deferred: the
-  every-turn auto-power-down (rides on item 2's every-turn rules; `use_charge` covers the
-  attack path), the power banner (rides on scoring), and the locker-smash variant.
+  advent's default otherwise — a testing shortcut past the hacking puzzles. The every-turn
+  **auto-power-down** is now wired (item 2's `every_turn_rules`; the power-up turn is
+  skipped via a flag). Deferred: the power banner (rides on scoring) and the locker-smash
+  variant.
 - **`--encode-strings`: encode name literals inside inlined native JS (backlog).** Today
   the encoder rewrites name literals only in *emitter-emitted* code; strings inside a lib's
   `index.js` are inlined verbatim, so structural names a native references by literal stay

@@ -1,0 +1,83 @@
+lib advent
+
+# The self-destruct doom-clock (ported from Countdown.i7x). A turn counter ticks down
+# every turn; once Galaxy is inside the base the PA system announces the remaining count
+# (in Siriusian) each turn, and when it reaches zero the story ends — the moon fires its
+# thrusters and the Sirius Syndicate destroys Mars.
+#
+# Built on advent's every_turn_rules + the story-end state. The end-of-game narration is
+# the custom final line, contributed to end_story_rules (overriding the default banner).
+#
+# Faithful to the original: the counter decrements every turn (even at Passage End, where
+# the PA is silent), but the announcement and the zero check fire from the count itself.
+#
+# Deferred (matches the current port slice):
+# - self-destruct-in-progress is never set true yet (the reactor self-destruct isn't
+#   ported), so only the Mars-destroyed loss ending is reachable. The win branch (heroic
+#   death after arming self-destruct) is wired for when that puzzle lands.
+# - The Cyberhelmet number-translation and the PA System backdrop object are deferred; the
+#   count always renders in Siriusian digit-glyphs.
+
+# Turns until the moon fires. Decrements every turn.
+global int countdown = 789
+# Set once the reactor self-destruct is armed (not ported yet). Switches the zero ending
+# from "Mars destroyed" (loss) to "heroic death, Mars saved" (win).
+global bool self_destruct_in_progress = false
+
+# Siriusian numerals, indexed by digit 0-9 (a separate cipher from the letter glyphs).
+# Distinct from the linguistic module's letter alphabet; numbers are never scanned.
+global string siriusian_digits = "ļĽľĿŀŁłĹĺĻ"
+
+# Render a non-negative integer as a Siriusian numeral. The original maps each decimal
+# digit to a glyph and reverses the whole string; extracting least-significant-first with
+# div/mod and appending reproduces that reversal.
+function string siriusian_number(int n):
+	if n == 0:
+		return char_at(siriusian_digits, 0)
+	let out = ""
+	let m = n
+	while m > 0:
+		let d = m mod 10
+		out = out + char_at(siriusian_digits, d)
+		m = m div 10
+	return out
+
+# The doom-clock tick. Decrement always; announce only inside the base; end the story at
+# zero regardless of location.
+rule every_turn_rules:
+	countdown = countdown - 1
+	let indoors = not (holder(player) == Passage_End)
+	if indoors:
+		if countdown > 0:
+			# [first time]…[only]: the full crackle line prints on the first indoor turn,
+			# then just the bare count thereafter (the I7 site-durable once-only block).
+			let num = fixed(siriusian_number(countdown))
+			print "[first time]The PA system crackles to life, and a voice says, [only]'[num].'"
+		else:
+			print "The PA system crackles to life, and a voice says, '[siriusian(\"Countdown complete. Thank you for all you do\")].'"
+	if countdown == 0:
+		if self_destruct_in_progress:
+			print "The base explodes, destroying the Siriusian guard and Galaxy Jones."
+			story = won
+		else:
+			print "The deafening sound of moon-sized thrusters firing booms from all around. Galaxy Jones is thrown to the ground as the entire moon shakes from the sudden acceleration."
+			print "Somewhere on Mars, a child watches in curiosity as Phobos starts to move..."
+			story = lost
+
+# The custom end-of-game lines that replace advent's default win/lose banner live in the
+# main game file (phobos.lamp): only the main file's rules register at author order (0),
+# ahead of advent's order-1 default `when story == …` rules, so they can suppress them. A
+# lib file's contribution (this file) would register at library order and lose the race.
+
+# --- NOT FOR RELEASE ----------------------------------------------------------
+# Debug shortcut (I7's "late"/lowcounting): jump the clock near zero to exercise the
+# ending without burning hundreds of turns.
+action late:
+	syntax:
+		"late"
+
+do late:
+	countdown = 5
+
+report late:
+	print "The countdown is now [countdown]."

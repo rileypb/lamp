@@ -228,10 +228,29 @@ not yet declared as examinable objects.
     hook.)
 11. **Custom actions** — flying / ship-flying / simply-flying, listening,
     pulling, searching.
-12. **`end the story saying "…"`** — advent has `story = won/lost` +
-    `end_story_rules`; the custom final line needs a hook.
+12. ~~**`end the story saying "…"`**~~ **DONE.** The custom final line is a
+    game-contributed `rule end_story_rules when story == won/lost:` that prints the
+    bespoke text and `stop true`s to suppress advent's default banner. **Must live in
+    the main game file** (`phobos.lamp`): only main-file rules register at author order
+    (0), ahead of advent's order-1 default `when story == …` rules — a lib-file
+    contribution would register at library order and lose. Used by the countdown (below).
 13. **Misc object properties** — `outdoors`, per-room `preposition`, `edificial`,
     `indescribable`, `always-indefinite`, `privately-named`.
+14. ~~**The self-destruct doom-clock (Countdown.i7x)**~~ **DONE**
+    (`lib/phobos/countdown.lamp`): a `countdown` turn counter (789) decrements every turn
+    via advent's `every_turn_rules`; once Galaxy is **inside the base** (`holder(player)`
+    not Passage End) the PA system announces the remaining count each turn — rendered in a
+    **separate Siriusian digit-cipher** (`siriusian_number`: digit→glyph then reversed,
+    `fixed`-width), with the I7 `[first time]…[only]` preamble done via a `pa_announced`
+    flag. At zero the story ends: the moon fires its thrusters and **"The Sirius Syndicate
+    has destroyed Mars."** (loss). The custom endings are contributed to `end_story_rules`
+    in the **main file** (item 12). A NOT-FOR-RELEASE `late` verb (I7 `lowcounting`) jumps
+    the clock to 5 to exercise the ending. **Deferred:** `self_destruct_in_progress` is
+    never set true yet (reactor self-destruct unported), so only the loss ending is
+    reachable — the **win branch** (heroic death, "Galaxy Jones has saved Mars…") is wired
+    but **untested/unreachable** until that puzzle lands. Also deferred: the **Cyberhelmet**
+    number-translation (count stays alien) and the **PA System backdrop** object (needs
+    backdrops, item 10).
 
 Implication: Base content can't be finished until this infrastructure exists.
 Likely the port should pivot to building the infrastructure (engine vs. phobos

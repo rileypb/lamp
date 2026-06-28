@@ -87,3 +87,16 @@ rule room_heading_rules:
 	else:
 		print "Galaxy is [r.preposition] [bold(lower(the(r)))]. [run on]"
 	stop true
+
+# --- Countdown endings (Countdown.i7x) --------------------------------------
+# Custom end-of-game lines, replacing advent's default win/lose banner. These must live
+# in the main game file: only main-file rules register at author order (0) and so run
+# before — and suppress — advent's order-1 default `when story == …` rules. The clock
+# itself lives in lib/phobos/countdown.lamp.
+rule end_story_rules when story == won:
+	print "[par]Galaxy Jones has saved Mars and died a hero's death.[par]"
+	stop true
+
+rule end_story_rules when story == lost:
+	print "[par]The Sirius Syndicate has destroyed Mars.[par]"
+	stop true
