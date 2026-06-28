@@ -14,6 +14,11 @@ native function string char_at(string s, int i)
 native function int code_at(string s, int i)
 native function string substring(string s, int start, int end)
 
+# Integer remainder: mod(a, b) is a modulo b, non-negative for a positive divisor.
+# Lamp's `/` is float division and there is no `%` operator, so this is the primitive
+# for remainder arithmetic (parity checks, hashing into buckets).
+native function int mod(int a, int b)
+
 # Apply an object->string function to each element of a list, returning the list of
 # results. The general list-transform primitive (Lamp has no list literal/append, so
 # building a derived list needs a native); `fn` is any single-argument function

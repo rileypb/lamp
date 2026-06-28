@@ -1,30 +1,137 @@
 lib advent
 
 # The Linguistic Module / Siriusian translation system (ported from Siriusian.i7x).
-# A `document` is a textual thing: its `content` is English prose seeded with alien
-# proper nouns, rendered through a progressive translation filter (see lib/phobos/
-# index.js). Words translate only once their difficulty tier has been scanned; with
-# nothing scanned the whole text reads as untranslated Siriusian glyphs.
+# A textual item's `content` is English prose seeded with alien proper nouns, rendered
+# through a progressive translation filter: a word translates to English once its
+# difficulty tier has been scanned, otherwise it shows as untranslated Siriusian glyphs.
 #
-# READ a document to see it at the current translation state; SCAN it (while carrying
-# the Linguistic Module) to add its tier and translate more across every text.
+# This whole subsystem is now pure Lamp — the Siriusian cipher and the translation
+# filter, formerly native JS, are expressed here on the lib/sys string primitives
+# (length/char_at/code_at/substring/mod). READ a document to see it at the current
+# translation state; SCAN it (with the Linguistic Module) to add its tier.
 
-native function bool is_textual(item x)
-native function void print_translated(item x, list<bool> levels)
-
-# A readable Siriusian text. `scan_level` is its difficulty tier (1-5); the prose in
-# `content` is space-separated words, with `/` marking a paragraph break and a leading
-# `!` marking an always-alien proper noun. `scanned` guards re-scanning.
-type document < item:
+# Textual marker + payload, added to `item` by reopening the type (so advent stays
+# unchanged and no `document` subtype is needed). Non-textual items keep the defaults.
+type item:
+	bool textual = false
 	string content = ""
 	int scan_level = 1
-	bool textual = true
 	bool scanned = false
 
+# The glyph alphabet: codepoints 97-122 (a-z) map to these in order (a-t cycle the
+# same ten glyphs twice; u-z are unique). Indexed by code_at(...) - 97 in the cipher.
+global string siriusian_glyphs = "ĹĺĻļĽľĿŀŁłĹĺĻļĽľĿŀŁłЃΐſŧīı"
+
 # Which difficulty tiers have been scanned: scan_levels[t-1] is true once tier t is
-# scanned. A fixed five-slot list (one per tier) so adding a tier is a plain element
-# assignment — no list append needed. Initialised in startup_rules.
+# scanned. A fixed five-slot list (one per tier). Initialised in startup_rules.
 global list<bool> scan_levels = none
+
+# --- The Siriusian cipher (deterministic, deliberately non-invertible) -----------
+# Keep only digits, even-position chars, and the last char; Caesar-shift each surviving
+# code by the word length; reverse; map to a (many-to-one) glyph. Reversal is done by
+# prepending each glyph (out = glyph + out), so no list building is needed.
+function string siriusian_word(string word):
+	let s = to_lower(word)
+	let len = length(s)
+	let out = ""
+	for c = 1 to len:
+		let ord = code_at(s, c - 1)
+		let keep = false
+		if ord >= 48 and ord <= 57:
+			keep = true
+		else:
+			if mod(c, 2) == 0 or c == len:
+				keep = true
+		if keep:
+			let n = ord
+			if n > 57 and n < 190:
+				n = n + len
+			while n > 122:
+				n = n - 26
+			while n < 97:
+				n = n + 26
+			if n >= 97 and n <= 122:
+				out = char_at(siriusian_glyphs, n - 97) + out
+	return out
+
+# Render an English phrase as fully-untranslated Siriusian: cipher each word and
+# concatenate with no separators. Used in descriptions as [siriusian("...")].
+function string siriusian(string text):
+	let out = ""
+	for w in split(text):
+		out = out + siriusian_word(w)
+	return out
+
+# A word's difficulty tier. !/$/# prefixes are proper-noun/control tiers (15/16/20,
+# outside the 1-5 scan range); every other word hashes to 1-5 by char-sum mod 5.
+function int token_difficulty(string word):
+	let c0 = char_at(word, 0)
+	if c0 == "!":
+		return 15
+	if c0 == "$":
+		return 16
+	if c0 == "#":
+		return 20
+	let s = to_lower(word)
+	let sum = 0
+	let n = length(s)
+	for i = 0 to n - 1:
+		sum = sum + code_at(s, i)
+	return mod(sum, 5) + 1
+
+# Render an item's `content` at the current scan state and print it. English words are
+# bold; untranslated runs are fixed-width Siriusian and run together (no separating
+# spaces); `last_siriusian` inserts the space when the stream switches back to English.
+# `/` is a paragraph break, `*`-prefixed tokens are literal. Built as one string and
+# emitted via write() (no per-sentence auto-break), so only `/` breaks the prose.
+function void print_translated(item x, list<bool> levels):
+	let tokens = split(x.content)
+	let len = tokens.size
+	let num_levels = 0
+	for b in levels:
+		if b:
+			num_levels = num_levels + 1
+	let out = ""
+	let last_siriusian = false
+	for i = 0 to len - 1:
+		let w = tokens[i]
+		if w == "/":
+			out = out + paragraph()
+			last_siriusian = false
+		else:
+			let c0 = char_at(w, 0)
+			if c0 == "*":
+				out = out + fixed(substring(w, 1, length(w)))
+			else:
+				let cdl = token_difficulty(w)
+				let glyph = siriusian_word(w)
+				if cdl == 15:
+					out = out + fixed("<" + glyph + ">")
+					last_siriusian = true
+				else:
+					let reveal = false
+					if cdl == 20:
+						if num_levels >= 5:
+							reveal = true
+					else:
+						if cdl >= 1 and cdl <= 5:
+							if levels[cdl - 1]:
+								reveal = true
+					if reveal:
+						let eng = w
+						if c0 == "#":
+							eng = substring(w, 1, length(w))
+						if last_siriusian:
+							out = out + " "
+						out = out + bold(eng)
+						if i < len - 1:
+							out = out + " "
+						last_siriusian = false
+					else:
+						out = out + fixed(glyph)
+						last_siriusian = true
+	write(out)
+	write(line_break())
 
 # The tool that does the translating. Galaxy carries it from the start.
 item linguistic_module:
@@ -34,17 +141,22 @@ item linguistic_module:
 contains yourself linguistic_module
 
 # Reading a textual thing shows its translated content instead of a plain description.
-instead examine when is_textual(self.target):
+# The guard reads `textual` straight off examine's `item` target — pure Lamp, no native.
+instead examine when self.target.textual:
 	print_translated(self.target, scan_levels)
 	stop succeeded
 
-# SCAN adds a text's tier to the model, so every text with that tier reads more
-# clearly afterwards. The target is typed `document`, so only textual things are
-# scannable and their fields are read directly (no accessor natives).
+# SCAN adds a text's tier to the model, so every text with that tier reads more clearly
+# afterward. The target is an `item`, so a non-textual thing gets a useful message.
 action scan:
-	document target
+	item target
 	syntax:
 		"scan [target]"
+
+check scan:
+	if not self.target.textual:
+		print "To operate, the Linguistic Module needs more text than is available on [the act.target]."
+		stop failed
 
 check scan:
 	if self.target.scanned:

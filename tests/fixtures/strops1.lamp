@@ -20,4 +20,5 @@ report probe:
 	print "length=[length(s)][line break]"
 	print "char0=[char_at(s, 0)] char3=[char_at(s, 3)] oob=\"[char_at(s, 99)]\"[line break]"
 	print "code0=[code_at(s, 0)] code3=[code_at(s, 3)] oob=[code_at(s, 99)][line break]"
-	print "sub=[substring(s, 0, 2)] tail=[substring(s, 3, length(s))]"
+	print "sub=[substring(s, 0, 2)] tail=[substring(s, 3, length(s))][line break]"
+	print "mod=[mod(17, 5)] [mod(10, 2)] [mod(0, 5)]"

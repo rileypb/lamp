@@ -1,8 +1,7 @@
 lib advent
 
-# Siriusian glyph cipher (see lib/phobos/index.js): renders English as the alien
-# script. Used in descriptions via [siriusian("...")].
-native function string siriusian(string text)
+# Siriusian glyph cipher (a Lamp function in lib/phobos/linguistics.lamp): renders
+# English as the alien script. Used in descriptions via [siriusian("...")].
 
 room Passage_End:
 	description "South of here a maze of passages leads back to the surface. But it is north that Galaxy must go, into the heart of the base, to stop the Siriusian plot to destroy Mars. The Moon Sled is parked here, out of fuel. A heavy green door to the north is labeled '[siriusian(\"This way to the secret base\")]'. The door is [if green_door.closed]closed[else]open[end if]."
@@ -40,7 +39,8 @@ box locker:
 # break; `!` marks an always-alien proper noun (these stay alien even fully scanned);
 # `[']` forces a literal apostrophe where the quote convention would otherwise convert
 # a word-final `'`. Full diary text ported from Texts.i7x (content1 + content2).
-document diary:
+item diary:
+	textual true
 	scan_level 2
 	content "Phobos is bleak even for a moon. The horizon is so close it seems like you could reach out and touch it. Without an atmosphere like we have on !MyHomeworld, there is no sky, just the infinite blackness of space. The only sights to see here are the great crater that dominates the landscape, and the oppressive bulk of Mars in the sky above. /
 		!x34agclw, my commander, has tasked me with final watch, when only I stay on to watch over the base before launch. They think it is a punishment, but I don't mind. I like the quiet. I like the solitude. By myself, I can think and remember. /

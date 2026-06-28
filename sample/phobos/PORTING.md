@@ -126,35 +126,39 @@ description already in `base.lamp` predates this and will be revisited.
    **the passage end**. <desc>"). Remaining: contents reword "Also here is/are …"
    (needs a parallel contents seam), and the deferred third-person *action reports*
    / `[We]`-as-name (not take/drop) per the agreed scope.
-3. ~~**`[Siriusian]…[English]` glyph cipher**~~ **Display cipher DONE.** Ported the
-   `siriusian(text)` algorithm to a phobos-lib native (`lib/phobos/index.js`): a
-   deterministic, deliberately **non-invertible** cipher (drops odd-position chars;
-   shift-by-length; reverse; many-to-one glyph table). Used in descriptions as
-   `[siriusian("…")]`. Verified: `siriusian("This way to the secret base")` ===
-   `"ſĺĺļĿŀĹıŧĹŁĽ"`, and **the full Passage End description now renders byte-for-byte
-   like the transcript.** **Reading DONE (slice 1 of the Linguistic Module):** the
-   **progressive per-word, scan-level reveal** is ported (`lib/phobos/linguistics.lamp`
-   + `print_translated`/`is_textual` in `index.js`). A `document` (textual) type carries
-   `content` + `scan_level`; examine/read renders the content word-by-word through the
+3. ~~**`[Siriusian]…[English]` glyph cipher**~~ **Display cipher DONE.** The
+   `siriusian(text)` algorithm — a deterministic, deliberately **non-invertible** cipher
+   (drops odd-position chars; shift-by-length; reverse; many-to-one glyph table) — is now
+   a **pure-Lamp function** (`lib/phobos/linguistics.lamp`; see the native→Lamp migration
+   below). Used in descriptions as `[siriusian("…")]`. Verified:
+   `siriusian("This way to the secret base")` === `"ſĺĺļĿŀĹıŧĹŁĽ"`, and **the full Passage
+   End description now renders byte-for-byte like the transcript.** **Reading DONE (slice 1
+   of the Linguistic Module):** the **progressive per-word, scan-level reveal**
+   (`lib/phobos/linguistics.lamp`, `print_translated`). The `textual` marker + `content`
+   + `scan_level` are added to `item` by **reopening the type in Phobos** (no `document`
+   subtype, advent untouched); examine/read renders the content word-by-word through the
    filter — each word translates to English (bold) once its difficulty tier (`!`/`$`/`#`
    = proper-noun/control tiers 15/16/20, else a 1-5 char-sum hash) is in the global
    `scan_levels`, otherwise it shows as fixed-width Siriusian; `/` = paragraph break.
    Emitted via `write()` so only `/` breaks the prose (no per-sentence auto-break). The
-   diary is the first `document` — its **full text is ported** from Texts.i7x (content1 +
+   diary is the first textual item — its **full text is ported** from Texts.i7x (content1 +
    content2, 9 paragraphs); `!`-proper-nouns stay alien even fully scanned, and word-final
    possessives use the `[']` escape so the quote convention doesn't turn `humans'` into a
    typographic `"`.
    **Scanning DONE (slice 2):** the **SCAN verb + Linguistic Module item** (carried from
-   start). `scan [document]` (target typed `document`, so only textual things qualify and
-   their fields are read directly — *no new natives*) marks the text `scanned` and flips
-   its tier on in `scan_levels`, so every text of that tier reads more clearly afterward.
-   Guards: already-scanned, and not-carrying-the-Module. `scan_levels` is a fixed
-   five-slot `list<bool>` (one per tier) so adding a tier is plain element assignment — no
-   list append. The temporary `reveal` lever is gone. Undo reverts scan state. **Deferred:**
-   the `obscure`/`revealed` real-name/real-description swap on examine; the friendlier
-   "needs more text than available on [noun]" message for scanning a non-textual thing
-   (today the `document`-typed slot just yields "can't see any such thing"); reaching full
-   translation needs documents of every tier (content follow-up).
+   start). `scan [target]` marks the text `scanned` and flips its tier on in `scan_levels`,
+   so every text of that tier reads more clearly afterward. Guards: not-textual (a friendly
+   "needs more text" message), already-scanned, and not-carrying-the-Module. `scan_levels`
+   is a fixed five-slot `list<bool>` (one per tier) so adding a tier is plain element
+   assignment — no list append. The temporary `reveal` lever is gone. Undo reverts scan
+   state.
+   **Native→Lamp migration DONE:** the entire Phobos native JS (`lib/phobos/index.js`,
+   now deleted) — the Siriusian cipher, `token_difficulty`, and `print_translated` — is
+   rewritten in pure Lamp on new lib/sys string/arithmetic primitives (`length`/`char_at`/
+   `code_at`/`substring`/`mod`); verified **byte-identical** to the native (door label +
+   diary). `is_textual` collapsed into the pure-Lamp guard `self.target.textual`.
+   **Deferred:** the `obscure`/`revealed` real-name/real-description swap on examine;
+   reaching full translation needs documents of every tier (content follow-up).
 4. **`feels` property + FEEL/TOUCH action** — nearly every object has a `feels`
    string. From `Can't Touch This.i7x`.
 5. **HACK / the KIM — in progress** (from `KIM.i7x`). The KIM tool + `hack` verb,
