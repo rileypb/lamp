@@ -1728,7 +1728,7 @@ described below.
 |---|---|---|
 | `thing` | — | `string printed_name`, `string understand` |
 | `physical` | `thing` | `article article` |
-| `room` | `container` | `string description`, `bool lighted` (default `true`), `string preposition` (default `"in"`), `bool always_indefinite` |
+| `room` | `container` | `string description`, `bool lighted` (default `true`) |
 | `item` | `physical` | `bool scenery`, `bool wearable`, `string initial_appearance` (default `""`), `bool handled` |
 | `box` | `item, container` | `bool closable`, `bool closed`, `bool locked` |
 | `person` | `physical` | — |
@@ -1782,9 +1782,11 @@ unchanged. A game replaces the heading by contributing a rule **from its author
 file** (so it runs before the library default and `stop`s it); printing without a
 trailing line break makes the description run on into the same paragraph. This is
 how a game gets a third-person, name-embedded intro — e.g. "Galaxy is in **the
-passage end**. <description>" — using the room's `preposition` ("in"/"on") and
-`always_indefinite` (render the name with "a"/"an" rather than "the"). See
-`sample/phobos/`.
+passage end**. <description>". Any presentation fields the custom heading needs are
+the **game's** concern, not advent's: the game **reopens the `room` type** to add
+them. Phobos adds `preposition` ("in"/"on") and `always_indefinite` (render the name
+with "a"/"an" rather than "the"); see `sample/phobos/` (and the `room_heading1`
+fixture).
 
 **Initial appearance.** An `item` with a non-empty **`initial_appearance`** string
 describes itself in its own paragraph in the room description — e.g. "A form hangs on

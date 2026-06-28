@@ -1,9 +1,16 @@
 # Room-heading seam: a game replaces advent's default room-name heading via a
 # `room_heading_rules` contribution (author file → runs before the library default
 # and stops it), embedding the room name in prose that runs on into the
-# description. Exercises `preposition`, `always_indefinite`, and the [run on] cancel.
+# description. Exercises a game adding its own presentation fields (by reopening the
+# `room` type), plus the [run on] cancel.
 
 lib advent
+
+# Presentation fields are the game's concern, not advent's: a game reopens `room` to add
+# the hooks its custom heading needs.
+type room:
+	string preposition = "in"
+	bool always_indefinite = false
 
 game HeadingTest:
 	start Lab

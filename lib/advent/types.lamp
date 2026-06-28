@@ -28,12 +28,6 @@ type container < physical
 
 type room < container:
 	bool lighted = true
-	# Presentation hooks for a custom room-description heading (see
-	# `room_heading_rules` in rooms.lamp). `preposition` reads "in the foyer" /
-	# "on the deck"; `always_indefinite` renders the name with "a"/"an" not "the".
-	# Unused by the default heading, so default output is unchanged.
-	string preposition = "in"
-	bool always_indefinite = false
 
 type item < physical:
 	bool scenery

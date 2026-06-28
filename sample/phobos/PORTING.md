@@ -127,10 +127,12 @@ form and the Cyberhelmet are now real objects.)
    real progression blocker is HACK, item 5.)* Door **descriptions** and the
    handprint-**scanner parts** are still deferred (Siriusian markup + parts).
 2. ~~**Third-person room presentation**~~ **Heading DONE.** advent factors the
-   heading into an overridable `room_heading_rules` rulebook (default unchanged) +
-   `room` `preposition`/`always_indefinite` fields; Phobos's author-file rule
-   prints the name-embedded intro that runs on into the description ("Galaxy is in
-   **the passage end**. <desc>"). **Third-person viewpoint DONE:** advent's player-facing
+   heading into an overridable `room_heading_rules` rulebook (default unchanged);
+   Phobos's author-file rule prints the name-embedded intro that runs on into the
+   description ("Galaxy is in **the passage end**. <desc>"). The presentation fields it
+   needs — `preposition` ("in"/"on") and `always_indefinite` — are **Phobos's**, added by
+   reopening the `room` type in `base.lamp` (advent's `room` stays free of game-specific
+   presentation; the rooms set the fields where they differ from the defaults). **Third-person viewpoint DONE:** advent's player-facing
    `[We]`/verb messages now render by the **story viewpoint** — Phobos sets
    `viewpoint_person = 3` (in `startup_rules`) and `gender "female"` on `yourself`, so the
    room-contents listing reads "She sees a form here." and examine-nothing "She sees

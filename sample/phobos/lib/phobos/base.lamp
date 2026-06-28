@@ -1,5 +1,14 @@
 lib advent
 
+# Third-person room-heading hooks, added to advent's `room` by reopening the type (so advent
+# stays free of presentation concerns specific to this game). Consumed by Phobos's
+# `room_heading_rules` override in phobos.lamp — `preposition` reads "in the foyer" / "on the
+# deck"; `always_indefinite` renders the name with "a"/"an" rather than "the". Rooms below set
+# them where they differ from the defaults.
+type room:
+	string preposition = "in"
+	bool always_indefinite = false
+
 # Siriusian glyph cipher (a Lamp function in lib/phobos/linguistics.lamp): renders
 # English as the alien script. Used in descriptions via [siriusian("...")].
 
