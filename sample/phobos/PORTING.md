@@ -152,6 +152,18 @@ not yet declared as examinable objects.
    content2, 9 paragraphs); `!`-proper-nouns stay alien even fully scanned, and word-final
    possessives use the `[']` escape so the quote convention doesn't turn `humans'` into a
    typographic `"`.
+   **All five textual documents DONE:** the remaining four are ported (`base.lamp`), one per
+   tier — the **sign-out form** (1, storeroom), **science notebook** (3, science lab),
+   **reactor manual** (4, reactor room), and **commander's log** (5, commander's quarters) —
+   joining the diary (2) for **full tier coverage**, so scanning every document now unlocks
+   complete translation (the log's tier-20 `#` security-key words reveal only once all five
+   tiers are scanned, dropping the `#`). Tier markers verified end-to-end: `!` proper noun
+   (angle-bracketed, always alien), `$` control word (always alien, no brackets), `#`
+   security-key (reveals at full scan), `[']` literal apostrophe, `/` break. The form alone
+   carries a physical `description` (its wall framing + "It reads in part:"), now shown before
+   the readable content by the textual-examine rule (other documents leave it empty).
+   **Deferred on the log:** the actual control-code value appended after "...is" — generated
+   by the (unported) purple-door control-code system; the sentence ends at "is" for now.
    **Scanning DONE (slice 2):** the **SCAN verb + Linguistic Module item** (carried from
    start). `scan [target]` marks the text `scanned` and flips its tier on in `scan_levels`,
    so every text of that tier reads more clearly afterward. Guards: not-textual (a friendly
@@ -164,8 +176,8 @@ not yet declared as examinable objects.
    rewritten in pure Lamp on new lib/sys string primitives (`length`/`char_at`/`code_at`/
    `substring`) and the new `mod` operator; verified **byte-identical** to the native (door
    label + diary). `is_textual` collapsed into the pure-Lamp guard `self.target.textual`.
-   **Deferred:** the `obscure`/`revealed` real-name/real-description swap on examine;
-   reaching full translation needs documents of every tier (content follow-up).
+   **Deferred:** the `obscure`/`revealed` real-name/real-description swap on examine.
+   (Full translation is now reachable — all five tiers have a document; see above.)
 4. **`feels` property + FEEL/TOUCH action** — nearly every object has a `feels`
    string. From `Can't Touch This.i7x`.
    ~~**Galaxy Suit + power-up (GJ Basics / Powerup / Galaxy Smash)**~~ **DONE**
@@ -215,10 +227,12 @@ not yet declared as examinable objects.
    (re-pressing a button undoes it, so it's not required to solve).
 6. **Parts / components** — `X is a part of Y` (handprint scanners, screens,
    buttons, levers). advent has no part-of relation.
-7. ~~**KIM / scanning (Linguistic Module)**~~ **DONE** (item 3 above): `document`/
+7. ~~**KIM / scanning (Linguistic Module) + all documents**~~ **DONE** (item 3 above):
    `textual`, `content`, `scan_level`, `scanned`; the per-tier translation filter +
-   examine/read surface (slice 1) and the SCAN verb + Linguistic Module item (slice 2).
-   Remaining is content (more `document`s across tiers) + the deferreds noted in item 3.
+   examine/read surface (slice 1), the SCAN verb + Linguistic Module item (slice 2), and
+   **all five textual documents** (form/diary/notebook/manual/log, tiers 1-5).
+   Remaining is only the deferreds noted in item 3 (the `obscure`/`revealed` swap; the log's
+   control-code tail with the purple-door system).
 8. **Open/close actions** for containers (cabinet, locker); advent's `box` has
    `closed`/`closable` fields but no open/close *actions*.
 9. **Vehicles / ENTER / enterable supporters** — Moon Sled, Siriusian ship,

@@ -260,16 +260,20 @@ core edit is contained. Names (default): `contains`/`place`/`contained`, keyword
   `scan_levels` (a fixed five-slot `list<bool>`, so adding a tier is element assignment —
   no append, no new natives; the scan target is typed `document` so it reads fields
   directly). Guards: already-scanned, not-carrying-Module. Undo reverts scan state.
-  The diary's **full text is ported** (Texts.i7x content1+content2, 9 paragraphs; `[']`
-  escapes the word-final possessives). **All room descriptions DONE** (Base.i7x, in
-  `base.lamp`): static `[siriusian("…")]` signage + `[if <door>.closed]` state; the North
-  Barracks `cabinet` added so its conditional resolves. **Remaining:** **scan-aware
-  Siriusian labels** — room/door labels are static-alien today and never translate; making
-  them respond to `scan_levels` (like diary content) needs a string-returning translate
-  function and would also convert the Passage End door label off `siriusian()`. Also: the
-  in-prose sub-objects (signs, sign-out form, poster, reactor levers, control panel +
-  launch/self-destruct buttons, the cabinet's Cyberhelmet) as examinable objects; more
-  documents across the other tiers; the `obscure`/`revealed` real-name swap.
+  **All five textual documents DONE** (Texts.i7x): the diary (tier 2, full content1+content2,
+  9 paragraphs) plus the sign-out form (1), science notebook (3), reactor manual (4), and
+  commander's log (5) — **full tier coverage, so full translation is reachable** (the log's
+  tier-20 `#` security-key words reveal only once all five tiers are scanned). `[']` escapes
+  word-final possessives; the form alone carries a physical description shown before its
+  content. **All room descriptions DONE** (Base.i7x, in `base.lamp`): static
+  `[siriusian("…")]` signage + `[if <door>.closed]` state; the North Barracks `cabinet` added
+  so its conditional resolves. **Remaining:** **scan-aware Siriusian labels** — room/door
+  labels are static-alien today and never translate; making them respond to `scan_levels`
+  (like document content) needs a string-returning translate function and would also convert
+  the Passage End door label off `siriusian()`. Also: the in-prose sub-objects (signs, poster,
+  reactor levers, control panel + launch/self-destruct buttons, the cabinet's Cyberhelmet) as
+  examinable objects; the `obscure`/`revealed` real-name swap; the log's control-code tail
+  (with the purple-door system).
   ~~**Migration (native phobos JS → Lamp)**~~ **DONE** (memory
   `phobos-native-to-lamp-migration`). Phase 1: general lib/sys primitives `length`/
   `char_at`/`code_at`/`substring` (codepoint-based, 0-indexed) + the `mod`/`div` operators;

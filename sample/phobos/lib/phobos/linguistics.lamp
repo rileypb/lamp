@@ -142,7 +142,12 @@ contains yourself linguistic_module
 
 # Reading a textual thing shows its translated content instead of a plain description.
 # The guard reads `textual` straight off examine's `item` target — pure Lamp, no native.
+# A textual item may also carry a physical `description` (e.g. the sign-out form's wall
+# framing); when set, it prints before the readable content. Most documents leave it empty.
 instead examine when self.target.textual:
+	if not (self.target.description == ""):
+		let intro = self.target.description
+		print "[intro][par]"
 	print_translated(self.target, scan_levels)
 	stop succeeded
 

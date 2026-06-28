@@ -139,3 +139,59 @@ door flight_deck_door:
 	scenery
 	locked true
 	lockable false
+
+# --- Textual documents (Texts.i7x) -------------------------------------------
+# Four more textual things, one per remaining difficulty tier (the diary above is
+# tier 2): the sign-out form (1), science notebook (3), reactor manual (4), and the
+# commander's log (5). Together with the diary they cover all five tiers, so scanning
+# every document unlocks full translation — the tier-20 `#` security-key words in the
+# log reveal only once all five tiers have been scanned. Examine/read renders each
+# through the Siriusian filter (lib/phobos/linguistics.lamp). Markers: `!` proper noun
+# (always alien, angle-bracketed), `$` control word (always alien), `#` security-key word
+# (reveals only at full scan, dropping the `#`), `[']` literal apostrophe, `/` break.
+# The custom initial-appearance room prose and the `feels` strings are deferred (no hooks).
+
+# The sign-out form — tier 1, on the storeroom wall. Unlike the other documents it has a
+# physical description, shown before the readable content by the textual-examine rule.
+item form:
+	textual true
+	scan_level 1
+	description "It's a form attached to the wall. The top line reads '[siriusian(\"Sign-Out Form\")]'. The rest of the form is a lot of Siriusian scribbles of what look like minor bureaucratic details. It reads in part:"
+	content "Equipment Sign-out Form /
+		Name Date Equipment /
+		!fred !flintstone 34256 8 feet of rubber tubing /
+		!barney !rubble 34258 power drill /
+		!wilma !flintstone 34261 toothbrush repair kit /
+		!betty !rubble 34262 bolt cutter /
+		!barney !rubble 34263 new power drill /
+		!anderson !cooper 34267 metal polisher /
+		!barney !rubble 34268 power drill manual"
+
+contains Storeroom form
+
+# Science notebook — tier 3, in the science lab.
+item science_notebook:
+	textual true
+	scan_level 3
+	content "Mission Day 13 -- Measurements indicate the target (Mars) is some distance away from the proposed missile, Phobos, necessitating some sort of propulsion system. We are relaying our new requirements to Syndicate HQ. / Mission day 14 -- HQ responds that we may need to construct a fusion reactor. We are currently assessing the feasibility of this approach, first by asking HQ what a fusion reactor is. / Mission Day 17 -- Fusion reactor it is, I guess. We will need to wait several weeks while HQ ships the necessary components and people who know something about nuclear physics. In the meantime we are working on the control center chair design, as well as having a lively debate about the colors of the Launch and Self-Destruct buttons."
+
+contains Science_Lab science_notebook
+
+# Reactor manual — tier 4, in the reactor room (the self-destruct confirmation procedure).
+item reactor_manual:
+	textual true
+	scan_level 4
+	content "Reactor Manual page 122 -- Reactor Self-Destruct Confirmation Phase / Upon the activation of the reactor self-destruct from the central control room, the reactor will enter a confirmation phase. During this phase, both arming levers must be pulled simultaneously to confirm the self-destruct. Note that one cyborg alone cannot activate the self-destruct, as the levers are too far apart."
+
+contains Reactor_Room reactor_manual
+
+# Commander's log — tier 5, in the commander's quarters. The final `#`-tagged sentence is
+# the security key for the purple-door control code; the actual code is produced by the
+# (deferred) control-code system, so the key value is omitted and the sentence ends at "is".
+item commanders_log:
+	printed_name "Commander's Log"
+	textual true
+	scan_level 5
+	content "Commander's Log, 34269 / !mfk5plas continues to be a problem. I trust them completely, but their kind of free-thinking can infect entire crews and sap their will. I spoke with them today and I believe I may have gotten through to them. I've assigned them to take final watch before launch, which they surely think of as a punishment, but which I hope they will come to understand is my gesture of faith in them as a soldier. / And my penance. May they never find out that I am the one who ordered the death of !Cleopatra. They may be loyal to the Syndicate, but loyalty has its limits. / We can't be done with this soon enough. Spending this much time in the $stupid rats['] home system makes me feel dirty. Let's wipe Mars out of existence and get out of here. / Important: #The #new #security #key #for #control #is"
+
+contains Commanders_Quarters commanders_log
