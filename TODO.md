@@ -238,13 +238,22 @@ core edit is contained. Names (default): `contains`/`place`/`contained`, keyword
   `room_heading_rules(room r)` rulebook (default byte-identical) + `room`
   `preposition`/`always_indefinite` fields; Phobos contributes a name-embedded
   third-person intro that runs on into the description ("Galaxy is in **the passage
-  end**. <desc>"). Golden `room_heading1`; 158 green; docs in specs.md. **Remaining
-  for presentation:** (a) contents reword "Also here is/are …" — needs a parallel
-  **contents seam** (advent's frame can't add the copula from a message override
-  alone, like the heading); (b) deferred (agreed): `[We]`-as-name viewpoint feature
-  + third-person **action reports** — but NOT take/drop (Phobos leaves "Taken."/
-  "Dropped." as-is); examine-undescribed / parser-error rewordings; disguise
-  variant; nested-location parenthetical. **Siriusian display cipher DONE:**
+  end**. <desc>"). Golden `room_heading1`; 158 green; docs in specs.md. **Third-person
+  viewpoint DONE:** the story viewpoint now supports third-person gendered narration —
+  person/number from the globals `viewpoint_person`/`viewpoint_plural`
+  (`lib/sys/globals.lamp`, defaults 2/false, byte-invariant), and **gender read off the
+  player object** (`player.gender`, the same source the subject pronouns use — not a global,
+  so it tracks the main character) by the locale's `viewpoint()` (both en-US and fr-FR).
+  advent's hard-coded "You see " contents intro became the `[We] [see]` sugar. Phobos sets
+  `viewpoint_person = 3` + `gender "female"` on `yourself`, so the contents listing reads
+  "She sees a … here." and examine-nothing "She sees nothing unusual …". (text.md D7.) **Remaining for
+  presentation:** (a) contents reword "Also here is/are …" — needs a parallel **contents
+  seam** (advent's frame can't add the copula from a message override alone, like the
+  heading); (b) the still-2nd-person **parser feedback** ("You can't see any such thing."
+  — `parser_cant_see`/`parser_no_understand`); (c) deferred (agreed): third-person
+  **action reports** — but NOT take/drop (Phobos leaves "Taken."/"Dropped." as-is);
+  examine-undescribed / disguise variant; nested-location parenthetical. **Siriusian
+  display cipher DONE:**
   `siriusian(text)` native in `sample/phobos/lib/phobos/index.js` (non-invertible:
   drop odd chars / shift-by-len / reverse / many-to-one glyphs); used as
   `[siriusian("…")]`; **the full Passage End description renders byte-for-byte like

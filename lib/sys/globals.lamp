@@ -6,6 +6,18 @@ global bool oxford_comma = false
 # devdocs/state.md). Set `undo_limit = N` in a game to change it; 0 disables undo.
 global int undo_limit = 32
 
+# Story viewpoint: the grammatical person/number the player — `[We]`/`[us]`/`[our]`/`[ours]`
+# and the unqualified adaptive verbs — is narrated in. `viewpoint_person` is 1/2/3 (default
+# 2 → "you"), `viewpoint_plural` toggles number (default singular). Read by the locale's
+# viewpoint() (lib/en-US, lib/fr-FR); saved, so a chosen viewpoint survives restore. The
+# defaults reproduce the second-person "you" exactly.
+#
+# Gender is deliberately NOT here: in third person it comes from the *player object's*
+# `gender` field (advent's `physical.gender`), so it tracks the main character — change who
+# `player` is and the pronoun follows, with nothing to keep in sync.
+global int viewpoint_person = 2
+global bool viewpoint_plural = false
+
 global real PI = 3.141592653
 
 # The action currently running (set by the action pipeline for the duration of an

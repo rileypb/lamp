@@ -1,0 +1,12 @@
+study
+A small panelled study.
+
+She sees a coin and a locket here.
+
+> examine coin
+She sees nothing unusual about the coin.
+
+> examine locket
+A silver locket.
+
+> quit

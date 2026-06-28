@@ -130,9 +130,21 @@ not yet declared as examinable objects.
    heading into an overridable `room_heading_rules` rulebook (default unchanged) +
    `room` `preposition`/`always_indefinite` fields; Phobos's author-file rule
    prints the name-embedded intro that runs on into the description ("Galaxy is in
-   **the passage end**. <desc>"). Remaining: contents reword "Also here is/are …"
-   (needs a parallel contents seam), and the deferred third-person *action reports*
-   / `[We]`-as-name (not take/drop) per the agreed scope.
+   **the passage end**. <desc>"). **Third-person viewpoint DONE:** advent's player-facing
+   `[We]`/verb messages now render by the **story viewpoint** — Phobos sets
+   `viewpoint_person = 3` (in `startup_rules`) and `gender "female"` on `yourself`, so the
+   room-contents listing reads "She sees a form here." and examine-nothing "She sees
+   nothing unusual about …". This filled a real engine gap: the viewpoint formerly carried
+   person+number only, hard-coding gender to neuter (→ "it"). The locale's `viewpoint()` now
+   reads **gender off the player object** (`player.gender`, the same source the subject
+   pronouns use) rather than a separate global — so it tracks the main character (reassign
+   `player` and the pronoun follows). advent's `room_contents_intro` switched from a
+   hard-coded "You see " to the `[We] [see]` sugar (byte-invariant for default 2nd-person
+   games). `gender "female"` works in both locales (en-US `gender_of` and fr-FR
+   `is_feminine` both accept it). Remaining: the deferred third-person
+   *action reports* (NOT take/drop — those stay "Taken."/"Dropped." per the agreed
+   scope), and the still-2nd-person **parser feedback** ("You can't see any such thing.")
+   — a separate message family (`parser_cant_see`/`parser_no_understand`).
 3. ~~**`[Siriusian]…[English]` glyph cipher**~~ **Display cipher DONE.** The
    `siriusian(text)` algorithm — a deterministic, deliberately **non-invertible** cipher
    (drops odd-position chars; shift-by-length; reverse; many-to-one glyph table) — is now

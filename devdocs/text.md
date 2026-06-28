@@ -197,7 +197,15 @@ use an ordinary reference (`[the self.actor]`), not a pronoun word.
 - **D6. Story tense.** Render adaptive text in past/present/future (Inform's "story
   tense"): `[We] [had jumped]`. DEFER until we add story tense
 - **D7. Person setting.** Choose 1st/2nd/3rd person narration globally (Inform lets
-  a story be told in any person); the player verbs adapt accordingly. DEFER until we add other person viewpoints
+  a story be told in any person); the player verbs adapt accordingly. **DONE.** Person and
+  number are narration choices — the globals `viewpoint_person` (1/2/3, default 2 → "you")
+  and `viewpoint_plural` (default false), declared in `lib/sys/globals.lamp`. **Gender is
+  not a global:** in third person it is read off the *player object's* `gender` field (the
+  same source the subject pronouns use), so it tracks the main character — reassign `player`
+  and the pronoun follows, with nothing to keep in sync. So `[We] [see]` renders "You see" /
+  "I see" / "She sees" / "He sees" / "It sees" by `viewpoint_person` + `player.gender`, and
+  the verb agrees. (Phobos: `viewpoint_person = 3` + `gender "female"` on `yourself` → "She
+  …".) Still a *pronoun*, never a name (D8). Story **tense** (D6) remains deferred.
 - **D8. Integration with action defaults.** Inform: `"[The actor] [take] [the
   noun]."` (where `[The actor]` becomes "You" or "Alice"). **Lamp:** the default
   report of a generic action becomes a template keyed on the actor as **subject** —

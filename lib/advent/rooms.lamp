@@ -52,7 +52,9 @@ function void list_room_contents(room r):
 		# surrounding frame carries no local reference and splits into named
 		# intro/outro messages (same pattern as the inventory `(worn)` split). A
 		# translation reshapes the frame around the contents — "Vous voyez … ici."
-		print room_contents_intro:"[par]You see "
+		# `[We] [see]` renders by the story viewpoint: "You see" (2nd person, default),
+		# "She sees"/"He sees"/"I see" under a 1st/3rd-person viewpoint.
+		print room_contents_intro:"[par][We] [see] "
 		print "[render_contents(r)]"
 		print room_contents_outro:" here."
 	describe_supporters(r)
