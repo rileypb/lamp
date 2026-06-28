@@ -1,0 +1,29 @@
+# TREE and SCOPE (advent debug commands), both `out_of_world`.
+# TREE dumps the whole world's containment tree (every room and its contents, recursively),
+# including a gem sealed in a closed safe and a lamp in another room. SCOPE lists only what
+# is in the player's scope right now — the carried coin, the safe, and the player — so the
+# sealed gem and the other room's lamp are absent (the contrast with TREE).
+
+lib advent
+
+game TreeScope:
+	start Hall
+
+room Hall:
+	description "A bare hall."
+room Vault:
+	description "A locked vault."
+
+box safe:
+	closable true
+	closed true
+item gem
+item coin
+item lamp
+
+contains Hall safe
+contains safe gem
+contains Vault lamp
+contains yourself coin
+
+bidi connects Hall north Vault

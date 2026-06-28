@@ -1,0 +1,20 @@
+Hall
+A bare hall.
+
+You see a safe here.
+
+> tree
+Hall (room)
+  safe (box)
+    gem (item)
+  yourself (person)
+    coin (item)
+Vault (room)
+  lamp (item)
+
+> scope
+coin (item)
+safe (box)
+yourself (person)
+
+> quit

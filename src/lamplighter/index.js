@@ -2207,6 +2207,7 @@ module.exports = {
     removeRelationByName,
     moveObject,
     containerOf,
+    scopeOf,
     queryRelation,
     queryRelationValue,
     ANY,

@@ -206,8 +206,11 @@ core edit is contained. Names (default): `contains`/`place`/`contained`, keyword
   fields); reaches out-of-scope objects too. **GONEAR [room-or-thing] DONE** (golden
   `gonear1`): teleports the player to a room, or to the room enclosing a thing (pure-Lamp
   `room_of` walks the holder chain to the top); the destination auto-describes. One verb for
-  both (GOTO left free for authors). **Next debug verbs:** TREE/SCOPE (dump the object tree /
-  what's in scope), ABSTRACT [thing] TO [holder]. **Gap:**
+  both (GOTO left free for authors). **TREE + SCOPE DONE** (golden `treescope1`): TREE dumps
+  the whole world's containment tree (a `world_tree` native); SCOPE lists what is in the
+  player's scope right now (`scope_listing` over the now-exposed `scopeOf`). (ABSTRACT is
+  skipped — deprecated in I7.) **Possible next:** the release-build flag below; richer SHOWME
+  (e.g. relations); a debug-only `RELATIONS`/`RULES` dump. **Gap:**
   no release-build flag yet to exclude them from a shipped game (Inform's NOT-FOR-RELEASE) —
   they currently always load in advent.
 - ~~**Galaxy Suit + power-up (Phobos)**~~ **DONE** (`sample/phobos/lib/phobos/suit.lamp`):

@@ -57,3 +57,29 @@ action gonear:
 
 do gonear:
 	move self.actor to room_of(self.target)
+
+# TREE — dump the whole world's containment tree (every room and its contents, recursively
+# indented). No target, so no `world_scope`.
+native function string world_tree()
+
+action tree:
+	out_of_world
+	syntax:
+		"tree"
+
+report tree:
+	write(world_tree())
+	write(line_break())
+
+# SCOPE — list what is currently in the player's scope (what the parser would resolve a noun
+# against right now), one per line.
+native function string scope_listing()
+
+action scope:
+	out_of_world
+	syntax:
+		"scope"
+
+report scope:
+	write(scope_listing())
+	write(line_break())
