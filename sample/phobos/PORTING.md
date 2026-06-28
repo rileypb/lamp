@@ -50,7 +50,7 @@ descriptions can't be ported verbatim. (Durable note also in agent memory
 | story release / genre / description / year (L45–48) | bibliographic | **N/A for now** — no advent fields; kept `version 0 / release dev` (partial-port markers) |
 | Before looking for the first time (L85–86) | Galaxy Jones reveal beat | **Done** — appended to `startup_rules` (prints just before the first room description); `[bold type]`→`[bold]…[/bold]` |
 | `Use scoring` + Score/Rank (L5) | scoring subsystem | **Blocked** — advent has no score/rank system |
-| autopower down rule listed last (L95) | every-turn rule ordering | **Blocked** — every-turn rules not implemented (TODO item 2); also needs Powerup ext |
+| autopower down rule listed last (L95) | every-turn rule ordering | **Deferred** — Powerup ext ported (`suit.lamp`), but the every-turn auto-power-down still needs every-turn rules (TODO item 2); `use_charge` powers down after each smash, so the attack path is faithful |
 | `Instead of searching: try examining` (L92) | redirect search→examine | **Blocked** — no `search` action in advent yet |
 | can't-exit response (A) (L97) | message override | **Blocked** — no exit/enter action in advent |
 | parser clarification response (E) (L119) | "What should Galaxy…" | **Blocked** — parser feedback not author-exposed by name |
@@ -168,6 +168,17 @@ not yet declared as examinable objects.
    reaching full translation needs documents of every tier (content follow-up).
 4. **`feels` property + FEEL/TOUCH action** — nearly every object has a `feels`
    string. From `Can't Touch This.i7x`.
+   ~~**Galaxy Suit + power-up (GJ Basics / Powerup / Galaxy Smash)**~~ **DONE**
+   (`lib/phobos/suit.lamp`): the worn Galaxy Suit, `powered_up`/`charges_left`/
+   `first_power_use` globals, POWER UP/DOWN actions (with the `--`-optional "suit"
+   variants + already-powered / out-of-charges / not-powered checks), and a powered
+   ATTACK/SMASH/PUNCH (target typed `door`) that smashes any locked door open — purple
+   resists (force field). A `use_charge()` helper powers down, decrements, and prints the
+   first-use no-points note. **Great for testing** — POWER UP then ATTACK bypasses any
+   door's hacking puzzle. **Deferred:** the every-turn "powers down if unused" rule (needs
+   every-turn rules — TODO item 2; `use_charge` covers the attack path so power-up→attack
+   is faithful) and the power banner (with scoring). Smashing the **locker** (vs the doors)
+   and PUNCH/SMASH on non-door targets are not ported (door-scoped slot).
 5. **HACK / the KIM — in progress** (from `KIM.i7x`). The KIM tool + `hack` verb,
    the green door (instant bypass), and the **yellow and red doors (Lights-Out
    keypads)** are done (`lib/phobos/hacking.lamp`): `press [n]` flips a hidden

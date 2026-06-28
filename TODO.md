@@ -179,6 +179,11 @@ core edit is contained. Names (default): `contains`/`place`/`contained`, keyword
 **Where:** `src/lantern/{tokenizer,parser_rd,emitter,checker}.js`, `src/lamplighter/index.js`, `lib/advent/*`, `devdocs/{relations,world-model}.md`.
 
 ## Smaller / opportunistic
+- ~~**Galaxy Suit + power-up (Phobos)**~~ **DONE** (`sample/phobos/lib/phobos/suit.lamp`):
+  worn suit, POWER UP/DOWN, and a powered ATTACK/SMASH that destroys any locked door
+  (purple resists) — a testing shortcut past the hacking puzzles. Deferred: the every-turn
+  auto-power-down (rides on item 2's every-turn rules; `use_charge` covers the attack path)
+  and the power banner (rides on scoring). Locker-smash + non-door targets not ported.
 - **`--encode-strings`: encode name literals inside inlined native JS (backlog).** Today
   the encoder rewrites name literals only in *emitter-emitted* code; strings inside a lib's
   `index.js` are inlined verbatim, so structural names a native references by literal stay
