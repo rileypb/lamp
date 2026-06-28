@@ -96,6 +96,25 @@ instead hack when self.target == locker:
 	print "Galaxy mutters to herself. 'Some already lit. What do I press? 1? 2?'"
 	stop succeeded
 
+# The purple door: gated on the cyborg disguise (the scanner reads a "visual identity"),
+# then a 16-button select-five keypad (see below). The KIM only adheres while Galaxy wears
+# both the Cyberhelmet and the Cybercarapace. Slice 1 uses a fixed control code {1,2,3,4,5};
+# the random code + its commander's-log clue are a follow-up slice.
+instead hack when self.target == purple_door:
+	if not self.target.locked:
+		print "The door is already unlocked."
+		stop succeeded
+	if not (wears player cyberhelmet) or not (wears player cybercarapace):
+		print "The purple door beeps, and a voice says, '[siriusian(\"Visual identity not confirmed\")].' The KIM will not adhere to the door."
+		stop failed
+	kim_adhered_to = purple_door
+	sixteen_buttons = [false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false]
+	control_parts = [1, 2, 3, 4, 5]
+	print "The purple door beeps, and a voice says, '[siriusian(\"Visual identity confirmed\")].'[par]Galaxy attaches the KIM to the purple handprint scanner.[par]"
+	show_keypad_16()
+	print "Sixteen buttons, all dark. 'Light the right five,' Galaxy murmurs."
+	stop succeeded
+
 # Every other hackable target opens a puzzle that isn't ported yet.
 instead hack:
 	print "Galaxy attempts to attach the KIM to [the act.target], but it fails to activate. Perhaps [the act.target] is not hackable?"
@@ -343,3 +362,76 @@ report press when kim_adhered_to == locker:
 	else:
 		print "[par]"
 		show_keypad_4()
+
+
+# --- Purple door: a 16-button "select five" keypad ---------------------------
+# Sixteen buttons, each dark (red) or lit (blue). Light exactly the five buttons whose
+# numbers are the control code (`control_parts`) to open the door. A fifth lit button that
+# doesn't complete the code beeps and resets every button to red; pressing a lit button
+# before then turns it back off. Slice 1 fixes the code to {1,2,3,4,5}.
+global list<bool> sixteen_buttons = none
+global list<int> control_parts = none
+# Whether the most recent press triggered a wrong-five reset (do → report signal).
+global bool purple_reset = false
+
+function bool in_control_parts(int n):
+	for p in control_parts:
+		if p == n:
+			return true
+	return false
+
+# Solved = exactly five buttons lit and every lit button is a control part.
+function bool purple_solved():
+	let count = 0
+	for i = 0 to 15:
+		if sixteen_buttons[i]:
+			count = count + 1
+			if not in_control_parts(i + 1):
+				return false
+	return count == 5
+
+function int lit_count():
+	let count = 0
+	for i = 0 to 15:
+		if sixteen_buttons[i]:
+			count = count + 1
+	return count
+
+# The keypad display: a dark button shows as [N], a lit one as <N>.
+function void show_keypad_16():
+	for i = 1 to 16:
+		if sixteen_buttons[i - 1]:
+			print "<[i]>"
+		else:
+			print "\[[i]\]"
+	print "[line break]\[\] = red, <> = blue[par]"
+
+do press when kim_adhered_to == purple_door:
+	if self.n < 1 or self.n > 16:
+		print "Use the numbers 1-16."
+		stop failed
+	purple_reset = false
+	sixteen_buttons[self.n - 1] = not sixteen_buttons[self.n - 1]
+	if purple_solved():
+		let pd = purple_door
+		pd.locked = false
+		pd.closed = false
+	else:
+		if lit_count() == 5:
+			sixteen_buttons = [false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false]
+			purple_reset = true
+
+report press when kim_adhered_to == purple_door:
+	if purple_solved():
+		print "Galaxy presses button [self.n].[par]As the fifth button lights up blue, the purple door to the north swings open! Galaxy retrieves the KIM."
+		kim_adhered_to = none
+	else:
+		print "Galaxy presses button [self.n]. [run on]"
+		if purple_reset:
+			print "Five lit, but not the code — the KIM beeps and all sixteen buttons reset to red.[par]"
+		else:
+			if sixteen_buttons[self.n - 1]:
+				print "Button [self.n] turns blue.[par]"
+			else:
+				print "Button [self.n] turns red.[par]"
+		show_keypad_16()

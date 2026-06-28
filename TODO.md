@@ -202,12 +202,15 @@ core edit is contained. Names (default): `contains`/`place`/`contained`, keyword
   `after wear` rule that prints its own message (replacing advent's 2nd-person default — `after`
   precedes and `stop`s the report band) plus the "She is now disguised as a Siriusian cyborg."
   completion when both are worn. The player OPENs the (closed) cabinet to reveal the helmet.
-  **The disguise payoff is the bigger Phobos blocker: the purple door → endgame** — the
-  control-code puzzle (16-button select-5, clue from the fully-scanned commander's log + the
-  Siriusian letter→button decoding), the visual-identity gate (now that the gear exists), the
-  control room (launch/self-destruct/levers), and the **Guard** (60KB conversation/persuasion
-  extension) that the two-lever self-destruct needs. Large; slice it. Deferred with it: the
-  helmet's translation effect, examine-self disguise variants.
+  **Purple door → endgame (the disguise payoff) — being sliced.** **Slice 1 DONE**
+  (`hacking.lamp`): the visual-identity gate (hacking the purple door needs both wearables)
+  + the **16-button select-five keypad** (`press [n]`, toggle lit/dark, wrong-fifth resets,
+  the right five opens the door → the control room), with the control code **fixed to
+  {1,2,3,4,5}**. **Slice 2:** the random 5-number control-code generation + revealing it in
+  the fully-scanned commander's log (decode Siriusian glyphs → button numbers). **Later:**
+  the control room (launch/self-destruct/levers), and the **Guard** (60KB conversation/
+  persuasion extension) the two-lever self-destruct needs; scoring on solve. Also deferred:
+  the helmet's translation effect, examine-self disguise variants.
 - ~~**OPEN / CLOSE actions for containers (advent)**~~ **DONE**
   (`lib/advent/actions.lamp`): OPEN/CLOSE (`shut`) over `box`es — opt in with `closable
   true`; opening reveals newly-visible contents and unseals them for scope (closing

@@ -106,8 +106,9 @@ and now **every room description** (Base.i7x). Siriusian signage uses the static
 via `[if <door>.closed]…[end if]`; both render correctly in play (verified open↔closed
 across the green/yellow doors). The North Barracks `cabinet` was added (a scenery `box`)
 so its `[if cabinet.closed]` resolves. Door-gated rooms (Reactor Room, armory,
-Commander's Quarters via their puzzles; Control Room + Flight Deck still gated behind the
-unported purple door) all have descriptions in place.
+Commander's Quarters, and now the Control Room via their puzzles — the purple door's keypad
+is ported; the Flight Deck lies beyond the Control Room's still-unported door) all have
+descriptions in place.
 
 **Deferred (room-description follow-ups):** **scan-aware Siriusian labels** — today the
 labels are static-alien and never translate; making them respond to scan level (like the
@@ -250,8 +251,14 @@ form and the Cyberhelmet are now real objects.)
    `contents_of` closed-check for listings + a core **scope-barrier seam**
    `registerScopeBarrier` so closed contents are out of scope; golden `closedbox1`).
    Chosen (author): the KIM.i7x 4-button puzzle, not Base.i7x's simple bypass.
-   **Remaining doors:** purple (pick-5-of-16, needs the scan/control-code system —
-   deferred). `read` is now a synonym for `examine` (advent), so reading the diary
+   **Purple door — slice 1 DONE:** a 16-button **select-five** keypad gated on the cyborg
+   disguise. Hacking it checks that Galaxy wears both the **Cyberhelmet and Cybercarapace**
+   ("Visual identity confirmed/not confirmed"); on confirm the KIM attaches and shows the
+   keypad. `press [n]` (1-16) toggles a button lit/dark; lighting exactly the five
+   `control_parts` opens the door (→ the control room), while a fifth wrong selection beeps
+   and resets all to red. The control code is **fixed to {1,2,3,4,5}** for now; the random
+   generation + the commander's-log clue (decode the Siriusian code glyphs → button numbers)
+   are **slice 2**. `read` is now a synonym for `examine` (advent), so reading the diary
    shows its description. Deferred for the locker: the sleeping-pod scenery and the
    `personal/effects/chest/trunk` synonyms.
    **Still partial:** every solve also runs `score 1` (Galaxy Banner + notification)
