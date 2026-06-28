@@ -100,15 +100,22 @@ Base.i7x is the **content** layer — ~14 rooms, the map, scenery and props —
 layered on **infrastructure** defined in the other extensions (Base is `Include`d
 *last* in story.ni). advent supplies almost none of that infrastructure.
 
-**Ported (scaffold, in `base.lamp`):** the room declarations (names) and the
-**door-free** connections. Navigable; rooms show name-only until descriptions
-land. Door-gated rooms (Reactor Room, armory, Commander's Quarters, Control
-Room, Flight Deck) are declared but not yet connected.
+**Ported (in `base.lamp`):** the room declarations and the door-free connections,
+and now **every room description** (Base.i7x). Siriusian signage uses the static cipher
+`[siriusian("…")]` (always alien, like the Passage End door label) and door-state shows
+via `[if <door>.closed]…[end if]`; both render correctly in play (verified open↔closed
+across the green/yellow doors). The North Barracks `cabinet` was added (a scenery `box`)
+so its `[if cabinet.closed]` resolves. Door-gated rooms (Reactor Room, armory,
+Commander's Quarters via their puzzles; Control Room + Flight Deck still gated behind the
+unported purple door) all have descriptions in place.
 
-**Deferred — room descriptions.** Every room/sign description embeds
-`[Siriusian]…[English]` markup and `[if <door> is closed]…` state, so none can be
-ported verbatim yet (see infrastructure below). The simplified `Passage_End`
-description already in `base.lamp` predates this and will be revisited.
+**Deferred (room-description follow-ups):** **scan-aware Siriusian labels** — today the
+labels are static-alien and never translate; making them respond to scan level (like the
+diary content) needs a string-returning translate function and would also convert the
+Passage End door label off `siriusian()`. The in-prose **sub-objects** (door/west/store
+signs, the sign-out form, the poster, the reactor levers, the control panel + launch/
+self-destruct buttons, the cabinet's Cyberhelmet) are mentioned in description text but
+not yet declared as examinable objects.
 
 **Infrastructure Base.i7x needs that Lamp/advent lacks** (rough priority):
 
