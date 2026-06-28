@@ -218,10 +218,14 @@ core edit is contained. Names (default): `contains`/`place`/`contained`, keyword
   both (GOTO left free for authors). **TREE + SCOPE DONE** (golden `treescope1`): TREE dumps
   the whole world's containment tree (a `world_tree` native); SCOPE lists what is in the
   player's scope right now (`scope_listing` over the now-exposed `scopeOf`). (ABSTRACT is
-  skipped — deprecated in I7.) **Possible next:** the release-build flag below; richer SHOWME
-  (e.g. relations); a debug-only `RELATIONS`/`RULES` dump. **Gap:**
-  no release-build flag yet to exclude them from a shipped game (Inform's NOT-FOR-RELEASE) —
-  they currently always load in advent.
+  skipped — deprecated in I7.) **Release-build flag DONE** (`test:release`): a `.lamp` file
+  marks itself debug-only with a top-level **`not_for_release`** directive (new keyword,
+  inert in a normal build); **`--release`** excludes every such file (the compiler drops
+  them from the token stream before parsing; build fingerprint over the included files).
+  `lib/advent/debug.lamp` and `sample/phobos/lib/phobos/debug.lamp` (Phobos's `late`/`scanall`,
+  moved there) are marked. **Possible next:** richer SHOWME (e.g. relations); a debug-only
+  `RELATIONS`/`RULES` dump; threading `--release` through `exe.js` and Lighthouse's
+  `build:web` (the bundler should always build `--release`).
 - ~~**Galaxy Suit + power-up (Phobos)**~~ **DONE** (`sample/phobos/lib/phobos/suit.lamp`):
   worn suit, POWER UP/DOWN, and a powered smash. The **ATTACK/HIT/SMASH/PUNCH verb is in
   advent** (any `item`; default declines via `attack_violence`; golden `attack1`); the suit

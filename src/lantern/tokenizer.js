@@ -28,6 +28,7 @@ const KEYWORDS = new Set([
     "break",
     "lib",
     "locale",
+    "not_for_release",
     "from",
     "to",
     "step",

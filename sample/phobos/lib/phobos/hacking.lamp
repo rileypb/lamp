@@ -483,16 +483,3 @@ report press when kim_adhered_to == purple_door:
 			else:
 				print "Button [self.n] turns red.[par]"
 		show_keypad_16()
-
-# --- NOT FOR RELEASE ----------------------------------------------------------
-# Debug shortcut: complete the Linguistic Module's model (all five tiers scanned at once),
-# so the commander's log reveals the control code without collecting every document.
-action scanall:
-	syntax:
-		"scanall"
-
-do scanall:
-	scan_levels = [true, true, true, true, true]
-
-report scanall:
-	print "The Linguistic Module's model is now complete."

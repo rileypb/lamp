@@ -68,16 +68,3 @@ rule every_turn_rules:
 # main game file (phobos.lamp): only the main file's rules register at author order (0),
 # ahead of advent's order-1 default `when story == …` rules, so they can suppress them. A
 # lib file's contribution (this file) would register at library order and lose the race.
-
-# --- NOT FOR RELEASE ----------------------------------------------------------
-# Debug shortcut (I7's "late"/lowcounting): jump the clock near zero to exercise the
-# ending without burning hundreds of turns.
-action late:
-	syntax:
-		"late"
-
-do late:
-	countdown = 5
-
-report late:
-	print "The countdown is now [countdown]."

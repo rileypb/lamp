@@ -198,6 +198,13 @@ function createLocaleDecl(tag) {
     return { kind: "LocaleDecl", tag };
 }
 
+// A compile-time directive marking the whole file as debug-only: a `--release` build
+// excludes such files. Inert in the AST (the emitter/checker ignore the node) — the
+// compiler detects the directive from the token stream and drops the file. See specs.md.
+function createNotForReleaseDecl() {
+    return { kind: "NotForReleaseDecl" };
+}
+
 function createDispatchStatement(eventName) {
     return { kind: "DispatchStatement", eventName };
 }
@@ -420,6 +427,7 @@ module.exports = {
     createNoneLiteral,
     createLibImport,
     createLocaleDecl,
+    createNotForReleaseDecl,
     createDispatchStatement,
     createWhileStatement,
     createLessThanExpr,

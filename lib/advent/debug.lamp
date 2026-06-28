@@ -1,3 +1,5 @@
+not_for_release
+
 # Debug commands (modeled on Inform 7's NOT-FOR-RELEASE testing verbs). They are
 # `out_of_world` (they spend no turn, take no undo checkpoint, and fire no every-turn rules)
 # and, where they name a thing, `world_scope` (they reach any object, not just what's in

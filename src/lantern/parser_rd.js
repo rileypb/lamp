@@ -356,6 +356,7 @@ function createParser(tokens, filePath, globalNames, functionNames = new Set(), 
                 case "on": return parseOnHandler();
                 case "lib": return parseLibImport();
                 case "locale": return parseLocaleDecl();
+                case "not_for_release": return parseNotForReleaseDecl();
                 case "function": return parseFunctionDecl();
                 case "native": return parseNativeFunctionDecl();
                 case "rulebook": return parseRulebookDecl();
@@ -984,6 +985,14 @@ function createParser(tokens, filePath, globalNames, functionNames = new Set(), 
         const tag = expect("STRING", "Expected a quoted locale tag after 'locale'");
         expectNewline();
         return ast.createLocaleDecl(tag.value);
+    }
+
+    // `not_for_release` on its own line marks the whole file as debug-only (excluded by a
+    // `--release` build). Inert when present in a normal build. See specs.md.
+    function parseNotForReleaseDecl() {
+        expectKeyword("not_for_release");
+        expectNewline();
+        return ast.createNotForReleaseDecl();
     }
 
     function parseNativeFunctionDecl() {

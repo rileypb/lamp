@@ -1,0 +1,31 @@
+lib advent
+
+not_for_release
+
+# Phobos debug shortcuts (NOT FOR RELEASE — a `--release` build excludes this whole file).
+# They jump game state forward so late-game content can be exercised without a full
+# playthrough; the globals they set live in countdown.lamp / linguistics.lamp.
+
+# late (I7's "lowcounting"): jump the self-destruct clock near zero, to reach the ending
+# without burning hundreds of turns.
+action late:
+	syntax:
+		"late"
+
+do late:
+	countdown = 5
+
+report late:
+	print "The countdown is now [countdown]."
+
+# scanall: complete the Linguistic Module's model (all five tiers at once), so the
+# commander's log reveals the purple-door control code without collecting every document.
+action scanall:
+	syntax:
+		"scanall"
+
+do scanall:
+	scan_levels = [true, true, true, true, true]
+
+report scanall:
+	print "The Linguistic Module's model is now complete."
