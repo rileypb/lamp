@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 // Thin CLI entry: build a web bundle from a Lamp game.
 //
-// Usage: node src/lighthouse/build.js <input.lamp> [outDir] [--encode-strings] [--no-minify]
+// Usage: node src/lighthouse/build.js <input.lamp> [outDir] [--encode-strings] [--no-minify] [--debug]
 
 const path = require("path");
 const { buildWeb } = require("./index");
@@ -9,17 +9,20 @@ const { buildWeb } = require("./index");
 const args = process.argv.slice(2);
 const encodeStrings = args.includes("--encode-strings");
 const minify = !args.includes("--no-minify");
+// Web bundles are distribution builds, so they are release builds by default (debug verbs
+// excluded). `--debug` keeps them, for testing the web shell against the debug tooling.
+const release = !args.includes("--debug");
 const [inputArg, outArg] = args.filter((arg) => !arg.startsWith("--"));
 
 if (!inputArg) {
-    console.error("Usage: node src/lighthouse/build.js <input.lamp> [outDir] [--encode-strings] [--no-minify]");
+    console.error("Usage: node src/lighthouse/build.js <input.lamp> [outDir] [--encode-strings] [--no-minify] [--debug]");
     process.exit(1);
 }
 
 const outDir = outArg || path.join("dist", path.basename(inputArg, ".lamp"));
 
 try {
-    const result = buildWeb(inputArg, outDir, { encodeStrings, minify });
+    const result = buildWeb(inputArg, outDir, { encodeStrings, minify, release });
     console.log(`Lighthouse built web bundle: ${result.outDir}`);
     console.log(`  ${result.files.join(", ")}`);
 } catch (err) {

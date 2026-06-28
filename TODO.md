@@ -223,9 +223,11 @@ core edit is contained. Names (default): `contains`/`place`/`contained`, keyword
   inert in a normal build); **`--release`** excludes every such file (the compiler drops
   them from the token stream before parsing; build fingerprint over the included files).
   `lib/advent/debug.lamp` and `sample/phobos/lib/phobos/debug.lamp` (Phobos's `late`/`scanall`,
-  moved there) are marked. **Possible next:** richer SHOWME (e.g. relations); a debug-only
-  `RELATIONS`/`RULES` dump; threading `--release` through `exe.js` and Lighthouse's
-  `build:web` (the bundler should always build `--release`).
+  moved there) are marked. **`--release` threaded DONE:** `exe.js` forwards compile flags
+  (e.g. `lantern-exe game.lamp --release`); **Lighthouse `build:web` builds release by
+  default** (web bundles are distribution — `--debug` opts back in), so the Pages deploy
+  ships without debug verbs. **Possible next:** richer SHOWME (e.g. relations); a debug-only
+  `RELATIONS`/`RULES` dump.
 - ~~**Galaxy Suit + power-up (Phobos)**~~ **DONE** (`sample/phobos/lib/phobos/suit.lamp`):
   worn suit, POWER UP/DOWN, and a powered smash. The **ATTACK/HIT/SMASH/PUNCH verb is in
   advent** (any `item`; default declines via `attack_violence`; golden `attack1`); the suit

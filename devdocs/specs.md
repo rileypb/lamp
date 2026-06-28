@@ -1720,7 +1720,10 @@ of Inform's NOT-FOR-RELEASE sections: advent's debug verbs live in `lib/advent/d
 (marked `not_for_release`), so a shipped game built with `--release` can't be cheated past
 puzzles with PURLOIN/GONEAR/etc.; a game's own debug shortcuts go in its own
 `not_for_release` file (e.g. `sample/phobos/lib/phobos/debug.lamp`). The flag is off by
-default (debug verbs available during development).
+default for the bare compiler and for `lantern-exe` (which forwards compile flags), so debug
+verbs are available during development; **Lighthouse (`build:web`) builds release by default**
+(a web bundle is a distribution build — `--debug` opts back in), so the Pages deploy ships
+without debug verbs.
 
 The emitted program is a body-only module that assumes `lamplighter` is already available as a context global (injected by the sandbox launcher). It is prefixed with a single `lamplighter.setBuildId("…")` call carrying the build fingerprint (a content hash of the source inputs, used to gate save compatibility). It then runs in this order: `bootstrapBuiltins()` → native JS (inlined from `index.js` files) → kinds → kind constants → types → type constants → objects (primitive/kind fields only) → object-typed field assignments → top-level relation assertions/removes → global declarations → global assignments → function definitions → rulebook definitions (each a dispatcher function plus a `registerRulebookRule` call per declaration-block rule) → event handler registrations → change handler registrations → phase rule registrations (a selector rule expands to one registration per resolved action) → rulebook rule contribution registrations → grammar registrations → relation add/remove handler registrations → `run()`. Globals and object-typed field assignments are placed after all `createObject` calls so that any `lamplighter.getObject(...)` reference resolves against an already-registered instance regardless of declaration order. Function definitions are emitted before event handler registrations so they are in scope when handlers run.
 

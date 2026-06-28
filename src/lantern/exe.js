@@ -5,9 +5,13 @@ const path = require("path");
 
 const inputArg = process.argv[2];
 if (!inputArg) {
-    console.error("Usage: lantern-exe <input.lamp>");
+    console.error("Usage: lantern-exe <input.lamp> [--release] [--locale <tag>] [--encode-strings]");
     process.exit(1);
 }
+
+// Compile flags after the input (e.g. --release, --locale <tag>) pass straight to Lantern.
+// Default is a debug build, so the debug verbs are available while developing.
+const compileFlags = process.argv.slice(3);
 
 const inputFile = path.resolve(inputArg);
 const buildDir = path.join(__dirname, "..", "..", "build");
@@ -19,7 +23,7 @@ const playCli = path.join(__dirname, "..", "lamplighter", "play.js");
 // surfaces there, so swallow execFileSync's own "Command failed" wrapper (with its
 // JS stack) and just propagate the status.
 try {
-    execFileSync("node", [lanternCli, inputFile, tmpFile], { stdio: "inherit" });
+    execFileSync("node", [lanternCli, inputFile, tmpFile, ...compileFlags], { stdio: "inherit" });
 } catch (_) {
     process.exit(1);
 }

@@ -71,7 +71,10 @@ Built in `src/lighthouse/`: `index.js` (the `buildWeb` logic) and `build.js` (a
 thin CLI). Steps:
 
 1. Compile the game to a body-only module via the standard Lantern CLI (no
-   pipeline reimplementation).
+   pipeline reimplementation). A web bundle is a distribution build, so Lighthouse
+   compiles with **`--release`** by default — files marked `not_for_release` (advent's
+   debug verbs, a game's debug shortcuts) are excluded, so a shipped bundle can't be
+   cheated past puzzles. `--debug` opts back in (for testing the shell against the tools).
 2. Wrap that module as the bootstrap's `runGame(function (lamplighter, require,
    console) { … })` factory, binding the emitted code's free globals to the
    controlled values. esbuild leaves the shadowed `require` (renamed to avoid its
