@@ -38,7 +38,14 @@ on startup:
 		input = prompt("> ")
 		if to_lower(input) == "quit":
 			break
-		run_command(input, player)
+		# Fire every-turn rules only when the command actually spent a turn (not on a
+		# parse failure, a disambiguation prompt, or undo) and the story is still going.
+		# `[par if printed]` separates any every-turn output into its own paragraph after
+		# the action's report (and is a no-op when the action printed nothing).
+		if run_command(input, player):
+			if story == ongoing:
+				print "[par if printed]"
+				follow every_turn_rules()
 	# End-of-story sequence: print the win/lose banner, then accept only QUIT.
 	# (RESTART is not yet supported.)
 	if not (story == ongoing):

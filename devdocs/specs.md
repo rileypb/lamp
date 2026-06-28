@@ -16,7 +16,7 @@
     - `split(string) → list<string>` — splits a string on whitespace and returns the words as a list.
     - `length(string) → int`, `char_at(string, int) → string`, `code_at(string, int) → int`, `substring(string, int start, int end) → string` — the string-character primitives. All **codepoint-based** (an astral character counts as one) and **0-indexed** (matching list indexing). `char_at` returns `""` and `code_at` returns `-1` when the index is out of range; `substring` is the half-open range `[start, end)`, tolerant of out-of-range bounds. With `to_lower` and `+` these are enough to express text algorithms (ciphers, hashing, tokenisation) in Lamp rather than a native.
     - `map_strings(list<object>, function) → list<string>` — applies an object→string function (passed by name) to each element, returning the list of results. The general list-transform primitive (Lamp has list literals `[…]` but no append, so *deriving* a transformed list still needs a native); pairs with the locale's `format_list` to render a list of objects to prose (`format_list(map_strings(things, describe))`).
-    - `run_command(string) → void` — parses one line of player input against registered action templates, resolves slot objects in scope, and runs the matched action. Uses the `player` global as the actor.
+    - `run_command(string, object) → bool` — parses one line of player input against registered action templates, resolves slot objects in scope, and runs the matched action for the given actor. Returns **true iff a turn was spent** (an action actually ran), so the caller can fire every-turn rules; false for a parse failure, a disambiguation prompt, or an out-of-world verb.
 - `lib/en-US/` is the **default locale pack** — English *language data* for the text-substitution layer (article functions `the`/`a`/`an`, case functions `cap`/`upper`/`lower`/`title`, and the list-to-prose formatter `format_list` with its "and"/Oxford comma). Like `lib/sys`, it auto-loads on every invocation, inserted **immediately after `lib/sys/` and before any imported library**. It is the swappable language layer (a future `lib/en-GB`/`lib/fr-FR` replaces it) — `lib/sys` holds only language-agnostic mechanism. See `devdocs/text.md` (three-layer split).
 - Other subdirectories of `lib/` (e.g. `lib/test/`, `lib/advent/`) are optional libraries that must be imported explicitly with `lib LIBNAME`.
 - `.lamp` files placed directly in `lib/` (not inside a named subdirectory) are not parsed and are not available for import.
@@ -1821,6 +1821,38 @@ rule end_story_rules when story == lost:
 RESTART is not yet wired into the end sequence, so only `quit` ends the session —
 though the state-snapshot mechanism (see *State, undo, and save*) now provides the
 reset primitive a RESTART would build on.
+
+### Every-turn rules
+
+advent declares an `every_turn_rules` rulebook that the command loop **follows once
+per turn**, after a command that actually spent a turn and while `story == ongoing`:
+
+```lamp
+if run_command(input, player):
+    if story == ongoing:
+        print "[par if printed]"   # separate every-turn output into its own paragraph
+        follow every_turn_rules()
+```
+
+The `[par if printed]` puts any every-turn output in its own paragraph after the
+action's report, and is a no-op when nothing was printed. The guard is `run_command`'s
+boolean return — true only when an action ran — so a
+parse failure, a disambiguation prompt, and out-of-world verbs (undo) spend no turn
+and fire nothing. A game contributes side-effect rules — daemons, countdowns,
+per-turn upkeep — and should **not** `stop`, so every contributed rule runs:
+
+```lamp
+rule every_turn_rules:
+    fuse = fuse - 1
+    if fuse == 0:
+        print "The bomb goes off."
+        story = lost
+```
+
+A rule may end the story (the loop exits to the end sequence next iteration). Timed
+(fire-once-at-turn-N) events are not yet a built-in — schedule them with a counter in
+an every-turn rule. (`every_turn_rules` is declared `bool, default false` only because
+a `void` rulebook isn't expressible; the result is unused.)
 
 ### Relations
 

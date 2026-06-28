@@ -940,13 +940,14 @@ function runCommand(line, actor) {
                 const unbound = unboundPronounIn(remainingSlots.map(([, span]) => span));
                 print(unbound ? `I don't know what "${unbound}" refers to.` : message("parser_cant_see", "You can't see any such thing."));
             }
-            return;
+            // A turn was spent only if the action actually ran.
+            return status === "ok";
         }
         if (narrowed.length > 1) {
             // Still ambiguous — re-prompt with the narrowed set.
             printDisambiguationPrompt(narrowed);
             pendingDisambiguation = { ...pendingDisambiguation, candidates: narrowed };
-            return;
+            return false;
         }
         // 0 matches — treat input as a fresh command.
         pendingDisambiguation = null;
@@ -957,7 +958,7 @@ function runCommand(line, actor) {
     // this command. See devdocs/state.md.
     if (tokens.length === 1 && outOfWorldCommands.has(tokens[0])) {
         outOfWorldCommands.get(tokens[0])();
-        return;
+        return false;
     }
     checkpoint();
     advanceTurn();
@@ -985,10 +986,10 @@ function runCommand(line, actor) {
         const status = resolveSlots(Object.entries(matched), instance, scope, slotTypes);
         if (status === "ok") {
             runAction(entry.actionName, instance);
-            return;
+            return true;
         }
         if (status === "ambiguous") {
-            return;
+            return false;
         }
         unresolvedSpans.push(...Object.values(matched));
         if (entry.parts.some((part) => part.kind === "literal")) {
@@ -1000,11 +1001,12 @@ function runCommand(line, actor) {
     const unbound = unboundPronounIn(unresolvedSpans);
     if (unbound) {
         print(`I don't know what "${unbound}" refers to.`);
-        return;
+        return false;
     }
     print(sawVerbMatch
         ? message("parser_cant_see", "You can't see any such thing.")
         : message("parser_no_understand", "I don't understand that."));
+    return false;
 }
 
 // World-model contract: fires the `startup` event, which the world library hooks

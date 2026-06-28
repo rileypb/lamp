@@ -1,0 +1,5 @@
+wait
+xyzzy
+wait
+wait
+quit

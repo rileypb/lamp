@@ -55,13 +55,17 @@ Reconciles with item 2's "move prompting into `lib`": lib owns the verbs + the
 *text-host* wording, but the *rendering* of the prompt/picker is the host seam.
 
 ### 2. Parser v2 — every-turn & timed rules + out-of-world actions
-Action-rulebook bands are implemented; what remains for v2 is a turn clock:
-every-turn rules and timed/scheduled events, plus **out-of-world actions**
-(`save`/`undo`/`restore`/`again`). The turn clock should **reuse the minimal turn
-counter** added for save metadata (item 1), not introduce a second count, and is
-where it would gain an author-facing surface. Also surface the outcome of a player command
-(the `run_command` path discards `runAction`'s result, unlike `let x = try`) so
-turn rules can see whether the command succeeded.
+**Every-turn rules DONE:** advent declares an `every_turn_rules` rulebook the command
+loop **follows once per turn** (`if run_command(...): if story == ongoing: follow
+every_turn_rules()`). `run_command` now returns **true iff a turn was spent** (an action
+ran), so parse failures / disambiguation prompts / out-of-world verbs fire nothing.
+Games add side-effect `rule every_turn_rules:` (don't `stop`, so all run). Golden
+`everyturn1` (countdown daemon that ends the story + the parse-failure-spends-no-turn
+case); Phobos wires the suit auto-power-down on it. Docs: specs.md "Every-turn rules".
+**Remaining for v2:** **timed/scheduled events** (fire-once-at-turn-N — today done with a
+counter in an every-turn rule; a built-in scheduler is the convenience layer) and
+**out-of-world actions** (`save`/`undo`/`restore`/`again`). Reuse the turn counter (item
+1), don't add a second count.
 - **Fold in here:** move the `undo`/`save`/`restore` verb handling + prompting +
   wording **out of the runtime** and into `lib/advent`. Today `performUndo`/
   `performSave`/`performRestore` live in the engine and hardcode English prose —

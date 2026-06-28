@@ -87,6 +87,14 @@ relation contains:
 rulebook bool startup_rules():
 	default true
 
+# every_turn_rules: followed once per turn, after a command that actually spent a turn
+# (run_command returned true) and while the story is ongoing. Side-effect rules for
+# daemons, countdowns, and per-turn upkeep. A game contributes `rule every_turn_rules:
+# …` (optionally `when …`); rules should not `stop`, so every contributed rule runs.
+# The bool result is unused (a void rulebook isn't expressible; `default false` is inert).
+rulebook bool every_turn_rules():
+	default false
+
 # end_story_rules: prints the end-of-game message once `story` leaves `ongoing`.
 # The game loop follows it after the ending command. Games may contribute rules
 # (e.g. `rule end_story_rules when story == won:`) to customize or replace the

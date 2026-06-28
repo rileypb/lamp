@@ -1,0 +1,25 @@
+Room
+A bare room.
+
+> wait
+You wait.
+
+(tick: 2 left)
+
+> xyzzy
+I don't understand that.
+
+> wait
+You wait.
+
+(tick: 1 left)
+
+> wait
+You wait.
+
+The bomb goes off.
+
+*** You have lost ***
+
+Please type QUIT to exit.
+> quit

@@ -1,0 +1,29 @@
+# every_turn_rules (lib/advent): a rule contributed here is followed once per turn,
+# after a command that actually spent a turn. A countdown that ends the story shows the
+# core daemon pattern; the parse failure ("xyzzy") spends no turn, so the fuse holds.
+
+lib advent
+
+game Countdown:
+	start Room
+
+room Room:
+	description "A bare room."
+
+global int fuse = 3
+
+action wait:
+	syntax:
+		"wait"
+		"z"
+
+report wait:
+	print "You wait."
+
+rule every_turn_rules:
+	fuse = fuse - 1
+	if fuse == 0:
+		print "The bomb goes off."
+		story = lost
+	else:
+		print "(tick: [fuse] left)"

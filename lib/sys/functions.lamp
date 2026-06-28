@@ -24,7 +24,10 @@ native function list<string> map_strings(list<object> xs, function fn)
 # Parse one line of input and run the matched action on behalf of `actor` (see
 # devdocs/game_parser.md). The actor is supplied by the caller — typically the
 # world library's player — so this base function names no world-specific global.
-native function void run_command(string line, object actor)
+# Returns true iff a turn was spent (an action actually ran), so the caller can fire
+# every-turn rules; false for a parse failure, a disambiguation prompt, or an
+# out-of-world verb (undo/save/restore).
+native function bool run_command(string line, object actor)
 
 # The player's most recent command line, as typed (original casing, trimmed). Use
 # it in narration as `[player_command()]` — e.g. "I don't understand
