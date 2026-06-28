@@ -38,6 +38,12 @@ type room < container:
 type item < physical:
 	bool scenery
 	bool wearable
+	# Initial-appearance text: shown as its own paragraph in the room description while the
+	# item has not yet been handled (picked up). Empty (the default) means the item is just
+	# listed in the standard "[We] [see] … here." line. Once taken, `handled` flips true and
+	# the item joins that list instead. See `list_room_contents` (rooms.lamp).
+	string initial_appearance = ""
+	bool handled = false
 
 # A door between two rooms; see lib/advent/doors.lamp for the full subsystem. Lives
 # here (not doors.lamp) so it is emitted after its parent `item` — Lantern emits

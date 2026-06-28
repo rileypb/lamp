@@ -246,7 +246,12 @@ core edit is contained. Names (default): `contains`/`place`/`contained`, keyword
   so it tracks the main character) by the locale's `viewpoint()` (both en-US and fr-FR).
   advent's hard-coded "You see " contents intro became the `[We] [see]` sugar. Phobos sets
   `viewpoint_person = 3` + `gender "female"` on `yourself`, so the contents listing reads
-  "She sees a … here." and examine-nothing "She sees nothing unusual …". (text.md D7.) **Remaining for
+  "She sees a … here." and examine-nothing "She sees nothing unusual …". (text.md D7.)
+  **Initial appearance DONE:** `item.initial_appearance` (a paragraph shown in the room until
+  the item is first taken) + a `handled` flag set on take; `listable_contents` pulls
+  not-yet-handled initial-appearance items out of the "[We] [see] … here." list (they stay
+  in scope). Phobos's loose documents use it ("A form hangs on the wall beneath the sign.");
+  golden `initial_appearance1`; byte-invariant (empty default). **Remaining for
   presentation:** (a) contents reword "Also here is/are …" — needs a parallel **contents
   seam** (advent's frame can't add the copula from a message override alone, like the
   heading); (b) the still-2nd-person **parser feedback** ("You can't see any such thing."

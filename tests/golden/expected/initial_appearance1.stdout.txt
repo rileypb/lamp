@@ -1,0 +1,34 @@
+study
+A small panelled study.
+
+A portrait of a stern ancestor hangs above the mantel.
+
+You see a coin here.
+
+> look
+study
+A small panelled study.
+
+A portrait of a stern ancestor hangs above the mantel.
+
+You see a coin here.
+
+> take painting
+Taken.
+
+> look
+study
+A small panelled study.
+
+You see a coin here.
+
+> drop painting
+Dropped.
+
+> look
+study
+A small panelled study.
+
+You see a painting and a coin here.
+
+> quit

@@ -32,6 +32,9 @@ check take:
 
 do take:
 	move self.taken to self.actor
+	# Mark it handled, so an item with an `initial_appearance` stops describing itself in
+	# its own paragraph and joins the standard room-contents list once dropped.
+	self.taken.handled = true
 
 # Player-facing text is written as named, overridable messages (see
 # devdocs/messages.md): the English default lives inline, and a game or translation

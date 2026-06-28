@@ -1,4 +1,5 @@
 native function list<item> contents_of(physical r)
+native function list<item> listable_contents(room r)
 native function void describe_supporters(room r)
 
 # An object's container (the source of its `contains` edge). Author code reads
@@ -42,20 +43,30 @@ function string render_thing(physical x):
 		return indefinite(x)
 	return indefinite(x) + contained_phrase(x, render_contents(x), inner.size)
 
+function string render_list(list<item> xs):
+	return format_list(map_strings(xs, render_thing))
+
 function string render_contents(physical holder):
-	return format_list(map_strings(contents_of(holder), render_thing))
+	return render_list(contents_of(holder))
 
 function void list_room_contents(room r):
-	let contents = contents_of(r)
-	if not (contents.first == none):
-		# The contents reference the local `r`, so they stay a plain print; the
+	# An item that hasn't been handled and carries an `initial_appearance` describes
+	# itself in its own paragraph (e.g. "A form hangs on the wall beneath the sign.")
+	# rather than being lumped into the "[We] [see] … here." list; once taken it rejoins
+	# that list. `listable_contents` is `contents_of` minus these.
+	for x in contents_of(r):
+		if not x.handled and not (x.initial_appearance == ""):
+			print "[par][x.initial_appearance]"
+	let listed = listable_contents(r)
+	if not (listed.first == none):
+		# The contents reference the local `listed`, so they stay a plain print; the
 		# surrounding frame carries no local reference and splits into named
 		# intro/outro messages (same pattern as the inventory `(worn)` split). A
 		# translation reshapes the frame around the contents — "Vous voyez … ici."
 		# `[We] [see]` renders by the story viewpoint: "You see" (2nd person, default),
 		# "She sees"/"He sees"/"I see" under a 1st/3rd-person viewpoint.
 		print room_contents_intro:"[par][We] [see] "
-		print "[render_contents(r)]"
+		print "[render_list(listed)]"
 		print room_contents_outro:" here."
 	describe_supporters(r)
 

@@ -1,0 +1,23 @@
+# Initial appearance (Inform's "initial appearance"): an item with a non-empty
+# `initial_appearance` describes itself in its own paragraph in the room description, until
+# it is first taken (handled). After it's been picked up, it drops back into the standard
+# "[We] [see] … here." list. A normal item (the coin) always lists normally and shows the
+# two coexist. Demonstrated: before handled (its paragraph, not the list), gone when carried,
+# and listed normally once dropped.
+
+lib advent
+
+game Initial_Appearance:
+    author "Lamp"
+    start study
+
+room study:
+    description "A small panelled study."
+
+item painting:
+    initial_appearance "A portrait of a stern ancestor hangs above the mantel."
+
+item coin
+
+contains study painting
+contains study coin

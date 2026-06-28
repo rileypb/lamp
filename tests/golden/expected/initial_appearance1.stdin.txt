@@ -1,0 +1,6 @@
+look
+take painting
+look
+drop painting
+look
+quit

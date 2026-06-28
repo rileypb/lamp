@@ -1729,7 +1729,7 @@ described below.
 | `thing` | — | `string printed_name`, `string understand` |
 | `physical` | `thing` | `article article` |
 | `room` | `container` | `string description`, `bool lighted` (default `true`), `string preposition` (default `"in"`), `bool always_indefinite` |
-| `item` | `physical` | `bool scenery`, `bool wearable`, `container holder` |
+| `item` | `physical` | `bool scenery`, `bool wearable`, `string initial_appearance` (default `""`), `bool handled` |
 | `box` | `item, container` | `bool closable`, `bool closed` |
 | `person` | `physical` | `container holder` |
 | `direction` | `thing` | `direction inverse`, `string understand` |
@@ -1785,6 +1785,17 @@ how a game gets a third-person, name-embedded intro — e.g. "Galaxy is in **the
 passage end**. <description>" — using the room's `preposition` ("in"/"on") and
 `always_indefinite` (render the name with "a"/"an" rather than "the"). See
 `sample/phobos/`.
+
+**Initial appearance.** An `item` with a non-empty **`initial_appearance`** string
+describes itself in its own paragraph in the room description — e.g. "A form hangs on
+the wall beneath the sign." — *instead of* appearing in the standard "[We] [see] … here."
+list, until it is first picked up. Taking an item sets its **`handled`** flag (in `do
+take`); once handled it drops back into the normal list (so after take-then-drop the room
+reads "[We] [see] a form here."). The split is `listable_contents(room)` — `contents_of`
+minus any not-yet-handled item that carries an `initial_appearance`; those items stay
+fully in **scope** (scope doesn't read `contents_of`), so they're examinable and takeable
+the whole time. The default empty `initial_appearance` leaves an item always listed
+normally, so existing games are unaffected.
 
 ### Ending the story
 

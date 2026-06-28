@@ -174,6 +174,13 @@ not yet declared as examinable objects.
    security-key (reveals at full scan), `[']` literal apostrophe, `/` break. The form alone
    carries a physical `description` (its wall framing + "It reads in part:"), now shown before
    the readable content by the textual-examine rule (other documents leave it empty).
+   **Initial appearances DONE:** each loose document has its Base.i7x **initial appearance**
+   ("A form hangs on the wall beneath the sign.", "Someone has left behind a science notebook
+   …", etc.) — shown as its own paragraph in the room until first picked up, after which it
+   joins the standard "She sees … here." list. This dogfooded a new general advent feature:
+   `item.initial_appearance` + a `handled` flag set on take, with `listable_contents` pulling
+   not-yet-handled initial-appearance items out of the contents list (golden
+   `initial_appearance1`). They stay in scope (examinable/takeable) the whole time.
    **Deferred on the log:** the actual control-code value appended after "...is" — generated
    by the (unported) purple-door control-code system; the sentence ends at "is" for now.
    **Scanning DONE (slice 2):** the **SCAN verb + Linguistic Module item** (carried from
