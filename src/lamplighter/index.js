@@ -1293,6 +1293,22 @@ function divide(a, b) {
     return b === 0 ? NaN : a / b;
 }
 
+// Integer division and remainder (the `div` and `mod` operators). Floored division
+// paired with a remainder that takes the divisor's sign, so the identity
+// a == (a div b) * b + (a mod b) holds. Divide-by-zero yields 0 (keeping an int).
+function intDivide(a, b) {
+    const bi = Math.trunc(b);
+    if (bi === 0) return 0;
+    return Math.floor(Math.trunc(a) / bi);
+}
+
+function modulo(a, b) {
+    const bi = Math.trunc(b);
+    if (bi === 0) return 0;
+    const ai = Math.trunc(a);
+    return ai - bi * Math.floor(ai / bi);
+}
+
 // Renders a template literal's parts (text strings and embedded values) to a
 // single string, formatting each part as `print` would. Emitter target for a
 // TemplateLiteral; the eager-render form of text substitution. See devdocs/text.md.
@@ -2180,6 +2196,8 @@ module.exports = {
     randomizeRng,
     randomInt,
     divide,
+    intDivide,
+    modulo,
     onEvent,
     registerActionRule,
     runAction,

@@ -945,6 +945,15 @@ function inferExprType(expr, typeSchema, kindSchema, localTypes, functionSchema 
         }
         return null;
     }
+    if (expr.kind === "ModExpr" || expr.kind === "DivExpr") {
+        // Integer remainder / floored integer division: numeric operands, int result.
+        const leftType = inferExprType(expr.left, typeSchema, kindSchema, localTypes, functionSchema);
+        const rightType = inferExprType(expr.right, typeSchema, kindSchema, localTypes, functionSchema);
+        if (leftType === null || rightType === null) {
+            return null;
+        }
+        return (isNumericType(leftType) && isNumericType(rightType)) ? "int" : null;
+    }
     if (expr.kind === "GlobalExpr") {
         return null;
     }

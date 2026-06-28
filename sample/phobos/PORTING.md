@@ -154,9 +154,9 @@ description already in `base.lamp` predates this and will be revisited.
    state.
    **Native→Lamp migration DONE:** the entire Phobos native JS (`lib/phobos/index.js`,
    now deleted) — the Siriusian cipher, `token_difficulty`, and `print_translated` — is
-   rewritten in pure Lamp on new lib/sys string/arithmetic primitives (`length`/`char_at`/
-   `code_at`/`substring`/`mod`); verified **byte-identical** to the native (door label +
-   diary). `is_textual` collapsed into the pure-Lamp guard `self.target.textual`.
+   rewritten in pure Lamp on new lib/sys string primitives (`length`/`char_at`/`code_at`/
+   `substring`) and the new `mod` operator; verified **byte-identical** to the native (door
+   label + diary). `is_textual` collapsed into the pure-Lamp guard `self.target.textual`.
    **Deferred:** the `obscure`/`revealed` real-name/real-description swap on examine;
    reaching full translation needs documents of every tier (content follow-up).
 4. **`feels` property + FEEL/TOUCH action** — nearly every object has a `feels`

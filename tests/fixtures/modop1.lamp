@@ -1,0 +1,23 @@
+# The `mod` and `div` keyword operators: integer remainder and floored integer
+# division. They bind like `*` and `/` (multiplicative), so `a mod b + c` is
+# `(a mod b) + c`. Floored semantics: the remainder takes the divisor's sign, and
+# a == (a div b) * b + (a mod b) holds. Divide-by-zero yields 0.
+
+lib advent
+
+game ModOp:
+	start Room
+
+room Room:
+	description "A bare room."
+
+action probe:
+	syntax:
+		"probe"
+
+report probe:
+	print "mod: [17 mod 5] [10 mod 2] [0 mod 5][line break]"
+	print "div: [17 div 5] [10 div 2] [9 div 4][line break]"
+	print "prec: [17 mod 5 + 1] [2 + 17 mod 5] [20 div 3 * 2][line break]"
+	print "neg: [(0 - 7) mod 3] [(0 - 7) div 3][line break]"
+	print "zero: [5 mod 0] [5 div 0]"

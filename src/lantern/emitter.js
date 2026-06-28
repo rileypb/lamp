@@ -5,7 +5,7 @@ const { coerceName } = require("./tokenizer");
 // names, property-access chains, function calls) and never need extra parens.
 const SAFE_ATOM = new Set([
     "StringLiteral", "TemplateLiteral", "FreezeExpr", "NumberLiteral", "BooleanLiteral", "NoneLiteral",
-    "VariableExpr", "PropertyAccess", "GlobalExpr", "ParenNameExpr", "Concat", "DivideExpr", "CallExpr", "FunctionRefExpr", "FollowExpr", "IndexExpr", "MemberAccess",
+    "VariableExpr", "PropertyAccess", "GlobalExpr", "ParenNameExpr", "Concat", "DivideExpr", "ModExpr", "DivExpr", "CallExpr", "FunctionRefExpr", "FollowExpr", "IndexExpr", "MemberAccess",
 ]);
 
 // JS operator precedence for the binary/unary expression kinds we emit.
@@ -1068,6 +1068,12 @@ function emitExpression(expr, globalNames = new Set()) {
     }
     if (expr.kind === "DivideExpr") {
         return `lamplighter.divide(${emitExpression(expr.left, globalNames)}, ${emitExpression(expr.right, globalNames)})`;
+    }
+    if (expr.kind === "ModExpr") {
+        return `lamplighter.modulo(${emitExpression(expr.left, globalNames)}, ${emitExpression(expr.right, globalNames)})`;
+    }
+    if (expr.kind === "DivExpr") {
+        return `lamplighter.intDivide(${emitExpression(expr.left, globalNames)}, ${emitExpression(expr.right, globalNames)})`;
     }
     if (expr.kind === "PowerExpr") {
         return `${wrapIfNeeded(expr.left, 15, globalNames, { leftOfPower: true })} ** ${wrapIfNeeded(expr.right, 15, globalNames)}`;

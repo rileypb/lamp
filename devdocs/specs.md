@@ -247,7 +247,7 @@ Local variables (introduced by `let`) and loop variables (introduced by `for`) a
 
 Free text that contains spaces or punctuation is written as a double-quoted string literal, not a bare identifier (for example, `author "Phil Riley"`).
 
-The following words are **reserved** and may not be used as a name (object, type, kind, global, field, event, or local): `type`, `kind`, `global`, `on`, `for`, `in`, `while`, `if`, `else`, `let`, `print`, `error`, `dispatch`, `break`, `lib`, `from`, `to`, `step`, `change`, `function`, `native`, `freeze`, `return`, `when`, `and`, `or`, `not`, `relation`, `bidi`, `remove`, `disconnect`, `rulebook`, `stop`, `follow`, `action`, `try`, `verb`, `move`. (`freeze EXPR` forces a `text` value to a `string`; see the `text` primitive type. `verb WORD, …` registers conjugation-sugar words for text substitution; see the `text` type. `syntax`, `inverted`, and `unique` are contextual keywords recognized only inside a `relation` body; `tags` is contextual only inside an `action` body; `default` is a contextual keyword recognized only inside a `rulebook` body; the band words `before`, `instead`, `check`, `do`, `after`, and `report` are contextual keywords recognized only as the leading token of a phase rule; `any` and `except` are contextual only in a phase-rule action selector; `rule` is contextual only when followed by a declared rulebook name; `silently` is contextual only immediately before `try`; `understand` and `as` are contextual only in a top-level `understand "TEMPLATE" as ACTION` grammar contribution; none of these are globally reserved.) A reservation applies only to a whole identifier: a reserved word appearing *inside* a longer identifier is unrestricted, so `move_to_room` (which denotes the name `move to room`) is a valid identifier even though `to` is reserved.
+The following words are **reserved** and may not be used as a name (object, type, kind, global, field, event, or local): `type`, `kind`, `global`, `on`, `for`, `in`, `while`, `if`, `else`, `let`, `print`, `error`, `dispatch`, `break`, `lib`, `from`, `to`, `step`, `change`, `function`, `native`, `freeze`, `return`, `when`, `and`, `or`, `not`, `relation`, `bidi`, `remove`, `disconnect`, `rulebook`, `stop`, `follow`, `action`, `try`, `verb`, `move`, `mod`, `div`. (`mod` and `div` are the integer remainder / floored-division operators. `freeze EXPR` forces a `text` value to a `string`; see the `text` primitive type. `verb WORD, …` registers conjugation-sugar words for text substitution; see the `text` type. `syntax`, `inverted`, and `unique` are contextual keywords recognized only inside a `relation` body; `tags` is contextual only inside an `action` body; `default` is a contextual keyword recognized only inside a `rulebook` body; the band words `before`, `instead`, `check`, `do`, `after`, and `report` are contextual keywords recognized only as the leading token of a phase rule; `any` and `except` are contextual only in a phase-rule action selector; `rule` is contextual only when followed by a declared rulebook name; `silently` is contextual only immediately before `try`; `understand` and `as` are contextual only in a top-level `understand "TEMPLATE" as ACTION` grammar contribution; none of these are globally reserved.) A reservation applies only to a whole identifier: a reserved word appearing *inside* a longer identifier is unrestricted, so `move_to_room` (which denotes the name `move to room`) is a valid identifier even though `to` is reserved.
 
 ### Objects and types
 
@@ -1535,6 +1535,15 @@ circumference / (2 * PI)
 ```
 
 Type rules mirror `*`. Division by zero produces `NaN` rather than an error.
+
+- **Integer division and remainder** — `div` and `mod` are **keyword** operators (in the readable-word family with `and`/`or`/`not`):
+
+```lamp
+17 div 5   # 3   (floored integer division)
+17 mod 5   # 2   (remainder)
+```
+
+Both take numeric operands and produce `int`. They use **floored** semantics: the result of `mod` takes the divisor's sign (so `(0 - 7) mod 3` is `2`), and the identity `a == (a div b) * b + (a mod b)` holds. Division or remainder by zero yields `0`. They have the **same precedence as `*` and `/`** (so `a mod b + c` is `(a mod b) + c`) and are left-associative. `mod` and `div` are reserved words.
 
 - **Exponentiation** — `^` raises the left operand to the power of the right operand:
 

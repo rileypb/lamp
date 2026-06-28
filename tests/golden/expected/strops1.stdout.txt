@@ -6,6 +6,5 @@ length=5
 char0=H char3=𝔘 oob=""
 code0=72 code3=120088 oob=-1
 sub=Hi tail=𝔘!
-mod=2 0 0
 
 > quit

@@ -40,7 +40,7 @@ function string siriusian_word(string word):
 		if ord >= 48 and ord <= 57:
 			keep = true
 		else:
-			if mod(c, 2) == 0 or c == len:
+			if c mod 2 == 0 or c == len:
 				keep = true
 		if keep:
 			let n = ord
@@ -77,7 +77,7 @@ function int token_difficulty(string word):
 	let n = length(s)
 	for i = 0 to n - 1:
 		sum = sum + code_at(s, i)
-	return mod(sum, 5) + 1
+	return sum mod 5 + 1
 
 # Render an item's `content` at the current scan state and print it. English words are
 # bold; untranslated runs are fixed-width Siriusian and run together (no separating

@@ -166,6 +166,14 @@ function createMultiplyExpr(left, right) {
     return { kind: "MultiplyExpr", left, right };
 }
 
+function createModExpr(left, right) {
+    return { kind: "ModExpr", left, right };
+}
+
+function createDivExpr(left, right) {
+    return { kind: "DivExpr", left, right };
+}
+
 function createGlobalExpr(name) {
     return { kind: "GlobalExpr", name };
 }
@@ -405,6 +413,8 @@ module.exports = {
     createConcat,
     createEqualsExpr,
     createMultiplyExpr,
+    createModExpr,
+    createDivExpr,
     createGlobalExpr,
     createParenNameExpr,
     createNoneLiteral,

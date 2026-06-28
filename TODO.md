@@ -232,7 +232,7 @@ core edit is contained. Names (default): `contains`/`place`/`contained`, keyword
   friendlier non-textual-scan message.
   ~~**Migration (native phobos JS → Lamp)**~~ **DONE** (memory
   `phobos-native-to-lamp-migration`). Phase 1: general lib/sys primitives `length`/
-  `char_at`/`code_at`/`substring` (codepoint-based, 0-indexed) + `mod` (no `%` operator);
+  `char_at`/`code_at`/`substring` (codepoint-based, 0-indexed) + the `mod`/`div` operators;
   golden `strops1`. Phase 2: the whole Siriusian cipher + `token_difficulty` +
   `print_translated` rewritten in pure Lamp on those primitives, **byte-identical** to the
   deleted native (door label + diary); the cipher's reversal is string-prepend (`out = g +

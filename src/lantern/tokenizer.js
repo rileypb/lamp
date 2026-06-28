@@ -51,6 +51,8 @@ const KEYWORDS = new Set([
     "try",
     "verb",
     "move",
+    "mod",
+    "div",
 ]);
 
 const SINGLE_CHAR_TOKENS = {
