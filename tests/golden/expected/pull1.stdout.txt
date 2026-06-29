@@ -1,0 +1,18 @@
+Room
+A bare room.
+
+You see a rope and a lever here.
+
+> pull rope
+Nothing obvious happens.
+
+> examine lever
+A long iron lever.
+
+> pull it
+The lever groans, and a drawbridge lowers across the moat.
+
+> pull lever
+The lever is already thrown.
+
+> quit

@@ -304,6 +304,20 @@ check push:
 report failed push when self.reason == nothing_happens:
 	print push_inert:"Nothing obvious happens."
 
+# PULL — the counterpart to PUSH (Inform's "pulling a thing"), for levers and the like. Same
+# fail-by-default shape: a game adds `instead pull` rules for things that respond. Shares the
+# `nothing_happens` reason with PUSH but has its own named default message.
+action pull:
+	direct item target
+	syntax:
+		"pull [target]"
+
+check pull:
+	stop failed nothing_happens
+
+report failed pull when self.reason == nothing_happens:
+	print pull_inert:"Nothing obvious happens."
+
 action go:
 	direction way
 	syntax:

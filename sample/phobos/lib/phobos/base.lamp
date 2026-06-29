@@ -218,8 +218,8 @@ contains Commanders_Quarters commanders_log
 # screens/buttons/launch/self-destruct as "part of" the central control panel and the
 # chair as an enterable supporter; advent has neither part-of nor SIT yet, so each is a
 # standalone scenery item reachable by its own synonyms. The `feels`/touch strings are
-# deferred (no TOUCH verb). The buttons' PRESS behaviour — and the launch/self-destruct
-# endgame it triggers — is deferred with the Guard and the win sequence.
+# deferred (no TOUCH verb). The buttons' PUSH behaviour (the launch/self-destruct endgame) is
+# in lib/phobos/control_room.lamp.
 #
 # Shared vocabulary mirrors I7: the bare word "button" matches all three button objects
 # (so EXAMINE BUTTON disambiguates), while "buttons" resolves to the collective, "green"
@@ -256,3 +256,35 @@ contains Control_Room control_room_chair
 contains Control_Room buttons
 contains Control_Room launch_button
 contains Control_Room self_destruct_button
+
+# --- Reactor Room furniture (Base.i7x "Book - Reactor Room") ------------------
+# The reactor control board and the two arming levers (plus the collective "levers"). Scenery,
+# EXAMINE only here; the levers' PULL behaviour is in lib/phobos/control_room.lamp (the reactor
+# half of the self-destruct sequence). The reactor manual is a textual document, defined above.
+# Vocab: "left"/"right" pick a single lever; "lever" disambiguates the two; "levers" resolves to
+# the collective. ("screen"/"screens"/"panel" overlap the Control Room fixtures, but the rooms
+# are never in scope together.)
+item reactor_control_board:
+	scenery
+	understand "knobs/dials/knob/dial/keyboard/keys/screen/screens/panel"
+	description "The control board is so dense with knobs, dials, keyboard and screens that it's hard to see how anyone would operate it."
+item left_reactor_arming_lever:
+	printed_name "left reactor arming lever"
+	scenery
+	understand "left"
+	description "This lever is mounted on the wall to the left of the control board."
+item right_reactor_arming_lever:
+	printed_name "right reactor arming lever"
+	scenery
+	understand "right"
+	description "This lever is mounted on the wall to the right of the control board."
+item reactor_arming_levers:
+	printed_name "reactor arming levers"
+	scenery
+	understand "levers/arming"
+	description "These two levers are mounted on the wall, one to the left and one to the right of the control board. They are designed to be pulled simultaneously to arm the reactor's self-destruct sequence."
+
+contains Reactor_Room reactor_control_board
+contains Reactor_Room left_reactor_arming_lever
+contains Reactor_Room right_reactor_arming_lever
+contains Reactor_Room reactor_arming_levers

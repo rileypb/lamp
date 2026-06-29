@@ -38,3 +38,22 @@ instead push when self.target == self_destruct_button:
 	print "A red light begins to flash on the control panel, and a voice says, '[siriusian(\"To initiate the self-destruct sequence, the arming levers on the base reactor must be engaged\")].' The message is repeated on the screen."
 	self_destruct_pushed = true
 	stop succeeded
+
+# --- Reactor arming levers (Base.i7x "Book - Reactor Room", no-guard variants) ----------------
+# The self-destruct's confirmation half. Arming requires *two* people pulling the levers at once,
+# so Galaxy alone can't do it: a single lever springs back, and grabbing for both is hopeless.
+# The actual arming — the Siriusian guard pulls the left lever and holds it, Galaxy pulls the
+# right, setting `self_destruct_in_progress` (countdown.lamp) and so the heroic win — is
+# guard-driven (Guard.i7x) and deferred with the Guard. When the guard lands, its lever rules go
+# in earlier / more specific than these (these are the "guard not present" fallbacks).
+instead pull when self.target == left_reactor_arming_lever:
+	print "Galaxy pulls the lever. It springs back to its original position. Nothing else happens."
+	stop succeeded
+
+instead pull when self.target == right_reactor_arming_lever:
+	print "Galaxy pulls the lever. It springs back to its original position. Nothing else happens."
+	stop succeeded
+
+instead pull when self.target == reactor_arming_levers:
+	print "The levers are too far apart for one person to pull at once."
+	stop succeeded

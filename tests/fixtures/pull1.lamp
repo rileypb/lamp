@@ -1,0 +1,29 @@
+# The generic PULL action (lib/advent): PULL any item, with a default "Nothing obvious
+# happens." The target is `direct`, so the pronoun "it" refers back to the last-named thing.
+# A game overrides the named `pull_inert` message or adds `instead pull` rules for things that
+# respond — here a lever that raises a drawbridge.
+
+lib advent
+
+game Pull:
+	start Room
+
+room Room:
+	description "A bare room."
+
+item rope
+item lever:
+	description "A long iron lever."
+
+global bool bridge_down = false
+
+contains Room rope
+contains Room lever
+
+instead pull when self.target == lever:
+	if bridge_down:
+		print "The lever is already thrown."
+	else:
+		print "The lever groans, and a drawbridge lowers across the moat."
+		bridge_down = true
+	stop succeeded

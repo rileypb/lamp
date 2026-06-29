@@ -1,0 +1,5 @@
+pull rope
+examine lever
+pull it
+pull lever
+quit

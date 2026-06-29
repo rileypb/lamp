@@ -140,10 +140,19 @@ carried by a new `ending_override` global (the Lamp analogue of I7's `end the st
 the Guard death endings later). **self-destruct** = starts the sequence and sets
 `self_destruct_pushed`, telling Galaxy the reactor's arming levers must be engaged; pushing it
 again reports it is already running. **Deferred:** the guard-present overrides (the cyborg's
-suspicion → "spy!" → death-or-suit-deflect), and the self-destruct *payoff* — the reactor arming
-levers (which set `self_destruct_in_progress`, switching the doom-clock's zero ending to the
-heroic win) and the escape by ship — port with the Guard and the win sequence (reactor levers,
-flight deck, ship still unported).
+suspicion → "spy!" → death-or-suit-deflect), and the self-destruct *payoff* — the escape by ship.
+
+**Reactor Room furniture + arming levers (Base.i7x "Book - Reactor Room"): ported.** The reactor
+control board and the two arming levers (left/right) plus the collective "levers" are scenery
+`item`s in `Reactor_Room` (`base.lamp`); the reactor manual was already a textual document. The
+generic **PULL verb is now in advent** (`pull [target]`, any item, default "Nothing obvious
+happens."; shares the `nothing_happens` reason with PUSH; golden `pull1`). The levers' **no-guard
+PULL behaviour** is in `control_room.lamp`: a single lever "springs back… nothing happens", and
+grabbing both is "too far apart for one person to pull at once" — because arming needs *two*
+people. **Deferred (guard-driven):** the actual arming — the Siriusian guard pulls the left lever
+and holds it, Galaxy pulls the right, setting `self_destruct_in_progress` (countdown.lamp) and so
+the doom-clock's heroic win — ports with the Guard (its lever rules go more specific / earlier
+than these "guard not present" fallbacks). Still unported: the flight deck + escape ship.
 
 **Infrastructure Base.i7x needs that Lamp/advent lacks** (rough priority):
 
