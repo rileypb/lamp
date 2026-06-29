@@ -80,7 +80,7 @@ test_script test_most:
 test_script test_endgame:
 	printed_name "endgame"
 	understand "endgame"
-	commands "test most/give chocolate to guard/remove helmet/s/w/w/pull right lever/e/e/n/attack tall commando/attack short commando/n/enter ship/fly"
+	commands "test most/give chocolate to guard/remove helmet/s/w/w/pull right lever/e/e/n/attack tall commando/attack short commando/take tall commando/n/enter ship/drop tall commando/out/s/take short commando/n/enter ship/fly"
 
 test_script test_talk:
 	printed_name "talk"

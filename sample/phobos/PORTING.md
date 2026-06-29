@@ -198,8 +198,10 @@ flight-deck door, and clears the way to the ship and the win. To make people att
 advent's **`examine` and `attack` now target `physical`** (was `item`; byte-invariant). **Deferred:**
 **scoring** (carrying the unconscious commandos to safety earned points in I7), the "distracted ->
 shot" punishment for non-combat actions mid-fight (here she simply can't flee), and the SAY/ANSWER
-free-text asides (assert-humanity / loyalty yes/no — a separate text-topic mechanism). **`test
-endgame` now plays the whole game to victory with no debug shortcuts.**
+free-text asides (assert-humanity / loyalty yes/no — a separate text-topic mechanism). The
+unconscious commandos can be **carried to the ship** (one at a time; a shot/dead one can't be
+saved) for the score bonus (see Scoring below). **`test endgame` plays the whole game to victory,
+saving both commandos for the full score, with no debug shortcuts.**
 
 **Scoring + the Galaxy Banner (Score.i7x / Galaxy Banner.i7x / Rank.i7x): ported.** A general
 **score subsystem** lives in advent (`scoring.lamp`): `score`/`max_score` globals, `award_points(n)`
@@ -207,10 +209,12 @@ endgame` now plays the whole game to victory with no debug shortcuts.**
 wraps it as **`galaxy_score(n)`** — which flashes the "Galaxy Jones" ASCII figlet (`fixed()`
 monospace) on every point — and maps the final score to a **rank** (Cyborg Bait → Queen of Mars),
 shown in the end banner. Eleven points (`max_score = 11`): the six puzzle solves (green/yellow/red/
-blue/locker/purple), the alliance, arming the reactor, defeating the commandos, and the escape
-(+2) — a full playthrough (`test endgame`) earns all eleven and the rank of **Queen of Mars**. The
-suit-smash bypass earns nothing (consistent with I7). **Deferred:** carrying the unconscious
-commandos for bonus points, and the power/action banners (Powerup/Galaxy Banner extras).
+blue/locker/purple), the alliance, arming the reactor, the **launch** (+1), and **+1 for each
+unconscious commando carried into the ship** (max 2). So the top rank of **Queen of Mars** (11)
+*requires saving both commandos* — punch them (TAKE the unconscious ones, one at a time, drop them
+in a passenger seat) rather than SHOOT them dead; shooting both caps the run at 9 (Dame of Deimos),
+faithful to I7. The suit-smash bypass earns nothing. **Deferred:** the power/action banners
+(Powerup/Galaxy Banner extras).
 
 **TEST runner (story.ni L159–163's `test … with "…"`): the mechanism is built** (general; in
 `lib/advent/debug.lamp`, see specs.md "Debug: the TEST runner"). `test [name]` queues a

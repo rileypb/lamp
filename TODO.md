@@ -479,10 +479,11 @@ core edit is contained. Names (default): `contains`/`place`/`contained`, keyword
   (`lib/phobos/scoring.lamp`) wraps it as **`galaxy_score(n)`**, which flashes the "Galaxy Jones"
   ASCII figlet (`fixed()` monospace) on every point-gain, and maps the final score to a **rank**
   (Cyborg Bait → Queen of Mars) shown in the end banner. `max_score = 11` (six puzzle solves,
-  alliance, arming, commandos, escape +2); `test endgame` earns all eleven → Queen of Mars. The
-  suit-smash bypass earns nothing. Two fixtures that used `score` as a local verb were renamed
-  (outofworld1 → `ping`). **Deferred:** carrying the unconscious commandos for bonus points, and
-  the power/action banners (Powerup/Galaxy Banner extras).
+  alliance, arming, the launch, and **+1 per unconscious commando carried into the ship** — so
+  Queen of Mars *requires saving both*: punch + carry them, don't shoot; shooting both caps at 9,
+  faithful to I7). `test endgame` saves both → all eleven → Queen of Mars. The suit-smash bypass
+  earns nothing. Two fixtures that used `score` as a local verb were renamed (outofworld1 → `ping`).
+  **Deferred:** the power/action banners (Powerup/Galaxy Banner extras).
 - **Localization to French — in progress (`devdocs/i18n.md`).** Goal: a playable French
   Cloak of Darkness. **Part 1 DONE (2026-06-26):** the compile-time **locale switch** —
   `--locale <tag>` flag (also `--locale=<tag>`) > a `locale "<tag>"` source declaration >

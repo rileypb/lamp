@@ -13,7 +13,10 @@ lib advent
 # "distracted -> shot" punishment for non-combat actions mid-fight (here she simply can't flee),
 # and the SHOW/SAY free-text asides.
 
-type commando < person:
+# Commandos are `item`s, not `person`s: they never converse, and once knocked out Galaxy can
+# carry them to the ship (TAKE wants an item). `defeated` = down (punched unconscious or shot);
+# `dead` = shot (can't be saved).
+type commando < item:
 	bool defeated = false
 	bool dead = false
 
@@ -109,7 +112,6 @@ function void commando_finale():
 	move guard to Reactor_Room
 	move dead_guard to Control_Room
 	print "[par]The way to the flight deck, and the waiting ship, stands open to the north."
-	galaxy_score(1)
 
 # Knock a commando out (punch) or kill it (shoot); the last one down triggers the finale.
 function void down_commando(commando c, bool killed):
@@ -157,3 +159,47 @@ report shoot:
 instead go when commando_started and not commandos_down() and holder(player) == Control_Room:
 	print "Galaxy can't turn her back on the commandos -- she has to deal with them first."
 	stop failed
+
+# --- Carrying the unconscious commandos to safety ----------------------------
+# Once knocked out (not killed), Galaxy can sling a commando over her shoulder and carry them to
+# the ship -- but only one at a time. A dead (shot) commando can't be saved. Each one she gets
+# into the ship is worth a point at lift-off (flight_deck.lamp).
+instead take when self.taken == tall_commando:
+	if not tall_commando.defeated:
+		print "Galaxy can't get near the commando while they're still trading fire."
+		stop failed
+	if tall_commando.dead:
+		print "With so much at stake, Galaxy can't carry a dead commando around. She leaves them where they lie."
+		stop failed
+	if holder(short_commando) == player:
+		print "Galaxy can't carry both commandos at once."
+		stop failed
+	move tall_commando to player
+	print "Galaxy slings the unconscious tall commando over her shoulder."
+	stop succeeded
+instead take when self.taken == short_commando:
+	if not short_commando.defeated:
+		print "Galaxy can't get near the commando while they're still trading fire."
+		stop failed
+	if short_commando.dead:
+		print "With so much at stake, Galaxy can't carry a dead commando around. She leaves them where they lie."
+		stop failed
+	if holder(tall_commando) == player:
+		print "Galaxy can't carry both commandos at once."
+		stop failed
+	move short_commando to player
+	print "Galaxy slings the unconscious short commando over her shoulder."
+	stop succeeded
+
+after drop when self.dropped == tall_commando:
+	if holder(player) == Inside_The_Ship:
+		print "Galaxy lays the tall commando in one of the passenger seats."
+	else:
+		print "Galaxy gently lays the tall commando on the ground."
+	stop succeeded
+after drop when self.dropped == short_commando:
+	if holder(player) == Inside_The_Ship:
+		print "Galaxy lays the short commando in one of the passenger seats."
+	else:
+		print "Galaxy gently lays the short commando on the ground."
+	stop succeeded
