@@ -25,8 +25,15 @@ verb (prints a thing's `feels` text or the default reply), the `feels` string +
 refusals, and the trait-driven TAKE refusals (golden `touch1`; specs.md) — **plus the per-object
 `feels` text on every ported Phobos object** (with `far_away` on Mars/Stickney Crater, `edificial`
 on the ship, and a state-dependent `instead touch` for the commandos); residual feels ride with the
-not-yet-ported sub-objects. The next big remnant is **backdrops** (walls/floors/ceilings — needs a
-backdrop scope mechanism in advent).
+not-yet-ported sub-objects. **Backdrops DONE** (`Walls/Floors/Ceilings/PBR Common.i7x`): advent
+gained a general `backdrop` type surfaced in scope in every room by a second scope provider (golden
+`backdrop1`; specs.md), and Phobos's `lib/phobos/backdrops.lamp` adds walls/floor/ceiling with the
+PBR default messages + an `outdoors` room flag (the flight deck) for the no-walls / ground / open-sky
+wording. Also fixed a latent locale bug (`feel` was missing from the verb vocab, so `[feel]` didn't
+conjugate). Remaining parity items: SAY/ANSWER free-text, distracted→shot, noun forms of FLY, custom
+can't-go/hit/take messages, power/action banners, banner placement seam, examinable in-prose
+sub-objects, handprint-scanner parts, examine-self / X ME, indescribable objects, and the audit
+passes.
 Smaller: SAY/ANSWER free-text, custom can't-go/hit/take messages, power/action banners, banner
 placement seam, examinable in-prose sub-objects, and a per-extension audit. **Infra DONE:** golden
 discovery now walks one level into subdirs, so `sample/phobos/phobos.lamp` is a golden (`test
@@ -379,6 +386,20 @@ core edit is contained. Names (default): `contains`/`place`/`contained`, keyword
   OPEN/CLOSE/LOCK/UNLOCK door verbs; door **parts** (handprint scanners) as
   `contains` vs. a distinct `part_of` relation; door-closed message is a plain
   print (i18n gap — names a non-slot local).
+- **Region/subset-scoped backdrops (advent).** Today advent's `backdrop` type is
+  **everywhere** — the scope provider in `lib/advent/index.js` returns *every*
+  `backdrop` instance regardless of the actor's location (`type("backdrop").all`),
+  matching I7's default "the X is everywhere." But I7 backdrops can also be present
+  in only *some* rooms (a specific room, a list, or a region). Add a way to scope a
+  backdrop to a **subset of rooms**, so the provider surfaces a given backdrop only
+  where it belongs. Likely shape: a `present_in` relation (`backdrop` → `room`,
+  many-to-many) that the provider consults — empty set = everywhere (back-compat), a
+  non-empty set = only those rooms; or, later, a `region` grouping over rooms.
+  Parallels how the **door** provider is already room-scoped (it queries the
+  `doorway` relation for the current room). Not needed by Phobos (its walls/floor/
+  ceiling are genuinely everywhere), so it's a general-engine enhancement. **Where:**
+  `lib/advent/index.js` (provider) + `lib/advent/globals.lamp` or `types.lamp` (the
+  relation), specs.md "Backdrops".
 - **Phobos third-person presentation + Siriusian cipher (port) — in progress.**
   **Room heading DONE:** advent factors the heading into an overridable
   `room_heading_rules(room r)` rulebook (default byte-identical) + `room`

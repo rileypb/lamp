@@ -1,0 +1,96 @@
+lib advent
+
+# Walls / floor / ceiling backdrops (ported from Walls.i7x / Floors.i7x / Ceilings.i7x +
+# PBR Common.i7x). Each is an advent `backdrop` — present in scope in every room — made
+# examinable/touchable here with location-aware wording.
+#
+# Phobos is entirely indoors except the flight deck (`outdoors`, set in base.lamp); there are
+# no floating rooms, no low-ceilinged rooms, and the game defines no custom per-room wall/floor/
+# ceiling descriptions. So this ports only the PBR *default* messages:
+#   - walls:   indoors → present; outdoors → "There are no walls."
+#   - floor:   always present ("floor" indoors, "ground" outdoors).
+#   - ceiling: indoors → present but too high to touch; outdoors → only open sky.
+# The messages use the [We] [see]/[feel] viewpoint sugar, so they read in Phobos's third person
+# ("She sees nothing special about the walls."), matching advent's examine-nothing line.
+
+# Presence predicates (PBR's walled/floored/ceilinged, simplified: with no floating rooms,
+# "indoors" is just "not outdoors", and the floor is present everywhere).
+function bool walled(room r):
+	return not r.outdoors
+function bool floored(room r):
+	return true
+function bool ceilinged(room r):
+	return not r.outdoors
+
+# --- Walls (Walls.i7x) -------------------------------------------------------
+backdrop walls:
+	printed_name "wall"
+	article plural
+	scenery
+	understand "wall/walls"
+
+instead examine when self.target == walls:
+	if walled(holder(self.actor)):
+		print "[We] [see] nothing special about the walls."
+	else:
+		print "There are no walls to see."
+	stop succeeded
+
+instead touch when self.target == walls:
+	if walled(holder(self.actor)):
+		print "[We] [feel] nothing special about the walls."
+	else:
+		print "There are no walls to feel."
+	stop succeeded
+
+# Outdoors there are no walls to take; indoors the scenery flag refuses normally.
+instead take when self.taken == walls and not walled(holder(self.actor)):
+	print "There are no walls."
+	stop failed
+
+# --- Floor (Floors.i7x) ------------------------------------------------------
+# Present in every Phobos room; named "floor" indoors, "ground" outdoors.
+backdrop floor:
+	printed_name "floor"
+	scenery
+	understand "floor/ground"
+
+instead examine when self.target == floor:
+	if holder(self.actor).outdoors:
+		print "[We] [see] nothing special about the ground."
+	else:
+		print "[We] [see] nothing special about the floor."
+	stop succeeded
+
+instead touch when self.target == floor:
+	if holder(self.actor).outdoors:
+		print "[We] [feel] nothing special about the ground."
+	else:
+		print "[We] [feel] nothing special about the floor."
+	stop succeeded
+
+# --- Ceiling (Ceilings.i7x) --------------------------------------------------
+# Indoors: a ceiling, too high to touch (no low-ceilinged rooms in Phobos). Outdoors: open sky.
+backdrop ceiling:
+	printed_name "ceiling"
+	scenery
+	understand "ceiling/sky"
+
+instead examine when self.target == ceiling:
+	if ceilinged(holder(self.actor)):
+		print "[We] [see] nothing special about the ceiling."
+	else:
+		print "There's nothing up there but sky."
+	stop succeeded
+
+instead touch when self.target == ceiling:
+	if ceilinged(holder(self.actor)):
+		print "[We] can't reach the ceiling."
+	else:
+		print "[We] can't touch the sky."
+	stop succeeded
+
+# Outdoors, "take ceiling/sky" → can't take the sky; indoors the scenery flag refuses normally.
+instead take when self.taken == ceiling and holder(self.actor).outdoors:
+	print "[We] can't take the sky."
+	stop failed

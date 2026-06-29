@@ -1,7 +1,7 @@
 Room
 A bare room.
 
-You see a velvet, a brick, a ghost, a star and a statue here.
+She sees a velvet, a brick, a ghost, a star and a statue here.
 
 > touch velvet
 The velvet is impossibly soft.
@@ -10,22 +10,22 @@ The velvet is impossibly soft.
 The velvet is impossibly soft.
 
 > touch brick
-You feel nothing unexpected.
+She feels nothing unexpected.
 
 > feel it
-You feel nothing unexpected.
+She feels nothing unexpected.
 
 > touch ghost
-You can't touch the ghost.
+She can't touch the ghost.
 
 > touch star
-You can't reach the star.
+She can't reach the star.
 
 > take ghost
-You can't take the ghost.
+She can't take the ghost.
 
 > take star
-You can't reach the star.
+She can't reach the star.
 
 > take statue
 The statue is much too massive to take.

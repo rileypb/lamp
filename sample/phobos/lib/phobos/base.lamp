@@ -8,6 +8,11 @@ lib advent
 type room:
 	string preposition = "in"
 	bool always_indefinite = false
+	# Indoors/outdoors (PBR Common's room model, simplified — Phobos has no floating rooms).
+	# Drives the walls/floor/ceiling backdrops (lib/phobos/backdrops.lamp): indoors rooms have
+	# walls and a (too-high) ceiling; outdoors has neither, only open sky. All but the flight
+	# deck are indoors.
+	bool outdoors = false
 
 # Siriusian glyph cipher (a Lamp function in lib/phobos/linguistics.lamp): renders
 # English as the alien script. Used in descriptions via [siriusian("...")].
@@ -101,7 +106,8 @@ room Commanders_Quarters:
 room Control_Room:
 	description "The inner sanctum of the base is dominated by a large control panel, covered with buttons, switches and screens. Two large buttons, one green and one red, stand out among the rest.[par]A chair sits in front of the control panel. A purple door stands [if purple_door.closed]closed[else]open[end if] to the south, while the door to the flight deck, [if flight_deck_door.closed]closed[else]open[end if], is to the north."
 room Flight_Deck:
-	preposition "on"         # "Galaxy is on the flight deck" (I7 "outdoors" deferred)
+	preposition "on"         # "Galaxy is on the flight deck"
+	outdoors true            # exposed to space: no walls, no ceiling — only sky (backdrops.lamp)
 	description "The platform stands exposed to the blackness above. The expanse of Stickney Crater stretches to the north, and the immense face of Mars dominates the southern sky. A door to the south, [if flight_deck_door.closed]closed[else]open[end if], leads back to the control room."
 
 # Door-free connections.

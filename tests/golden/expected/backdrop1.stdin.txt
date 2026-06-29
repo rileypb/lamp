@@ -1,0 +1,7 @@
+examine sky
+touch sky
+north
+look
+examine sky
+touch sky
+quit

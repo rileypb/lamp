@@ -77,6 +77,13 @@ type box < item, container:
 	bool closed
 	bool locked = false
 
+# A backdrop is present in scope in *every* room (walls, floor, ceiling, sky, the distant
+# horizon) rather than contained in one. The scope provider in index.js surfaces all backdrop
+# instances regardless of the actor's location; a game makes them examinable/touchable with its
+# own `instead examine`/`instead touch` rules (the per-room/indoors logic is the game's). Lives
+# here (not its own file) so it is emitted after its parent `item`. See specs.md "Backdrops".
+type backdrop < item
+
 type person < physical
 
 type direction < thing:

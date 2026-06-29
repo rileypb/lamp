@@ -1,0 +1,26 @@
+Meadow
+An open meadow.
+
+You see a flower here.
+
+> examine sky
+The sky is a flat, even blue.
+
+> touch sky
+Your fingers find only empty air.
+
+> north
+Cave
+A dim cave.
+
+> look
+Cave
+A dim cave.
+
+> examine sky
+The sky is a flat, even blue.
+
+> touch sky
+You feel only the damp cave roof.
+
+> quit

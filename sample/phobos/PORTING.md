@@ -34,10 +34,22 @@ Lamp's capabilities. The checklist below tracks what's left; we work through it 
   signs/poster, handprint scanners, the Moon Sled, sleeping pods, tile/counters, the PA System, the
   suit light, the RESET button) rides along with those objects when they land (sub-objects/backdrops/
   parts items below). `feel me`/`feel galaxy` needs the player's self-synonyms (the X ME item below).
-- [ ] **Backdrops: walls / floors / ceilings** (`Walls.i7x` / `Floors.i7x` / `Ceilings.i7x` /
-  `PBR Common.i7x`): examinable scenery present in *every* room (X WALL / FLOOR / CEILING / SKY /
-  GROUND), per-room descriptions via tables, low-ceiling/outdoors variants. Needs a backdrop
-  mechanism in advent (the scope-provider seam doors use is the hook).
+- [x] **Backdrops: walls / floors / ceilings** (`Walls.i7x` / `Floors.i7x` / `Ceilings.i7x` /
+  `PBR Common.i7x`): **DONE.** advent gained a general **`backdrop` type** — a thing surfaced in
+  scope in *every* room by a second scope provider (the door seam's sibling; golden `backdrop1`,
+  specs.md). Phobos's `lib/phobos/backdrops.lamp` adds the **walls / floor / ceiling** backdrops with
+  the PBR **default** messages (the game defines no custom per-room rows): X/TOUCH give "[She] sees/
+  feels nothing special about the walls/floor/ceiling", the ceiling is too high to touch ("can't
+  reach the ceiling"). An **`outdoors`** flag on Phobos's `room` reopen (only the flight deck;
+  no floating rooms, no low ceilings) drives the outdoor wording — no walls ("There are no walls to
+  see/feel"), floor→"ground", ceiling→open sky ("There's nothing up there but sky", "can't touch the
+  sky", "can't take the sky"). En route this fixed a latent bug: `feel` was missing from the locale
+  verb vocab, so `[feel]` didn't conjugate ("She feel"→"She feels"); `touch1` now runs in third
+  person to lock it. *Residual:* the per-room description **table** (N/A — Phobos has none),
+  RUB/CUT and the "[We] would just embarrass [ourselves]" ATTACK refusals (no RUB/CUT verbs; ATTACK
+  falls to advent's default — rides with the custom-attack-refusals item + a viewpoint `ourselves`),
+  LOOK UP/DOWN → examine ceiling/floor, and location-gated `sky`/`ground` synonyms (understood
+  everywhere now).
 
 **Alternate paths / behaviour:**
 - [ ] **SAY / ANSWER free-text** (`Guard.i7x`): "say I am human" / "I'm from earth" →
@@ -519,9 +531,11 @@ than these "guard not present" fallbacks). Still unported: the flight deck + esc
    **doors** (kept on their own passage/hack mechanism — revisit with the door work).
 9. **Vehicles / ENTER / enterable supporters** — Moon Sled, Siriusian ship,
    chair, pilot's seat; the ENTER verb, vehicles, sitting on supporters.
-10. **Scope/backdrop tricks** — `far away` (Mars, Stickney Crater), "place X in
-    scope", "reaching inside" rules. (The scope-provider seam from doors is the
-    hook.)
+10. ~~**Scope/backdrop tricks**~~ **Backdrops DONE** — advent's general `backdrop` type +
+    a second scope provider surface a thing in scope in *every* room (golden `backdrop1`); the
+    walls/floor/ceiling use it (`lib/phobos/backdrops.lamp`). `far_away` (Mars, Stickney Crater)
+    is done too (TOUCH/TAKE item). Still open: arbitrary "place X in scope" / "reaching inside"
+    rules and region-scoped backdrops (every backdrop is currently everywhere).
 11. **Custom actions** — flying / ship-flying / simply-flying, listening,
     pulling, searching.
 12. ~~**`end the story saying "…"`**~~ **DONE.** The custom final line is a

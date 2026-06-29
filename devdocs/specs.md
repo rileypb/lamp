@@ -1791,6 +1791,7 @@ described below.
 | `person` | `physical` | — |
 | `direction` | `thing` | `direction inverse`, `string understand` |
 | `door` | `item` | `bool closed=true`, `bool locked=false`, `bool lockable=true`, one `room` field per direction |
+| `backdrop` | `item` | — (present in scope in *every* room; see Backdrops) |
 
 `article` is an enum kind with values `count`, `definite`, `proper`, `plural`.
 `stop_reason` is an open object type; lib/advent declares the reasons listed
@@ -1979,6 +1980,31 @@ directional fields at compile time (keyed on the directional-field signature, so
 unrelated user type named `door` is unaffected). Only the ten built-in directions
 are supported as door sides; standard OPEN/CLOSE/LOCK/UNLOCK verbs are not yet
 provided (a game drives door state itself).
+
+### Backdrops
+
+A **`backdrop`** is a thing present in scope in *every* room — walls, the floor, the
+ceiling, the sky, a distant landmark — rather than contained in any one. A second
+**scope provider** (registered in `lib/advent/index.js`, alongside the door one)
+surfaces **every `backdrop` instance** regardless of the actor's location, so a
+backdrop is referable everywhere; like all scope-provided objects its own contained
+parts come along via the scope fixpoint. Backdrops are not in any room's `contains`,
+so they never appear in room-contents listings. advent supplies only the *presence*
+mechanism — the per-room and indoors/outdoors wording is the game's, via its own
+`instead examine` / `instead touch` (etc.) rules keyed on `holder(self.actor)`:
+
+```lamp
+backdrop sky:
+    understand "sky/clouds"
+    description "The sky is a flat, even blue."
+
+instead touch when self.target == sky:
+    print "Your fingers find only empty air."
+    stop succeeded
+```
+
+(Region- or room-scoped backdrops — present in only some rooms — are not yet
+modelled; every backdrop is everywhere. Golden `backdrop1`.)
 
 ### Stop reasons
 

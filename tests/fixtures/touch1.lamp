@@ -2,11 +2,20 @@
 # physical thing senses it without changing the world. A thing's `feels` text is printed when set,
 # else a default reply. Three traits gate it — `unfeelable` (can't touch), `far_away` and
 # `obstructed` (can't reach) — and the reach/`edificial` traits also refuse TAKE. FEEL is a synonym.
+#
+# Runs in third person (viewpoint_person = 3) so the default "[We] [feel] nothing unexpected." line
+# exercises the `[feel]` verb conjugation ("She feels …"), which needs `feel` in the locale vocab.
 
 lib advent
 
 game Touch:
 	start Room
+
+person yourself:
+	gender "female"
+
+rule startup_rules:
+	viewpoint_person = 3
 
 room Room:
 	description "A bare room."

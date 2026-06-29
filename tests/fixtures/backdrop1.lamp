@@ -1,0 +1,30 @@
+# The generic `backdrop` type (lib/advent): a thing present in scope in *every* room, not
+# contained in any one. The scope provider surfaces all backdrops everywhere, so the sky is
+# examinable/touchable from both rooms here, and a game layers its own `instead` rules for
+# location-aware wording. Backdrops aren't in any room's `contains`, so they're never listed.
+
+lib advent
+
+game Sky:
+	start Meadow
+
+room Meadow:
+	description "An open meadow."
+room Cave:
+	description "A dim cave."
+
+bidi connects Meadow north Cave
+
+backdrop sky:
+	understand "sky/clouds"
+	description "The sky is a flat, even blue."
+
+item flower
+contains Meadow flower
+
+instead touch when self.target == sky:
+	if holder(self.actor) == Cave:
+		print "You feel only the damp cave roof."
+	else:
+		print "Your fingers find only empty air."
+	stop succeeded
