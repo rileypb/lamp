@@ -7,11 +7,8 @@ lib advent
 #
 # The leading is NPC movement driven by every-turn rules keyed on co-location (the guard steps to
 # the next room when Galaxy is with it, so she witnesses and follows each step). The commandos are
-# a small `commando` type with defeated/dead state. Galaxy can't leave the control room mid-fight.
-#
-# Deferred: scoring (carrying the unconscious commandos to safety earned points in I7), the
-# "distracted -> shot" punishment for non-combat actions mid-fight (here she simply can't flee),
-# and the SHOW/SAY free-text asides.
+# a small `commando` type with defeated/dead state. Mid-fight, doing anything but ATTACK/SHOOT gets
+# Galaxy shot ("distracted -> shot", below).
 
 # Commandos are `item`s, not `person`s: they never converse, and once knocked out Galaxy can
 # carry them to the ship (TAKE wants an item). `defeated` = down (punched unconscious or shot);
@@ -109,6 +106,23 @@ rule every_turn_rules:
 		fdd.locked = false
 		print "[par]Without warning, a pair of Siriusian commandos -- one tall, one short -- burst into the control room from the flight deck above, weapons drawn. Galaxy and the guard spring into action."
 
+# Distracted -> shot (Guard.i7x): while the ambush is live -- the commandos have burst in and at
+# least one is still up -- doing ANYTHING but ATTACK or SHOOT gets Galaxy gunned down. The action
+# selector `any except attack except shoot` maps Inform's "doing something other than attacking or
+# shooting" directly. It runs in the **`before`** band (not `instead`) so it preempts *every* other
+# rule for those actions regardless of library load order -- including the backdrop examine/touch
+# and commando take/touch rules below -- so taking/feeling/fleeing/examining mid-fight is all death.
+# Both attackers still up -> twin blasts; one left -> a single blast. (Fires for any non-combat
+# action, meta included -- a do-or-die moment.)
+before any except attack except shoot when commando_started and not commandos_down() and holder(player) == Control_Room:
+	if not tall_commando.defeated and not short_commando.defeated:
+		print "While Galaxy is distracted, the commandos take advantage of the situation and fire at her. She is hit by twin disruptor blasts, and she falls to the ground, unconscious. She never awakes."
+	else:
+		print "While Galaxy is distracted, the remaining commando takes advantage of the situation and fires at her. She is hit by a disruptor blast, and she falls to the ground, unconscious. She never awakes."
+	ending_override = "Galaxy Jones has been terminated by a pair of Siriusian commandos."
+	story = lost
+	stop succeeded
+
 function bool commandos_down():
 	return tall_commando.defeated and short_commando.defeated
 
@@ -182,10 +196,8 @@ instead touch when self.target == short_commando:
 	feel_commando(short_commando)
 	stop succeeded
 
-# Can't turn your back on the commandos until they're down.
-instead go when commando_started and not commandos_down() and holder(player) == Control_Room:
-	print "Galaxy can't turn her back on the commandos -- she has to deal with them first."
-	stop failed
+# (Fleeing mid-fight -- like any non-combat action -- is handled by the distracted-shot rule above,
+# which preempts `go`.)
 
 # --- Carrying the unconscious commandos to safety ----------------------------
 # Once knocked out (not killed), Galaxy can sling a commando over her shoulder and carry them to

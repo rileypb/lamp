@@ -35,7 +35,10 @@ room flag (the flight deck) for the no-walls / ground / open-sky wording, and th
 `[feel]` didn't conjugate). **SAY/ANSWER free-text DONE** (`Guard.i7x`): lib/conversation gained a
 `say` action (`say/answer [topic]`, a free-text `string` topic distinct from ASK/TELL's subject;
 golden `conversation1`), used by the guard for the assert-humanity alliance (no gift) and the loyalty
-yes/no window (specs.md). Remaining parity items: distracted→shot, noun forms of FLY, custom
+yes/no window (specs.md). **Distracted→shot DONE** (`Guard.i7x`): mid-commando-fight, doing anything
+but ATTACK/SHOOT gets Galaxy shot — a `before any except attack except shoot` action-selector rule
+(the `before` band preempts every other rule regardless of load order), mapping Inform's "doing
+something other than attacking or shooting". Remaining parity items: noun forms of FLY, custom
 can't-go/hit/take messages, power/action banners, banner placement seam, examinable in-prose
 sub-objects, handprint-scanner parts, examine-self / X ME, indescribable objects, the bare-word SAY
 shortcuts (needs a command-rewrite hook, below), and the audit passes.

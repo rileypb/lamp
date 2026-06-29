@@ -72,8 +72,18 @@ Lamp's capabilities. The checklist below tracks what's left; we work through it 
   the **bare-word shortcuts** (typing just "yes"/"no"/"human" without "say") — I7 rewrites those via
   an *after reading a command* rule; Lamp has no command-rewrite hook (recorded in TODO.md), so for
   now the player says "say yes" / "say I am human".
-- [ ] **"Distracted → shot" mid-fight** (`Guard.i7x`): doing anything but attack/shoot while a
-  commando is up gets Galaxy killed (today she simply can't flee).
+- [x] **"Distracted → shot" mid-fight** (`Guard.i7x`): **DONE.** While the commando ambush is live
+  (commandos in, not both down), doing anything but ATTACK or SHOOT gets Galaxy gunned down. Ported
+  with an action **selector in the `before` band** — `before any except attack except shoot when
+  commando_started and not commandos_down() and holder(player) == Control_Room` — which maps
+  Inform's "doing something other than attacking or shooting" directly. The `before` band (not
+  `instead`) makes it preempt *every* other rule for those actions regardless of library load order
+  (so examining/touching a wall, taking/feeling a commando, or fleeing mid-fight is all death, not
+  the gentler refusals). Both attackers up → "twin disruptor blasts"; one left → "the remaining
+  commando … a disruptor blast"; ends with "Galaxy Jones has been terminated by a pair of Siriusian
+  commandos." Replaced the old `instead go` "can't turn her back" placeholder. (Slightly stricter
+  than I7's specificity-ordered `instead`, where a few noun-specific rules would slip through — this
+  matches the do-or-die intent and is order-robust.) Verified in play; golden win path unchanged.
 - [ ] **Noun forms of FLY** ("fly ship" / "operate panel") and the ship-flying/simply-flying split
   (`Base.i7x`).
 - [ ] **`blowing up the base` scene flavour** (`Guard.i7x`): audit the guard-leading lines against
