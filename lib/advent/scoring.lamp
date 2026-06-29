@@ -1,0 +1,26 @@
+lib advent
+
+# A small score subsystem. A game sets `max_score` (e.g. in `startup_rules`) and awards points with
+# `award_points(n)`, which bumps the running `score` and prints the standard notification. The SCORE
+# verb (out-of-world) reports the total. A game may wrap `award_points` to add a flourish — Phobos
+# prints the Galaxy Banner on every gain (sample/phobos/lib/phobos/scoring.lamp).
+global int score = 0
+global int max_score = 0
+
+function void award_points(int n):
+	score = score + n
+	if n == 1:
+		print score_up_one:"\[Your score has just gone up by one point.\]"
+	else:
+		print score_up_many:"\[Your score has just gone up by [n] points.\]"
+
+action request_score:
+	out_of_world
+	syntax:
+		"score"
+
+report request_score:
+	if max_score > 0:
+		print score_report:"[We] [have] scored [score] out of a possible [max_score]."
+	else:
+		print score_report_nomax:"[We] [have] scored [score]."

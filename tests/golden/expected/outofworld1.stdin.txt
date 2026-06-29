@@ -1,4 +1,4 @@
 wait
-score
+ping
 wait
 quit

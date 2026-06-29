@@ -132,6 +132,7 @@ function void guard_ally():
 	print "[par]The guard turns back to Galaxy. 'Now we must engage the arming levers on the base reactor. It requires two people to do it, so I will need your help. Come with me, human.'"
 	self_destruct_pushed = true
 	guard_allied = true
+	galaxy_score(1)
 
 after doff when self.clothing == cyberhelmet:
 	if guard_pleased and not guard_allied and holder(guard) == holder(player):

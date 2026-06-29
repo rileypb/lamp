@@ -70,6 +70,7 @@ instead pull when self.target == right_reactor_arming_lever and holder(guard) ==
 	print "Galaxy hauls the right lever down. A loud klaxon sounds and the control board lights up. A voice announces, '[siriusian(\"Reactor armed. Self-destruct sequence will now proceed. Get clear of the blast\")].'"
 	self_destruct_in_progress = true
 	countdown = 20
+	galaxy_score(1)
 	stop succeeded
 
 # --- The guard leads back to the control room (after arming) ---------------------------------
@@ -108,6 +109,7 @@ function void commando_finale():
 	move guard to Reactor_Room
 	move dead_guard to Control_Room
 	print "[par]The way to the flight deck, and the waiting ship, stands open to the north."
+	galaxy_score(1)
 
 # Knock a commando out (punch) or kill it (shoot); the last one down triggers the finale.
 function void down_commando(commando c, bool killed):

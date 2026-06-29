@@ -6,7 +6,7 @@ Time passes.
 
 (tick 1)
 
-> score
+> ping
 Your score is 7.
 
 > wait

@@ -18,12 +18,12 @@ rule every_turn_rules:
 	ticks = ticks + 1
 	print "(tick [ticks])"
 
-action score:
+action ping:
 	out_of_world
 	syntax:
-		"score"
+		"ping"
 
-report score:
+report ping:
 	print "Your score is 7."
 
 action wait:

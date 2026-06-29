@@ -39,6 +39,7 @@ do fly:
 	if holder(player) == Inside_The_Ship:
 		if self_destruct_in_progress:
 			print "She straps herself into the pilot's seat and begins to prepare for launch. She can almost feel the ticking of the self-destruct countdown as she races to get the ship ready. Finally, she is ready to go. She presses the launch button, and the ship's engines roar to life. The ship lifts off the ground and begins to accelerate towards Mars.[par]But Galaxy's thoughts are on the poor guard she couldn't save. She hopes that the guard's sacrifice will not be in vain, and that a new era of peace will dawn between Mars and Sirius.[par]As the ship speeds away from Phobos, Galaxy glances back to see the self-destruct sequence complete. The base explodes in a brilliant flash of light, sending debris flying in all directions. Stickney Crater has been enlarged by several acres, but the Siriusian threat has been eliminated. Galaxy Jones has saved Mars once again."
+			galaxy_score(2)
 			ending_override = "Galaxy Jones has saved Mars from the Sirius Syndicate."
 			story = won
 		else:

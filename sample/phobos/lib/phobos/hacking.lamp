@@ -39,6 +39,7 @@ instead hack when self.target == green_door:
 		print "Galaxy attaches the KIM to the green door. The door's lock is a simple one, and the KIM quickly bypasses it without manual intervention. The door opens, revealing a corridor north.[par]Galaxy retrieves the KIM."
 		self.target.locked = false
 		self.target.closed = false
+		galaxy_score(1)
 	else:
 		print "Galaxy has already opened the door."
 	stop succeeded
@@ -204,6 +205,7 @@ report press_key when kim_adhered_to == yellow_door:
 	if nine_solved():
 		print "As the final button lights up blue, the yellow door to the west swings open! Galaxy retrieves the KIM."
 		kim_adhered_to = none
+		galaxy_score(1)
 
 
 # --- Red door: a second nine-button keypad with its own hidden flip-sets ------
@@ -244,6 +246,7 @@ report press_key when kim_adhered_to == red_door:
 	if nine_solved():
 		print "As the final button lights up blue, the red door to the south swings open! Galaxy retrieves the KIM."
 		kim_adhered_to = none
+		galaxy_score(1)
 
 
 # --- Blue door: a "sort by swapping" puzzle ----------------------------------
@@ -332,6 +335,7 @@ report press_key when kim_adhered_to == blue_door:
 	if blue_solved():
 		print "[par]As the final symbols switch places, the blue door to the east swings open! Galaxy retrieves the KIM."
 		kim_adhered_to = none
+		galaxy_score(1)
 	else:
 		print "[par]"
 		show_keypad_blue()
@@ -377,6 +381,7 @@ report press_key when kim_adhered_to == locker:
 	if four_solved():
 		print "[par]As the final button lights up blue, the locker swings open, revealing a diary. Galaxy retrieves the KIM."
 		kim_adhered_to = none
+		galaxy_score(1)
 	else:
 		print "[par]"
 		show_keypad_4()
@@ -484,6 +489,7 @@ report press_key when kim_adhered_to == purple_door:
 	if purple_solved():
 		print "Galaxy presses button [self.n].[par]As the fifth button lights up blue, the purple door to the north swings open! Galaxy retrieves the KIM."
 		kim_adhered_to = none
+		galaxy_score(1)
 	else:
 		print "Galaxy presses button [self.n]. [run on]"
 		if purple_reset:

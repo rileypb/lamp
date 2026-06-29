@@ -473,18 +473,16 @@ core edit is contained. Names (default): `contains`/`place`/`contained`, keyword
   relations / globals already resolve order-independently); or (b) a **library
   manifest** declaring file order. Lean (a). **Where:** `src/lantern/{index,emitter}.js`. See `sample/phobos/PORTING.md`. **Where:** `lib/advent/`,
   `src/lantern/*`, `src/lamplighter/index.js`, devdocs.
-- **Scoring / rank subsystem (motivated by the Phobos port).** advent has no
-  score or rank system; the Phobos I7 game uses `Use scoring` + Score.i7x +
-  Rank.i7x. Phobos's `score N` phrase (Score.i7x) bundles three effects in order:
-  **print the Galaxy Banner** ("Galaxy Jones" ASCII figlet — shown on *every*
-  point-gain, e.g. each hack), **add N to the score**, **fire the score-change
-  notification** ("[Your score has just gone up by one point.]"). So a Lamp port
-  needs a `score` global + an award entry point that does banner + increment +
-  notify, plus a `SCORE` verb and rank-from-score. Galaxy Banner.i7x also has
-  action/power banners. The green-door hack is the first concrete caller (it omits
-  `score 1` today). Art + details in `sample/phobos/PORTING.md`. Would need a `score` global, a points-award surface, and a
-  rank-from-score lookup, plus a status-line/`SCORE` verb surface. *Not yet
-  designed.* Surfaced by `sample/phobos/PORTING.md`. **Where:** `lib/advent/`.
+- ~~**Scoring / rank subsystem (motivated by the Phobos port).**~~ **DONE.** advent now has a
+  general score subsystem (`lib/advent/scoring.lamp`): `score`/`max_score` globals, `award_points(n)`
+  (+ the standard notification), and the out-of-world **SCORE** verb (`request_score`). Phobos
+  (`lib/phobos/scoring.lamp`) wraps it as **`galaxy_score(n)`**, which flashes the "Galaxy Jones"
+  ASCII figlet (`fixed()` monospace) on every point-gain, and maps the final score to a **rank**
+  (Cyborg Bait → Queen of Mars) shown in the end banner. `max_score = 11` (six puzzle solves,
+  alliance, arming, commandos, escape +2); `test endgame` earns all eleven → Queen of Mars. The
+  suit-smash bypass earns nothing. Two fixtures that used `score` as a local verb were renamed
+  (outofworld1 → `ping`). **Deferred:** carrying the unconscious commandos for bonus points, and
+  the power/action banners (Powerup/Galaxy Banner extras).
 - **Localization to French — in progress (`devdocs/i18n.md`).** Goal: a playable French
   Cloak of Darkness. **Part 1 DONE (2026-06-26):** the compile-time **locale switch** —
   `--locale <tag>` flag (also `--locale=<tag>`) > a `locale "<tag>"` source declaration >

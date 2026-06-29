@@ -201,6 +201,17 @@ shot" punishment for non-combat actions mid-fight (here she simply can't flee), 
 free-text asides (assert-humanity / loyalty yes/no — a separate text-topic mechanism). **`test
 endgame` now plays the whole game to victory with no debug shortcuts.**
 
+**Scoring + the Galaxy Banner (Score.i7x / Galaxy Banner.i7x / Rank.i7x): ported.** A general
+**score subsystem** lives in advent (`scoring.lamp`): `score`/`max_score` globals, `award_points(n)`
+(+ the notification), and the out-of-world **SCORE** verb (see specs.md). Phobos (`scoring.lamp`)
+wraps it as **`galaxy_score(n)`** — which flashes the "Galaxy Jones" ASCII figlet (`fixed()`
+monospace) on every point — and maps the final score to a **rank** (Cyborg Bait → Queen of Mars),
+shown in the end banner. Eleven points (`max_score = 11`): the six puzzle solves (green/yellow/red/
+blue/locker/purple), the alliance, arming the reactor, defeating the commandos, and the escape
+(+2) — a full playthrough (`test endgame`) earns all eleven and the rank of **Queen of Mars**. The
+suit-smash bypass earns nothing (consistent with I7). **Deferred:** carrying the unconscious
+commandos for bonus points, and the power/action banners (Powerup/Galaxy Banner extras).
+
 **TEST runner (story.ni L159–163's `test … with "…"`): the mechanism is built** (general; in
 `lib/advent/debug.lamp`, see specs.md "Debug: the TEST runner"). `test [name]` queues a
 `test_script`'s `"/"`-joined commands through the real command loop; a script may begin with

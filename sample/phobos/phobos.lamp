@@ -40,6 +40,9 @@ rule startup_rules:
 	print "[par]The Moon Sled's hatch opens, and out steps a tall, athletic woman in a black jumpsuit: [bold]Galaxy Jones[/bold].[par]"
 	# Scan state starts empty: one slot per difficulty tier 1-5, all unscanned.
 	scan_levels = [false, false, false, false, false]
+	# Eleven points to earn (six puzzles, the alliance, arming, the commandos, and the escape),
+	# topping out at the rank of Queen of Mars. See lib/phobos/scoring.lamp.
+	max_score = 11
 	# Third-person narration: advent's player-facing `[We]`/verb messages render as "She …"
 	# (e.g. the room-contents listing "She sees a … here.", examine-nothing). The "She" comes
 	# from Galaxy's `gender` (on `yourself` below), not a viewpoint global. Phobos's custom
@@ -107,6 +110,7 @@ rule end_story_rules when story == won:
 		print "[par]Galaxy Jones has saved Mars and died a hero's death.[par]"
 	else:
 		print "[par][ending_override][par]"
+	print "This earns Galaxy the rank of [rank_name()].[par]"
 	stop true
 
 rule end_story_rules when story == lost:
@@ -114,4 +118,5 @@ rule end_story_rules when story == lost:
 		print "[par]The Sirius Syndicate has destroyed Mars.[par]"
 	else:
 		print "[par][ending_override][par]"
+	print "This earns Galaxy the rank of [rank_name()].[par]"
 	stop true

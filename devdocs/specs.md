@@ -2032,6 +2032,15 @@ A game declares one `subject` per topic with its `reply`, and overrides `ask`/`t
 `instead`/`after` rules guarded on `self.topic` (and `self.interlocutor` for per-NPC responses)
 for dynamic reactions. No table primitive is needed — topic data lives on the subject objects.
 
+### Scoring (`lib/advent/scoring.lamp`)
+
+A small opt-in score subsystem. Globals `score` and `max_score` (a game sets `max_score`, e.g. in
+`startup_rules`); `award_points(n)` bumps `score` and prints the standard notification (`score_up_one`
+/ `score_up_many`). The **SCORE** verb (out-of-world `request_score`, syntax `score`) reports the
+total (`score_report` / `score_report_nomax`). A game can wrap `award_points` to add a flourish —
+Phobos's `galaxy_score(n)` prints the "Galaxy Jones" ASCII banner on every gain, and maps the final
+score to a rank in its end banner.
+
 ### Debug: the TEST runner (`lib/advent/debug.lamp`)
 
 A debug feature (in the `not_for_release` debug file, so excluded from `--release` builds), modeled
