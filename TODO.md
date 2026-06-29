@@ -299,7 +299,11 @@ core edit is contained. Names (default): `contains`/`place`/`contained`, keyword
   library **`lib/conversation`** (subjects + `ask`/`tell`, kept out of core advent — opt in with
   `lib conversation`; golden `conversation1`) drives the guard's ~43 ASK topics (`guard.lamp`,
   subjects carry their `reply` — no table primitive). EXAMINE now targets any `physical` so NPCs are
-  examinable. **Guard persuasion + alliance DONE** (`guard_persuasion.lamp`): new advent **GIVE/SHOW**
+  examinable. **All guard speech is Siriusian/scan-aware** (like signs): the ASK/TELL replies and
+  every spoken scene line (greeting, gift reactions, alliance, lever/flee/death, control-room PAs)
+  render the English source through `siriusian()` via a `g_say` helper / `instead ask` override
+  (write()-based, so multi-sentence lines aren't broken per sentence). Readable only as far as
+  Galaxy has scanned. **Guard persuasion + alliance DONE** (`guard_persuasion.lamp`): new advent **GIVE/SHOW**
   verbs (golden `give1`); a pleasing action (give/drop pistol, give log, give chocolate) → pleased →
   removing the disguise fires the **alliance reveal** (sets `self_destruct_pushed`); death-on-detection
   + greeting; not-for-release `disguise` debug verb. **Guard endgame DONE** (`guard_endgame.lamp`):

@@ -171,12 +171,19 @@ library `lib/conversation`** (kept out of core advent — conversation is a matt
 game pulls it in with `lib conversation`, declared between `lib advent` and `lib phobos`). It adds
 the `subject` topic type + the `ask`/`tell` actions (ASK GUARD ABOUT X / TELL GUARD ABOUT X); see
 specs.md. The ~43 topics from the Table of Conversing are `subject` objects each carrying its
-`reply` — no table primitive needed (decided: subjects carry their own data). Guard speech renders
-in **English** (the worn Cyberhelmet translates Siriusian — the helmet's first real-time
-translation use; `siriusian()` is only for untranslated signage); the alien proper nouns the
-original keeps in glyphs are rendered plainly for now. Also: **EXAMINE now targets any `physical`**
-(was `item`), so NPCs/scenery are examinable (byte-invariant; golden suite green). The log/diary/
-chocolate topics use their "not yet given" replies.
+`reply` — no table primitive needed (decided: subjects carry their own data). **Guard speech is
+Siriusian, scan-aware** — the guard speaks the alien language, and Galaxy understands a reply only
+as far as she has scanned it, so the reply (English *source* text) is rendered through `siriusian()`
+exactly like the signs (a guard `instead ask`/`tell` override; rendered via `write()` so a
+multi-sentence reply isn't broken per sentence by print's sentence-end rule). Proper nouns that
+stay alien (`!NB563FFAA`, `!x34agclw`, `!Cleopatra`) carry the `!` marker. Also: **EXAMINE now
+targets any `physical`** (was `item`), so NPCs/scenery are examinable (byte-invariant; golden suite
+green). The log/diary/chocolate topics use their "not yet given" replies. Every *spoken* line in
+the whole Guard arc — the greeting, the gift reactions, the alliance, the lever/flee/death lines,
+and the control-room PA announcements — goes through the same scan-aware path via a `g_say(speech)`
+helper (narration stays plain English; only the quoted speech is Siriusian). In normal play the
+guard is reached only after a full scan (the purple-door code needs it), so the speech reads in
+English; reach it under-scanned (debug `gonear`) and it is alien.
 
 **The Guard — persuasion + the alliance reveal (Guard.i7x): ported** (`guard_persuasion.lamp`).
 New advent generics: **GIVE / SHOW** actions (`give [gift] to [recipient]`, `show [shown] to

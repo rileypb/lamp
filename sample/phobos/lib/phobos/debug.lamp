@@ -85,9 +85,9 @@ test_script test_endgame:
 test_script test_talk:
 	printed_name "talk"
 	understand "talk"
-	commands "disguise/gonear guard/x guard/ask guard about mars/ask guard about peace/ask guard about syndicate/ask guard about commander"
+	commands "scanall/disguise/gonear chair/x guard/ask guard about mars/ask guard about peace/ask guard about syndicate"
 
 test_script test_win:
 	printed_name "win"
 	understand "win"
-	commands "disguise/gonear guard/give chocolate to guard/remove helmet/arm/gonear seat/fly"
+	commands "disguise/gonear chair/give chocolate to guard/remove helmet/arm/gonear seat/fly"

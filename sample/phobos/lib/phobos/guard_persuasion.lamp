@@ -41,34 +41,39 @@ after go:
 	if holder(player) == Control_Room and holder(guard) == Control_Room and not met_guard:
 		if wears player cyberhelmet and wears player cybercarapace:
 			met_guard = true
-			print "[par]The guard looks up as Galaxy enters, and makes a gesture of greeting. 'Hey, NB563FFAA,' they say. 'Didn't expect to see you here. I thought you were back on the mothership. Anyway, you're just in time. Pretty soon we'll launch this thing and get off this godforsaken rock. I can't wait to get back to the mothership and have some real food. Anything but rations... Say, sorry about the goofy PA messages -- don't tell the commander!'"
+			print "[par]The guard looks up as Galaxy enters, and makes a gesture of greeting."
+			g_say("Hey, !NB563FFAA, didn't expect to see you here. I thought you were back on the mothership. Anyway, you're just in time. Pretty soon we'll launch this thing and get off this godforsaken rock. I can't wait to get back to the mothership and have some real food. Anything but rations... Say, sorry about the goofy PA messages -- don't tell the commander!")
 
 # Detection: in the control room with the guard, not yet pleased, and not wearing the full
 # disguise -> the guard realizes Galaxy is human and shoots her. (Once pleased/allied she is safe.)
 rule every_turn_rules:
 	if holder(player) == Control_Room and holder(guard) == Control_Room and not guard_pleased and not guard_allied:
 		if not (wears player cyberhelmet) or not (wears player cybercarapace):
-			print "The guard looks up at Galaxy Jones and realizes she is not a Siriusian after all. Before Galaxy can react, a gun barrel extends from the guard's armor, and they proceed to blow her to pieces with a hail of disruptor fire.[par]As the life ebbs from Galaxy's body, the guard looks into her eyes and says, 'I am sorry, human. I did not want to kill you, but I could not know if you were friend or foe. And now I shall never know.'"
+			print "The guard looks up at Galaxy Jones and realizes she is not a Siriusian after all. Before Galaxy can react, a gun barrel extends from the guard's armor, and they proceed to blow her to pieces with a hail of disruptor fire.[par]As the life ebbs from Galaxy's body, the guard looks into her eyes and says,"
+			g_say("I am sorry, human. I did not want to kill you, but I could not know if you were friend or foe. And now I shall never know.")
 			ending_override = "Galaxy Jones has been terminated by a profoundly startled Siriusian guard."
 			story = lost
 
 # --- Pleasing actions (GIVE / DROP) ------------------------------------------
 instead give when self.recipient == guard and self.gift == disruptor_pistol:
-	print "The guard reluctantly takes the disruptor and looks at Galaxy in confusion. 'I don't understand. Why are you giving me this?'"
+	print "The guard reluctantly takes the disruptor and looks at Galaxy in confusion."
+	g_say("I don't understand. Why are you giving me this?")
 	guard_pleased = true
 	pleased_by = "pistol"
 	move disruptor_pistol to guard
 	stop succeeded
 
 instead give when self.recipient == guard and self.gift == commanders_log:
-	print "The guard looks at the commander's log and says, 'The commander's log? And about me, apparently... and Cleopatra? Is this true? It must be, as this is the commander's seal. And yet, if the Syndicate has betrayed me so completely, how can I remain loyal to them? But NB563FFAA, why would you give me this? Are you not loyal to the Syndicate?'"
+	print "The guard looks at the commander's log and says,"
+	g_say("The commander's log? And about me, apparently... and !Cleopatra? Is this true? It must be, as this is the commander's seal. And yet, if the Syndicate has betrayed me so completely, how can I remain loyal to them? But !NB563FFAA, why would you give me this? Are you not loyal to the Syndicate?")
 	guard_pleased = true
 	pleased_by = "log"
 	move commanders_log to guard
 	stop succeeded
 
 instead give when self.recipient == guard and self.gift == chocolate_bar:
-	print "The Siriusian guard sniffs at the chocolate bar. They sniff again, and their eyes widen. They grab the chocolate bar and shove it into their mouth with great enthusiasm. 'What is this? It's delicious! I've never had anything like it before! Thank you, NB563FFAA!'"
+	print "The Siriusian guard sniffs at the chocolate bar. They sniff again, and their eyes widen. They grab the chocolate bar and shove it into their mouth with great enthusiasm."
+	g_say("What is this? It's delicious! I've never had anything like it before! Thank you, !NB563FFAA!")
 	guard_pleased = true
 	pleased_by = "chocolate"
 	move chocolate_bar to guard
@@ -76,7 +81,9 @@ instead give when self.recipient == guard and self.gift == chocolate_bar:
 
 # The guard angrily reclaims its own diary (no persuasion).
 instead give when self.recipient == guard and self.gift == diary:
-	print "The guard looks angry. 'Why do you have my diary? This is private!' The guard snatches the diary from Galaxy's hands."
+	print "The guard looks angry."
+	g_say("Why do you have my diary? This is private!")
+	print "The guard snatches the diary from Galaxy's hands."
 	move diary to guard
 	stop succeeded
 
@@ -100,14 +107,16 @@ instead give when self.recipient == guard and self.gift == reactor_manual:
 # Dropping the gun in front of the guard reads as a gesture of trust.
 after drop when self.dropped == disruptor_pistol:
 	if holder(guard) == holder(player) and not guard_pleased:
-		print "The guard looks at the disruptor pistol and says, 'You dropped your gun, NB563FFAA.'"
+		print "The guard looks at the disruptor pistol and says,"
+		g_say("You dropped your gun, !NB563FFAA.")
 		guard_pleased = true
 		pleased_by = "pistol_dropped"
 
 # --- SHOW ---------------------------------------------------------------------
 # Showing the pistol is mere curiosity; showing anything else to the guard behaves like giving it.
 instead show when self.recipient == guard and self.shown == disruptor_pistol:
-	print "The guard peers at the pistol and says 'Interesting gun, NB563FFAA, is that a new model? I don't recognize it.'"
+	print "The guard peers at the pistol and says,"
+	g_say("Interesting gun, !NB563FFAA, is that a new model? I don't recognize it.")
 	stop succeeded
 instead show when self.recipient == guard:
 	try give:
@@ -117,19 +126,26 @@ instead show when self.recipient == guard:
 
 # --- The reveal: uncovering while pleased makes the guard an ally -------------
 function void guard_ally():
+	print "The guard looks at Galaxy in confusion."
 	if pleased_by == "pistol":
-		print "The guard looks at Galaxy in confusion. 'A human? I don't understand. You could have killed me with that gun, but instead you gave it to me. Why?'"
+		g_say("A human? I don't understand. You could have killed me with that gun, but instead you gave it to me. Why?")
 	if pleased_by == "pistol_dropped":
-		print "The guard looks at Galaxy in confusion. 'A human? I don't understand. You could have killed me with that gun, but instead you dropped it. Why?'"
+		g_say("A human? I don't understand. You could have killed me with that gun, but instead you dropped it. Why?")
 	if pleased_by == "log":
-		print "The guard looks at Galaxy in confusion. 'A human? I don't understand. You could have killed me, but instead you gave me truth. Why?'"
+		g_say("A human? I don't understand. You could have killed me, but instead you gave me truth. Why?")
 	if pleased_by == "chocolate":
-		print "The guard looks at Galaxy in confusion. 'A human? I don't understand. You could have killed me, but instead you gave me this miraculous food. Why?'"
-	print "[par]Galaxy Jones answers, in as good a Siriusian accent as she can manage, 'I don't want to kill Siriusians. I just want to save Mars.'"
-	print "[par]'Human, you are the sign I have been waiting for,' the guard says. 'We must stop this madness and save Mars. Come, we must destroy the base so that Phobos can never be launched into Mars.'"
-	print "[par]The guard slams their carapaced fist down onto the [siriusian(\"Self-Destruct\")] button, and the control panel lights up. A voice says, '[siriusian(\"Self-Destruct sequence initiated. We would like to take a moment here to say just how sorry we are that the mission to destroy Mars seems to have ended in abject failure. Your names shall live in ignominy forevermore\")].'"
-	print "[par]A red light begins to flash on the control panel, and the voice continues, '[siriusian(\"To continue the self-destruct sequence, the arming levers on the base reactor must be engaged\")].' The message is repeated on the screen."
-	print "[par]The guard turns back to Galaxy. 'Now we must engage the arming levers on the base reactor. It requires two people to do it, so I will need your help. Come with me, human.'"
+		g_say("A human? I don't understand. You could have killed me, but instead you gave me this miraculous food. Why?")
+	print "[par]Galaxy Jones answers, in as good a Siriusian accent as she can manage,"
+	g_say("I don't want to kill Siriusians. I just want to save Mars.")
+	print "[par]The guard says,"
+	g_say("Human, you are the sign I have been waiting for. We must stop this madness and save Mars. Come, we must destroy the base so that Phobos can never be launched into Mars.")
+	print "[par]The guard slams their carapaced fist down onto the [siriusian(\"Self-Destruct\")] button, and the control panel lights up. A voice says,"
+	g_say("Self-Destruct sequence initiated. We would like to take a moment here to say just how sorry we are that the mission to destroy Mars seems to have ended in abject failure. Your names shall live in ignominy forevermore.")
+	print "[par]A red light begins to flash on the control panel, and the voice continues,"
+	g_say("To continue the self-destruct sequence, the arming levers on the base reactor must be engaged.")
+	print "The message is repeated on the screen."
+	print "[par]The guard turns back to Galaxy."
+	g_say("Now we must engage the arming levers on the base reactor. It requires two people to do it, so I will need your help. Come with me, human.")
 	self_destruct_pushed = true
 	guard_allied = true
 	galaxy_score(1)

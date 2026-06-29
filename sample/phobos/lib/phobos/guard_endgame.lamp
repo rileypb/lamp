@@ -48,7 +48,8 @@ rule every_turn_rules:
 		let here = holder(player)
 		if here == Control_Room:
 			move guard to Hub_Junction
-			print "'Come, human -- the reactor is this way. Quickly!' The guard heads south."
+			g_say("Come, human -- the reactor is this way. Quickly!")
+			print "The guard heads south."
 		if here == Hub_Junction:
 			move guard to Western_Spoke
 			print "The guard leads the way west."
@@ -57,20 +58,23 @@ rule every_turn_rules:
 			print "The guard leads the way west, into the reactor room."
 		if here == Reactor_Room:
 			if not left_lever_pulled:
-				print "'Here we are, human,' the guard says. 'It takes two: I will pull the left lever and hold it. Now you must pull the right lever -- quickly!' The guard hauls the left lever down and braces against it."
+				g_say("Here we are, human. It takes two: I will pull the left lever and hold it. Now you must pull the right lever -- quickly!")
+				print "The guard hauls the left lever down and braces against it."
 				left_lever_pulled = true
 
 # Galaxy pulls the right lever while the guard holds the left -> the reactor arms. (The "guard not
 # present" fallbacks in control_room.lamp bow out once the guard is in the reactor.)
 instead pull when self.target == left_reactor_arming_lever and holder(guard) == Reactor_Room:
-	print "'I have the left lever, human,' the guard grunts. 'Pull the right!'"
+	print "The guard grunts,"
+	g_say("I have the left lever, human. Pull the right!")
 	stop succeeded
 
 instead pull when self.target == right_reactor_arming_lever and holder(guard) == Reactor_Room:
 	if not left_lever_pulled:
 		print "The lever won't budge alone -- it needs the left lever pulled at the same time."
 		stop failed
-	print "Galaxy hauls the right lever down. A loud klaxon sounds and the control board lights up. A voice announces, '[siriusian(\"Reactor armed. Self-destruct sequence will now proceed. Get clear of the blast\")].'"
+	print "Galaxy hauls the right lever down. A loud klaxon sounds and the control board lights up. A voice announces,"
+	g_say("Reactor armed. Self-destruct sequence will now proceed. Get clear of the blast.")
 	self_destruct_in_progress = true
 	countdown = 20
 	galaxy_score(1)
@@ -82,7 +86,8 @@ rule every_turn_rules:
 		let here = holder(player)
 		if here == Reactor_Room:
 			move guard to Western_Spoke
-			print "'It is done,' the guard says. 'Now we flee, before the reactor blows -- and before more guards come. This way!' They hurry east."
+			g_say("It is done. Now we flee, before the reactor blows -- and before more guards come. This way!")
+			print "The guard hurries east."
 		if here == Western_Spoke:
 			move guard to Hub_Junction
 			print "The guard hurries east."
@@ -108,7 +113,9 @@ function bool commandos_down():
 
 # The guard's death + the way out, once both attackers are down.
 function void commando_finale():
-	print "[par]Galaxy turns to her companion, who has fallen, hit by disruptor fire shielding her. She kneels and lifts away the guard's Cyberhelmet, baring a Siriusian face in its final moments. 'Thank you, human,' they say weakly. 'You could not save my life, but you have saved my honor. You have shown me there is hope for a better future. That is enough.' Then they die."
+	print "[par]Galaxy turns to her companion, who has fallen, hit by disruptor fire shielding her. She kneels and lifts away the guard's Cyberhelmet, baring a Siriusian face in its final moments. They say weakly,"
+	g_say("Thank you, human. You could not save my life, but you have saved my honor. You have shown me there is hope for a better future. That is enough.")
+	print "Then they die."
 	move guard to Reactor_Room
 	move dead_guard to Control_Room
 	print "[par]The way to the flight deck, and the waiting ship, stands open to the north."

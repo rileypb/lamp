@@ -21,8 +21,9 @@ global string ending_override = ""
 # Pushing the green Launch button fires the thruster — an immediate loss (Galaxy destroys Mars
 # herself, the worst ending).
 instead push when self.target == launch_button:
-	print "Galaxy Jones presses the large green button marked '[siriusian(\"Launch\")]'. The control panel lights up, and a voice says, '[siriusian(\"Launch sequence initiated. Thank you for your cooperation in the destruction of Mars\")]'.[par]"
-	print "Galaxy watches the screens in horror as the vast mass of Phobos begins to move, slowly at first, but then picking up speed. The base shakes as the asteroid begins to accelerate. The screens show the surface of Mars growing larger and larger, until it fills the entire screen. Galaxy Jones feels absolutely terrible that she has just destroyed an entire planet, but there is nothing she can do about it now."
+	print "Galaxy Jones presses the large green button marked '[siriusian(\"Launch\")]'. The control panel lights up, and a voice says,"
+	g_say("Launch sequence initiated. Thank you for your cooperation in the destruction of Mars.")
+	print "[par]Galaxy watches the screens in horror as the vast mass of Phobos begins to move, slowly at first, but then picking up speed. The base shakes as the asteroid begins to accelerate. The screens show the surface of Mars growing larger and larger, until it fills the entire screen. Galaxy Jones feels absolutely terrible that she has just destroyed an entire planet, but there is nothing she can do about it now."
 	ending_override = "Galaxy Jones has destroyed Mars."
 	story = lost
 	stop succeeded
@@ -34,8 +35,11 @@ instead push when self.target == self_destruct_button:
 	if self_destruct_pushed:
 		print "The self-destruct sequence has already been initiated."
 		stop succeeded
-	print "Galaxy Jones presses the large red button marked '[siriusian(\"Self-Destruct\")]'. The control panel lights up, and a voice says, '[siriusian(\"Self-Destruct sequence initiated. We would like to take a moment here to say just how sorry we are that the mission to destroy Mars seems to have ended in abject failure. Your names shall live in ignominy forevermore\")].'[par]"
-	print "A red light begins to flash on the control panel, and a voice says, '[siriusian(\"To initiate the self-destruct sequence, the arming levers on the base reactor must be engaged\")].' The message is repeated on the screen."
+	print "Galaxy Jones presses the large red button marked '[siriusian(\"Self-Destruct\")]'. The control panel lights up, and a voice says,"
+	g_say("Self-Destruct sequence initiated. We would like to take a moment here to say just how sorry we are that the mission to destroy Mars seems to have ended in abject failure. Your names shall live in ignominy forevermore.")
+	print "A red light begins to flash on the control panel, and a voice says,"
+	g_say("To initiate the self-destruct sequence, the arming levers on the base reactor must be engaged.")
+	print "The message is repeated on the screen."
 	self_destruct_pushed = true
 	stop succeeded
 

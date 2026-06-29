@@ -1,19 +1,11 @@
 lib advent
 
-# The Siriusian guard (Guard.i7x) — conversation foundation slice. This ports the guard as a
-# conversational NPC: ASK GUARD ABOUT <topic> and the ~43 topics from the Table of Conversing,
-# modelled as `subject` objects (lib/conversation) each carrying its `reply`. The guard's speech
-# is shown in English — Galaxy hears it translated through the worn Cyberhelmet (the helmet's
-# real-time translation, of which this is the first use); the always-alien `siriusian()` cipher
-# is for untranslated signage, not for the disguised conversation. Proper nouns the original
-# keeps in Siriusian glyphs (the serial "NB563FFAA", the commander "x34agclw", "Cleopatra") are
-# rendered plainly here.
-#
-# Deferred to later slices: the meeting/blowing-up/commando SCENES, the death-on-detection (no
-# disguise -> shot), the persuasion state machine (GIVE/SHOW the log/chocolate/pistol -> pleased
-# -> reveal -> alliance), SAY/ANSWER yes/no (the loyalty question), the guard leading Galaxy to
-# the levers, the commando fight, and scoring. So for now the guard simply stands in the control
-# room and talks.
+# The Siriusian guard (Guard.i7x): a conversational NPC. ASK GUARD ABOUT <topic> covers the ~43
+# topics from the Table of Conversing, modelled as `subject` objects (lib/conversation) each
+# carrying its `reply` — the English *source* text. The guard speaks Siriusian, and Galaxy
+# understands a reply only as far as she has scanned the language, so the reply is rendered through
+# `siriusian()` (the same scan-aware filter as signs and labels), not printed in the clear. Proper
+# nouns that stay alien (the serial `!NB563FFAA`, the commander `!x34agclw`) carry the `!` marker.
 
 person guard:
 	printed_name "Siriusian guard"
@@ -22,6 +14,32 @@ person guard:
 
 contains Control_Room guard
 
+# Render the guard's speech in Siriusian (scan-aware), wrapping it in the speech quotes. A reply
+# turns to English word by word as Galaxy scans documents; an unknown/empty topic gets the guard's
+# puzzled line. TELLING the guard about something gets the same puzzled brush-off (as in I7).
+# Rendered via write() (not print) so the scan-aware reply, which may run several sentences, isn't
+# split into a paragraph per sentence by print's sentence-end auto-break — the same reason
+# print_translated uses write(). The speech is wrapped in quotes.
+instead ask when self.interlocutor == guard:
+	let words = self.topic.reply
+	if words == "":
+		words = "Your vocal circuits must be malfunctioning."
+	write("\"" + siriusian(words) + "\"")
+	write(line_break())
+	stop succeeded
+
+instead tell when self.interlocutor == guard:
+	write("\"" + siriusian("Your vocal circuits must be malfunctioning.") + "\"")
+	write(line_break())
+	stop succeeded
+
+# Speak a line of Siriusian guard dialogue on its own line: scan-aware (`siriusian`), quoted, and
+# emitted via write() so a multi-sentence line isn't broken per sentence. The persuasion and
+# endgame scenes call this for every spoken guard line; proper nouns that stay alien carry `!`.
+function void g_say(string speech):
+	write(" \"" + siriusian(speech) + "\"")
+	write(line_break())
+
 # --- Topics (Guard.i7x Table of Conversing) ----------------------------------
 # One `subject` per topic; `reply` is the guard's answer when ASKED. `understand` gives the
 # player words (topic slots resolve against subjects globally, so synonyms shared with physical
@@ -29,172 +47,172 @@ contains Control_Room guard
 subject humanity_subject:
 	printed_name "humanity"
 	understand "humans/human/humanity"
-	reply "'There must be a way to coexist.'"
+	reply "There must be a way to coexist."
 subject cyborgs_subject:
 	printed_name "cyborgs"
 	understand "cyborgs/cyborg"
-	reply "'Cyborgs are a clearly higher form of life than pure organic beings, but we would be hypocritical not to be willing to coexist with them.'"
+	reply "Cyborgs are a clearly higher form of life than pure organic beings, but we would be hypocritical not to be willing to coexist with them."
 subject siriusians_subject:
 	printed_name "Siriusian people"
 	understand "siriusians/people"
-	reply "'We are the only known true cyborgs.'"
+	reply "We are the only known true cyborgs."
 subject log_subject:
 	printed_name "commander's log"
 	understand "log"
-	reply "'What about it? I've never seen it. Maybe if you showed it to me, I could tell you more.'"
+	reply "What about it? I've never seen it. Maybe if you showed it to me, I could tell you more."
 subject diary_subject:
 	printed_name "diary"
 	understand "diary"
-	reply "'A diary? Yes, I have a diary, but I wouldn't show it to you. It's private.'"
+	reply "A diary? Yes, I have a diary, but I wouldn't show it to you. It's private."
 subject cybercarapace_subject:
 	printed_name "cybercarapace"
 	understand "cybercarapace/carapace/armor"
-	reply "'Your cybercarapace is a marvel. Mine is due for an upgrade.'"
+	reply "Your cybercarapace is a marvel. Mine is due for an upgrade."
 subject cyberhelmet_subject:
 	printed_name "cyberhelmet"
 	understand "cyberhelmet/helmet"
-	reply "'I would take yours in for a tune-up if I were you. Your voice is garbled.'"
+	reply "I would take yours in for a tune-up if I were you. Your voice is garbled."
 subject chocolate_subject:
 	printed_name "chocolate bar"
 	understand "chocolate/bar"
-	reply "'Chocolate? What is that? I've never seen it. Maybe if you showed it to me, I could tell you more.'"
+	reply "Chocolate? What is that? I've never seen it. Maybe if you showed it to me, I could tell you more."
 subject siriusian_language_subject:
 	printed_name "Siriusian language"
 	understand "siriusian/language"
-	reply "'The Siriusian language is a complex and beautiful language. It is right that it should be a source of Siriusian pride.'"
+	reply "The Siriusian language is a complex and beautiful language. It is right that it should be a source of Siriusian pride."
 subject earth_subject:
 	printed_name "Earth"
 	understand "earth"
-	reply "'I have never been to Earth, but I have heard that it is a beautiful planet. It would be a shame if it were destroyed.'"
+	reply "I have never been to Earth, but I have heard that it is a beautiful planet. It would be a shame if it were destroyed."
 subject mars_subject:
 	printed_name "Mars"
 	understand "mars"
-	reply "'Mars is beautiful in its own way. Wouldn't it be a shame if such beauty went out of the world?'"
+	reply "Mars is beautiful in its own way. Wouldn't it be a shame if such beauty went out of the world?"
 subject phobos_subject:
 	printed_name "Phobos"
 	understand "phobos"
-	reply "'Phobos may be a barren rock, but it is part of the universe, and as such is valuable. It is a shame that it is being destroyed.'"
+	reply "Phobos may be a barren rock, but it is part of the universe, and as such is valuable. It is a shame that it is being destroyed."
 subject notebook_subject:
 	printed_name "science notebook"
 	understand "science/notebook"
-	reply "'I am merely a guard, not a scientist. I know nothing of science notebooks.'"
+	reply "I am merely a guard, not a scientist. I know nothing of science notebooks."
 subject manual_subject:
 	printed_name "reactor manual"
 	understand "manual"
-	reply "'I was required to read the reactor manual when I was assigned to this base, but I have not read it in a long time. I do not remember much of it.'"
+	reply "I was required to read the reactor manual when I was assigned to this base, but I have not read it in a long time. I do not remember much of it."
 subject form_subject:
 	printed_name "form"
 	understand "form"
-	reply "'Who cares? It's just a signout form.'"
+	reply "Who cares? It's just a signout form."
 subject control_panel_subject:
 	printed_name "control panel"
 	understand "panel/controls"
-	reply "'I don't know any more than I need. I am just a guard, not a technician.'"
+	reply "I don't know any more than I need. I am just a guard, not a technician."
 subject launch_button_subject:
 	printed_name "launch button"
 	understand "green/launch"
-	reply "'Don't touch that! The launch sequence will begin automatically when it is time.'"
+	reply "Don't touch that! The launch sequence will begin automatically when it is time."
 subject self_destruct_button_subject:
 	printed_name "self-destruct button"
 	understand "selfdestruct/self-destruct"
-	reply "'Don't touch that! The self-destruct sequence will scrub the entire mission and destroy the base.'"
+	reply "Don't touch that! The self-destruct sequence will scrub the entire mission and destroy the base."
 subject arming_levers_subject:
 	printed_name "arming levers"
 	understand "arming/levers"
-	reply "'The arming levers are the only way to confirm the self-destruct sequence. They must be pulled in tandem, one on each side of the reactor. It is a two-person job.'"
+	reply "The arming levers are the only way to confirm the self-destruct sequence. They must be pulled in tandem, one on each side of the reactor. It is a two-person job."
 subject sleeping_pod_subject:
 	printed_name "sleeping pods"
 	understand "sleeping/pod/pods"
-	reply "'Mine is so uncomfortable. Fortunately the mission is almost over, and I will be able to sleep in a real pod at home.'"
+	reply "Mine is so uncomfortable. Fortunately the mission is almost over, and I will be able to sleep in a real pod at home."
 subject mothership_subject:
 	printed_name "mothership"
 	understand "mothership"
-	reply "'Dammit, I wish I were back on the mothership on the way home. The base is so uncomfortable, and the food is terrible.'"
+	reply "Dammit, I wish I were back on the mothership on the way home. The base is so uncomfortable, and the food is terrible."
 subject base_subject:
 	printed_name "base"
 	understand "base"
-	reply "'The base is a terrible place. It is so uncomfortable, and the food is terrible. I can't wait to get back to the mothership.'"
+	reply "The base is a terrible place. It is so uncomfortable, and the food is terrible. I can't wait to get back to the mothership."
 subject guard_subject:
 	printed_name "guard itself"
 	understand "itself"
-	reply "'I am fine, thank you. Just doing my job.'"
+	reply "I am fine, thank you. Just doing my job."
 subject galaxy_subject:
 	printed_name "Galaxy Jones herself"
 	understand "galaxy/jones/herself/me"
-	reply "'You seem to be in fine working order, NB563FFAA, except for your garbled voice. I would take your Cyberhelmet in for a tune-up if I were you.'"
+	reply "You seem to be in fine working order, !NB563FFAA, except for your garbled voice. I would take your Cyberhelmet in for a tune-up if I were you."
 subject mission_subject:
 	printed_name "mission"
 	understand "mission"
-	reply "'The mission is almost over. We will be able to return to the mothership soon. I think it is well-known that I don't agree with the mission's goals.'"
+	reply "The mission is almost over. We will be able to return to the mothership soon. I think it is well-known that I don't agree with the mission's goals."
 subject commander_subject:
 	printed_name "commander"
 	understand "commander"
-	reply "'I don't think it's a secret that Commander x34agclw hates me. They dislike free-thinking Siriusians, and I am one of them.'"
+	reply "I don't think it's a secret that Commander !x34agclw hates me. They dislike free-thinking Siriusians, and I am one of them."
 subject barracks_subject:
 	printed_name "barracks"
 	understand "barracks/barrack"
-	reply "'The barracks are so uncomfortable. I can't wait to get back to the mothership.'"
+	reply "The barracks are so uncomfortable. I can't wait to get back to the mothership."
 subject kim_subject:
 	printed_name "KIM"
 	understand "kim"
-	reply "'It looks like human technology. How did you get it? I thought we had a strict policy against human technology.'"
+	reply "It looks like human technology. How did you get it? I thought we had a strict policy against human technology."
 subject linguistic_module_subject:
 	printed_name "linguistic module"
 	understand "linguistic/module"
-	reply "'It looks like human technology. How did you get it? I thought we had a strict policy against human technology.'"
+	reply "It looks like human technology. How did you get it? I thought we had a strict policy against human technology."
 subject lab_subject:
 	printed_name "lab"
 	understand "lab/laboratory"
-	reply "'I am not a scientist, so I don't know much about the lab. I just know that it is where we keep the science notebooks and other scientific equipment.'"
+	reply "I am not a scientist, so I don't know much about the lab. I just know that it is where we keep the science notebooks and other scientific equipment."
 subject armory_subject:
 	printed_name "armory"
 	understand "armory/armoury"
-	reply "'That's where we keep the weapons and armor. But of course you know all about it.'"
+	reply "That's where we keep the weapons and armor. But of course you know all about it."
 subject control_room_subject:
 	printed_name "control room"
 	understand "control"
-	reply "'You mean, like right here? This is where we will launch the ship to destroy Mars.'"
+	reply "You mean, like right here? This is where we will launch the ship to destroy Mars."
 subject flight_deck_subject:
 	printed_name "flight deck"
 	understand "flight/deck"
-	reply "'There's a ship on the flight deck right now. But that must be how you got here, right?'"
+	reply "There's a ship on the flight deck right now. But that must be how you got here, right?"
 subject ship_subject:
 	printed_name "Siriusian ship"
 	understand "ship"
-	reply "'Yeah, there's a ship on the flight deck right now ready to launch.'"
+	reply "Yeah, there's a ship on the flight deck right now ready to launch."
 subject storage_room_subject:
 	printed_name "storage room"
 	understand "storage"
-	reply "'I doubt there's anything down there anymore since everyone has been evacuated. But I guess you could check.'"
+	reply "I doubt there's anything down there anymore since everyone has been evacuated. But I guess you could check."
 subject commander_quarters_subject:
 	printed_name "commander's quarters"
 	understand "quarters"
-	reply "'I only have bad memories of the commander's quarters. Every time I went in there, I was berated by the commander for being a free-thinking Siriusian.'"
+	reply "I only have bad memories of the commander's quarters. Every time I went in there, I was berated by the commander for being a free-thinking Siriusian."
 subject peace_subject:
 	printed_name "peace"
 	understand "peace"
-	reply "'If I met one human who could convince me that peace is possible, I[']d stop this mission right now. But I haven't met that human yet.'"
+	reply "If I met one human who could convince me that peace is possible, I[']d stop this mission right now. But I haven't met that human yet."
 subject goals_subject:
 	printed_name "goals"
 	understand "goals/goal"
-	reply "'The goal? Of course I mean -- to destroy Mars. But I don't agree with it. I think we should be trying to find a way to coexist with humans, not destroy them.'"
+	reply "The goal? Of course I mean -- to destroy Mars. But I don't agree with it. I think we should be trying to find a way to coexist with humans, not destroy them."
 subject war_subject:
 	printed_name "war"
 	understand "war"
-	reply "'War is a terrible thing. It only leads to suffering and destruction. I wish we could find a way to resolve our differences without resorting to violence.'"
+	reply "War is a terrible thing. It only leads to suffering and destruction. I wish we could find a way to resolve our differences without resorting to violence."
 subject sirius_syndicate_subject:
 	printed_name "Sirius Syndicate"
 	understand "syndicate"
-	reply "'I agree with their goal to expel all humans from Sirius, but I don't agree with their methods. I think we should be trying to find a way to coexist with humans, not destroy them.'"
+	reply "I agree with their goal to expel all humans from Sirius, but I don't agree with their methods. I think we should be trying to find a way to coexist with humans, not destroy them."
 subject sirius_subject:
 	printed_name "Sirius the star"
 	understand "sirius/star"
-	reply "'Sirius is a beautiful star, and the center of our civilization. It is our home, and of course we are proud of it. But we must not let our pride blind us to the suffering of others.'"
+	reply "Sirius is a beautiful star, and the center of our civilization. It is our home, and of course we are proud of it. But we must not let our pride blind us to the suffering of others."
 subject pa_messages_subject:
 	printed_name "PA messages"
 	understand "pa/messages/goofy"
-	reply "'I get so bored here alone, so I play around with the PA system. I like to make up goofy messages to keep myself entertained.'"
+	reply "I get so bored here alone, so I play around with the PA system. I like to make up goofy messages to keep myself entertained."
 subject food_subject:
 	printed_name "food"
 	understand "food/rations/ration"
-	reply "'The food here is terrible. I can't wait to get back to the mothership and have some real food.'"
+	reply "The food here is terrible. I can't wait to get back to the mothership and have some real food."
