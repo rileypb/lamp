@@ -118,9 +118,20 @@ Lamp's capabilities. The checklist below tracks what's left; we work through it 
   linguistics engine already glyphs `$` words (control word, always alien), so they bleep while the
   rest of the now-scanned speech reads English. Also corrected the stale guard_persuasion header
   (guard speech is scan-aware `siriusian()`, not "shown in English"; `!` names + `$` swears stay
-  alien). Golden updated (greeting + right-lever glyphs). *Residual:* `$rearend`/`$stupid` remain in
-  the still-unported random "goofy" PA broadcasts. (`$shit`/`$fooblitsky` are now ported — see the
-  guard combat speech below.)
+  alien). Golden updated (greeting + right-lever glyphs). (`$shit`/`$fooblitsky` ported with the
+  guard combat speech below; `$rearend`/`$stupid` ported with the goofy PA broadcasts below — so all
+  Siriusian swears are now restored.)
+- [x] **Goofy PA broadcasts** (`Guard.i7x` "Volume - PA Messages"): **DONE.** While Galaxy is inside
+  the base but hasn't reached the control room, the bored guard pipes random nonsense over the PA —
+  the twelve verbatim messages (with `!mfk5plas`/`!stuff` names and `$rearend`/`$stupid` swears), each
+  spoken once, heard in Siriusian (scan-aware, so they clear up as she scans). `lib/phobos/
+  pa_broadcasts.lamp`: an every-turn rule, separate from the doom-clock PA (countdown.lamp). **Release**
+  shuffles the order at startup (Guard.i7x line 726) and rolls a 1-in-7 chance per turn; **debug**
+  removes both — natural order, exactly every 7th eligible turn — for a deterministic, readable golden
+  (mirroring how debug_mode fixes the keypads; since the puzzle shuffles are also debug-skipped, no RNG
+  is drawn in a walkthrough). Golden gained 9 deterministic PA lines, win path byte-identical.
+  *Residual:* the related **Interjections** table (the guard's random conversational asides *during*
+  the meeting, gated by `no-interjection-this-turn`) is still unported — a separate system.
 - [x] **Guard combat speech: shoot-on-sight + spy-death button overrides** (`Guard.i7x`): **DONE.**
   The two unported combat scenes. **Arrival shoot-on-sight** (`guard_persuasion.lamp` `after go`):
   entering the control room undisguised, the guard shrieks "Oh `$shit`, a human!" and opens fire —

@@ -1,0 +1,72 @@
+lib advent
+
+# The guard's goofy PA broadcasts (Guard.i7x "Volume - PA Messages"). While Galaxy is inside the
+# base but has not yet reached the control room, the bored guard pipes random nonsense over the PA:
+# a 1-in-7 chance each turn, each of the twelve messages spoken at most once, in a shuffled order.
+# Heard in Siriusian (scan-aware) like all base speech, so they read as glyphs early and clear up as
+# Galaxy scans documents; `!mfk5plas`/`!stuff` proper nouns and `$rearend`/`$stupid` swears stay
+# alien. Separate from the doom-clock PA (countdown.lamp), which announces the count every turn.
+#
+# In a release build the order is randomized once at startup (Guard.i7x line 726: "sort the Table
+# of PAMessages in random order") and each turn rolls a 1-in-7 chance. In a debug build both sources
+# of randomness are removed for a deterministic, readable transcript — the order stays natural and a
+# message airs on exactly every 7th eligible turn — mirroring how debug_mode fixes the keypads.
+
+global bool control_room_reached = false
+global list<int> pa_order = none
+global int pa_next = 0
+global int pa_tick = 0
+
+rule startup_rules:
+	pa_order = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]
+	if not debug_mode:
+		shuffle(pa_order)
+
+# The twelve broadcasts (verbatim from the Table of PAMessages).
+function string pa_message(int i):
+	if i == 0:
+		return "Hello, everyone. This is your friendly guard !mfk5plas. I just want to let you know that I'm sooooo bored."
+	if i == 1:
+		return "Halloooo! !mfk5plas speaking. Everyone who'd rather not kill off the entire population of Mars, please report to the control room. No? I guess I'm the only one, then. Poor me."
+	if i == 2:
+		return "This is your commander speaking. I hereby direct you all to report to !mfk5plas from now on. They are the only one who seems to have any sense around here. I don't know how they got assigned to this base, but I guess they must have been a real pain in the $rearend."
+	if i == 3:
+		return "Woohoo, anyone there? If you can hear me, please report to the control room. If you can't hear me, please carry on with your business. I don't care."
+	if i == 4:
+		return "!mfk5plas here. I'm so over this mission. Get me off of this $stupid moon!"
+	if i == 5:
+		return "Half-off sale on gently-used Cyberhelmets! No cyborg should be without one! C'mon in and ask for !mfk5plas, and I'll give you a great deal on a Cyberhelmet! No questions asked!"
+	if i == 6:
+		return "Looks like there's a lovely Mars out tonight, so if you're looking for a romantic evening, come on down to the control room and I'll show you the view."
+	if i == 7:
+		return "Are there any spies out there on the base? If so, please report to the control room. Huh. I wonder what I'd do if I actually found one. I never got trained for that. I guess I'd just have to wing it."
+	if i == 8:
+		return "Boooooooored. BORED! BORED! Bored bored bored bored bored!"
+	if i == 9:
+		return "And now for a free concert by !mfk5plas! Da da da da da da da da daaaaaa! Da da da da da da daaaaaaa! Da da da daaaaaaa! Da da daaaaaaa! Da!"
+	if i == 10:
+		return "And now, a word from our sponsor: !mfk5plas! If you want to talk about depressing !stuff, come on down to the control room and I'll tell you all about it. I know a lot about depressing stuff, like how we're about to destroy Mars and kill a lot of people. But hey, at least we get to go home after that, right? Right?"
+	if i == 11:
+		return "I have written a poem for you all. It goes like this: Some doors are purple, some doors are green, some doors are open or closed and some in-between. I have closed the door to the control room just in case there is someone out there up to no good."
+	return ""
+
+# Once Galaxy reaches the control room the broadcasts stop (the guard is busy with her). Until then,
+# inside the base (not at the passage end), the next unspoken message airs — on a 1-in-7 roll in a
+# release build, or on exactly every 7th eligible turn in debug.
+rule every_turn_rules:
+	if holder(player) == Control_Room:
+		control_room_reached = true
+	if not control_room_reached and not (holder(player) == Passage_End) and pa_next < 12:
+		pa_tick = pa_tick + 1
+		let fire = false
+		if debug_mode:
+			if pa_tick mod 7 == 0:
+				fire = true
+		else:
+			if random(7) == 0:
+				fire = true
+		if fire:
+			print "A voice comes over the PA:"
+			write(" \"" + siriusian(pa_message(pa_order[pa_next])) + "\"")
+			write(line_break())
+			pa_next = pa_next + 1
