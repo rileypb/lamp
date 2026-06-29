@@ -13,4 +13,13 @@ Bob has nothing to say about that.
 > tell bob about weather
 Bob does not seem interested.
 
+> say hello
+Bob waves. "Hello there!"
+
+> answer hello
+Bob waves. "Hello there!"
+
+> say goodbye forever
+There is no reply.
+
 > quit

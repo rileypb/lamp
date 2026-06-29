@@ -2055,10 +2055,19 @@ game pulls it in with `lib conversation`, declared **after** `lib advent` (it re
   Default report prints the topic's `reply`, or `convo_no_reply` ("[The act.interlocutor] [have]
   nothing to say about that.") when empty.
 - **`tell`** — same slots; `tell [interlocutor] about [topic]`. Neutral default (`convo_not_interested`).
+- **`say`** — `string topic`; `say [topic]` / `answer [topic]`. **SAY/ANSWER free text**: unlike
+  ASK/TELL (which resolve a declared `subject`), the topic is a primitive `string` slot, so it
+  captures whatever the player typed **verbatim** (lowercased by the parser — `say I am human` →
+  `"i am human"`). The action **fails by default** (reason `nothing_to_say`, message `say_no_reply`
+  = "There is no reply."); a game adds `instead say` rules guarded on `self.topic` (e.g.
+  `self.topic == "yes"`) for utterances that land, `stop succeeded` after handling, and lets
+  anything its guards don't match fall through (no `stop`) to the default. The listener is *not* a
+  slot — a game gates on the relevant NPC being present (`holder(npc) == holder(player)`).
 
 A game declares one `subject` per topic with its `reply`, and overrides `ask`/`tell` with
 `instead`/`after` rules guarded on `self.topic` (and `self.interlocutor` for per-NPC responses)
 for dynamic reactions. No table primitive is needed — topic data lives on the subject objects.
+SAY/ANSWER instead is the free-text counterpart for fixed utterances (yes/no, an asserted phrase).
 
 ### Scoring (`lib/advent/scoring.lamp`)
 

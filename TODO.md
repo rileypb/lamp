@@ -32,10 +32,13 @@ gained a general `backdrop` type surfaced in scope in every room by a second sco
 room fields read by the generic instead rules — stone/gray-tile/white-tile/rubber), an `outdoors`
 room flag (the flight deck) for the no-walls / ground / open-sky wording, and the ship's `low_ceiling`
 (its ceiling is touchable). Also fixed a latent locale bug (`feel` was missing from the verb vocab, so
-`[feel]` didn't conjugate). Remaining parity items: SAY/ANSWER free-text, distracted→shot, noun forms of FLY, custom
+`[feel]` didn't conjugate). **SAY/ANSWER free-text DONE** (`Guard.i7x`): lib/conversation gained a
+`say` action (`say/answer [topic]`, a free-text `string` topic distinct from ASK/TELL's subject;
+golden `conversation1`), used by the guard for the assert-humanity alliance (no gift) and the loyalty
+yes/no window (specs.md). Remaining parity items: distracted→shot, noun forms of FLY, custom
 can't-go/hit/take messages, power/action banners, banner placement seam, examinable in-prose
-sub-objects, handprint-scanner parts, examine-self / X ME, indescribable objects, and the audit
-passes.
+sub-objects, handprint-scanner parts, examine-self / X ME, indescribable objects, the bare-word SAY
+shortcuts (needs a command-rewrite hook, below), and the audit passes.
 Smaller: SAY/ANSWER free-text, custom can't-go/hit/take messages, power/action banners, banner
 placement seam, examinable in-prose sub-objects, and a per-extension audit. **Infra DONE:** golden
 discovery now walks one level into subdirs, so `sample/phobos/phobos.lamp` is a golden (`test
@@ -694,6 +697,16 @@ core edit is contained. Names (default): `contains`/`place`/`contained`, keyword
   Locals keep the raw name (no-shadow guarantees no collision). Regression golden
   `multiword_global1` (reassignment + multi-word global field read run at runtime).
   The two `coerceName` imports were added to checker.js/emitter.js.
+- **Command-rewrite hook (I7's "after reading a command").** Inform lets a game rewrite the raw
+  player input before parsing — Phobos uses it so bare "human"/"i'm human" become "say I am human",
+  and the loyalty answer can be a bare "yes"/"no". Lamp has no such seam: `run_command(line, actor)`
+  parses the line as-is. Add a hook the game can contribute to (rewrite/normalize the input string
+  before tokenizing) — e.g. a `rewrite_command_rules(string line) -> string` rulebook the loop runs
+  on the input first, or a registered Lamp callback on the parse path. Enables the **bare-word SAY
+  shortcuts** (the only Phobos parity gap left from the SAY/ANSWER work — today the player types "say
+  yes" / "say I am human") and is generally useful (typo/synonym fixups, "x"→"examine" style aliases
+  beyond grammar). **Where:** `src/lamplighter/index.js` (`runCommand`/`run_command`), specs.md;
+  Phobos would add a rule mapping the bare utterances in `guard_persuasion.lamp`.
 - **Demonstrative sugar `[that]`/`[those]` (agreeing with a target).** Inform's refusal
   messages refer back to the noun with a number-agreeing demonstrative — "[We] can't touch
   [regarding the noun][those]." renders "can't touch that" (singular) / "can't touch those"

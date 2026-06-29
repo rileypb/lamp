@@ -59,9 +59,19 @@ Lamp's capabilities. The checklist below tracks what's left; we work through it 
   which never touches a wall) — verified manually across all five textures.
 
 **Alternate paths / behaviour:**
-- [ ] **SAY / ANSWER free-text** (`Guard.i7x`): "say I am human" / "I'm from earth" →
-  player-assert-humanity → the alliance *without* a gift; the loyalty YES/NO after giving the log.
-  A free-text SAY/ANSWER mechanism distinct from ASK-about-topic — a currently-unreachable solution.
+- [x] **SAY / ANSWER free-text** (`Guard.i7x`): **DONE.** lib/conversation gained a **`say` action**
+  (`say [topic]` / `answer [topic]`) whose `topic` is a free-text `string` slot — captured verbatim,
+  distinct from ASK/TELL's declared `subject`; fails by default ("There is no reply."), a game adds
+  `instead say` guarded on `self.topic` (golden `conversation1`; specs.md). Phobos
+  (`guard_persuasion.lamp`) uses it for both original SAY paths: **assert humanity** — "say I am
+  human" / "I am from earth" (and the natural variants) sets `player_assert_humanity`, the guard
+  dares Galaxy to prove it by removing her helmet, which then opens the **alliance with no gift**
+  (the detection now spares an asserting Galaxy; the reveal's "in wonder / you are a human!" branch
+  fires); and the **loyalty YES/NO** after giving the commander's log, answerable only the turn after
+  (a one-turn window via an every-turn shift rule, mirroring I7's loyalty question rule). *Residual:*
+  the **bare-word shortcuts** (typing just "yes"/"no"/"human" without "say") — I7 rewrites those via
+  an *after reading a command* rule; Lamp has no command-rewrite hook (recorded in TODO.md), so for
+  now the player says "say yes" / "say I am human".
 - [ ] **"Distracted → shot" mid-fight** (`Guard.i7x`): doing anything but attack/shoot while a
   commando is up gets Galaxy killed (today she simply can't flee).
 - [ ] **Noun forms of FLY** ("fly ship" / "operate panel") and the ship-flying/simply-flying split

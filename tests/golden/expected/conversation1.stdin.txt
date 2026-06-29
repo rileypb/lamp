@@ -2,4 +2,7 @@ examine bob
 ask bob about weather
 ask bob about silence
 tell bob about weather
+say hello
+answer hello
+say goodbye forever
 quit

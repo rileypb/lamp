@@ -29,3 +29,11 @@ subject weather_subject:
 subject silence_subject:
 	printed_name "silence"
 	understand "silence"
+
+# SAY / ANSWER free text: the `topic` is a raw `string` (the parser lowercases it), matched against
+# specific utterances rather than a declared subject. Bob reacts to "hello"; anything he doesn't
+# react to (and any utterance with no one listening) falls through to the default "There is no
+# reply." `answer` is a synonym for `say`.
+instead say when holder(bob) == holder(player) and self.topic == "hello":
+	print "Bob waves. 'Hello there!'"
+	stop succeeded
