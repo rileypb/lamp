@@ -16,6 +16,13 @@ Sourced from the staged roadmaps and prerequisite lists in
 
 ## Active
 
+### 0. README onboarding — DONE / follow-ups
+Top-level `README.md` now describes the system and how to run Lantern, the
+terminal player (Lamplighter), `lantern-exe`, and a Lighthouse web build. Possible
+follow-ups: document the `.lamp` language with a minimal "hello world" walkthrough;
+note any required Node.js minimum version (none declared in `package.json` today);
+link the README from `devdocs/`.
+
 ### 1. SAVE / RESTORE — remaining items (Slice 3)
 UNDO, dev-host SAVE/RESTORE, the durable CLI save location, and browser
 localStorage persistence are **done** (snapshot core + state-provider registry,
