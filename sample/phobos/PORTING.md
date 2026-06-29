@@ -369,9 +369,10 @@ than these "guard not present" fallbacks). Still unported: the flight deck + esc
    item's own message (replacing advent's second-person default report — `after` runs before
    the report band and `stop`s it) and, once both are worn, the completion line "She is now
    disguised as a Siriusian cyborg." The cabinet starts **closed**; the player OPENs it (see
-   the OPEN/CLOSE note below) to reveal the helmet. **Deferred:** the disguise *payoff* — the purple-door visual-identity gate
-   and the guard interactions (with the endgame) — plus the helmet's translation/hearing
-   effect, the examine-self disguise variants, and `feels`.
+   the OPEN/CLOSE note below) to reveal the helmet. The disguise *payoff* (the purple-door
+   visual-identity gate and the guard interactions) is ported with the endgame, and the
+   helmet's **number-translation** (the doom-clock count reads in plain numerals while worn) is
+   in `countdown.lamp`. **Deferred:** the examine-self disguise variants and `feels`.
 5. **HACK / the KIM — in progress** (from `KIM.i7x`). The KIM tool + `hack` verb,
    the green door (instant bypass), and the **yellow and red doors (Lights-Out
    keypads)** are done (`lib/phobos/hacking.lamp`): `press [n]` flips a hidden

@@ -315,7 +315,8 @@ core edit is contained. Names (default): `contains`/`place`/`contained`, keyword
   byte-invariant). **`test endgame` plays the whole game to victory with no debug shortcuts.** The
   **Guard arc is complete.** Deferred: **scoring** (carry the unconscious commandos for points), the
   "distracted → shot" mid-fight punishment (here she just can't flee), the SAY/ANSWER free-text asides,
-  the handprint-scanner part-object, and the helmet's translation effect.
+  and the handprint-scanner part-object. (The helmet's number-translation — the doom-clock count
+  reads in plain numerals while the Cyberhelmet is worn — is done, in countdown.lamp.)
 - ~~**OPEN / CLOSE actions for containers (advent)**~~ **DONE**
   (`lib/advent/actions.lamp`): OPEN/CLOSE (`shut`) over `box`es — opt in with `closable
   true`; opening reveals newly-visible contents and unseals them for scope (closing

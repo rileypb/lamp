@@ -3,8 +3,9 @@ lib advent
 # The Cyberhelmet and Cybercarapace (ported from Cyborg.i7x): the two pieces of Siriusian
 # cyborg gear that, worn together, disguise Galaxy as a cyborg. This first slice ports them
 # as wearables with their wear messages and the "disguised" completion. The disguise's
-# payoff — the purple-door visual-identity gate and the guard interactions — is deferred
-# with the purple door / endgame, as is the helmet's translation/hearing effect.
+# payoff — the purple-door visual-identity gate and the guard interactions — ported with the
+# purple door / endgame. The Cyberhelmet's number-translation (the doom-clock count reads in
+# plain numerals while it is worn) is wired in countdown.lamp.
 
 item cyberhelmet:
 	printed_name "Cyberhelmet"

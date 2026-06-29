@@ -15,8 +15,8 @@ lib advent
 # - self-destruct-in-progress is never set true yet (the reactor self-destruct isn't
 #   ported), so only the Mars-destroyed loss ending is reachable. The win branch (heroic
 #   death after arming self-destruct) is wired for when that puzzle lands.
-# - The Cyberhelmet number-translation and the PA System backdrop object are deferred; the
-#   count always renders in Siriusian digit-glyphs.
+# - The PA System backdrop object is deferred. The count renders in Siriusian digit-glyphs,
+#   except while Galaxy wears the Cyberhelmet (its translation circuitry shows plain numerals).
 
 # Turns until the moon fires. Decrements every turn.
 global int countdown = 789
@@ -49,9 +49,13 @@ rule every_turn_rules:
 	let indoors = not (holder(player) == Passage_End)
 	if indoors:
 		if countdown > 0:
+			# The count is Siriusian digit-glyphs — unless Galaxy wears the Cyberhelmet, whose
+			# translation circuitry renders the numerals in plain English (Cyborg.i7x).
+			let num = fixed(siriusian_number(countdown))
+			if wears player cyberhelmet:
+				num = fixed(countdown)
 			# [first time]…[only]: the full crackle line prints on the first indoor turn,
 			# then just the bare count thereafter (the I7 site-durable once-only block).
-			let num = fixed(siriusian_number(countdown))
 			print "[first time]The PA system crackles to life, and a voice says, [only]'[num].'"
 		else:
 			print "The PA system crackles to life, and a voice says, '[siriusian(\"Countdown complete. Thank you for all you do\")].'"
