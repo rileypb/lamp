@@ -19,12 +19,16 @@ Sourced from the staged roadmaps and prerequisite lists in
 ### Phobos 1:1 parity (drives advent/Lamp features)
 Goal: a **1:1 port** of Phobos to prove out Lamp (memory `phobos-1to1-goal`). The authoritative,
 tickable checklist lives in `sample/phobos/PORTING.md` → "Remaining for 1:1 parity"; work it one
-item at a time. The two biggest remnants are general advent features: **TOUCH/FEEL + `feels`** and
-**backdrops** (walls/floors/ceilings). Smaller: SAY/ANSWER free-text, custom can't-go/hit/take
-messages, power/action banners, banner placement seam, examinable in-prose sub-objects, and a
-per-extension audit. **Infra DONE:** golden discovery now walks one level into subdirs, so
-`sample/phobos/phobos.lamp` is a golden (`test endgame` → the full winning transcript) — the whole
-game is a deterministic regression check.
+item at a time. **TOUCH/FEEL machinery DONE in advent** (`Can't Touch This.i7x`): the TOUCH/FEEL
+verb (prints a thing's `feels` text or the default reply), the `feels` string +
+`feelable`/`far_away`/`obstructed`/`edificial` traits on `physical`, the unfeelable/out-of-reach
+refusals, and the trait-driven TAKE refusals (golden `touch1`; specs.md). *Remaining for that item:*
+the per-object `feels` text across Phobos's objects (drop in as objects are revisited). The next
+big remnant is **backdrops** (walls/floors/ceilings — needs a backdrop scope mechanism in advent).
+Smaller: SAY/ANSWER free-text, custom can't-go/hit/take messages, power/action banners, banner
+placement seam, examinable in-prose sub-objects, and a per-extension audit. **Infra DONE:** golden
+discovery now walks one level into subdirs, so `sample/phobos/phobos.lamp` is a golden (`test
+endgame` → the full winning transcript) — the whole game is a deterministic regression check.
 
 ### 0. README onboarding — DONE / follow-ups
 Top-level `README.md` now describes the system and how to run Lantern, the
@@ -665,6 +669,17 @@ core edit is contained. Names (default): `contains`/`place`/`contained`, keyword
   Locals keep the raw name (no-shadow guarantees no collision). Regression golden
   `multiword_global1` (reassignment + multi-word global field read run at runtime).
   The two `coerceName` imports were added to checker.js/emitter.js.
+- **Demonstrative sugar `[that]`/`[those]` (agreeing with a target).** Inform's refusal
+  messages refer back to the noun with a number-agreeing demonstrative — "[We] can't touch
+  [regarding the noun][those]." renders "can't touch that" (singular) / "can't touch those"
+  (plural). advent has no such sugar, so the ported TOUCH/TAKE refusals from `Can't Touch
+  This.i7x` ([lib/advent/actions.lamp](lib/advent/actions.lamp), `touch_cant`/`touch_cant_reach`/
+  `take_cant_unfeelable`/`take_cant_reach`) use the object **name** instead ("can't touch the
+  wall") — same meaning, advent house style, but not byte-faithful to the I7 wording. To close
+  the gap: add a `[that]`/`[those]` template (locale native, agreeing with the `[regarding]`/named
+  subject like `[they]`/`[them]` do — `it`/`they` set the agreement; demonstrative reads "that"
+  singular / "those" plural), then swap the refusal messages to use it. Also a localization win
+  (French ce/cette/ces). **Where:** `lib/en-US/index.js` (+ `lib/fr-FR`), `lib/advent/actions.lamp`.
 - **Remaining pronouns (`him`/`her`/`them`).** `it` is implemented with
   explicit `direct` slot marking (the `direct item NAME` annotation on action
   field declarations sets the antecedent; at most one per action; enforced at

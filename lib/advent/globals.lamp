@@ -35,6 +35,10 @@ stop_reason nothing_happens
 stop_reason cant_enter
 stop_reason give_declined
 stop_reason show_declined
+stop_reason cant_touch
+stop_reason cant_reach
+stop_reason cant_take_unfeelable
+stop_reason too_massive
 
 # directions
 #

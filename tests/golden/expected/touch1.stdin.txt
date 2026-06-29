@@ -1,0 +1,10 @@
+touch velvet
+feel velvet
+touch brick
+feel it
+touch ghost
+touch star
+take ghost
+take star
+take statue
+quit

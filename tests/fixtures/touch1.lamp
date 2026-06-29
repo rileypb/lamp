@@ -1,0 +1,37 @@
+# The generic TOUCH / FEEL action (lib/advent, ported from Can't Touch This.i7x): touching any
+# physical thing senses it without changing the world. A thing's `feels` text is printed when set,
+# else a default reply. Three traits gate it — `unfeelable` (can't touch), `far_away` and
+# `obstructed` (can't reach) — and the reach/`edificial` traits also refuse TAKE. FEEL is a synonym.
+
+lib advent
+
+game Touch:
+	start Room
+
+room Room:
+	description "A bare room."
+
+item velvet:
+	description "A square of red velvet."
+	feels "The velvet is impossibly soft."
+
+item brick:
+	description "An ordinary brick."
+
+item ghost:
+	description "A flickering apparition."
+	feelable false
+
+item star:
+	description "A distant star."
+	far_away true
+
+item statue:
+	description "A colossal stone statue."
+	edificial true
+
+contains Room velvet
+contains Room brick
+contains Room ghost
+contains Room star
+contains Room statue

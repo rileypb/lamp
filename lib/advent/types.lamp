@@ -23,6 +23,16 @@ type physical < thing:
 	# un/une). Gender-neutral locales like en-US ignore it; default masculine, a
 	# game sets `gender "feminine"` on a feminine-named object. See devdocs/i18n.md.
 	string gender = "masculine"
+	# TOUCH / FEEL (see actions.lamp, ported from Can't Touch This.i7x). `feels` is the
+	# optional sensation text printed when the thing is touched; empty means the default
+	# "feel nothing unexpected" reply. The traits gate reach: an `unfeelable` thing can't be
+	# touched at all (`feelable` is the usual state); a `far_away` or `obstructed` thing is out
+	# of reach; an `edificial` thing is too massive to take. The reach traits also refuse TAKE.
+	string feels = ""
+	bool feelable = true
+	bool far_away = false
+	bool obstructed = false
+	bool edificial = false
 
 type container < physical
 

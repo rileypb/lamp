@@ -1784,7 +1784,7 @@ described below.
 | Type | Parent | Key fields |
 |---|---|---|
 | `thing` | — | `string printed_name`, `string understand` |
-| `physical` | `thing` | `article article` |
+| `physical` | `thing` | `article article`, `string description`, `string gender` (default `"masculine"`), `string feels` (default `""`), `bool feelable` (default `true`), `bool far_away`, `bool obstructed`, `bool edificial` |
 | `room` | `container` | `string description`, `bool lighted` (default `true`) |
 | `item` | `physical` | `bool scenery`, `bool wearable`, `string initial_appearance` (default `""`), `bool handled` |
 | `box` | `item, container` | `bool closable`, `bool closed`, `bool locked` |
@@ -1984,7 +1984,8 @@ provided (a game drives door state itself).
 
 `already_carrying`, `cant_take_that`, `not_carrying`, `cant_put_on_that`,
 `cant_go_that_way`, `not_wearable`, `already_worn`, `not_worn`, `too_dark`,
-`door_closed`.
+`door_closed`, and the touch/reach family `cant_touch`, `cant_reach`,
+`cant_take_unfeelable`, `too_massive`.
 
 ### Actions
 
@@ -1992,10 +1993,11 @@ provided (a game drives door state itself).
 |---|---|---|---|
 | `look` | — | `look`, `l` | Describes the current room. |
 | `examine` | `direct physical target` | `examine [target]`, `x [target]`, `read [target]` | Prints `self.target.description` (or `examine_nothing` when empty). Targets any `physical`, so people and non-item scenery are examinable too. |
+| `touch` | `direct physical target` | `touch [target]`, `feel [target]` | Inform's "touching" (ported from Can't Touch This.i7x). Senses a thing without changing the world (no `do` band, like `examine`), and works in the dark. Prints the target's `feels` text when set, else `touch_nothing` = "[We] [feel] nothing unexpected." Refused when the target is `unfeelable` (reason `cant_touch`, message `touch_cant` = "[We] can't touch [the act.target].") or out of reach — `far_away`/`obstructed` (reason `cant_reach`, message `touch_cant_reach` = "[We] can't reach [the act.target]."). The reach/feel traits also refuse `take` (see below). Targets any `physical`. `target` is `direct`, so `it` refers back to it. |
 | `attack` | `direct physical target` | `attack [target]`, `hit [target]`, `smash [target]`, `punch [target]` | **Fails by default** (reason `attack_pointless`, message `attack_violence`), so any `do` is skipped — it's a refusal. A game adds `instead attack` rules for things that respond (`stop succeeded` to act, or a bare `stop failed` after its own refusal — the `report failed` reason guard then suppresses the default). Targets any `physical` (so people are attackable). `target` is `direct`, so `it` refers back to it. |
 | `push` | `direct item target` | `push [target]` | Inform's "pushing a thing" — for buttons, switches and the like. **Fails by default** (reason `nothing_happens`, message `push_inert` = "Nothing obvious happens."), same band shape as `attack`: a game adds `instead push` rules for controls that respond. `target` is `direct`, so `it` refers back to it. A game that needs a *key-press* grammar (`press 1` on a keypad) declares its own action with a number/text slot — `push` stays the item verb so the two never collide (see the Phobos `press_key` sample). |
 | `pull` | `direct item target` | `pull [target]` | Inform's "pulling a thing" — the counterpart to `push`, for levers and the like. **Fails by default** (shares the `nothing_happens` reason; message `pull_inert` = "Nothing obvious happens."); a game adds `instead pull` rules for things that respond. `target` is `direct`, so `it` refers back to it. |
-| `take` | `item taken` | `take [taken]`, `get [taken]` | Moves item to actor. |
+| `take` | `item taken` | `take [taken]`, `get [taken]` | Moves item to actor. Refused for an already-carried item (`already_carrying`), a `scenery` item (`cant_take_that`), and — from Can't Touch This.i7x — an `unfeelable` item (`cant_take_unfeelable` = "[We] can't take [the act.taken]."), one out of reach (`far_away`/`obstructed` → `cant_reach`), or an `edificial` one (`too_massive` = "[The act.taken] [is] much too massive to take."). The trait checks run before the scenery check, so a massive scenery fixture reports "too massive". |
 | `drop` | `item dropped` | `drop [dropped]` | Moves item to actor's location; implicitly calls `doff` if item is worn (printing `(first taking off X)` for the player). |
 | `inventory` | — | `inventory`, `i` | Lists carried items; marks worn items with `(worn)`. |
 | `wear` | `item clothing` | `wear [clothing]` | Asserts `wears actor clothing`; implicitly calls `take` if item is not yet carried (printing `(first taking X)` for the player). |

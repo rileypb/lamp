@@ -7,6 +7,11 @@ You see a safe here.
 gem (item)
   location: safe
   gender: "masculine"
+  feels: ""
+  feelable: true
+  far_away: false
+  obstructed: false
+  edificial: false
   initial_appearance: ""
   handled: false
   printed_name: ""
@@ -20,6 +25,11 @@ gem (item)
 safe (box)
   location: Hall
   gender: "masculine"
+  feels: ""
+  feelable: true
+  far_away: false
+  obstructed: false
+  edificial: false
   initial_appearance: ""
   handled: false
   locked: false

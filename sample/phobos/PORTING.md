@@ -20,9 +20,13 @@ Lamp's capabilities. The checklist below tracks what's left; we work through it 
 ### Remaining for 1:1 parity (work top-down)
 
 **Subsystems (the meatier pieces):**
-- [ ] **TOUCH / FEEL + `feels`** (`Can't Touch This.i7x`): a touch/feel verb, a `feels` text on
-  every thing, and the `feelable` / `far away` / `obstructed` / `edificial` traits with their
-  messages. Pervasive — nearly every object in the game carries `feels` text.
+- [~] **TOUCH / FEEL + `feels`** (`Can't Touch This.i7x`): **machinery DONE in advent** — the
+  TOUCH/FEEL verb (prints a thing's `feels` text or "[We] [feel] nothing unexpected."), the
+  `feels` string + `feelable`/`far_away`/`obstructed`/`edificial` traits on `physical`, with the
+  unfeelable/out-of-reach refusals and the trait-driven TAKE refusals (can't-take/can't-reach/too-
+  massive). Golden `touch1`; see specs.md. **Still pending:** the per-object `feels` text on
+  Phobos's objects (pervasive — nearly every object carries one) and any per-object trait settings;
+  drop those in as the objects are revisited.
 - [ ] **Backdrops: walls / floors / ceilings** (`Walls.i7x` / `Floors.i7x` / `Ceilings.i7x` /
   `PBR Common.i7x`): examinable scenery present in *every* room (X WALL / FLOOR / CEILING / SKY /
   GROUND), per-room descriptions via tables, low-ceiling/outdoors variants. Needs a backdrop
@@ -406,8 +410,12 @@ than these "guard not present" fallbacks). Still unported: the flight deck + esc
    label + diary). `is_textual` collapsed into the pure-Lamp guard `self.target.textual`.
    **Deferred:** the `obscure`/`revealed` real-name/real-description swap on examine.
    (Full translation is now reachable — all five tiers have a document; see above.)
-4. **`feels` property + FEEL/TOUCH action** — nearly every object has a `feels`
-   string. From `Can't Touch This.i7x`.
+4. ~~**`feels` property + FEEL/TOUCH action**~~ **Machinery DONE in advent** (from
+   `Can't Touch This.i7x`): the TOUCH/FEEL verb, the `feels` string and
+   `feelable`/`far_away`/`obstructed`/`edificial` traits on `physical`, the
+   unfeelable/out-of-reach refusals, and the trait-driven TAKE refusals (golden `touch1`;
+   specs.md). **Remaining:** the per-object `feels` text — nearly every object has one — plus
+   any per-object trait settings, dropped in as the objects are revisited.
    ~~**Galaxy Suit + power-up (GJ Basics / Powerup / Galaxy Smash)**~~ **DONE**
    (`lib/phobos/suit.lamp`): the worn Galaxy Suit, `powered_up`/`charges_left`/
    `first_power_use` globals, POWER UP/DOWN actions (with the `--`-optional "suit"

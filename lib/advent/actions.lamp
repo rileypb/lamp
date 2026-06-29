@@ -26,6 +26,18 @@ check take:
 	if holder(self.taken) == self.actor:
 		stop failed already_carrying
 
+# The reach/feel traits (Can't Touch This.i7x) also refuse TAKE: an unfeelable thing can't be
+# taken, an out-of-reach one can't be reached, and an edificial one is too massive. Runs before
+# the scenery check so a massive scenery fixture reports "too massive" rather than the generic
+# refusal.
+check take:
+	if not self.taken.feelable:
+		stop failed cant_take_unfeelable
+	if self.taken.far_away or self.taken.obstructed:
+		stop failed cant_reach
+	if self.taken.edificial:
+		stop failed too_massive
+
 check take:
 	if self.taken.scenery:
 		stop failed cant_take_that
@@ -55,6 +67,15 @@ report failed take:
 		stop
 	if self.reason == cant_take_that:
 		print take_cant_take:"That's not something you can take."
+		stop
+	if self.reason == cant_take_unfeelable:
+		print take_cant_unfeelable:"[We] can't take [the act.taken]."
+		stop
+	if self.reason == cant_reach:
+		print take_cant_reach:"[We] can't reach [the act.taken]."
+		stop
+	if self.reason == too_massive:
+		print take_too_massive:"[The act.taken] [is] much too massive to take."
 		stop
 
 action inventory:
@@ -265,6 +286,38 @@ report examine:
 report failed examine:
 	if self.reason == too_dark:
 		print examine_too_dark:"It's too dark to see that."
+		stop
+
+# TOUCH / FEEL (Inform's "touching", ported from Can't Touch This.i7x). Touching changes nothing
+# in the world — like LOOK and EXAMINE it only senses — so there is no `do` band: a `check`
+# validates reach and a `report` prints the result. Targets any `physical` (people and scenery
+# included, like EXAMINE/ATTACK). Three traits refuse it: an `unfeelable` thing can't be touched,
+# and a `far_away` or `obstructed` thing is out of reach. When the thing carries `feels` text,
+# touching prints that instead of the default reply. (Touching works in the dark — no light check.)
+action touch:
+	direct physical target
+	syntax:
+		"touch [target]"
+		"feel [target]"
+
+check touch:
+	if not self.target.feelable:
+		stop failed cant_touch
+	if self.target.far_away or self.target.obstructed:
+		stop failed cant_reach
+
+report touch:
+	if self.target.feels == "":
+		print touch_nothing:"[We] [feel] nothing unexpected."
+	else:
+		print touch_feels:"[act.target.feels]"
+
+report failed touch:
+	if self.reason == cant_touch:
+		print touch_cant:"[We] can't touch [the act.target]."
+		stop
+	if self.reason == cant_reach:
+		print touch_cant_reach:"[We] can't reach [the act.target]."
 		stop
 
 # A generic reaction to violence against any item (also ATTACK/HIT/SMASH/PUNCH). The
