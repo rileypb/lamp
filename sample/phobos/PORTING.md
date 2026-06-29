@@ -130,9 +130,20 @@ action was renamed **`press_key`** (was `press`) to keep PUSH (items) and PRESS 
 from colliding — faithful to Inform (KIM.i7x gates its "press [key]" to active hacking, while a
 button is pushed). **Deferred:** advent has no part-of relation, so each fixture is a standalone
 object rather than "part of" the panel; the `feels`/TOUCH strings (no TOUCH verb);
-SIT/enterable-supporter for the chair; and the buttons' specific **`instead push`** responses —
-launch = the lose ending, self-destruct = the reactor-lever sequence — which port with the Guard
-and the win/endgame (the reactor levers, flight deck, and ship are still unported).
+SIT/enterable-supporter for the chair.
+
+**Button push behaviour (Guard.i7x, base/no-guard variants): ported in `control_room.lamp`.**
+Two `instead push` rules on the buttons: **launch** = the immediate loss (Galaxy fires the
+thruster and destroys Mars herself) — it ends the story with a banner specific to that ending,
+carried by a new `ending_override` global (the Lamp analogue of I7's `end the story saying "…"`;
+`end_story_rules` in phobos.lamp prints it when set, else the generic win/lose line — reused by
+the Guard death endings later). **self-destruct** = starts the sequence and sets
+`self_destruct_pushed`, telling Galaxy the reactor's arming levers must be engaged; pushing it
+again reports it is already running. **Deferred:** the guard-present overrides (the cyborg's
+suspicion → "spy!" → death-or-suit-deflect), and the self-destruct *payoff* — the reactor arming
+levers (which set `self_destruct_in_progress`, switching the doom-clock's zero ending to the
+heroic win) and the escape by ship — port with the Guard and the win sequence (reactor levers,
+flight deck, ship still unported).
 
 **Infrastructure Base.i7x needs that Lamp/advent lacks** (rough priority):
 

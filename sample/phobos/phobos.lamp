@@ -99,10 +99,18 @@ rule room_heading_rules:
 # in the main game file: only main-file rules register at author order (0) and so run
 # before — and suppress — advent's order-1 default `when story == …` rules. The clock
 # itself lives in lib/phobos/countdown.lamp.
+# An ending may set `ending_override` (control_room.lamp) to a banner specific to that death
+# — e.g. pushing the launch button. When unset, each branch prints its generic line.
 rule end_story_rules when story == won:
-	print "[par]Galaxy Jones has saved Mars and died a hero's death.[par]"
+	if ending_override == "":
+		print "[par]Galaxy Jones has saved Mars and died a hero's death.[par]"
+	else:
+		print "[par][ending_override][par]"
 	stop true
 
 rule end_story_rules when story == lost:
-	print "[par]The Sirius Syndicate has destroyed Mars.[par]"
+	if ending_override == "":
+		print "[par]The Sirius Syndicate has destroyed Mars.[par]"
+	else:
+		print "[par][ending_override][par]"
 	stop true

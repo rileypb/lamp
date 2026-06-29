@@ -196,6 +196,14 @@ core edit is contained. Names (default): `contains`/`place`/`contained`, keyword
 **Where:** `src/lantern/{tokenizer,parser_rd,emitter,checker}.js`, `src/lamplighter/index.js`, `lib/advent/*`, `devdocs/{relations,world-model}.md`.
 
 ## Smaller / opportunistic
+- **End-the-game machinery: isolate the globals behind a function call.** Ending the game
+  today means game code writing globals directly — `story` (enum, lib/advent/globals.lamp) and
+  `ending_override` (the ending-specific banner, sample/phobos/control_room.lamp + phobos.lamp
+  `end_story_rules`). Replace with a single entry point, e.g. `end_game(outcome, banner)`, that
+  sets the globals internally so callers never touch them (the I7 analogue of `end the story
+  saying "…"`). Keeps the win/lose contract in one place and makes the Guard's many death
+  endings one-liners. Lives in advent (where `story`/`end_story_rules` live). **Where:**
+  `lib/advent/globals.lamp`, sample end rules.
 - **Read-only render flag (text engine).** Some renders are *inspections*, not real output,
   and must not advance site-durable state (`[first time]`/`[Nth time]` counters,
   `[cycling]`/`[random]` cursors): **SHOWME** renders a field's template to display it
@@ -260,10 +268,14 @@ core edit is contained. Names (default): `contains`/`place`/`contained`, keyword
   (items) and PRESS (keypad keys) never collide — faithful to Inform, where pushing understands
   push/press but the keypad's "press [key]" is a separate, hacking-gated action. Deferred: advent
   has no **part-of** relation (each fixture is a standalone object, not "part of" the panel), no
-  **TOUCH**/`feels` verb, no **SIT**/enterable supporter (the chair), and the buttons' specific
-  **`instead push`** responses (launch = the lose ending, self-destruct = the reactor-lever
-  sequence) — which port with the endgame below. **Later:**
-  the buttons' push endgame + the **reactor levers / flight deck / ship**, and the **Guard**
+  **TOUCH**/`feels` verb, no **SIT**/enterable supporter (the chair). The **buttons' push
+  behaviour is now ported** (`control_room.lamp`, base/no-guard variants): **launch** = the
+  immediate loss (ends the story via a new `ending_override` global = I7's `end the story saying`,
+  reused by Guard deaths later), **self-destruct** = starts the sequence + sets
+  `self_destruct_pushed` and points Galaxy at the reactor (re-push = "already initiated").
+  **Still deferred:** the guard-present overrides (suspicion → "spy!" → death/deflect) and the
+  self-destruct *payoff* — the **reactor levers** (set `self_destruct_in_progress` → the doom-clock
+  win) and the escape by **ship**. **Later:** the **reactor levers / flight deck / ship**, and the **Guard**
   (60KB conversation/persuasion extension) the two-lever self-destruct needs; scoring on solve;
   the handprint-scanner as a real part-object. Also deferred: the helmet's translation effect,
   examine-self disguise variants.
