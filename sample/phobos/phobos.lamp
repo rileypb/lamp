@@ -84,6 +84,7 @@ report credits:
 person yourself:
 	printed_name "Galaxy"
 	gender "female"
+	feels "Galaxy Jones pinches herself. She feels the same as always."
 
 # Replace advent's room-name heading with the name-embedded, third-person intro
 # that runs on into the description: "Galaxy is in the passage end. <description>".

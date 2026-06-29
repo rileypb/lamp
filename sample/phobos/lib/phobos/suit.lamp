@@ -19,6 +19,7 @@ global bool powered_this_turn = false
 item galaxy_suit:
 	printed_name "Galaxy Suit"
 	wearable
+	feels "The suit is made of a lightweight, flexible material that feels like a second skin."
 	description "It's an advanced Smart Suit, a flexible black jumpsuit able to communicate sound, vision, and radar back to Beck at Galaxy Base. POWER ON the suit to supercharge Galaxy's next ATTACK. The suit will power down if unused."
 
 contains yourself galaxy_suit

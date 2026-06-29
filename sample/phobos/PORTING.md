@@ -20,13 +20,20 @@ Lamp's capabilities. The checklist below tracks what's left; we work through it 
 ### Remaining for 1:1 parity (work top-down)
 
 **Subsystems (the meatier pieces):**
-- [~] **TOUCH / FEEL + `feels`** (`Can't Touch This.i7x`): **machinery DONE in advent** — the
+- [x] **TOUCH / FEEL + `feels`** (`Can't Touch This.i7x`): **DONE.** Machinery in advent — the
   TOUCH/FEEL verb (prints a thing's `feels` text or "[We] [feel] nothing unexpected."), the
   `feels` string + `feelable`/`far_away`/`obstructed`/`edificial` traits on `physical`, with the
   unfeelable/out-of-reach refusals and the trait-driven TAKE refusals (can't-take/can't-reach/too-
-  massive). Golden `touch1`; see specs.md. **Still pending:** the per-object `feels` text on
-  Phobos's objects (pervasive — nearly every object carries one) and any per-object trait settings;
-  drop those in as the objects are revisited.
+  massive). Golden `touch1`; see specs.md. **Per-object `feels` text ported** onto every currently-
+  ported Phobos object (doors, the five documents, KIM/Linguistic Module, suit/pistol/chocolate,
+  cyberhelmet/cybercarapace, the control-room + reactor + ship fixtures, the locker/cabinet, the
+  guard, the dead guard, Galaxy herself), plus the I7 traits: `far_away` on Mars and Stickney Crater
+  (→ "can't reach"), `edificial` on the Siriusian ship (→ "too massive to take"). The commandos' feels
+  is state-dependent (fighting/unconscious/dead), so it's an `instead touch` in `guard_endgame.lamp`
+  rather than a static field. *Residual:* the `feels` on objects **not yet ported** (the in-prose
+  signs/poster, handprint scanners, the Moon Sled, sleeping pods, tile/counters, the PA System, the
+  suit light, the RESET button) rides along with those objects when they land (sub-objects/backdrops/
+  parts items below). `feel me`/`feel galaxy` needs the player's self-synonyms (the X ME item below).
 - [ ] **Backdrops: walls / floors / ceilings** (`Walls.i7x` / `Floors.i7x` / `Ceilings.i7x` /
   `PBR Common.i7x`): examinable scenery present in *every* room (X WALL / FLOOR / CEILING / SKY /
   GROUND), per-room descriptions via tables, low-ceiling/outdoors variants. Needs a backdrop
@@ -410,12 +417,13 @@ than these "guard not present" fallbacks). Still unported: the flight deck + esc
    label + diary). `is_textual` collapsed into the pure-Lamp guard `self.target.textual`.
    **Deferred:** the `obscure`/`revealed` real-name/real-description swap on examine.
    (Full translation is now reachable — all five tiers have a document; see above.)
-4. ~~**`feels` property + FEEL/TOUCH action**~~ **Machinery DONE in advent** (from
-   `Can't Touch This.i7x`): the TOUCH/FEEL verb, the `feels` string and
-   `feelable`/`far_away`/`obstructed`/`edificial` traits on `physical`, the
-   unfeelable/out-of-reach refusals, and the trait-driven TAKE refusals (golden `touch1`;
-   specs.md). **Remaining:** the per-object `feels` text — nearly every object has one — plus
-   any per-object trait settings, dropped in as the objects are revisited.
+4. ~~**`feels` property + FEEL/TOUCH action**~~ **DONE** (from `Can't Touch This.i7x`): the
+   TOUCH/FEEL verb, the `feels` string and `feelable`/`far_away`/`obstructed`/`edificial` traits
+   on `physical`, the unfeelable/out-of-reach refusals, and the trait-driven TAKE refusals (golden
+   `touch1`; specs.md). The **per-object `feels` text is ported** onto every currently-ported Phobos
+   object, with `far_away` on Mars/Stickney Crater and `edificial` on the Siriusian ship; the
+   commandos' state-dependent feels is an `instead touch`. Residual feels ride with the not-yet-
+   ported sub-objects (signs/scanners/Moon Sled/pods/tile/PA/suit-light/RESET button).
    ~~**Galaxy Suit + power-up (GJ Basics / Powerup / Galaxy Smash)**~~ **DONE**
    (`lib/phobos/suit.lamp`): the worn Galaxy Suit, `powered_up`/`charges_left`/
    `first_power_use` globals, POWER UP/DOWN actions (with the `--`-optional "suit"

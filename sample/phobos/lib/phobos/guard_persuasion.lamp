@@ -19,10 +19,12 @@ lib advent
 item disruptor_pistol:
 	printed_name "disruptor pistol"
 	understand "gun/weapon/laser/pistol/disruptor"
+	feels "The disruptor pistol is made of a lightweight polymer, and it feels perfectly balanced in the hand."
 	description "A compact instrument of death, with only one setting: kill."
 item chocolate_bar:
 	printed_name "chocolate bar"
 	understand "chocolate/bar/candy"
+	feels "Feels like a chocolate bar, alright. Don't touch it too much, though, or it will get all melty."
 	description "It's a Mars Bar. The label says 'May contain nuts.' Galaxy often carries a snack on a mission. You never know when it might come in handy."
 
 contains yourself disruptor_pistol

@@ -35,6 +35,7 @@ item dead_guard:
 	scenery
 	printed_name "guard's body"
 	understand "guard/body/corpse"
+	feels "Galaxy leaves the dead guard alone."
 	description "The guard lies still, their Cyberhelmet removed, their Siriusian face peaceful at last. They gave their life to save Mars."
 
 global bool left_lever_pulled = false
@@ -161,6 +162,25 @@ instead shoot when self.target == short_commando:
 
 report shoot:
 	print "Galaxy sees no reason to shoot [the act.target]."
+
+# FEEL/TOUCH a commando — the `feels` text is state-dependent (Guard.i7x swaps in a
+# different commando object per state), so a static `feels` field can't carry it: an
+# `instead touch` reports the right line for fighting / unconscious / dead.
+function void feel_commando(commando c):
+	if c.dead:
+		print "The poor thing is dead. Leave them alone."
+	else:
+		if c.defeated:
+			print "The poor thing is unconscious. Leave them alone."
+		else:
+			print "You can't get near them while you're fighting them!"
+
+instead touch when self.target == tall_commando:
+	feel_commando(tall_commando)
+	stop succeeded
+instead touch when self.target == short_commando:
+	feel_commando(short_commando)
+	stop succeeded
 
 # Can't turn your back on the commandos until they're down.
 instead go when commando_started and not commandos_down() and holder(player) == Control_Room:

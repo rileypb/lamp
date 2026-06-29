@@ -11,12 +11,14 @@ item cyberhelmet:
 	printed_name "Cyberhelmet"
 	understand "silver/helmet"
 	wearable
+	feels "The Cyberhelmet's durable polymer shell feels smooth to the touch, and the interior padding is soft and comfortable."
 	description "The Cyberhelmet is a silver helmet that looks just about the right size for Galaxy."
 
 item cybercarapace:
 	printed_name "Cybercarapace"
 	understand "armor/carapace"
 	wearable
+	feels "The Cybercarapace's durable polymer shell feels smooth to the touch, and the interior padding is soft and comfortable."
 	initial_appearance "The sole remaining piece of equipment is a Cybercarapace."
 	description "The Cybercarapace is a piece of armor worn by Siriusian cyborgs on their torso and legs. Combined with the Cyberhelmet, it completes the transformation of the organic protocyborg into a full-fledged cyborg. This one is labeled '[siriusian(\"Cybercarapace Serial Number $NB563FFAA\")]'."
 

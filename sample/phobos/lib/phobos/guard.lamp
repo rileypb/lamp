@@ -10,6 +10,7 @@ lib advent
 person guard:
 	printed_name "Siriusian guard"
 	understand "guard/cyborg"
+	feels "The guard would prefer not to be touched."
 	description "The guard is as anonymous as all Siriusian cyborgs, an organic core hidden in an armored exoskeleton. This one's carapace is labeled '[siriusian(\"Cybercarapace Serial Number !mfk5plas\")]'."
 
 contains Control_Room guard

@@ -19,12 +19,14 @@ Sourced from the staged roadmaps and prerequisite lists in
 ### Phobos 1:1 parity (drives advent/Lamp features)
 Goal: a **1:1 port** of Phobos to prove out Lamp (memory `phobos-1to1-goal`). The authoritative,
 tickable checklist lives in `sample/phobos/PORTING.md` → "Remaining for 1:1 parity"; work it one
-item at a time. **TOUCH/FEEL machinery DONE in advent** (`Can't Touch This.i7x`): the TOUCH/FEEL
+item at a time. **TOUCH/FEEL DONE** (`Can't Touch This.i7x`): the advent machinery — the TOUCH/FEEL
 verb (prints a thing's `feels` text or the default reply), the `feels` string +
 `feelable`/`far_away`/`obstructed`/`edificial` traits on `physical`, the unfeelable/out-of-reach
-refusals, and the trait-driven TAKE refusals (golden `touch1`; specs.md). *Remaining for that item:*
-the per-object `feels` text across Phobos's objects (drop in as objects are revisited). The next
-big remnant is **backdrops** (walls/floors/ceilings — needs a backdrop scope mechanism in advent).
+refusals, and the trait-driven TAKE refusals (golden `touch1`; specs.md) — **plus the per-object
+`feels` text on every ported Phobos object** (with `far_away` on Mars/Stickney Crater, `edificial`
+on the ship, and a state-dependent `instead touch` for the commandos); residual feels ride with the
+not-yet-ported sub-objects. The next big remnant is **backdrops** (walls/floors/ceilings — needs a
+backdrop scope mechanism in advent).
 Smaller: SAY/ANSWER free-text, custom can't-go/hit/take messages, power/action banners, banner
 placement seam, examinable in-prose sub-objects, and a per-extension audit. **Infra DONE:** golden
 discovery now walks one level into subdirs, so `sample/phobos/phobos.lamp` is a golden (`test

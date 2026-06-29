@@ -6,6 +6,7 @@
 
 item KIM:
 	printed_name "KIM"
+	feels "The KIM feels like smooth, featureless plastic."
 	description "The Kovert Infiltration Matrix, or KIM, is the state-of-the-art in breaching high-security facilities. Just HACK your target, and a few steps later, you'll be in! The KIM is a featureless black slab, roughly 4x5 inches in dimension, and an eighth of an inch thick."
 
 contains yourself KIM
