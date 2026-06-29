@@ -319,11 +319,15 @@ contains Reactor_Room reactor_arming_levers
 # carry their `feels` text, and the ship is `edificial` (too massive to take). The ENTER-the-ship
 # and FLY behaviour — and the win/loss endings — are in lib/phobos/flight_deck.lamp.
 item stickney_crater:
+	printed_name "Stickney Crater"
+	article proper
 	scenery
 	far_away true
 	understand "crater"
 	description "Stickney Crater, the largest crater on Phobos, is a vast expanse of rock and dust, stretching out to the north. At this distance, one can barely see the lines where the crater will open up to reveal the huge Siriusian thrusters."
 item mars:
+	printed_name "Mars"
+	article proper
 	scenery
 	far_away true
 	description "Mars sits in the southern sky, oblivious to the events unfolding on Phobos."
