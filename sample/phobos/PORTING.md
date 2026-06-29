@@ -51,6 +51,18 @@ Lamp's capabilities. The checklist below tracks what's left; we work through it 
   the original for any missed beckons/variants.
 
 **Messages / polish:**
+- [ ] **Viewpoint subject: name "Galaxy", not pronoun "She"** (house style / `Third Person
+  Narration`): advent's viewpoint substitution (`[We]`/the unqualified adaptive verbs) renders the
+  protagonist as the third-person *pronoun* — so a `[We] …` refusal reads "**She** can't reach
+  Stickney Crater." where the original uses the **name**: "**Galaxy** can't reach that." Phobos's
+  whole house style names the character ("Galaxy is in the passage end."), so the pronoun sounds
+  awkward in these viewpoint messages. Need a way for the viewpoint subject to render as the player's
+  **name** (e.g. a `[We]`/sentence-start form that emits `display_name(player)` for a 3rd-person,
+  named viewpoint, perhaps gated by a `viewpoint_named`/`always_indefinite`-style flag, with later
+  references still pronominalizing — "Galaxy … she …"). Touches the locale `we()`/viewpoint path
+  (`lib/en-US`) and any advent message that opens with `[We]`. (Distinct from the deferred
+  third-person *action reports*, but the same underlying gap.) The "that"/"Stickney Crater"
+  demonstrative split is separate and already tracked in the repo `TODO.md`.
 - [ ] **Custom "can't go that way"** (`Can't Go That Way.i7x`): per-room excuse messages.
 - [ ] **Custom attack / take refusals** (`Can't Hit That.i7x`, `Can't Take That.i7x`, the
   `Phobos Polish` Table of Attacking): e.g. "Galaxy pounds pointlessly on the Moon Sled's hull" +
