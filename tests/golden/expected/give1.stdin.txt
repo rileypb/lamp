@@ -1,0 +1,4 @@
+give coin to bob
+give gem to bob
+show gem to bob
+quit

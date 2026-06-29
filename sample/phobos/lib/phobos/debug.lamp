@@ -41,3 +41,18 @@ do arm:
 
 report arm:
 	print "The reactor self-destruct is now armed."
+
+# disguise: put on both cyborg pieces at once, to reach the guard (behind the purple door) without
+# the helmet/carapace fetch + hack. Asserts the `wears` relation directly (no wear messages).
+action disguise:
+	syntax:
+		"disguise"
+
+do disguise:
+	move cyberhelmet to player
+	move cybercarapace to player
+	wears player cyberhelmet
+	wears player cybercarapace
+
+report disguise:
+	print "Galaxy is now disguised as a Siriusian cyborg."

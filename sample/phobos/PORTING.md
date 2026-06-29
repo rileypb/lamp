@@ -170,11 +170,23 @@ in **English** (the worn Cyberhelmet translates Siriusian — the helmet's first
 translation use; `siriusian()` is only for untranslated signage); the alien proper nouns the
 original keeps in glyphs are rendered plainly for now. Also: **EXAMINE now targets any `physical`**
 (was `item`), so NPCs/scenery are examinable (byte-invariant; golden suite green). The log/diary/
-chocolate topics use their "not yet given" replies. **Deferred (later slices):** GIVE/SHOW + the
-persuasion state machine (give log/chocolate/pistol → pleased → reveal disguise → alliance),
-SAY/ANSWER yes/no (the loyalty question), the meeting/blowing-up/commando **scenes**, the
-**death-on-detection**, the guard **leading** Galaxy to the levers (NPC actions), the **commando
-fight**, and **scoring**.
+chocolate topics use their "not yet given" replies.
+
+**The Guard — persuasion + the alliance reveal (Guard.i7x): ported** (`guard_persuasion.lamp`).
+New advent generics: **GIVE / SHOW** actions (`give [gift] to [recipient]`, `show [shown] to
+[recipient]`; fail by default, `instead give`/`instead show` to respond; golden `give1`). Galaxy
+wins the guard over with a **pleasing action** — give or drop the disruptor pistol, give the
+commander's log, or give the chocolate bar (all carried from the start now). Once `guard_pleased`,
+removing the Cyberhelmet or Cybercarapace fires the **alliance reveal**: the guard recognizes her
+humanity, allies, slams the self-destruct (sets `self_destruct_pushed`), and asks her to come help
+with the levers. **Death-on-detection**: standing in the control room undisguised and not-yet-
+pleased gets Galaxy shot (every-turn). A disguised first entry triggers the guard's **greeting**.
+A not-for-release **`disguise`** debug verb (dons both pieces) eases testing past the purple door.
+**Deferred (later slices):** the SAY/ANSWER free-text paths (assert humanity, the loyalty yes/no
+question — a separate text-topic mechanism), the guard **leading** Galaxy to the reactor levers
+(NPC actions) — so the alliance sets `self_destruct_pushed` but arming still needs the levers (the
+`arm` debug verb) — the **commando fight**, and **scoring**. The meeting/blowing-up/commando
+"scenes" are modelled with flags + every-turn rules rather than a general scene abstraction.
 
 **Reactor Room furniture + arming levers (Base.i7x "Book - Reactor Room"): ported.** The reactor
 control board and the two arming levers (left/right) plus the collective "levers" are scenery

@@ -291,10 +291,12 @@ core edit is contained. Names (default): `contains`/`place`/`contained`, keyword
   library **`lib/conversation`** (subjects + `ask`/`tell`, kept out of core advent — opt in with
   `lib conversation`; golden `conversation1`) drives the guard's ~43 ASK topics (`guard.lamp`,
   subjects carry their `reply` — no table primitive). EXAMINE now targets any `physical` so NPCs are
-  examinable. **Still deferred (Guard, later slices):** GIVE/SHOW + the persuasion state machine
-  (give log/chocolate/pistol → pleased → reveal → alliance), SAY/ANSWER yes/no (loyalty question),
-  the meeting/blowing-up/commando **scenes**, **death-on-detection**, the guard **leading** Galaxy
-  to the levers (NPC actions) + the **commando fight**, and **scoring**.
+  examinable. **Guard persuasion + alliance DONE** (`guard_persuasion.lamp`): new advent **GIVE/SHOW**
+  verbs (golden `give1`); a pleasing action (give/drop pistol, give log, give chocolate) → pleased →
+  removing the disguise fires the **alliance reveal** (sets `self_destruct_pushed`); death-on-detection
+  + greeting; not-for-release `disguise` debug verb. **Still deferred (Guard, later slices):** the
+  SAY/ANSWER free-text paths (assert humanity, loyalty yes/no), the guard **leading** Galaxy to the
+  levers (NPC actions) — so arming still needs the `arm` debug — the **commando fight**, and **scoring**.
   (60KB conversation/persuasion extension) the two-lever self-destruct needs; scoring on solve;
   the handprint-scanner as a real part-object. Also deferred: the helmet's translation effect,
   examine-self disguise variants.

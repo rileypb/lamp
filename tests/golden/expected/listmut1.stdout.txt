@@ -1,7 +1,7 @@
 Room
 A room.
 
-> show
+> dump
 nums = 10, 20, 30 (size 3).
 local last = 9.
 
@@ -11,7 +11,7 @@ set first = 99.
 > undo
 [Previous turn undone.]
 
-> show
+> dump
 nums = 10, 20, 30 (size 3).
 local last = 9.
 

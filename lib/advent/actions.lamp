@@ -319,6 +319,33 @@ check pull:
 report failed pull when self.reason == nothing_happens:
 	print pull_inert:"Nothing obvious happens."
 
+# GIVE / SHOW a thing to someone. Both *fail* by default (most recipients don't react), so the
+# default is a refusal message; a game adds `instead give`/`instead show` rules for recipients
+# that respond (e.g. an NPC that takes a gift). `gift`/`shown` are `direct`, so `it` refers back.
+action give:
+	direct item gift
+	physical recipient
+	syntax:
+		"give [gift] to [recipient]"
+
+check give:
+	stop failed give_declined
+
+report failed give when self.reason == give_declined:
+	print give_declined_msg:"[The act.recipient] [do] not seem interested."
+
+action show:
+	direct item shown
+	physical recipient
+	syntax:
+		"show [shown] to [recipient]"
+
+check show:
+	stop failed show_declined
+
+report failed show when self.reason == show_declined:
+	print show_declined_msg:"[The act.recipient] [are] unimpressed."
+
 # ENTER a thing (Inform's "entering"). advent has no enterable-supporter/vehicle model yet, so
 # the action *fails* by default; a game adds `instead enter` rules for things that can be entered
 # (e.g. a vehicle that moves the actor to an interior room). `target` is `direct`, so `it` refers

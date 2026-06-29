@@ -1,0 +1,13 @@
+Room
+A bare room.
+
+> give coin to bob
+Bob pockets the coin with a nod of thanks.
+
+> give gem to bob
+Bob does not seem interested.
+
+> show gem to bob
+Bob is unimpressed.
+
+> quit

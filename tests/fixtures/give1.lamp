@@ -1,0 +1,29 @@
+# The GIVE / SHOW actions (lib/advent). Both fail by default — most recipients don't react — so
+# the defaults are refusal messages (`give_declined` / `show_declined`); a game adds `instead
+# give` / `instead show` rules for recipients that respond. `gift`/`shown` are `direct`.
+
+lib advent
+
+game Give:
+	start Room
+
+room Room:
+	description "A bare room."
+
+person bob:
+	printed_name "Bob"
+	article proper
+	understand "bob/man"
+	description "An ordinary man."
+
+item coin
+item gem
+
+contains Room bob
+contains yourself coin
+contains yourself gem
+
+instead give when self.recipient == bob and self.gift == coin:
+	print "Bob pockets the coin with a nod of thanks."
+	move coin to bob
+	stop succeeded

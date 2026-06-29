@@ -14,7 +14,7 @@ room Room:
 
 global list<int> deck = none
 
-function string show(list<int> xs):
+function string fmt(list<int> xs):
 	let out = ""
 	for x in xs:
 		out = out + "[x] "
@@ -27,9 +27,9 @@ action mix:
 report mix:
 	deck = [1, 2, 3, 4, 5, 6, 7, 8, 9]
 	shuffle(deck)
-	print "first:  [show(deck)]"
+	print "first:  [fmt(deck)]"
 	shuffle(deck)
-	print "second: [show(deck)]"
+	print "second: [fmt(deck)]"
 	let solo = [42]
 	shuffle(solo)
-	print "solo:   [show(solo)]"
+	print "solo:   [fmt(solo)]"

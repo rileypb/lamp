@@ -1,5 +1,5 @@
-show
+dump
 set 99
 undo
-show
+dump
 quit

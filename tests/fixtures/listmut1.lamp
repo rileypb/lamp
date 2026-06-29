@@ -25,10 +25,10 @@ report setone:
 	let v = nums[0]
 	print "set first = [v]."
 
-action show:
+action dump:
 	syntax:
-		"show"
-report show:
+		"dump"
+report dump:
 	let a = nums[0]
 	let b = nums[1]
 	let c = nums[2]
