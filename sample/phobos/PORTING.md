@@ -57,7 +57,7 @@ descriptions can't be ported verbatim. (Durable note also in agent memory
 | describable/indescribable property (L8) | bool on all objects | **Blocked/minor** — only used by debug code; needs adding a field to a base type |
 | Use MAX_STATIC_DATA / text length (L3, 6) | I6 VM memory tuning | **N/A** — no equivalent needed |
 | Before starting VM / debug-now / RulesOnSub (L53–57) | I6 inline + rule tracing | **N/A** — debug only |
-| NOT FOR RELEASE block (L122–164) | DEBUG flag, debug verbs, mistakes, test scripts | **Deferred** — debug tooling; the `test … with "…"` scripts are a useful porting oracle/walkthrough later |
+| NOT FOR RELEASE block (L122–164) | DEBUG flag, debug verbs, mistakes, test scripts | **Partly done** — the **`test … with "…"` runner is built** (see below); other debug verbs (PURLOIN/SHOWME/GONEAR/…) are in `lib/advent/debug.lamp` + Phobos's `late`/`scanall`/`arm`/`disguise`. The mistakes (`*`) and the faithful puzzle-walkthrough scripts are still to do |
 
 ## Blocked by a missing engine/library feature
 
@@ -187,6 +187,15 @@ question — a separate text-topic mechanism), the guard **leading** Galaxy to t
 (NPC actions) — so the alliance sets `self_destruct_pushed` but arming still needs the levers (the
 `arm` debug verb) — the **commando fight**, and **scoring**. The meeting/blowing-up/commando
 "scenes" are modelled with flags + every-turn rules rather than a general scene abstraction.
+
+**TEST runner (story.ni L159–163's `test … with "…"`): the mechanism is built** (general; in
+`lib/advent/debug.lamp`, see specs.md "Debug: the TEST runner"). `test [name]` queues a
+`test_script`'s `"/"`-joined commands through the real command loop; a script may begin with
+another `test name` (expands in place). Phobos ships demo scripts in its debug file — **`test
+talk`** (disguise → guard → a few ASK topics) and **`test win`** (disguise → give chocolate →
+reveal → arm → fly, reaching the heroic ending in one command). **Deferred:** the *faithful*
+puzzle-walkthrough scripts from story.ni (`test most`/`endgame`/…) need their button sequences
+re-derived for the Lamp port's puzzles (the keypad solutions differ from I7's).
 
 **Reactor Room furniture + arming levers (Base.i7x "Book - Reactor Room"): ported.** The reactor
 control board and the two arming levers (left/right) plus the collective "levers" are scenery

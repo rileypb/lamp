@@ -56,3 +56,16 @@ do disguise:
 
 report disguise:
 	print "Galaxy is now disguised as a Siriusian cyborg."
+
+# --- TEST scripts (run with `test <name>`; see the TEST runner in lib/advent/debug.lamp) -------
+# These drive late-game content via the debug shortcuts above (the faithful puzzle-walkthroughs
+# from story.ni still need their button sequences re-derived for the Lamp port — a follow-up).
+test_script test_talk:
+	printed_name "talk"
+	understand "talk"
+	commands "disguise/gonear guard/x guard/ask guard about mars/ask guard about peace/ask guard about syndicate/ask guard about commander"
+
+test_script test_win:
+	printed_name "win"
+	understand "win"
+	commands "disguise/gonear guard/give chocolate to guard/remove helmet/arm/gonear seat/fly"

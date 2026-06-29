@@ -2,6 +2,10 @@ native function string readline()
 native function string prompt(string s)
 native function void write(string s)
 native function list<string> split(string input)
+# Split on a literal separator string (each piece trimmed; empty pieces dropped). `split`
+# breaks on whitespace; `split_on` breaks on an explicit delimiter (e.g. the "/"-joined test
+# command scripts).
+native function list<string> split_on(string s, string sep)
 native function string to_lower(string input)
 
 # String-character primitives — the building blocks for text algorithms in Lamp.

@@ -1,0 +1,32 @@
+Room
+A small room.
+
+You see a ball here.
+
+> test outer
+> look
+Room
+A small room.
+
+You see a ball here.
+
+(tick 1)
+
+> test inner
+> x ball
+You see nothing unusual about the ball.
+
+(tick 2)
+
+> take ball
+Taken.
+
+(tick 3)
+
+> i
+You are carrying:
+  a ball
+
+(tick 4)
+
+> quit

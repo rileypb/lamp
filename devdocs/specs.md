@@ -2032,6 +2032,19 @@ A game declares one `subject` per topic with its `reply`, and overrides `ask`/`t
 `instead`/`after` rules guarded on `self.topic` (and `self.interlocutor` for per-NPC responses)
 for dynamic reactions. No table primitive is needed — topic data lives on the subject objects.
 
+### Debug: the TEST runner (`lib/advent/debug.lamp`)
+
+A debug feature (in the `not_for_release` debug file, so excluded from `--release` builds), modeled
+on Inform 7's `test NAME with "a/b/c"`. A **`test_script`** holds a `"/"`-joined `commands` string;
+`test [script]` splits it (the general `split_on(s, sep)` sys native) and **queues** the commands
+onto the input stream. The runtime keeps a command queue that `promptLine` drains ahead of host
+input, echoing each line like a typed command — so queued commands flow through the **real**
+command loop and every-turn rules / story checks fire exactly as in normal play. The native
+`queue_commands(list<string>)` inserts at the **front**, so a script that begins with another
+`test NAME` expands that script *in place* (depth-first). `test_script` is a non-`physical` type,
+so the `[script]` slot resolves by name globally (like conversation subjects). Scripts are authored
+in the game's own debug file (e.g. `sample/phobos/lib/phobos/debug.lamp`).
+
 ## Open Questions
 
 - Should the no-shadowing rule extend to top-level `let`-style bindings if locals are ever permitted outside a local context, or remain scoped to local contexts only?

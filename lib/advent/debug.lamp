@@ -85,3 +85,29 @@ action scope:
 report scope:
 	write(scope_listing())
 	write(line_break())
+
+# TEST [name] — run a canned script of commands, one after another, as if typed (modeled on
+# Inform 7's `test NAME with "a/b/c"`). A `test_script` holds its commands as a single "/"-joined
+# string; running it splits them and queues them onto the input stream (queue_commands inserts at
+# the front), so they flow through the real command loop — every-turn rules and story checks fire
+# exactly as in normal play. A script may begin with another `test NAME` command; because queuing
+# is front-insertion, the referenced script expands in place. Author scripts live in the game's own
+# debug file (e.g. sample/phobos/lib/phobos/debug.lamp). `test_script` is not `physical`, so the
+# `[script]` slot resolves by name globally (like conversation subjects); it carries its own
+# `printed_name`/`understand` rather than subtyping `thing`, to avoid the cross-file
+# parent-before-subtype ordering constraint (this debug file loads before advent's `types.lamp`).
+type test_script:
+	string printed_name
+	string understand
+	string commands = ""
+
+native function void queue_commands(list<string> cmds)
+
+action test:
+	out_of_world
+	test_script script
+	syntax:
+		"test [script]"
+
+do test:
+	queue_commands(split_on(self.script.commands, "/"))

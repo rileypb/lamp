@@ -1288,6 +1288,17 @@ function setStatusLine(left, right) {
 let requestLineImpl = null;
 let promptLineImpl = null;
 
+// A queue of pending input lines (used by the debug `test` runner — see lib/advent/debug.lamp).
+// promptLine drains this before reading from the host, echoing each line like a typed command, so
+// queued commands flow through the *real* command loop (every-turn rules, story checks, and all).
+// queueCommands inserts at the FRONT, so a nested `test X` expands in place ahead of the
+// remaining lines of the enclosing script.
+let commandQueue = [];
+
+function queueCommands(items) {
+    commandQueue.unshift(...items);
+}
+
 function setInputChannel(requestLine) {
     requestLineImpl = requestLine;
 }
@@ -1310,6 +1321,15 @@ function readLine() {
 // and echoes the input line in piped/non-TTY mode. Use this instead of
 // write()+readLine() for interactive prompts.
 function promptLine(promptText) {
+    // Drain any queued commands first (the `test` runner), echoing each as if typed so the
+    // transcript reads naturally and the real command loop drives them.
+    if (commandQueue.length > 0) {
+        const queued = commandQueue.shift();
+        streamFlushPending();
+        writeImpl(promptText + queued + "\n");
+        streamNoteInputLine();
+        return queued;
+    }
     if (!promptLineImpl) {
         throw new Error("no prompt channel installed; run the game through the sandbox launcher");
     }
@@ -2268,6 +2288,7 @@ module.exports = {
     flushOutput,
     setPromptChannel,
     promptLine,
+    queueCommands,
     setInputChannel,
     readLine,
     error,

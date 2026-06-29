@@ -1,0 +1,32 @@
+# The debug TEST runner (lib/advent/debug.lamp): `test [script]` runs a `test_script`'s
+# "/"-joined commands one after another, as if typed, through the real command loop — so
+# every-turn rules fire for each (the per-turn "(tick N)" below). A script may start with another
+# `test X`; front-insertion queuing expands it in place (here `test inner` runs between `look`
+# and `i`). The `test` action itself is out-of-world, so it spends no turn.
+
+lib advent
+
+game Test:
+	start Room
+
+room Room:
+	description "A small room."
+
+item ball
+
+contains Room ball
+
+global int ticks = 0
+rule every_turn_rules:
+	ticks = ticks + 1
+	print "(tick [ticks])"
+
+test_script inner_script:
+	printed_name "inner"
+	understand "inner"
+	commands "x ball/take ball"
+
+test_script outer_script:
+	printed_name "outer"
+	understand "outer"
+	commands "look/test inner/i"

@@ -241,8 +241,13 @@ core edit is contained. Names (default): `contains`/`place`/`contained`, keyword
   moved there) are marked. **`--release` threaded DONE:** `exe.js` forwards compile flags
   (e.g. `lantern-exe game.lamp --release`); **Lighthouse `build:web` builds release by
   default** (web bundles are distribution — `--debug` opts back in), so the Pages deploy
-  ships without debug verbs. **Possible next:** richer SHOWME (e.g. relations); a debug-only
-  `RELATIONS`/`RULES` dump.
+  ships without debug verbs. **TEST runner DONE** (I7's `test NAME with "a/b/c"`): a `test_script`
+  holds a `"/"`-joined command string; `test [name]` splits it (`split_on` sys native) and queues
+  the commands through the **real** command loop via a runtime input queue that `promptLine` drains
+  (echoing each; front-insertion so a nested `test name` expands in place) — every-turn rules fire
+  as in normal play. Golden `test1`; Phobos demo scripts `test talk`/`test win`. **Possible next:**
+  the faithful Phobos puzzle-walkthrough scripts (re-derive keypad solutions for the Lamp port);
+  richer SHOWME (e.g. relations); a debug-only `RELATIONS`/`RULES` dump.
 - ~~**Galaxy Suit + power-up (Phobos)**~~ **DONE** (`sample/phobos/lib/phobos/suit.lamp`):
   worn suit, POWER UP/DOWN, and a powered smash. The **ATTACK/HIT/SMASH/PUNCH verb is in
   advent** (any `item`; default declines via `attack_violence`; golden `attack1`); the suit
