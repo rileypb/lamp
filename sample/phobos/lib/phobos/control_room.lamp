@@ -1,12 +1,13 @@
 lib advent
 
-# Control Room button behaviour (Guard.i7x "Book - Control Room", base/no-guard variants).
-# The two big buttons drive the endgame. PUSH is advent's generic item verb (lib/advent/
-# actions.lamp); these `instead push` rules give the launch and self-destruct buttons their
-# responses. Deferred with the Guard and the win sequence: the guard-present overrides (the
-# cyborg's suspicion -> "spy!" -> death-or-suit-deflect) and the self-destruct *payoff* (the
-# reactor arming levers, then the escape by ship) — pushing self-destruct here only starts the
-# sequence and points Galaxy at the reactor.
+# Control Room button behaviour (Guard.i7x "Book - Control Room"). The two big buttons drive the
+# endgame. PUSH is advent's generic item verb (lib/advent/actions.lamp); these `instead push` rules
+# give the launch and self-destruct buttons their responses.
+#
+# Guard-present overrides come FIRST (so they win by source order): while the guard is in the
+# control room and not yet allied — i.e. during the disguised meeting — reaching for either button
+# blows Galaxy's cover and she's shot as a spy (guard_spy_death, in guard_persuasion.lamp). Once the
+# guard has left to lead the arming (or died), these fall through to the no-guard behaviour below.
 
 # Set once the self-destruct button is pushed (the control-room half of the sequence). The
 # reactor levers (deferred) then set `self_destruct_in_progress` (countdown.lamp), which the
@@ -17,6 +18,17 @@ global bool self_destruct_pushed = false
 # instead of the generic win/lose line — the Lamp analogue of I7's `end the story saying "…"`.
 # (Reused by the Guard's death endings later.)
 global string ending_override = ""
+
+# Guard-present spy-death overrides (Guard.i7x). More specific than the no-guard rules below and
+# declared first, so they fire while the guard is present and unallied; otherwise they bow out.
+instead push when self.target == launch_button and holder(guard) == Control_Room and not guard_allied:
+	print "As Galaxy reaches for the launch button, the Siriusian guard looks at her with sudden suspicion and shouts,"
+	guard_spy_death()
+	stop succeeded
+instead push when self.target == self_destruct_button and holder(guard) == Control_Room and not guard_allied:
+	print "As Galaxy reaches for the self-destruct button, the Siriusian guard looks at her with sudden suspicion and shouts,"
+	guard_spy_death()
+	stop succeeded
 
 # Pushing the green Launch button fires the thruster — an immediate loss (Galaxy destroys Mars
 # herself, the worst ending).

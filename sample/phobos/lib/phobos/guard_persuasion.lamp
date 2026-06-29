@@ -72,14 +72,52 @@ function bool is_yes(string t):
 function bool is_no(string t):
 	return t == "no"
 
-# First arrival in the control room: a disguised Galaxy is greeted as a fellow cyborg. (Arriving
-# or uncovering while undisguised is handled by the every-turn detection below.)
+# The Galaxy Suit, powered up, reflects the guard's fire back (Guard.i7x) — on an undisguised
+# arrival or when the spy is caught reaching for a button. The guard dies: the live object is
+# stashed off-screen (as in the commando finale) and the corpse placed. Killing one's would-be ally
+# is a dead end, but the original allows it.
+function void guard_suit_deflect():
+	print "Swiftly, a gun barrel extends from their armor and fires a barrage of disruptor fire."
+	print "The Galaxy Suit, powered up and ready, reflects the fire back at the guard, who goes down with dramatic finality."
+	use_charge()
+	move guard to Reactor_Room
+	move dead_guard to Control_Room
+
+# Caught reaching for a button while still disguised but not yet allied (Guard.i7x): the guard
+# smells a spy. Powered up, the suit saves her (and kills the guard); else she is gunned down and
+# unmasked. Shared by both button overrides (control_room.lamp).
+function void guard_spy_death():
+	g_say("Hey, what are you doing? You're not !NB563FFAA at all! You're a spy!")
+	if powered_up:
+		guard_suit_deflect()
+	else:
+		print "[par]Before Galaxy can react, a gun barrel extends from the guard's armor, and they proceed to blow her to pieces with a hail of disruptor fire.[par]As the life ebbs from Galaxy's body, the guard pulls off her Cyberhelmet, revealing her as human. The guard makes a sound of disgust."
+		g_say("$fooblitsky! I should have known not to hope for a happy ending. Human fool, you have doomed the whole planet Mars to destruction. I hope you are proud of yourself.")
+		ending_override = "Galaxy Jones has been terminated by a Siriusian guard."
+		story = lost
+
+# First arrival in the control room. Disguised, Galaxy is greeted as a fellow cyborg; undisguised,
+# the guard shrieks and opens fire (the suit deflects it if powered up, else death). Reaching the
+# control room normally needs the disguise (the purple door's visual-identity gate), so the
+# undisguised arrival is reachable mainly via the powered suit-smash bypass. Standing undisguised
+# *after* arrival (e.g. uncovering here) is handled by the every-turn detection below.
 after go:
 	if holder(player) == Control_Room and holder(guard) == Control_Room and not met_guard:
 		if wears player cyberhelmet and wears player cybercarapace:
 			met_guard = true
 			print "[par]The guard looks up as Galaxy enters, and makes a gesture of greeting."
 			g_say("Hey, !NB563FFAA, didn't expect to see you here. I thought you were back on the mothership. Anyway, you're just in time. Pretty soon we'll launch this thing and get off this $godforsaken rock. I can't wait to get back to the $effin'n mothership and have some real food. Anything but rations... Say, sorry about the goofy PA messages -- don't tell the commander!")
+		else:
+			met_guard = true
+			print "[par]The guard looks up as Galaxy enters, makes a shriek of alarm, and screams,"
+			g_say("Oh $shit, a human!")
+			if powered_up:
+				guard_suit_deflect()
+			else:
+				print "Before Galaxy can react, a gun barrel extends from the guard's armor, and they proceed to blow her to pieces with a hail of disruptor fire.[par]As the life ebbs from Galaxy's body, the guard looks into her eyes and says,"
+				g_say("I am sorry, human. I did not want to kill you, but I could not know if you were friend or foe. And now I shall never know.")
+				ending_override = "Galaxy Jones has been terminated by a Siriusian guard."
+				story = lost
 
 # The loyalty yes/no is answerable only on the turn right after the log is given (Guard.i7x's
 # loyalty question rule): shift `asked` into `..._last_turn`, then clear it. Runs every turn after

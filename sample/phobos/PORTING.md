@@ -118,9 +118,23 @@ Lamp's capabilities. The checklist below tracks what's left; we work through it 
   linguistics engine already glyphs `$` words (control word, always alien), so they bleep while the
   rest of the now-scanned speech reads English. Also corrected the stale guard_persuasion header
   (guard speech is scan-aware `siriusian()`, not "shown in English"; `!` names + `$` swears stay
-  alien). Golden updated (greeting + right-lever glyphs). *Residual:* `$shit`/`$fooblitsky`/`$rearend`/
-  `$stupid` live in unported speech (the arrival shoot-on-sight, the spy-death button overrides, and
-  the random "goofy" PA broadcasts) — they come with those features.
+  alien). Golden updated (greeting + right-lever glyphs). *Residual:* `$rearend`/`$stupid` remain in
+  the still-unported random "goofy" PA broadcasts. (`$shit`/`$fooblitsky` are now ported — see the
+  guard combat speech below.)
+- [x] **Guard combat speech: shoot-on-sight + spy-death button overrides** (`Guard.i7x`): **DONE.**
+  The two unported combat scenes. **Arrival shoot-on-sight** (`guard_persuasion.lamp` `after go`):
+  entering the control room undisguised, the guard shrieks "Oh `$shit`, a human!" and opens fire —
+  death ("terminated by a Siriusian guard"), or, if the Galaxy Suit is **powered up**, the suit
+  **reflects the fire** and the guard dies. (Reachable by hacking the purple door disguised, then
+  doffing before entering; the every-turn detection still covers uncovering *after* arrival, with
+  its "profoundly startled" variant.) **Spy-death button overrides** (`control_room.lamp`): reaching
+  for the launch or self-destruct button while the guard is present and not yet allied blows Galaxy's
+  cover — "Hey, what are you doing? You're not !NB563FFAA at all! You're a spy!" → death ("`$fooblitsky`!
+  …") or the powered suit-deflect. Shared `guard_suit_deflect`/`guard_spy_death` helpers; the
+  overrides are declared before the no-guard button rules so they win while the guard is present.
+  Golden byte-identical (the walkthrough arrives disguised and never pushes a button with the guard
+  there); all four paths verified in play. *Note:* suit-deflecting one's would-be ally is a dead end
+  (no alliance → can't arm the reactor), as in the original.
 - [ ] **Viewpoint subject: name "Galaxy", not pronoun "She"** (house style / `Third Person
   Narration`): advent's viewpoint substitution (`[We]`/the unqualified adaptive verbs) renders the
   protagonist as the third-person *pronoun* — so a `[We] …` refusal reads "**She** can't reach
@@ -299,8 +313,9 @@ carried by a new `ending_override` global (the Lamp analogue of I7's `end the st
 `end_story_rules` in phobos.lamp prints it when set, else the generic win/lose line — reused by
 the Guard death endings later). **self-destruct** = starts the sequence and sets
 `self_destruct_pushed`, telling Galaxy the reactor's arming levers must be engaged; pushing it
-again reports it is already running. **Deferred:** the guard-present overrides (the cyborg's
-suspicion → "spy!" → death-or-suit-deflect).
+again reports it is already running. The **guard-present overrides** (the cyborg's suspicion →
+"spy!" → death-or-suit-deflect) are now ported too (see "Guard combat speech" in the parity
+checklist above).
 
 **Flight Deck + Siriusian ship (Base.i7x "Book - Flight Deck"): ported.** The flight-deck scenery
 (Stickney Crater, Mars, the static force field), the ship, its interior room `Inside_The_Ship`,

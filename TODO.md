@@ -46,8 +46,10 @@ the guard-leading dialogue is now verbatim (was paraphrased) + the missed reacto
 are caught!" nag. Remaining parity items: custom can't-go/hit/take messages, power/action banners,
 banner placement seam, the remaining examinable in-prose sub-objects (signs/poster), handprint-scanner
 parts, examine-self / X ME, indescribable objects, the bare-word SAY shortcuts (needs a command-rewrite
-hook, below), and the audit passes. (The `$` Siriusian-swear censorship is now restored across ported
-guard speech — greeting/$godforsaken/$effin'n, mothership/$dammit, reactor/$hell.)
+hook, below), the goofy random PA broadcasts (last bit of $-censored speech: $rearend/$stupid), and the
+audit passes. (Now restored/ported: the `$` swear censorship across ported guard speech; and the two
+unported guard combat scenes — arrival shoot-on-sight "Oh $shit, a human!" + powered suit-deflect, and
+the spy-death button overrides "You're a spy!"/$fooblitsky.)
 Smaller: SAY/ANSWER free-text, custom can't-go/hit/take messages, power/action banners, banner
 placement seam, examinable in-prose sub-objects, and a per-extension audit. **Infra DONE:** golden
 discovery now walks one level into subdirs, so `sample/phobos/phobos.lamp` is a golden (`test
