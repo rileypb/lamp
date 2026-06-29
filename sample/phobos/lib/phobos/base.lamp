@@ -110,6 +110,19 @@ room Flight_Deck:
 	outdoors true            # exposed to space: no walls, no ceiling — only sky (backdrops.lamp)
 	description "The platform stands exposed to the blackness above. The expanse of Stickney Crater stretches to the north, and the immense face of Mars dominates the southern sky. A door to the south, [if flight_deck_door.closed]closed[else]open[end if], leads back to the control room."
 
+# The Moon Sled Galaxy arrived on (Base.i7x): scenery at the Passage End, out of fuel so it goes
+# nowhere — its only interactive use is FLY/DRIVE it (flight_deck.lamp), which reports the empty
+# tank. `edificial` (too massive to take).
+item moon_sled:
+	printed_name "Moon Sled"
+	scenery
+	edificial true
+	feels "Feels like polished metal and glass."
+	understand "sled/vehicle"
+	description "A small, one-person vehicle designed for fast short-range travel. It is almost undetectable, making it ideal for stealth missions. It is currently out of fuel, so it can't go anywhere."
+
+contains Passage_End moon_sled
+
 # Door-free connections.
 bidi connects Southern_Spoke west Storeroom
 bidi connects Southern_Spoke north Hub_Junction

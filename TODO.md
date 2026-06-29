@@ -38,10 +38,13 @@ golden `conversation1`), used by the guard for the assert-humanity alliance (no 
 yes/no window (specs.md). **Distracted→shot DONE** (`Guard.i7x`): mid-commando-fight, doing anything
 but ATTACK/SHOOT gets Galaxy shot — a `before any except attack except shoot` action-selector rule
 (the `before` band preempts every other rule regardless of load order), mapping Inform's "doing
-something other than attacking or shooting". Remaining parity items: noun forms of FLY, custom
-can't-go/hit/take messages, power/action banners, banner placement seam, examinable in-prose
-sub-objects, handprint-scanner parts, examine-self / X ME, indescribable objects, the bare-word SAY
-shortcuts (needs a command-rewrite hook, below), and the audit passes.
+something other than attacking or shooting". **Noun forms of FLY DONE** (`Base.i7x`): bare `fly`
+(simply-flying) + a `fly_thing` noun action (`fly`/`drive`/`operate`/`pilot`/`launch [target]`) sharing
+a `fly_the_ship()` helper — "fly/operate ship/panel" launches, the Moon Sled (now a real scenery
+object) is "out of fuel", else "can't fly that". Remaining parity items: custom can't-go/hit/take
+messages, power/action banners, banner placement seam, the remaining examinable in-prose sub-objects
+(signs/poster), handprint-scanner parts, examine-self / X ME, indescribable objects, the bare-word
+SAY shortcuts (needs a command-rewrite hook, below), and the audit passes.
 Smaller: SAY/ANSWER free-text, custom can't-go/hit/take messages, power/action banners, banner
 placement seam, examinable in-prose sub-objects, and a per-extension audit. **Infra DONE:** golden
 discovery now walks one level into subdirs, so `sample/phobos/phobos.lamp` is a golden (`test
@@ -700,6 +703,16 @@ core edit is contained. Names (default): `contains`/`place`/`contained`, keyword
   Locals keep the raw name (no-shadow guarantees no collision). Regression golden
   `multiword_global1` (reassignment + multi-word global field read run at runtime).
   The two `coerceName` imports were added to checker.js/emitter.js.
+- **Optional action slots / unfilled object slot reads as `none`.** An action whose grammar has
+  some syntaxes with a `[target]` slot and some without (an *optional* noun — e.g. one `fly` action
+  serving both "fly" and "fly [ship]") doesn't work today: for the bare syntax the object slot is
+  left unfilled, and an unfilled object slot does **not** compare equal to `none` (so `if self.target
+  == none:` is false and the bare case falls through). Found porting Phobos FLY — worked around by
+  splitting into two actions (`fly` + `fly_thing`) distinguished by arity. Make an unfilled object
+  slot read as `none` (and/or allow a slot default like `physical target = none`), so optional-slot
+  actions are expressible as one action. Verify against the primitive-slot path (`int`/`string` slots
+  already backfill zeros). **Where:** `src/lamplighter/index.js` (`resolveSlots` / slot defaulting),
+  specs.md (action slots).
 - **Command-rewrite hook (I7's "after reading a command").** Inform lets a game rewrite the raw
   player input before parsing — Phobos uses it so bare "human"/"i'm human" become "say I am human",
   and the loyalty answer can be a bare "yes"/"no". Lamp has no such seam: `run_command(line, actor)`

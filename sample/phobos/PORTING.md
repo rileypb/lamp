@@ -84,8 +84,18 @@ Lamp's capabilities. The checklist below tracks what's left; we work through it 
   commandos." Replaced the old `instead go` "can't turn her back" placeholder. (Slightly stricter
   than I7's specificity-ordered `instead`, where a few noun-specific rules would slip through — this
   matches the do-or-die intent and is order-robust.) Verified in play; golden win path unchanged.
-- [ ] **Noun forms of FLY** ("fly ship" / "operate panel") and the ship-flying/simply-flying split
-  (`Base.i7x`).
+- [x] **Noun forms of FLY** ("fly ship" / "operate panel") and the ship-flying/simply-flying split
+  (`Base.i7x`): **DONE.** The original's three flying actions (generic `flying`, `ship-flying`,
+  `simply-flying`, separated by I7 grammar specificity) become two Lamp actions sharing the flight
+  logic via `fly_the_ship()`: bare **`fly`** (+ launch/blast off/lift off/pilot/start/ride/engage —
+  *simply-flying*: inside the ship or on the flight deck tries the ship, else "What should Galaxy
+  fly?"), and **`fly_thing`** taking a noun (`fly`/`drive`/`pilot`/`operate`/`start`/`ride`/`launch
+  [target]` — *ship-flying*+*flying* merged): the **ship or its control panel** flies it ("operate
+  panel" inside → launch), the **Moon Sled** is "out of fuel", anything else "can't fly that". Two
+  actions (not one with an optional slot) because an **unfilled object slot doesn't read as `none`**
+  (gotcha recorded in TODO.md). This also ported the **Moon Sled** as a real scenery object at the
+  Passage End (description, `feels`, `edificial` — Base.i7x), so X/DRIVE/TAKE MOON SLED all work.
+  Win/loss logic unchanged (golden win path byte-identical); the noun forms verified in play.
 - [ ] **`blowing up the base` scene flavour** (`Guard.i7x`): audit the guard-leading lines against
   the original for any missed beckons/variants.
 

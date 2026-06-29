@@ -6,9 +6,12 @@ lib advent
 # ship objects + interior room live in base.lamp; the win-enabling `self_destruct_in_progress`
 # lives in countdown.lamp (set by the guard-driven lever arming, deferred).
 #
-# Deferred (port slice): the commandos Galaxy can carry to safety (+ their scoring), the
-# `blowing up the base` scene's extra flavour, and noun forms of FLY ("fly ship" / "operate
-# panel") — FLY is the bare verb, used from inside the ship.
+# FLY comes in three grammatical shapes, mirroring Base.i7x's three actions, all routed through
+# `fly_the_ship()` here: the bare verb (I7 *simply-flying* — "fly"/"launch"/"blast off"), the ship
+# noun form (I7 *ship-flying* — "fly/operate/pilot the ship", "operate the panel"), and the generic
+# "fly [anything else]" (I7 *flying* — the Moon Sled is out of fuel; everything else "can't fly
+# that"). One Lamp action with an optional `[target]` slot covers all three: bare syntaxes leave
+# `target` unset (none), the noun syntaxes fill it, and `do fly` branches.
 
 # Entering the ship moves Galaxy into the interior (which auto-describes on arrival).
 instead enter when self.target == siriusian_ship:
@@ -20,23 +23,13 @@ instead take when self.target == siriusian_ship:
 	print "The ship is far too large to carry."
 	stop failed
 
-action fly:
-	syntax:
-		"fly"
-		"launch"
-		"blast off"
-		"blastoff"
-		"lift off"
-		"liftoff"
-		"take off"
-		"takeoff"
-		"engage"
-		"pilot"
-		"start"
-		"ride"
-
-do fly:
-	if holder(player) == Inside_The_Ship:
+# The escape itself: only from the pilot's seat inside the ship. Off the seat (e.g. standing on the
+# flight deck) it just reminds Galaxy to get inside. Win once the self-destruct is armed, else the
+# loss (she flees but Phobos still hits Mars).
+function void fly_the_ship():
+	if not (holder(player) == Inside_The_Ship):
+		print "Galaxy Jones needs to be inside the ship to fly it."
+	else:
 		if self_destruct_in_progress:
 			# Count the unconscious commandos Galaxy got into the ship (carried in, or laid in a
 			# seat). Each is worth a point at lift-off, on top of the launch itself.
@@ -66,8 +59,50 @@ do fly:
 			print "All Galaxy can do at this point is to try to get away from the base before Phobos flies into Mars. She jumps into the pilot's seat and begins lift-off procedures. Within moments, the ship blasts out of the base and into space.[par]Not much later, Phobos begins to move towards Mars..."
 			ending_override = "Mars has been destroyed by the Sirius Syndicate."
 			story = lost
+
+# Bare FLY (I7 simply-flying): inside the ship or on the flight deck it tries the ship; anywhere
+# else there's nothing to fly. (A separate `fly_thing` action below takes a noun — an unfilled
+# object slot doesn't read as none, so the two grammatical shapes are two actions, distinguished by
+# arity: "fly" -> here, "fly <thing>" -> fly_thing.)
+action fly:
+	syntax:
+		"fly"
+		"launch"
+		"blast off"
+		"blastoff"
+		"lift off"
+		"liftoff"
+		"take off"
+		"takeoff"
+		"engage"
+		"pilot"
+		"start"
+		"ride"
+
+do fly:
+	if holder(player) == Inside_The_Ship or holder(player) == Flight_Deck:
+		fly_the_ship()
 	else:
-		if holder(player) == Flight_Deck:
-			print "Galaxy Jones needs to be inside the ship to fly it."
+		print "What should Galaxy fly?"
+
+# FLY/DRIVE/OPERATE <thing> (I7 ship-flying + flying merged): the ship or its control panel flies
+# it; the Moon Sled is out of fuel; nothing else is flyable.
+action fly_thing:
+	direct physical target
+	syntax:
+		"fly [target]"
+		"drive [target]"
+		"pilot [target]"
+		"operate [target]"
+		"start [target]"
+		"ride [target]"
+		"launch [target]"
+
+do fly_thing:
+	if self.target == siriusian_ship or self.target == ship_control_panel:
+		fly_the_ship()
+	else:
+		if self.target == moon_sled:
+			print "The Moon Sled is out of fuel. Galaxy can't fly it anywhere."
 		else:
-			print "What should Galaxy fly?"
+			print "Galaxy can't fly that."
