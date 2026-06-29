@@ -406,10 +406,12 @@ core edit is contained. Names (default): `contains`/`place`/`contained`, keyword
   word-final possessives; the form alone carries a physical description shown before its
   content. **All room descriptions DONE** (Base.i7x, in `base.lamp`): static
   `[siriusian("…")]` signage + `[if <door>.closed]` state; the North Barracks `cabinet` added
-  so its conditional resolves. **Remaining:** **scan-aware Siriusian labels** — room/door
-  labels are static-alien today and never translate; making them respond to `scan_levels`
-  (like document content) needs a string-returning translate function and would also convert
-  the Passage End door label off `siriusian()`. Also: the remaining in-prose sub-objects (signs,
+  so its conditional resolves. **Scan-aware Siriusian labels DONE:** `siriusian("…")` now runs the
+  same per-word filter the documents use (extracted into a string-returning `translate(text, levels)`,
+  shared by `print_translated` and `siriusian`, against the global `scan_levels`), so signs/labels
+  translate word-by-word as Galaxy scans (the blue keypad's digit glyphs use the raw `siriusian_word`
+  to stay alien — that's the puzzle; all-alien labels stay byte-identical in plain transcripts).
+  **Remaining:** the remaining in-prose sub-objects (signs,
   poster, reactor levers) as examinable objects; the `obscure`/`revealed` real-name swap. (The
   log's control-code reveal is done — purple-door slice 2. The **Control Room furniture** —
   central control panel, screens, chair, launch/self-destruct buttons — is now ported as

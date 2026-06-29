@@ -110,10 +110,16 @@ Commander's Quarters, and now the Control Room via their puzzles — the purple 
 is ported; the Flight Deck lies beyond the Control Room's still-unported door) all have
 descriptions in place.
 
-**Deferred (room-description follow-ups):** **scan-aware Siriusian labels** — today the
-labels are static-alien and never translate; making them respond to scan level (like the
-diary content) needs a string-returning translate function and would also convert the
-Passage End door label off `siriusian()`. The remaining in-prose **sub-objects** (door/west/store
+**Scan-aware Siriusian labels: DONE.** `siriusian("…")` is now scan-aware — the per-word filter
+the documents use was extracted into a string-returning `translate(text, levels)`, and both
+`print_translated` (documents) and `siriusian` (inline signs/labels) call it against the global
+`scan_levels`. So every sign, door label, and serial reads progressively: a word turns to English
+once its tier is scanned (proper-noun/control words `!`/`$` stay alien). Text that must stay alien
+regardless — the blue keypad's digit glyphs — calls the raw `siriusian_word` directly. In a plain
+(non-TTY) transcript the `fixed()`/`bold()` styling drops, so an all-alien label is byte-identical
+to before (verified: the Passage End label still renders unchanged at the start).
+
+**Deferred (room-description follow-ups):** The remaining in-prose **sub-objects** (door/west/store
 signs, the poster, the reactor levers) are mentioned in description text but not yet declared
 as examinable objects. (The sign-out form, the Cyberhelmet, and now the **Control Room
 furniture** — central control panel, screens, chair, launch/self-destruct buttons — are real

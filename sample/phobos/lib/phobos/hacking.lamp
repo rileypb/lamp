@@ -259,8 +259,10 @@ global list<int> number_order = none
 
 # The Siriusian glyph for a single digit 1-9 (reuses the display cipher, so it stays
 # consistent with the rest of the game's alien script).
+# The blue keypad's digit labels stay alien regardless of scan progress (decoding them IS the
+# puzzle), so use the raw `siriusian_word` cipher rather than the now scan-aware `siriusian`.
 function string glyph_for(int d):
-	let glyphs = [siriusian("1"), siriusian("2"), siriusian("3"), siriusian("4"), siriusian("5"), siriusian("6"), siriusian("7"), siriusian("8"), siriusian("9")]
+	let glyphs = [siriusian_word("1"), siriusian_word("2"), siriusian_word("3"), siriusian_word("4"), siriusian_word("5"), siriusian_word("6"), siriusian_word("7"), siriusian_word("8"), siriusian_word("9")]
 	return glyphs[d - 1]
 
 # Shuffle the nine digit labels into a random order (lib/sys `shuffle`). Reshuffle if it

@@ -54,13 +54,13 @@ function string siriusian_word(string word):
 				out = char_at(siriusian_glyphs, n - 97) + out
 	return out
 
-# Render an English phrase as fully-untranslated Siriusian: cipher each word and
-# concatenate with no separators. Used in descriptions as [siriusian("...")].
+# Signs and labels read like any other Siriusian text: they translate progressively as Galaxy
+# scans documents. `[siriusian("…")]` in a description runs the phrase through the same per-word
+# filter the documents use (against the global `scan_levels`), so a word turns to English once its
+# tier is scanned, and proper-noun/control words (!/$) stay alien. (For text that must stay alien
+# regardless — e.g. the blue keypad's digit glyphs — call the raw `siriusian_word` directly.)
 function string siriusian(string text):
-	let out = ""
-	for w in split(text):
-		out = out + siriusian_word(w)
-	return out
+	return translate(text, scan_levels)
 
 # A word's difficulty tier. !/$/# prefixes are proper-noun/control tiers (15/16/20,
 # outside the 1-5 scan range); every other word hashes to 1-5 by char-sum mod 5.
@@ -79,13 +79,13 @@ function int token_difficulty(string word):
 		sum = sum + code_at(s, i)
 	return sum mod 5 + 1
 
-# Render an item's `content` at the current scan state and print it. English words are
-# bold; untranslated runs are fixed-width Siriusian and run together (no separating
-# spaces); `last_siriusian` inserts the space when the stream switches back to English.
-# `/` is a paragraph break, `*`-prefixed tokens are literal. Built as one string and
-# emitted via write() (no per-sentence auto-break), so only `/` breaks the prose.
-function void print_translated(item x, list<bool> levels):
-	let tokens = split(x.content)
+# Render an English phrase at the current scan state, returning the styled string. English words
+# are bold; untranslated runs are fixed-width Siriusian and run together (no separating spaces);
+# `last_siriusian` inserts the space when the stream switches back to English. `/` is a paragraph
+# break, `*`-prefixed tokens are literal. Shared by document content (`print_translated`) and
+# inline signs/labels (`siriusian`).
+function string translate(string text, list<bool> levels):
+	let tokens = split(text)
 	let len = tokens.size
 	let num_levels = 0
 	for b in levels:
@@ -130,7 +130,12 @@ function void print_translated(item x, list<bool> levels):
 					else:
 						out = out + fixed(glyph)
 						last_siriusian = true
-	write(out)
+	return out
+
+# Render an item's `content` at the current scan state and print it (no per-sentence auto-break,
+# so only `/` breaks the prose).
+function void print_translated(item x, list<bool> levels):
+	write(translate(x.content, levels))
 	write(line_break())
 
 # The tool that does the translating. Galaxy carries it from the start.
