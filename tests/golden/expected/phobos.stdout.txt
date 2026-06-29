@@ -1,0 +1,747 @@
+Phobos
+A Looming Disaster by Phil Riley
+Version 0 dev
+
+Phobos, 2245.
+
+Something -- just a fraction of a speck -- detaches itself from the great bulk of Mars and speeds towards Phobos. Anyone on that moon watching Mars would miss it. Unless they were looking for it, of course. 
+
+Which they're not. But we get ahead of ourselves.
+
+Let's get back to the speck: it's Galaxy Jones, on a race to stop the destruction of Mars. And someone is indeed not looking for her: the alien cyborgs of the Sirius Syndicate. And we're ahead of ourselves again. Let's just let Beck tell it, shall we?
+
+Three hours earlier: Galaxy's handler Beck briefs her at Galaxy Base. "Jones, we have credible intelligence that the Syndicate has nearly completed converting Phobos into a giant missile. Already they have finished turning Stickney Crater into a massive thruster, and it's only a matter of hours before the moon lines up properly to assault the Martian surface. We have detected a series of tunnels leading under the crater, which we believe will allow access to their base. We need you to get in there, break into the base, and find a way to stop them. Fortunately, most of the Syndicate cyborgs should be off the moon by now.
+
+"You should take the Moon Sled. It's small enough that you'll be mistaken for a harmless asteroid, so you'll be able to get right up in their base without them noticing. They won't be looking for something that small." (Told you.) 
+
+Anyway, he continues:
+
+"We'll have to do this on radio silence, so I won't be able to help you out when you're on the moon. You should take a look at your equipment as we've made some upgrades and you'll want to know what they do.
+
+"And Galaxy -- don't kill anyone unnecessarily. Save who you can."
+
+Back to the present: close to Stickney Crater, it's evident what the Syndicate has been up to. While still natural-looking at a distance, at close range one can clearly see that the crater's bottom has been converted into massive doors, ready to open when the thruster is activated.
+
+The Moon Sled dives for the surface, autopilot nimbly navigating a miniscule opening just beyond the crater. Within, it winds through a series of tunnels, finally landing just inside the base's atmospheric containment field, next to a security door. And not a moment too soon -- the Sled is out of fuel.
+
+The Moon Sled's hatch opens, and out steps a tall, athletic woman in a black jumpsuit: Galaxy Jones.
+
+Galaxy is in the passage end. South of here a maze of passages leads back to the surface. But it is north that Galaxy must go, into the heart of the base, to stop the Siriusian plot to destroy Mars. The Moon Sled is parked here, out of fuel. A heavy green door to the north is labeled "ſĺĺļĿŀĹıŧĹŁĽ". The door is closed.
+
+> test endgame
+> test most
+> hack door
+Galaxy attaches the KIM to the green door. The door's lock is a simple one, and the KIM quickly bypasses it without manual intervention. The door opens, revealing a corridor north.
+
+Galaxy retrieves the KIM.
+
+_________      __                     _____                     
+__/ ____/___ _/ /___ __  ____  __     __/ /___  ____  ___  _____
+_/ / __/ __ `/ / __ `/ |/ / / / /____ _/ / __ \/ __ \/ _ \/ ___/
+/ /_/ / /_/ / / /_/ />  </ /_/ / _/ /_/ / /_/ / / / /  __(__  ) 
+\____/\__,_/_/\__,_/_/|_|\__, /  _\____/\____/_/ /_/\___/____/  
+_____________________________/                                  
+
+[Your score has just gone up by one point.]
+
+> n
+Galaxy is in the southern spoke. This is a nondescript hallway. An opening to the west is labeled "ΐŧĹĹĻ". The hallway continues north and south.
+
+The PA system crackles to life, and a voice says, "ĹĺĹ."
+
+> w
+Galaxy is in a storeroom. Apparently the previous occupants have cleared out. There is a sign on the wall that reads "ĹĿŀŀĻſŧĺĿĹĿŧĻłĻſΐŀıĹЃĹĻĽĿĿĺ."
+
+The exit is to the east.
+
+A form hangs on the wall beneath the sign.
+
+"łĺĹ."
+
+> take form
+Taken.
+
+"ŁĺĹ."
+
+> scan form
+The Linguistic Module scans the text, augmenting its model of the language. It can translate more accurately now — the scanned text should read more clearly.
+
+"ŀĺĹ."
+
+> read form
+It's a form attached to the wall. The top line reads "ĺſΐĿĿŁ". The rest of the form is a lot of Siriusian scribbles of what look like minor bureaucratic details. It reads in part:
+
+ĻſΐŀıĺſΐĿĿŁ
+
+ŁĽŁĽĻſΐŀı
+
+<ŁłĹ><ľīĽĽłĿ> 34256 ĺ feet ŀŧŀĹĻĽĹ
+
+<ľĺīŁ><ĺŁŁī>ĺŁľŀĿſłł drill 
+
+<ĿŀĻ><ľīĽĽłĿ>ĽłľŀĿŀĽĺļīŧĿĹſĺ
+
+<Ľıŀ><ĺŁŁī>ľłľŀĿŧŁŧıĹ
+
+<ľĺīŁ><ĺŁŁī>ĿłľŀĿ new ſłł drill 
+
+<ſŧĹĻł><īĺΐł>ĹłľŀĿĿľł polisher 
+
+<ľĺīŁ><ĺŁŁī>ĺłľŀĿſłł drill ŀĹĿ
+
+"ĿĺĹ."
+
+> e
+Galaxy is in the southern spoke. This is a nondescript hallway. An opening to the west is labeled "ΐŧĹĹĻ". The hallway continues north and south.
+
+"ľĺĹ."
+
+> n
+Galaxy is in the hub junction. Three indistinguishable corridors lead off from here. The western one is labeled "Science", the southern one, "ĺļīĹ", and the eastern one, "Ѓļſĺļ". A purple door labeled "ŁΐĹΐ Room" stands closed to the north.
+
+"ĽĺĹ."
+
+> e
+Galaxy is in the eastern spoke. This is a nondescript hallway. An opening to the north is labeled "ĹĹıŁĺ", one to the south is labeled "ĹĹıŁĻ", and the blue door at the east end of the hallway is labeled "ļЃľīŧıĹĻıĻ". It is closed.
+
+"ļĺĹ."
+
+> n
+Galaxy is in the north barracks. Like most of the base, it's been cleared out, although someone left behind a poster on the wall showing some happy cyborgs. There is a cabinet against the wall next to the sleeping pods. It is closed.
+
+The exit is to the south.
+
+"ĻĹĹ."
+
+> open cabinet
+She opens the cabinet, revealing a Cyberhelmet.
+
+"ĺĹĹ."
+
+> take helmet
+Taken.
+
+"ĹĹĹ."
+
+> wear helmet
+Upon putting on the Cyberhelmet, Galaxy feels her mind expand. Something about her hearing is different than before.
+
+"776."
+
+> s
+Galaxy is in the eastern spoke. This is a nondescript hallway. An opening to the north is labeled "ĹĹıŁĺ", one to the south is labeled "ĹĹıŁĻ", and the blue door at the east end of the hallway is labeled "ļЃľīŧıĹĻıĻ". It is closed.
+
+"775."
+
+> s
+Galaxy is in the south barracks. Like most of the base, it's been cleared out. By one of the sleeping pods stands what could only be a storage locker, which is closed. The exit is to the north.
+
+"774."
+
+> hack locker
+Galaxy attaches the KIM to the locker.
+
+[1]<2><3>[4]
+[] = red, <> = blue
+
+Galaxy mutters to herself. "Some already lit. What do I press? 1? 2?"
+
+"773."
+
+> press 1
+Galaxy presses button 1. Button 1 turns blue.
+
+<1><2><3>[4]
+[] = red, <> = blue
+
+"772."
+
+> press 4
+Galaxy presses button 4. Button 4 turns blue.
+
+As the final button lights up blue, the locker swings open, revealing a diary. Galaxy retrieves the KIM.
+
+_________      __                     _____                     
+__/ ____/___ _/ /___ __  ____  __     __/ /___  ____  ___  _____
+_/ / __/ __ `/ / __ `/ |/ / / / /____ _/ / __ \/ __ \/ _ \/ ___/
+/ /_/ / /_/ / / /_/ />  </ /_/ / _/ /_/ / /_/ / / / /  __(__  ) 
+\____/\__,_/_/\__,_/_/|_|\__, /  _\____/\____/_/ /_/\___/____/  
+_____________________________/                                  
+
+[Your score has just gone up by one point.]
+
+"771."
+
+> take diary
+Taken.
+
+"770."
+
+> scan diary
+The Linguistic Module scans the text, augmenting its model of the language. It can translate more accurately now — the scanned text should read more clearly.
+
+"769."
+
+> n
+Galaxy is in the eastern spoke. This is a nondescript hallway. An opening to the north is labeled "Barracks ĺ", one to the south is labeled "Barracks Ļ", and the blue door at the east end of the hallway is labeled "ļЃľīŧıĹĻıĻ". It is closed.
+
+"768."
+
+> hack blue door
+Galaxy attaches the KIM to the blue door.
+
+[ ľ ][ Ľ ][ Ŀ ][ ŀ ][ Ł ][ ł ][ Ĺ ][ ĺ ][ Ļ ]
+  1    2    3    4    5    6    7    8    9  
+[] = red, <> = blue
+
+Galaxy studies the scrambled symbols. "These want sorting, I think."
+
+"767."
+
+> press 1
+Galaxy presses button 1. Button 1 turns blue. 
+
+< ľ >[ Ľ ][ Ŀ ][ ŀ ][ Ł ][ ł ][ Ĺ ][ ĺ ][ Ļ ]
+  1    2    3    4    5    6    7    8    9  
+[] = red, <> = blue
+
+"766."
+
+> press 2
+Galaxy presses button 2. Button 2 turns blue. The labels on the two blue buttons swap places, and the buttons revert to red.
+
+As the final symbols switch places, the blue door to the east swings open! Galaxy retrieves the KIM.
+
+_________      __                     _____                     
+__/ ____/___ _/ /___ __  ____  __     __/ /___  ____  ___  _____
+_/ / __/ __ `/ / __ `/ |/ / / / /____ _/ / __ \/ __ \/ _ \/ ___/
+/ /_/ / /_/ / / /_/ />  </ /_/ / _/ /_/ / /_/ / / / /  __(__  ) 
+\____/\__,_/_/\__,_/_/|_|\__, /  _\____/\____/_/ /_/\___/____/  
+_____________________________/                                  
+
+[Your score has just gone up by one point.]
+
+"765."
+
+> e
+Galaxy is in the commander's quarters. Like everywhere else on the base, it is mostly cleared out. A blue door, open, is to the west.
+
+Discarded on the floor, as if by accident, is the commander's log.
+
+"764."
+
+> take log
+Taken.
+
+"763."
+
+> scan log
+The Linguistic Module scans the text, augmenting its model of the language. It can translate more accurately now — the scanned text should read more clearly.
+
+"762."
+
+> read log
+Commander's Log, 34269 
+
+<ĺłīŁłΐ> continues Ŀ be ĺ problem. I īŧſ them completely, but their ŀĻŀłĹŧΐĿŀĽ can ıĹłĹĽłŧĺſĿĿ sap their will. I spoke with them today ĿĿ I ĺĻľĺ I ĺļ have łıЃ through Ŀ them. ŁЃ assigned them Ŀ take Ŀľļ watch ĹЃĹ launch, which Ļĺ surely ľŁĻŀЃĺıĽľŁłľ but which I ŁŁĻĺ will come Ŀ understand is my ĺīĹĺŀ faith in them Ѓĺ soldier. 
+
+ĿĿ my penance. ĺļĻĺ never ŀĻ out ŧĺ I am the ŀĿ who ordered the Ļīłŀ<ĺĺĽĹľļ>Ļĺĺļ be loyal Ŀ the ıļĻļŁ but ľĹŀΐ has its limits. 
+
+We can't be ŁŁ with this ŀŁĺĽĺЃ Spending this much time in the Ĺľĺı rats' home ŁıĽ makes me ľŁĺıĽ Let's ŁĻ Mars out ŀļĺļĺĿĿĿ get out ŀ here. 
+
+ŧŧļīſŁŧĹŀŀĻĹĺĺĻĽΐłłıΐĹΐĺ
+
+"761."
+
+> w
+Galaxy is in the eastern spoke. This is a nondescript hallway. An opening to the north is labeled "Barracks ĺ", one to the south is labeled "Barracks Ļ", and the blue door at the east end of the hallway is labeled "Commander's ĹĻıĻ". It is open.
+
+"760."
+
+> w
+Galaxy is in the hub junction. Three indistinguishable corridors lead off from here. The western one is labeled "Science", the southern one, "ĺļīĹ", and the eastern one, "Ѓļſĺļ". A purple door labeled "Control Room" stands closed to the north.
+
+"759."
+
+> w
+Galaxy is in the western spoke. This is a nondescript hallway. An opening to the north is labeled "Science". The red door to the south (closed) is labeled "Armory", and the yellow door at the west end of the hallway is labeled "īΐłĺ Room". It is closed.
+
+"758."
+
+> n
+Galaxy is in the science lab. Since it's cleaned out, this identification is based purely on the antiseptic nature of the place -- white tile floor, walls, and counters. The exit is to the south.
+
+Someone has left behind a science notebook on one of the counters.
+
+"757."
+
+> take notebook
+Taken.
+
+"756."
+
+> scan notebook
+The Linguistic Module scans the text, augmenting its model of the language. It can translate more accurately now — the scanned text should read more clearly.
+
+"755."
+
+> read notebook
+Mission ĺļ 13 -- Measurements ĻŁĿΐ the target (Mars) is some ĻΐĺĿ away from the proposed missile, Phobos, łĹĿĿľŀŀ some sort ŀ propulsion ĺłĹľ We are relaying our new requirements to Syndicate ĺł
+
+Mission ĺļ 14 -- HQ ĹΐŧĻŧĺ we may need to construct a fusion ĺſĹĻ We are currently assessing the łĽſĻļľŀ this approach, first by asking HQ what a fusion reactor is. 
+
+Mission ĺļ 17 -- Fusion reactor it is, I guess. We will need to wait several ŧľł while HQ ships the ŀĹĺļļ components and people who know something about nuclear physics. In the ĻĿΐĻ we are working on the control center chair ıЃľĺ as well as having a lively ĹĿĹ about the īЃЃŀ the Launch and Self-Destruct buttons.
+
+"754."
+
+> s
+Galaxy is in the western spoke. This is a nondescript hallway. An opening to the north is labeled "Science". The red door to the south (closed) is labeled "Armory", and the yellow door at the west end of the hallway is labeled "Reactor Room". It is closed.
+
+"753."
+
+> hack yellow door
+Galaxy attaches the KIM to the yellow door.
+
+[1][2][3][4][5][6][7][8][9]
+[] = red, <> = blue
+
+Galaxy mutters to herself. "Never seen a hacking interface like this before. What do I press? 1? 2?"
+
+"752."
+
+> press 2
+Galaxy presses button 2.
+
+[1]<2><3>[4][5][6][7][8][9]
+[] = red, <> = blue
+
+"751."
+
+> press 3
+Galaxy presses button 3.
+
+[1]<2>[3]<4>[5][6][7][8][9]
+[] = red, <> = blue
+
+"750."
+
+> press 5
+Galaxy presses button 5.
+
+[1]<2>[3]<4><5><6>[7][8][9]
+[] = red, <> = blue
+
+"749."
+
+> press 7
+Galaxy presses button 7.
+
+[1]<2>[3]<4><5><6><7><8>[9]
+[] = red, <> = blue
+
+"748."
+
+> press 9
+Galaxy presses button 9.
+
+<1><2><3><4><5><6><7><8><9>
+[] = red, <> = blue
+
+As the final button lights up blue, the yellow door to the west swings open! Galaxy retrieves the KIM.
+
+_________      __                     _____                     
+__/ ____/___ _/ /___ __  ____  __     __/ /___  ____  ___  _____
+_/ / __/ __ `/ / __ `/ |/ / / / /____ _/ / __ \/ __ \/ _ \/ ___/
+/ /_/ / /_/ / / /_/ />  </ /_/ / _/ /_/ / /_/ / / / /  __(__  ) 
+\____/\__,_/_/\__,_/_/|_|\__, /  _\____/\____/_/ /_/\___/____/  
+_____________________________/                                  
+
+[Your score has just gone up by one point.]
+
+"747."
+
+> w
+Galaxy is in the reactor room. Unlike the rest of the rooms on the base, this one is still functioning. The actual reactor is not in this room, but beyond the far wall and its enormous control board. Two levers bookend the control board, too far apart for one person to pull at once. A yellow security door stands open to the east.
+
+A manual for the reactor control board rests on the control board. It is titled "Reactor Control ŀĹĿ".
+
+"746."
+
+> take manual
+Taken.
+
+"745."
+
+> scan manual
+The Linguistic Module scans the text, augmenting its model of the language. It can translate more accurately now — the scanned text should read more clearly.
+
+"744."
+
+> read manual
+Reactor Manual page 122 -- Reactor Self-Destruct Confirmation Phase 
+
+Upon the activation of the reactor self-destruct from the central control room, the reactor will enter a confirmation phase. During this phase, both arming levers must be pulled simultaneously to confirm the self-destruct. Note that one cyborg alone cannot activate the self-destruct, as the levers are too far apart.
+
+"743."
+
+> e
+Galaxy is in the western spoke. This is a nondescript hallway. An opening to the north is labeled "Science". The red door to the south (closed) is labeled "Armory", and the yellow door at the west end of the hallway is labeled "Reactor Room". It is open.
+
+"742."
+
+> hack red door
+Galaxy attaches the KIM to the red door.
+
+[1][2][3][4][5]<6>[7][8][9]
+[] = red, <> = blue
+
+Galaxy frowns. "One's already lit. That's new."
+
+"741."
+
+> press 1
+Galaxy presses button 1.
+
+<1>[2][3][4][5]<6>[7][8][9]
+[] = red, <> = blue
+
+"740."
+
+> press 2
+Galaxy presses button 2.
+
+[1][2]<3>[4]<5><6><7>[8]<9>
+[] = red, <> = blue
+
+"739."
+
+> press 3
+Galaxy presses button 3.
+
+<1><2><3><4>[5]<6>[7]<8><9>
+[] = red, <> = blue
+
+"738."
+
+> press 5
+Galaxy presses button 5.
+
+[1][2][3][4][5][6]<7>[8][9]
+[] = red, <> = blue
+
+"737."
+
+> press 7
+Galaxy presses button 7.
+
+<1><2><3><4><5><6><7><8><9>
+[] = red, <> = blue
+
+As the final button lights up blue, the red door to the south swings open! Galaxy retrieves the KIM.
+
+_________      __                     _____                     
+__/ ____/___ _/ /___ __  ____  __     __/ /___  ____  ___  _____
+_/ / __/ __ `/ / __ `/ |/ / / / /____ _/ / __ \/ __ \/ _ \/ ___/
+/ /_/ / /_/ / / /_/ />  </ /_/ / _/ /_/ / /_/ / / / /  __(__  ) 
+\____/\__,_/_/\__,_/_/|_|\__, /  _\____/\____/_/ /_/\___/____/  
+_____________________________/                                  
+
+[Your score has just gone up by one point.]
+
+"736."
+
+> s
+Galaxy is in an armory. This is evidently where the base kept weapons and armor. A red door, open, stands to the north.
+
+The sole remaining piece of equipment is a Cybercarapace.
+
+"735."
+
+> take carapace
+Taken.
+
+"734."
+
+> wear carapace
+Galaxy puts on the Cybercarapace.
+She is now disguised as a Siriusian cyborg.
+
+"733."
+
+> n
+Galaxy is in the western spoke. This is a nondescript hallway. An opening to the north is labeled "Science". The red door to the south (open) is labeled "Armory", and the yellow door at the west end of the hallway is labeled "Reactor Room". It is open.
+
+"732."
+
+> e
+Galaxy is in the hub junction. Three indistinguishable corridors lead off from here. The western one is labeled "Science", the southern one, "Storage", and the eastern one, "Personnel". A purple door labeled "Control Room" stands closed to the north.
+
+"731."
+
+> hack purple door
+The purple door beeps, and a voice says, "Visual identity confirmed."
+
+Galaxy attaches the KIM to the purple handprint scanner.
+
+[1 Ĺ][2 ĺ][3 Ļ][4 ļ][5 Ľ][6 ľ][7 Ŀ][8 ŀ][9 Ł][10 ł][11 Ѓ][12 ΐ][13 ſ][14 ŧ][15 ī][16 ı]
+[] = red, <> = blue
+
+Sixteen buttons, all dark. "Light the right five," Galaxy murmurs.
+
+"730."
+
+> press 1
+Galaxy presses button 1. Button 1 turns blue.
+
+<1 Ĺ>[2 ĺ][3 Ļ][4 ļ][5 Ľ][6 ľ][7 Ŀ][8 ŀ][9 Ł][10 ł][11 Ѓ][12 ΐ][13 ſ][14 ŧ][15 ī][16 ı]
+[] = red, <> = blue
+
+"729."
+
+> press 2
+Galaxy presses button 2. Button 2 turns blue.
+
+<1 Ĺ><2 ĺ>[3 Ļ][4 ļ][5 Ľ][6 ľ][7 Ŀ][8 ŀ][9 Ł][10 ł][11 Ѓ][12 ΐ][13 ſ][14 ŧ][15 ī][16 ı]
+[] = red, <> = blue
+
+"728."
+
+> press 3
+Galaxy presses button 3. Button 3 turns blue.
+
+<1 Ĺ><2 ĺ><3 Ļ>[4 ļ][5 Ľ][6 ľ][7 Ŀ][8 ŀ][9 Ł][10 ł][11 Ѓ][12 ΐ][13 ſ][14 ŧ][15 ī][16 ı]
+[] = red, <> = blue
+
+"727."
+
+> press 4
+Galaxy presses button 4. Button 4 turns blue.
+
+<1 Ĺ><2 ĺ><3 Ļ><4 ļ>[5 Ľ][6 ľ][7 Ŀ][8 ŀ][9 Ł][10 ł][11 Ѓ][12 ΐ][13 ſ][14 ŧ][15 ī][16 ı]
+[] = red, <> = blue
+
+"726."
+
+> press 5
+Galaxy presses button 5.
+
+As the fifth button lights up blue, the purple door to the north swings open! Galaxy retrieves the KIM.
+
+_________      __                     _____                     
+__/ ____/___ _/ /___ __  ____  __     __/ /___  ____  ___  _____
+_/ / __/ __ `/ / __ `/ |/ / / / /____ _/ / __ \/ __ \/ _ \/ ___/
+/ /_/ / /_/ / / /_/ />  </ /_/ / _/ /_/ / /_/ / / / /  __(__  ) 
+\____/\__,_/_/\__,_/_/|_|\__, /  _\____/\____/_/ /_/\___/____/  
+_____________________________/                                  
+
+[Your score has just gone up by one point.]
+
+"725."
+
+> n
+Galaxy is in the control room. The inner sanctum of the base is dominated by a large control panel, covered with buttons, switches and screens. Two large buttons, one green and one red, stand out among the rest.
+
+A chair sits in front of the control panel. A purple door stands open to the south, while the door to the flight deck, closed, is to the north.
+
+The guard looks up as Galaxy enters, and makes a gesture of greeting.
+ "Hey, <ıĺĿĿłŁī> didn't expect to see you here. I thought you were back on the mothership. Anyway, you're just in time. Pretty soon we'll launch this thing and get off this godforsaken rock. I can't wait to get back to the mothership and have some real food. Anything but rations... Say, sorry about the goofy PA messages -- don't tell the commander!"
+
+"724."
+
+> give chocolate to guard
+The Siriusian guard sniffs at the chocolate bar. They sniff again, and their eyes widen. They grab the chocolate bar and shove it into their mouth with great enthusiasm.
+ "What is this? It's delicious! I've never had anything like it before! Thank you, <ĽĺĿĿłŁī>"
+
+"723."
+
+> remove helmet
+The guard looks at Galaxy in confusion.
+ "A human? I don't understand. You could have killed me, but instead you gave me this miraculous food. Why?"
+
+Galaxy Jones answers, in as good a Siriusian accent as she can manage, "I don't want to kill Siriusians. I just want to save Mars."
+
+The guard says, "Human, you are the sign I have been waiting for. We must stop this madness and save Mars. Come, we must destroy the base so that Phobos can never be launched into Mars."
+
+The guard slams their carapaced fist down onto the Self-Destruct button, and the control panel lights up. A voice says, "Self-Destruct sequence initiated. We would like to take a moment here to say just how sorry we are that the mission to destroy Mars seems to have ended in abject failure. Your names shall live in ignominy forevermore."
+
+A red light begins to flash on the control panel, and the voice continues, "To continue the self-destruct sequence, the arming levers on the base reactor must be engaged."
+The message is repeated on the screen.
+
+The guard turns back to Galaxy.
+ "Now we must engage the arming levers on the base reactor. It requires two people to do it, so I will need your help. Come with me, human."
+
+_________      __                     _____                     
+__/ ____/___ _/ /___ __  ____  __     __/ /___  ____  ___  _____
+_/ / __/ __ `/ / __ `/ |/ / / / /____ _/ / __ \/ __ \/ _ \/ ___/
+/ /_/ / /_/ / / /_/ />  </ /_/ / _/ /_/ / /_/ / / / /  __(__  ) 
+\____/\__,_/_/\__,_/_/|_|\__, /  _\____/\____/_/ /_/\___/____/  
+_____________________________/                                  
+
+[Your score has just gone up by one point.]
+
+"ľľĹ."
+ "Come, human -- the reactor is this way. Quickly!"
+The guard heads south.
+
+> s
+Galaxy is in the hub junction. Three indistinguishable corridors lead off from here. The western one is labeled "Science", the southern one, "Storage", and the eastern one, "Personnel". A purple door labeled "Control Room" stands open to the north.
+
+"ĽľĹ."
+The guard leads the way west.
+
+> w
+Galaxy is in the western spoke. This is a nondescript hallway. An opening to the north is labeled "Science". The red door to the south (open) is labeled "Armory", and the yellow door at the west end of the hallway is labeled "Reactor Room". It is open.
+
+"ļľĹ."
+The guard leads the way west, into the reactor room.
+
+> w
+Galaxy is in the reactor room. Unlike the rest of the rooms on the base, this one is still functioning. The actual reactor is not in this room, but beyond the far wall and its enormous control board. Two levers bookend the control board, too far apart for one person to pull at once. A yellow security door stands open to the east.
+
+"ĻĽĹ."
+ "Here we are, human. It takes two: I will pull the left lever and hold it. Now you must pull the right lever -- quickly!"
+The guard hauls the left lever down and braces against it.
+
+> pull right lever
+Galaxy hauls the right lever down. A loud klaxon sounds and the control board lights up. A voice announces, "Reactor armed. Self-destruct sequence will now proceed. Get clear of the blast."
+
+_________      __                     _____                     
+__/ ____/___ _/ /___ __  ____  __     __/ /___  ____  ___  _____
+_/ / __/ __ `/ / __ `/ |/ / / / /____ _/ / __ \/ __ \/ _ \/ ___/
+/ /_/ / /_/ / / /_/ />  </ /_/ / _/ /_/ / /_/ / / / /  __(__  ) 
+\____/\__,_/_/\__,_/_/|_|\__, /  _\____/\____/_/ /_/\___/____/  
+_____________________________/                                  
+
+[Your score has just gone up by one point.]
+
+"ĻĽ."
+ "It is done. Now we flee, before the reactor blows -- and before more guards come. This way!"
+The guard hurries east.
+
+> e
+Galaxy is in the western spoke. This is a nondescript hallway. An opening to the north is labeled "Science". The red door to the south (open) is labeled "Armory", and the yellow door at the west end of the hallway is labeled "Reactor Room". It is open.
+
+"ĺĽ."
+The guard hurries east.
+
+> e
+Galaxy is in the hub junction. Three indistinguishable corridors lead off from here. The western one is labeled "Science", the southern one, "Storage", and the eastern one, "Personnel". A purple door labeled "Control Room" stands open to the north.
+
+"ĹĽ."
+The guard hurries north, back toward the control room.
+
+> n
+Galaxy is in the control room. The inner sanctum of the base is dominated by a large control panel, covered with buttons, switches and screens. Two large buttons, one green and one red, stand out among the rest.
+
+A chair sits in front of the control panel. A purple door stands open to the south, while the door to the flight deck, closed, is to the north.
+
+"łĽ."
+
+Without warning, a pair of Siriusian commandos -- one tall, one short -- burst into the control room from the flight deck above, weapons drawn. Galaxy and the guard spring into action.
+
+> attack tall commando
+Galaxy ducks the disruptor fire, closes in, and cracks the tall commando's helmet with a single brutal punch. They crumple, unconscious.
+The other commando stays locked in a furious firefight with the guard, who is keeping their body between the attacker and Galaxy.
+
+"ŁĽ."
+
+> attack short commando
+Galaxy ducks the disruptor fire, closes in, and cracks the short commando's helmet with a single brutal punch. They crumple, unconscious.
+
+Galaxy turns to her companion, who has fallen, hit by disruptor fire shielding her. She kneels and lifts away the guard's Cyberhelmet, baring a Siriusian face in its final moments. They say weakly, "Thank you, human. You could not save my life, but you have saved my honor. You have shown me there is hope for a better future. That is enough."
+Then they die.
+
+The way to the flight deck, and the waiting ship, stands open to the north.
+
+"ŀĽ."
+
+> take tall commando
+Galaxy slings the unconscious tall commando over her shoulder.
+
+"ĿĽ."
+
+> n
+Galaxy is on the flight deck. The platform stands exposed to the blackness above. The expanse of Stickney Crater stretches to the north, and the immense face of Mars dominates the southern sky. A door to the south, open, leads back to the control room.
+
+A Siriusian ship rests on the platform, an open hatch awaiting.
+
+"ľĽ."
+
+> enter ship
+Galaxy is inside the siriusian ship. It's a small, cramped, utilitarian space with three seats and a control panel. Even Star Trek's shuttlecraft were cooler than this. The only way to go is out, to the flight deck.
+
+"ĽĽ."
+
+> drop tall commando
+Galaxy lays the tall commando in one of the passenger seats.
+
+"ļĽ."
+
+> out
+Galaxy is on the flight deck. The platform stands exposed to the blackness above. The expanse of Stickney Crater stretches to the north, and the immense face of Mars dominates the southern sky. A door to the south, open, leads back to the control room.
+
+A Siriusian ship rests on the platform, an open hatch awaiting.
+
+"Ļ."
+
+> s
+Galaxy is in the control room. The inner sanctum of the base is dominated by a large control panel, covered with buttons, switches and screens. Two large buttons, one green and one red, stand out among the rest.
+
+A chair sits in front of the control panel. A purple door stands open to the south, while the door to the flight deck, open, is to the north.
+
+She sees a short commando here.
+
+"ĺ."
+
+> take short commando
+Galaxy slings the unconscious short commando over her shoulder.
+
+"Ĺ."
+
+> n
+Galaxy is on the flight deck. The platform stands exposed to the blackness above. The expanse of Stickney Crater stretches to the north, and the immense face of Mars dominates the southern sky. A door to the south, open, leads back to the control room.
+
+A Siriusian ship rests on the platform, an open hatch awaiting.
+
+"ł."
+
+> enter ship
+Galaxy is inside the siriusian ship. It's a small, cramped, utilitarian space with three seats and a control panel. Even Star Trek's shuttlecraft were cooler than this. The only way to go is out, to the flight deck.
+
+She sees a tall commando here.
+
+"Ł."
+
+> fly
+Galaxy takes a moment to strap the two unconscious commandos into the seats behind her.
+
+_________      __                     _____                     
+__/ ____/___ _/ /___ __  ____  __     __/ /___  ____  ___  _____
+_/ / __/ __ `/ / __ `/ |/ / / / /____ _/ / __ \/ __ \/ _ \/ ___/
+/ /_/ / /_/ / / /_/ />  </ /_/ / _/ /_/ / /_/ / / / /  __(__  ) 
+\____/\__,_/_/\__,_/_/|_|\__, /  _\____/\____/_/ /_/\___/____/  
+_____________________________/                                  
+
+[Your score has just gone up by 2 points.]
+
+She straps herself into the pilot's seat and begins to prepare for launch. She can almost feel the ticking of the self-destruct countdown as she races to get the ship ready. Finally, she is ready to go. She presses the launch button, and the ship's engines roar to life. The ship lifts off the ground and begins to accelerate towards Mars.
+
+_________      __                     _____                     
+__/ ____/___ _/ /___ __  ____  __     __/ /___  ____  ___  _____
+_/ / __/ __ `/ / __ `/ |/ / / / /____ _/ / __ \/ __ \/ _ \/ ___/
+/ /_/ / /_/ / / /_/ />  </ /_/ / _/ /_/ / /_/ / / / /  __(__  ) 
+\____/\__,_/_/\__,_/_/|_|\__, /  _\____/\____/_/ /_/\___/____/  
+_____________________________/                                  
+
+[Your score has just gone up by one point.]
+
+But Galaxy's thoughts are on the poor guard she couldn't save. She hopes that the guard's sacrifice will not be in vain, and that a new era of peace will dawn between Mars and Sirius. Perhaps even the commandos unconscious behind her will be instrumental in that peace.
+
+As the ship speeds away from Phobos, Galaxy glances back to see the self-destruct sequence complete. The base explodes in a brilliant flash of light, sending debris flying in all directions. Stickney Crater has been enlarged by several acres, but the Siriusian threat has been eliminated. Galaxy Jones has saved Mars once again.
+
+Galaxy Jones has saved Mars from the Sirius Syndicate.
+
+This earns Galaxy the rank of Queen of Mars.
+
+Please type QUIT to exit.
+> quit

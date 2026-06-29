@@ -10,6 +10,67 @@ I7 sources:
 - Extensions: `Phobos.materials/Extensions/Philip Riley/*.i7x` (third-party
   extensions handled later)
 
+## Goal: 1:1 parity with the original
+
+The game is already playable start-to-win (Queen of Mars) through the real puzzles, but the
+**target is a 1:1 port** — every behavior, message, and object of the original — as a proof of
+Lamp's capabilities. The checklist below tracks what's left; we work through it one item at a time.
+(Durable goal also in agent memory `phobos-1to1-goal`.)
+
+### Remaining for 1:1 parity (work top-down)
+
+**Subsystems (the meatier pieces):**
+- [ ] **TOUCH / FEEL + `feels`** (`Can't Touch This.i7x`): a touch/feel verb, a `feels` text on
+  every thing, and the `feelable` / `far away` / `obstructed` / `edificial` traits with their
+  messages. Pervasive — nearly every object in the game carries `feels` text.
+- [ ] **Backdrops: walls / floors / ceilings** (`Walls.i7x` / `Floors.i7x` / `Ceilings.i7x` /
+  `PBR Common.i7x`): examinable scenery present in *every* room (X WALL / FLOOR / CEILING / SKY /
+  GROUND), per-room descriptions via tables, low-ceiling/outdoors variants. Needs a backdrop
+  mechanism in advent (the scope-provider seam doors use is the hook).
+
+**Alternate paths / behaviour:**
+- [ ] **SAY / ANSWER free-text** (`Guard.i7x`): "say I am human" / "I'm from earth" →
+  player-assert-humanity → the alliance *without* a gift; the loyalty YES/NO after giving the log.
+  A free-text SAY/ANSWER mechanism distinct from ASK-about-topic — a currently-unreachable solution.
+- [ ] **"Distracted → shot" mid-fight** (`Guard.i7x`): doing anything but attack/shoot while a
+  commando is up gets Galaxy killed (today she simply can't flee).
+- [ ] **Noun forms of FLY** ("fly ship" / "operate panel") and the ship-flying/simply-flying split
+  (`Base.i7x`).
+- [ ] **`blowing up the base` scene flavour** (`Guard.i7x`): audit the guard-leading lines against
+  the original for any missed beckons/variants.
+
+**Messages / polish:**
+- [ ] **Custom "can't go that way"** (`Can't Go That Way.i7x`): per-room excuse messages.
+- [ ] **Custom attack / take refusals** (`Can't Hit That.i7x`, `Can't Take That.i7x`, the
+  `Phobos Polish` Table of Attacking): e.g. "Galaxy pounds pointlessly on the Moon Sled's hull" +
+  powered variants.
+- [ ] **Power / action banners** (`Galaxy Banner.i7x` + `Powerup.i7x`): the POWER figlet on
+  power-up, and the little action banner.
+- [ ] **Banner placement** (`story.ni`): the title banner should appear *between* the intro
+  narration and the Galaxy Jones reveal (intro → banner → reveal), not before `startup_rules`.
+  Needs an advent seam (a callable `print_banner()` + opt-out of the auto-print). See house-style note below.
+- [ ] **In-prose sub-objects as examinables** (`Base.i7x`): the door/west/store signs and the
+  barracks poster, declared as scenery so X SIGN / X POSTER work.
+- [ ] **Handprint-scanner door-parts** (`Base.i7x`): each door's scanner as a real part-object.
+- [ ] **Examine-self disguise variants** (`Cyborg.i7x`): X ME / X GALAXY changes with the disguise.
+- [ ] **`indescribable` objects + button asides** (`Phobos Polish.i7x` / `Polish.i7x`): yourself,
+  the disruptor pistol, etc. marked indescribable; the "Why not press it instead?" button replies.
+
+**Audit passes (may add items):**
+- [ ] **`Actions.i7x`** — audit for unported custom actions (shooting, listening, searching →
+  examining, etc.).
+- [ ] **`Improved Pushing.i7x`** — pushing things between rooms (likely N/A; confirm).
+- [ ] **`GJ Basics.i7x` / `PBR Common.i7x` / `Polish.i7x`** — sweep for leftover behaviours.
+- [ ] **Final line-by-line parity pass** over every extension + `story.ni` once the above land, to
+  catch missed messages and edge cases.
+
+**Infrastructure (enabling, not game content):**
+- [x] **Automate `test endgame` in CI** — *done.* Golden discovery now walks one level into
+  subdirectories (`tests/golden/run-golden.js` `lampInputsIn`), so `sample/phobos/phobos.lamp` is a
+  golden: stdin `test endgame` / quit, expected the full ~750-line winning transcript (`phobos`
+  golden; no pinned generated JS, so it doesn't churn). The whole game is now a deterministic
+  regression check — re-run `npm test`.
+
 ## Presentation / house style (read first)
 
 Phobos departs from advent's defaults in ways that affect almost all output, so

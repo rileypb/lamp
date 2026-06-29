@@ -93,42 +93,59 @@ function main() {
 }
 
 function discoverCases() {
-    return testRoots
-        .flatMap((rootDir) => {
-            if (!fs.existsSync(rootDir)) {
-                return [];
+    return testRoots.flatMap(lampInputsIn).map(buildCase);
+}
+
+// Every `.lamp` input under a test root: files directly in it, plus files one level down in an
+// immediate subdirectory (so a multi-file sample game in its own dir — e.g.
+// `sample/phobos/phobos.lamp`, alongside its `lib/phobos/` — is discovered, while deeper library
+// files are not). Sorted for stable ordering; expected files are keyed by the bare base name.
+function lampInputsIn(rootDir) {
+    if (!fs.existsSync(rootDir)) {
+        return [];
+    }
+    const inputs = [];
+    for (const entry of fs.readdirSync(rootDir).sort()) {
+        const full = path.join(rootDir, entry);
+        const stat = fs.statSync(full);
+        if (stat.isFile() && entry.endsWith(".lamp")) {
+            inputs.push(full);
+        } else if (stat.isDirectory()) {
+            for (const sub of fs.readdirSync(full).sort()) {
+                const subPath = path.join(full, sub);
+                if (sub.endsWith(".lamp") && fs.statSync(subPath).isFile()) {
+                    inputs.push(subPath);
+                }
             }
+        }
+    }
+    return inputs;
+}
 
-            return fs.readdirSync(rootDir)
-                .filter((entry) => entry.endsWith(".lamp"))
-                .sort()
-                .map((entry) => {
-                    const baseName = path.basename(entry, ".lamp");
-                    const inputPath = path.join(rootDir, entry);
-                    const generatedPath = path.join(tmpDir, `${baseName}.generated.js`);
-                    const expectedJsCandidate = path.join(expectedDir, `${baseName}.generated.js`);
-                    const expectedStdoutPath = path.join(expectedDir, `${baseName}.stdout.txt`);
-                    const expectedStdout = fs.readFileSync(expectedStdoutPath, "utf8");
-                    const expectedJsExists = fs.existsSync(expectedJsCandidate);
-                    const expectCompileFailure = !expectedJsExists && (
-                        expectedStdout.trimStart().startsWith("error:") ||
-                        expectedStdout.trimStart().startsWith("Compile error:")
-                    );
-                    const expectRuntimeFailure = expectedStdout.trimStart().startsWith("Runtime error:");
-                    const stdinPath = path.join(expectedDir, `${baseName}.stdin.txt`);
-                    const stdinContent = fs.existsSync(stdinPath) ? fs.readFileSync(stdinPath, "utf8") : null;
+function buildCase(inputPath) {
+    const baseName = path.basename(inputPath, ".lamp");
+    const generatedPath = path.join(tmpDir, `${baseName}.generated.js`);
+    const expectedJsCandidate = path.join(expectedDir, `${baseName}.generated.js`);
+    const expectedStdoutPath = path.join(expectedDir, `${baseName}.stdout.txt`);
+    const expectedStdout = fs.readFileSync(expectedStdoutPath, "utf8");
+    const expectedJsExists = fs.existsSync(expectedJsCandidate);
+    const expectCompileFailure = !expectedJsExists && (
+        expectedStdout.trimStart().startsWith("error:") ||
+        expectedStdout.trimStart().startsWith("Compile error:")
+    );
+    const expectRuntimeFailure = expectedStdout.trimStart().startsWith("Runtime error:");
+    const stdinPath = path.join(expectedDir, `${baseName}.stdin.txt`);
+    const stdinContent = fs.existsSync(stdinPath) ? fs.readFileSync(stdinPath, "utf8") : null;
 
-                    return {
-                        inputPath,
-                        generatedPath,
-                        expectedJsPath: expectedJsExists ? expectedJsCandidate : null,
-                        expectedStdoutPath,
-                        expectCompileFailure,
-                        expectRuntimeFailure,
-                        stdinContent,
-                    };
-                });
-        });
+    return {
+        inputPath,
+        generatedPath,
+        expectedJsPath: expectedJsExists ? expectedJsCandidate : null,
+        expectedStdoutPath,
+        expectCompileFailure,
+        expectRuntimeFailure,
+        stdinContent,
+    };
 }
 
 function compileCase(inputPath, outputPath, expectCompileFailure) {

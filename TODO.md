@@ -16,6 +16,16 @@ Sourced from the staged roadmaps and prerequisite lists in
 
 ## Active
 
+### Phobos 1:1 parity (drives advent/Lamp features)
+Goal: a **1:1 port** of Phobos to prove out Lamp (memory `phobos-1to1-goal`). The authoritative,
+tickable checklist lives in `sample/phobos/PORTING.md` → "Remaining for 1:1 parity"; work it one
+item at a time. The two biggest remnants are general advent features: **TOUCH/FEEL + `feels`** and
+**backdrops** (walls/floors/ceilings). Smaller: SAY/ANSWER free-text, custom can't-go/hit/take
+messages, power/action banners, banner placement seam, examinable in-prose sub-objects, and a
+per-extension audit. **Infra DONE:** golden discovery now walks one level into subdirs, so
+`sample/phobos/phobos.lamp` is a golden (`test endgame` → the full winning transcript) — the whole
+game is a deterministic regression check.
+
 ### 0. README onboarding — DONE / follow-ups
 Top-level `README.md` now describes the system and how to run Lantern, the
 terminal player (Lamplighter), `lantern-exe`, and a Lighthouse web build. Possible
