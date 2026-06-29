@@ -35,21 +35,28 @@ Lamp's capabilities. The checklist below tracks what's left; we work through it 
   suit light, the RESET button) rides along with those objects when they land (sub-objects/backdrops/
   parts items below). `feel me`/`feel galaxy` needs the player's self-synonyms (the X ME item below).
 - [x] **Backdrops: walls / floors / ceilings** (`Walls.i7x` / `Floors.i7x` / `Ceilings.i7x` /
-  `PBR Common.i7x`): **DONE.** advent gained a general **`backdrop` type** — a thing surfaced in
-  scope in *every* room by a second scope provider (the door seam's sibling; golden `backdrop1`,
-  specs.md). Phobos's `lib/phobos/backdrops.lamp` adds the **walls / floor / ceiling** backdrops with
-  the PBR **default** messages (the game defines no custom per-room rows): X/TOUCH give "[She] sees/
-  feels nothing special about the walls/floor/ceiling", the ceiling is too high to touch ("can't
-  reach the ceiling"). An **`outdoors`** flag on Phobos's `room` reopen (only the flight deck;
-  no floating rooms, no low ceilings) drives the outdoor wording — no walls ("There are no walls to
-  see/feel"), floor→"ground", ceiling→open sky ("There's nothing up there but sky", "can't touch the
-  sky", "can't take the sky"). En route this fixed a latent bug: `feel` was missing from the locale
-  verb vocab, so `[feel]` didn't conjugate ("She feel"→"She feels"); `touch1` now runs in third
-  person to lock it. *Residual:* the per-room description **table** (N/A — Phobos has none),
-  RUB/CUT and the "[We] would just embarrass [ourselves]" ATTACK refusals (no RUB/CUT verbs; ATTACK
-  falls to advent's default — rides with the custom-attack-refusals item + a viewpoint `ourselves`),
-  LOOK UP/DOWN → examine ceiling/floor, and location-gated `sky`/`ground` synonyms (understood
-  everywhere now).
+  `PBR Common.i7x` / `Phobos Polish.i7x`): **DONE.** advent gained a general **`backdrop` type** — a
+  thing surfaced in scope in *every* room by a second scope provider (the door seam's sibling; golden
+  `backdrop1`, specs.md). Phobos's `lib/phobos/backdrops.lamp` adds the **walls / floor / ceiling**
+  backdrops with **per-room descriptions**. The I7 originals key those off a `Table of Walls/Floors/
+  Ceilings` (a row per room: description + touch description + low-ceiling flag) looked up by one
+  generic instead rule; the port mirrors the table as **fields on the room** (`wall_description`,
+  `wall_touch`, `floor_description`, `floor_touch`, `ceiling_description`, `ceiling_touch`,
+  `low_ceiling`), read off `holder(actor)` by the generic `instead examine/touch` rules. The
+  per-room text is verbatim from **Phobos Polish.i7x** (rough stone in the entry passages, the
+  gray-tile interior as the room-type default, white tile in the labs, dense rubber in the ship);
+  an empty field falls back to the PBR "nothing special" defaults. An **`outdoors`** flag on the
+  `room` reopen (only the flight deck; no floating rooms) drives the outdoor wording — no walls
+  ("There are no walls to see/feel"), floor→"ground", ceiling→open sky ("There's nothing up there
+  but sky", "can't touch/take the sky"); the **ship** is the one `low_ceiling` room, so its ceiling
+  is touchable while every other indoor ceiling reports "can't reach the ceiling". En route this
+  fixed a latent bug: `feel` was missing from the locale verb vocab, so `[feel]` didn't conjugate
+  ("She feel"→"She feels"); `touch1` now runs in third person to lock it. *Residual:* RUB/CUT and the
+  "[We] would just embarrass [ourselves]" ATTACK refusals (no RUB/CUT verbs; ATTACK falls to advent's
+  default — rides with the custom-attack-refusals item + a viewpoint `ourselves`), LOOK UP/DOWN →
+  examine ceiling/floor, and location-gated `sky`/`ground` synonyms (understood everywhere now). The
+  per-room messages aren't golden-covered (the sample's only golden is the `test endgame` walkthrough,
+  which never touches a wall) — verified manually across all five textures.
 
 **Alternate paths / behaviour:**
 - [ ] **SAY / ANSWER free-text** (`Guard.i7x`): "say I am human" / "I'm from earth" →

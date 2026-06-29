@@ -28,9 +28,11 @@ on the ship, and a state-dependent `instead touch` for the commandos); residual 
 not-yet-ported sub-objects. **Backdrops DONE** (`Walls/Floors/Ceilings/PBR Common.i7x`): advent
 gained a general `backdrop` type surfaced in scope in every room by a second scope provider (golden
 `backdrop1`; specs.md), and Phobos's `lib/phobos/backdrops.lamp` adds walls/floor/ceiling with the
-PBR default messages + an `outdoors` room flag (the flight deck) for the no-walls / ground / open-sky
-wording. Also fixed a latent locale bug (`feel` was missing from the verb vocab, so `[feel]` didn't
-conjugate). Remaining parity items: SAY/ANSWER free-text, distracted→shot, noun forms of FLY, custom
+**per-room** descriptions from Phobos Polish.i7x (the I7 `Table of Walls/Floors/Ceilings` mirrored as
+room fields read by the generic instead rules — stone/gray-tile/white-tile/rubber), an `outdoors`
+room flag (the flight deck) for the no-walls / ground / open-sky wording, and the ship's `low_ceiling`
+(its ceiling is touchable). Also fixed a latent locale bug (`feel` was missing from the verb vocab, so
+`[feel]` didn't conjugate). Remaining parity items: SAY/ANSWER free-text, distracted→shot, noun forms of FLY, custom
 can't-go/hit/take messages, power/action banners, banner placement seam, examinable in-prose
 sub-objects, handprint-scanner parts, examine-self / X ME, indescribable objects, and the audit
 passes.
