@@ -1,0 +1,5 @@
+examine bob
+ask bob about weather
+ask bob about silence
+tell bob about weather
+quit

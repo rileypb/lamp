@@ -1,0 +1,31 @@
+# The conversation library (lib/conversation): ASK / TELL <someone> ABOUT <topic>. Topics are
+# `subject` objects (a `thing`, not `physical`), so they resolve globally — no scope needed —
+# while the interlocutor must be in scope. A subject's `reply` is its ASK answer; an empty reply
+# falls to the puzzled default, and TELL has a neutral default. Declared after `lib advent` so it
+# can reference advent's `physical`/`thing`.
+
+lib advent
+lib conversation
+
+game Convo:
+	start Room
+
+room Room:
+	description "A small office."
+
+person bob:
+	printed_name "Bob"
+	article proper
+	understand "bob/man"
+	description "An ordinary man at a desk."
+
+contains Room bob
+
+subject weather_subject:
+	printed_name "the weather"
+	understand "weather"
+	reply "'Looks like rain.'"
+
+subject silence_subject:
+	printed_name "silence"
+	understand "silence"

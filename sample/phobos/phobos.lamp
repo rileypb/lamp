@@ -2,6 +2,7 @@
 # Ported to Lamp (partially)
 
 lib advent
+lib conversation
 lib phobos
 
 game Phobos:

@@ -159,6 +159,23 @@ the `blowing up the base` scene's extra flavour, and noun forms of FLY ("fly shi
 panel"). The guard-driven lever arming that normally sets `self_destruct_in_progress` is the last
 big missing piece (the Guard).
 
+**The Guard — conversation foundation (Guard.i7x): ported.** The Siriusian guard is now a
+conversational NPC in the control room (`guard.lamp`). Conversation lives in a **new third
+library `lib/conversation`** (kept out of core advent — conversation is a matter of taste; the
+game pulls it in with `lib conversation`, declared between `lib advent` and `lib phobos`). It adds
+the `subject` topic type + the `ask`/`tell` actions (ASK GUARD ABOUT X / TELL GUARD ABOUT X); see
+specs.md. The ~43 topics from the Table of Conversing are `subject` objects each carrying its
+`reply` — no table primitive needed (decided: subjects carry their own data). Guard speech renders
+in **English** (the worn Cyberhelmet translates Siriusian — the helmet's first real-time
+translation use; `siriusian()` is only for untranslated signage); the alien proper nouns the
+original keeps in glyphs are rendered plainly for now. Also: **EXAMINE now targets any `physical`**
+(was `item`), so NPCs/scenery are examinable (byte-invariant; golden suite green). The log/diary/
+chocolate topics use their "not yet given" replies. **Deferred (later slices):** GIVE/SHOW + the
+persuasion state machine (give log/chocolate/pistol → pleased → reveal disguise → alliance),
+SAY/ANSWER yes/no (the loyalty question), the meeting/blowing-up/commando **scenes**, the
+**death-on-detection**, the guard **leading** Galaxy to the levers (NPC actions), the **commando
+fight**, and **scoring**.
+
 **Reactor Room furniture + arming levers (Base.i7x "Book - Reactor Room"): ported.** The reactor
 control board and the two arming levers (left/right) plus the collective "levers" are scenery
 `item`s in `Reactor_Room` (`base.lamp`); the reactor manual was already a textual document. The

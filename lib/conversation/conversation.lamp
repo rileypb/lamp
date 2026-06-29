@@ -1,0 +1,42 @@
+lib advent
+
+# Conversation subsystem — ASK/TELL ABOUT a topic. Kept in its own library because conversation
+# style is a matter of taste: an advent game opts in with `lib conversation` rather than getting
+# it baked into core. Declare it AFTER `lib advent` (it references advent's `physical`/`thing`)
+# and before the game.
+#
+# A `subject` is an abstract topic: a `thing` (so it has a printed name + `understand` vocab) but
+# NOT `physical`, so the parser resolves a `[topic]` slot against every subject in the world
+# rather than by scope (resolvePool treats non-physical slot types as globally referable — the
+# same path directions use). A game declares one subject per topic and sets its `reply` (the
+# answer when ASKED); dynamic or per-interlocutor responses come from `instead`/`after ask`
+# (or `tell`) rules guarded on `self.topic` / `self.interlocutor`.
+
+type subject < thing:
+	# The interlocutor's reply when ASKED about this topic. Empty → the default puzzled message.
+	string reply = ""
+
+# ASK <someone> ABOUT <topic>. The interlocutor is a `physical` (in scope); the topic is a
+# `subject` (resolved globally). Default report prints the topic's `reply`, or a puzzled line.
+action ask:
+	physical interlocutor
+	subject topic
+	syntax:
+		"ask [interlocutor] about [topic]"
+
+report ask:
+	if self.topic.reply == "":
+		print convo_no_reply:"[The act.interlocutor] [have] nothing to say about that."
+	else:
+		print "[self.topic.reply]"
+
+# TELL <someone> ABOUT <topic>. Informing rather than querying: no stock answer, so the default
+# is a neutral non-reaction; a game adds `instead tell when self.topic == X` for topics that land.
+action tell:
+	physical interlocutor
+	subject topic
+	syntax:
+		"tell [interlocutor] about [topic]"
+
+report tell:
+	print convo_not_interested:"[The act.interlocutor] [do] not seem interested."

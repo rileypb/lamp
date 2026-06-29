@@ -1,0 +1,16 @@
+Room
+A small office.
+
+> examine bob
+An ordinary man at a desk.
+
+> ask bob about weather
+"Looks like rain."
+
+> ask bob about silence
+Bob has nothing to say about that.
+
+> tell bob about weather
+Bob does not seem interested.
+
+> quit

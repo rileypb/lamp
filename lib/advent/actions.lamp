@@ -242,8 +242,9 @@ report failed close:
 		print close_already_closed:"[The act.target] [is] already closed."
 		stop
 
+# Targets any `physical` (not just `item`) so people and other non-item scenery can be examined.
 action examine:
-	direct item target
+	direct physical target
 	syntax:
 		"examine [target]"
 		"x [target]"

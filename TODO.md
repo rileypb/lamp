@@ -287,9 +287,14 @@ core edit is contained. Names (default): `contains`/`place`/`contained`, keyword
   — an **`enter` action** (golden `enter1`) and **`inward`/`outward` directions** (typed in/out).
   FLY decides the ending — a loss if the self-destruct isn't armed (reachable now), the heroic win
   once `self_destruct_in_progress` is set (both via `ending_override`); a not-for-release **`arm`**
-  debug verb makes the win testable. **Still deferred:** the guard-present overrides (suspicion →
-  "spy!" → death/deflect), the **guard-driven lever arming** (guard holds left, Galaxy pulls right
-  → `self_destruct_in_progress`), and the commandos-to-safety + scoring. **Later:** the **Guard**
+  debug verb makes the win testable. **The Guard — conversation foundation DONE:** a new third
+  library **`lib/conversation`** (subjects + `ask`/`tell`, kept out of core advent — opt in with
+  `lib conversation`; golden `conversation1`) drives the guard's ~43 ASK topics (`guard.lamp`,
+  subjects carry their `reply` — no table primitive). EXAMINE now targets any `physical` so NPCs are
+  examinable. **Still deferred (Guard, later slices):** GIVE/SHOW + the persuasion state machine
+  (give log/chocolate/pistol → pleased → reveal → alliance), SAY/ANSWER yes/no (loyalty question),
+  the meeting/blowing-up/commando **scenes**, **death-on-detection**, the guard **leading** Galaxy
+  to the levers (NPC actions) + the **commando fight**, and **scoring**.
   (60KB conversation/persuasion extension) the two-lever self-destruct needs; scoring on solve;
   the handprint-scanner as a real part-object. Also deferred: the helmet's translation effect,
   examine-self disguise variants.

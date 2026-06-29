@@ -1991,7 +1991,7 @@ provided (a game drives door state itself).
 | Action | Slots | Player syntax | Notes |
 |---|---|---|---|
 | `look` | — | `look`, `l` | Describes the current room. |
-| `examine` | `item target` | `examine [target]`, `x [target]`, `read [target]` | Prints `self.target.description`. |
+| `examine` | `direct physical target` | `examine [target]`, `x [target]`, `read [target]` | Prints `self.target.description` (or `examine_nothing` when empty). Targets any `physical`, so people and non-item scenery are examinable too. |
 | `attack` | `direct item target` | `attack [target]`, `hit [target]`, `smash [target]`, `punch [target]` | **Fails by default** (reason `attack_pointless`, message `attack_violence`), so any `do` is skipped — it's a refusal. A game adds `instead attack` rules for things that respond (`stop succeeded` to act, or a bare `stop failed` after its own refusal — the `report failed` reason guard then suppresses the default). `target` is `direct`, so `it` refers back to it. |
 | `push` | `direct item target` | `push [target]` | Inform's "pushing a thing" — for buttons, switches and the like. **Fails by default** (reason `nothing_happens`, message `push_inert` = "Nothing obvious happens."), same band shape as `attack`: a game adds `instead push` rules for controls that respond. `target` is `direct`, so `it` refers back to it. A game that needs a *key-press* grammar (`press 1` on a keypad) declares its own action with a number/text slot — `push` stays the item verb so the two never collide (see the Phobos `press_key` sample). |
 | `pull` | `direct item target` | `pull [target]` | Inform's "pulling a thing" — the counterpart to `push`, for levers and the like. **Fails by default** (shares the `nothing_happens` reason; message `pull_inert` = "Nothing obvious happens."); a game adds `instead pull` rules for things that respond. `target` is `direct`, so `it` refers back to it. |
@@ -2010,6 +2010,25 @@ All report rules are actor-aware: player actions produce second-person text
 
 The player also has **out-of-world** verbs handled by the runtime (no turn taken):
 `undo`, `save`, `restore` — see *State, undo, and save*.
+
+### The conversation library (`lib/conversation`)
+
+An opt-in library (not part of core advent, since conversation style is a matter of taste). A
+game pulls it in with `lib conversation`, declared **after** `lib advent` (it references advent's
+`physical`/`thing`) and before the game file. It adds:
+
+- **`subject`** — a topic type (`< thing`, so it has a printed name + `understand` vocab, but
+  **not** `physical`). Because it isn't physical, a `[topic]` slot resolves against *every*
+  subject in the world rather than by scope (the same global-by-name path `direction` uses; see
+  `resolvePool`). Field `reply` (string) is the interlocutor's answer when ASKED.
+- **`ask`** — `physical interlocutor`, `subject topic`; `ask [interlocutor] about [topic]`.
+  Default report prints the topic's `reply`, or `convo_no_reply` ("[The act.interlocutor] [have]
+  nothing to say about that.") when empty.
+- **`tell`** — same slots; `tell [interlocutor] about [topic]`. Neutral default (`convo_not_interested`).
+
+A game declares one `subject` per topic with its `reply`, and overrides `ask`/`tell` with
+`instead`/`after` rules guarded on `self.topic` (and `self.interlocutor` for per-NPC responses)
+for dynamic reactions. No table primitive is needed — topic data lives on the subject objects.
 
 ## Open Questions
 
