@@ -140,7 +140,24 @@ carried by a new `ending_override` global (the Lamp analogue of I7's `end the st
 the Guard death endings later). **self-destruct** = starts the sequence and sets
 `self_destruct_pushed`, telling Galaxy the reactor's arming levers must be engaged; pushing it
 again reports it is already running. **Deferred:** the guard-present overrides (the cyborg's
-suspicion → "spy!" → death-or-suit-deflect), and the self-destruct *payoff* — the escape by ship.
+suspicion → "spy!" → death-or-suit-deflect).
+
+**Flight Deck + Siriusian ship (Base.i7x "Book - Flight Deck"): ported.** The flight-deck scenery
+(Stickney Crater, Mars, the static force field), the ship, its interior room `Inside_The_Ship`,
+and the pilot's seat + ship control panel are in `base.lamp`; the ENTER + FLY behaviour is in
+`flight_deck.lamp`. New advent generics this needed: an **`enter` action** (`enter [target]`,
+fails by default, `instead enter` to respond; golden `enter1`) and the **`inward`/`outward`
+directions** (typed `in`/`out`; named that way because `in` is a reserved keyword). Enter the
+ship (or go `in`/`north`) → the interior; `out` leaves. **FLY** (the bare verb, with synonyms)
+decides the ending: a **loss** if the self-destruct isn't armed (Galaxy flees but Phobos still
+hits Mars — reachable now), the **heroic win** once `self_destruct_in_progress` is set. Both
+endings use `ending_override`. The flight deck is reachable in normal play via the powered
+suit-smash on the flight-deck door (`suit.lamp`); the door's guard/handprint opening is deferred.
+A debug verb **`arm`** (not-for-release) sets `self_destruct_in_progress` so the win is testable
+before the guard lands. **Deferred:** the commandos Galaxy can carry to safety (+ their scoring),
+the `blowing up the base` scene's extra flavour, and noun forms of FLY ("fly ship"/"operate
+panel"). The guard-driven lever arming that normally sets `self_destruct_in_progress` is the last
+big missing piece (the Guard).
 
 **Reactor Room furniture + arming levers (Base.i7x "Book - Reactor Room"): ported.** The reactor
 control board and the two arming levers (left/right) plus the collective "levers" are scenery

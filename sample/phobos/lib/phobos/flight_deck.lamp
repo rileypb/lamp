@@ -1,0 +1,52 @@
+lib advent
+
+# Flight Deck + ship behaviour (Base.i7x "Book - Flight Deck"). The ship is the escape: ENTER
+# it to climb inside, then FLY to leave. Flying decides the ending — a loss if the self-destruct
+# isn't armed (Galaxy just flees while Phobos still hits Mars), the heroic win once it is. The
+# ship objects + interior room live in base.lamp; the win-enabling `self_destruct_in_progress`
+# lives in countdown.lamp (set by the guard-driven lever arming, deferred).
+#
+# Deferred (port slice): the commandos Galaxy can carry to safety (+ their scoring), the
+# `blowing up the base` scene's extra flavour, and noun forms of FLY ("fly ship" / "operate
+# panel") — FLY is the bare verb, used from inside the ship.
+
+# Entering the ship moves Galaxy into the interior (which auto-describes on arrival).
+instead enter when self.target == siriusian_ship:
+	move player to Inside_The_Ship
+	stop succeeded
+
+# The ship is fixed (I7 "edificial").
+instead take when self.target == siriusian_ship:
+	print "The ship is far too large to carry."
+	stop failed
+
+action fly:
+	syntax:
+		"fly"
+		"launch"
+		"blast off"
+		"blastoff"
+		"lift off"
+		"liftoff"
+		"take off"
+		"takeoff"
+		"engage"
+		"pilot"
+		"start"
+		"ride"
+
+do fly:
+	if holder(player) == Inside_The_Ship:
+		if self_destruct_in_progress:
+			print "She straps herself into the pilot's seat and begins to prepare for launch. She can almost feel the ticking of the self-destruct countdown as she races to get the ship ready. Finally, she is ready to go. She presses the launch button, and the ship's engines roar to life. The ship lifts off the ground and begins to accelerate towards Mars.[par]But Galaxy's thoughts are on the poor guard she couldn't save. She hopes that the guard's sacrifice will not be in vain, and that a new era of peace will dawn between Mars and Sirius.[par]As the ship speeds away from Phobos, Galaxy glances back to see the self-destruct sequence complete. The base explodes in a brilliant flash of light, sending debris flying in all directions. Stickney Crater has been enlarged by several acres, but the Siriusian threat has been eliminated. Galaxy Jones has saved Mars once again."
+			ending_override = "Galaxy Jones has saved Mars from the Sirius Syndicate."
+			story = won
+		else:
+			print "All Galaxy can do at this point is to try to get away from the base before Phobos flies into Mars. She jumps into the pilot's seat and begins lift-off procedures. Within moments, the ship blasts out of the base and into space.[par]Not much later, Phobos begins to move towards Mars..."
+			ending_override = "Mars has been destroyed by the Sirius Syndicate."
+			story = lost
+	else:
+		if holder(player) == Flight_Deck:
+			print "Galaxy Jones needs to be inside the ship to fly it."
+		else:
+			print "What should Galaxy fly?"

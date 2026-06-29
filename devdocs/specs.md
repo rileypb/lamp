@@ -2000,7 +2000,8 @@ provided (a game drives door state itself).
 | `inventory` | — | `inventory`, `i` | Lists carried items; marks worn items with `(worn)`. |
 | `wear` | `item clothing` | `wear [clothing]` | Asserts `wears actor clothing`; implicitly calls `take` if item is not yet carried (printing `(first taking X)` for the player). |
 | `doff` | `item clothing` | `remove [clothing]`, `take off [clothing]` | Retracts `wears actor clothing`. (Named `doff` internally because `remove` is a reserved keyword.) |
-| `go` | `direction way` | `go [way]`, `[way]` | Moves actor along a `connects` edge. |
+| `enter` | `direct item target` | `enter [target]` | Inform's "entering". advent has no enterable/vehicle model, so it **fails by default** (reason `cant_enter`, message `cant_enter_msg` = "That's not something [we] can enter."); a game adds `instead enter` rules to move the actor into an interior (e.g. a vehicle). `target` is `direct`, so `it` refers back to it. |
+| `go` | `direction way` | `go [way]`, `[way]` | Moves actor along a `connects` edge. Directions: the eight compass points, `up`/`down`, and `inward`/`outward` (typed `in`/`out`, named that way because `in` is a reserved keyword). |
 | `put_on` | `direct item put_item`, `item destination` | `put [put_item] on [destination]` | Moves an item onto a supporter (sets `holder`, records `supports`); a `check` refuses a non-`supporter` destination (`cant_put_on_that`). Worn items are taken off first. Games add their own phrasing with `understand` (e.g. cloak's `hang … on …`). |
 
 All report rules are actor-aware: player actions produce second-person text

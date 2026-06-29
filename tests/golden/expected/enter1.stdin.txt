@@ -1,0 +1,5 @@
+enter rock
+enter pod
+out
+in
+quit

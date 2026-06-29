@@ -29,3 +29,15 @@ do scanall:
 
 report scanall:
 	print "The Linguistic Module's model is now complete."
+
+# arm: arm the reactor self-destruct (normally guard-driven via the levers, not yet ported), so
+# the heroic FLY-the-ship win can be exercised. Switches the doom-clock's zero ending too.
+action arm:
+	syntax:
+		"arm"
+
+do arm:
+	self_destruct_in_progress = true
+
+report arm:
+	print "The reactor self-destruct is now armed."

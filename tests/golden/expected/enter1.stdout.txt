@@ -1,0 +1,23 @@
+Field
+A grassy field.
+
+You see a rock and a pod here.
+
+> enter rock
+That's not something you can enter.
+
+> enter pod
+Pod
+A cramped capsule.
+
+> out
+Field
+A grassy field.
+
+You see a rock and a pod here.
+
+> in
+Pod
+A cramped capsule.
+
+> quit

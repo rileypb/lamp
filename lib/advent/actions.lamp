@@ -318,6 +318,21 @@ check pull:
 report failed pull when self.reason == nothing_happens:
 	print pull_inert:"Nothing obvious happens."
 
+# ENTER a thing (Inform's "entering"). advent has no enterable-supporter/vehicle model yet, so
+# the action *fails* by default; a game adds `instead enter` rules for things that can be entered
+# (e.g. a vehicle that moves the actor to an interior room). `target` is `direct`, so `it` refers
+# back to it.
+action enter:
+	direct item target
+	syntax:
+		"enter [target]"
+
+check enter:
+	stop failed cant_enter
+
+report failed enter when self.reason == cant_enter:
+	print cant_enter_msg:"That's not something [we] can enter."
+
 action go:
 	direction way
 	syntax:

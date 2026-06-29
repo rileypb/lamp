@@ -1,0 +1,31 @@
+# The ENTER action + the in/out directions (lib/advent). ENTER fails by default ("That's not
+# something you can enter."); a game adds `instead enter` to move the actor into a vehicle's
+# interior. The `inward`/`outward` directions (typed "in"/"out") wire the interior back to the
+# field, so the pod is reachable both ways.
+
+lib advent
+
+game Enter:
+	start Field
+
+room Field:
+	description "A grassy field."
+room Pod:
+	description "A cramped capsule."
+
+item rock
+item pod:
+	description "A small landing pod with an open hatch."
+
+contains Field rock
+contains Field pod
+
+bidi connects Field inward Pod
+
+instead enter when self.target == pod:
+	move player to Pod
+	stop succeeded
+
+instead take when self.target == pod:
+	print "The pod is bolted to the ground."
+	stop failed

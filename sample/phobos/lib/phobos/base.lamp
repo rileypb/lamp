@@ -288,3 +288,54 @@ contains Reactor_Room reactor_control_board
 contains Reactor_Room left_reactor_arming_lever
 contains Reactor_Room right_reactor_arming_lever
 contains Reactor_Room reactor_arming_levers
+
+# --- Flight Deck + Siriusian ship (Base.i7x "Book - Flight Deck") -------------
+# The escape platform and the ship Galaxy flees in. The Flight_Deck room itself is defined
+# above; here are its scenery and the ship, plus the ship's interior room. I7's "far away"
+# (can't-touch) trait on the crater/Mars and the atmospheric force field are flavour scenery
+# (no TOUCH verb). The ENTER-the-ship and FLY behaviour — and the win/loss endings — are in
+# lib/phobos/flight_deck.lamp.
+item stickney_crater:
+	scenery
+	understand "crater"
+	description "Stickney Crater, the largest crater on Phobos, is a vast expanse of rock and dust, stretching out to the north. At this distance, one can barely see the lines where the crater will open up to reveal the huge Siriusian thrusters."
+item mars:
+	scenery
+	description "Mars sits in the southern sky, oblivious to the events unfolding on Phobos."
+item static_force_field:
+	scenery
+	understand "field/forcefield"
+	description "An invisible force field prevents the atmosphere from escaping from the flight deck."
+item siriusian_ship:
+	printed_name "Siriusian ship"
+	understand "ship/hatch"
+	initial_appearance "A Siriusian ship rests on the platform, an open hatch awaiting."
+	description "The ship is roughly cylindrical, with a complete lack of windows. An open hatch awaits."
+
+# The ship's interior, reached by entering the ship (flight_deck.lamp) or going north/in.
+room Inside_The_Ship:
+	printed_name "Siriusian ship"   # the heading rule adds "the"; I7's name carried it
+	preposition "inside"
+	description "It's a small, cramped, utilitarian space with three seats and a control panel. Even Star Trek's shuttlecraft were cooler than this. The only way to go is out, to the flight deck."
+item pilots_seat:
+	printed_name "pilot's seat"
+	scenery
+	understand "seat/seats"
+	description "The seat is shaped somewhat strangely, designed as it was for a Siriusian. It is perched directly in front of the control panel."
+item ship_control_panel:
+	printed_name "control panel"
+	scenery
+	understand "control/panel/buttons/switches/controls/screen"
+	description "The control panel is a simple array of buttons and switches, with a single large screen in the center. Galaxy Jones has no trouble understanding how to operate it."
+
+contains Flight_Deck stickney_crater
+contains Flight_Deck mars
+contains Flight_Deck static_force_field
+contains Flight_Deck siriusian_ship
+contains Inside_The_Ship pilots_seat
+contains Inside_The_Ship ship_control_panel
+
+# Entering is via the ship (flight_deck.lamp's `instead enter`) or "in"/"north"; leaving is "out"
+# (the inverse of the bidi `inward` edge).
+bidi connects Flight_Deck inward Inside_The_Ship
+connects Flight_Deck north Inside_The_Ship

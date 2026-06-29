@@ -32,6 +32,7 @@ stop_reason already_open
 stop_reason already_closed
 stop_reason locked_shut
 stop_reason nothing_happens
+stop_reason cant_enter
 
 # directions
 #
@@ -68,6 +69,14 @@ direction up:
 direction down:
 	inverse up
 	understand "d"
+# In/out directions. Named `inward`/`outward` because `in` is a reserved keyword (the `for … in`
+# operator); the player still types "in"/"out" via the understand words below.
+direction inward:
+	inverse outward
+	understand "in/inside"
+direction outward:
+	inverse inward
+	understand "out/outside/exit"
 
 relation connects:
 	from room source

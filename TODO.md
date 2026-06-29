@@ -282,10 +282,14 @@ core edit is contained. Names (default): `contains`/`place`/`contained`, keyword
   `self_destruct_pushed` and points Galaxy at the reactor (re-push = "already initiated"). The
   **reactor arming levers are now ported** (`base.lamp` furniture + `control_room.lamp` PULL rules):
   a generic **PULL verb is in advent** (golden `pull1`); a single lever springs back, both are
-  "too far apart for one person" — arming needs two people. **Still deferred:** the guard-present
-  overrides (suspicion → "spy!" → death/deflect) and the self-destruct *payoff* — the **guard-driven
-  lever arming** (guard holds left, Galaxy pulls right → `self_destruct_in_progress` → the doom-clock
-  win) and the escape by **ship**. **Later:** the **flight deck / ship**, and the **Guard**
+  "too far apart for one person" — arming needs two people. The **flight deck + escape ship are
+  ported** (`base.lamp` scenery/ship/interior + `flight_deck.lamp` ENTER/FLY): new advent generics
+  — an **`enter` action** (golden `enter1`) and **`inward`/`outward` directions** (typed in/out).
+  FLY decides the ending — a loss if the self-destruct isn't armed (reachable now), the heroic win
+  once `self_destruct_in_progress` is set (both via `ending_override`); a not-for-release **`arm`**
+  debug verb makes the win testable. **Still deferred:** the guard-present overrides (suspicion →
+  "spy!" → death/deflect), the **guard-driven lever arming** (guard holds left, Galaxy pulls right
+  → `self_destruct_in_progress`), and the commandos-to-safety + scoring. **Later:** the **Guard**
   (60KB conversation/persuasion extension) the two-lever self-destruct needs; scoring on solve;
   the handprint-scanner as a real part-object. Also deferred: the helmet's translation effect,
   examine-self disguise variants.
