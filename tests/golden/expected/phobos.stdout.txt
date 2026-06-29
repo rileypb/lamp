@@ -544,7 +544,7 @@ Galaxy is in the control room. The inner sanctum of the base is dominated by a l
 A chair sits in front of the control panel. A purple door stands open to the south, while the door to the flight deck, closed, is to the north.
 
 The guard looks up as Galaxy enters, and makes a gesture of greeting.
- "Hey, <ıĺĿĿłŁī> didn't expect to see you here. I thought you were back on the mothership. Anyway, you're just in time. Pretty soon we'll launch this thing and get off this godforsaken rock. I can't wait to get back to the mothership and have some real food. Anything but rations... Say, sorry about the goofy PA messages -- don't tell the commander!"
+ "Hey, <ıĺĿĿłŁī> didn't expect to see you here. I thought you were back on the mothership. Anyway, you're just in time. Pretty soon we'll launch this thing and get off this ıſĽĹľŁ rock. I can't wait to get back to the ΐΐļĻ mothership and have some real food. Anything but rations... Say, sorry about the goofy PA messages -- don't tell the commander!"
 
 "724."
 
@@ -580,30 +580,30 @@ _____________________________/
 [Your score has just gone up by one point.]
 
 "ľľĹ."
- "Come, human -- the reactor is this way. Quickly!"
-The guard heads south.
+The Siriusian guard goes south.
 
 > s
 Galaxy is in the hub junction. Three indistinguishable corridors lead off from here. The western one is labeled "Science", the southern one, "Storage", and the eastern one, "Personnel". A purple door labeled "Control Room" stands open to the north.
 
 "ĽľĹ."
-The guard leads the way west.
+ "Time is short, human. We must engage the arming levers on the base reactor before someone comes to stop us."
+The Siriusian guard goes west.
 
 > w
 Galaxy is in the western spoke. This is a nondescript hallway. An opening to the north is labeled "Science". The red door to the south (open) is labeled "Armory", and the yellow door at the west end of the hallway is labeled "Reactor Room". It is open.
 
 "ļľĹ."
-The guard leads the way west, into the reactor room.
+The Siriusian guard goes west.
 
 > w
 Galaxy is in the reactor room. Unlike the rest of the rooms on the base, this one is still functioning. The actual reactor is not in this room, but beyond the far wall and its enormous control board. Two levers bookend the control board, too far apart for one person to pull at once. A yellow security door stands open to the east.
 
 "ĻĽĹ."
- "Here we are, human. It takes two: I will pull the left lever and hold it. Now you must pull the right lever -- quickly!"
-The guard hauls the left lever down and braces against it.
+ "Here we are, human. Now we must engage the arming levers on the base reactor. It requires two people to do it, so I will need your help."
+They gesture to two large levers on the wall, one on either side of the reactor. Then they pull the lever on the left side of the reactor and hold it. They say, "Now you must pull the lever on the right side of the reactor. Do it quickly, human."
 
 > pull right lever
-Galaxy hauls the right lever down. A loud klaxon sounds and the control board lights up. A voice announces, "Reactor armed. Self-destruct sequence will now proceed. Get clear of the blast."
+Galaxy Jones pulls the right lever, and a loud klaxon sounds. The control panel lights up, and a voice says, "Reactor has been armed. Self-destruct sequence will now proceed. Get the ĿĿĻ out of here."
 
 _________      __                     _____                     
 __/ ____/___ _/ /___ __  ____  __     __/ /___  ____  ___  _____
@@ -615,20 +615,20 @@ _____________________________/
 [Your score has just gone up by one point.]
 
 "ĻĽ."
- "It is done. Now we flee, before the reactor blows -- and before more guards come. This way!"
-The guard hurries east.
+ "We have disabled the failsafe on the base reactor. Now we must get out of here before it explodes. Be careful -- other guards may have been summoned to the base following the self-destruct command."
+The Siriusian guard goes east.
 
 > e
 Galaxy is in the western spoke. This is a nondescript hallway. An opening to the north is labeled "Science". The red door to the south (open) is labeled "Armory", and the yellow door at the west end of the hallway is labeled "Reactor Room". It is open.
 
 "ĺĽ."
-The guard hurries east.
+The Siriusian guard goes east.
 
 > e
 Galaxy is in the hub junction. Three indistinguishable corridors lead off from here. The western one is labeled "Science", the southern one, "Storage", and the eastern one, "Personnel". A purple door labeled "Control Room" stands open to the north.
 
 "ĹĽ."
-The guard hurries north, back toward the control room.
+The Siriusian guard goes north.
 
 > n
 Galaxy is in the control room. The inner sanctum of the base is dominated by a large control panel, covered with buttons, switches and screens. Two large buttons, one green and one red, stand out among the rest.

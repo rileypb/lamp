@@ -128,7 +128,7 @@ subject sleeping_pod_subject:
 subject mothership_subject:
 	printed_name "mothership"
 	understand "mothership"
-	reply "Dammit, I wish I were back on the mothership on the way home. The base is so uncomfortable, and the food is terrible."
+	reply "$dammit, I wish I were back on the mothership on the way home. The base is so uncomfortable, and the food is terrible."
 subject base_subject:
 	printed_name "base"
 	understand "base"

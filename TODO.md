@@ -41,10 +41,13 @@ but ATTACK/SHOOT gets Galaxy shot — a `before any except attack except shoot` 
 something other than attacking or shooting". **Noun forms of FLY DONE** (`Base.i7x`): bare `fly`
 (simply-flying) + a `fly_thing` noun action (`fly`/`drive`/`operate`/`pilot`/`launch [target]`) sharing
 a `fly_the_ship()` helper — "fly/operate ship/panel" launches, the Moon Sled (now a real scenery
-object) is "out of fuel", else "can't fly that". Remaining parity items: custom can't-go/hit/take
-messages, power/action banners, banner placement seam, the remaining examinable in-prose sub-objects
-(signs/poster), handprint-scanner parts, examine-self / X ME, indescribable objects, the bare-word
-SAY shortcuts (needs a command-rewrite hook, below), and the audit passes.
+object) is "out of fuel", else "can't fly that". **Blowing-up-base flavour audit DONE** (`Guard.i7x`):
+the guard-leading dialogue is now verbatim (was paraphrased) + the missed reactor "Hurry! Before we
+are caught!" nag. Remaining parity items: custom can't-go/hit/take messages, power/action banners,
+banner placement seam, the remaining examinable in-prose sub-objects (signs/poster), handprint-scanner
+parts, examine-self / X ME, indescribable objects, the bare-word SAY shortcuts (needs a command-rewrite
+hook, below), and the audit passes. (The `$` Siriusian-swear censorship is now restored across ported
+guard speech — greeting/$godforsaken/$effin'n, mothership/$dammit, reactor/$hell.)
 Smaller: SAY/ANSWER free-text, custom can't-go/hit/take messages, power/action banners, banner
 placement seam, examinable in-prose sub-objects, and a per-extension audit. **Infra DONE:** golden
 discovery now walks one level into subdirs, so `sample/phobos/phobos.lamp` is a golden (`test

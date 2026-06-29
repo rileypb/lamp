@@ -96,10 +96,31 @@ Lamp's capabilities. The checklist below tracks what's left; we work through it 
   (gotcha recorded in TODO.md). This also ported the **Moon Sled** as a real scenery object at the
   Passage End (description, `feels`, `edificial` — Base.i7x), so X/DRIVE/TAKE MOON SLED all work.
   Win/loss logic unchanged (golden win path byte-identical); the noun forms verified in play.
-- [ ] **`blowing up the base` scene flavour** (`Guard.i7x`): audit the guard-leading lines against
-  the original for any missed beckons/variants.
+- [x] **`blowing up the base` scene flavour** (`Guard.i7x`): **DONE.** Audited the guard-leading
+  every-turn rules against the original and made the dialogue **verbatim** (the port had paraphrased
+  it): the hub beckon "Time is short, human…", the reactor gesture sequence ("Here we are, human…"
+  + "They gesture to two large levers… pull the lever on the left… 'Now you must pull the lever on
+  the right side…'"), the return line "We have disabled the failsafe… other guards may have been
+  summoned…", and the lever responses ("I have already pulled the left lever…", "Reactor has been
+  armed… Get the hell out of here."). Added the **missed variant** — the reactor *"Hurry! Before we
+  are caught!"* nag when Galaxy lingers after the left lever is pulled. Fixed placement so the
+  "Time is short" beckon lands at the hub (the control→hub step is a silent move, as in the
+  original), and used Inform's NPC-movement phrasing "The Siriusian guard goes <dir>." Golden
+  updated (leading section only); win path intact. *Note:* the original censors Siriusian swears
+  with a `$` glyph marker ("$hell", "$godforsaken"); the port renders them as plain English
+  throughout the guard speech — a separate consistency pass if we want the censorship joke (below).
 
 **Messages / polish:**
+- [x] **Siriusian swear censorship (`$` markers)** (`Guard.i7x`): **DONE.** The original tags
+  Siriusian profanity with a `$` control-word marker so it renders as untranslated glyphs — a running
+  bleep joke. Restored it across all ported guard speech: the greeting's `$godforsaken`/`$effin'n`,
+  the mothership topic's `$dammit`, and the reactor-arming `$hell` ("Get the $hell out of here"). The
+  linguistics engine already glyphs `$` words (control word, always alien), so they bleep while the
+  rest of the now-scanned speech reads English. Also corrected the stale guard_persuasion header
+  (guard speech is scan-aware `siriusian()`, not "shown in English"; `!` names + `$` swears stay
+  alien). Golden updated (greeting + right-lever glyphs). *Residual:* `$shit`/`$fooblitsky`/`$rearend`/
+  `$stupid` live in unported speech (the arrival shoot-on-sight, the spy-death button overrides, and
+  the random "goofy" PA broadcasts) — they come with those features.
 - [ ] **Viewpoint subject: name "Galaxy", not pronoun "She"** (house style / `Third Person
   Narration`): advent's viewpoint substitution (`[We]`/the unqualified adaptive verbs) renders the
   protagonist as the third-person *pronoun* — so a `[We] …` refusal reads "**She** can't reach

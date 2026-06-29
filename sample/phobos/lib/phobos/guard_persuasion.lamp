@@ -6,9 +6,10 @@ lib advent
 # allies with her, slamming the self-destruct button. Reaching the control room undisguised (or
 # uncovering before pleasing the guard) gets Galaxy shot.
 #
-# Guard speech is shown in English (the worn Cyberhelmet translates Siriusian); only the system PA
-# announcement stays in `siriusian()`. Proper nouns the original keeps in glyphs (the serial
-# "NB563FFAA", "Cleopatra") are rendered plainly.
+# All guard speech goes through `g_say` -> `siriusian()` (scan-aware), so it reads in English once
+# Galaxy has scanned the documents, while two marker classes stay alien glyphs: `!` proper nouns
+# (the serial "!NB563FFAA", the commander "!x34agclw", "!Cleopatra") and `$` censored Siriusian
+# swears ("$godforsaken", "$effin'n", "$dammit", "$hell" — the running bleep joke).
 #
 # SAY/ANSWER free text is ported (below): "say I am human" / "I am from earth" opens the alliance
 # with no gift, and the loyalty yes/no answers the guard's question after the log. It uses the
@@ -78,7 +79,7 @@ after go:
 		if wears player cyberhelmet and wears player cybercarapace:
 			met_guard = true
 			print "[par]The guard looks up as Galaxy enters, and makes a gesture of greeting."
-			g_say("Hey, !NB563FFAA, didn't expect to see you here. I thought you were back on the mothership. Anyway, you're just in time. Pretty soon we'll launch this thing and get off this godforsaken rock. I can't wait to get back to the mothership and have some real food. Anything but rations... Say, sorry about the goofy PA messages -- don't tell the commander!")
+			g_say("Hey, !NB563FFAA, didn't expect to see you here. I thought you were back on the mothership. Anyway, you're just in time. Pretty soon we'll launch this thing and get off this $godforsaken rock. I can't wait to get back to the $effin'n mothership and have some real food. Anything but rations... Say, sorry about the goofy PA messages -- don't tell the commander!")
 
 # The loyalty yes/no is answerable only on the turn right after the log is given (Guard.i7x's
 # loyalty question rule): shift `asked` into `..._last_turn`, then clear it. Runs every turn after
