@@ -2,7 +2,7 @@ Room
 A bare room.
 
 > wait
-You wait.
+Time passes.
 
 (tick: 2 left)
 
@@ -10,12 +10,12 @@ You wait.
 I don't understand that.
 
 > wait
-You wait.
+Time passes.
 
 (tick: 1 left)
 
 > wait
-You wait.
+Time passes.
 
 The bomb goes off.
 

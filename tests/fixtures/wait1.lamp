@@ -1,0 +1,17 @@
+# The generic WAIT action (lib/advent): WAIT / Z lets a turn pass, printing "Time passes." It
+# changes nothing but is an ordinary in-world action, so it spends the turn and every-turn rules
+# fire — demonstrated here by a counter daemon that ticks each turn.
+
+lib advent
+
+game Wait:
+	start Room
+
+room Room:
+	description "A quiet room."
+
+global int ticks = 0
+
+rule every_turn_rules:
+	ticks = ticks + 1
+	print "(tick [ticks])"

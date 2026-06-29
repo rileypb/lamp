@@ -1,0 +1,4 @@
+wait
+z
+look
+quit

@@ -1,0 +1,20 @@
+Room
+A quiet room.
+
+> wait
+Time passes.
+
+(tick 1)
+
+> z
+Time passes.
+
+(tick 2)
+
+> look
+Room
+A quiet room.
+
+(tick 3)
+
+> quit

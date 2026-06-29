@@ -26,9 +26,4 @@ action ping:
 report ping:
 	print "Your score is 7."
 
-action wait:
-	syntax:
-		"wait"
-
-report wait:
-	print "Time passes."
+# WAIT is a core advent action ("Time passes.") — a normal in-world turn, unlike out-of-world `ping`.

@@ -12,14 +12,7 @@ room Room:
 
 global int fuse = 3
 
-action wait:
-	syntax:
-		"wait"
-		"z"
-
-report wait:
-	print "You wait."
-
+# WAIT is now a core advent action ("Time passes."); the game just contributes the daemon.
 rule every_turn_rules:
 	fuse = fuse - 1
 	if fuse == 0:

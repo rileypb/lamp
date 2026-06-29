@@ -95,7 +95,8 @@ disambiguation, the `it` pronoun, `"You can't go that way."`, and
   addressing: "You must address the urchin directly." (L759)
 
 ### Meta / out-of-world
-- **NEW — `wait` / `z`.** "Time passes…" (L355) — drives the turn clock.
+- **DONE — `wait` / `z`.** "Time passes." — a core advent action (lib/advent/actions.lamp),
+  a normal in-world turn so every-turn rules fire; message `wait_report`; golden `wait1`; specs.md.
 - **PARTIAL — `again` / `g`.** Repeat last command. "again" (L1280) — needs
   last-command memory (related to TODO Parser v2).
 - **NEW — `save` / `restore` / `restart`.** "Okay." (L65); end-of-game menu

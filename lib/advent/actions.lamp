@@ -16,6 +16,18 @@ action look:
 report look:
 	describe_room(holder(self.actor))
 
+# WAIT — let a turn pass (Inform's "waiting"). Like LOOK it changes nothing, so there's no `do`
+# band; but it is an ordinary in-world action, so it still spends the turn and every-turn rules fire
+# — the whole point of waiting (let a daemon, countdown, or NPC advance). The message is named, so a
+# game or locale can retheme it.
+action wait:
+	syntax:
+		"wait"
+		"z"
+
+report wait:
+	print wait_report:"Time passes."
+
 action take:
 	direct item taken
 	syntax:
