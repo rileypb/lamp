@@ -130,8 +130,16 @@ Lamp's capabilities. The checklist below tracks what's left; we work through it 
   removes both — natural order, exactly every 7th eligible turn — for a deterministic, readable golden
   (mirroring how debug_mode fixes the keypads; since the puzzle shuffles are also debug-skipped, no RNG
   is drawn in a walkthrough). Golden gained 9 deterministic PA lines, win path byte-identical.
-  *Residual:* the related **Interjections** table (the guard's random conversational asides *during*
-  the meeting, gated by `no-interjection-this-turn`) is still unported — a separate system.
+- [x] **Guard interjections** (`Guard.i7x` "Volume - Interjections"): **DONE.** While Galaxy is in
+  the control room with the guard during the disguised meeting (before the alliance), the guard tosses
+  out the occasional unprompted aside on a quiet turn — the seven verbatim asides, each spoken once.
+  `lib/phobos/interjections.lamp`. The suppression flag `no_interjection_this_turn` is set inside
+  **`g_say`** (the single chokepoint for guard speech), so an interjection is never piled on a line the
+  guard already said this turn (greeting, gift reactions, loyalty/say) — and, faithfully, ASK/TELL
+  replies (which render via `write()`, not `g_say`) do *not* suppress, matching the original's `After
+  quizzing` rule. Same determinism split as the PA: release shuffles + 1-in-3, debug uses natural order
+  + every 3rd eligible turn. Golden byte-identical (the walkthrough's two meeting turns are both
+  guard-speech turns, so none fire); verified by hand.
 - [x] **Guard combat speech: shoot-on-sight + spy-death button overrides** (`Guard.i7x`): **DONE.**
   The two unported combat scenes. **Arrival shoot-on-sight** (`guard_persuasion.lamp` `after go`):
   entering the control room undisguised, the guard shrieks "Oh `$shit`, a human!" and opens fire —

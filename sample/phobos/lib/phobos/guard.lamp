@@ -37,7 +37,11 @@ instead tell when self.interlocutor == guard:
 # Speak a line of Siriusian guard dialogue on its own line: scan-aware (`siriusian`), quoted, and
 # emitted via write() so a multi-sentence line isn't broken per sentence. The persuasion and
 # endgame scenes call this for every spoken guard line; proper nouns that stay alien carry `!`.
+# Every line the guard speaks goes through here, so this is also where we mark that the guard has
+# already spoken this turn — suppressing a random interjection on top of it (see interjections.lamp,
+# Guard.i7x's `no-interjection-this-turn`).
 function void g_say(string speech):
+	no_interjection_this_turn = true
 	write(" \"" + siriusian(speech) + "\"")
 	write(line_break())
 
