@@ -1,0 +1,5 @@
+take statue
+attack statue
+take pebble
+attack pebble
+quit

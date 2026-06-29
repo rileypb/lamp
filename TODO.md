@@ -50,7 +50,9 @@ hook, below), and the audit passes. (Now ported: all `$` swear censorship; the t
 scenes — arrival shoot-on-sight + powered suit-deflect, spy-death button overrides; the goofy random
 PA broadcasts; the guard Interjections; and the **named third-person viewpoint** — `viewpoint_named`
 global so `[We]` renders the player's name ("Galaxy can't reach that.") with later refs pronominalized,
-runtime per-render flag + locale `we()`, default-false so byte-invariant.)
+runtime per-render flag + locale `we()`, default-false so byte-invariant; and the **custom refusals**
+— advent `take_refusal`/`attack_refusal` fields + direction-aware `can't go that way`, Phobos data in
+`lib/phobos/refusals.lamp`.)
 Smaller: SAY/ANSWER free-text, custom can't-go/hit/take messages, power/action banners, banner
 placement seam, examinable in-prose sub-objects, and a per-extension audit. **Infra DONE:** golden
 discovery now walks one level into subdirs, so `sample/phobos/phobos.lamp` is a golden (`test

@@ -1,0 +1,26 @@
+# Custom refusal messages (lib/advent, Can't Take That.i7x / Can't Hit That.i7x): a `take_refusal`
+# replaces the default TAKE failure for a fixed thing, and an `attack_refusal` replaces the generic
+# ATTACK refusal — without per-object `instead` rules. Unset (the default) leaves the stock refusals.
+
+lib advent
+
+game Refusal:
+	start Room
+
+room Room:
+	description "A bare room."
+
+item statue:
+	scenery
+	description "A marble statue."
+	take_refusal "The statue is bolted to the floor."
+	attack_refusal "Hitting the statue would only bruise your knuckles."
+
+item pebble:
+	description "A small pebble."
+
+contains Room statue
+contains Room pebble
+
+instead attack when self.target == pebble:
+	stop failed attack_pointless

@@ -33,6 +33,12 @@ type physical < thing:
 	bool far_away = false
 	bool obstructed = false
 	bool edificial = false
+	# Custom refusal messages (Can't Take That.i7x / Can't Hit That.i7x). When non-empty, they
+	# replace the default refusal: `take_refusal` overrides any TAKE failure for this thing (e.g.
+	# "It's bolted down."), `attack_refusal` the ATTACK refusal (e.g. "Hitting it accomplishes
+	# nothing."). A game keys per-object flavour off these instead of writing many `instead` rules.
+	string take_refusal = ""
+	string attack_refusal = ""
 
 type container < physical
 

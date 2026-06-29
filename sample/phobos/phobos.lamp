@@ -100,6 +100,19 @@ rule room_heading_rules:
 		print "Galaxy is [r.preposition] [bold(lower(the(r)))]. [run on]"
 	stop true
 
+# --- Custom "can't go that way" (Can't Go That Way.i7x, Phobos Polish Table of Excuses) ------
+# Per-room blocked-exit excuses. Must live in the main file (author order 0) so it runs before — and
+# `stop`s — advent's direction-aware default `report failed go`. Phobos only customizes the Passage
+# End (its lateral walls and the "no retreat" south); every other room uses advent's defaults.
+report failed go when self.reason == cant_go_that_way and holder(player) == Passage_End:
+	if self.way == south:
+		print "Galaxy Jones never runs away from a fight!"
+		stop
+	if self.way == southwest or self.way == west or self.way == northwest or self.way == northeast or self.way == east or self.way == southeast:
+		print "There are only stone walls in that direction."
+		stop
+	# up/down/in get no custom excuse here — fall through (no `stop`) to advent's defaults.
+
 # --- Countdown endings (Countdown.i7x) --------------------------------------
 # Custom end-of-game lines, replacing advent's default win/lose banner. These must live
 # in the main game file: only main-file rules register at author order (0) and so run

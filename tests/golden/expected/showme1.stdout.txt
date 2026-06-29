@@ -12,6 +12,8 @@ gem (item)
   far_away: false
   obstructed: false
   edificial: false
+  take_refusal: ""
+  attack_refusal: ""
   initial_appearance: ""
   handled: false
   printed_name: ""
@@ -30,6 +32,8 @@ safe (box)
   far_away: false
   obstructed: false
   edificial: false
+  take_refusal: ""
+  attack_refusal: ""
   initial_appearance: ""
   handled: false
   locked: false

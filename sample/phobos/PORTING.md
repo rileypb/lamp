@@ -170,10 +170,26 @@ Lamp's capabilities. The checklist below tracks what's left; we work through it 
   heading through `[We]`, or the deferred contents-reword; left as-is. (Distinct from the deferred
   third-person *action reports*. The "that"/"Stickney Crater" demonstrative split is separate, in repo
   `TODO.md`.)
-- [ ] **Custom "can't go that way"** (`Can't Go That Way.i7x`): per-room excuse messages.
-- [ ] **Custom attack / take refusals** (`Can't Hit That.i7x`, `Can't Take That.i7x`, the
-  `Phobos Polish` Table of Attacking): e.g. "Galaxy pounds pointlessly on the Moon Sled's hull" +
-  powered variants.
+- [x] **Custom "can't go that way"** (`Can't Go That Way.i7x` + `Phobos Polish` Table of Excuses):
+  **DONE.** advent's blocked-exit refusal is now **direction-aware** (up → "can neither climb walls
+  nor fly.", down → "can't just dig downward.", in → "What do we want to enter?", else "can't go that
+  way." — byte-invariant for the default 2nd-person). Phobos refines the **Passage End** via a
+  `report failed go` rule in the **main file** (author order, so it beats advent's default): south →
+  "Galaxy Jones never runs away from a fight!", the six lateral compass points → "There are only stone
+  walls in that direction." (up/down/in fall through to the defaults).
+- [x] **Custom attack / take refusals** (`Can't Hit That.i7x`, `Can't Take That.i7x`, `Phobos Polish`
+  Tables of Attacking + Frustrated Taking): **DONE.** advent gained `take_refusal` / `attack_refusal`
+  string fields on `physical` (Can't Take That / Can't Hit That tables → per-object fields), read by
+  the take/attack `report failed` to replace the default refusal (golden `refusal1`; specs.md). Phobos
+  (`lib/phobos/refusals.lamp` + door fields inline in `base.lamp`) sets them for every ported object —
+  e.g. "Galaxy Jones pounds pointlessly on the moonsled's hull", "Galaxy could probably rip the X door
+  off its hinges …", "firmly attached to the wall", "Galaxy Jones can't take the walls!". Powered ATTACK
+  matches unpowered except the **Moon Sled** ("Galaxy would rather not damage her ship.") — a small
+  `instead attack when … powered_up` rule. *Residual:* the push/pull **"move message"** column (lower
+  value; conflicts with the levers' own PULL rules), and entries for **not-yet-ported objects** (suit
+  light, reset button, in-prose signs, sleeping pods, handprint scanners, counters/tile, PA System) —
+  they ride along with those objects. The walls/floor/ceiling **attack** refusal ("[We] would just
+  embarrass [ourselves]", Walls.i7x) is still deferred (needs a viewpoint reflexive).
 - [ ] **Power / action banners** (`Galaxy Banner.i7x` + `Powerup.i7x`): the POWER figlet on
   power-up, and the little action banner.
 - [ ] **Banner placement** (`story.ni`): the title banner should appear *between* the intro

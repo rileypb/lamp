@@ -74,6 +74,12 @@ report take:
 # Failure text lives here, keyed by reason, so a game can retheme a refusal
 # without restating the `check` condition (see devdocs/rulebooks.md).
 report failed take:
+	# A custom per-object refusal (Can't Take That.i7x) replaces the default for any "can't take
+	# this thing" failure — but not the state errors (already/​not carrying), which aren't about the
+	# thing being un-takeable.
+	if not (self.taken.take_refusal == "") and not (self.reason == already_carrying) and not (self.reason == not_carrying):
+		print "[act.taken.take_refusal]"
+		stop
 	if self.reason == already_carrying:
 		print take_already_carrying:"You're already carrying that."
 		stop
@@ -350,6 +356,10 @@ check attack:
 	stop failed attack_pointless
 
 report failed attack when self.reason == attack_pointless:
+	# A custom per-object refusal (Can't Hit That.i7x) replaces the generic "violence" line.
+	if not (self.target.attack_refusal == ""):
+		print "[act.target.attack_refusal]"
+		stop
 	print attack_violence:"Violence isn't the answer to this one."
 
 # PUSH for buttons, switches and the like (Inform's "pushing a thing"). Like ATTACK, the
@@ -443,9 +453,21 @@ do go:
 	let here = holder(self.actor)
 	move self.actor to connects here self.way ?first
 
+# Direction-aware excuses for a blocked exit (Can't Go That Way.i7x): up/down/in get their own
+# default lines, everything else the generic "can't go that way." A game refines per-room by
+# contributing its own `report failed go` rule *from its main file* (author-order, so it runs first).
 report failed go:
 	if self.reason == cant_go_that_way:
-		print go_cant:"You can't go that way."
+		if self.way == up:
+			print go_cant_up:"[We] can neither climb walls nor fly."
+			stop
+		if self.way == down:
+			print go_cant_down:"[We] can't just dig downward."
+			stop
+		if self.way == inward:
+			print go_cant_in:"What [do] [we] want to enter?"
+			stop
+		print go_cant:"[We] can't go that way."
 		stop
 
 # go needs no report: moving the actor fires the `contains add` handler, which

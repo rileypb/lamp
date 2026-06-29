@@ -1,0 +1,18 @@
+Room
+A bare room.
+
+You see a pebble here.
+
+> take statue
+The statue is bolted to the floor.
+
+> attack statue
+Hitting the statue would only bruise your knuckles.
+
+> take pebble
+Taken.
+
+> attack pebble
+Violence isn't the answer to this one.
+
+> quit

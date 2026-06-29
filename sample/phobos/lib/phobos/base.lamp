@@ -140,6 +140,7 @@ bidi connects Eastern_Spoke south South_Barracks
 # (parts of each door) are deferred too.
 door green_door:
 	feels "The door is smooth cold metal."
+	take_refusal "Galaxy could probably rip the green door off its hinges if she used the Galaxy Suit, if that's what she wants to use the charges up for."
 	north Southern_Spoke
 	south Passage_End
 	scenery
@@ -147,6 +148,8 @@ door green_door:
 	lockable false
 door yellow_door:
 	feels "The door is smooth cold metal."
+	take_refusal "Galaxy could probably rip the yellow door off its hinges if she used the Galaxy Suit, if that's what she wants to use the charges up for."
+	attack_refusal "Galaxy pounds uselessly on the yellow door."
 	west Reactor_Room
 	east Western_Spoke
 	scenery
@@ -154,6 +157,8 @@ door yellow_door:
 	lockable false
 door red_door:
 	feels "The door is smooth cold metal."
+	take_refusal "Galaxy could probably rip the red door off its hinges if she used the Galaxy Suit, if that's what she wants to use the charges up for."
+	attack_refusal "Galaxy pounds uselessly on the red door."
 	south armory
 	north Western_Spoke
 	scenery
@@ -161,6 +166,8 @@ door red_door:
 	lockable false
 door blue_door:
 	feels "The door is smooth cold metal."
+	take_refusal "Galaxy could probably rip the blue door off its hinges if she used the Galaxy Suit, if that's what she wants to use the charges up for."
+	attack_refusal "Galaxy pounds uselessly on the blue door."
 	east Commanders_Quarters
 	west Eastern_Spoke
 	scenery
@@ -168,6 +175,7 @@ door blue_door:
 	lockable false
 door purple_door:
 	feels "The door is smooth cold metal."
+	take_refusal "Galaxy could probably rip the purple door off its hinges if she used the Galaxy Suit, if that's what she wants to use the charges up for."
 	north Control_Room
 	south Hub_Junction
 	scenery
@@ -175,6 +183,7 @@ door purple_door:
 	lockable false
 door flight_deck_door:
 	feels "The door is smooth cold metal."
+	take_refusal "Galaxy could probably rip the flight deck door off its hinges if she used the Galaxy Suit, if that's what she wants to use the charges up for."
 	north Flight_Deck
 	south Control_Room
 	scenery
