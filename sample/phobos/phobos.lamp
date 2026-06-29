@@ -43,11 +43,12 @@ rule startup_rules:
 	# Eleven points to earn (six puzzles, the alliance, arming, the commandos, and the escape),
 	# topping out at the rank of Queen of Mars. See lib/phobos/scoring.lamp.
 	max_score = 11
-	# Third-person narration: advent's player-facing `[We]`/verb messages render as "She …"
-	# (e.g. the room-contents listing "She sees a … here.", examine-nothing). The "She" comes
-	# from Galaxy's `gender` (on `yourself` below), not a viewpoint global. Phobos's custom
-	# rules still use the name "Galaxy"; this only governs the pronoun forms.
+	# Third-person, name-based narration: advent's player-facing `[We]`/verb messages render with
+	# Galaxy's *name* ("Galaxy can't reach that.", "Galaxy sees a … here."), pronominalizing later
+	# references in the same message ("she"). `viewpoint_named` turns on the name form; `viewpoint_person
+	# = 3` + Galaxy's `gender` (on `yourself` below) give the third-person pronoun/verb agreement.
 	viewpoint_person = 3
+	viewpoint_named = true
 
 # Informational verbs (story.ni: abouting / helping). These are "out of world"
 # in I7 (no turn passes). advent has no game-defined out-of-world hook yet, so

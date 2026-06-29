@@ -205,7 +205,12 @@ use an ordinary reference (`[the self.actor]`), not a pronoun word.
   and the pronoun follows, with nothing to keep in sync. So `[We] [see]` renders "You see" /
   "I see" / "She sees" / "He sees" / "It sees" by `viewpoint_person` + `player.gender`, and
   the verb agrees. (Phobos: `viewpoint_person = 3` + `gender "female"` on `yourself` → "She
-  …".) Still a *pronoun*, never a name (D8). Story **tense** (D6) remains deferred.
+  …".) **Named third-person viewpoint (DONE):** set `viewpoint_named = true` (a `lib/sys`
+  global) and, in third person, `[We]` emits the player's **name** on its first use in a render
+  ("Galaxy") and pronominalizes later references in that render ("she"). It uses a per-render
+  `viewpointNamed` flag in the runtime (`renderViewpointNamed`/`renderSetViewpointNamed`); the
+  locale's `we()` reads it. For a name-based house style (Phobos: "Galaxy can't reach that.").
+  Default false → pronoun, byte-invariant. Story **tense** (D6) remains deferred.
 - **D8. Integration with action defaults.** Inform: `"[The actor] [take] [the
   noun]."` (where `[The actor]` becomes "You" or "Alice"). **Lamp:** the default
   report of a generic action becomes a template keyed on the actor as **subject** —

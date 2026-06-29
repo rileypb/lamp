@@ -1428,7 +1428,7 @@ function renderTextValue(textValue) {
     if (currentRenderContext() !== null) {
         return textValue();
     }
-    renderContextStack.push({ subject: null, agreement: null, count: null });
+    renderContextStack.push({ subject: null, agreement: null, count: null, viewpointNamed: false });
     try {
         return textValue();
     } finally {
@@ -1462,6 +1462,20 @@ function renderAgreement() {
 function renderSetAgreement(value) {
     const ctx = currentRenderContext();
     if (ctx) ctx.agreement = value;
+    return "";
+}
+
+// Whether the player has already been rendered by *name* (rather than a pronoun) in this render —
+// used by a named third-person viewpoint so the first [We] emits "Galaxy" and later references in
+// the same render pronominalize ("she"). Per-render, so each message starts fresh.
+function renderViewpointNamed() {
+    const ctx = currentRenderContext();
+    return ctx ? ctx.viewpointNamed : false;
+}
+
+function renderSetViewpointNamed(value) {
+    const ctx = currentRenderContext();
+    if (ctx) ctx.viewpointNamed = Boolean(value);
     return "";
 }
 
@@ -2248,6 +2262,8 @@ module.exports = {
     renderSetSubject,
     renderAgreement,
     renderSetAgreement,
+    renderViewpointNamed,
+    renderSetViewpointNamed,
     renderCount,
     renderSetCount,
     interp,

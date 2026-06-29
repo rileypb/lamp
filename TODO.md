@@ -48,8 +48,9 @@ banner placement seam, the remaining examinable in-prose sub-objects (signs/post
 parts, examine-self / X ME, indescribable objects, the bare-word SAY shortcuts (needs a command-rewrite
 hook, below), and the audit passes. (Now ported: all `$` swear censorship; the two guard combat
 scenes — arrival shoot-on-sight + powered suit-deflect, spy-death button overrides; the goofy random
-PA broadcasts; and the guard Interjections — both random in release / deterministic-every-Nth-turn in
-debug so the golden stays clean, suppression keyed off the single `g_say` chokepoint.)
+PA broadcasts; the guard Interjections; and the **named third-person viewpoint** — `viewpoint_named`
+global so `[We]` renders the player's name ("Galaxy can't reach that.") with later refs pronominalized,
+runtime per-render flag + locale `we()`, default-false so byte-invariant.)
 Smaller: SAY/ANSWER free-text, custom can't-go/hit/take messages, power/action banners, banner
 placement seam, examinable in-prose sub-objects, and a per-extension audit. **Infra DONE:** golden
 discovery now walks one level into subdirs, so `sample/phobos/phobos.lamp` is a golden (`test

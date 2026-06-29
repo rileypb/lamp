@@ -18,6 +18,12 @@ global int undo_limit = 32
 global int viewpoint_person = 2
 global bool viewpoint_plural = false
 
+# Named third-person viewpoint: when true (and `viewpoint_person` is 3), `[We]` renders the player's
+# *name* on its first use in a render (e.g. "Galaxy") and pronominalizes later references in the same
+# render ("she"), instead of always using the pronoun. For a name-based house style (e.g. "Galaxy
+# can't reach that." rather than "She can't reach that."). Default false; read by the locale's we().
+global bool viewpoint_named = false
+
 global real PI = 3.141592653
 
 # The action currently running (set by the action pipeline for the duration of an

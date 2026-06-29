@@ -154,18 +154,22 @@ Lamp's capabilities. The checklist below tracks what's left; we work through it 
   Golden byte-identical (the walkthrough arrives disguised and never pushes a button with the guard
   there); all four paths verified in play. *Note:* suit-deflecting one's would-be ally is a dead end
   (no alliance → can't arm the reactor), as in the original.
-- [ ] **Viewpoint subject: name "Galaxy", not pronoun "She"** (house style / `Third Person
-  Narration`): advent's viewpoint substitution (`[We]`/the unqualified adaptive verbs) renders the
-  protagonist as the third-person *pronoun* — so a `[We] …` refusal reads "**She** can't reach
-  Stickney Crater." where the original uses the **name**: "**Galaxy** can't reach that." Phobos's
-  whole house style names the character ("Galaxy is in the passage end."), so the pronoun sounds
-  awkward in these viewpoint messages. Need a way for the viewpoint subject to render as the player's
-  **name** (e.g. a `[We]`/sentence-start form that emits `display_name(player)` for a 3rd-person,
-  named viewpoint, perhaps gated by a `viewpoint_named`/`always_indefinite`-style flag, with later
-  references still pronominalizing — "Galaxy … she …"). Touches the locale `we()`/viewpoint path
-  (`lib/en-US`) and any advent message that opens with `[We]`. (Distinct from the deferred
-  third-person *action reports*, but the same underlying gap.) The "that"/"Stickney Crater"
-  demonstrative split is separate and already tracked in the repo `TODO.md`.
+- [x] **Viewpoint subject: name "Galaxy", not pronoun "She"** (house style / `Third Person
+  Narration`): **DONE.** Added a **named third-person viewpoint** to the engine/locale: a
+  `viewpoint_named` global (`lib/sys/globals.lamp`); when true and `viewpoint_person == 3`, the
+  locale's `we()` (`lib/en-US`, mirrored in `lib/fr-FR`) emits the player's `display_name` on the
+  first `[We]` of a render and pronominalizes later references in that same render (via a new
+  per-render `viewpointNamed` flag in the runtime + `renderViewpointNamed`/`renderSetViewpointNamed`).
+  So advent's `[We] …` messages now read "**Galaxy** can't reach Stickney Crater.", "Galaxy opens the
+  cabinet, revealing …", etc. Phobos sets `viewpoint_named = true` (startup_rules). Default false, so
+  every en-US/fr-FR golden is byte-invariant; the Phobos golden changed only the three `[We]`-derived
+  lines (She→Galaxy). *Known minor:* the room-contents intro ("[We] [see] … here." → "Galaxy sees a
+  commando here.") follows the manual "Galaxy is in …" heading, which is a *separate* literal render,
+  so the per-render flag can't link them and it names rather than pronominalizes — a mild repetition,
+  rare (only rooms with a listable item). Pronominalizing it would need a per-turn flag + routing the
+  heading through `[We]`, or the deferred contents-reword; left as-is. (Distinct from the deferred
+  third-person *action reports*. The "that"/"Stickney Crater" demonstrative split is separate, in repo
+  `TODO.md`.)
 - [ ] **Custom "can't go that way"** (`Can't Go That Way.i7x`): per-room excuse messages.
 - [ ] **Custom attack / take refusals** (`Can't Hit That.i7x`, `Can't Take That.i7x`, the
   `Phobos Polish` Table of Attacking): e.g. "Galaxy pounds pointlessly on the Moon Sled's hull" +

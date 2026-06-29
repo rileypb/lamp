@@ -115,7 +115,7 @@ The exit is to the south.
 "ĻĹĹ."
 
 > open cabinet
-She opens the cabinet, revealing a Cyberhelmet.
+Galaxy opens the cabinet, revealing a Cyberhelmet.
 
 "ĺĹĹ."
 
@@ -698,7 +698,7 @@ Galaxy is in the control room. The inner sanctum of the base is dominated by a l
 
 A chair sits in front of the control panel. A purple door stands open to the south, while the door to the flight deck, open, is to the north.
 
-She sees a short commando here.
+Galaxy sees a short commando here.
 
 "ĺ."
 
@@ -717,7 +717,7 @@ A Siriusian ship rests on the platform, an open hatch awaiting.
 > enter ship
 Galaxy is inside the siriusian ship. It's a small, cramped, utilitarian space with three seats and a control panel. Even Star Trek's shuttlecraft were cooler than this. The only way to go is out, to the flight deck.
 
-She sees a tall commando here.
+Galaxy sees a tall commando here.
 
 "Ł."
 
