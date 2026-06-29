@@ -5,21 +5,16 @@ lib advent
 # banner, then awards the points (advent's `award_points`, which also prints the notification).
 # `rank_name()` maps the final score to a rank, shown in the end-of-game banner (phobos.lamp).
 
-# The "Galaxy Jones" figlet, in fixed (monospace) styling so it aligns. Printed line by line with
-# explicit breaks; the backslashes are escaped (\\).
+# The "Galaxy Jones" figlet, in fixed (monospace) styling so it aligns. Each line uses the
+# [fixed]…[/fixed] paired-marker sugar; the backslashes are escaped (\\).
 function void galaxy_banner():
 	print "[par]"
-	print fixed("_________      __                     _____                     ")
-	print "[line break]"
-	print fixed("__/ ____/___ _/ /___ __  ____  __     __/ /___  ____  ___  _____")
-	print "[line break]"
-	print fixed("_/ / __/ __ `/ / __ `/ |/ / / / /____ _/ / __ \\/ __ \\/ _ \\/ ___/")
-	print "[line break]"
-	print fixed("/ /_/ / /_/ / / /_/ />  </ /_/ / _/ /_/ / /_/ / / / /  __(__  ) ")
-	print "[line break]"
-	print fixed("\\____/\\__,_/_/\\__,_/_/|_|\\__, /  _\\____/\\____/_/ /_/\\___/____/  ")
-	print "[line break]"
-	print fixed("_____________________________/                                  ")
+	print "[fixed]_________      __                     _____                     [/fixed][line break]"
+	print "[fixed]__/ ____/___ _/ /___ __  ____  __     __/ /___  ____  ___  _____[/fixed][line break]"
+	print "[fixed]_/ / __/ __ `/ / __ `/ |/ / / / /____ _/ / __ \\/ __ \\/ _ \\/ ___/[/fixed][line break]"
+	print "[fixed]/ /_/ / /_/ / / /_/ />  </ /_/ / _/ /_/ / /_/ / / / /  __(__  ) [/fixed][line break]"
+	print "[fixed]\\____/\\__,_/_/\\__,_/_/|_|\\__, /  _\\____/\\____/_/ /_/\\___/____/  [/fixed][line break]"
+	print "[fixed]_____________________________/                                  [/fixed]"
 	print "[par]"
 
 function void galaxy_score(int n):
