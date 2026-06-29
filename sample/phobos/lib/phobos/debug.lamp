@@ -6,6 +6,13 @@ not_for_release
 # They jump game state forward so late-game content can be exercised without a full
 # playthrough; the globals they set live in countdown.lamp / linguistics.lamp.
 
+# Mark this a debug build (mirrors I7's "DEBUG is true" in the NOT FOR RELEASE block). Today it
+# forces the purple-door control code to buttons 1-5 (hacking.lamp's `ensure_control_parts`), so
+# the walkthrough test scripts below are deterministic. A release build excludes this file, so the
+# code shuffles randomly for players.
+rule startup_rules:
+	debug_mode = true
+
 # late (I7's "lowcounting"): jump the self-destruct clock near zero, to reach the ending
 # without burning hundreds of turns.
 action late:
@@ -58,8 +65,23 @@ report disguise:
 	print "Galaxy is now disguised as a Siriusian cyborg."
 
 # --- TEST scripts (run with `test <name>`; see the TEST runner in lib/advent/debug.lamp) -------
-# These drive late-game content via the debug shortcuts above (the faithful puzzle-walkthroughs
-# from story.ni still need their button sequences re-derived for the Lamp port — a follow-up).
+# `test most` is the faithful puzzle walkthrough (ported from story.ni's "test most"): it collects
+# and scans all five documents and solves every keypad, ending disguised in the control room. The
+# keypad solutions are the Lamp port's own (the flip-sets/arrangements differ from I7); they are
+# deterministic because debug_mode (set above) fixes the blue and purple codes. `test endgame`
+# adds the guard win. `test talk`/`test win` are quick all-debug shortcuts (gonear/disguise/arm).
+test_script test_most:
+	printed_name "most"
+	understand "most"
+	commands "hack door/n/w/take form/scan form/read form/e/n/e/n/open cabinet/take helmet/wear helmet/s/s/hack locker/press 1/press 4/take diary/scan diary/n/hack blue door/press 1/press 2/e/take log/scan log/read log/w/w/w/n/take notebook/scan notebook/read notebook/s/hack yellow door/press 2/press 3/press 5/press 7/press 9/w/take manual/scan manual/read manual/e/hack red door/press 1/press 2/press 3/press 5/press 7/s/take carapace/wear carapace/n/e/hack purple door/press 1/press 2/press 3/press 4/press 5/n"
+
+# The arming levers are still guard-led (deferred), so this uses the `arm` debug verb between the
+# alliance and the escape; once NPC-leading lands, replace `arm` with following the guard.
+test_script test_endgame:
+	printed_name "endgame"
+	understand "endgame"
+	commands "test most/give chocolate to guard/remove helmet/arm/gonear seat/fly"
+
 test_script test_talk:
 	printed_name "talk"
 	understand "talk"

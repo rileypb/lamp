@@ -191,11 +191,21 @@ question — a separate text-topic mechanism), the guard **leading** Galaxy to t
 **TEST runner (story.ni L159–163's `test … with "…"`): the mechanism is built** (general; in
 `lib/advent/debug.lamp`, see specs.md "Debug: the TEST runner"). `test [name]` queues a
 `test_script`'s `"/"`-joined commands through the real command loop; a script may begin with
-another `test name` (expands in place). Phobos ships demo scripts in its debug file — **`test
-talk`** (disguise → guard → a few ASK topics) and **`test win`** (disguise → give chocolate →
-reveal → arm → fly, reaching the heroic ending in one command). **Deferred:** the *faithful*
-puzzle-walkthrough scripts from story.ni (`test most`/`endgame`/…) need their button sequences
-re-derived for the Lamp port's puzzles (the keypad solutions differ from I7's).
+another `test name` (expands in place). Phobos ships four scripts in its debug file:
+**`test most`** — the faithful puzzle walkthrough (ported from story.ni's "test most"): collects and
+scans all five documents and solves every keypad (green/yellow/red/blue/locker/purple), ending
+disguised in the control room; **`test endgame`** — `test most` + the guard win (give chocolate →
+reveal → arm → fly to the victory banner); plus quick all-debug **`test talk`** and **`test win`**.
+
+**Deterministic puzzles for the walkthroughs (story.ni's `DEBUG is true`).** Two keypads use the
+RNG: the purple control code (`shuffle 1-16, take 5`) and the blue sort-by-swap arrangement.
+Mirroring I7's NOT-FOR-RELEASE `DEBUG is true` (which forces the control code to `12345` and the
+blue order to `{2,1,3..}`), a Phobos **`debug_mode`** global — set true by a `startup_rules`
+contribution in the (not-for-release) debug file — forces the purple code to buttons **1-5** and
+the blue arrangement to a single swap (**press 1/press 2**). A release build excludes the debug
+file, so `debug_mode` stays false and both shuffle randomly for players. The Lamp keypad solutions
+(yellow **2,3,5,7,9**; red **1,2,3,5,7**; locker **1,4**) are the port's own, computed from its
+flip-sets (they differ from I7's).
 
 **Reactor Room furniture + arming levers (Base.i7x "Book - Reactor Room"): ported.** The reactor
 control board and the two arming levers (left/right) plus the collective "levers" are scenery

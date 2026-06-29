@@ -245,8 +245,11 @@ core edit is contained. Names (default): `contains`/`place`/`contained`, keyword
   holds a `"/"`-joined command string; `test [name]` splits it (`split_on` sys native) and queues
   the commands through the **real** command loop via a runtime input queue that `promptLine` drains
   (echoing each; front-insertion so a nested `test name` expands in place) — every-turn rules fire
-  as in normal play. Golden `test1`; Phobos demo scripts `test talk`/`test win`. **Possible next:**
-  the faithful Phobos puzzle-walkthrough scripts (re-derive keypad solutions for the Lamp port);
+  as in normal play. Golden `test1`. **Faithful Phobos walkthroughs DONE:** `test most` (collect +
+  scan all 5 docs + solve every keypad → control room) and `test endgame` (+ the guard win → victory),
+  plus quick `test talk`/`test win`. Made deterministic by a `debug_mode` global (mirrors I7's
+  `DEBUG is true`; set in the not-for-release debug file) that fixes the purple code (buttons 1-5) and
+  the blue arrangement (press 1/2); a release build leaves them random. **Possible next:**
   richer SHOWME (e.g. relations); a debug-only `RELATIONS`/`RULES` dump.
 - ~~**Galaxy Suit + power-up (Phobos)**~~ **DONE** (`sample/phobos/lib/phobos/suit.lamp`):
   worn suit, POWER UP/DOWN, and a powered smash. The **ATTACK/HIT/SMASH/PUNCH verb is in
