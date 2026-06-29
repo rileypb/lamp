@@ -75,12 +75,12 @@ test_script test_most:
 	understand "most"
 	commands "hack door/n/w/take form/scan form/read form/e/n/e/n/open cabinet/take helmet/wear helmet/s/s/hack locker/press 1/press 4/take diary/scan diary/n/hack blue door/press 1/press 2/e/take log/scan log/read log/w/w/w/n/take notebook/scan notebook/read notebook/s/hack yellow door/press 2/press 3/press 5/press 7/press 9/w/take manual/scan manual/read manual/e/hack red door/press 1/press 2/press 3/press 5/press 7/s/take carapace/wear carapace/n/e/hack purple door/press 1/press 2/press 3/press 4/press 5/n"
 
-# The arming levers are still guard-led (deferred), so this uses the `arm` debug verb between the
-# alliance and the escape; once NPC-leading lands, replace `arm` with following the guard.
+# The full guard-led endgame, no debug shortcuts: persuade -> reveal -> follow the guard to the
+# reactor and arm the self-destruct -> follow back -> fight off the commandos -> flee in the ship.
 test_script test_endgame:
 	printed_name "endgame"
 	understand "endgame"
-	commands "test most/give chocolate to guard/remove helmet/arm/gonear seat/fly"
+	commands "test most/give chocolate to guard/remove helmet/s/w/w/pull right lever/e/e/n/attack tall commando/attack short commando/n/enter ship/fly"
 
 test_script test_talk:
 	printed_name "talk"

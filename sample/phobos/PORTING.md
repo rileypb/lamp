@@ -182,11 +182,24 @@ humanity, allies, slams the self-destruct (sets `self_destruct_pushed`), and ask
 with the levers. **Death-on-detection**: standing in the control room undisguised and not-yet-
 pleased gets Galaxy shot (every-turn). A disguised first entry triggers the guard's **greeting**.
 A not-for-release **`disguise`** debug verb (dons both pieces) eases testing past the purple door.
-**Deferred (later slices):** the SAY/ANSWER free-text paths (assert humanity, the loyalty yes/no
-question — a separate text-topic mechanism), the guard **leading** Galaxy to the reactor levers
-(NPC actions) — so the alliance sets `self_destruct_pushed` but arming still needs the levers (the
-`arm` debug verb) — the **commando fight**, and **scoring**. The meeting/blowing-up/commando
-"scenes" are modelled with flags + every-turn rules rather than a general scene abstraction.
+**Death-on-detection**, the greeting, and the meeting/blowing-up "scenes" are modelled with flags +
+every-turn rules rather than a general scene abstraction.
+
+**The Guard — endgame: ported** (`guard_endgame.lamp`). After the alliance the guard **leads**
+Galaxy to the reactor (NPC movement via co-location-keyed every-turn rules: the guard steps to the
+next room when Galaxy is with it, so she follows each step) and pulls the **left** arming lever;
+Galaxy pulls the **right** to arm the self-destruct (`self_destruct_in_progress`, countdown 20) —
+retiring the `arm` debug crutch. The guard then leads back to the control room, where two
+**commandos** (a small `commando` type with defeated/dead state) burst in. Galaxy **ATTACK**s them
+(unconscious) or **SHOOT**s them with the disruptor pistol (dead; a new Phobos `shoot` action that
+needs the pistol still in hand — so giving it away earlier forecloses that path); she can't leave
+mid-fight. Downing the second commando triggers the guard's death (it shielded her), opens the
+flight-deck door, and clears the way to the ship and the win. To make people attackable/examinable,
+advent's **`examine` and `attack` now target `physical`** (was `item`; byte-invariant). **Deferred:**
+**scoring** (carrying the unconscious commandos to safety earned points in I7), the "distracted ->
+shot" punishment for non-combat actions mid-fight (here she simply can't flee), and the SAY/ANSWER
+free-text asides (assert-humanity / loyalty yes/no — a separate text-topic mechanism). **`test
+endgame` now plays the whole game to victory with no debug shortcuts.**
 
 **TEST runner (story.ni L159–163's `test … with "…"`): the mechanism is built** (general; in
 `lib/advent/debug.lamp`, see specs.md "Debug: the TEST runner"). `test [name]` queues a

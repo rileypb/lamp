@@ -44,13 +44,14 @@ instead push when self.target == self_destruct_button:
 # so Galaxy alone can't do it: a single lever springs back, and grabbing for both is hopeless.
 # The actual arming — the Siriusian guard pulls the left lever and holds it, Galaxy pulls the
 # right, setting `self_destruct_in_progress` (countdown.lamp) and so the heroic win — is
-# guard-driven (Guard.i7x) and deferred with the Guard. When the guard lands, its lever rules go
-# in earlier / more specific than these (these are the "guard not present" fallbacks).
-instead pull when self.target == left_reactor_arming_lever:
+# guard-driven (Guard.i7x): the guard pulls the left lever and holds it, Galaxy pulls the right
+# (see guard_endgame.lamp). These are the "guard not present" fallbacks, so they bow out once the
+# guard is in the reactor leading the arming.
+instead pull when self.target == left_reactor_arming_lever and not (holder(guard) == Reactor_Room):
 	print "Galaxy pulls the lever. It springs back to its original position. Nothing else happens."
 	stop succeeded
 
-instead pull when self.target == right_reactor_arming_lever:
+instead pull when self.target == right_reactor_arming_lever and not (holder(guard) == Reactor_Room):
 	print "Galaxy pulls the lever. It springs back to its original position. Nothing else happens."
 	stop succeeded
 

@@ -1,0 +1,157 @@
+lib advent
+
+# The Guard endgame (Guard.i7x): after the alliance, the guard leads Galaxy to the reactor and
+# pulls the left arming lever; Galaxy pulls the right, arming the self-destruct. The guard then
+# leads back to the control room, where two Siriusian commandos burst in. Galaxy fights them off
+# (the guard shields her and is fatally hit); with the commandos down she flees to the ship.
+#
+# The leading is NPC movement driven by every-turn rules keyed on co-location (the guard steps to
+# the next room when Galaxy is with it, so she witnesses and follows each step). The commandos are
+# a small `commando` type with defeated/dead state. Galaxy can't leave the control room mid-fight.
+#
+# Deferred: scoring (carrying the unconscious commandos to safety earned points in I7), the
+# "distracted -> shot" punishment for non-combat actions mid-fight (here she simply can't flee),
+# and the SHOW/SAY free-text asides.
+
+type commando < person:
+	bool defeated = false
+	bool dead = false
+
+# The two attackers. Defined but unplaced (no room) until the attack begins.
+commando tall_commando:
+	printed_name "tall commando"
+	understand "tall/commando"
+	description "A tall, lanky Siriusian in a Cyberhelmet and carapace, armed with a disruptor rifle."
+commando short_commando:
+	printed_name "short commando"
+	understand "short/commando"
+	description "A short, stocky Siriusian in a Cyberhelmet and carapace, armed with a disruptor rifle."
+
+# The fallen guard, swapped in at the finale (scenery, so it isn't listed; examinable).
+item dead_guard:
+	scenery
+	printed_name "guard's body"
+	understand "guard/body/corpse"
+	description "The guard lies still, their Cyberhelmet removed, their Siriusian face peaceful at last. They gave their life to save Mars."
+
+global bool left_lever_pulled = false
+global bool commando_started = false
+
+# --- The guard leads Galaxy to the reactor (before the self-destruct is armed) ---------------
+# Fires while allied, not yet armed, and standing together: the guard takes one step toward the
+# reactor (Galaxy follows next turn), and at the reactor pulls and holds the left lever.
+rule every_turn_rules:
+	if guard_allied and not self_destruct_in_progress and holder(guard) == holder(player):
+		let here = holder(player)
+		if here == Control_Room:
+			move guard to Hub_Junction
+			print "'Come, human -- the reactor is this way. Quickly!' The guard heads south."
+		if here == Hub_Junction:
+			move guard to Western_Spoke
+			print "The guard leads the way west."
+		if here == Western_Spoke:
+			move guard to Reactor_Room
+			print "The guard leads the way west, into the reactor room."
+		if here == Reactor_Room:
+			if not left_lever_pulled:
+				print "'Here we are, human,' the guard says. 'It takes two: I will pull the left lever and hold it. Now you must pull the right lever -- quickly!' The guard hauls the left lever down and braces against it."
+				left_lever_pulled = true
+
+# Galaxy pulls the right lever while the guard holds the left -> the reactor arms. (The "guard not
+# present" fallbacks in control_room.lamp bow out once the guard is in the reactor.)
+instead pull when self.target == left_reactor_arming_lever and holder(guard) == Reactor_Room:
+	print "'I have the left lever, human,' the guard grunts. 'Pull the right!'"
+	stop succeeded
+
+instead pull when self.target == right_reactor_arming_lever and holder(guard) == Reactor_Room:
+	if not left_lever_pulled:
+		print "The lever won't budge alone -- it needs the left lever pulled at the same time."
+		stop failed
+	print "Galaxy hauls the right lever down. A loud klaxon sounds and the control board lights up. A voice announces, '[siriusian(\"Reactor armed. Self-destruct sequence will now proceed. Get clear of the blast\")].'"
+	self_destruct_in_progress = true
+	countdown = 20
+	stop succeeded
+
+# --- The guard leads back to the control room (after arming) ---------------------------------
+rule every_turn_rules:
+	if self_destruct_in_progress and guard_allied and not commando_started and holder(guard) == holder(player):
+		let here = holder(player)
+		if here == Reactor_Room:
+			move guard to Western_Spoke
+			print "'It is done,' the guard says. 'Now we flee, before the reactor blows -- and before more guards come. This way!' They hurry east."
+		if here == Western_Spoke:
+			move guard to Hub_Junction
+			print "The guard hurries east."
+		if here == Hub_Junction:
+			move guard to Control_Room
+			print "The guard hurries north, back toward the control room."
+
+# --- Commando attack ------------------------------------------------------------------------
+# Reaching the control room together, armed, springs the ambush: two commandos drop in from the
+# flight deck (whose door is now forced open).
+rule every_turn_rules:
+	if self_destruct_in_progress and guard_allied and not commando_started and holder(player) == Control_Room and holder(guard) == Control_Room:
+		commando_started = true
+		move tall_commando to Control_Room
+		move short_commando to Control_Room
+		let fdd = flight_deck_door
+		fdd.closed = false
+		fdd.locked = false
+		print "[par]Without warning, a pair of Siriusian commandos -- one tall, one short -- burst into the control room from the flight deck above, weapons drawn. Galaxy and the guard spring into action."
+
+function bool commandos_down():
+	return tall_commando.defeated and short_commando.defeated
+
+# The guard's death + the way out, once both attackers are down.
+function void commando_finale():
+	print "[par]Galaxy turns to her companion, who has fallen, hit by disruptor fire shielding her. She kneels and lifts away the guard's Cyberhelmet, baring a Siriusian face in its final moments. 'Thank you, human,' they say weakly. 'You could not save my life, but you have saved my honor. You have shown me there is hope for a better future. That is enough.' Then they die."
+	move guard to Reactor_Room
+	move dead_guard to Control_Room
+	print "[par]The way to the flight deck, and the waiting ship, stands open to the north."
+
+# Knock a commando out (punch) or kill it (shoot); the last one down triggers the finale.
+function void down_commando(commando c, bool killed):
+	c.defeated = true
+	c.dead = killed
+	if killed:
+		print "Galaxy fires, and [the c] is flung backwards, dead before they hit the floor."
+	else:
+		print "Galaxy ducks the disruptor fire, closes in, and cracks [the c][']s helmet with a single brutal punch. They crumple, unconscious."
+	if commandos_down():
+		commando_finale()
+	else:
+		print "The other commando stays locked in a furious firefight with the guard, who is keeping their body between the attacker and Galaxy."
+
+instead attack when self.target == tall_commando:
+	down_commando(tall_commando, false)
+	stop succeeded
+instead attack when self.target == short_commando:
+	down_commando(short_commando, false)
+	stop succeeded
+
+# SHOOT with the disruptor pistol. Needs the pistol still in hand (Galaxy may have given it away).
+action shoot:
+	direct physical target
+	syntax:
+		"shoot [target]"
+
+instead shoot when self.target == tall_commando:
+	if not (holder(disruptor_pistol) == player):
+		print "Galaxy reaches for her disruptor -- but she no longer has it."
+		stop failed
+	down_commando(tall_commando, true)
+	stop succeeded
+instead shoot when self.target == short_commando:
+	if not (holder(disruptor_pistol) == player):
+		print "Galaxy reaches for her disruptor -- but she no longer has it."
+		stop failed
+	down_commando(short_commando, true)
+	stop succeeded
+
+report shoot:
+	print "Galaxy sees no reason to shoot [the act.target]."
+
+# Can't turn your back on the commandos until they're down.
+instead go when commando_started and not commandos_down() and holder(player) == Control_Room:
+	print "Galaxy can't turn her back on the commandos -- she has to deal with them first."
+	stop failed

@@ -274,7 +274,7 @@ report failed examine:
 # its own refusal stops with a bare `stop failed`, so the reason guard below leaves the
 # default unprinted. The message is named, so a game or locale can retheme it.
 action attack:
-	direct item target
+	direct physical target
 	syntax:
 		"attack [target]"
 		"hit [target]"

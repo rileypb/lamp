@@ -302,12 +302,16 @@ core edit is contained. Names (default): `contains`/`place`/`contained`, keyword
   examinable. **Guard persuasion + alliance DONE** (`guard_persuasion.lamp`): new advent **GIVE/SHOW**
   verbs (golden `give1`); a pleasing action (give/drop pistol, give log, give chocolate) → pleased →
   removing the disguise fires the **alliance reveal** (sets `self_destruct_pushed`); death-on-detection
-  + greeting; not-for-release `disguise` debug verb. **Still deferred (Guard, later slices):** the
-  SAY/ANSWER free-text paths (assert humanity, loyalty yes/no), the guard **leading** Galaxy to the
-  levers (NPC actions) — so arming still needs the `arm` debug — the **commando fight**, and **scoring**.
-  (60KB conversation/persuasion extension) the two-lever self-destruct needs; scoring on solve;
-  the handprint-scanner as a real part-object. Also deferred: the helmet's translation effect,
-  examine-self disguise variants.
+  + greeting; not-for-release `disguise` debug verb. **Guard endgame DONE** (`guard_endgame.lamp`):
+  the guard **leads** Galaxy to the reactor (NPC movement via co-location every-turn rules) and pulls
+  the left lever; Galaxy pulls the right → arms the self-destruct (retires the `arm` crutch); the guard
+  leads back; two **commandos** burst in (a `commando` type) — ATTACK (unconscious) or SHOOT (dead, new
+  `shoot` action needing the pistol); downing both kills the guard (it shielded her) and opens the way
+  to the ship → win. advent's **examine + attack now target `physical`** (people attackable/examinable;
+  byte-invariant). **`test endgame` plays the whole game to victory with no debug shortcuts.** The
+  **Guard arc is complete.** Deferred: **scoring** (carry the unconscious commandos for points), the
+  "distracted → shot" mid-fight punishment (here she just can't flee), the SAY/ANSWER free-text asides,
+  the handprint-scanner part-object, and the helmet's translation effect.
 - ~~**OPEN / CLOSE actions for containers (advent)**~~ **DONE**
   (`lib/advent/actions.lamp`): OPEN/CLOSE (`shut`) over `box`es — opt in with `closable
   true`; opening reveals newly-visible contents and unseals them for scope (closing
