@@ -327,18 +327,53 @@ instead push when self.target == reset_button:
 	reset_keypad()
 	stop succeeded
 
-# RESET / PRESS RESET — the same as pushing the on-screen RESET button.
+# RESET — the same as pushing the on-screen RESET button. (PRESS RESET is handled by press_word below,
+# alongside the other non-numeric keypresses.)
 action reset_pad:
 	syntax:
 		"reset"
-		"press reset"
 
 do reset_pad:
 	reset_keypad()
 
+# The valid-range reminder plus a keypad reprint, shared by an out-of-range number and a non-numeric
+# keypress so either lands the player back at a readable board.
+function void press_bad_digit():
+	if kim_adhered_to == locker:
+		print "Use the digits 1-4.[par]"
+		show_keypad_4()
+	else:
+		if kim_adhered_to == purple_door:
+			print "Use the numbers 1-16.[par]"
+			show_keypad_16()
+		else:
+			if kim_adhered_to == blue_door:
+				print "Use the digits 1-9.[par]"
+				show_keypad_blue()
+			else:
+				print "Use the digits 1-9.[par]"
+				show_keypad_9()
+
+# A keypress that isn't a digit ("press f"): the numeric `press [n]` only matches digits, so anything
+# else falls here rather than a parser "no such thing". PRESS RESET routes here too.
+action press_word:
+	string keytext
+	syntax:
+		"press [keytext]"
+
+before press_word:
+	if kim_adhered_to == none or not (holder(player) == kim_hack_room):
+		print "Galaxy isn't hacking anything right now."
+		stop failed
+	if to_lower(self.keytext) == "reset":
+		reset_keypad()
+		stop succeeded
+	press_bad_digit()
+	stop succeeded
+
 do press_key when kim_adhered_to == yellow_door:
 	if self.n < 1 or self.n > 9:
-		print "Use the digits 1-9."
+		press_bad_digit()
 		stop failed
 	# Per-key flip-sets (the hidden rule). Pressing flips each listed button.
 	let flip = [0]
@@ -379,7 +414,7 @@ report press_key when kim_adhered_to == yellow_door:
 # --- Red door: a second nine-button keypad with its own hidden flip-sets ------
 do press_key when kim_adhered_to == red_door:
 	if self.n < 1 or self.n > 9:
-		print "Use the digits 1-9."
+		press_bad_digit()
 		stop failed
 	# Per-key flip-sets (the hidden rule, distinct from the yellow door's).
 	let flip = [0]
@@ -470,7 +505,7 @@ function void show_keypad_blue():
 
 do press_key when kim_adhered_to == blue_door:
 	if self.n < 1 or self.n > 9:
-		print "Use the digits 1-9."
+		press_bad_digit()
 		stop failed
 	nine_buttons[self.n - 1] = not nine_buttons[self.n - 1]
 	print "Galaxy presses button [self.n]. [run on]"
@@ -535,7 +570,7 @@ function void show_keypad_4():
 
 do press_key when kim_adhered_to == locker:
 	if self.n < 1 or self.n > 4:
-		print "Use the digits 1-4."
+		press_bad_digit()
 		stop failed
 	four_buttons[self.n - 1] = not four_buttons[self.n - 1]
 	if four_solved():
@@ -644,7 +679,7 @@ function void show_keypad_16():
 
 do press_key when kim_adhered_to == purple_door:
 	if self.n < 1 or self.n > 16:
-		print "Use the numbers 1-16."
+		press_bad_digit()
 		stop failed
 	purple_reset = false
 	sixteen_buttons[self.n - 1] = not sixteen_buttons[self.n - 1]
