@@ -154,10 +154,17 @@ function void down_commando(commando c, bool killed):
 	else:
 		print "The other commando stays locked in a furious firefight with the guard, who is keeping their body between the attacker and Galaxy."
 
+# Once a commando is down, attacking again is refused (I7's "short/tall unconscious commando" rows).
 instead attack when self.target == tall_commando:
+	if tall_commando.defeated:
+		print "Attacking a defenseless person is not Galaxy's style."
+		stop failed
 	down_commando(tall_commando, false)
 	stop succeeded
 instead attack when self.target == short_commando:
+	if short_commando.defeated:
+		print "Attacking a defenseless person is not Galaxy's style."
+		stop failed
 	down_commando(short_commando, false)
 	stop succeeded
 

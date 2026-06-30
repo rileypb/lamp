@@ -28,7 +28,7 @@ function void describe_room(room r):
 		list_room_contents(r)
 	else:
 		print darkness_name:"Darkness[line break]"
-		print darkness_description:"It is pitch dark, and you can't see a thing."
+		print darkness_description:"It is pitch dark, and [we] can't see a thing."
 
 # Recursive content listing: each visible thing is rendered with the things it
 # holds in a parenthetical — "a box (in which is a thimble (in which is a marble))".

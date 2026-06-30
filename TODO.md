@@ -91,8 +91,14 @@ morbid", `shoot <door>` → "…dissipates against the door", no-firearm), a sco
 (general advent: "[score] of [max] points" when `max_score > 0`), the **remove-suit refusal**, and the
 two Polish library-message overrides (`drop_not_carrying`, `parser_cant_see` → third-person, in
 lib/phobos/messages.lamp); Improved Pushing / PBR Common / color-toggles / two-noun shoot-with grammar
-ruled N/A or acceptable simplifications. Only the **final line-by-line parity pass** remains (re-theme
-the residual second-person advent default reports + the feels/refusal text-fidelity check). **KIM
+ruled N/A or acceptable simplifications. **Final line-by-line parity pass DONE:** (1) re-themed
+advent's hardcoded second-person default reports to `[We]`-adaptive — byte-identical for the default
+2nd-person viewpoint, third-person for Phobos — plus `lib/phobos/messages.lamp` overrides for the
+contracted ones (`take_already_carrying`/`wear_already_worn`/`doff_not_worn`); (2) feels/refusal
+text-fidelity check filled the attack-refusal gaps the original port skipped (green/purple/flight
+doors + green/purple scanners + walls/floor/ceiling + force field + ship + pods + sign), the
+unconscious-commando refusal, and the tile's `feels`. **The Phobos 1:1 port is now feature- and
+text-complete.** **KIM
 location-gating DONE:** the KIM now physically adheres to its target (the
 hack moves it onto the handprint scanner / the walls, out of inventory, via `adhere_kim`), so PRESS
 and the state display are gated on Galaxy still being in the hack room (`kim_hack_room`); leaving the

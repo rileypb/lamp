@@ -141,6 +141,7 @@ door green_door:
 	description "A cyborg handprint scanner adorns the center of the door, which is [if green_door.closed]closed[else]open[end if]."
 	feels "The door is smooth cold metal."
 	take_refusal "Galaxy could probably rip the green door off its hinges if she used the Galaxy Suit, if that's what she wants to use the charges up for."
+	attack_refusal "Galaxy pounds uselessly on the green door."
 	north Southern_Spoke
 	south Passage_End
 	scenery
@@ -180,6 +181,7 @@ door purple_door:
 	description "A cyborg handprint scanner adorns the center of the door, which is [if purple_door.closed]closed[else]open[end if]."
 	feels "The door is smooth cold metal."
 	take_refusal "Galaxy could probably rip the purple door off its hinges if she used the Galaxy Suit, if that's what she wants to use the charges up for."
+	attack_refusal "Galaxy pounds uselessly on the purple door."
 	north Control_Room
 	south Hub_Junction
 	scenery
@@ -189,6 +191,7 @@ door flight_deck_door:
 	description "A cyborg handprint scanner adorns the center of the door, which is [if flight_deck_door.closed]closed[else]open[end if]."
 	feels "The door is smooth cold metal."
 	take_refusal "Galaxy could probably rip the flight deck door off its hinges if she used the Galaxy Suit, if that's what she wants to use the charges up for."
+	attack_refusal "Galaxy pounds uselessly on the flight deck door."
 	north Flight_Deck
 	south Control_Room
 	scenery

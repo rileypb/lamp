@@ -8,3 +8,9 @@ drop_not_carrying: "Galaxy doesn't have that."
 
 # Parser "no such thing" — referring to something that isn't here.
 parser_cant_see: "There is nothing there."
+
+# Third-person re-themes of advent's contracted second-person refusals (the non-contracted "[We]"
+# defaults already adapt to the viewpoint; these don't, lacking an adaptive be-contraction form).
+take_already_carrying: "Galaxy is already carrying that."
+wear_already_worn: "Galaxy is already wearing that."
+doff_not_worn: "Galaxy isn't wearing that."

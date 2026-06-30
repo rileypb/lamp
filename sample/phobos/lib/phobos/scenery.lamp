@@ -35,6 +35,7 @@ item storeroom_sign:
 	understand "sign/label"
 	feels "It's a plastic surface with etched letters."
 	take_refusal "The sign is firmly attached to the wall."
+	attack_refusal "There's no point in attacking the sign."
 	description "It reads '[siriusian(\"Please sign out any supplies or equipment before taking them\")].'"
 item junction_signs:
 	printed_name "sign"
@@ -95,6 +96,7 @@ item north_sleeping_pods:
 	understand "pod/pods/sleeping"
 	feels "The sleeping pods are made of a lightweight plastic, and feel smooth to the touch."
 	take_refusal "The sleeping pods are firmly attached to the floor."
+	attack_refusal "Galaxy Jones is not going to attack the sleeping pods."
 	description "This must be how Siriusians sleep: in claustrophobic little pods, closed to the outside world."
 item south_sleeping_pods:
 	printed_name "sleeping pods"
@@ -103,6 +105,7 @@ item south_sleeping_pods:
 	understand "pod/pods/sleeping"
 	feels "The sleeping pods are made of a lightweight plastic, and feel smooth to the touch."
 	take_refusal "The sleeping pods are firmly attached to the floor."
+	attack_refusal "Galaxy Jones is not going to attack the sleeping pods."
 	description "This must be how Siriusians sleep: in claustrophobic little pods, closed to the outside world."
 
 contains North_Barracks north_sleeping_pods
@@ -132,6 +135,7 @@ item counters:
 item tile:
 	scenery
 	understand "tile/tiles"
+	feels "The tile is smooth and polished."
 	take_refusal "The tile is part of the wall and floor."
 	description "The tile is white and spotless."
 
@@ -163,6 +167,7 @@ item green_scanner:
 	scenery
 	understand "scanner/handprint/indentations"
 	feels "Galaxy's five fingers don't fit in the three ridged indentations, but she can feel the metal surface of the scanner."
+	attack_refusal "Galaxy pounds uselessly on the green handprint scanner."
 	description "The three ridged indentations here are apparently designed to scan a Siriusian hand for security purposes."
 item yellow_scanner:
 	printed_name "handprint scanner"
@@ -195,6 +200,7 @@ item purple_scanner:
 	scenery
 	understand "scanner/handprint/indentations"
 	feels "Galaxy's five fingers don't fit in the three ridged indentations, but she can feel the metal surface of the scanner."
+	attack_refusal "Galaxy pounds uselessly on the purple handprint scanner."
 	description "The three ridged indentations here are apparently designed to scan a Siriusian hand for security purposes."
 item flight_deck_scanner:
 	printed_name "handprint scanner"

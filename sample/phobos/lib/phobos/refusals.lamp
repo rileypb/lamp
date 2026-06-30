@@ -79,6 +79,7 @@ item self_destruct_button:
 # --- Flight Deck / ship ------------------------------------------------------
 item static_force_field:
 	take_refusal "Galaxy can't take a force field!"
+	attack_refusal "Galaxy can't attack a force field!"
 item stickney_crater:
 	take_refusal "Not a chance."
 	attack_refusal "As if that were possible."
@@ -86,6 +87,7 @@ item mars:
 	take_refusal "Not a chance."
 item siriusian_ship:
 	take_refusal "That's much too big to take."
+	attack_refusal "Galaxy isn't going to attack her means of escape."
 item pilots_seat:
 	take_refusal "The pilot's seat is firmly attached to the floor."
 item ship_control_panel:
@@ -94,10 +96,15 @@ item ship_control_panel:
 # --- Backdrops ---------------------------------------------------------------
 backdrop walls:
 	take_refusal "Galaxy Jones can't take the walls!"
+	attack_refusal "Galaxy Jones is not going to attack the walls."
 backdrop floor:
 	take_refusal "Galaxy Jones can't take the floor!"
+	attack_refusal "Galaxy Jones is not going to attack the floor."
 backdrop ceiling:
+	# Indoors only; the outdoors "sky" take is the more-specific `instead take` in backdrops.lamp
+	# ("[We] can't take the sky.", matching Ceilings.i7x's block-taking-the-sky rule).
 	take_refusal "Galaxy Jones can't take the ceiling!"
+	attack_refusal "Galaxy Jones is not going to attack the ceiling."
 
 # --- The fallen guard --------------------------------------------------------
 item dead_guard:

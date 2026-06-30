@@ -84,7 +84,7 @@ report failed take:
 		print take_already_carrying:"You're already carrying that."
 		stop
 	if self.reason == cant_take_that:
-		print take_cant_take:"That's not something you can take."
+		print take_cant_take:"That's not something [we] can take."
 		stop
 	if self.reason == cant_take_unfeelable:
 		print take_cant_unfeelable:"[We] can't take [the act.taken]."
@@ -106,7 +106,7 @@ report inventory:
 	for x in item.all:
 		if holder(x) == self.actor:
 			if not found:
-				print inventory_header:"You are carrying:[line break]"
+				print inventory_header:"[We] [are] carrying:[line break]"
 				found = true
 			# The item name references the loop variable `x` (not the action), so it
 			# stays a plain print (a message may only reference `act`/globals); the
@@ -121,7 +121,7 @@ report inventory:
 				print inventory_providing_light:" (providing light)"
 			print "[line break]"
 	if not found:
-		print inventory_empty:"You are carrying nothing."
+		print inventory_empty:"[We] [are] carrying nothing."
 
 action drop:
 	direct item dropped
@@ -180,13 +180,13 @@ do wear:
 
 report wear:
 	if self.actor == player:
-		print wear_report:"You put on [the act.clothing]."
+		print wear_report:"[We] [put] on [the act.clothing]."
 	else:
 		print wear_report_other:"[The act.actor] [put] on [the act.clothing]."
 
 report failed wear:
 	if self.reason == not_wearable:
-		print wear_not_wearable:"That's not something you can wear."
+		print wear_not_wearable:"That's not something [we] can wear."
 		stop
 	if self.reason == already_worn:
 		print wear_already_worn:"You're already wearing that."
@@ -207,7 +207,7 @@ do doff:
 
 report doff:
 	if self.actor == player:
-		print doff_report:"You take off [the act.clothing]."
+		print doff_report:"[We] [take] off [the act.clothing]."
 	else:
 		print doff_report_other:"[The act.actor] [take] off [the act.clothing]."
 
@@ -248,7 +248,7 @@ report open:
 
 report failed open:
 	if self.reason == not_openable:
-		print open_not_openable:"That's not something you can open."
+		print open_not_openable:"That's not something [we] can open."
 		stop
 	if self.reason == already_open:
 		print open_already_open:"[The act.target] [is] already open."
@@ -277,7 +277,7 @@ report close:
 
 report failed close:
 	if self.reason == not_closable:
-		print close_not_closable:"That's not something you can close."
+		print close_not_closable:"That's not something [we] can close."
 		stop
 	if self.reason == already_closed:
 		print close_already_closed:"[The act.target] [is] already closed."
@@ -517,7 +517,7 @@ do put_on:
 
 report put_on:
 	if self.actor == player:
-		print put_on_report:"You put [the act.put_item] on [the act.destination]."
+		print put_on_report:"[We] [put] [the act.put_item] on [the act.destination]."
 	else:
 		print put_on_report_other:"[The act.actor] [put] [the act.put_item] on [the act.destination]."
 
@@ -526,5 +526,5 @@ report failed put_on:
 		print put_on_not_carrying:"You aren't carrying that."
 		stop
 	if self.reason == cant_put_on_that:
-		print put_on_cant:"You can't put things on that."
+		print put_on_cant:"[We] can't put things on that."
 		stop

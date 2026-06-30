@@ -274,11 +274,20 @@ Lamp's capabilities. The checklist below tracks what's left; we work through it 
   Transitions is empty in the original, so N/A. *PBR Common:* infrastructure only — indoors/outdoors
   already ported (the `outdoors` flag); `floating` / `initializing` activity / sentence-case are unused
   in Phobos.
-- [ ] **Final line-by-line parity pass** over every extension + `story.ni`, to catch missed messages and
-  edge cases. **Surfaced by the sweep:** several advent default reports are hardcoded second-person
-  ("You take off [the clothing].", etc.) which clash with Phobos's third-person narration — Polish.i7x
-  fixed the two the original author hit; a systematic pass should re-theme the rest (the feels / refusal
-  / message text-fidelity check, memory `phobos-text-fidelity-audit`).
+- [x] **Final line-by-line parity pass** — **DONE.** Two strands:
+  1. *Second-person → viewpoint-adaptive.* Converted advent's plain `You [verb]` defaults to `[We]
+     [verb]` (byte-identical for the default 2nd-person viewpoint, third-person for Phobos): inventory
+     header/empty, wear/doff reports, put-on report, the "not something you can take/wear/open/close"
+     refusals, darkness. The contracted ones (no adaptive be-contraction form) are overridden in
+     `lib/phobos/messages.lamp`: `take_already_carrying`, `wear_already_worn`, `doff_not_worn`. The
+     score/win notifications keep "Your"/"You" (Inform convention; the port matches).
+  2. *Feels / refusal text-fidelity check* (diffed the I7 Tables of Attacking / Frustrated Taking and the
+     `feels` assignments against the port). Filled gaps the original port missed: **attack refusals** on
+     the green/purple/flight-deck doors, the green/purple handprint scanners, walls/floor/ceiling, the
+     static force field, the Siriusian ship, the sleeping pods, and the storeroom sign; the
+     **unconscious-commando** "Attacking a defenseless person is not Galaxy's style." (an `instead
+     attack` guarding the down state); and the science-lab **tile**'s missing `feels`. (The dead-guard
+     `feels` "Galaxy leaves the dead guard alone." already matched I7 — it was *not* a divergence.)
 
 **Infrastructure (enabling, not game content):**
 - [x] **Automate `test endgame` in CI** — *done.* Golden discovery now walks one level into
