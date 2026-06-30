@@ -58,7 +58,9 @@ engine flag (Inform "privately-named": suppress identifier tokens so a `locker_s
 answer to "locker"; golden `privatename1`); and the **`part_of` relation** (`lib/advent/parts.lamp`:
 a part is in scope wherever its whole is, via a `wire_parts` startup native that materializes
 containment; scoped the closed-container barrier to real `container` types so a closed door doesn't
-hide its scanner part — golden `parts1`), used by the handprint scanners / suit light / RESET button.)
+hide its scanner part — golden `parts1`), used by the handprint scanners / suit light / RESET button; and the **power banner** — the POWER
+figlet flashed when the Galaxy Suit spends a charge, `power_banner()` in scoring.lamp, printed by the
+smash + guard-deflect paths. The unused action banner isn't ported.)
 Smaller: SAY/ANSWER free-text, custom can't-go/hit/take messages, power/action banners, banner
 placement seam, examinable in-prose sub-objects, and a per-extension audit. **Infra DONE:** golden
 discovery now walks one level into subdirs, so `sample/phobos/phobos.lamp` is a golden (`test
@@ -278,7 +280,12 @@ core edit is contained. Names (default): `contains`/`place`/`contained`, keyword
   fields); reaches out-of-scope objects too. **GONEAR [room-or-thing] DONE** (golden
   `gonear1`): teleports the player to a room, or to the room enclosing a thing (pure-Lamp
   `room_of` walks the holder chain to the top); the destination auto-describes. One verb for
-  both (GOTO left free for authors). **TREE + SCOPE DONE** (golden `treescope1`): TREE dumps
+  both (GOTO left free for authors). **BUG — `gonear <door>` is broken:** a door is contained
+  in no room (it's surfaced by the door scope provider, present in two rooms), so `room_of`
+  walks to a door and finds no enclosing room → gonear fails / goes nowhere. Fix: special-case
+  doors in `room_of`/gonear — pick one of the door's two sides (e.g. read a side off the
+  `doorway`/`connects` edges). Found while teleporting around Phobos. **Where:** the gonear/
+  `room_of` logic in `lib/advent/debug.lamp` (+ maybe a door-side query). **TREE + SCOPE DONE** (golden `treescope1`): TREE dumps
   the whole world's containment tree (a `world_tree` native); SCOPE lists what is in the
   player's scope right now (`scope_listing` over the now-exposed `scopeOf`). (ABSTRACT is
   skipped — deprecated in I7.) **Release-build flag DONE** (`test:release`): a `.lamp` file

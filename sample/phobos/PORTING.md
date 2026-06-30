@@ -190,8 +190,13 @@ Lamp's capabilities. The checklist below tracks what's left; we work through it 
   light, reset button, in-prose signs, sleeping pods, handprint scanners, counters/tile, PA System) —
   they ride along with those objects. The walls/floor/ceiling **attack** refusal ("[We] would just
   embarrass [ourselves]", Walls.i7x) is still deferred (needs a viewpoint reflexive).
-- [ ] **Power / action banners** (`Galaxy Banner.i7x` + `Powerup.i7x`): the POWER figlet on
-  power-up, and the little action banner.
+- [x] **Power banner** (`Galaxy Banner.i7x` + `Powerup.i7x`): **DONE.** The POWER figlet
+  (`power_banner()` in `scoring.lamp`, beside the Galaxy figlet) flashes whenever the Galaxy Suit
+  spends a charge — printed by the `use_charge` callers (the powered door-smash in `suit.lamp` and
+  the guard suit-deflect in `guard_persuasion.lamp`) just before the outcome message, then the
+  "[Galaxy doesn't earn any points…]" note, mirroring Powerup.i7x's `use a charge`. Golden
+  byte-identical (the walkthrough never spends a charge). (The third banner — the little **action
+  banner** — is defined in the extension but **unused** by Phobos, so it isn't ported.)
 - [ ] **Banner placement** (`story.ni`): the title banner should appear *between* the intro
   narration and the Galaxy Jones reveal (intro → banner → reveal), not before `startup_rules`.
   Needs an advent seam (a callable `print_banner()` + opt-out of the auto-print). See house-style note below.

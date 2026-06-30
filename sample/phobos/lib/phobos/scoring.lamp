@@ -17,6 +17,18 @@ function void galaxy_banner():
 	print "[fixed]_____________________________/                                  [/fixed]"
 	print "[par]"
 
+# The POWER figlet (Galaxy Banner.i7x), flashed when the Galaxy Suit spends a charge (see
+# suit.lamp's `use_charge` callers). The action banner is unused by Phobos, so it isn't ported.
+function void power_banner():
+	print "[par]"
+	print "[fixed]_________            ______[/fixed][line break]"
+	print "[fixed]____/ __ \\____ _  _  ___/ /[/fixed][line break]"
+	print "[fixed]___/ /_/ / __ \\ | /| / / / [/fixed][line break]"
+	print "[fixed]__/ ____/ /_/ / |/ |/ /_/  [/fixed][line break]"
+	print "[fixed]_/_/   _\\____/|__/|__(_)   [/fixed][line break]"
+	print "[fixed]_______________________[/fixed]"
+	print "[par]"
+
 function void galaxy_score(int n):
 	galaxy_banner()
 	award_points(n)

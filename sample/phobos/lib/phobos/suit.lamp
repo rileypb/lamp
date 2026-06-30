@@ -4,10 +4,10 @@ lib advent
 # Galaxy Smash.i7x). POWER UP the suit to supercharge Galaxy's next ATTACK, which
 # smashes a locked door open — a fast way to bypass the hacking puzzles while testing.
 #
-# Deviations: the every-turn "powers down if unused" rule is deferred (no every-turn
-# rulebook yet), but USE_CHARGE powers the suit down after each smash, so the
-# power-up→attack path matches the original. The power banner (ASCII art) is deferred
-# with scoring.
+# The POWER banner (ASCII figlet, Galaxy Banner.i7x) flashes whenever the suit spends a charge —
+# printed by the `use_charge` callers (the smash below and the guard suit-deflect) just before the
+# outcome message, as in Powerup.i7x's `use a charge`. The figlet lives in scoring.lamp with the
+# other banners.
 
 global bool powered_up = false
 global int charges_left = 3000
@@ -104,9 +104,11 @@ instead attack when self.target == purple_door:
 		stop failed
 
 # A powered strike destroys a locked door. A non-door target has no `locked` (reads
-# falsy), so it falls through to advent's default attack reaction.
+# falsy), so it falls through to advent's default attack reaction. The POWER banner flashes
+# first (Powerup.i7x's `use a charge` prints it ahead of the message).
 instead attack:
 	if powered_up and self.target.locked:
+		power_banner()
 		print "Galaxy uses the Galaxy Suit to attack [the act.target]. The door is destroyed, just hanging from its hinges."
 		self.target.locked = false
 		self.target.closed = false

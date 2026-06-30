@@ -78,6 +78,7 @@ function bool is_no(string t):
 # is a dead end, but the original allows it.
 function void guard_suit_deflect():
 	print "Swiftly, a gun barrel extends from their armor and fires a barrage of disruptor fire."
+	power_banner()
 	print "The Galaxy Suit, powered up and ready, reflects the fire back at the guard, who goes down with dramatic finality."
 	use_charge()
 	move guard to Reactor_Room
