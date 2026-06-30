@@ -140,3 +140,4 @@ dist
 /tests/golden/tmp/*
 /build
 lib/.DS_Store
+/transcripts
