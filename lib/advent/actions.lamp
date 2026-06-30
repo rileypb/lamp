@@ -136,7 +136,7 @@ do drop:
 	if wears self.actor self.dropped:
 		if (self.actor == player):
 			print drop_first_doff:"(first taking off [the act.dropped])[line break]"
-		try doff:
+		silently try doff:
 			clothing self.dropped
 			actor self.actor
 		if wears self.actor self.dropped:
