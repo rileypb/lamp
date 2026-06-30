@@ -143,7 +143,7 @@ A voice comes over the PA: "ĽŧŧЃł<ĺłīŁłΐ>ĺľŀłīĻſıļŁЃĻŧļ
 > hack locker
 Galaxy attaches the KIM to the locker.
 
-[1]<2><3>[4]
+[1]<2><3>[4][RESET]
 [] = red, <> = blue
 
 Galaxy mutters to herself. "Never seen a hacking interface like this before. What do I press? 1? 2?"
@@ -153,7 +153,7 @@ Galaxy mutters to herself. "Never seen a hacking interface like this before. Wha
 > press 1
 Galaxy presses button 1. Button 1 turns blue.
 
-<1><2><3>[4]
+<1><2><3>[4][RESET]
 [] = red, <> = blue
 
 "772."
@@ -305,7 +305,7 @@ A voice comes over the PA: "<ĺłīŁłΐ> here. ľЃ so over this mission. Get 
 > hack yellow door
 Galaxy attaches the KIM to the yellow door.
 
-[1][2][3][4][5][6][7][8][9]
+[1][2][3][4][5][6][7][8][9][RESET]
 [] = red, <> = blue
 
 "752."
@@ -313,7 +313,7 @@ Galaxy attaches the KIM to the yellow door.
 > press 2
 Galaxy presses button 2.
 
-[1]<2><3>[4][5][6][7][8][9]
+[1]<2><3>[4][5][6][7][8][9][RESET]
 [] = red, <> = blue
 
 "751."
@@ -321,7 +321,7 @@ Galaxy presses button 2.
 > press 3
 Galaxy presses button 3.
 
-[1]<2>[3]<4>[5][6][7][8][9]
+[1]<2>[3]<4>[5][6][7][8][9][RESET]
 [] = red, <> = blue
 
 "750."
@@ -329,7 +329,7 @@ Galaxy presses button 3.
 > press 5
 Galaxy presses button 5.
 
-[1]<2>[3]<4><5><6>[7][8][9]
+[1]<2>[3]<4><5><6>[7][8][9][RESET]
 [] = red, <> = blue
 
 "749."
@@ -337,7 +337,7 @@ Galaxy presses button 5.
 > press 7
 Galaxy presses button 7.
 
-[1]<2>[3]<4><5><6><7><8>[9]
+[1]<2>[3]<4><5><6><7><8>[9][RESET]
 [] = red, <> = blue
 
 "748."
@@ -345,7 +345,7 @@ Galaxy presses button 7.
 > press 9
 Galaxy presses button 9.
 
-<1><2><3><4><5><6><7><8><9>
+<1><2><3><4><5><6><7><8><9>[RESET]
 [] = red, <> = blue
 
 As the final button lights up blue, the yellow door to the west swings open! Galaxy retrieves the KIM.
@@ -394,7 +394,7 @@ Galaxy is in the western spoke. This is a nondescript hallway. An opening to the
 > hack red door
 Galaxy attaches the KIM to the red door.
 
-[1][2][3][4][5]<6>[7][8][9]
+[1][2][3][4][5]<6>[7][8][9][RESET]
 [] = red, <> = blue
 
 "741."
@@ -402,7 +402,7 @@ Galaxy attaches the KIM to the red door.
 > press 1
 Galaxy presses button 1.
 
-<1>[2][3][4][5]<6>[7][8][9]
+<1>[2][3][4][5]<6>[7][8][9][RESET]
 [] = red, <> = blue
 
 "740."
@@ -410,7 +410,7 @@ Galaxy presses button 1.
 > press 2
 Galaxy presses button 2.
 
-[1][2]<3>[4]<5><6><7>[8]<9>
+[1][2]<3>[4]<5><6><7>[8]<9>[RESET]
 [] = red, <> = blue
 
 "739."
@@ -419,7 +419,7 @@ A voice comes over the PA: "Looks like there's a lovely Mars out tonight, so if 
 > press 3
 Galaxy presses button 3.
 
-<1><2><3><4>[5]<6>[7]<8><9>
+<1><2><3><4>[5]<6>[7]<8><9>[RESET]
 [] = red, <> = blue
 
 "738."
@@ -427,7 +427,7 @@ Galaxy presses button 3.
 > press 5
 Galaxy presses button 5.
 
-[1][2][3][4][5][6]<7>[8][9]
+[1][2][3][4][5][6]<7>[8][9][RESET]
 [] = red, <> = blue
 
 "737."
@@ -435,7 +435,7 @@ Galaxy presses button 5.
 > press 7
 Galaxy presses button 7.
 
-<1><2><3><4><5><6><7><8><9>
+<1><2><3><4><5><6><7><8><9>[RESET]
 [] = red, <> = blue
 
 As the final button lights up blue, the red door to the south swings open! Galaxy retrieves the KIM.
@@ -485,7 +485,7 @@ The purple door beeps, and a voice says, "Visual identity confirmed."
 
 Galaxy attaches the KIM to the purple handprint scanner.
 
-[1 Ĺ][2 ĺ][3 Ļ][4 ļ][5 Ľ][6 ľ][7 Ŀ][8 ŀ][9 Ł][10 ł][11 Ѓ][12 ΐ][13 ſ][14 ŧ][15 ī][16 ı]
+[1 Ĺ][2 ĺ][3 Ļ][4 ļ][5 Ľ][6 ľ][7 Ŀ][8 ŀ][9 Ł][10 ł][11 Ѓ][12 ΐ][13 ſ][14 ŧ][15 ī][16 ı][RESET]
 [] = red, <> = blue
 
 "730."
@@ -493,7 +493,7 @@ Galaxy attaches the KIM to the purple handprint scanner.
 > press 1
 Galaxy presses button 1. Button 1 turns blue.
 
-<1 Ĺ>[2 ĺ][3 Ļ][4 ļ][5 Ľ][6 ľ][7 Ŀ][8 ŀ][9 Ł][10 ł][11 Ѓ][12 ΐ][13 ſ][14 ŧ][15 ī][16 ı]
+<1 Ĺ>[2 ĺ][3 Ļ][4 ļ][5 Ľ][6 ľ][7 Ŀ][8 ŀ][9 Ł][10 ł][11 Ѓ][12 ΐ][13 ſ][14 ŧ][15 ī][16 ı][RESET]
 [] = red, <> = blue
 
 "729."
@@ -501,7 +501,7 @@ Galaxy presses button 1. Button 1 turns blue.
 > press 2
 Galaxy presses button 2. Button 2 turns blue.
 
-<1 Ĺ><2 ĺ>[3 Ļ][4 ļ][5 Ľ][6 ľ][7 Ŀ][8 ŀ][9 Ł][10 ł][11 Ѓ][12 ΐ][13 ſ][14 ŧ][15 ī][16 ı]
+<1 Ĺ><2 ĺ>[3 Ļ][4 ļ][5 Ľ][6 ľ][7 Ŀ][8 ŀ][9 Ł][10 ł][11 Ѓ][12 ΐ][13 ſ][14 ŧ][15 ī][16 ı][RESET]
 [] = red, <> = blue
 
 "728."
@@ -509,7 +509,7 @@ Galaxy presses button 2. Button 2 turns blue.
 > press 3
 Galaxy presses button 3. Button 3 turns blue.
 
-<1 Ĺ><2 ĺ><3 Ļ>[4 ļ][5 Ľ][6 ľ][7 Ŀ][8 ŀ][9 Ł][10 ł][11 Ѓ][12 ΐ][13 ſ][14 ŧ][15 ī][16 ı]
+<1 Ĺ><2 ĺ><3 Ļ>[4 ļ][5 Ľ][6 ľ][7 Ŀ][8 ŀ][9 Ł][10 ł][11 Ѓ][12 ΐ][13 ſ][14 ŧ][15 ī][16 ı][RESET]
 [] = red, <> = blue
 
 "727."
@@ -517,7 +517,7 @@ Galaxy presses button 3. Button 3 turns blue.
 > press 4
 Galaxy presses button 4. Button 4 turns blue.
 
-<1 Ĺ><2 ĺ><3 Ļ><4 ļ>[5 Ľ][6 ľ][7 Ŀ][8 ŀ][9 Ł][10 ł][11 Ѓ][12 ΐ][13 ſ][14 ŧ][15 ī][16 ı]
+<1 Ĺ><2 ĺ><3 Ļ><4 ļ>[5 Ľ][6 ľ][7 Ŀ][8 ŀ][9 Ł][10 ł][11 Ѓ][12 ΐ][13 ſ][14 ŧ][15 ī][16 ı][RESET]
 [] = red, <> = blue
 
 "726."

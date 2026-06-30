@@ -234,8 +234,7 @@ instead hack:
 # --- Yellow door: a "Lights Out" keypad --------------------------------------
 # 9 buttons (shared across the nine-button doors), each red or blue; start all red,
 # goal all blue. Pressing a button flips a fixed, hidden set of the nine (the rule
-# the player must work out). Re-pressing a button undoes it, so no RESET is needed
-# (RESET deferred).
+# the player must work out). Re-pressing a button undoes it; a RESET button (below) also clears it.
 global list<bool> nine_buttons = none
 
 # Shared goal for every nine-button door: all nine lit blue (true).
@@ -252,6 +251,7 @@ function void show_keypad_9():
 			print "<[i]>"
 		else:
 			print "\[[i]\]"
+	print "\[RESET\]"
 	print "[line break]\[\] = red, <> = blue[par]"
 
 action press_key:
@@ -263,6 +263,78 @@ before press_key:
 	if kim_adhered_to == none or not (holder(player) == kim_hack_room):
 		print "Galaxy isn't hacking anything right now."
 		stop failed
+
+# --- RESET button (KIM.i7x) --------------------------------------------------
+# Every keypad except the blue door's carries an on-screen RESET button that returns the puzzle to
+# its starting layout. The `reset_button` object (a part of the KIM, scenery.lamp) makes PUSH RESET /
+# X RESET work; RESET / PRESS RESET are convenience verbs for the same. A redundant reset (already at
+# the start) "does nothing", matching I7's `initial keypad state` test.
+function bool nine_all_red():
+	for i = 0 to 8:
+		if nine_buttons[i]:
+			return false
+	return true
+
+# The red door starts with button 6 already lit.
+function bool nine_at_red_start():
+	for i = 0 to 8:
+		if i == 5:
+			if not nine_buttons[i]:
+				return false
+		else:
+			if nine_buttons[i]:
+				return false
+	return true
+
+# The locker starts {red, blue, blue, red}.
+function bool four_at_start():
+	return (not four_buttons[0]) and four_buttons[1] and four_buttons[2] and (not four_buttons[3])
+
+function void reset_keypad():
+	if kim_adhered_to == none or not (holder(player) == kim_hack_room):
+		print "There's no RESET button around."
+	else:
+		if kim_adhered_to == yellow_door:
+			if nine_all_red():
+				print "Galaxy presses the RESET button. Nothing seems to happen."
+			else:
+				nine_buttons = [false, false, false, false, false, false, false, false, false]
+				print "Galaxy presses the RESET button. The buttons all turn red.[par]"
+				show_keypad_9()
+		if kim_adhered_to == red_door:
+			if nine_at_red_start():
+				print "Galaxy presses the RESET button. Nothing seems to happen."
+			else:
+				nine_buttons = [false, false, false, false, false, true, false, false, false]
+				print "Galaxy presses the RESET button. The buttons reset to their initial states.[par]"
+				show_keypad_9()
+		if kim_adhered_to == locker:
+			if four_at_start():
+				print "Galaxy presses the RESET button. Nothing seems to happen."
+			else:
+				four_buttons = [false, true, true, false]
+				print "Galaxy presses the RESET button. The buttons change to their initial states.[par]"
+				show_keypad_4()
+		if kim_adhered_to == purple_door:
+			sixteen_buttons = [false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false]
+			print "Galaxy presses the RESET button. The buttons all turn red.[par]"
+			show_keypad_16()
+		# The blue door's sort-by-swap puzzle has no RESET (no reset button on its keypad).
+		if kim_adhered_to == blue_door:
+			print "There's no RESET button around."
+
+instead push when self.target == reset_button:
+	reset_keypad()
+	stop succeeded
+
+# RESET / PRESS RESET — the same as pushing the on-screen RESET button.
+action reset_pad:
+	syntax:
+		"reset"
+		"press reset"
+
+do reset_pad:
+	reset_keypad()
 
 do press_key when kim_adhered_to == yellow_door:
 	if self.n < 1 or self.n > 9:
@@ -451,13 +523,14 @@ function bool four_solved():
 			return false
 	return true
 
-# A red button shows as [N], a blue one as <N> (RESET deferred, as on the keypads).
+# A red button shows as [N], a blue one as <N>, followed by the [RESET] button.
 function void show_keypad_4():
 	for i = 1 to 4:
 		if four_buttons[i - 1]:
 			print "<[i]>"
 		else:
 			print "\[[i]\]"
+	print "\[RESET\]"
 	print "[line break]\[\] = red, <> = blue[par]"
 
 do press_key when kim_adhered_to == locker:
@@ -566,6 +639,7 @@ function void show_keypad_16():
 			print "<[i] [g]>"
 		else:
 			print "\[[i] [g]\]"
+	print "\[RESET\]"
 	print "[line break]\[\] = red, <> = blue[par]"
 
 do press_key when kim_adhered_to == purple_door:
