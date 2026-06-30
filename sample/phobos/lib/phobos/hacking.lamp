@@ -55,6 +55,11 @@ function void retrieve_kim():
 	print "Galaxy retrieves the KIM from [kim_surface_name()]."
 	detach_kim()
 
+# The single shared hacking hint (I7's `push clue`), printed after the keypad on the yellow, red,
+# purple, and locker hacks — but not the blue one. The original has no per-puzzle flavour lines.
+function void push_clue():
+	print "Galaxy mutters to herself. 'Never seen a hacking interface like this before. What do I press? 1? 2?'"
+
 # Examining the KIM shows its base description, plus — while it's adhered mid-hack — the live puzzle
 # state, so the player can re-read the board (I7 KIM.i7x: the description ends "[if KIM adheres to
 # something][paragraph break][KIM state]"). advent prints the description in its library `report
@@ -139,7 +144,7 @@ instead hack when self.target == yellow_door:
 	nine_buttons = [false, false, false, false, false, false, false, false, false]
 	print "Galaxy attaches the KIM to the yellow door.[par]"
 	show_keypad_9()
-	print "Galaxy mutters to herself. 'Never seen a hacking interface like this before. What do I press? 1? 2?'"
+	push_clue()
 	stop succeeded
 
 # The red door: another nine-button Lights-Out, but it starts with button 6 already
@@ -152,7 +157,7 @@ instead hack when self.target == red_door:
 	nine_buttons = [false, false, false, false, false, true, false, false, false]
 	print "Galaxy attaches the KIM to the red door.[par]"
 	show_keypad_9()
-	print "Galaxy frowns. 'One's already lit. That's new.'"
+	push_clue()
 	stop succeeded
 
 # The blue door: a different mechanic entirely — a sort-by-swap (see below). The
@@ -167,7 +172,6 @@ instead hack when self.target == blue_door:
 	shuffle_labels()
 	print "Galaxy attaches the KIM to the blue door.[par]"
 	show_keypad_blue()
-	print "Galaxy studies the scrambled symbols. 'These want sorting, I think.'"
 	stop succeeded
 
 # The locker: a four-button toggle (see below). Unlike the doors, success opens a
@@ -180,7 +184,7 @@ instead hack when self.target == locker:
 	four_buttons = [false, true, true, false]
 	print "Galaxy attaches the KIM to the locker.[par]"
 	show_keypad_4()
-	print "Galaxy mutters to herself. 'Some already lit. What do I press? 1? 2?'"
+	push_clue()
 	stop succeeded
 
 # The purple door: gated on the cyborg disguise (the scanner reads a "visual identity"),
@@ -199,7 +203,7 @@ instead hack when self.target == purple_door:
 	ensure_control_parts()
 	print "The purple door beeps, and a voice says, '[siriusian(\"Visual identity confirmed\")].'[par]Galaxy attaches the KIM to the purple handprint scanner.[par]"
 	show_keypad_16()
-	print "Sixteen buttons, all dark. 'Light the right five,' Galaxy murmurs."
+	push_clue()
 	stop succeeded
 
 # Reading the commander's log: the textual content renders through the Linguistic filter

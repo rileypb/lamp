@@ -146,7 +146,7 @@ Galaxy attaches the KIM to the locker.
 [1]<2><3>[4]
 [] = red, <> = blue
 
-Galaxy mutters to herself. "Some already lit. What do I press? 1? 2?"
+Galaxy mutters to herself. "Never seen a hacking interface like this before. What do I press? 1? 2?"
 
 "773."
 
@@ -195,8 +195,6 @@ Galaxy attaches the KIM to the blue door.
 [ ľ ][ Ľ ][ Ŀ ][ ŀ ][ Ł ][ ł ][ Ĺ ][ ĺ ][ Ļ ]
   1    2    3    4    5    6    7    8    9  
 [] = red, <> = blue
-
-Galaxy studies the scrambled symbols. "These want sorting, I think."
 
 "767."
 A voice comes over the PA: "This is ΐŁ commander speaking. I ĽĹĹ direct ŧŀĽĽĿıЃĹĿ<ĺłīŁłΐ> from now ĺĿĻĺŀЃ the only ŀĿŀĹ seems Ŀ have ĺĿłŧłłĹŧ here. I don't ĹŀıŀĻĺ got assigned Ŀ this base, but I guess Ļĺŧī have been ĺ real ŀĽ in the ĺĻļłĹ"
@@ -401,7 +399,7 @@ Galaxy attaches the KIM to the red door.
 [1][2][3][4][5]<6>[7][8][9]
 [] = red, <> = blue
 
-Galaxy frowns. "One's already lit. That's new."
+Galaxy mutters to herself. "Never seen a hacking interface like this before. What do I press? 1? 2?"
 
 "741."
 
@@ -494,7 +492,7 @@ Galaxy attaches the KIM to the purple handprint scanner.
 [1 Ĺ][2 ĺ][3 Ļ][4 ļ][5 Ľ][6 ľ][7 Ŀ][8 ŀ][9 Ł][10 ł][11 Ѓ][12 ΐ][13 ſ][14 ŧ][15 ī][16 ı]
 [] = red, <> = blue
 
-Sixteen buttons, all dark. "Light the right five," Galaxy murmurs.
+Galaxy mutters to herself. "Never seen a hacking interface like this before. What do I press? 1? 2?"
 
 "730."
 
