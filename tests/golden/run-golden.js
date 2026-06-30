@@ -78,7 +78,7 @@ function main() {
         // CLI host must have written a transcript file mirroring the session's output
         // and the player's commands (devdocs/sandbox.md → "Transcript broker protocol").
         try {
-            const text = fs.readFileSync(path.join(transcriptDir, "Transcript_Demo__session1.txt"), "utf8");
+            const text = fs.readFileSync(path.join(transcriptDir, "session1.txt"), "utf8");
             if (!text.startsWith("Transcript started.")) throw new Error("transcript should open with the start confirmation");
             if (!text.includes("> take coin\nTaken.")) throw new Error("transcript should mirror a command and its output");
             if (text.includes("Transcript ended.")) throw new Error("the closing message must be screen-only, not in the file");

@@ -42,11 +42,12 @@ function install({ startStatus = "ok" } = {}) {
     });
 }
 
-test("transcriptStart opens the channel with a game-namespaced key and reports running", () => {
+test("transcriptStart opens the channel with the sanitized (un-namespaced) name and reports running", () => {
     install();
     assert.strictEqual(lamp.transcriptRunning(), false);
     assert.strictEqual(lamp.transcriptStart("myfile"), true);
-    assert.strictEqual(recorder.started, "ScriptDemo__myfile");
+    // Transcripts are not game-namespaced (cf. saves): the host gets a plain stem.
+    assert.strictEqual(recorder.started, "myfile");
     assert.strictEqual(lamp.transcriptRunning(), true);
 });
 

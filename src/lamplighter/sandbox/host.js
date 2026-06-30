@@ -38,11 +38,12 @@ function defaultSaveDir() {
 }
 const SAVE_DIR = process.env.LAMP_SAVE_DIR || defaultSaveDir();
 
-// Where SCRIPT/TRANSCRIPT files land. Defaults beside the saves under the same
-// app-data root; `LAMP_TRANSCRIPT_DIR` overrides it (used by tests and by anyone
-// wanting transcripts in, say, the working directory). See devdocs/state.md.
-const TRANSCRIPT_DIR = process.env.LAMP_TRANSCRIPT_DIR
-    || path.join(path.dirname(SAVE_DIR), "transcripts");
+// Where SCRIPT/TRANSCRIPT files land. Defaults to the current working directory — a
+// terminal player finds the `.txt` right where they ran the game, as classic
+// interpreters do; unlike an opaque save blob, a transcript is a human-readable artifact
+// meant to be found, read, and shared. `LAMP_TRANSCRIPT_DIR` overrides it (tests isolate
+// to a temp dir). See devdocs/state.md.
+const TRANSCRIPT_DIR = process.env.LAMP_TRANSCRIPT_DIR || process.cwd();
 
 // Enumerate the metadata sidecars for slots under `prefix` (this game's key
 // namespace), newest first. Reads only the unobfuscated `.meta` files, never the

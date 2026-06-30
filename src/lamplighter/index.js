@@ -2353,10 +2353,13 @@ function transcriptStop() {
     }
 }
 
-// A filesystem-safe, game-namespaced key for the transcript file, reusing the same
-// sanitizing/prefix scheme as saves so a host can store them side by side.
+// A filesystem-safe stem for the transcript file, from the player's chosen name. Unlike
+// saves, transcripts are NOT game-namespaced: a save is an opaque blob in a shared store
+// (the prefix prevents cross-game collisions), but a transcript is a human-named artifact
+// the host drops in the working directory — so the player gets a plain `<name>.txt`, not
+// a `<game>__<name>` store key. The host adds the directory and extension.
 function transcriptKey(slot) {
-    return `${gameKeyPrefix()}${saveKeySafe(slot, "transcript")}`;
+    return saveKeySafe(slot, "transcript");
 }
 
 module.exports = {

@@ -233,9 +233,10 @@ Worker → host:
 
 Only `transcript_start` blocks (sharing the save buffer's `blockForReply`); appends and
 stop are unacknowledged `postMessage`s, and message order preserves the transcript's
-sequence. `key` is the game-namespaced, sanitized slot name (`<safeGameName>__<slot>`),
-the same scheme as saves. The CLI host writes `<key>.txt` under `LAMP_TRANSCRIPT_DIR`
-(default: a `transcripts` dir beside the saves) and closes any open stream on worker
+sequence. `key` is the player's chosen name, sanitized — **not** game-namespaced like a
+save key (a transcript is a human-named artifact, not a slot in a shared store). The CLI
+host writes `<key>.txt` under `LAMP_TRANSCRIPT_DIR` (default: the current working
+directory, where a terminal player can find it) and closes any open stream on worker
 exit. A host that installs no transcript channel (e.g. the current browser worker)
 leaves `SCRIPT` reporting it is unavailable.
 

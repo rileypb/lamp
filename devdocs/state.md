@@ -347,9 +347,12 @@ right way: the **runtime owns only the mechanism**, the **library owns the polic
   unavailable, already running, or the host failed), `transcriptStop()`,
   `transcriptRunning() → bool`, `transcriptAvailable() → bool`. These *must* be the
   runtime's: output and input flow through its stream manager, which a Lamp game can't
-  reach. The runtime also owns the namespaced/sanitized storage key (`transcriptKey`,
-  the SAVE scheme). Surfaced to Lamp as the lib/sys natives `transcript_start` /
-  `transcript_stop` / `transcript_running` / `transcript_available`.
+  reach. The runtime also owns the filesystem-safe filename stem (`transcriptKey`) —
+  just the player's name sanitized, **not** game-namespaced like a save key: a save is an
+  opaque blob in a shared store (the `<game>__` prefix prevents collisions), but a
+  transcript is a human-named artifact the host drops in the working directory, so the
+  player gets a plain `<name>.txt`. Surfaced to Lamp as the lib/sys natives
+  `transcript_start` / `transcript_stop` / `transcript_running` / `transcript_available`.
 - **Library (policy, `lib/advent/transcript.lamp`).** The verb words, the filename
   prompt, and the wording. Two **out-of-world Lamp actions** (`script_on`/`script_off`,
   built on the `out_of_world` action mechanism) carry the grammar — `script`,
