@@ -7,26 +7,32 @@ function void update_status_line():
 	else:
 		status_line(freeze "[holder(player)]", freeze "[turns_taken()] turns")
 
+# The title banner. Gated on `tagline`: a game opts in by setting it; games that leave it blank
+# (the `""` default) get no banner. The banner interpolates game fields (locals), which a named
+# message may not reference, so the translatable connectives ("by", "Version") split out as named
+# messages around the plain interpolating prints (the same split as the room-contents frame). A
+# game may call this itself (with `auto_banner false`) to place the banner mid-narration.
+function void print_banner():
+	let this_game = game.all.first
+	if not (this_game.tagline == ""):
+		print "[bold][this_game.name][/bold][line break]"
+		print "[this_game.tagline]"
+		print banner_by:" by "
+		print "[this_game.author][line break]"
+		print banner_version:"Version "
+		print "[this_game.version] [this_game.release][par]"
+
 on startup:
 	# Materialize door connectivity from each door's directional fields before any
 	# navigation (see lib/advent/doors.lamp).
 	wire_doors()
 	# Materialize part-of containment so parts are in scope with their wholes (parts.lamp).
 	wire_parts()
-	# Title banner, printed before any startup_rules contributions. A game opts in
-	# by setting `tagline`; games that leave it blank get no banner.
 	let this_game = game.all.first
-	if not (this_game.tagline == ""):
-		# The banner interpolates game fields (locals), which a named message may
-		# not reference, so the translatable connectives ("by", "Version") split
-		# out as named messages around the plain interpolating prints (the same
-		# split as the room-contents frame). A translation overrides the words.
-		print "[this_game.name][line break]"
-		print "[this_game.tagline]"
-		print banner_by:" by "
-		print "[this_game.author][line break]"
-		print banner_version:"Version "
-		print "[this_game.version] [this_game.release][par]"
+	# Auto-print the title banner before any startup_rules contributions, unless the game opts out
+	# (auto_banner false) to place it itself — e.g. between its intro narration and a reveal.
+	if this_game.auto_banner:
+		print_banner()
 	follow startup_rules()
 	if this_game.start == none:
 		error "This game has no starting room. Declare one in the game block with `start <Room>` (for example, `start Foyer`)."

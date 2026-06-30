@@ -1838,6 +1838,12 @@ leave it blank (the `""` default) get no banner. The base `game` type
 (`lib/sys/types.lamp`) defaults the banner fields — `tagline = ""`,
 `version = 0`, `release = dev` — so a game need only set the ones it cares about.
 
+**Placement.** The banner is a callable **`print_banner()`** (it does the `tagline`
+gate itself, so calling it with no tagline is a no-op). `on startup` auto-prints it
+before `startup_rules` only when **`game.auto_banner`** is true (the default). A game
+that wants the banner elsewhere — e.g. *between* an intro narration and a reveal —
+sets `auto_banner false` and calls `print_banner()` itself from `startup_rules`.
+
 ### Room description heading
 
 `describe_room` prints the room-name heading through an overridable rulebook,

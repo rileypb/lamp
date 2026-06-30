@@ -60,7 +60,9 @@ a part is in scope wherever its whole is, via a `wire_parts` startup native that
 containment; scoped the closed-container barrier to real `container` types so a closed door doesn't
 hide its scanner part — golden `parts1`), used by the handprint scanners / suit light / RESET button; and the **power banner** — the POWER
 figlet flashed when the Galaxy Suit spends a charge, `power_banner()` in scoring.lamp, printed by the
-smash + guard-deflect paths. The unused action banner isn't ported.)
+smash + guard-deflect paths. The unused action banner isn't ported; and the **banner placement** —
+advent extracted a callable `print_banner()` + an `auto_banner` opt-out field on `game`, so Phobos
+prints the title banner between its intro and the reveal, default-true so other games are invariant.)
 Smaller: SAY/ANSWER free-text, custom can't-go/hit/take messages, power/action banners, banner
 placement seam, examinable in-prose sub-objects, and a per-extension audit. **Infra DONE:** golden
 discovery now walks one level into subdirs, so `sample/phobos/phobos.lamp` is a golden (`test

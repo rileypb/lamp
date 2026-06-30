@@ -5,3 +5,7 @@ type game:
 	string tagline = ""
 	int version = 0
 	reltype release = dev
+	# Whether the host library prints the title banner automatically at startup (before
+	# `startup_rules`). Set `auto_banner false` to suppress that and call `print_banner()` yourself
+	# at the right moment — e.g. between an intro narration and a reveal. See lib/advent/startup.lamp.
+	bool auto_banner = true

@@ -11,6 +11,8 @@ game Phobos:
   version 0
   release dev
   start Passage_End
+  # The banner is placed by startup_rules (intro -> banner -> reveal), not auto-printed first.
+  auto_banner false
 
 rule startup_rules:
 	print "Phobos, 2245.
@@ -34,6 +36,10 @@ rule startup_rules:
   Back to the present: close to Stickney Crater, it's evident what the Syndicate has been up to. While still natural-looking at a distance, at close range one can clearly see that the crater's bottom has been converted into massive doors, ready to open when the thruster is activated.
 
   The Moon Sled dives for the surface, autopilot nimbly navigating a miniscule opening just beyond the crater. Within, it winds through a series of tunnels, finally landing just inside the base's atmospheric containment field, next to a security door. And not a moment too soon -- the Sled is out of fuel."
+	# The title banner sits between the intro narration and the reveal (intro -> banner -> reveal ->
+	# first room), as in the original; advent's auto-print is opted out via `auto_banner false` above.
+	print "[par]"
+	print_banner()
 	# I7: "Before looking for the first time". Prints right before the first room
 	# description (startup_rules runs, then the player is moved into the start room,
 	# which auto-describes it). I7's [bold type]…[roman type] → Lamp's [bold]…[/bold].

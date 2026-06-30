@@ -197,9 +197,12 @@ Lamp's capabilities. The checklist below tracks what's left; we work through it 
   "[Galaxy doesn't earn any points…]" note, mirroring Powerup.i7x's `use a charge`. Golden
   byte-identical (the walkthrough never spends a charge). (The third banner — the little **action
   banner** — is defined in the extension but **unused** by Phobos, so it isn't ported.)
-- [ ] **Banner placement** (`story.ni`): the title banner should appear *between* the intro
-  narration and the Galaxy Jones reveal (intro → banner → reveal), not before `startup_rules`.
-  Needs an advent seam (a callable `print_banner()` + opt-out of the auto-print). See house-style note below.
+- [x] **Banner placement** (`story.ni`): **DONE.** The title banner now appears **between** the intro
+  narration and the Galaxy Jones reveal (intro → banner → reveal → first room), as in the original.
+  Built the advent seam: advent extracts the banner into a callable **`print_banner()`** and gates
+  its auto-print on a new **`auto_banner`** field on `game` (default true). Phobos sets `auto_banner
+  false` and calls `print_banner()` itself in `startup_rules`, between the intro and the reveal.
+  Other banner-using games (default `auto_banner true`) are byte-invariant.
 - [x] **In-prose sub-objects as examinables** (`Base.i7x`): **DONE.** `lib/phobos/scenery.lamp`
   adds the eight in-prose signs (door/west/storeroom/junction/eastern/western/locker labels + the
   barracks poster) as **privately-named** scenery — so X SIGN / X POSTER work, each with the
@@ -257,13 +260,11 @@ descriptions can't be ported verbatim. (Durable note also in agent memory
   every room/sign description. Mapping lives in `Siriusian.i7x` / `Texts.i7x`.
 - **Banner:** standard Inform format (title / "<headline> by <author>" / "Release N
   / serial / build"), not advent's "Version N <release>".
-- **Banner placement (TODO):** the starting banner appears **between the intro
-  narration and the Galaxy Jones reveal** — i.e. intro → banner → reveal → first
-  room. advent currently prints its banner *before* `startup_rules` (banner → intro
-  → reveal), so the order is wrong. Needs an advent seam: let the game trigger the
-  banner mid-narration (e.g. a callable `print_banner()` invoked from within the
-  startup sequence, with advent's auto-print made opt-out) rather than always
-  printing it first.
+- **Banner placement (DONE):** the starting banner sits **between the intro
+  narration and the Galaxy Jones reveal** — intro → banner → reveal → first room.
+  advent's `on startup` auto-prints the banner only when `game.auto_banner` is true
+  (the default); Phobos sets `auto_banner false` and calls advent's extracted
+  `print_banner()` itself, in `startup_rules`, between the intro and the reveal.
 
 ## story.ni walkthrough
 
