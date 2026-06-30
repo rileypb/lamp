@@ -147,6 +147,12 @@ The design targets these Inform 7/10 parser capabilities, grouped by stage:
 - Pronouns (`it`, `them`, `him`, `her`) bound to the last-referenced object(s).
   **`it` is implemented** (v1): a bare `it` noun resolves to the last single
   object the player referred to, gated by scope. `them`/`him`/`her` are deferred.
+- **Self words** (`me`, `myself`) — a bare `me`/`myself` resolves to the **current
+  `player` global** (read at parse time, gated by scope and the slot's type), so it
+  follows a reassigned protagonist rather than binding to a fixed object. Implemented
+  alongside `it` (`isSelfWord` in `resolveCandidates`). Golden `selfword1`. A game's
+  own *name* synonyms for the protagonist (e.g. "galaxy") stay object-bound `understand`
+  words on the player object.
 
 **Scope & resolution**
 - Scope: the set of objects the player can currently refer to (room contents,

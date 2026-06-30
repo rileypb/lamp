@@ -1,0 +1,30 @@
+# Self words (lib/advent / runtime): "me" / "myself" resolve to the *current* `player` global at
+# parse time, not to a fixed object — so they follow a reassigned protagonist. Here SWAP makes the
+# robot the player, after which "x me" describes the robot.
+
+lib advent
+
+game Self:
+	start Room
+
+room Room:
+	description "A bare room."
+
+person yourself:
+	description "You are an ordinary adventurer."
+
+person robot:
+	understand "robot"
+	description "A boxy little robot."
+
+contains Room robot
+
+action swap:
+	syntax:
+		"swap"
+
+do swap:
+	player = robot
+
+report swap:
+	print "Control transfers to the robot."

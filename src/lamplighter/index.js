@@ -771,6 +771,14 @@ function pronounOf(span) {
     return tokens.length === 1 && PRONOUNS.has(tokens[0]) ? tokens[0] : null;
 }
 
+// Self words — "me"/"myself" — resolve to the *current* `player` global (not a fixed object), so
+// they follow a reassigned protagonist. The player's own name synonyms (if any) stay object-bound.
+const SELF_WORDS = new Set(["me", "myself"]);
+function isSelfWord(span) {
+    const tokens = strippedPhraseTokens(span);
+    return tokens.length === 1 && SELF_WORDS.has(tokens[0]);
+}
+
 // A pronoun used among `spans` that has no antecedent yet, else null. This is
 // the "never bound" case — distinct from a bound pronoun whose referent has
 // left scope (pronounIt is set) — so it gets its own message.
@@ -834,6 +842,13 @@ function resolveCandidates(span, scope, slotType) {
     if (pronounOf(span)) {
         if (pronounIt && scopeSet.has(pronounIt) && (!slotType || isTypeOrSubtype(pronounIt.type, slotType))) {
             return [pronounIt];
+        }
+        return [];
+    }
+    if (isSelfWord(span)) {
+        const self = getGlobal("player");
+        if (self && scopeSet.has(self) && (!slotType || isTypeOrSubtype(self.type, slotType))) {
+            return [self];
         }
         return [];
     }

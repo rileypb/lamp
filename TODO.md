@@ -62,7 +62,10 @@ hide its scanner part — golden `parts1`), used by the handprint scanners / sui
 figlet flashed when the Galaxy Suit spends a charge, `power_banner()` in scoring.lamp, printed by the
 smash + guard-deflect paths. The unused action banner isn't ported; and the **banner placement** —
 advent extracted a callable `print_banner()` + an `auto_banner` opt-out field on `game`, so Phobos
-prints the title banner between its intro and the reveal, default-true so other games are invariant.)
+prints the title banner between its intro and the reveal, default-true so other games are invariant;
+and **examine-self disguise variants** — plus a general `me`/`myself` parser self-word that resolves
+to the current `player` global (follows a reassigned protagonist; golden `selfword1`), which also
+fixed feel/attack/examine ME reaching the player's own text.)
 Smaller: SAY/ANSWER free-text, custom can't-go/hit/take messages, power/action banners, banner
 placement seam, examinable in-prose sub-objects, and a per-extension audit. **Infra DONE:** golden
 discovery now walks one level into subdirs, so `sample/phobos/phobos.lamp` is a golden (`test

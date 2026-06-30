@@ -1,0 +1,16 @@
+Room
+A bare room.
+
+> x me
+You are an ordinary adventurer.
+
+> x myself
+You are an ordinary adventurer.
+
+> swap
+Control transfers to the robot.
+
+> x me
+A boxy little robot.
+
+> quit

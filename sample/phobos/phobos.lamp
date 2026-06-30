@@ -91,7 +91,12 @@ report credits:
 person yourself:
 	printed_name "Galaxy"
 	gender "female"
+	understand "galaxy/jones/woman"
 	feels "Galaxy Jones pinches herself. She feels the same as always."
+	# Examined undisguised; the disguise variants (X ME while wearing the cyborg gear) override via
+	# an `instead examine` rule in cyborg.lamp. ("me"/"myself" resolve to the player at the parser
+	# level — see the runtime self-words; "galaxy" also matches the Galaxy Suit, so it disambiguates.)
+	description "Galaxy Jones looks ready to kick ass, dressed in the midnight black Galaxy Suit."
 
 # Replace advent's room-name heading with the name-embedded, third-person intro
 # that runs on into the description: "Galaxy is in the passage end. <description>".

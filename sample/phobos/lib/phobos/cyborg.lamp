@@ -43,3 +43,18 @@ after wear when self.clothing == cybercarapace:
 	if wears player cyberhelmet:
 		print "[line break]She is now disguised as a Siriusian cyborg."
 	stop succeeded
+
+# Examine-self varies with the disguise (GJ Basics.i7x): undisguised shows her own description;
+# half-disguised she "looks a bit silly"; fully disguised she passes as a Siriusian cyborg.
+instead examine when self.target == player:
+	if not (wears player cyberhelmet) and not (wears player cybercarapace):
+		print "[player.description]"
+	else:
+		if not (wears player cyberhelmet):
+			print "Galaxy Jones is wearing a Cybercarapace, but the Cyberhelmet is missing. As a result, she looks a bit silly."
+		else:
+			if not (wears player cybercarapace):
+				print "Galaxy Jones is wearing a Cyberhelmet, but the Cybercarapace is missing. As a result, she looks a bit silly."
+			else:
+				print "Galaxy Jones is fully disguised as a Siriusian cyborg, with a Cyberhelmet and Cybercarapace."
+	stop succeeded

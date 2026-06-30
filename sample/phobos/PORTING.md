@@ -223,7 +223,15 @@ Lamp's capabilities. The checklist below tracks what's left; we work through it 
   door, the light with the worn suit, the button with the carried KIM), with the originals'
   descriptions/feels/refusals (incl. the suit light's powered-attack variant). Hacking still targets
   the door, not the scanner (the scanner is examinable flavour).
-- [ ] **Examine-self disguise variants** (`Cyborg.i7x`): X ME / X GALAXY changes with the disguise.
+- [x] **Examine-self disguise variants** (`GJ Basics.i7x`): **DONE.** X ME (and X JONES) shows
+  Galaxy's description, which varies with the disguise — undisguised "looks ready to kick ass";
+  carapace-only / helmet-only "looks a bit silly"; both → "fully disguised as a Siriusian cyborg"
+  (`instead examine when self.target == player` in `cyborg.lamp`). This also fixed the long-standing
+  "feel me / attack me don't resolve" gap: **`me`/`myself` are now parser self-words** resolving to
+  the *current* `player` global (a general engine addition — they follow a reassigned protagonist;
+  golden `selfword1`), so the player's `feels`/`attack_refusal`/description are all reachable. Galaxy's
+  name synonyms ("galaxy/jones/woman") are object-bound `understand` on `yourself` ("galaxy" also
+  matches the Galaxy Suit, so it disambiguates, as in the original).
 - [ ] **`indescribable` objects + button asides** (`Phobos Polish.i7x` / `Polish.i7x`): yourself,
   the disruptor pistol, etc. marked indescribable; the "Why not press it instead?" button replies.
 
