@@ -166,6 +166,17 @@ action shoot:
 	direct physical target
 	syntax:
 		"shoot [target]"
+		"shoot at [target]"
+		"fire [target]"
+		"fire at [target]"
+
+# The pistol is the only firearm and is supplied implicitly (Actions.i7x's "supplying a missing
+# second noun"). With it gone, shooting fails the way the original does. Runs after the object-keyed
+# instead refusals above, so combat / morbid / dissipates keep their own wording.
+check shoot:
+	if not (holder(disruptor_pistol) == player):
+		print "Galaxy doesn't have a firearm to shoot with."
+		stop failed
 
 instead shoot when self.target == tall_commando:
 	if not (holder(disruptor_pistol) == player):
@@ -180,8 +191,21 @@ instead shoot when self.target == short_commando:
 	down_commando(short_commando, true)
 	stop succeeded
 
+# Flavour refusals from Actions.i7x (the "shooting it with the disruptor pistol" checks). The port's
+# SHOOT is one-noun (the pistol is the only firearm, supplied implicitly), so these are object-keyed.
+instead shoot when self.target == player:
+	print "Don't be morbid."
+	stop succeeded
+instead shoot when self.target == disruptor_pistol:
+	print "That would be a neat trick."
+	stop succeeded
+# A hackable door (the five coloured base doors; not the flight-deck door or the scanners).
+instead shoot when self.target == green_door or self.target == yellow_door or self.target == red_door or self.target == blue_door or self.target == purple_door:
+	print "The disruptor pistol's energy beam harmlessly dissipates against the door."
+	stop succeeded
+
 report shoot:
-	print "Galaxy sees no reason to shoot [the act.target]."
+	print "Galaxy can't see the point of that."
 
 # FEEL/TOUCH a commando — the `feels` text is state-dependent (Guard.i7x swaps in a
 # different commando object per state), so a static `feels` field can't carry it: an

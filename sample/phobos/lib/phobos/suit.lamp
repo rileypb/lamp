@@ -25,6 +25,12 @@ item galaxy_suit:
 contains yourself galaxy_suit
 wears yourself galaxy_suit
 
+# The suit can't be removed — Galaxy needs it for the mission (GJ Basics.i7x "Instead of taking off
+# the Galaxy Suit"). Catches both REMOVE and TAKE OFF (the doff action).
+instead doff when self.clothing == galaxy_suit:
+	print "Galaxy needs the Galaxy Suit to complete her mission."
+	stop failed
+
 # Spend a charge: power down, decrement, and on the first use note the no-points rule.
 function void use_charge():
 	powered_up = false

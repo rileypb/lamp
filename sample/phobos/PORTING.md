@@ -254,12 +254,31 @@ Lamp's capabilities. The checklist below tracks what's left; we work through it 
   FROTZ itself is verified manually (the phobos golden is `test endgame`).
 
 **Audit passes (may add items):**
-- [ ] **`Actions.i7x`** — audit for unported custom actions (shooting, listening, searching →
-  examining, etc.).
-- [ ] **`Improved Pushing.i7x`** — pushing things between rooms (likely N/A; confirm).
-- [ ] **`GJ Basics.i7x` / `PBR Common.i7x` / `Polish.i7x`** — sweep for leftover behaviours.
-- [ ] **Final line-by-line parity pass** over every extension + `story.ni` once the above land, to
-  catch missed messages and edge cases.
+- [x] **`Actions.i7x`** — **DONE.** Ported the SHOOT flavour the port's one-noun `shoot` was missing
+  (guard_endgame.lamp): `fire`/`shoot at`/`fire at` synonyms; generic "Galaxy can't see the point of
+  that."; `shoot me` → "Don't be morbid."; `shoot <pistol>` → "That would be a neat trick."; a hackable
+  door → "…energy beam harmlessly dissipates against the door."; no-pistol → "Galaxy doesn't have a
+  firearm to shoot with." The two-noun `shoot/fire X with Y` + `attack X with Y` grammar is left as a
+  deliberate simplification (the pistol is the only firearm, supplied implicitly; attack-with would
+  just fall through to the noun's `attack_refusal`, already ported). TASTE/SMELL: N/A (advent has no
+  such verbs, so they're already unrecognised, matching I7's "Understand … as something new").
+- [x] **`Improved Pushing.i7x`** — **N/A (confirmed).** Tracks a "thing pushed" consumed only by Third
+  Person Narration's content listing; nothing in Phobos is pushable between rooms, so it never fires.
+- [x] **`GJ Basics.i7x` / `PBR Common.i7x` / `Polish.i7x`** — **DONE.**
+  *GJ Basics:* score-based **status line** ("[score] of [max_score] points" instead of turns — a
+  general advent change gated on `max_score > 0`; the room name is already title-cased from its
+  identifier) and the **remove-suit refusal** ("Galaxy needs the Galaxy Suit to complete her mission.",
+  suit.lamp). `color on/off` N/A (the port renders keypads with `[N]`/`<N>` markers, no colour styling
+  to toggle). *Polish:* the two library-message overrides (lib/phobos/messages.lamp) — `drop_not_carrying`
+  → "Galaxy doesn't have that." and `parser_cant_see` → "There is nothing there."; the Table of
+  Transitions is empty in the original, so N/A. *PBR Common:* infrastructure only — indoors/outdoors
+  already ported (the `outdoors` flag); `floating` / `initializing` activity / sentence-case are unused
+  in Phobos.
+- [ ] **Final line-by-line parity pass** over every extension + `story.ni`, to catch missed messages and
+  edge cases. **Surfaced by the sweep:** several advent default reports are hardcoded second-person
+  ("You take off [the clothing].", etc.) which clash with Phobos's third-person narration — Polish.i7x
+  fixed the two the original author hit; a systematic pass should re-theme the rest (the feels / refusal
+  / message text-fidelity check, memory `phobos-text-fidelity-audit`).
 
 **Infrastructure (enabling, not game content):**
 - [x] **Automate `test endgame` in CI** — *done.* Golden discovery now walks one level into

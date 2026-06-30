@@ -2,10 +2,15 @@
 # host lays the two segments out in a fixed-width, reverse-video bar; a host without
 # a status bar ignores it. Redrawn at the top of each turn. See devdocs/windows.md.
 function void update_status_line():
+	# Right segment: a scored game (max_score set) shows "[score] of [max] points" — the usual IF
+	# convention; otherwise the turn count. Games that never set max_score are unchanged.
+	let right = freeze "[turns_taken()] turns"
+	if max_score > 0:
+		right = freeze "[score] of [max_score] points"
 	if in_darkness(player):
-		status_line(freeze "Darkness", freeze "[turns_taken()] turns")
+		status_line(freeze "Darkness", right)
 	else:
-		status_line(freeze "[holder(player)]", freeze "[turns_taken()] turns")
+		status_line(freeze "[holder(player)]", right)
 
 # The title banner. Gated on `tagline`: a game opts in by setting it; games that leave it blank
 # (the `""` default) get no banner. The banner interpolates game fields (locals), which a named
