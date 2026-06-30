@@ -104,9 +104,10 @@ hack moves it onto the handprint scanner / the walls, out of inventory, via `adh
 and the state display are gated on Galaxy still being in the hack room (`kim_hack_room`); leaving the
 room implicitly retrieves it ("(first taking the KIM) / Galaxy retrieves the KIM from the X", a
 `before go` rule) and so does TAKE — mirroring I7's "leaving the KIM behind is impossible" / "the KIM
-is enclosed by the location". Fixes the bug where `press` drove a puzzle from another room. Verified
-manually (the phobos golden is `test endgame`, which skips the hack flow, so this isn't golden-covered
-— same as the rest of hacking). **Infra DONE:** golden
+is enclosed by the location". Fixes the bug where `press` drove a puzzle from another room. (NOTE:
+`test endgame` runs the FULL winning walkthrough, so the hack *solve* path IS golden-covered; only the
+edge behaviours — pressing from another room, examining the KIM mid-hack — are verified manually.)
+**Infra DONE:** golden
 discovery now walks one level into subdirs, so `sample/phobos/phobos.lamp` is a golden (`test
 endgame` → the full winning transcript) — the whole game is a deterministic regression check.
 
