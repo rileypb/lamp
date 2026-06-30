@@ -2326,6 +2326,7 @@ module.exports = {
     registerStateProvider,
     registerScopeProvider,
     registerScopeBarrier,
+    isTypeOrSubtype,
     advanceTurn,
     turnsTaken,
     registerOutOfWorld,

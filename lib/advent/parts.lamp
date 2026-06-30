@@ -1,0 +1,20 @@
+# Parts — a thing that is part of another (a door's handprint scanner, a suit's light, a panel's
+# button). A part is in scope whenever its whole is, and travels with it.
+#
+# `part_of PART WHOLE` is the queryable semantic relation; `wire_parts` (called once at startup)
+# materializes a `contains` edge (the whole contains the part) for each, so the part rides scope's
+# containment fixpoint — the same mechanism a door's parts already use (scopeOf expands into any
+# in-scope object's contents). Placing the part inside its whole also means it moves with the whole
+# for free (drop a suit, its light goes too). A part is normally `scenery` (so it isn't listed and
+# can't be taken off); advent adds no separate "that's part of X" behaviour beyond the scoping.
+
+relation part_of:
+	from physical part
+	to physical whole
+	syntax "part_of [part] [whole]"
+
+native function void wire_parts()
+
+# Query helper: the whole a part belongs to (none if it isn't a part).
+function physical whole_of(physical part):
+	return part_of part ?only

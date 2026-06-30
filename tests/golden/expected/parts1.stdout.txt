@@ -1,0 +1,20 @@
+Lab
+A lab.
+
+> x dial
+A calibration dial.
+
+> x gauge
+A glowing gauge.
+
+> north
+Hall
+A hall.
+
+> x dial
+You can't see any such thing.
+
+> x gauge
+A glowing gauge.
+
+> quit

@@ -2013,6 +2013,21 @@ instead touch when self.target == sky:
 (Region- or room-scoped backdrops — present in only some rooms — are not yet
 modelled; every backdrop is everywhere. Golden `backdrop1`.)
 
+### Parts
+
+A **`part_of PART WHOLE`** relation (`from physical part`, `to physical whole`) marks a
+thing as part of another — a door's handprint scanner, a suit's light, a panel's button.
+A part is in scope **wherever its whole is**, and moves with it. `wire_parts` (called at
+startup, beside `wire_doors`) materializes a `contains` edge (the whole contains the part)
+for each `part_of`, so the part rides scope's containment fixpoint — the same mechanism a
+door's parts use. Because the part is placed *inside* its whole, dropping the whole carries
+the part along for free. A part is normally `scenery` (unlisted, untakeable); advent adds no
+behaviour beyond the scoping. The whole a part belongs to is `whole_of(part)`.
+
+One subtlety this exposed: the closed-container **scope barrier** now applies only to actual
+`container` types (a box), not to anything with a `closed` field — a `door` is a passage, not
+a vessel, so a *closed* door must not hide its parts. Golden `parts1`.
+
 ### Stop reasons
 
 `already_carrying`, `cant_take_that`, `not_carrying`, `cant_put_on_that`,

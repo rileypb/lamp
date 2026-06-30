@@ -151,3 +151,90 @@ backdrop pa_system:
 instead examine when self.target == pa_system:
 	print "You can hear the PA, but it's not clear where it's coming from."
 	stop succeeded
+
+# --- Parts (Base.i7x / GJ Basics.i7x / KIM.i7x) ------------------------------
+# advent's `part_of` relation: each is in scope wherever its whole is. The handprint scanners ride
+# their doors (visible from both sides), the suit light the worn suit, the RESET button the carried
+# KIM. All privately-named (the identifiers would leak colliding tokens like "green"/"button").
+# Hacking still targets the door, not the scanner (the scanner is examinable flavour).
+item green_scanner:
+	printed_name "handprint scanner"
+	private_name true
+	scenery
+	understand "scanner/handprint/indentations"
+	feels "Galaxy's five fingers don't fit in the three ridged indentations, but she can feel the metal surface of the scanner."
+	description "The three ridged indentations here are apparently designed to scan a Siriusian hand for security purposes."
+item yellow_scanner:
+	printed_name "handprint scanner"
+	private_name true
+	scenery
+	understand "scanner/handprint/indentations"
+	feels "Galaxy's five fingers don't fit in the three ridged indentations, but she can feel the metal surface of the scanner."
+	take_refusal "Galaxy pounds uselessly on the yellow handprint scanner."
+	attack_refusal "Galaxy pounds uselessly on the yellow handprint scanner."
+	description "The three ridged indentations here are apparently designed to scan a Siriusian hand for security purposes."
+item red_scanner:
+	printed_name "handprint scanner"
+	private_name true
+	scenery
+	understand "scanner/handprint/indentations"
+	feels "Galaxy's five fingers don't fit in the three ridged indentations, but she can feel the metal surface of the scanner."
+	attack_refusal "Galaxy pounds uselessly on the red handprint scanner."
+	description "The three ridged indentations here are apparently designed to scan a Siriusian hand for security purposes."
+item blue_scanner:
+	printed_name "handprint scanner"
+	private_name true
+	scenery
+	understand "scanner/handprint/indentations"
+	feels "Galaxy's five fingers don't fit in the three ridged indentations, but she can feel the metal surface of the scanner."
+	attack_refusal "Galaxy pounds uselessly on the blue handprint scanner."
+	description "The three ridged indentations here are apparently designed to scan a Siriusian hand for security purposes."
+item purple_scanner:
+	printed_name "handprint scanner"
+	private_name true
+	scenery
+	understand "scanner/handprint/indentations"
+	feels "Galaxy's five fingers don't fit in the three ridged indentations, but she can feel the metal surface of the scanner."
+	description "The three ridged indentations here are apparently designed to scan a Siriusian hand for security purposes."
+item flight_deck_scanner:
+	printed_name "handprint scanner"
+	private_name true
+	scenery
+	understand "scanner/handprint/indentations"
+	feels "Galaxy's five fingers don't fit in the three ridged indentations, but she can feel the metal surface of the scanner."
+	description "The three ridged indentations here are apparently designed to scan a Siriusian hand for security purposes."
+
+part_of green_scanner green_door
+part_of yellow_scanner yellow_door
+part_of red_scanner red_door
+part_of blue_scanner blue_door
+part_of purple_scanner purple_door
+part_of flight_deck_scanner flight_deck_door
+
+# The Galaxy Suit's light (GJ Basics.i7x); the powered ATTACK message differs (like the Moon Sled).
+item suit_light:
+	printed_name "suit light"
+	private_name true
+	scenery
+	understand "light/led"
+	feels "The light is a plastic-covered LED, and it feels like it."
+	attack_refusal "What's the point of that?"
+	description "The suit light automatically goes on when it gets dark. Cool."
+
+part_of suit_light galaxy_suit
+
+instead attack when self.target == suit_light and powered_up:
+	print "Why damage important mission gear?"
+	stop failed
+
+# The KIM's RESET button (KIM.i7x): a light on the screen, not a physical button.
+item reset_button:
+	printed_name "RESET button"
+	private_name true
+	scenery
+	understand "reset"
+	feels "The RESET button is just light on a screen, not a physical button. It feels like a screen."
+	attack_refusal "What a silly idea!"
+	description "The RESET button says 'RESET' in big, friendly letters."
+
+part_of reset_button KIM

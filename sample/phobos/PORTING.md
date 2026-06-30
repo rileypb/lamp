@@ -208,7 +208,13 @@ Lamp's capabilities. The checklist below tracks what's left; we work through it 
   byte-identical. *Residual:* the everywhere `Label-sign` fallback (generic "ordinary sign" in
   signless rooms), and the PA System's region-confinement (it's everywhere, not just the indoor
   base, pending region-scoped backdrops).
-- [ ] **Handprint-scanner door-parts** (`Base.i7x`): each door's scanner as a real part-object.
+- [x] **Handprint-scanner door-parts** (`Base.i7x`): **DONE** via the new advent **`part_of`**
+  relation (infra item 6 below). `lib/phobos/scenery.lamp` adds the six handprint scanners (one
+  `part_of` each door), the **suit light** (`part_of` the Galaxy Suit), and the **RESET button**
+  (`part_of` the KIM) — each in scope wherever its whole is (the scanners from both sides of their
+  door, the light with the worn suit, the button with the carried KIM), with the originals'
+  descriptions/feels/refusals (incl. the suit light's powered-attack variant). Hacking still targets
+  the door, not the scanner (the scanner is examinable flavour).
 - [ ] **Examine-self disguise variants** (`Cyborg.i7x`): X ME / X GALAXY changes with the disguise.
 - [ ] **`indescribable` objects + button asides** (`Phobos Polish.i7x` / `Polish.i7x`): yourself,
   the disruptor pistol, etc. marked indescribable; the "Why not press it instead?" button replies.
@@ -638,8 +644,14 @@ than these "guard not present" fallbacks). Still unported: the flight deck + esc
    **Still partial:** every solve also runs `score 1` (Galaxy Banner + notification)
    — deferred with scoring (see the Scoring note above). RESET button deferred
    (re-pressing a button undoes it, so it's not required to solve).
-6. **Parts / components** — `X is a part of Y` (handprint scanners, screens,
-   buttons, levers). advent has no part-of relation.
+6. ~~**Parts / components** — `X is a part of Y`~~ **DONE.** advent now has a **`part_of`**
+   relation (`lib/advent/parts.lamp`): a part is in scope wherever its whole is and moves with it
+   — `wire_parts` materializes a `contains` edge so it rides scope's fixpoint (parallel to
+   `wire_doors`); `whole_of(part)` queries the whole. Exposed `isTypeOrSubtype` to the barrier seam
+   and scoped the closed-container barrier to actual `container` types (so a *closed door* no longer
+   hides its scanner part). Golden `parts1`; specs.md. Used by the handprint scanners / suit light /
+   RESET button (above). The control-room screens/buttons/levers were ported earlier as standalone
+   scenery (not `part_of` the panel) — could be re-parented now, but it's cosmetic.
 7. ~~**KIM / scanning (Linguistic Module) + all documents**~~ **DONE** (item 3 above):
    `textual`, `content`, `scan_level`, `scanned`; the per-tier translation filter +
    examine/read surface (slice 1), the SCAN verb + Linguistic Module item (slice 2), and

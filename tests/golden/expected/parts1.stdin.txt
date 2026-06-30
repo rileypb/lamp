@@ -1,0 +1,6 @@
+x dial
+x gauge
+north
+x dial
+x gauge
+quit

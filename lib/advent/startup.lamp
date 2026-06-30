@@ -11,6 +11,8 @@ on startup:
 	# Materialize door connectivity from each door's directional fields before any
 	# navigation (see lib/advent/doors.lamp).
 	wire_doors()
+	# Materialize part-of containment so parts are in scope with their wholes (parts.lamp).
+	wire_parts()
 	# Title banner, printed before any startup_rules contributions. A game opts in
 	# by setting `tagline`; games that leave it blank get no banner.
 	let this_game = game.all.first

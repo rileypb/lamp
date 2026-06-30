@@ -1,0 +1,36 @@
+# The `part_of` relation (lib/advent): a part is in scope wherever its whole is, and travels with
+# it. Declaring `part_of PART WHOLE` materializes a `contains` edge so the part rides scope's
+# containment fixpoint. Here a dial is part of a fixed machine (so it's reachable only in the lab),
+# and a gauge is part of a carried meter (so it travels with the player).
+
+lib advent
+
+game Parts:
+	start Lab
+
+room Lab:
+	description "A lab."
+room Hall:
+	description "A hall."
+
+bidi connects Lab north Hall
+
+item machine:
+	scenery
+	description "A big grey machine."
+item dial:
+	scenery
+	understand "dial"
+	description "A calibration dial."
+
+item meter:
+	description "A handheld meter."
+item gauge:
+	scenery
+	understand "gauge"
+	description "A glowing gauge."
+
+contains Lab machine
+contains yourself meter
+part_of dial machine
+part_of gauge meter

@@ -55,7 +55,10 @@ runtime per-render flag + locale `we()`, default-false so byte-invariant; and th
 `lib/phobos/refusals.lamp`; and the **remaining in-prose scenery** — signs/poster/pods/counters/tile
 (`lib/phobos/scenery.lamp`) + the PA System backdrop — which needed a new general `private_name`
 engine flag (Inform "privately-named": suppress identifier tokens so a `locker_sign` object doesn't
-answer to "locker"; golden `privatename1`).)
+answer to "locker"; golden `privatename1`); and the **`part_of` relation** (`lib/advent/parts.lamp`:
+a part is in scope wherever its whole is, via a `wire_parts` startup native that materializes
+containment; scoped the closed-container barrier to real `container` types so a closed door doesn't
+hide its scanner part — golden `parts1`), used by the handprint scanners / suit light / RESET button.)
 Smaller: SAY/ANSWER free-text, custom can't-go/hit/take messages, power/action banners, banner
 placement seam, examinable in-prose sub-objects, and a per-extension audit. **Infra DONE:** golden
 discovery now walks one level into subdirs, so `sample/phobos/phobos.lamp` is a golden (`test
