@@ -1,0 +1,153 @@
+lib advent
+
+# Remaining in-prose scenery (Base.i7x): the labels/signs/poster as examinable objects, the
+# sleeping pods, and the science-lab counters/tile — plus the PA System backdrop (Countdown.i7x).
+# The room descriptions already show the Siriusian labels inline; these objects make X SIGN /
+# X POSTER / X POD / X COUNTER / X TILE / X PA work, carrying the originals' feels and refusals.
+# (The handprint scanners, the suit light, and the RESET button are *parts* of other objects, which
+# advent can't model yet — deferred with the part_of relation.)
+
+# The "inadequate sign" objects (Base.i7x): privately-named "sign" (so the object identifier doesn't
+# leak colliding tokens like "locker"/"door" into the parser — `private_name true`), a plastic feel,
+# take-refused as "firmly attached to the wall". Scanning one falls to the scan action's not-textual
+# reply ("…needs more text than is available on the sign."), so no special rule is needed. advent type
+# bodies can't default inherited fields, so the shared sign fields are repeated per object.
+item door_sign:
+	printed_name "sign"
+	private_name true
+	scenery
+	understand "sign/label"
+	feels "It feels like a plastic sign, with raised letters."
+	take_refusal "The sign is firmly attached to the wall."
+	description "A sign on the door reads '[siriusian(\"This way to the secret base\")]'."
+item west_sign:
+	printed_name "sign"
+	private_name true
+	scenery
+	understand "opening/sign/label"
+	feels "It feels like a plastic sign, with raised letters."
+	take_refusal "The sign is firmly attached to the wall."
+	description "An opening to the west is labeled '[siriusian(\"Storeroom\")]'."
+item storeroom_sign:
+	printed_name "sign"
+	private_name true
+	scenery
+	understand "sign/label"
+	feels "It's a plastic surface with etched letters."
+	take_refusal "The sign is firmly attached to the wall."
+	description "It reads '[siriusian(\"Please sign out any supplies or equipment before taking them\")].'"
+item junction_signs:
+	printed_name "sign"
+	private_name true
+	scenery
+	understand "sign/label/signs"
+	feels "It feels like a plastic sign, with raised letters."
+	take_refusal "The sign is firmly attached to the wall."
+	description "The western corridor is labeled '[siriusian(\"Science\")]', the southern one, '[siriusian(\"Storage\")]', and the eastern one, '[siriusian(\"Personnel\")]'. The purple door to the north is labeled '[siriusian(\"Control Room\")]'."
+item eastern_sign:
+	printed_name "sign"
+	private_name true
+	scenery
+	understand "sign/label"
+	feels "It feels like a plastic sign, with raised letters."
+	take_refusal "The sign is firmly attached to the wall."
+	description "An opening to the north is labeled '[siriusian(\"Barracks A\")]', one to the south is labeled '[siriusian(\"Barracks B\")]', and the blue door at the east end of the hallway is labeled '[siriusian(\"Commander's Quarters\")]'."
+item western_sign:
+	printed_name "sign"
+	private_name true
+	scenery
+	understand "sign/label"
+	feels "It feels like a plastic sign, with raised letters."
+	take_refusal "The sign is firmly attached to the wall."
+	description "An opening to the north is labeled '[siriusian(\"Science\")]'. The red door to the south ([if red_door.closed]closed[else]open[end if]) is labeled '[siriusian(\"Armory\")]', and the yellow door at the west end of the hallway is labeled '[siriusian(\"Reactor Room\")]'."
+item poster:
+	printed_name "poster"
+	private_name true
+	scenery
+	understand "poster/sign/label"
+	feels "The poster is made of paper, and feels smooth to the touch."
+	take_refusal "The sign is firmly attached to the wall."
+	description "Several happy cyborgs are shown on the poster, with the caption '[siriusian(\"Let's work together to kick the $stupid out of the $silly humans\")]'."
+item locker_sign:
+	printed_name "sign"
+	private_name true
+	scenery
+	understand "sign/label"
+	feels "It feels like a plastic sign, with raised letters."
+	take_refusal "The sign is firmly attached to the wall."
+	description "The locker is labeled '[siriusian(\"!mfk5plas\")]'."
+
+contains Passage_End door_sign
+contains Southern_Spoke west_sign
+contains Storeroom storeroom_sign
+contains Hub_Junction junction_signs
+contains Eastern_Spoke eastern_sign
+contains Western_Spoke western_sign
+contains North_Barracks poster
+contains South_Barracks locker_sign
+
+# --- Sleeping pods (north & south barracks) ----------------------------------
+# Privately-named too — the object identifiers would otherwise leak "north"/"south" (directions).
+item north_sleeping_pods:
+	printed_name "sleeping pods"
+	private_name true
+	scenery
+	understand "pod/pods/sleeping"
+	feels "The sleeping pods are made of a lightweight plastic, and feel smooth to the touch."
+	take_refusal "The sleeping pods are firmly attached to the floor."
+	description "This must be how Siriusians sleep: in claustrophobic little pods, closed to the outside world."
+item south_sleeping_pods:
+	printed_name "sleeping pods"
+	private_name true
+	scenery
+	understand "pod/pods/sleeping"
+	feels "The sleeping pods are made of a lightweight plastic, and feel smooth to the touch."
+	take_refusal "The sleeping pods are firmly attached to the floor."
+	description "This must be how Siriusians sleep: in claustrophobic little pods, closed to the outside world."
+
+contains North_Barracks north_sleeping_pods
+contains South_Barracks south_sleeping_pods
+
+# Galaxy won't climb into / open a pod mid-mission (Base.i7x).
+instead enter when self.target == north_sleeping_pods:
+	print "Galaxy Jones is not going to climb into a sleeping pod right now. She has a mission to complete."
+	stop failed
+instead enter when self.target == south_sleeping_pods:
+	print "Galaxy Jones is not going to climb into a sleeping pod right now. She has a mission to complete."
+	stop failed
+instead open when self.target == north_sleeping_pods:
+	print "Galaxy Jones is not going to climb into a sleeping pod right now. She has a mission to complete."
+	stop failed
+instead open when self.target == south_sleeping_pods:
+	print "Galaxy Jones is not going to climb into a sleeping pod right now. She has a mission to complete."
+	stop failed
+
+# --- Science lab fixtures ----------------------------------------------------
+item counters:
+	scenery
+	understand "counter/counters"
+	feels "The counters are made of white tile, and feel smooth to the touch."
+	take_refusal "The counters are firmly attached to the floor."
+	description "The counters are made of white tile, and are spotless."
+item tile:
+	scenery
+	understand "tile/tiles"
+	take_refusal "The tile is part of the wall and floor."
+	description "The tile is white and spotless."
+
+contains Science_Lab counters
+contains Science_Lab tile
+
+# --- PA System (Countdown.i7x): a backdrop heard throughout the base. Examining or feeling it just
+# notes that its source is unclear; it can't be taken. (I7 confines it to the indoor base rooms; the
+# port's backdrops are everywhere — a minor over-reach until region-scoped backdrops land.)
+backdrop pa_system:
+	printed_name "PA system"
+	private_name true
+	understand "pa/system/speaker/loudspeaker"
+	feels "You can hear the PA, but it's not clear where it's coming from."
+	take_refusal "Although Galaxy Jones can hear the PA System, she doesn't know where it's coming from."
+
+instead examine when self.target == pa_system:
+	print "You can hear the PA, but it's not clear where it's coming from."
+	stop succeeded

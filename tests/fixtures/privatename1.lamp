@@ -1,0 +1,35 @@
+# `private_name` (lib/advent thing, Inform's "privately-named"): an object with `private_name true`
+# contributes NO vocabulary from its identifier — only its explicit `understand` words. Here the
+# object is named `door_sign` but must not answer to "door" (that's the actual door); only "sign".
+
+lib advent
+
+game Private:
+	start Hall
+
+room Hall:
+	description "A hall."
+
+door oak_door:
+	north Hall
+	south Yard
+	description "A heavy oak door."
+
+room Yard:
+	description "A yard."
+
+item door_sign:
+	printed_name "sign"
+	private_name true
+	scenery
+	understand "sign/placard"
+	description "It reads: KEEP OUT."
+
+contains Hall door_sign
+
+# A control object WITHOUT private_name, to show the identifier normally contributes vocab.
+item brass_lamp:
+	scenery
+	description "A brass lamp."
+
+contains Hall brass_lamp

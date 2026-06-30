@@ -52,7 +52,10 @@ PA broadcasts; the guard Interjections; and the **named third-person viewpoint**
 global so `[We]` renders the player's name ("Galaxy can't reach that.") with later refs pronominalized,
 runtime per-render flag + locale `we()`, default-false so byte-invariant; and the **custom refusals**
 — advent `take_refusal`/`attack_refusal` fields + direction-aware `can't go that way`, Phobos data in
-`lib/phobos/refusals.lamp`.)
+`lib/phobos/refusals.lamp`; and the **remaining in-prose scenery** — signs/poster/pods/counters/tile
+(`lib/phobos/scenery.lamp`) + the PA System backdrop — which needed a new general `private_name`
+engine flag (Inform "privately-named": suppress identifier tokens so a `locker_sign` object doesn't
+answer to "locker"; golden `privatename1`).)
 Smaller: SAY/ANSWER free-text, custom can't-go/hit/take messages, power/action banners, banner
 placement seam, examinable in-prose sub-objects, and a per-extension audit. **Infra DONE:** golden
 discovery now walks one level into subdirs, so `sample/phobos/phobos.lamp` is a golden (`test

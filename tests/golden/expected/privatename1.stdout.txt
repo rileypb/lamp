@@ -1,0 +1,19 @@
+Hall
+A hall.
+
+> x door
+A heavy oak door.
+
+> x sign
+It reads: KEEP OUT.
+
+> x placard
+It reads: KEEP OUT.
+
+> x brass
+A brass lamp.
+
+> x lamp
+A brass lamp.
+
+> quit

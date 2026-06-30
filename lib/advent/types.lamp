@@ -3,6 +3,11 @@
 type thing:
 	string printed_name
 	string understand
+	# `private_name true` (Inform's "privately-named") suppresses the object's *identifier* tokens
+	# from the parser vocabulary, so it is referable only by its explicit `understand` words — for a
+	# thing whose internal name would otherwise leak colliding tokens (a sign named `locker_sign`
+	# must not answer to "locker"). See buildVocabIndex (runtime).
+	bool private_name = false
 
 type article
 

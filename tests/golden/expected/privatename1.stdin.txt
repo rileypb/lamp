@@ -1,0 +1,6 @@
+x door
+x sign
+x placard
+x brass
+x lamp
+quit

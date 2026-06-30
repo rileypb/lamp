@@ -1783,7 +1783,7 @@ described below.
 
 | Type | Parent | Key fields |
 |---|---|---|
-| `thing` | — | `string printed_name`, `string understand` |
+| `thing` | — | `string printed_name`, `string understand`, `bool private_name` |
 | `physical` | `thing` | `article article`, `string description`, `string gender` (default `"masculine"`), `string feels` (default `""`), `bool feelable` (default `true`), `bool far_away`, `bool obstructed`, `bool edificial`, `string take_refusal`, `string attack_refusal` |
 | `room` | `container` | `string description`, `bool lighted` (default `true`) |
 | `item` | `physical` | `bool scenery`, `bool wearable`, `string initial_appearance` (default `""`), `bool handled` |
@@ -1796,6 +1796,13 @@ described below.
 `article` is an enum kind with values `count`, `definite`, `proper`, `plural`.
 `stop_reason` is an open object type; lib/advent declares the reasons listed
 below, and game files may declare more.
+
+By default an object is referable both by its **identifier** tokens (the name split
+on `_`/whitespace — `green_door` → "green", "door") and by its `understand` words.
+Setting **`private_name true`** (Inform's "privately-named") suppresses the identifier
+tokens, so the object is referable *only* by its explicit `understand` words — for a
+thing whose internal name would otherwise leak a colliding token (a sign object named
+`locker_sign` must not answer to "locker"). Golden `privatename1`.
 
 ### Globals and constants
 

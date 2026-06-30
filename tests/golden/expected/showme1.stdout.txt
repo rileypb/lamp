@@ -6,6 +6,7 @@ You see a safe here.
 > showme gem
 gem (item)
   location: safe
+  private_name: false
   gender: "masculine"
   feels: ""
   feelable: true
@@ -26,6 +27,7 @@ gem (item)
 > showme safe
 safe (box)
   location: Hall
+  private_name: false
   gender: "masculine"
   feels: ""
   feelable: true

@@ -195,8 +195,19 @@ Lamp's capabilities. The checklist below tracks what's left; we work through it 
 - [ ] **Banner placement** (`story.ni`): the title banner should appear *between* the intro
   narration and the Galaxy Jones reveal (intro → banner → reveal), not before `startup_rules`.
   Needs an advent seam (a callable `print_banner()` + opt-out of the auto-print). See house-style note below.
-- [ ] **In-prose sub-objects as examinables** (`Base.i7x`): the door/west/store signs and the
-  barracks poster, declared as scenery so X SIGN / X POSTER work.
+- [x] **In-prose sub-objects as examinables** (`Base.i7x`): **DONE.** `lib/phobos/scenery.lamp`
+  adds the eight in-prose signs (door/west/storeroom/junction/eastern/western/locker labels + the
+  barracks poster) as **privately-named** scenery — so X SIGN / X POSTER work, each with the
+  Siriusian label text, the "plastic sign" feel, and the "firmly attached" take-refusal — plus the
+  **sleeping pods** (N/S barracks, refusing ENTER/OPEN), the science-lab **counters** and **tile**,
+  and the **PA System** backdrop (X PA → "you can hear the PA, but…"). This needed a new general
+  **`private_name`** engine flag (Inform's "privately-named", item 13 below): the sign objects'
+  identifiers (`locker_sign`, `door_sign`) were leaking colliding parser tokens ("locker", "door")
+  that broke HACK LOCKER / HACK DOOR; `private_name true` suppresses identifier tokens so an object
+  answers only to its `understand` words (golden `privatename1`; specs.md). Phobos golden
+  byte-identical. *Residual:* the everywhere `Label-sign` fallback (generic "ordinary sign" in
+  signless rooms), and the PA System's region-confinement (it's everywhere, not just the indoor
+  base, pending region-scoped backdrops).
 - [ ] **Handprint-scanner door-parts** (`Base.i7x`): each door's scanner as a real part-object.
 - [ ] **Examine-self disguise variants** (`Cyborg.i7x`): X ME / X GALAXY changes with the disguise.
 - [ ] **`indescribable` objects + button asides** (`Phobos Polish.i7x` / `Polish.i7x`): yourself,
@@ -656,8 +667,9 @@ than these "guard not present" fallbacks). Still unported: the flight deck + esc
     the main game file** (`phobos.lamp`): only main-file rules register at author order
     (0), ahead of advent's order-1 default `when story == …` rules — a lib-file
     contribution would register at library order and lose. Used by the countdown (below).
-13. **Misc object properties** — `outdoors`, per-room `preposition`, `edificial`,
-    `indescribable`, `always-indefinite`, `privately-named`.
+13. **Misc object properties** — `outdoors` (done, backdrops), per-room `preposition` (done),
+    `edificial` (done, TOUCH/FEEL), `always-indefinite` (done, room heading), **`privately-named`**
+    (done — `private_name` engine flag, see in-prose sub-objects above). Still: `indescribable`.
 14. ~~**The self-destruct doom-clock (Countdown.i7x)**~~ **DONE**
     (`lib/phobos/countdown.lamp`): a `countdown` turn counter (789) decrements every turn
     via advent's `every_turn_rules`; once Galaxy is **inside the base** (`holder(player)`

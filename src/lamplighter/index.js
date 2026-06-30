@@ -788,8 +788,14 @@ function buildVocabIndex() {
     for (const instances of instanceRegistry.values()) {
         for (const obj of instances) {
             const tokens = new Set();
-            for (const t of String(obj.name).toLowerCase().split(/[_\s]+/).filter(Boolean)) {
-                tokens.add(t);
+            // A `private_name` object contributes no vocabulary from its identifier — only its
+            // explicit `understand` words (Inform's "privately-named"). Lets a thing be referred to
+            // by its synonyms without its internal name leaking colliding tokens (e.g. a sign object
+            // named `locker_sign` must not answer to "locker").
+            if (!obj.private_name) {
+                for (const t of String(obj.name).toLowerCase().split(/[_\s]+/).filter(Boolean)) {
+                    tokens.add(t);
+                }
             }
             if (obj.understand) {
                 for (const t of String(obj.understand).toLowerCase().split("/").map((s) => s.trim()).filter(Boolean)) {
@@ -839,7 +845,10 @@ function resolveCandidates(span, scope, slotType) {
 // The vocabulary token set for a single object: identifier tokens + understand tokens.
 function objectVocab(obj) {
     const vocab = new Set();
-    for (const t of String(obj.name).toLowerCase().split(/[_\s]+/).filter(Boolean)) vocab.add(t);
+    // `private_name` suppresses the identifier tokens (see buildVocabIndex); only `understand` counts.
+    if (!obj.private_name) {
+        for (const t of String(obj.name).toLowerCase().split(/[_\s]+/).filter(Boolean)) vocab.add(t);
+    }
     if (obj.understand) {
         for (const t of String(obj.understand).toLowerCase().split("/").map((s) => s.trim()).filter(Boolean)) vocab.add(t);
     }
