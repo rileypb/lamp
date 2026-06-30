@@ -76,6 +76,16 @@ let writeImpl = (value) => {
     process.stdout.write(String(value));
 };
 
+// The single chokepoint every output run passes through: it forwards to the host
+// sink and, when a transcript is open, mirrors the plain text into it. The stream
+// manager calls this instead of writeImpl directly so SCRIPT/TRANSCRIPT capture is
+// transparent to it. Styles ride only to the host; the transcript stays plain text.
+// See devdocs/state.md → Transcript (scripting).
+function hostWrite(text, styles) {
+    writeImpl(text, styles);
+    transcriptCapture(text);
+}
+
 let builtinsInitialized = false;
 
 function bootstrapBuiltins() {
@@ -1168,7 +1178,7 @@ function streamFlushPending() {
     if (streamPending > 0) {
         const need = streamPending - streamTrailingNewlines;
         if (need > 0) {
-            writeImpl("\n".repeat(need));
+            hostWrite("\n".repeat(need));
             streamTrailingNewlines += need;
         }
         streamPending = 0;
@@ -1185,7 +1195,7 @@ function streamEmitRun(run, applyRuleA, styles) {
     streamFlushPending();
     // styles ride out-of-band as a second arg (structured-segment transport); a
     // plain run passes undefined so unstyled output keeps the bare write contract.
-    writeImpl(run, styles && styles.length ? styles : undefined);
+    hostWrite(run, styles && styles.length ? styles : undefined);
     streamTrailingNewlines = trailingNewlineCount(run);
     streamPrintedSinceBreak = true;
     streamPrintCount += 1;
@@ -1344,6 +1354,9 @@ function readLine() {
     streamFlushPending();
     const line = requestLineImpl();
     streamNoteInputLine();
+    // The host (or terminal) echoes the typed line to the screen, bypassing the
+    // output stream, so a transcript would miss it — record it here instead.
+    transcriptCapture(line + "\n");
     return line;
 }
 
@@ -1356,7 +1369,7 @@ function promptLine(promptText) {
     if (commandQueue.length > 0) {
         const queued = commandQueue.shift();
         streamFlushPending();
-        writeImpl(promptText + queued + "\n");
+        hostWrite(promptText + queued + "\n");
         streamNoteInputLine();
         return queued;
     }
@@ -1366,6 +1379,9 @@ function promptLine(promptText) {
     streamFlushPending();
     const line = promptLineImpl(promptText);
     streamNoteInputLine();
+    // The prompt and the typed line are written to the screen by the host, not
+    // through the output stream, so mirror both into an open transcript.
+    transcriptCapture(promptText + line + "\n");
     return line;
 }
 
@@ -2262,6 +2278,87 @@ function listSaves() {
 registerOutOfWorld("save", performSave);
 registerOutOfWorld("restore", performRestore);
 
+// ====================================================================
+// TRANSCRIPT (scripting) — the *mechanism* only: capture wiring + a host
+// file seam + start/stop/query primitives. The verb words, the filename
+// prompt, and the wording are library policy (lib/advent), not engine
+// concerns, so a game can reword, localize, or omit them. The capture
+// hooks must live here because output/input flow through the runtime's
+// stream manager, which a Lamp game can't reach. See devdocs/state.md →
+// Transcript (scripting).
+// ====================================================================
+
+// Storage seam: the host injects a transcript channel so the engine stays
+// host-agnostic, mirroring the save channel. start(key) opens a file (returns a
+// status string, "ok" on success); write(text) appends a chunk; stop() closes it.
+// A host without file output installs nothing, so the feature reports unavailable.
+let transcriptChannel = null;
+function setTranscriptChannel(channel) {
+    transcriptChannel = channel;
+}
+
+// Whether a transcript is currently open. hostWrite and the input-reading helpers
+// consult this on every chunk, so it must be cheap.
+let transcriptActive = false;
+
+// Append plain output/input text to the open transcript. The single entry point the
+// capture hooks call; a no-op (and swallows host errors) when no transcript is open
+// so a failing transcript never disrupts gameplay.
+function transcriptCapture(text) {
+    if (!transcriptActive || !transcriptChannel) return;
+    try {
+        transcriptChannel.write(String(text));
+    } catch (err) {
+        // A write failure shouldn't crash the turn; drop the transcript silently.
+        transcriptActive = false;
+    }
+}
+
+// Whether a transcript host seam is installed at all (vs. merely not running). The
+// library checks this to distinguish "transcripts unavailable here" from a failure.
+function transcriptAvailable() {
+    return !!transcriptChannel;
+}
+
+function transcriptRunning() {
+    return transcriptActive;
+}
+
+// Open a transcript to a player-named file, returning true on success. The runtime
+// owns the namespaced/sanitized storage key and the capture wiring; the caller (the
+// library verb) owns the name prompt and all wording. False if unavailable, already
+// running, or the host failed to open the file.
+function transcriptStart(name) {
+    if (!transcriptChannel || transcriptActive) return false;
+    let status;
+    try {
+        status = transcriptChannel.start(transcriptKey(name));
+    } catch (err) {
+        status = "error";
+    }
+    if (status !== "ok") return false;
+    transcriptActive = true;
+    return true;
+}
+
+// Close the open transcript (a no-op if none). Capture stops immediately, so a
+// closing message printed by the caller afterward is screen-only, not in the file.
+function transcriptStop() {
+    if (!transcriptActive) return;
+    transcriptActive = false;
+    try {
+        transcriptChannel.stop();
+    } catch (err) {
+        // Already detached from the channel; nothing more to do.
+    }
+}
+
+// A filesystem-safe, game-namespaced key for the transcript file, reusing the same
+// sanitizing/prefix scheme as saves so a host can store them side by side.
+function transcriptKey(slot) {
+    return `${gameKeyPrefix()}${saveKeySafe(slot, "transcript")}`;
+}
+
 module.exports = {
     bootstrapBuiltins,
     defineType,
@@ -2358,6 +2455,11 @@ module.exports = {
     restoreSave,
     setSaveChannel,
     listSaves,
+    setTranscriptChannel,
+    transcriptStart,
+    transcriptStop,
+    transcriptRunning,
+    transcriptAvailable,
     setStatusChannel,
     setStatusLine,
 };

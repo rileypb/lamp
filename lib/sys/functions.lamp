@@ -42,6 +42,20 @@ native function string player_command()
 # narration as `[turns_taken()]` and used by the library to fill the status line.
 native function int turns_taken()
 
+# Transcript (scripting) primitives. The runtime owns the *mechanism* — it mirrors all
+# session output plus the player's prompts/commands to a host-written file — while the
+# library owns the *policy*: the verb words (SCRIPT/TRANSCRIPT), the filename prompt, and
+# the wording (so a game can reword, localize, or omit the feature). `transcript_start`
+# opens a transcript to a player-named file and returns whether it succeeded (false if
+# unavailable, already running, or the host couldn't open it); `transcript_stop` closes
+# it; `transcript_running` reports whether one is open; `transcript_available` reports
+# whether the host provides the capability at all (so the verb can say "unavailable here"
+# rather than "failed"). See devdocs/state.md → Transcript (scripting).
+native function bool transcript_start(string name)
+native function void transcript_stop()
+native function bool transcript_running()
+native function bool transcript_available()
+
 # Set the host status line's two segments. The library composes the content (it
 # knows the world model); this is only the transport. A host with a status bar (the
 # web shell) renders `left` flush-left and `right` flush-right in a fixed-width,

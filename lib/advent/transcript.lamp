@@ -1,0 +1,49 @@
+# SCRIPT / TRANSCRIPT — start or stop a transcript: a text log of the whole session
+# (the game's output plus the player's prompts and typed commands), the classic IF
+# "scripting" feature. The capture mechanism and the host file seam live in the runtime
+# (the lib/sys `transcript_*` primitives); the verb words, the filename prompt, and the
+# player-facing wording live here, so a game can reword them, localize them (the messages
+# below are named/overridable), or drop the feature by not loading this file.
+#
+# Both are out-of-world: they spend no turn, take no undo checkpoint, and fire no
+# every-turn rules. Starting prompts for a filename, like SAVE; an empty name cancels.
+
+action script_on:
+	out_of_world
+	syntax:
+		"script"
+		"script on"
+		"transcript"
+		"transcript on"
+
+do script_on:
+	if transcript_running():
+		print transcript_already:"A transcript is already running."
+		stop
+	if not transcript_available():
+		print transcript_unavailable:"Transcripting isn't available here."
+		stop
+	let name = prompt(transcript_name_prompt:"Name for transcript file: ")
+	if name == "":
+		print transcript_cancelled:"Transcript cancelled."
+		stop
+	# transcript_start opens the file before this returns, so the confirmation below is
+	# captured as the transcript's first line.
+	if transcript_start(name):
+		print transcript_started:"Transcript started."
+	else:
+		print transcript_failed:"Transcript failed."
+
+action script_off:
+	out_of_world
+	syntax:
+		"script off"
+		"transcript off"
+
+do script_off:
+	if not transcript_running():
+		print transcript_not_running:"No transcript is running."
+		stop
+	# Stop first so this closing line is screen-only, not the file's last line.
+	transcript_stop()
+	print transcript_ended:"Transcript ended."

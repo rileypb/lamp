@@ -38,6 +38,12 @@ function defaultSaveDir() {
 }
 const SAVE_DIR = process.env.LAMP_SAVE_DIR || defaultSaveDir();
 
+// Where SCRIPT/TRANSCRIPT files land. Defaults beside the saves under the same
+// app-data root; `LAMP_TRANSCRIPT_DIR` overrides it (used by tests and by anyone
+// wanting transcripts in, say, the working directory). See devdocs/state.md.
+const TRANSCRIPT_DIR = process.env.LAMP_TRANSCRIPT_DIR
+    || path.join(path.dirname(SAVE_DIR), "transcripts");
+
 // Enumerate the metadata sidecars for slots under `prefix` (this game's key
 // namespace), newest first. Reads only the unobfuscated `.meta` files, never the
 // blobs; skips foreign games (prefix mismatch) and unreadable/corrupt sidecars.
@@ -109,6 +115,16 @@ function playFile(generatedPath, { out = process.stdout, err = process.stderr } 
     const backend = useTui ? createTuiBackend({ out, err }) : createPlainBackend({ out, err, fs });
     backend.start();
 
+    // The single open transcript file for this session (SCRIPT/TRANSCRIPT), or null.
+    // Appends stream straight to disk; closed on `transcript_stop` or worker exit.
+    let transcriptStream = null;
+    function closeTranscript() {
+        if (transcriptStream) {
+            transcriptStream.end();
+            transcriptStream = null;
+        }
+    }
+
     return new Promise((resolve, reject) => {
         const worker = new Worker(workerPath, {
             workerData: { generatedPath: path.resolve(generatedPath), inputBuffer, saveBuffer },
@@ -143,7 +159,22 @@ function playFile(generatedPath, { out = process.stdout, err = process.stderr } 
                 replySave(fs.existsSync(file) ? fs.readFileSync(file, "utf8") : null);
             } else if (msg.type === "save_list") {
                 replySave(JSON.stringify(listSaveMeta(SAVE_DIR, msg.prefix)));
+            } else if (msg.type === "transcript_start") {
+                try {
+                    closeTranscript();
+                    fs.mkdirSync(TRANSCRIPT_DIR, { recursive: true });
+                    transcriptStream = fs.createWriteStream(path.join(TRANSCRIPT_DIR, `${msg.key}.txt`), { flags: "w" });
+                    replySave("ok");
+                } catch (e) {
+                    transcriptStream = null;
+                    replySave(`error: ${e.message}`);
+                }
+            } else if (msg.type === "transcript_write") {
+                if (transcriptStream) transcriptStream.write(msg.data);
+            } else if (msg.type === "transcript_stop") {
+                closeTranscript();
             } else if (msg.type === "error") {
+                closeTranscript();
                 backend.stop();
                 worker.terminate();
                 reject(new Error(msg.message));
@@ -151,10 +182,12 @@ function playFile(generatedPath, { out = process.stdout, err = process.stderr } 
         });
 
         worker.on("error", (e) => {
+            closeTranscript();
             backend.stop();
             reject(e);
         });
         worker.on("exit", (code) => {
+            closeTranscript();
             backend.stop();
             if (code === 0) resolve();
             else reject(new Error(`sandbox worker exited with code ${code}`));

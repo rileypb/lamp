@@ -9,6 +9,11 @@ const projectRoot = path.resolve(__dirname, "../..");
 // touch the real per-user save location.
 const saveDir = fs.mkdtempSync(path.join(os.tmpdir(), "lamp-golden-saves-"));
 process.on("exit", () => fs.rmSync(saveDir, { recursive: true, force: true }));
+
+// Same isolation for transcript files (the `transcript1` fixture), so SCRIPT never
+// writes into the real per-user transcript location.
+const transcriptDir = fs.mkdtempSync(path.join(os.tmpdir(), "lamp-golden-transcripts-"));
+process.on("exit", () => fs.rmSync(transcriptDir, { recursive: true, force: true }));
 const lanternCli = path.join(projectRoot, "src", "lantern", "index.js");
 const playCli = path.join(projectRoot, "src", "lamplighter", "play.js");
 const testRoots = [
@@ -67,6 +72,19 @@ function main() {
             if (meta.name !== "slot1") throw new Error(`sidecar name: expected "slot1", got ${meta.name}`);
         } catch (error) {
             failures.push({ name: "save1 metadata sidecar", message: error.message });
+        }
+
+        // End-to-end: the `transcript1` fixture runs SCRIPT to slot "session1", so the
+        // CLI host must have written a transcript file mirroring the session's output
+        // and the player's commands (devdocs/sandbox.md → "Transcript broker protocol").
+        try {
+            const text = fs.readFileSync(path.join(transcriptDir, "Transcript_Demo__session1.txt"), "utf8");
+            if (!text.startsWith("Transcript started.")) throw new Error("transcript should open with the start confirmation");
+            if (!text.includes("> take coin\nTaken.")) throw new Error("transcript should mirror a command and its output");
+            if (text.includes("Transcript ended.")) throw new Error("the closing message must be screen-only, not in the file");
+            if (text.includes("You are carrying")) throw new Error("output after SCRIPT OFF must not be captured");
+        } catch (error) {
+            failures.push({ name: "transcript1 transcript file", message: error.message });
         }
     }
 
@@ -175,7 +193,7 @@ function runGenerated(generatedPath, expectRuntimeFailure = false, stdinContent 
             stdio: "pipe",
             encoding: "utf8",
             input: stdinContent !== null ? stdinContent : undefined,
-            env: { ...process.env, LAMP_SAVE_DIR: saveDir },
+            env: { ...process.env, LAMP_SAVE_DIR: saveDir, LAMP_TRANSCRIPT_DIR: transcriptDir },
         });
     } catch (error) {
         if (!expectRuntimeFailure) throw error;

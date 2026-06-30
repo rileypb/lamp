@@ -1,0 +1,20 @@
+hall
+A plain hall.
+
+You see a coin here.
+
+> transcript
+Name for transcript file: session1
+Transcript started.
+
+> take coin
+Taken.
+
+> script off
+Transcript ended.
+
+> i
+You are carrying:
+  a coin
+
+> quit

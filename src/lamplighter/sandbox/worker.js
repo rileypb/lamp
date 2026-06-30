@@ -88,6 +88,24 @@ function installSaveChannel(saveBuffer) {
             }
         },
     });
+
+    // Transcript output shares the save reply buffer: `start` opens the file and
+    // blocks for the host's "ok"/error status (so SCRIPT can report failure), while
+    // `write`/`stop` are fire-and-forget — appends must not stall each printed line,
+    // and message order preserves the transcript's sequence. See devdocs/sandbox.md.
+    lamplighter.setTranscriptChannel({
+        start(key) {
+            Atomics.store(ctrl, 0, 0);
+            parentPort.postMessage({ type: "transcript_start", key });
+            return blockForReply();
+        },
+        write(text) {
+            parentPort.postMessage({ type: "transcript_write", data: text });
+        },
+        stop() {
+            parentPort.postMessage({ type: "transcript_stop" });
+        },
+    });
 }
 
 function main() {

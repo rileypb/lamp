@@ -298,6 +298,25 @@ core edit is contained. Names (default): `contains`/`place`/`contained`, keyword
 **Where:** `src/lantern/{tokenizer,parser_rd,emitter,checker}.js`, `src/lamplighter/index.js`, `lib/advent/*`, `devdocs/{relations,world-model}.md`.
 
 ## Smaller / opportunistic
+- ~~**SCRIPT / TRANSCRIPT (scripting) — advent transcript command.**~~ **DONE
+  (2026-06-30):** `SCRIPT`/`SCRIPT ON`/`TRANSCRIPT`/`TRANSCRIPT ON` start, `SCRIPT OFF`/
+  `TRANSCRIPT OFF` stop, mirroring the session's output + the player's prompts/commands to
+  a host-written text file (filename prompted, like SAVE). **Built with the mechanism/policy
+  split the SAVE/RESTORE layering-smell fix wants** (it's the worked example for migrating
+  those): the **runtime owns only the mechanism** — capture hooks (`hostWrite` chokepoint +
+  `promptLine`/`readLine` for input), the `setTranscriptChannel` host seam, and four
+  primitives `transcript_start`/`transcript_stop`/`transcript_running`/`transcript_available`
+  (lib/sys natives); the **library owns the policy** — `lib/advent/transcript.lamp` declares
+  `script_on`/`script_off` as `out_of_world` actions carrying the grammar, the `prompt(...)`
+  for the filename, and named/overridable wording, so a non-advent game can reword, localize,
+  or omit it. The host seam reuses the save reply buffer for a synchronous `start` +
+  fire-and-forget `write`/`stop` (`worker.js`/`host.js`; CLI writes `<key>.txt` under
+  `LAMP_TRANSCRIPT_DIR`). Unit tests `tests/transcript` (the primitives + capture mechanism),
+  e2e golden `transcript1`; docs in `devdocs/state.md` ("Transcript (scripting)") +
+  `devdocs/sandbox.md` ("Transcript broker protocol"). **Follow-ups:** browser/Electron
+  transcript UX (today's browser worker installs no channel, so `transcript_available` is
+  false and SCRIPT reports unavailable — same gap as the browser save picker); apply this
+  same split to undo/save/restore (item 2's out-of-world-verb hook).
 - **End-the-game machinery: isolate the globals behind a function call.** Ending the game
   today means game code writing globals directly — `story` (enum, lib/advent/globals.lamp) and
   `ending_override` (the ending-specific banner, sample/phobos/control_room.lamp + phobos.lamp

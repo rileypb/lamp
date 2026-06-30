@@ -1,0 +1,15 @@
+lib advent
+
+# Exercises SCRIPT/TRANSCRIPT end-to-end through the brokered transcript channel:
+# start a named transcript, play a couple of turns, then stop it. The golden harness
+# also checks the written transcript file mirrors output and the player's commands.
+
+game Transcript_Demo:
+    start hall
+
+room hall:
+    description "A plain hall."
+
+item coin
+
+contains hall coin

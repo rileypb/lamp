@@ -216,6 +216,29 @@ The protocol supports both host-seam renderings without divergence:
   `save_write`/`save_read`/`save_list`/`save_delete`; only the prompt messages are
   browser-only.
 
+### Transcript broker protocol
+
+`SCRIPT` / `TRANSCRIPT` (scripting) reuses the save reply buffer for one synchronous
+op and runs the rest fire-and-forget. The seam is installed by `setTranscriptChannel`;
+the runtime owns *what* to capture (all output runs plus the player's prompts and typed
+lines), the host owns the file. See `devdocs/state.md` → "Transcript (scripting)".
+
+Worker → host:
+
+| Message | Payload | Reply | Timing | Notes |
+| --- | --- | --- | --- | --- |
+| `transcript_start` | `{ key }` | `ok` / `error: …` | inline (blocks) | opens (truncates) the file; lets `SCRIPT` report failure |
+| `transcript_write` | `{ data }` | — (none) | fire-and-forget | appends a chunk; must not stall each printed line |
+| `transcript_stop` | — | — (none) | fire-and-forget | closes the file |
+
+Only `transcript_start` blocks (sharing the save buffer's `blockForReply`); appends and
+stop are unacknowledged `postMessage`s, and message order preserves the transcript's
+sequence. `key` is the game-namespaced, sanitized slot name (`<safeGameName>__<slot>`),
+the same scheme as saves. The CLI host writes `<key>.txt` under `LAMP_TRANSCRIPT_DIR`
+(default: a `transcripts` dir beside the saves) and closes any open stream on worker
+exit. A host that installs no transcript channel (e.g. the current browser worker)
+leaves `SCRIPT` reporting it is unavailable.
+
 ## Host Environments
 
 Each environment that runs a game is a pairing of two layers, which must not be

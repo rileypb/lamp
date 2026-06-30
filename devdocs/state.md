@@ -331,6 +331,52 @@ as "for hosts without a native save UI."
 (protocol + deferred replies), `src/lighthouse/web/{shell.js,shell.css,index.html}`
 (modals).
 
+## Transcript (scripting)
+
+`SCRIPT` / `TRANSCRIPT` mirror the live session — the game's output **and** the
+player's prompts and typed commands — to a host-written text file, the classic IF
+"scripting" feature. It is **not** game state: a transcript is never snapshotted, and
+UNDO/RESTORE neither stop nor rewind it; it simply records what scrolled past.
+
+**Mechanism vs. policy — the split.** Unlike `undo`/`save`/`restore` (native verbs
+hardcoded in the runtime, the documented "layering smell" above), transcript is built the
+right way: the **runtime owns only the mechanism**, the **library owns the policy**.
+
+- **Runtime (mechanism, `src/lamplighter/index.js`).** The capture wiring and a host file
+  seam, exposed as four primitives: `transcriptStart(name) → bool` (open; false if
+  unavailable, already running, or the host failed), `transcriptStop()`,
+  `transcriptRunning() → bool`, `transcriptAvailable() → bool`. These *must* be the
+  runtime's: output and input flow through its stream manager, which a Lamp game can't
+  reach. The runtime also owns the namespaced/sanitized storage key (`transcriptKey`,
+  the SAVE scheme). Surfaced to Lamp as the lib/sys natives `transcript_start` /
+  `transcript_stop` / `transcript_running` / `transcript_available`.
+- **Library (policy, `lib/advent/transcript.lamp`).** The verb words, the filename
+  prompt, and the wording. Two **out-of-world Lamp actions** (`script_on`/`script_off`,
+  built on the `out_of_world` action mechanism) carry the grammar — `script`,
+  `script on`, `transcript`, `transcript on` start; `script off` / `transcript off` stop
+  — guard on `transcript_running`/`transcript_available`, prompt via `prompt(...)`, and
+  print named/overridable messages (`transcript_started:"…"`, etc.). A game can reword,
+  localize, or omit the feature by not loading the file. This is the worked example for
+  migrating undo/save/restore the same way (TODO item 2).
+
+**Capture hooks.** All output flows through one chokepoint, `hostWrite`, which forwards
+to the host sink and — when a transcript is open — mirrors the plain text (styles ride
+only to the host). The player's input is echoed by the host/terminal, bypassing the
+output stream, so `promptLine`/`readLine` separately feed the prompt + typed line into
+the transcript. The toggle is a single module flag (`transcriptActive`). Ordering makes
+the wording land naturally: the action calls `transcript_start` (file opens), *then*
+prints "Transcript started.", so the confirmation is the file's first line; on stop it
+calls `transcript_stop` (capture off) *before* printing "Transcript ended.", so that line
+is screen-only. A failed host open, or a write error mid-session, silently drops the
+transcript rather than disrupting play.
+
+**Where:** `src/lamplighter/index.js` (capture hooks + primitives + `setTranscriptChannel`
+seam), `lib/sys/{functions,index}.{lamp,js}` (native bridge), `lib/advent/transcript.lamp`
+(verbs + wording), `src/lamplighter/sandbox/{worker,host}.js` (broker + file writes). The
+wire protocol is in `devdocs/sandbox.md` → "Transcript broker protocol". A host that
+installs no transcript channel (today's browser worker) makes `transcript_available`
+false, so SCRIPT reports it unavailable — a follow-up, like the browser save UX.
+
 ## Inputs and Outputs
 
 - **Input (capture):** the live registries.

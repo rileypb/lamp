@@ -1,0 +1,6 @@
+transcript
+session1
+take coin
+script off
+i
+quit
