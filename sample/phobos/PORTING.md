@@ -496,10 +496,9 @@ than these "guard not present" fallbacks). Still unported: the flight deck + esc
 1. ~~**Doors**~~ **DONE — built in advent.** A `door` type declares its two sides
    as `<direction> <room>` fields; closed doors block `go`; doors are examinable
    from both rooms (scope-provider seam). Phobos's 6 doors are wired in `base.lamp`
-   with their I7 closed/locked/not-lockable state. **The base is currently SEALED**
-   — there's no unlock/HACK verb yet, so only Passage End is reachable. *(Next
-   real progression blocker is HACK, item 5.)* Door **descriptions** and the
-   handprint-**scanner parts** are still deferred (Siriusian markup + parts).
+   with their I7 closed/locked/not-lockable state. Door **descriptions** (the
+   handprint-scanner line with the open/closed state conditional) and the
+   handprint-**scanner parts** (via the `part_of` relation) are now done.
 2. ~~**Third-person room presentation**~~ **Heading DONE.** advent factors the
    heading into an overridable `room_heading_rules` rulebook (default unchanged);
    Phobos's author-file rule prints the name-embedded intro that runs on into the
