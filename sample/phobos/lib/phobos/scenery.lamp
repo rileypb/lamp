@@ -4,8 +4,8 @@ lib advent
 # sleeping pods, and the science-lab counters/tile — plus the PA System backdrop (Countdown.i7x).
 # The room descriptions already show the Siriusian labels inline; these objects make X SIGN /
 # X POSTER / X POD / X COUNTER / X TILE / X PA work, carrying the originals' feels and refusals.
-# (The handprint scanners, the suit light, and the RESET button are *parts* of other objects, which
-# advent can't model yet — deferred with the part_of relation.)
+# (The handprint scanners, the suit light, and the RESET button are *parts* of other objects,
+# modeled via advent's `part_of` relation — see the part_of declarations below.)
 
 # The "inadequate sign" objects (Base.i7x): privately-named "sign" (so the object identifier doesn't
 # leak colliding tokens like "locker"/"door" into the parser — `private_name true`), a plastic feel,

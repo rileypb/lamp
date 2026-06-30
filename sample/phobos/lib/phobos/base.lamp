@@ -24,8 +24,8 @@ room Passage_End:
 # Descriptions ported from Base.i7x. Siriusian signage uses the static cipher
 # [siriusian("…")] (always alien — same as the Passage End door label; making the
 # labels scan-aware via the translation filter is a follow-up). Door-state shows via
-# [if <door>.closed]. The signs/form/poster and the levers/buttons/control-panel are
-# still deferred as objects — they appear here only as descriptive prose.
+# [if <door>.closed]. The signs/form/poster and the levers/buttons/control-panel are ported as
+# real objects (lib/phobos/scenery.lamp, refusals.lamp, control_room.lamp).
 
 room Southern_Spoke:
 	description "This is a nondescript hallway. An opening to the west is labeled '[siriusian(\"Storeroom\")]'. The hallway continues north and south."
@@ -250,8 +250,9 @@ item reactor_manual:
 contains Reactor_Room reactor_manual
 
 # Commander's log — tier 5, in the commander's quarters. The final `#`-tagged sentence is
-# the security key for the purple-door control code; the actual code is produced by the
-# (deferred) control-code system, so the key value is omitted and the sentence ends at "is".
+# the security key for the purple-door control code; the code itself is produced by the control-code
+# system (hacking.lamp) and revealed when the log is fully scanned (the `instead examine` there), so
+# the description field omits the key value and the sentence ends at "is".
 item commanders_log:
 	printed_name "Commander's Log"
 	textual true
