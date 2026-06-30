@@ -53,8 +53,12 @@ rule startup_rules:
 	# Galaxy's *name* ("Galaxy can't reach that.", "Galaxy sees a … here."), pronominalizing later
 	# references in the same message ("she"). `viewpoint_named` turns on the name form; `viewpoint_person
 	# = 3` + Galaxy's `gender` (on `yourself` below) give the third-person pronoun/verb agreement.
+	# `viewpoint_name` is the short narration name ("Galaxy"), kept separate from the player's full
+	# `printed_name` ("Galaxy Jones") so identification contexts — `[the player]`, disambiguation —
+	# show the full proper name while narration stays first-name (matching I7's `[Player]` substitution).
 	viewpoint_person = 3
 	viewpoint_named = true
+	viewpoint_name = "Galaxy"
 
 # Informational verbs (story.ni: abouting / helping). These are "out of world"
 # in I7 (no turn passes). advent has no game-defined out-of-world hook yet, so
@@ -89,7 +93,10 @@ report credits:
 # The player is "Galaxy", referred to by name. (Full third-person viewpoint /
 # action-report rewording is deferred; for now only the room heading is reshaped.)
 person yourself:
-	printed_name "Galaxy"
+	# Full, proper identification name — shown by `[the player]` and disambiguation ("Galaxy Jones",
+	# no article). Narration uses the short `viewpoint_name` ("Galaxy") set in the game block above.
+	printed_name "Galaxy Jones"
+	article proper
 	gender "female"
 	understand "galaxy/jones/woman"
 	feels "Galaxy Jones pinches herself. She feels the same as always."

@@ -157,7 +157,10 @@ The design targets these Inform 7/10 parser capabilities, grouped by stage:
 **Scope & resolution**
 - Scope: the set of objects the player can currently refer to (room contents,
   carried items, contents of open/transparent containers, recursively).
-- Disambiguation prompts and "deciding which one" rules.
+- Disambiguation prompts ("Which do you mean: the brass lamp or the lantern?"). Each candidate is
+  named with its definite article, except a **proper-named** object (a `proper` field, or advent's
+  `article` set to `proper`), which takes no article — "… or Galaxy Jones?" (`isProperNamed`,
+  mirroring the locale's `is_proper`). "Deciding which one" rules remain deferred.
 - Reachability/visibility distinction (you can *see* through a window but not
   *take* through it) — modeled as accessibility checks in the action rules.
 

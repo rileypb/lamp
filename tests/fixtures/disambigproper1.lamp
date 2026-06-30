@@ -1,0 +1,24 @@
+# Disambiguation respects proper-naming (runtime): a proper-named candidate ("Alice") takes no
+# definite article in the "Which do you mean" prompt, while an ordinary one keeps "the".
+
+lib advent
+
+game Demo:
+	start Lab
+
+room Lab:
+	description "A bare lab."
+
+person alice:
+	printed_name "Alice"
+	article proper
+	understand "alice"
+	description "A scientist named Alice."
+
+item band:
+	printed_name "alice band"
+	understand "alice/band"
+	description "A simple hair band."
+
+contains Lab alice
+contains Lab band

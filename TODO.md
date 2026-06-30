@@ -65,7 +65,11 @@ advent extracted a callable `print_banner()` + an `auto_banner` opt-out field on
 prints the title banner between its intro and the reveal, default-true so other games are invariant;
 and **examine-self disguise variants** — plus a general `me`/`myself` parser self-word that resolves
 to the current `player` global (follows a reassigned protagonist; golden `selfword1`), which also
-fixed feel/attack/examine ME reaching the player's own text.)
+fixed feel/attack/examine ME reaching the player's own text; and the **player naming split** — the
+player's `printed_name` is now the full proper "Galaxy Jones" (`article proper`) for identification
+(`[the player]`, disambiguation), while narration keeps the short first name via a new
+`viewpoint_name` global, and a runtime fix makes disambiguation prompts honor proper-naming —
+"the Galaxy Suit or Galaxy Jones?" — golden `disambigproper1`.)
 Smaller: SAY/ANSWER free-text, custom can't-go/hit/take messages, power/action banners, banner
 placement seam, examinable in-prose sub-objects, and a per-extension audit. **Infra DONE:** golden
 discovery now walks one level into subdirs, so `sample/phobos/phobos.lamp` is a golden (`test

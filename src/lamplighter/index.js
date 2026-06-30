@@ -875,8 +875,14 @@ function objectDisplayName(obj) {
     return String(obj.name).replace(/_/g, " ");
 }
 
+// A proper-named object takes no definite article ("Galaxy Jones", not "the Galaxy Jones"). Mirrors
+// the locale's is_proper: a boolean `proper` field or advent's `article` enum set to `proper`.
+function isProperNamed(obj) {
+    return Boolean(obj && (obj.proper || (obj.article && obj.article.name === "proper")));
+}
+
 function printDisambiguationPrompt(candidates) {
-    const names = candidates.map((obj) => "the " + objectDisplayName(obj));
+    const names = candidates.map((obj) => (isProperNamed(obj) ? "" : "the ") + objectDisplayName(obj));
     if (names.length === 2) {
         print(`Which do you mean: ${names[0]} or ${names[1]}?`);
     } else {

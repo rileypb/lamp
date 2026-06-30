@@ -210,7 +210,11 @@ use an ordinary reference (`[the self.actor]`), not a pronoun word.
   ("Galaxy") and pronominalizes later references in that render ("she"). It uses a per-render
   `viewpointNamed` flag in the runtime (`renderViewpointNamed`/`renderSetViewpointNamed`); the
   locale's `we()` reads it. For a name-based house style (Phobos: "Galaxy can't reach that.").
-  Default false → pronoun, byte-invariant. Story **tense** (D6) remains deferred.
+  Default false → pronoun, byte-invariant. The narration name defaults to the player's display
+  name (`printed_name`), but a non-empty **`viewpoint_name`** global overrides it — letting the
+  narration use a short first name ("Galaxy") while `printed_name` stays the full identification
+  name ("Galaxy Jones") seen by `[the player]` and disambiguation prompts (matching I7's separate
+  `[Player]` short-name substitution). Story **tense** (D6) remains deferred.
 - **D8. Integration with action defaults.** Inform: `"[The actor] [take] [the
   noun]."` (where `[The actor]` becomes "You" or "Alice"). **Lamp:** the default
   report of a generic action becomes a template keyed on the actor as **subject** —

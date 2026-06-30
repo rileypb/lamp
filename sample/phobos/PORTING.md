@@ -231,7 +231,12 @@ Lamp's capabilities. The checklist below tracks what's left; we work through it 
   the *current* `player` global (a general engine addition — they follow a reassigned protagonist;
   golden `selfword1`), so the player's `feels`/`attack_refusal`/description are all reachable. Galaxy's
   name synonyms ("galaxy/jones/woman") are object-bound `understand` on `yourself` ("galaxy" also
-  matches the Galaxy Suit, so it disambiguates, as in the original).
+  matches the Galaxy Suit, so it disambiguates, as in the original). The player's `printed_name` is the
+  full proper **"Galaxy Jones"** (`article proper`) — so `[the player]` and the disambiguation prompt
+  read "Galaxy Jones" (no article) — while narration keeps the short first name via the new
+  **`viewpoint_name = "Galaxy"`** global (mirrors I7's `[Player]` short-name substitution; the old
+  collapsed `printed_name "Galaxy"` made the prompt read "the Galaxy"). Engine fix: disambiguation
+  prompts now honor proper-naming (golden `disambigproper1`).
 - [ ] **`indescribable` objects + button asides** (`Phobos Polish.i7x` / `Polish.i7x`): yourself,
   the disruptor pistol, etc. marked indescribable; the "Why not press it instead?" button replies.
 

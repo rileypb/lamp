@@ -24,6 +24,13 @@ global bool viewpoint_plural = false
 # can't reach that." rather than "She can't reach that."). Default false; read by the locale's we().
 global bool viewpoint_named = false
 
+# The name `[We]` emits on its first use under a named third-person viewpoint. When empty (the
+# default), the locale falls back to the player's display name (`printed_name`). Set this when the
+# narration name differs from the protagonist's full/identification name — e.g. a player whose
+# `printed_name` is "Galaxy Jones" (used by `[the player]`, disambiguation) but who is narrated as
+# "Galaxy". Mirrors the I7 `[Player]` short-name substitution. Read by the locale's we().
+global string viewpoint_name = ""
+
 global real PI = 3.141592653
 
 # The action currently running (set by the action pipeline for the duration of an

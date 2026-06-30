@@ -1,0 +1,9 @@
+Lab
+A bare lab.
+
+You see an alice band here.
+
+> x alice
+Which do you mean: the alice band or Alice?
+
+> quit
