@@ -44,6 +44,10 @@ type physical < thing:
 	# nothing."). A game keys per-object flavour off these instead of writing many `instead` rules.
 	string take_refusal = ""
 	string attack_refusal = ""
+	# Whether this thing is itself glowing/luminous (Inform's `lit` property). advent's darkness model
+	# is room-level (`room.lighted`), so a lit thing has no illumination effect yet; it only annotates
+	# the inventory row as "(providing light)". A game sets it (e.g. Phobos's FROTZ).
+	bool lit = false
 
 type container < physical
 

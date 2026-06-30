@@ -1784,7 +1784,7 @@ described below.
 | Type | Parent | Key fields |
 |---|---|---|
 | `thing` | — | `string printed_name`, `string understand`, `bool private_name` |
-| `physical` | `thing` | `article article`, `string description`, `string gender` (default `"masculine"`), `string feels` (default `""`), `bool feelable` (default `true`), `bool far_away`, `bool obstructed`, `bool edificial`, `string take_refusal`, `string attack_refusal` |
+| `physical` | `thing` | `article article`, `string description`, `string gender` (default `"masculine"`), `string feels` (default `""`), `bool feelable` (default `true`), `bool far_away`, `bool obstructed`, `bool edificial`, `string take_refusal`, `string attack_refusal`, `bool lit` (Inform's `lit`; darkness is room-level so this only annotates the inventory row `(providing light)`) |
 | `room` | `container` | `string description`, `bool lighted` (default `true`) |
 | `item` | `physical` | `bool scenery`, `bool wearable`, `string initial_appearance` (default `""`), `bool handled` |
 | `box` | `item, container` | `bool closable`, `bool closed`, `bool locked` |
@@ -2054,7 +2054,7 @@ a vessel, so a *closed* door must not hide its parts. Golden `parts1`.
 | `pull` | `direct item target` | `pull [target]` | Inform's "pulling a thing" — the counterpart to `push`, for levers and the like. **Fails by default** (shares the `nothing_happens` reason; message `pull_inert` = "Nothing obvious happens."); a game adds `instead pull` rules for things that respond. `target` is `direct`, so `it` refers back to it. |
 | `take` | `item taken` | `take [taken]`, `get [taken]` | Moves item to actor. Refused for an already-carried item (`already_carrying`), a `scenery` item (`cant_take_that`), and — from Can't Touch This.i7x — an `unfeelable` item (`cant_take_unfeelable` = "[We] can't take [the act.taken]."), one out of reach (`far_away`/`obstructed` → `cant_reach`), or an `edificial` one (`too_massive` = "[The act.taken] [is] much too massive to take."). The trait checks run before the scenery check, so a massive scenery fixture reports "too massive". A non-empty **`take_refusal`** (`physical`, Can't Take That.i7x) replaces the default message for *any* take failure except the carry-state errors. |
 | `drop` | `item dropped` | `drop [dropped]` | Moves item to actor's location; implicitly calls `doff` if item is worn (printing `(first taking off X)` for the player). |
-| `inventory` | — | `inventory`, `i` | Lists carried items; marks worn items with `(worn)`. |
+| `inventory` | — | `inventory`, `i` | Lists carried items; marks worn items with `(worn)` and `lit` items with `(providing light)`. |
 | `wear` | `item clothing` | `wear [clothing]` | Asserts `wears actor clothing`; implicitly calls `take` if item is not yet carried (printing `(first taking X)` for the player). |
 | `doff` | `item clothing` | `remove [clothing]`, `take off [clothing]` | Retracts `wears actor clothing`. (Named `doff` internally because `remove` is a reserved keyword.) |
 | `enter` | `direct item target` | `enter [target]` | Inform's "entering". advent has no enterable/vehicle model, so it **fails by default** (reason `cant_enter`, message `cant_enter_msg` = "That's not something [we] can enter."); a game adds `instead enter` rules to move the actor into an interior (e.g. a vehicle). `target` is `direct`, so `it` refers back to it. |

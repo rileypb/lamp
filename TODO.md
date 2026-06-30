@@ -45,8 +45,12 @@ object) is "out of fuel", else "can't fly that". **Blowing-up-base flavour audit
 the guard-leading dialogue is now verbatim (was paraphrased) + the missed reactor "Hurry! Before we
 are caught!" nag. Remaining parity items: custom can't-go/hit/take messages, power/action banners,
 banner placement seam, the remaining examinable in-prose sub-objects (signs/poster), handprint-scanner
-parts, examine-self / X ME, indescribable objects, the bare-word SAY shortcuts (needs a command-rewrite
-hook, below), and the audit passes. (Now ported: all `$` swear censorship; the two guard combat
+parts, examine-self / X ME, the bare-word SAY shortcuts (needs a command-rewrite
+hook, below) and the audit passes. (**FROTZ DONE** — GJ Basics.i7x Easter egg `frotz [thing]` in
+lib/phobos/frotz.lamp; three message branches + a new advent `bool lit` on `physical` that annotates
+the inventory row `(providing light)`, golden `providinglight1`. `indescribable` objects intentionally
+skipped — debug-style suppression, not needed for the port; the "button asides" it was bundled with
+are just attack_refusal rows, already ported.) (Now ported: all `$` swear censorship; the two guard combat
 scenes — arrival shoot-on-sight + powered suit-deflect, spy-death button overrides; the goofy random
 PA broadcasts; the guard Interjections; and the **named third-person viewpoint** — `viewpoint_named`
 global so `[We]` renders the player's name ("Galaxy can't reach that.") with later refs pronominalized,

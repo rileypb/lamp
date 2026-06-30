@@ -117,6 +117,8 @@ report inventory:
 			print "  [indefinite(x)]"
 			if wears self.actor x:
 				print inventory_worn:" (worn)"
+			if x.lit:
+				print inventory_providing_light:" (providing light)"
 			print "[line break]"
 	if not found:
 		print inventory_empty:"You are carrying nothing."

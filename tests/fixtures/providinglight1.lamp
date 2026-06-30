@@ -1,0 +1,21 @@
+# Inventory annotation (lib/advent): a carried `lit` thing is marked "(providing light)" — alongside
+# the existing "(worn)" marker. advent's darkness is room-level, so `lit` has no illumination effect
+# yet; this is the surface annotation a game like Phobos (FROTZ) relies on.
+
+lib advent
+
+game Light:
+	start Room
+
+room Room:
+	description "A bare room."
+
+item lantern:
+	lit
+	description "A glowing lantern."
+
+item rock:
+	description "An ordinary rock."
+
+contains yourself lantern
+contains yourself rock

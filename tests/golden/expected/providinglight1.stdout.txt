@@ -1,0 +1,9 @@
+Room
+A bare room.
+
+> i
+You are carrying:
+  a lantern (providing light)
+  a rock
+
+> quit

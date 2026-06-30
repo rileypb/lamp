@@ -237,8 +237,21 @@ Lamp's capabilities. The checklist below tracks what's left; we work through it 
   **`viewpoint_name = "Galaxy"`** global (mirrors I7's `[Player]` short-name substitution; the old
   collapsed `printed_name "Galaxy"` made the prompt read "the Galaxy"). Engine fix: disambiguation
   prompts now honor proper-naming (golden `disambigproper1`).
-- [ ] **`indescribable` objects + button asides** (`Phobos Polish.i7x` / `Polish.i7x`): yourself,
-  the disruptor pistol, etc. marked indescribable; the "Why not press it instead?" button replies.
+- [x] **`indescribable` objects + button asides** (`Phobos Polish.i7x` / `Polish.i7x`): **CLOSED.**
+  The "button asides" were never a distinct feature — they're just `attack_refusal` rows in the Table
+  of Attacking, and they're already ported (launch/self-destruct → "Why not press it instead?" in
+  `refusals.lamp`; reset/generic buttons → "…silly idea!" in refusals.lamp/scenery.lamp). The
+  `indescribable` half (yourself / disruptor pistol marked indescribable) is **intentionally skipped**
+  — it's a debug-style suppression not needed for the port.
+
+- [x] **FROTZ Easter egg** (`GJ Basics.i7x` "Volume - Frotz"): **DONE.** `frotz <thing>` in
+  `lib/phobos/frotz.lamp` — the three message branches (scenery / `edificial` / take-refusal-bearing →
+  "Although Galaxy completes the spell, nothing seems to have happened."; the player → "Galaxy is
+  bathed in a sickly yellow light…"; any other thing → the adaptive "almost blinding flash… now quite
+  usable as a light source", via a `verb begin, fade` declaration). Sets the new advent **`bool lit`**
+  (`physical`), which annotates the inventory row **`(providing light)`** next to `(worn)` — golden
+  `providinglight1`. "Fixed in place" maps to scenery/`edificial`/non-empty `take_refusal` (the doors).
+  FROTZ itself is verified manually (the phobos golden is `test endgame`).
 
 **Audit passes (may add items):**
 - [ ] **`Actions.i7x`** — audit for unported custom actions (shooting, listening, searching →

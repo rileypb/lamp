@@ -1,0 +1,27 @@
+# FROTZ (GJ Basics.i7x "Volume - Frotz") — the Enchanter-spell Easter egg: `frotz <thing>` makes it
+# glow. Pure flavour: Phobos has no dark rooms, so the `lit` state has no illumination effect — it
+# only annotates the inventory row "(providing light)" (advent). Refused on anything Galaxy can't pick
+# up — scenery, too-massive (`edificial`), or anything carrying a take refusal (e.g. the doors) —
+# matching I7's "Check frotzing scenery / something fixed in place".
+
+# The adaptive verbs the success message conjugates against (regular, so conjugate() inflects them).
+verb begin, fade
+
+action frotz:
+	direct physical target
+	syntax:
+		"frotz [target]"
+
+check frotz:
+	if self.target.scenery or self.target.edificial or not (self.target.take_refusal == ""):
+		print "Although Galaxy completes the spell, nothing seems to have happened."
+		stop failed
+
+do frotz:
+	self.target.lit = true
+
+report frotz:
+	if self.target == player:
+		print "Galaxy is bathed in a sickly yellow light, bright enough to read by."
+	else:
+		print "There is an almost blinding flash of light as [the act.target] [begin] to glow! [They] slowly [fade] to a less painful level, but [the act.target] [are] now quite usable as a light source."
