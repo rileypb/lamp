@@ -8,7 +8,6 @@ The npc takes the hat.
 The npc puts on the coat.
 The npc takes off the coat.
 The npc puts on the coat.
-The npc takes off the coat.
 The npc drops the coat.
 The npc drops the hat.
 

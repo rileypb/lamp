@@ -33,7 +33,6 @@ You put on the hat.
 
 > drop hat
 (first taking off the hat)
-You take off the hat.
 Dropped.
 
 > i
