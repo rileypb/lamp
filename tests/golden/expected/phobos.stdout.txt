@@ -308,8 +308,6 @@ Galaxy attaches the KIM to the yellow door.
 [1][2][3][4][5][6][7][8][9]
 [] = red, <> = blue
 
-Galaxy mutters to herself. "Never seen a hacking interface like this before. What do I press? 1? 2?"
-
 "752."
 
 > press 2
@@ -398,8 +396,6 @@ Galaxy attaches the KIM to the red door.
 
 [1][2][3][4][5]<6>[7][8][9]
 [] = red, <> = blue
-
-Galaxy mutters to herself. "Never seen a hacking interface like this before. What do I press? 1? 2?"
 
 "741."
 
@@ -491,8 +487,6 @@ Galaxy attaches the KIM to the purple handprint scanner.
 
 [1 Ĺ][2 ĺ][3 Ļ][4 ļ][5 Ľ][6 ľ][7 Ŀ][8 ŀ][9 Ł][10 ł][11 Ѓ][12 ΐ][13 ſ][14 ŧ][15 ī][16 ı]
 [] = red, <> = blue
-
-Galaxy mutters to herself. "Never seen a hacking interface like this before. What do I press? 1? 2?"
 
 "730."
 

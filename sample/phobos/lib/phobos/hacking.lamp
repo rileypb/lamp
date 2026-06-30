@@ -55,10 +55,14 @@ function void retrieve_kim():
 	print "Galaxy retrieves the KIM from [kim_surface_name()]."
 	detach_kim()
 
-# The single shared hacking hint (I7's `push clue`), printed after the keypad on the yellow, red,
-# purple, and locker hacks — but not the blue one. The original has no per-puzzle flavour lines.
+# The single shared hacking hint (I7's `push clue`), offered after the keypad on the yellow, red,
+# purple, and locker hacks — but not the blue one. It's a one-shot: like an I7 `clip`, it prints only
+# the first time (the first hack of the game), never again.
+global bool clue_given = false
 function void push_clue():
-	print "Galaxy mutters to herself. 'Never seen a hacking interface like this before. What do I press? 1? 2?'"
+	if not clue_given:
+		print "Galaxy mutters to herself. 'Never seen a hacking interface like this before. What do I press? 1? 2?'"
+		clue_given = true
 
 # Examining the KIM shows its base description, plus — while it's adhered mid-hack — the live puzzle
 # state, so the player can re-read the board (I7 KIM.i7x: the description ends "[if KIM adheres to
