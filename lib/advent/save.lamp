@@ -1,12 +1,24 @@
-# SAVE / RESTORE — persist the game to a named slot and read it back. As with
-# SCRIPT/TRANSCRIPT, the capture/snapshot *mechanism* lives in the runtime (the lib/sys
-# `save_*` / `restore_*` primitives); the verb words, the name prompt, and the wording
+# State meta-verbs: UNDO, SAVE, RESTORE — roll back, persist, and reload the game state.
+# As with SCRIPT/TRANSCRIPT, the snapshot/storage *mechanism* lives in the runtime (the
+# lib/sys `undo_turn` / `save_*` / `restore_*` primitives); the verb words and the wording
 # live here, so a game can reword, localize (the messages are named/overridable), or omit
-# them. Both are out-of-world: no turn, no undo checkpoint.
+# them. All three are out-of-world: no turn, no undo checkpoint — and they resolve through
+# the normal grammar path like any other verb (the runtime has no separate meta-verb table).
 #
-# Name entry is a host seam. A host with a native save UI (the browser shell) renders its
-# own modal — the verb defers to it via `*_has_picker` / `*_pick_*`; a text host (CLI)
-# gets the line prompt below. The runtime keeps the blob lifecycle either way.
+# For SAVE/RESTORE, name entry is a host seam. A host with a native save UI (the browser
+# shell) renders its own modal — the verb defers to it via `*_has_picker` / `*_pick_*`; a
+# text host (CLI) gets the line prompt below. The runtime keeps the blob lifecycle either way.
+
+action undo:
+	out_of_world
+	syntax:
+		"undo"
+
+do undo:
+	if undo_turn():
+		print undo_done:"\[Previous turn undone.\]"
+	else:
+		print undo_none:"You can't undo any further."
 
 action save:
 	out_of_world

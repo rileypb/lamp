@@ -1024,14 +1024,9 @@ function runCommand(line, actor) {
         pendingDisambiguation = null;
     }
 
-    // Native out-of-world verbs (undo; later save/restore) bypass the turn and take no
-    // checkpoint. See devdocs/state.md. Lamp-declared `out of world` actions are handled
-    // below (after a grammar matches), since they carry full syntax and slots.
-    if (tokens.length === 1 && outOfWorldCommands.has(tokens[0])) {
-        outOfWorldCommands.get(tokens[0])();
-        return false;
-    }
-
+    // Every player command — including the meta-verbs UNDO/SAVE/RESTORE — resolves through
+    // the single grammar path below; they are `out_of_world` Lamp actions (lib/advent) over
+    // runtime primitives, so they bypass the turn clock without a separate dispatch table.
     // The checkpoint + turn advance happen only when an in-world action actually runs
     // (below), so a parse failure or an out-of-world action spends no turn.
     // Try each grammar whose structure matches. A grammar that matches
@@ -2085,22 +2080,16 @@ function checkpoint() {
 function clearUndoHistory() {
     undoStack.length = 0;
 }
-function performUndo() {
-    if (undoStack.length === 0) {
-        print("You can't undo any further.");
-        return;
-    }
+// Pop the most recent checkpoint and restore it, returning true if a turn was undone or
+// false if the undo stack was empty. The library `undo` verb (lib/advent/save.lamp) owns
+// the wording; the stack itself + checkpointing stay engine-internal (driven by
+// runCommand). This is the same mechanism/policy split as SAVE/RESTORE — there is no
+// longer a separate native meta-verb dispatch table.
+function undoTurn() {
+    if (undoStack.length === 0) return false;
     restoreState(undoStack.pop());
-    print("[Previous turn undone.]");
+    return true;
 }
-
-// Out-of-world verbs bypass the turn clock and take no undo checkpoint. An
-// interim hook until parser-v2 out-of-world actions land; `undo` is the first.
-const outOfWorldCommands = new Map();
-function registerOutOfWorld(word, handler) {
-    outOfWorldCommands.set(word, handler);
-}
-registerOutOfWorld("undo", performUndo);
 
 // ====================================================================
 // SAVE / RESTORE — the snapshot plus a versioned header and a storage
@@ -2442,7 +2431,7 @@ module.exports = {
     isTypeOrSubtype,
     advanceTurn,
     turnsTaken,
-    registerOutOfWorld,
+    undoTurn,
     clearUndoHistory,
     setBuildId,
     getBuildId,

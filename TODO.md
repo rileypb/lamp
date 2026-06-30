@@ -187,13 +187,13 @@ about/help/credits (which can now drop their turn).
 **Remaining for v2:** **timed/scheduled events** (fire-once-at-turn-N — today done with a
 counter in an every-turn rule, as the doom-clock shows; a built-in scheduler is the
 convenience layer).
-- **Fold in here — SAVE/RESTORE DONE (2026-06-30); UNDO remains.** `save`/`restore` moved
-  out of the runtime into `lib/advent/save.lamp` as `out_of_world` actions over runtime
-  primitives (see item 1). `undo` is still a native `registerOutOfWorld` verb
-  (`performUndo`): no name prompt and a single fixed line, so the layering payoff is small;
-  it can migrate later if `registerOutOfWorld` grows a **Lamp-callback** form, but it isn't
-  pulling its weight as a smell. (The other two needed no such hook — the `out_of_world`
-  action mechanism sufficed.)
+- **Fold in here — DONE (2026-06-30): all meta-verbs are now Lamp actions.** `undo`,
+  `save`, and `restore` moved out of the runtime into `lib/advent/save.lamp` as
+  `out_of_world` actions over runtime primitives (`undo_turn`, the `save_*`/`restore_*`
+  set; see item 1). No `registerOutOfWorld` Lamp-callback hook was needed — the
+  `out_of_world` action mechanism sufficed — so the native single-token meta-verb table
+  (`outOfWorldCommands`/`registerOutOfWorld`) was **deleted**, unifying all player-command
+  recognition through the grammar path.
 - **Where:** rulebook driver in `src/lamplighter/index.js`, `run_command` loop.
 - **See:** `devdocs/rulebooks.md` roadmap, `devdocs/game_parser.md` v2.
 
@@ -322,8 +322,9 @@ core edit is contained. Names (default): `contains`/`place`/`contained`, keyword
   `devdocs/sandbox.md` ("Transcript broker protocol"). **Follow-ups:** browser/Electron
   transcript UX (today's browser worker installs no channel, so `transcript_available` is
   false and SCRIPT reports unavailable — same gap as the browser save picker). **Applied
-  the same split to SAVE/RESTORE (2026-06-30; see items 1–2);** UNDO is the last native
-  meta-verb (little to gain from moving it).
+  the same split to SAVE/RESTORE *and* UNDO (2026-06-30; see items 1–2), retiring the
+  native meta-verb dispatch table (`outOfWorldCommands`/`registerOutOfWorld`) entirely — so
+  all player commands now resolve through one grammar path.**
 - **End-the-game machinery: isolate the globals behind a function call.** Ending the game
   today means game code writing globals directly — `story` (enum, lib/advent/globals.lamp) and
   `ending_override` (the ending-specific banner, sample/phobos/control_room.lamp + phobos.lamp

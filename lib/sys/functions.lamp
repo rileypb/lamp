@@ -80,6 +80,12 @@ native function string restore_pick_blob()
 native function string restore_read_slot(string name)
 native function string restore_apply_blob(string blob)
 
+# UNDO primitive. Pops the most recent turn checkpoint and restores it, returning true if
+# a turn was undone or false if the undo stack was empty. The runtime owns the undo stack
+# and checkpoints it once per fresh turn; the library `undo` verb (lib/advent/save.lamp)
+# owns only the wording. See devdocs/state.md → UNDO.
+native function bool undo_turn()
+
 # Set the host status line's two segments. The library composes the content (it
 # knows the world model); this is only the transport. A host with a status bar (the
 # web shell) renders `left` flush-left and `right` flush-right in a fixed-width,

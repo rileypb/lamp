@@ -164,28 +164,28 @@ mutate, restore, and assert the state matches the capture.
   and do not checkpoint again.
 - **Out-of-world verbs** bypass the turn clock and take no checkpoint.
 
-  **SAVE/RESTORE — layering-smell fix DONE (2026-06-30).** `save`/`restore` are no
-  longer runtime verbs: they are **out-of-world Lamp actions** in `lib/advent/save.lamp`
-  that call runtime *primitives*. The runtime keeps only the mechanism — the snapshot,
-  the versioned/obfuscated blob, the build-compatibility gate, the storage seam, and
-  access to a host's native save UI — exposed as `save_available` / `save_has_picker` /
+  **Meta-verbs — layering-smell fix DONE (2026-06-30).** `undo`, `save`, and `restore`
+  are no longer runtime verbs: all three are **out-of-world Lamp actions** in
+  `lib/advent/save.lamp` that call runtime *primitives*, so every player command — meta or
+  in-world — now resolves through the **single grammar path**. The old single-token
+  `outOfWorldCommands` dispatch table (and `registerOutOfWorld`) is gone; command
+  recognition has one home.
+
+  The runtime keeps only the mechanism. For save/restore: the snapshot, the
+  versioned/obfuscated blob, the build-compatibility gate, the storage seam, and access to
+  a host's native save UI — exposed as `save_available` / `save_has_picker` /
   `save_pick_name` / `save_to_slot` and `restore_has_picker` / `restore_pick_blob` /
-  `restore_read_slot` / `restore_apply_blob` (lib/sys natives). The library owns the verb
-  words, the text-host name prompt, and all wording (named/overridable messages). The
-  browser's modal name-entry stays a *host* seam reached through `*_has_picker` /
-  `*_pick_*` — the verb only chooses text-prompt vs. defer-to-host (see "Save/restore UX:
-  a host seam" below). This is the same split SCRIPT/TRANSCRIPT use; transcript was the
-  proof-of-concept, save/restore the second application.
+  `restore_read_slot` / `restore_apply_blob`. For undo: the checkpoint stack +
+  `undo_turn()` (pop-and-restore, returns whether a turn was undone). The library owns the
+  verb words and all wording (named/overridable messages); for save/restore the browser's
+  modal name-entry stays a *host* seam reached through `*_has_picker` / `*_pick_*` (the
+  verb only chooses text-prompt vs. defer-to-host — see "Save/restore UX: a host seam"
+  below). This is the same split SCRIPT/TRANSCRIPT use; transcript was the proof-of-
+  concept, save/restore/undo the applications.
 
-  **UNDO — still a runtime verb.** `undo` remains registered via
-  `registerOutOfWorld(word, handler)` with the handler (`performUndo`) in the runtime.
-  Unlike save/restore it has no name prompt and only the single fixed line, so the
-  layering payoff is small; it can migrate the same way later if `registerOutOfWorld`
-  gains a Lamp-callback form, but it isn't pulling its weight as a smell.
-
-The library turn loop is unchanged — `undo` typed by the player simply falls
-through to `run_command`, which recognizes it (the single-token out-of-world table).
-`save`/`restore` now resolve through the normal grammar path as out-of-world actions.
+The library turn loop is unchanged — `undo`/`save`/`restore` typed by the player resolve
+through `run_command`'s grammar path like any other verb; being `out_of_world`, they spend
+no turn and take no checkpoint.
 
 ## SAVE / RESTORE (Slice 2)
 
@@ -411,8 +411,10 @@ false, so SCRIPT reports it unavailable — a follow-up, like the browser save U
 ## Roadmap
 
 - **Slice 1 — snapshot core + UNDO. (Implemented.)** Encoder/restore, provider
-  registry + four built-ins, undo stack, `runCommand` checkpoint, out-of-world
-  `undo`. In-memory only; works in every host.
+  registry + four built-ins, undo stack, `runCommand` checkpoint, and `undo`. (The verb
+  moved to `lib/advent/save.lamp` on 2026-06-30 — an out-of-world Lamp action over the
+  `undo_turn()` primitive; see the layering-smell fix above.) In-memory only; works in
+  every host that loads a library defining the verb.
 - **Slice 2 — SAVE/RESTORE to storage (dev host). (Implemented.)** Versioned
   header (`buildId` + game identity), `captureSave`/`restoreSave` with the strict
   restore gate, the `setSaveChannel` storage seam brokered to the filesystem by

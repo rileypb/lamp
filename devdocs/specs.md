@@ -1238,10 +1238,12 @@ the turn clock**: it spends no turn, takes no undo checkpoint, and does not adva
 count, so the command loop's **every-turn rules do not fire** for it (`run_command` returns
 `false`). This is the model for meta and debug verbs (SCORE, and library debug commands like
 SHOWME/GONEAR) — commands that inspect or adjust the session rather than act in the world.
-Unlike the runtime's built-in single-word meta-verbs (`undo`, `save`, `restore`), an
-`out_of_world` action carries full grammar and slots, so it can take operands
-(`showme [target]`). Distinct from a *failed* in-world command (a parse failure or a refused
-action also spends no turn, but is in-world); `out_of_world` declares the action's nature.
+The meta-verbs `undo`/`save`/`restore` are themselves `out_of_world` actions (in
+`lib/advent/save.lamp`, over runtime primitives) — there is no separate built-in meta-verb
+table; every command resolves through the grammar. An `out_of_world` action also carries
+full grammar and slots, so it can take operands (`showme [target]`). Distinct from a
+*failed* in-world command (a parse failure or a refused action also spends no turn, but is
+in-world); `out_of_world` declares the action's nature.
 
 An action body may also carry a **`world_scope`** line (a contextual keyword): its object
 slots then resolve against **every object in the world** (all `physical` instances), not

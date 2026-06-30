@@ -93,13 +93,17 @@ Per the world-model contract (issue C), these are runtime-owned and IF-specific
 - **The six-band action model** — `ACTION_BANDS = [before, instead, check, do,
   after, report]` (+ `report_failed`) is Inform's IF rulebook convention,
   hardcoded in the runtime.
-- **Save / Undo / Restore** — checkpoint stack, out-of-world verbs
-  (`registerOutOfWorld("undo"/"save"/"restore")`), and ~15 hardcoded English
-  strings — an IF session subsystem with its text in the engine
+- **Save / Undo / Restore** — the runtime keeps only the *mechanism* (the checkpoint
+  stack, the versioned/obfuscated blob, the storage seam). The **verbs and all their
+  English prose moved to `lib/advent/save.lamp`** (2026-06-30), as `out_of_world` Lamp
+  actions over runtime primitives (`undo_turn`, the `save_*`/`restore_*` set); the native
+  meta-verb table (`registerOutOfWorld`) was deleted. So this item now *follows* the
+  list-to-prose model below — the engine holds no save/undo/restore strings
   (see `devdocs/state.md`).
-- **List-to-prose presentation** is now *out* of the runtime (installed by
-  `lib/sys` via `setListFormatter`); noted here as the model the items above have
-  not yet followed.
+- **List-to-prose presentation** is *out* of the runtime (installed by `lib/sys` via
+  `setListFormatter`); the model the items above aim at — now also met by Save/Undo/Restore
+  and by SCRIPT/TRANSCRIPT (lib-owned verbs over runtime primitives). The Game Parser's own
+  failure strings and the six-band model remain in the engine.
 
 System-layer items with mild IF/narrative flavor: the `game` bibliographic fields
 (`author`/`tagline`/`version`/`release`) and `reltype` (dev/beta/final) in
