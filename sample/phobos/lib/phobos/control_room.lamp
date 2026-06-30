@@ -10,8 +10,8 @@ lib advent
 # guard has left to lead the arming (or died), these fall through to the no-guard behaviour below.
 
 # Set once the self-destruct button is pushed (the control-room half of the sequence). The
-# reactor levers (deferred) then set `self_destruct_in_progress` (countdown.lamp), which the
-# doom-clock reads to switch the zero ending from loss to the heroic win.
+# guard-led reactor lever arming (guard_endgame.lamp) then sets `self_destruct_in_progress`
+# (countdown.lamp), which the doom-clock reads to switch the zero ending from loss to the heroic win.
 global bool self_destruct_pushed = false
 
 # The ending-specific final banner. When non-empty, end_story_rules (phobos.lamp) prints it
@@ -41,8 +41,8 @@ instead push when self.target == launch_button:
 	stop succeeded
 
 # Pushing the red Self-Destruct button starts the sequence — but the reactor's arming levers
-# must still be engaged (deferred), so this only arms the control-room half. Pushing it again
-# just reports it is already running.
+# must still be engaged (the guard-led arming, guard_endgame.lamp), so this only arms the
+# control-room half. Pushing it again just reports it is already running.
 instead push when self.target == self_destruct_button:
 	if self_destruct_pushed:
 		print "The self-destruct sequence has already been initiated."

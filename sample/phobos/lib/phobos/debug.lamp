@@ -37,8 +37,9 @@ do scanall:
 report scanall:
 	print "The Linguistic Module's model is now complete."
 
-# arm: arm the reactor self-destruct (normally guard-driven via the levers, not yet ported), so
-# the heroic FLY-the-ship win can be exercised. Switches the doom-clock's zero ending too.
+# arm: a debug shortcut to arm the reactor self-destruct directly (normally done in-game via the
+# guard-led lever pull, guard_endgame.lamp), so the heroic FLY-the-ship win can be reached quickly
+# in `test win`/`test talk`. Switches the doom-clock's zero ending too.
 action arm:
 	syntax:
 		"arm"

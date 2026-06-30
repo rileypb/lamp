@@ -4,7 +4,7 @@ lib advent
 # it to climb inside, then FLY to leave. Flying decides the ending — a loss if the self-destruct
 # isn't armed (Galaxy just flees while Phobos still hits Mars), the heroic win once it is. The
 # ship objects + interior room live in base.lamp; the win-enabling `self_destruct_in_progress`
-# lives in countdown.lamp (set by the guard-driven lever arming, deferred).
+# lives in countdown.lamp (set by the guard-driven lever arming, guard_endgame.lamp).
 #
 # FLY comes in three grammatical shapes, mirroring Base.i7x's three actions, all routed through
 # `fly_the_ship()` here: the bare verb (I7 *simply-flying* — "fly"/"launch"/"blast off"), the ship

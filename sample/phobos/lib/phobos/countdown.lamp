@@ -20,8 +20,8 @@ lib advent
 
 # Turns until the moon fires. Decrements every turn.
 global int countdown = 789
-# Set once the reactor self-destruct is armed (not ported yet). Switches the zero ending
-# from "Mars destroyed" (loss) to "heroic death, Mars saved" (win).
+# Set once the reactor self-destruct is armed (the guard-led lever arming, guard_endgame.lamp).
+# Switches the zero ending from "Mars destroyed" (loss) to "heroic death, Mars saved" (win).
 global bool self_destruct_in_progress = false
 
 # Siriusian numerals, indexed by digit 0-9 (a separate cipher from the letter glyphs).
