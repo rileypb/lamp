@@ -1902,7 +1902,7 @@ report read when self.target == sawdust:
 
 The command loop runs while `story == ongoing`; once a command leaves it
 `ongoing`, the loop exits, **follows the `end_story_rules` rulebook** to print the
-ending message, and then accepts only `quit`:
+ending message, and then accepts only `quit` (or its shorthand `q`):
 
 ```
 *** You have won ***
@@ -1919,6 +1919,9 @@ rule end_story_rules when story == lost:
     print "*** Game over, friend. ***"
     stop true
 ```
+
+Both the command loop and the end-of-story prompt accept `quit` or its shorthand
+`q` (case-insensitive) to end the session, via the `is_quit_command` helper.
 
 RESTART is not yet wired into the end sequence, so only `quit` ends the session —
 though the state-snapshot mechanism (see *State, undo, and save*) now provides the

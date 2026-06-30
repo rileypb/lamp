@@ -1,3 +1,12 @@
+# QUIT and its shorthand Q both end the command loop (and satisfy the end-of-story prompt).
+function bool is_quit_command(string line):
+	let cmd = to_lower(line)
+	if cmd == "quit":
+		return true
+	if cmd == "q":
+		return true
+	return false
+
 # Traditional status line: the current room (left) and the turn count (right). The
 # host lays the two segments out in a fixed-width, reverse-video bar; a host without
 # a status bar ignores it. Redrawn at the top of each turn. See devdocs/windows.md.
@@ -49,7 +58,7 @@ on startup:
 		update_status_line()
 		print "[par if printed]"
 		input = prompt("> ")
-		if to_lower(input) == "quit":
+		if is_quit_command(input):
 			break
 		# Fire every-turn rules only when the command actually spent a turn (not on a
 		# parse failure, a disambiguation prompt, or undo) and the story is still going.
@@ -68,6 +77,6 @@ on startup:
 		print quit_prompt:"Please type QUIT to exit."
 		while true:
 			input = prompt("> ")
-			if to_lower(input) == "quit":
+			if is_quit_command(input):
 				break
 
