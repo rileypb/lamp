@@ -89,6 +89,8 @@ before go:
 	if not (kim_adhered_to == none) and holder(player) == kim_hack_room:
 		print "(first taking the KIM)[line break]"
 		retrieve_kim()
+		# Separate the implicit-take report from the room description that `go` is about to print.
+		print "[par]"
 
 # The adhered-state block (I7 `To say KIM state`): which target the KIM is stuck to, the button-array
 # blurb, then the keypad itself (reusing the same renderers the hack/press flow shows).
