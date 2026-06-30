@@ -20,7 +20,7 @@ item galaxy_suit:
 	printed_name "Galaxy Suit"
 	wearable
 	feels "The suit is made of a lightweight, flexible material that feels like a second skin."
-	description "It's an advanced Smart Suit, a flexible black jumpsuit able to communicate sound, vision, and radar back to Beck at Galaxy Base. POWER ON the suit to supercharge Galaxy's next ATTACK. The suit will power down if unused."
+	description "It's an advanced Smart Suit, a flexible black jumpsuit able to communicate sound, vision, and radar back to Beck at Galaxy Base. POWER ON the suit to supercharge Galaxy's next ATTACK, SMASH, or PUNCH. The suit will power down if unused.[par]Also it has a neat light.[par][italic]Obligatory fine print: Obstacles that Galaxy would normally get a point for getting past earn no points if she uses the suit instead.[/italic]"
 
 contains yourself galaxy_suit
 wears yourself galaxy_suit

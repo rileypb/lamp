@@ -71,7 +71,16 @@ player's `printed_name` is now the full proper "Galaxy Jones" (`article proper`)
 `viewpoint_name` global, and a runtime fix makes disambiguation prompts honor proper-naming —
 "the Galaxy Suit or Galaxy Jones?" — golden `disambigproper1`.)
 Smaller: SAY/ANSWER free-text, custom can't-go/hit/take messages, power/action banners, banner
-placement seam, examinable in-prose sub-objects, and a per-extension audit. **Infra DONE:** golden
+placement seam, examinable in-prose sub-objects, and a per-extension audit. **Description-fidelity
+audit DONE:** diffed all 107 ported `description`s against the I7 source (normalized cipher/markup/
+conditionals, cross-checked every I7 ending against the port to catch tail truncations). Fixes: the
+**Galaxy Suit** (dropped "SMASH, or PUNCH" + the "neat light" note + the italic fine print), the
+**KIM** (dropped the paragraph break between its two paragraphs), the **dead Siriusian guard** (was a
+softer invented rewrite — restored the I7 "sprawled… oil and blood… staining the floor" + serial),
+and the **Linguistic Module** (restored exact I7 wording). Everything else matched. **One dynamic gap
+remains:** I7 appends the live button-puzzle (`[KIM state]`) to the KIM's *description* while it's
+adhered (shown on EXAMINE); the port shows that at HACK-time instead — fold into the HACK polish, not
+a static truncation. **Infra DONE:** golden
 discovery now walks one level into subdirs, so `sample/phobos/phobos.lamp` is a golden (`test
 endgame` → the full winning transcript) — the whole game is a deterministic regression check.
 

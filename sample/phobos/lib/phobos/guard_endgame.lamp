@@ -33,7 +33,7 @@ item dead_guard:
 	printed_name "guard's body"
 	understand "guard/body/corpse"
 	feels "Galaxy leaves the dead guard alone."
-	description "The guard lies still, their Cyberhelmet removed, their Siriusian face peaceful at last. They gave their life to save Mars."
+	description "The guard is sprawled on the ground, dead. Its Cybercarapace is labeled '[siriusian(\"Cybercarapace Serial Number $mfk5plas\")]'. Oil and blood seep from the wound in its chest, staining the floor."
 
 global bool left_lever_pulled = false
 global bool commando_started = false

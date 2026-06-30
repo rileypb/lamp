@@ -142,7 +142,7 @@ function void print_translated(item x, list<bool> levels):
 item linguistic_module:
 	printed_name "Linguistic Module"
 	feels "It feels like a combination of plastic, glass, and metal."
-	description "Looking like a typical media reader — a small, flat, rectangular device with a screen and a few buttons — the Linguistic Module can scan text in any language, building a model of the language in the process. It can then translate that language into English. To use it, SCAN the text, then READ it."
+	description "Looking like a typical media reader — a small, flat, rectangular device with a screen and a few buttons — the Linguistic Module can scan text in any language, building a model of the language in the process. It can then translate text from that language into English. To use the Linguistic Module, simply SCAN the text, then READ it."
 
 contains yourself linguistic_module
 
