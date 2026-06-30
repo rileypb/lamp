@@ -19,7 +19,7 @@ The chest is already open.
 You close the chest.
 
 > open strongbox
-The strongbox seems to be locked.
+It seems to be locked.
 
 > open crate
 You open the crate.

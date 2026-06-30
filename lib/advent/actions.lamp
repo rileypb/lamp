@@ -228,12 +228,14 @@ action open:
 		"open [target]"
 
 check open:
+	# A locked thing reports "locked" before anything else — including a door, which isn't `closable`
+	# (it opens via its own hack/passage mechanism) but is still meaningfully locked.
+	if self.target.locked:
+		stop failed locked_shut
 	if not self.target.closable:
 		stop failed not_openable
 	if not self.target.closed:
 		stop failed already_open
-	if self.target.locked:
-		stop failed locked_shut
 
 do open:
 	self.target.closed = false
@@ -254,7 +256,7 @@ report failed open:
 		print open_already_open:"[The act.target] [is] already open."
 		stop
 	if self.reason == locked_shut:
-		print open_locked:"[The act.target] seems to be locked."
+		print open_locked:"It seems to be locked."
 		stop
 
 action close:

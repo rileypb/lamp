@@ -1878,11 +1878,13 @@ contents out of scope and out of listings, via the scope barrier and `contents_o
 The actions take any `item` and refuse a non-`closable` target ("That's not something you
 can open."). Opening **reveals** the newly-visible contents — "[We] [open] [the chest],
 revealing a coin." (an empty box just confirms; the success reports use the `[We] [open]`
-/ `[We] [close]` sugar, so they follow the story viewpoint). A **`locked`** box refuses to
-open ("[The box] seems to be locked.") — there are **no LOCK/UNLOCK verbs**; a game clears
+/ `[We] [close]` sugar, so they follow the story viewpoint). A **`locked`** thing refuses to
+open ("It seems to be locked.") — there are **no LOCK/UNLOCK verbs**; a game clears
 `locked` through its own mechanism (e.g. a hacking puzzle that unlocks a container without
-letting OPEN bypass it). Already-open/closed are reported. **Doors are out of scope** here
-— they keep their own passage/`go` and game-specific (hack) mechanism, and their
+letting OPEN bypass it). The `locked` test runs **first**, so a `locked` **door** — which is
+not `closable` (it opens via its own hack/`go` passage) — still reports "locked" on OPEN
+rather than "not openable". Already-open/closed are reported. Otherwise **doors are out of
+scope** here — they keep their own passage/`go` and game-specific (hack) mechanism, and their
 `closed`/`locked` defaults differ from a box's. Refusal reasons:
 `not_openable`/`not_closable`/`already_open`/`already_closed`/`locked_shut`.
 
