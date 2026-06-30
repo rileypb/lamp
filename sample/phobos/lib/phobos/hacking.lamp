@@ -1,8 +1,8 @@
 # Hacking (the KIM). The KIM ("Kovert Infiltration Matrix") is Galaxy's hacking
 # tool. HACK <thing> attaches it; the green door is a simple instant bypass, while
 # the others open a button mini-game with hidden, per-door rules the player must
-# reverse-engineer. Ported from KIM.i7x. (Scoring + the handprint-scanner parts are
-# deferred, so we hack the door directly.)
+# reverse-engineer. Ported from KIM.i7x. (`kim_adhered_to` tracks the door being hacked; the
+# handprint-scanner parts exist as scenery but the puzzle is keyed on the door itself.)
 
 item KIM:
 	printed_name "KIM"
@@ -14,6 +14,37 @@ contains yourself KIM
 # What the KIM is currently adhered to (none = not mid-hack). While adhered, PRESS
 # drives that target's puzzle.
 global physical kim_adhered_to = none
+
+# Examining the KIM shows its base description, plus — while it's adhered mid-hack — the live puzzle
+# state, so the player can re-read the board (I7 KIM.i7x: the description ends "[if KIM adheres to
+# something][paragraph break][KIM state]"). advent prints the description in its library `report
+# examine`, and author rules run before library ones, so we preempt with `instead` and re-emit.
+instead examine when self.target == KIM:
+	if kim_adhered_to == none:
+		print "[self.target.description][line break]"
+	else:
+		print "[self.target.description][par]"
+		kim_state()
+	stop succeeded
+
+# The adhered-state block (I7 `To say KIM state`): which target the KIM is stuck to, the button-array
+# blurb, then the keypad itself (reusing the same renderers the hack/press flow shows).
+function void kim_state():
+	if kim_adhered_to == yellow_door:
+		print "The KIM is currently adhered to the yellow handprint scanner. The KIM displays an array of nine colored buttons, labeled 1 through 9, adjacent to a RESET button:[par]"
+		show_keypad_9()
+	if kim_adhered_to == red_door:
+		print "The KIM is currently adhered to the red handprint scanner. The KIM displays an array of nine colored buttons, labeled 1 through 9, adjacent to a RESET button:[par]"
+		show_keypad_9()
+	if kim_adhered_to == blue_door:
+		print "The KIM is currently adhered to the blue handprint scanner. The KIM displays an array of nine colored buttons, labeled 1 through 9:[par]"
+		show_keypad_blue()
+	if kim_adhered_to == purple_door:
+		print "The KIM is currently adhered to the purple handprint scanner. The KIM displays an array of 16 colored buttons, labeled 1 through 16:[par]"
+		show_keypad_16()
+	if kim_adhered_to == locker:
+		print "The KIM is currently adhered to the locker. The KIM displays an array of four colored buttons, labeled 1 through 4, adjacent to a RESET button:[par]"
+		show_keypad_4()
 
 action hack:
 	item target

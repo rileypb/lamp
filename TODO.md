@@ -77,10 +77,12 @@ conditionals, cross-checked every I7 ending against the port to catch tail trunc
 **Galaxy Suit** (dropped "SMASH, or PUNCH" + the "neat light" note + the italic fine print), the
 **KIM** (dropped the paragraph break between its two paragraphs), the **dead Siriusian guard** (was a
 softer invented rewrite — restored the I7 "sprawled… oil and blood… staining the floor" + serial),
-and the **Linguistic Module** (restored exact I7 wording). Everything else matched. **One dynamic gap
-remains:** I7 appends the live button-puzzle (`[KIM state]`) to the KIM's *description* while it's
-adhered (shown on EXAMINE); the port shows that at HACK-time instead — fold into the HACK polish, not
-a static truncation. **Infra DONE:** golden
+and the **Linguistic Module** (restored exact I7 wording). Everything else matched. **KIM `[KIM
+state]` DONE:** examining the KIM while it's adhered mid-hack now appends the live puzzle state (which
+scanner/target it's stuck to, the button-array blurb, and the keypad itself via the existing
+`show_keypad_*` renderers) — an `instead examine` rule + `kim_state()` in hacking.lamp, mirroring I7's
+`To say KIM state`. Verified manually (the phobos golden is `test endgame`, which skips the hack flow,
+so this isn't golden-covered — same as the rest of hacking). **Infra DONE:** golden
 discovery now walks one level into subdirs, so `sample/phobos/phobos.lamp` is a golden (`test
 endgame` → the full winning transcript) — the whole game is a deterministic regression check.
 
