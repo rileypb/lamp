@@ -1,0 +1,46 @@
+# Examining a container lists its contents (Inform's examine-a-container behaviour, lib/advent):
+# "In the X is/are …" for an open container, agreeing in number; nothing for a closed one; and
+# nothing for a non-container holder (a person), so examining someone doesn't spill their inventory.
+
+lib advent
+
+game Demo:
+	start Vault
+
+room Vault:
+	description "A bare vault."
+
+box pouch:
+	description "A small pouch."
+item coin:
+	description "A gold coin."
+
+box chest:
+	description "A wooden chest."
+item key:
+	description "A brass key."
+item map:
+	description "A folded map."
+
+box safe:
+	closable true
+	closed true
+	description "A steel safe."
+item gem:
+	description "A green gem."
+
+person bob:
+	understand "bob/fellow"
+	description "An ordinary fellow."
+item wallet:
+	description "A leather wallet."
+
+contains Vault pouch
+contains pouch coin
+contains Vault chest
+contains chest key
+contains chest map
+contains Vault safe
+contains safe gem
+contains Vault bob
+contains bob wallet

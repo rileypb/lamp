@@ -1,4 +1,5 @@
 native function list<item> contents_of(physical r)
+native function bool is_container(physical x)
 native function list<item> listable_contents(room r)
 native function void describe_supporters(room r)
 

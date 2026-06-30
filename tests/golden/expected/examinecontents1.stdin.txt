@@ -1,0 +1,5 @@
+x pouch
+x chest
+x safe
+x bob
+quit

@@ -302,6 +302,16 @@ report examine:
 		print examine_nothing:"[We] [see] nothing unusual about [the act.target]."
 	else:
 		print examine_report:"[act.target.description][line break]"
+	# Inform's examine-a-container behaviour: list the contents of an open container (`contents_of`
+	# already yields nothing for a closed one). Gated to real container kinds so examining a person or
+	# other holder doesn't spill its contents. `is`/`are` agrees with how many things are inside.
+	if is_container(self.target):
+		let inside = contents_of(self.target)
+		if not (inside.first == none):
+			if inside.size == 1:
+				print examine_in_container:"[par]In [the act.target] is [render_contents(act.target)]."
+			else:
+				print examine_in_container_plural:"[par]In [the act.target] are [render_contents(act.target)]."
 
 report failed examine:
 	if self.reason == too_dark:

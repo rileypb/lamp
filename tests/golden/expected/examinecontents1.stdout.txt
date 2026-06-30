@@ -1,0 +1,22 @@
+Vault
+A bare vault.
+
+You see a pouch (in which is a coin), a chest (in which are a key and a map) and a safe here.
+
+> x pouch
+A small pouch.
+
+In the pouch is a coin.
+
+> x chest
+A wooden chest.
+
+In the chest are a key and a map.
+
+> x safe
+A steel safe.
+
+> x bob
+An ordinary fellow.
+
+> quit
