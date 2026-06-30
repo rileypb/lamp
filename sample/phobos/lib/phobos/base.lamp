@@ -41,7 +41,7 @@ room Science_Lab:
 room Eastern_Spoke:
 	description "This is a nondescript hallway. An opening to the north is labeled '[siriusian(\"Barracks A\")]', one to the south is labeled '[siriusian(\"Barracks B\")]', and the blue door at the east end of the hallway is labeled '[siriusian(\"Commander's Quarters\")]'. It is [if blue_door.closed]closed[else]open[end if]."
 room North_Barracks:
-	description "Like most of the base, it's been cleared out, although someone left behind a poster on the wall showing some happy cyborgs. There is a cabinet against the wall next to the sleeping pods. It is [if cabinet.closed]closed[else]open[end if][if not cabinet.closed and holder(cyberhelmet) == cabinet], with a silver Cyberhelmet resting inside[end if].[par]The exit is to the south."
+	description "Like most of the base, it's been cleared out, although someone left behind a poster on the wall showing some happy cyborgs. There is a cabinet against the wall next to the sleeping pods. It is [if cabinet.closed]closed[else]open[end if].[par]The exit is to the south."
 
 # Ported in full (unlike its neighbours): its description carries no Siriusian markup,
 # only door/locker-state conditionals. The locker is the locker-puzzle's container.
@@ -90,7 +90,7 @@ box cabinet:
 	closable true
 	closed true
 	feels "The cabinet is made of cold metal, and feels smooth to the touch."
-	description "A cabinet stands against the wall, such as might hold equipment. It is [if cabinet.closed]closed[else]open[end if][if not cabinet.closed and holder(cyberhelmet) == cabinet], the silver Cyberhelmet resting inside[end if]."
+	description "A cabinet stands against the wall, such as might hold equipment. It is [if cabinet.closed]closed[else]open[end if]."
 
 contains North_Barracks cabinet
 
