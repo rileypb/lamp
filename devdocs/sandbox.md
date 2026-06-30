@@ -191,12 +191,14 @@ Worker → host (each blocks for one reply):
 - **`save_prompt` / `restore_prompt` (built, browser).** The host-rendered UX seam:
   the runtime hands the host the game `prefix` and the host runs its modal.
   `restore_prompt` returns the *chosen blob directly* (the host already holds it),
-  collapsing restore to one round-trip — the runtime then validates `buildId` and
-  applies (`applyRestoreBlob`), or prints the standard refusal. `save_prompt` returns
-  just the chosen *name*; the runtime then `captureSave`s and posts `save_write`. The
-  runtime detects this capability by the **presence of `promptSave`/`promptRestore`**
-  on the save channel (the browser worker installs them; the CLI worker does not, so it
-  falls back to the text prompt). The shell builds the modals in `shell.js`/`shell.css`
+  collapsing restore to one round-trip — the `restore_apply_blob` primitive then validates
+  `buildId` and applies, or returns a status the verb maps to the standard refusal.
+  `save_prompt` returns just the chosen *name*; the `save_to_slot` primitive then
+  `captureSave`s and posts `save_write`. The `save`/`restore` **verbs themselves live in
+  `lib/advent/save.lamp`** (devdocs/state.md → layering-smell fix); they detect this host
+  capability via the `save_has_picker` / `restore_has_picker` primitives — true when the
+  save channel carries `promptSave`/`promptRestore` (the browser worker installs them; the
+  CLI worker does not, so the verb falls back to its own text prompt). The shell builds the modals in `shell.js`/`shell.css`
   (no static markup), with the save dialog folding overwrite into its existing-slots
   list and the restore picker offering per-row delete done **host-side** (it owns
   localStorage — no `save_delete` message needed in the browser).

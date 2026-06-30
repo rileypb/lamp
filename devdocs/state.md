@@ -162,31 +162,30 @@ mutate, restore, and assert the state matches the capture.
   at the start of each fresh command turn, *before* it mutates — so `undo`
   reverts the command just typed. Disambiguation answers continue the same turn
   and do not checkpoint again.
-- **Out-of-world verbs** bypass the turn clock and take no checkpoint. `undo`,
-  `save`, and `restore` are registered via `registerOutOfWorld(word, handler)`,
-  and the handlers live **in the runtime** today (`performUndo`/`performSave`/
-  `performRestore`), prompting via `promptLine` and printing fixed English prose.
+- **Out-of-world verbs** bypass the turn clock and take no checkpoint.
 
-  **Known layering smell (to fix with out-of-world actions, Parser v2):** the
-  *mechanism* belongs in the runtime (snapshot, versioned blob, obfuscation,
-  storage seam, the out-of-world dispatch hook), but the *verb words, the
-  slot-name prompting, and the wording* are UX policy that should live in the
-  library — consistent with the command loop, the list formatter, and the banner,
-  all already library-side. `promptLine` itself is correctly placed (a
-  host-agnostic seam both the CLI and browser workers implement); the smell is
-  that engine code calls it and hardcodes prose. The fix: expose `save`/`restore`
-  as slot-taking runtime *primitives* and let `registerOutOfWorld` accept a **Lamp
-  callback**, so `lib/advent` defines the verbs and owns the prompting/wording.
-  This needs the runtime→Lamp out-of-world hook that the deferred out-of-world
-  *actions* work builds — so it is folded into Parser v2 rather than built twice.
-  **Refinement (2026-06-22):** the wording moves to `lib` only for hosts *without*
-  a native save UI; the *rendering* of the prompt/picker is a host seam (see
-  "Save/restore UX: a host seam" below). So `lib` owns the verbs + text-host prose;
-  a richer host (browser) renders its own widgets through the seam.
+  **SAVE/RESTORE — layering-smell fix DONE (2026-06-30).** `save`/`restore` are no
+  longer runtime verbs: they are **out-of-world Lamp actions** in `lib/advent/save.lamp`
+  that call runtime *primitives*. The runtime keeps only the mechanism — the snapshot,
+  the versioned/obfuscated blob, the build-compatibility gate, the storage seam, and
+  access to a host's native save UI — exposed as `save_available` / `save_has_picker` /
+  `save_pick_name` / `save_to_slot` and `restore_has_picker` / `restore_pick_blob` /
+  `restore_read_slot` / `restore_apply_blob` (lib/sys natives). The library owns the verb
+  words, the text-host name prompt, and all wording (named/overridable messages). The
+  browser's modal name-entry stays a *host* seam reached through `*_has_picker` /
+  `*_pick_*` — the verb only chooses text-prompt vs. defer-to-host (see "Save/restore UX:
+  a host seam" below). This is the same split SCRIPT/TRANSCRIPT use; transcript was the
+  proof-of-concept, save/restore the second application.
+
+  **UNDO — still a runtime verb.** `undo` remains registered via
+  `registerOutOfWorld(word, handler)` with the handler (`performUndo`) in the runtime.
+  Unlike save/restore it has no name prompt and only the single fixed line, so the
+  layering payoff is small; it can migrate the same way later if `registerOutOfWorld`
+  gains a Lamp-callback form, but it isn't pulling its weight as a smell.
 
 The library turn loop is unchanged — `undo` typed by the player simply falls
-through to `run_command`, which recognizes it. No `lib/` change is required for
-UNDO.
+through to `run_command`, which recognizes it (the single-token out-of-world table).
+`save`/`restore` now resolve through the normal grammar path as out-of-world actions.
 
 ## SAVE / RESTORE (Slice 2)
 
@@ -319,17 +318,20 @@ to synchronous localStorage). The seam adds:
   on `Atomics.wait`, exactly as it is during `readline`, so no new blocking primitive is
   needed — only the deferred-reply shape on the save channel.
 
-**Reconciliation with the layering-smell fix (TODO item 2).** That fix moves the verb
-words and prompting wording into `lib`. It still holds, refined: `lib` owns the *verbs*
-and the *text-host wording*, but the *rendering* of the prompt/picker is the host seam —
-so a host with a native save UI (the browser) supplies its own widgets while a text host
-(CLI) gets the `lib` prose. The two plans agree once "move prompting into `lib`" is read
-as "for hosts without a native save UI."
+**Reconciliation with the layering-smell fix — DONE (2026-06-30).** That fix moved the
+verb words and prompting wording into `lib`, refined exactly as planned: `lib/advent/
+save.lamp` owns the *verbs* and the *text-host wording*, while the *rendering* of the
+prompt/picker stays a host seam — a host with a native save UI (the browser) supplies its
+own widgets (reached via `save_has_picker`/`restore_has_picker` + `save_pick_name`/
+`restore_pick_blob`), a text host (CLI) gets the `lib` prose. The runtime keeps the blob
+lifecycle as primitives (`save_to_slot`, `restore_apply_blob`, …). "Move prompting into
+`lib`" held, read as "for hosts without a native save UI."
 
-**Where:** `src/lamplighter/index.js` (verbs → seam dispatch; metadata in `captureSave`),
-`src/lamplighter/sandbox/{worker-browser,worker,host}.js` + `src/lighthouse/web/shell.js`
-(protocol + deferred replies), `src/lighthouse/web/{shell.js,shell.css,index.html}`
-(modals).
+**Where:** `src/lamplighter/index.js` (blob-lifecycle + host-seam primitives; metadata in
+`captureSave`), `lib/sys/{functions,index}.{lamp,js}` (native bridge),
+`lib/advent/save.lamp` (verbs + wording), `src/lamplighter/sandbox/{worker-browser,worker,
+host}.js` + `src/lighthouse/web/shell.js` (protocol + deferred replies),
+`src/lighthouse/web/{shell.js,shell.css,index.html}` (modals).
 
 ## Transcript (scripting)
 
@@ -414,8 +416,10 @@ false, so SCRIPT reports it unavailable — a follow-up, like the browser save U
 - **Slice 2 — SAVE/RESTORE to storage (dev host). (Implemented.)** Versioned
   header (`buildId` + game identity), `captureSave`/`restoreSave` with the strict
   restore gate, the `setSaveChannel` storage seam brokered to the filesystem by
-  the dev host, and named-slot `save`/`restore` out-of-world verbs. Unit test
-  `tests/save`; golden `save1`.
+  the dev host, and named-slot `save`/`restore`. (The verbs themselves moved to
+  `lib/advent/save.lamp` on 2026-06-30 — out-of-world Lamp actions over the runtime
+  blob-lifecycle primitives; see the layering-smell fix above.) Unit test `tests/save`;
+  golden `save1`.
 - **Slice 3 — browser persistence. (Implemented, localStorage.)** The browser
   worker installs the same brokered save channel as the CLI; the shell
   (`src/lighthouse/web/shell.js`) backs it with **localStorage** over a second
@@ -440,13 +444,13 @@ false, so SCRIPT reports it unavailable — a follow-up, like the browser save U
 - **Save slots & metadata.** Named slots, timestamps, turn count; **resolved** to
   name · timestamp · turn count for the picker (see "Save/restore UX: a host seam").
   Per-save free-text descriptions remain optional/future.
-- **CLI save-name-prompt UX (deferred to the out-of-world verb move).** Once the
-  `save`/`restore` verbs and their prompting live in `lib` rather than the engine
-  (see "Known layering smell"), the CLI name prompt — the text-host rendering of the
-  same host seam — can offer: `^L` to **list** this game's existing saves, and an
-  **overwrite-confirmation** before clobbering an existing slot. Both need a
-  save-slot listing/exists primitive and the in-`lib` prompt flow. Tracked in TODO
-  item 1 (Slice 3) / item 2 (Parser v2).
+- **CLI save-name-prompt UX (now unblocked — the verb move is done).** The
+  `save`/`restore` verbs and their prompting now live in `lib/advent/save.lamp`, so the
+  CLI name prompt — the text-host rendering of the host seam — can offer: `^L` to **list**
+  this game's existing saves, and an **overwrite-confirmation** before clobbering an
+  existing slot. Both need a save-slot listing/exists primitive surfaced to Lamp
+  (`listSaves` exists in the runtime but has no native yet) plus the in-`lib` prompt flow.
+  Tracked in TODO item 1 (Slice 3).
 - **Schema drift across saves.** A save from an older build loaded into a newer
   one (added/removed globals or fields). Tolerated loosely today (missing keys
   ignored); a versioning policy is a Slice 2/3 question.

@@ -1,0 +1,72 @@
+# SAVE / RESTORE — persist the game to a named slot and read it back. As with
+# SCRIPT/TRANSCRIPT, the capture/snapshot *mechanism* lives in the runtime (the lib/sys
+# `save_*` / `restore_*` primitives); the verb words, the name prompt, and the wording
+# live here, so a game can reword, localize (the messages are named/overridable), or omit
+# them. Both are out-of-world: no turn, no undo checkpoint.
+#
+# Name entry is a host seam. A host with a native save UI (the browser shell) renders its
+# own modal — the verb defers to it via `*_has_picker` / `*_pick_*`; a text host (CLI)
+# gets the line prompt below. The runtime keeps the blob lifecycle either way.
+
+action save:
+	out_of_world
+	syntax:
+		"save"
+
+do save:
+	if not save_available():
+		print save_unavailable:"Saving isn't available here."
+		stop
+	let name = ""
+	if save_has_picker():
+		name = save_pick_name()
+	else:
+		name = prompt(save_name_prompt:"Name for saved game: ")
+	if name == "":
+		print save_cancelled:"Save cancelled."
+		stop
+	if save_to_slot(name):
+		print save_done:"Game saved."
+	else:
+		print save_failed:"Save failed."
+
+action restore:
+	out_of_world
+	syntax:
+		"restore"
+
+do restore:
+	if not save_available():
+		print restore_unavailable:"Restoring isn't available here."
+		stop
+	let blob = ""
+	if restore_has_picker():
+		# The host picker returns the chosen blob directly (one round-trip).
+		blob = restore_pick_blob()
+		if blob == "":
+			print restore_cancelled:"Restore cancelled."
+			stop
+	else:
+		let name = prompt(restore_name_prompt:"Name of saved game: ")
+		if name == "":
+			print restore_cancelled:"Restore cancelled."
+			stop
+		blob = restore_read_slot(name)
+		if blob == "":
+			print restore_none:"There is no saved game by that name."
+			stop
+	# restore_apply_blob gates on build compatibility and returns a status word.
+	let status = restore_apply_blob(blob)
+	if status == "ok":
+		print restore_done:"Game restored."
+		stop
+	if status == "game":
+		print restore_wrong_game:"That saved game is for a different game."
+		stop
+	if status == "version":
+		print restore_wrong_version:"That saved game is from a different version of this game."
+		stop
+	if status == "corrupt":
+		print restore_corrupt:"That saved game is corrupted."
+		stop
+	print restore_bad_format:"That saved game is in an unrecognized format."

@@ -2154,7 +2154,7 @@ function restoreSave(save) {
 
 // Storage seam: the host injects a save channel so the engine stays
 // host-agnostic. write(key, text, meta) persists the opaque blob plus an
-// unobfuscated metadata sidecar (see performSave); read(key) returns text or null.
+// unobfuscated metadata sidecar (see saveToSlot); read(key) returns text or null.
 let saveChannel = null;
 function setSaveChannel(channel) {
     saveChannel = channel;
@@ -2174,94 +2174,89 @@ function saveSlotKey(slot) {
     return `${gameKeyPrefix()}${saveKeySafe(slot, "save")}`;
 }
 
-function performSave() {
-    if (!saveChannel) {
-        print("Saving isn't available here.");
-        return;
-    }
-    // A host with a native save UI (the browser shell) collects the name through its
-    // own modal; a text host (CLI) falls back to the line prompt. The host gets the
-    // game key-prefix so it can show this game's existing slots for overwrite.
-    let slot;
-    if (typeof saveChannel.promptSave === "function") {
-        const choice = saveChannel.promptSave(gameKeyPrefix());
-        slot = choice && choice.name;
-    } else {
-        slot = promptLine("Name for saved game: ");
-    }
-    if (!slot || !String(slot).trim()) {
-        print("Save cancelled.");
-        return;
-    }
-    slot = String(slot);
+// SAVE/RESTORE follow the same mechanism/policy split as transcript: the runtime owns
+// the blob lifecycle, the storage seam, and the host-native-picker access (below); the
+// library owns the verb words, the text-host prompt, and all wording (lib/advent/
+// save.lamp). The browser's modal name-entry stays a *host* seam (promptSave/
+// promptRestore) reached through these primitives — the lib only decides text-prompt vs.
+// defer-to-host. See devdocs/state.md → Save/restore UX: a host seam.
+
+// Whether a save host seam is installed at all (vs. the engine running outside a host).
+// One predicate backs both verbs; each prints its own "unavailable" wording.
+function saveAvailable() {
+    return !!saveChannel;
+}
+
+// Whether the host renders its own save name-entry UI (the browser modal) rather than
+// relying on the library's text prompt. The lib branches on this.
+function saveHasPicker() {
+    return !!(saveChannel && typeof saveChannel.promptSave === "function");
+}
+
+// Collect a slot name through the host's native save modal (showing this game's slots
+// for overwrite). Returns the chosen name, or "" if the player dismissed it. Only valid
+// when saveHasPicker() is true.
+function savePickName() {
+    if (!saveChannel || typeof saveChannel.promptSave !== "function") return "";
+    const choice = saveChannel.promptSave(gameKeyPrefix());
+    const name = choice && choice.name;
+    return name ? String(name) : "";
+}
+
+// Capture, obfuscate, and persist the current game under slot `name`, with the
+// unobfuscated metadata sidecar a picker reads to label slots. Returns true on success,
+// false if there is no channel or the host write threw. The blob is obfuscated with the
+// same reversible XOR+base64 codec as --encode-strings (discourages snooping; not
+// security — the key ships in the runtime). `meta.name` is the player's faithful slot
+// name (not the sanitized key); `savedAt` mirrors the blob header; `turns` is the count
+// at save time. See devdocs/sandbox.md → "Save/restore broker protocol".
+function saveToSlot(name) {
+    if (!saveChannel) return false;
     try {
         const save = captureSave();
-        // Obfuscate the blob so a casual peeker can't read or hand-edit the save.
-        // Same reversible XOR+base64 codec as --encode-strings: it discourages
-        // snooping, it is not security (the key ships in the runtime).
-        // The metadata rides alongside *unobfuscated* so a save picker can label
-        // slots without decoding the blob (devdocs/sandbox.md → "Save/restore
-        // broker protocol"): name is the player's slot name (the faithful display
-        // label, not the sanitized key), savedAt mirrors the blob header, turns is
-        // the count at save time.
-        const meta = { name: slot.trim(), savedAt: save.savedAt, turns: turnsTaken() };
-        saveChannel.write(saveSlotKey(slot), encodeText(JSON.stringify(save)), meta);
-        print("Game saved.");
+        const meta = { name: String(name).trim(), savedAt: save.savedAt, turns: turnsTaken() };
+        saveChannel.write(saveSlotKey(name), encodeText(JSON.stringify(save)), meta);
+        return true;
     } catch (err) {
-        print("Save failed.");
+        return false;
     }
 }
 
-// Decode a stored blob, gate it on build compatibility, and report. Shared by the
-// host-picker path (blob handed back directly) and the text-prompt path.
-function applyRestoreBlob(stored) {
+// Whether the host renders its own restore picker (the browser modal of existing slots)
+// rather than relying on the library's text prompt.
+function restoreHasPicker() {
+    return !!(saveChannel && typeof saveChannel.promptRestore === "function");
+}
+
+// Run the host's native restore picker, which returns the chosen blob *directly* (one
+// round-trip — the host already holds it). Returns the blob, or "" if the player
+// dismissed the picker. Only valid when restoreHasPicker() is true.
+function restorePickBlob() {
+    if (!saveChannel || typeof saveChannel.promptRestore !== "function") return "";
+    const stored = saveChannel.promptRestore(gameKeyPrefix());
+    return stored == null ? "" : String(stored);
+}
+
+// Read the stored blob for slot `name` from the host (text-host path). Returns the blob,
+// or "" when there is no save by that name (a blob is never empty, so "" is unambiguous).
+function restoreReadSlot(name) {
+    if (!saveChannel) return "";
+    const stored = saveChannel.read(saveSlotKey(name));
+    return stored == null ? "" : String(stored);
+}
+
+// Decode a blob and apply it behind the build-compatibility gate. Returns a status the
+// library maps to wording: "ok" | "corrupt" (decode/parse failed) | "game" | "version" |
+// "format" (the restoreSave refusal reasons). Never restores on a mismatch.
+function restoreApplyBlob(blob) {
     let save;
     try {
-        save = JSON.parse(decode(stored));
+        save = JSON.parse(decode(blob));
     } catch (err) {
-        print("That saved game is corrupted.");
-        return;
+        return "corrupt";
     }
     const result = restoreSave(save);
-    if (result.ok) {
-        print("Game restored.");
-    } else if (result.reason === "game") {
-        print("That saved game is for a different game.");
-    } else if (result.reason === "version") {
-        print("That saved game is from a different version of this game.");
-    } else {
-        print("That saved game is in an unrecognized format.");
-    }
-}
-
-function performRestore() {
-    if (!saveChannel) {
-        print("Restoring isn't available here.");
-        return;
-    }
-    // A host with a native picker (the browser shell) shows this game's slots and
-    // returns the chosen blob directly (one round-trip), or null on cancel.
-    if (typeof saveChannel.promptRestore === "function") {
-        const stored = saveChannel.promptRestore(gameKeyPrefix());
-        if (stored == null) {
-            print("Restore cancelled.");
-            return;
-        }
-        applyRestoreBlob(stored);
-        return;
-    }
-    // Text host (CLI): prompt for a slot name and read it by key.
-    const slot = promptLine("Name of saved game: ");
-    if (!slot || !slot.trim()) {
-        print("Restore cancelled.");
-        return;
-    }
-    const stored = saveChannel.read(saveSlotKey(slot));
-    if (stored == null) {
-        print("There is no saved game by that name.");
-        return;
-    }
-    applyRestoreBlob(stored);
+    return result.ok ? "ok" : result.reason;
 }
 
 // Enumerate this game's saved slots via the host (which owns the store and reads
@@ -2274,9 +2269,6 @@ function listSaves() {
     const rows = saveChannel.list(gameKeyPrefix());
     return Array.isArray(rows) ? rows : [];
 }
-
-registerOutOfWorld("save", performSave);
-registerOutOfWorld("restore", performRestore);
 
 // ====================================================================
 // TRANSCRIPT (scripting) — the *mechanism* only: capture wiring + a host
@@ -2457,6 +2449,14 @@ module.exports = {
     captureSave,
     restoreSave,
     setSaveChannel,
+    saveAvailable,
+    saveHasPicker,
+    savePickName,
+    saveToSlot,
+    restoreHasPicker,
+    restorePickBlob,
+    restoreReadSlot,
+    restoreApplyBlob,
     listSaves,
     setTranscriptChannel,
     transcriptStart,

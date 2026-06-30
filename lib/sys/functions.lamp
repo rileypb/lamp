@@ -56,6 +56,30 @@ native function void transcript_stop()
 native function bool transcript_running()
 native function bool transcript_available()
 
+# SAVE / RESTORE primitives. As with transcript, the runtime owns the *mechanism* — the
+# state snapshot, the versioned/obfuscated blob, the build-compatibility gate, the host
+# storage seam, and access to a host's native save UI — while the library owns the
+# *policy*: the verb words (SAVE/RESTORE), the text-host name prompt, and the wording
+# (lib/advent/save.lamp), so a game can reword, localize, or omit them. `save_available`
+# reports whether a save host seam exists at all (one predicate backs both verbs).
+# `save_has_picker`/`restore_has_picker` report whether the host renders its own
+# name-entry UI (the browser modal) — the library prompts with its own text only when
+# false. `save_pick_name` runs the host's save modal, returning the chosen name ("" if
+# dismissed); `restore_pick_blob` runs the host's restore picker, returning the chosen
+# blob directly ("" if dismissed). `save_to_slot` captures and persists under a name
+# (true on success). `restore_read_slot` reads a named slot's blob ("" if none).
+# `restore_apply_blob` decodes + applies a blob behind the version gate, returning a
+# status the verb maps to wording: "ok" | "corrupt" | "game" | "version" | "format".
+# See devdocs/state.md → Save/restore UX: a host seam.
+native function bool save_available()
+native function bool save_has_picker()
+native function string save_pick_name()
+native function bool save_to_slot(string name)
+native function bool restore_has_picker()
+native function string restore_pick_blob()
+native function string restore_read_slot(string name)
+native function string restore_apply_blob(string blob)
+
 # Set the host status line's two segments. The library composes the content (it
 # knows the world model); this is only the transport. A host with a status bar (the
 # web shell) renders `left` flush-left and `right` flush-right in a fixed-width,

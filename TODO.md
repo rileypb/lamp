@@ -146,15 +146,22 @@ deferred modals in `shell.js`/`shell.css`; runtime detects them by `promptSave`/
 `promptRestore` on the channel and otherwise uses the CLI text prompt). Unit tests in
 `tests/save`, e2e sidecar in the `save1` golden; the browser modals are source-grep +
 manual only (the headless gap).
+**Layering-smell fix DONE (2026-06-30):** `save`/`restore` are now **out-of-world Lamp
+actions in `lib/advent/save.lamp`** over runtime blob-lifecycle primitives
+(`save_available`/`save_has_picker`/`save_pick_name`/`save_to_slot`,
+`restore_has_picker`/`restore_pick_blob`/`restore_read_slot`/`restore_apply_blob`; lib/sys
+natives). lib owns the verbs + text-host wording; the browser modal stays a host seam
+(reached via `*_has_picker`/`*_pick_*`). `save1` golden byte-invariant; `tests/save`
+rewritten to the primitives. Done *without* the Lamp-callback `registerOutOfWorld` hook —
+the `out_of_world` action mechanism was enough (same pattern as SCRIPT/TRANSCRIPT). UNDO
+left as a native verb (no prompt, single line — little to gain).
 **Remaining:**
 - **CLI text-host polish:** `^L`-lists-saves at the name prompt + overwrite-confirmation
-  (uses `save_list` + the in-`lib` prompt flow), and a CLI `save_delete`. Rides on item 2.
+  (surface `listSaves` as a Lamp native + the in-`lib` prompt flow — now unblocked, the
+  verbs live in lib), and a CLI `save_delete`.
 - **Cancel/error sentinels** (`-1`/`-2`): generalize `save_write`'s `ok`/`error` text
   reply so cancel and failure are distinguishable on every message.
 - Optional browser **file export/import** (download/upload) layered over localStorage.
-This shares the out-of-world-verb hook with Parser v2 (item 2) and RESTART (item 3).
-Reconciles with item 2's "move prompting into `lib`": lib owns the verbs + the
-*text-host* wording, but the *rendering* of the prompt/picker is the host seam.
 
 ### 2. Parser v2 — every-turn & timed rules + out-of-world actions
 **Every-turn rules DONE:** advent declares an `every_turn_rules` rulebook the command
@@ -180,14 +187,13 @@ about/help/credits (which can now drop their turn).
 **Remaining for v2:** **timed/scheduled events** (fire-once-at-turn-N — today done with a
 counter in an every-turn rule, as the doom-clock shows; a built-in scheduler is the
 convenience layer).
-- **Fold in here:** move the `undo`/`save`/`restore` verb handling + prompting +
-  wording **out of the runtime** and into `lib/advent`. Today `performUndo`/
-  `performSave`/`performRestore` live in the engine and hardcode English prose —
-  a layering smell (`devdocs/state.md` → "Known layering smell"). The fix needs
-  `registerOutOfWorld` to accept a **Lamp callback** so the library owns the verbs
-  while the runtime keeps the save/restore/snapshot *primitives* — now that
-  `out_of_world` actions exist, the meta-verbs can become advent actions that call the
-  snapshot primitives.
+- **Fold in here — SAVE/RESTORE DONE (2026-06-30); UNDO remains.** `save`/`restore` moved
+  out of the runtime into `lib/advent/save.lamp` as `out_of_world` actions over runtime
+  primitives (see item 1). `undo` is still a native `registerOutOfWorld` verb
+  (`performUndo`): no name prompt and a single fixed line, so the layering payoff is small;
+  it can migrate later if `registerOutOfWorld` grows a **Lamp-callback** form, but it isn't
+  pulling its weight as a smell. (The other two needed no such hook — the `out_of_world`
+  action mechanism sufficed.)
 - **Where:** rulebook driver in `src/lamplighter/index.js`, `run_command` loop.
 - **See:** `devdocs/rulebooks.md` roadmap, `devdocs/game_parser.md` v2.
 
@@ -315,8 +321,9 @@ core edit is contained. Names (default): `contains`/`place`/`contained`, keyword
   e2e golden `transcript1`; docs in `devdocs/state.md` ("Transcript (scripting)") +
   `devdocs/sandbox.md` ("Transcript broker protocol"). **Follow-ups:** browser/Electron
   transcript UX (today's browser worker installs no channel, so `transcript_available` is
-  false and SCRIPT reports unavailable — same gap as the browser save picker); apply this
-  same split to undo/save/restore (item 2's out-of-world-verb hook).
+  false and SCRIPT reports unavailable — same gap as the browser save picker). **Applied
+  the same split to SAVE/RESTORE (2026-06-30; see items 1–2);** UNDO is the last native
+  meta-verb (little to gain from moving it).
 - **End-the-game machinery: isolate the globals behind a function call.** Ending the game
   today means game code writing globals directly — `story` (enum, lib/advent/globals.lamp) and
   `ending_override` (the ending-specific banner, sample/phobos/control_room.lamp + phobos.lamp

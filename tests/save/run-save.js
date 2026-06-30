@@ -69,12 +69,10 @@ test("restore refuses an unrecognized format", () => {
 });
 
 test("performSave passes an unobfuscated meta sidecar (savedAt + turns)", () => {
-    // Drive the `save` out-of-world verb end-to-end through the runtime seams: a
-    // recording save channel captures the (key, data, meta) the engine emits, and a
-    // prompt stub supplies the slot name. The blob stays obfuscated; meta does not.
+    // Drive the `saveToSlot` primitive (what the lib `save` verb calls after collecting a
+    // name): a recording save channel captures the (key, data, meta) the engine emits.
+    // The blob stays obfuscated; meta does not.
     let recorded = null;
-    lamp.setWrite(() => {});
-    lamp.setPromptChannel(() => "slot1");
     lamp.setSaveChannel({
         write(key, data, meta) { recorded = { key, data, meta }; },
         read() { return null; },
@@ -83,7 +81,7 @@ test("performSave passes an unobfuscated meta sidecar (savedAt + turns)", () => 
     const before = lamp.turnsTaken();
     lamp.advanceTurn();
     lamp.advanceTurn();
-    lamp.runCommand("save");
+    assert.strictEqual(lamp.saveToSlot("slot1"), true);
 
     assert.ok(recorded, "save channel write was called");
     assert.strictEqual(recorded.key, "MyGame__slot1");
@@ -120,8 +118,6 @@ test("a saved slot surfaces its faithful name + turns through listSaves", () => 
     // name has a space (sanitized to "chapter_one" in the key), then list — the row
     // must carry the original "chapter one" from the meta sidecar, not the key.
     const store = new Map();
-    lamp.setWrite(() => {});
-    lamp.setPromptChannel(() => "chapter one");
     lamp.setSaveChannel({
         write(key, data, meta) { store.set(key, { data, meta }); },
         read(key) { return store.has(key) ? store.get(key).data : null; },
@@ -132,7 +128,7 @@ test("a saved slot surfaces its faithful name + turns through listSaves", () => 
         },
     });
     const turnsBefore = lamp.turnsTaken();
-    lamp.runCommand("save");
+    lamp.saveToSlot("chapter one");
     assert.ok(store.has("MyGame__chapter_one"), "blob stored under the sanitized key");
     const rows = lamp.listSaves();
     assert.strictEqual(rows.length, 1);
@@ -160,36 +156,44 @@ test("listSaveMeta returns [] for a missing directory", () => {
     assert.deepStrictEqual(listSaveMeta(path.join(os.tmpdir(), "lamp-nope-xyz-404"), "MyGame__"), []);
 });
 
-test("performSave uses the host picker (promptSave) when present, over the line prompt", () => {
+// The SAVE/RESTORE verbs (prompting + wording) live in lib/advent/save.lamp and are
+// covered end-to-end by the `save1` golden (text-host path). These tests cover the
+// runtime *primitives* the verb calls — including the host-native-picker seam the golden
+// can't exercise headlessly.
+
+test("saveHasPicker + savePickName run the host save modal; saveToSlot persists the name", () => {
     let promptedPrefix = null;
     let written = null;
-    lamp.setWrite(() => {});
-    lamp.setPromptChannel(() => { throw new Error("text prompt must not be used when promptSave exists"); });
     lamp.setSaveChannel({
         promptSave(prefix) { promptedPrefix = prefix; return { name: "from picker" }; },
         write(key, data, meta) { written = { key, meta }; },
         read() { return null; },
     });
-    lamp.runCommand("save");
-    assert.strictEqual(promptedPrefix, "MyGame__");
+    assert.strictEqual(lamp.saveHasPicker(), true);
+    const name = lamp.savePickName();
+    assert.strictEqual(promptedPrefix, "MyGame__", "picker gets this game's slot prefix");
+    assert.strictEqual(name, "from picker");
+    assert.strictEqual(lamp.saveToSlot(name), true);
     assert.strictEqual(written.key, "MyGame__from_picker");
     assert.strictEqual(written.meta.name, "from picker");
 });
 
-test("performSave: a cancelled picker writes nothing", () => {
-    let written = false;
-    lamp.setWrite(() => {});
+test("savePickName returns '' when the host modal is dismissed (verb then writes nothing)", () => {
     lamp.setSaveChannel({
         promptSave() { return null; },
-        write() { written = true; },
+        write() { throw new Error("must not write when the picker is dismissed"); },
         read() { return null; },
     });
-    lamp.runCommand("save");
-    assert.strictEqual(written, false);
+    assert.strictEqual(lamp.saveHasPicker(), true);
+    assert.strictEqual(lamp.savePickName(), "");
 });
 
-test("performRestore uses the host picker (promptRestore) and applies the chosen blob", () => {
-    lamp.setWrite(() => {});
+test("saveHasPicker is false for a text host (no promptSave) so the verb prompts itself", () => {
+    lamp.setSaveChannel({ write() {}, read() { return null; } });
+    assert.strictEqual(lamp.saveHasPicker(), false);
+});
+
+test("restoreHasPicker + restorePickBlob return the blob directly; restoreApplyBlob applies it", () => {
     lamp.setBuildId("build-picker");
     const coin = lamp.getObject("coin");
     lamp.setField(coin, "held", false);
@@ -200,12 +204,14 @@ test("performRestore uses the host picker (promptRestore) and applies the chosen
         write() {},
         read() { throw new Error("read must not be used when promptRestore exists"); },
     });
-    lamp.runCommand("restore");
-    assert.strictEqual(lamp.getObject("coin").held, false);
+    assert.strictEqual(lamp.restoreHasPicker(), true);
+    const got = lamp.restorePickBlob();
+    assert.strictEqual(got, blob);
+    assert.strictEqual(lamp.restoreApplyBlob(got), "ok");
+    assert.strictEqual(lamp.getObject("coin").held, false, "state rolled back by the applied blob");
 });
 
-test("performRestore: a cancelled picker leaves state untouched", () => {
-    lamp.setWrite(() => {});
+test("restorePickBlob returns '' when the host modal is dismissed (state untouched)", () => {
     const coin = lamp.getObject("coin");
     lamp.setField(coin, "held", true);
     lamp.setSaveChannel({
@@ -213,8 +219,37 @@ test("performRestore: a cancelled picker leaves state untouched", () => {
         write() {},
         read() { return null; },
     });
-    lamp.runCommand("restore");
+    assert.strictEqual(lamp.restorePickBlob(), "");
     assert.strictEqual(lamp.getObject("coin").held, true);
+});
+
+test("text-host restore: restoreReadSlot returns the stored blob, or '' for no such save", () => {
+    const store = new Map();
+    lamp.setBuildId("build-txt");
+    lamp.setSaveChannel({
+        write(key, data) { store.set(key, data); },
+        read(key) { return store.has(key) ? store.get(key) : null; },
+    });
+    assert.strictEqual(lamp.saveToSlot("slotA"), true);
+    assert.notStrictEqual(lamp.restoreReadSlot("slotA"), "", "stored slot reads back a blob");
+    assert.strictEqual(lamp.restoreReadSlot("missing"), "", "absent slot reads back ''");
+});
+
+test("restoreApplyBlob reports 'corrupt' on garbage and the version gate on a build mismatch", () => {
+    lamp.setSaveChannel({ write() {}, read() { return null; } });
+    assert.strictEqual(lamp.restoreApplyBlob("not a valid blob at all"), "corrupt");
+    lamp.setBuildId("build-A");
+    const blob = encodeText(JSON.stringify(lamp.captureSave()));
+    lamp.setBuildId("build-B");
+    assert.strictEqual(lamp.restoreApplyBlob(blob), "version");
+});
+
+test("saveAvailable reflects whether a save channel is installed", () => {
+    lamp.setSaveChannel({ write() {}, read() { return null; } });
+    assert.strictEqual(lamp.saveAvailable(), true);
+    lamp.setSaveChannel(null);
+    assert.strictEqual(lamp.saveAvailable(), false);
+    assert.strictEqual(lamp.saveToSlot("x"), false, "no channel → save fails");
 });
 
 if (failures > 0) {
