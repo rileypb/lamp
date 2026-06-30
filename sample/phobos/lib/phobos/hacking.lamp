@@ -15,17 +15,71 @@ contains yourself KIM
 # drives that target's puzzle.
 global physical kim_adhered_to = none
 
+# The room the hack is happening in. While adhered the KIM is physically left on its target (out of
+# inventory), so PRESS / the state display / the keypad only work while Galaxy is still here — leaving
+# retrieves it (see `before go` below). Mirrors I7's "the KIM is enclosed by the location" gate.
+global physical kim_hack_room = none
+
+# Stick the KIM onto `surface` (the handprint scanner, or the walls for the locker — as in I7) and
+# record the hack target + room. Moving it out of inventory is what makes "leaving it behind"
+# impossible (and keeps it off the inventory list) the way the original does.
+function void adhere_kim(physical target, physical surface):
+	kim_adhered_to = target
+	kim_hack_room = holder(player)
+	move KIM to surface
+
+# Pull the KIM back into Galaxy's hand and clear the hack (shared by retrieval and puzzle success).
+function void detach_kim():
+	move KIM to player
+	kim_adhered_to = none
+	kim_hack_room = none
+
+# The display name of whatever the KIM is stuck to, for the retrieval message (the scanners are all
+# printed "handprint scanner", so the colour is keyed off the target here — as I7 spells it out).
+function string kim_surface_name():
+	if kim_adhered_to == yellow_door:
+		return "the yellow handprint scanner"
+	if kim_adhered_to == red_door:
+		return "the red handprint scanner"
+	if kim_adhered_to == blue_door:
+		return "the blue handprint scanner"
+	if kim_adhered_to == purple_door:
+		return "the purple handprint scanner"
+	if kim_adhered_to == locker:
+		return "the locker"
+	return "the KIM's surface"
+
+# Retrieve the adhered KIM (TAKE, or the implicit take when leaving). I7: "Galaxy Jones retrieves the
+# KIM from [the surface]"; the port narrates by first name like its sibling hack messages.
+function void retrieve_kim():
+	print "Galaxy retrieves the KIM from [kim_surface_name()]."
+	detach_kim()
+
 # Examining the KIM shows its base description, plus — while it's adhered mid-hack — the live puzzle
 # state, so the player can re-read the board (I7 KIM.i7x: the description ends "[if KIM adheres to
 # something][paragraph break][KIM state]"). advent prints the description in its library `report
 # examine`, and author rules run before library ones, so we preempt with `instead` and re-emit.
 instead examine when self.target == KIM:
-	if kim_adhered_to == none:
+	if kim_adhered_to == none or not (holder(player) == kim_hack_room):
 		print "[self.target.description][line break]"
 	else:
 		print "[self.target.description][par]"
 		kim_state()
 	stop succeeded
+
+# Taking the adhered KIM peels it off its target (I7: "After taking the KIM when the KIM adheres to
+# something"). Only reachable when the KIM is in scope, i.e. Galaxy is at the target.
+instead take when self.taken == KIM and not (kim_adhered_to == none):
+	retrieve_kim()
+	stop succeeded
+
+# Leaving the room mid-hack can't strand the KIM: Galaxy implicitly takes it first (I7's "leaving the
+# KIM behind is impossible" / "Before going ... carry out the implicitly taking activity"). Runs in
+# the `before` band so the retrieval prints ahead of the new room, then the move proceeds normally.
+before go:
+	if not (kim_adhered_to == none) and holder(player) == kim_hack_room:
+		print "(first taking the KIM)[line break]"
+		retrieve_kim()
 
 # The adhered-state block (I7 `To say KIM state`): which target the KIM is stuck to, the button-array
 # blurb, then the keypad itself (reusing the same renderers the hack/press flow shows).
@@ -81,7 +135,7 @@ instead hack when self.target == yellow_door:
 	if not self.target.locked:
 		print "The door is already unlocked."
 		stop succeeded
-	kim_adhered_to = yellow_door
+	adhere_kim(yellow_door, yellow_scanner)
 	nine_buttons = [false, false, false, false, false, false, false, false, false]
 	print "Galaxy attaches the KIM to the yellow door.[par]"
 	show_keypad_9()
@@ -94,7 +148,7 @@ instead hack when self.target == red_door:
 	if not self.target.locked:
 		print "The door is already unlocked."
 		stop succeeded
-	kim_adhered_to = red_door
+	adhere_kim(red_door, red_scanner)
 	nine_buttons = [false, false, false, false, false, true, false, false, false]
 	print "Galaxy attaches the KIM to the red door.[par]"
 	show_keypad_9()
@@ -108,7 +162,7 @@ instead hack when self.target == blue_door:
 	if not self.target.locked:
 		print "The door is already unlocked."
 		stop succeeded
-	kim_adhered_to = blue_door
+	adhere_kim(blue_door, blue_scanner)
 	nine_buttons = [false, false, false, false, false, false, false, false, false]
 	shuffle_labels()
 	print "Galaxy attaches the KIM to the blue door.[par]"
@@ -122,7 +176,7 @@ instead hack when self.target == locker:
 	if not self.target.closed:
 		print "Galaxy has already opened the locker."
 		stop succeeded
-	kim_adhered_to = locker
+	adhere_kim(locker, walls)
 	four_buttons = [false, true, true, false]
 	print "Galaxy attaches the KIM to the locker.[par]"
 	show_keypad_4()
@@ -140,7 +194,7 @@ instead hack when self.target == purple_door:
 	if not (wears player cyberhelmet) or not (wears player cybercarapace):
 		print "The purple door beeps, and a voice says, '[siriusian(\"Visual identity not confirmed\")].' The KIM will not adhere to the door."
 		stop failed
-	kim_adhered_to = purple_door
+	adhere_kim(purple_door, purple_scanner)
 	sixteen_buttons = [false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false]
 	ensure_control_parts()
 	print "The purple door beeps, and a voice says, '[siriusian(\"Visual identity confirmed\")].'[par]Galaxy attaches the KIM to the purple handprint scanner.[par]"
@@ -196,7 +250,7 @@ action press_key:
 		"press [n]"
 
 before press_key:
-	if kim_adhered_to == none:
+	if kim_adhered_to == none or not (holder(player) == kim_hack_room):
 		print "Galaxy isn't hacking anything right now."
 		stop failed
 
@@ -236,7 +290,7 @@ report press_key when kim_adhered_to == yellow_door:
 	show_keypad_9()
 	if nine_solved():
 		print "As the final button lights up blue, the yellow door to the west swings open! Galaxy retrieves the KIM."
-		kim_adhered_to = none
+		detach_kim()
 		galaxy_score(1)
 
 
@@ -277,7 +331,7 @@ report press_key when kim_adhered_to == red_door:
 	show_keypad_9()
 	if nine_solved():
 		print "As the final button lights up blue, the red door to the south swings open! Galaxy retrieves the KIM."
-		kim_adhered_to = none
+		detach_kim()
 		galaxy_score(1)
 
 
@@ -368,7 +422,7 @@ do press_key when kim_adhered_to == blue_door:
 report press_key when kim_adhered_to == blue_door:
 	if blue_solved():
 		print "[par]As the final symbols switch places, the blue door to the east swings open! Galaxy retrieves the KIM."
-		kim_adhered_to = none
+		detach_kim()
 		galaxy_score(1)
 	else:
 		print "[par]"
@@ -414,7 +468,7 @@ report press_key when kim_adhered_to == locker:
 		print "Button [self.n] turns red."
 	if four_solved():
 		print "[par]As the final button lights up blue, the locker swings open, revealing a diary. Galaxy retrieves the KIM."
-		kim_adhered_to = none
+		detach_kim()
 		galaxy_score(1)
 	else:
 		print "[par]"
@@ -522,7 +576,7 @@ do press_key when kim_adhered_to == purple_door:
 report press_key when kim_adhered_to == purple_door:
 	if purple_solved():
 		print "Galaxy presses button [self.n].[par]As the fifth button lights up blue, the purple door to the north swings open! Galaxy retrieves the KIM."
-		kim_adhered_to = none
+		detach_kim()
 		galaxy_score(1)
 	else:
 		print "Galaxy presses button [self.n]. [run on]"

@@ -81,8 +81,14 @@ and the **Linguistic Module** (restored exact I7 wording). Everything else match
 state]` DONE:** examining the KIM while it's adhered mid-hack now appends the live puzzle state (which
 scanner/target it's stuck to, the button-array blurb, and the keypad itself via the existing
 `show_keypad_*` renderers) — an `instead examine` rule + `kim_state()` in hacking.lamp, mirroring I7's
-`To say KIM state`. Verified manually (the phobos golden is `test endgame`, which skips the hack flow,
-so this isn't golden-covered — same as the rest of hacking). **Infra DONE:** golden
+`To say KIM state`. **KIM location-gating DONE:** the KIM now physically adheres to its target (the
+hack moves it onto the handprint scanner / the walls, out of inventory, via `adhere_kim`), so PRESS
+and the state display are gated on Galaxy still being in the hack room (`kim_hack_room`); leaving the
+room implicitly retrieves it ("(first taking the KIM) / Galaxy retrieves the KIM from the X", a
+`before go` rule) and so does TAKE — mirroring I7's "leaving the KIM behind is impossible" / "the KIM
+is enclosed by the location". Fixes the bug where `press` drove a puzzle from another room. Verified
+manually (the phobos golden is `test endgame`, which skips the hack flow, so this isn't golden-covered
+— same as the rest of hacking). **Infra DONE:** golden
 discovery now walks one level into subdirs, so `sample/phobos/phobos.lamp` is a golden (`test
 endgame` → the full winning transcript) — the whole game is a deterministic regression check.
 
