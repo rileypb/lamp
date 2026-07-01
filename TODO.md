@@ -359,15 +359,19 @@ core edit is contained. Names (default): `contains`/`place`/`contained`, keyword
   persistable templates (`devdocs/text-persistence.md`): the emitter gives each no-capture
   template literal a build-stable id + module-load `registerTemplate`, a stored `text`
   serializes as `{$tmpl:id}`, and restore rebuilds a **live** thunk (`instantiateTemplate`).
-  Covers all construction descriptions (reading globals **or named instances** —
-  `[clock.hour]`, Phase 1.5) + rule-assigned templates reading only globals (the `[FOO]`
-  reassignment). Regression golden `textlive1` (undo *and* save/restore, global +
-  named-instance). Also removed the render-at-capture cursor side-effect (the read-only-render
-  item, save half). **Remaining — Phase 2 / fallbacks:** templates that capture `self`, or a
-  *rule-body* named-instance reference, need Phase 2 (free-variable + scope tracking +
-  `{$ref}` env plumbing); templates capturing a `let` local / action context, or composed at
-  runtime (`a + b`), still freeze (documented — what I7 also can't persist). **Where:**
-  `src/lantern/emitter.js` (`templatePartsCaptureLexical`/`capturesName`),
+  Covers construction descriptions **and rule-assigned templates** reading globals or a
+  **named instance** (`[clock.hour]`) — the emitter tracks lexical scope (`localScope`,
+  maintained by `emitStatementList`, consulted in `capturesName`) so a named instance
+  persists as a module const unless a local shadows it (Phases 1.5 + 2a). Regression goldens
+  `textlive1` (construction) + `textlive2` (rule-assigned). Also removed the
+  render-at-capture cursor side-effect (the read-only-render item, save half).
+  (A no-shadow-on-objects checker rule was tried for 2a and **reverted** — object names are
+  too numerous to reserve against locals, e.g. `let count` collides with an object.)
+  **Remaining — Phase 2b / fallbacks:** a template capturing `self` fields needs 2b
+  (`env:{self}` + `{$ref}` round-trip + runtime freeze-on-unserializable-capture); templates
+  capturing a `let`/param/loop var (incl. a shadowed object name) or the action context, or
+  composed at runtime (`a + b`), still freeze (documented — what I7 also can't persist).
+  **Where:** `src/lantern/emitter.js` (`localScope`/`capturesName`),
   `src/lamplighter/index.js` (`templateRegistry`, `encodeValue`/`decodeValue`).
 - **advent debug commands (Inform-style) — in progress** (`lib/advent/debug.lamp`).
   Built on `out_of_world` + a new **`world_scope`** action modifier (object slots resolve

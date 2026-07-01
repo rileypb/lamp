@@ -1,0 +1,41 @@
+lib advent
+
+# Regression (Phase 2a): a template ASSIGNED IN A RULE that reads a named instance must
+# persist live across save/restore — not freeze. `wire` sets panel.description to a
+# template reading `widget.level`; branding it requires the emitter to know `widget` isn't
+# shadowed by a local at the assignment site (scope tracking). See devdocs/text-persistence.md.
+
+type gizmo:
+    int level = 0
+
+gizmo widget
+
+item panel:
+    description "Blank panel."
+
+action tick:
+    direct gizmo target
+    syntax:
+        "tick [target]"
+
+do tick:
+    self.target.level = self.target.level + 1
+
+action wire:
+    direct item target
+    syntax:
+        "wire [target]"
+
+do wire:
+    self.target.description = "Panel shows widget=[widget.level]."
+
+report wire:
+    print "Wired."
+
+game TextLive2:
+    start hall
+
+room hall:
+    description "A hall."
+
+contains hall panel

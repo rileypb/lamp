@@ -109,17 +109,18 @@ let variationSiteCounter = 0;
 // can resolve any id, whether the literal is a construction default or assigned by a rule.
 let templateIdCounter = 0;
 let templateRegistrations = [];
-// True only while emitting an object field default, which (unlike a rule body) has no
-// local/`self` scope — so a bare identifier there can only be a global or a named
-// instance, never a `let` that could shadow one. This lets the capture predicate treat a
-// named-instance reference (a module `const`) as no-capture *safely* in that context.
-let emittingConstructionDefault = false;
+// The lexical bindings (`let`/loop var/named param) in scope at the point currently being
+// emitted — maintained block-precisely by emitStatementList, seeded with params by the
+// rule/function emitters. A construction default has none, so it is empty there. The
+// capture predicate consults it so a named-instance reference is treated as a persistable
+// module const *unless* a local shadows the name. See devdocs/text-persistence.md (Phase 2a).
+let localScope = new Set();
 
 function emitProgram(programAst, options = {}) {
     variationSiteCounter = 0;
     templateIdCounter = 0;
     templateRegistrations = [];
-    emittingConstructionDefault = false;
+    localScope = new Set();
     const nativeJsContents = options.nativeJsContents || [];
     const globalDeclNodes = programAst.nodes.filter((node) => node.kind === "GlobalDecl");
     const globalAssignNodes = programAst.nodes.filter((node) => node.kind === "GlobalAssign");
@@ -625,23 +626,17 @@ function emitValue(valueNode) {
     }
     // A template/freeze default emits as a normal expression. Embedded bare
     // globals self-emit as getGlobal (so they resolve); a default template has no
-    // local/`self` scope, so referencing `self` there is unsupported by design.
-    // The flag lets a template's capture predicate persist named-instance references
-    // (safe here — no locals — see devdocs/text-persistence.md).
+    // local/`self` scope (`localScope` is empty here), so a named-instance reference
+    // persists as a module const. See devdocs/text-persistence.md.
     if (valueNode.kind === "TemplateLiteral" || valueNode.kind === "FreezeExpr") {
-        emittingConstructionDefault = true;
-        try {
-            return emitExpression(valueNode, new Set());
-        } finally {
-            emittingConstructionDefault = false;
-        }
+        return emitExpression(valueNode, new Set());
     }
     throw new Error(`Unsupported value kind: ${valueNode.kind}`);
 }
 
 function emitFunctionDecl(node, globalNames = new Set()) {
     const paramList = node.params.map((p) => p.name).join(", ");
-    const bodyLines = emitStatementList(node.body, 1, globalNames);
+    const bodyLines = emitStatementList(node.body, 1, globalNames, "return;", node.params.map((p) => p.name));
     return [
         `function ${node.name}(${paramList}) {`,
         ...bodyLines,
@@ -732,7 +727,7 @@ function emitRulebookRuleFn(rulebookName, paramNames, whenExpr, body, order, glo
     if (whenExpr) {
         lines.push(`    if (!(${emitExpression(whenExpr, globalNames)})) return;`);
     }
-    lines.push(...emitStatementList(body, 1, globalNames, "return lamplighter.HALT;"));
+    lines.push(...emitStatementList(body, 1, globalNames, "return lamplighter.HALT;", paramNames));
     lines.push(`}, ${order});`);
     return lines.join("\n");
 }
@@ -837,8 +832,22 @@ function emitRelationRemoveHandler(node, globalNames = new Set()) {
 // construct: `return lamplighter.HALT;` inside a phase/rulebook rule, and a plain
 // `return;` elsewhere. It is threaded as a parameter (rather than module state)
 // so emission has no hidden context to save and restore.
-function emitStatementList(statements, indentLevel, globalNames = new Set(), bareStop = "return;") {
-    return statements.flatMap((statement) => emitStatementLines(statement, indentLevel, globalNames, bareStop));
+// Emits a statement list, maintaining `localScope` block-precisely for the template
+// capture predicate: the block gets its own copy (so a `let` here doesn't leak to the
+// caller), `initialLocals` seeds it (the enclosing rule/function's named params), and each
+// `let` extends it for the statements that follow. Loop vars are added by the For/ForEach
+// cases around their body. See devdocs/text-persistence.md (Phase 2a).
+function emitStatementList(statements, indentLevel, globalNames = new Set(), bareStop = "return;", initialLocals = []) {
+    const outer = localScope;
+    localScope = new Set(outer);
+    for (const name of initialLocals) localScope.add(name);
+    const lines = [];
+    for (const statement of statements) {
+        lines.push(...emitStatementLines(statement, indentLevel, globalNames, bareStop));
+        if (statement.kind === "LetStatement") localScope.add(statement.name);
+    }
+    localScope = outer;
+    return lines;
 }
 
 function emitStatementLines(statement, indentLevel, globalNames = new Set(), bareStop = "return;") {
@@ -906,7 +915,11 @@ function emitStatementLines(statement, indentLevel, globalNames = new Set(), bar
         const step = emitExpression(statement.step, globalNames);
         const v = statement.varName;
         const lines = [`${indent}for (let ${v} = ${start}; ${v} <= ${finish}; ${v} += ${step}) {`];
+        // The loop var is in scope for the body only (start/finish/step were emitted above).
+        const had = localScope.has(v);
+        localScope.add(v);
         lines.push(...emitStatementList(statement.body, indentLevel + 1, globalNames, bareStop));
+        if (!had) localScope.delete(v);
         lines.push(`${indent}}`);
         return lines;
     }
@@ -914,7 +927,10 @@ function emitStatementLines(statement, indentLevel, globalNames = new Set(), bar
         const listExpr = emitExpression(statement.listExpr, globalNames);
         const v = statement.varName;
         const lines = [`${indent}for (const ${v} of lamplighter.listItems(${listExpr})) {`];
+        const had = localScope.has(v);
+        localScope.add(v);
         lines.push(...emitStatementList(statement.body, indentLevel + 1, globalNames, bareStop));
+        if (!had) localScope.delete(v);
         lines.push(`${indent}}`);
         return lines;
     }
@@ -1021,13 +1037,15 @@ function templatePartCapturesLexical(part, globalNames) {
 
 // Whether a bare identifier used as a value head inside a template is a lexical capture
 // (so the template can't be rebuilt from an id at module load). A global reads via
-// getGlobal — name-based, never a capture. A named instance is a module `const`, a safe
-// non-capture *only* in a construction default, where no `let` can shadow the name (a rule
-// body could, and the hoisted factory would then silently read the const). Anything else —
-// a local, `self`, the action context — is a capture. See devdocs/text-persistence.md.
+// getGlobal — name-based, never a capture. A name bound by a `let`/loop var/param in scope
+// (`localScope`) is a capture — the hoisted factory can't see it. A named instance is a
+// module `const`; it is a non-capture *unless* a local shadows the name here. Anything else
+// (a local not otherwise known, `self`, the action context) is a capture. Conservative: the
+// final fallthrough treats an unrecognized name as a capture. See devdocs/text-persistence.md.
 function capturesName(name, globalNames) {
     if (globalNames.has(name)) return false;
-    if (emittingConstructionDefault && knownObjectNames.has(name)) return false;
+    if (localScope.has(name)) return true;
+    if (knownObjectNames.has(name)) return false;
     return true;
 }
 

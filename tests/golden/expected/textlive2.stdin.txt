@@ -1,0 +1,12 @@
+wire panel
+x panel
+tick widget
+x panel
+save
+s
+tick widget
+restore
+s
+tick widget
+x panel
+quit

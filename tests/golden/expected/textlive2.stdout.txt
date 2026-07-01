@@ -1,0 +1,29 @@
+hall
+A hall.
+
+You see a panel here.
+
+> wire panel
+Wired.
+
+> x panel
+Panel shows widget=0.
+
+> tick widget
+> x panel
+Panel shows widget=1.
+
+> save
+Name for saved game: s
+Game saved.
+
+> tick widget
+> restore
+Name of saved game: s
+Game restored.
+
+> tick widget
+> x panel
+Panel shows widget=2.
+
+> quit

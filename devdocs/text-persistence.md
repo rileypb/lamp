@@ -13,12 +13,14 @@ batch spliced in at module top (before construction); the use site emits
 capture) is emitted inline as before. Runtime (`src/lamplighter/index.js`):
 `templateRegistry` + `registerTemplate`/`instantiateTemplate` (brands the text with
 `__tmplId`); `encodeValue` emits `{$tmpl:id}` for a branded text (else freezes);
-`decodeValue` rebuilds via `instantiateTemplate`. **Phase 1.5 also built:** a construction
-default may reference a **named instance** (`[clock.hour]`) and still persist, since a named
-instance is a module `const` — gated by `emittingConstructionDefault` so a rule-body `let`
-can't shadow it (`capturesName`). Regression golden `textlive1` covers undo *and*
-save/restore for both a global (`reveal`) and a named-instance (`widget.level`) template.
-Fixes `bump.lamp`, `clock.lamp`, and the `[FOO]` reassignment.
+`decodeValue` rebuilds via `instantiateTemplate`. **Phase 1.5 + 2a also built:** a template
+that reads a **named instance** (`[clock.hour]`) persists — in a construction default *or* a
+rule body — because a named instance is a module `const`; the emitter tracks lexical scope
+(`localScope`, maintained by `emitStatementList`, consulted in `capturesName`) so this is
+allowed *unless* a local shadows the name. Regression goldens: `textlive1` (construction
+templates over a global + a named instance, undo *and* save/restore) and `textlive2` (a
+rule-*assigned* template over a named instance). Fixes `bump.lamp`, `clock.lamp`, and the
+`[FOO]` reassignment.
 
 ## Problem
 
@@ -126,21 +128,24 @@ reference `self`; everything else is ID-only.
 | Stored `text` field holds…                                      | Handling            | Faithful? |
 | --------------------------------------------------------------- | ------------------- | --------- |
 | Construction template reading globals/literals (`[reveal]`)     | `{$tmpl:id}`        | ✅ live (Phase 1) |
-| Construction template reading a **named instance** (`[clock.hour]`) | `{$tmpl:id}`    | ✅ live (Phase 1.5, built) |
+| Construction template reading a **named instance** (`[clock.hour]`) | `{$tmpl:id}`    | ✅ live (Phase 1.5) |
 | Rule-assigned template reading only globals (`[FOO]`)           | `{$tmpl:id}`        | ✅ live (Phase 1) |
-| Rule-assigned template reading `self` fields                    | `{$tmpl:id, env:{self}}` | ⚠️ Phase 2 (not built) |
-| Rule-assigned template reading a **named instance**             | freeze → string     | ⚠️ frozen (shadowing risk — needs scope tracking) |
+| Rule-assigned template reading a **named instance** (not shadowed) | `{$tmpl:id}`     | ✅ live (Phase 2a, built) |
+| Rule-assigned template reading `self` fields                    | `{$tmpl:id, env:{self}}` | ⚠️ Phase 2b (not built) |
 | Template composed at runtime (`textA + textB`, concat)          | freeze → string     | ⚠️ frozen |
-| Template capturing a `let` local / action context               | freeze → string     | ⚠️ frozen |
+| Template capturing a `let` local / action context / shadowed name | freeze → string   | ⚠️ frozen |
 
-**Phase 1.5 (named instances in construction defaults) is built.** A named instance
-compiles to a module-level `const`, so a construction-default template like
-`description "The clock reads [clock.hour]."` is persistable by id alone — no env needed.
-The emitter only relaxes this **inside a construction default** (`emittingConstructionDefault`
-+ `knownObjectNames` in `capturesName`), because a *rule body* could bind a `let` that
-shadows the object name, and the hoisted factory would then silently read the module const
-instead of the local. Safely persisting a rule-body named-instance reference needs the same
-scope tracking as Phase 2.
+**Phase 1.5 + 2a (named instances) are built.** A named instance compiles to a
+module-level `const`, so a template reading `[clock.hour]` is persistable by id alone — no
+env needed — **as long as no local shadows the name at that point**. The emitter tracks
+lexical scope for exactly this: a module-level `localScope` set, maintained block-precisely
+by `emitStatementList` (seeded with a rule/function's named params, extended by each `let`
+and loop var), consulted in `capturesName`. So a bare object name is a persistable const
+**unless** a `let`/param/loop var of the same name is in scope — in which case it's a
+capture and the template falls back to freezing. Conservative: `capturesName`'s
+fallthrough treats any unrecognized name as a capture. **Not** enforced via a no-shadow
+rule (tried and reverted — object names are too numerous to reserve against locals, e.g. a
+common `let count` collides with an object `count`).
 
 The remaining fallbacks are essentially what **I7 also cannot persist** (runtime-composed
 text, and `[the noun]`-style context that isn't saved state).
@@ -183,14 +188,22 @@ text, and `[the noun]`-style context that isn't saved state).
   reassignment example** — i.e. the whole demo-blocking bug and the I7 counterexample,
   because none of them capture a lexical (construction defaults *can't*, and `[FOO]` reads a
   global). Composed/lexical templates fall back to today's freeze.
-- **Phase 2 — `self` capture.** Free-variable analysis for `self`, `env:{self}` plumbing,
-  the `{$ref}` round-trip. Adds rule-assigned templates that read `self` fields.
-- **Fallbacks + the compile warning** land with Phase 1 (freeze is already the behavior;
-  the warning is new).
+- **Phase 1.5 — named instances (built).** A construction-default template reading another
+  object's field (`[clock.hour]`) persists by id alone (a named instance is a module const).
+- **Phase 2a — named instances in rule bodies (built).** The emitter gained lexical-scope
+  tracking (`localScope`), so a rule-assigned template reading a named instance persists too,
+  *unless* a local shadows the name. This is what a no-shadow-on-objects rule would have
+  given cheaply — but that rule was tried and **reverted** (object names are too numerous to
+  reserve; `let count` collides with an object), so the emitter tracks scope instead.
+- **Phase 2b — `self` capture (not built).** `env:{self}` plumbing + the `{$ref}` round-trip
+  + the runtime freeze-on-unserializable-capture fallback. Adds rule-assigned templates that
+  read `self` fields (change-handler `self` persists; action/relation `self` freezes, since
+  it isn't a serializable named instance). Reaches full I7 parity.
+- **The compile warning** for a field assigned an unpersistable (frozen) template is still a
+  follow-up (freeze is already the behavior; the warning would just make it loud).
 
-Phase 1 is the meaningful unit and is likely sufficient for a long time — the fields that
-persist in real games (descriptions, refusals, `feels`) are construction templates over
-globals/`self`-less state.
+Phases 1–2a cover what real games store (descriptions, refusals, `feels` — over
+globals/named-instance state); 2b is the last parity increment.
 
 ## Open questions
 
