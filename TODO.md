@@ -371,11 +371,13 @@ core edit is contained. Names (default): `contains`/`place`/`contained`, keyword
   goldens `textlive1`/`textlive2`/`textlive3`. Also removed the render-at-capture cursor
   side-effect. (A no-shadow-on-objects checker rule was tried for 2a and **reverted** —
   object names are too numerous to reserve against locals, e.g. `let count` collides with an
-  object.) **Only follow-up:** an optional compile-time *warning* when a field is assigned an
-  unpersistable (frozen) template, so the restriction is loud. **Where:**
-  `src/lantern/emitter.js` (`localScope`/`capturesName`/`collectTemplateCaptures`),
-  `src/lamplighter/index.js` (`templateRegistry`, `instantiateTemplate`,
-  `encodeValue`/`decodeValue`).
+  object.) A **compile-time warning** (built) fires when a field/global is assigned a
+  template that will freeze on save (captures a `let`/loop var/shadowed name), naming the
+  binding (`maybeWarnFrozenTemplate`; test `tests/textwarn`) — a `{self}` capture is not
+  warned (brandable; ambiguous at compile time). **Nothing left** — full I7 parity. **Where:**
+  `src/lantern/emitter.js` (`localScope`/`capturesName`/`collectTemplateCaptures`/
+  `maybeWarnFrozenTemplate`), `src/lamplighter/index.js` (`templateRegistry`,
+  `instantiateTemplate`, `encodeValue`/`decodeValue`).
 - **advent debug commands (Inform-style) — in progress** (`lib/advent/debug.lamp`).
   Built on `out_of_world` + a new **`world_scope`** action modifier (object slots resolve
   against every `physical` object, not just scope — parser/ast/emitter + runtime

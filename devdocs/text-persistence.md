@@ -159,11 +159,11 @@ text, and `[the noun]`-style context that isn't saved state).
   over-engineered for how rarely a *stored field* holds runtime-composed text. Freeze +
   document.
 - **Unsaveable capture** (a template referencing a `let` local, or the action context). The
-  emitter emits it unbranded (as today) → `encodeValue` freezes it. This is correct for the
-  common use (such templates are almost always *printed transiently*, never stored). When
-  such a template is **assigned to a field**, the emitter should emit a **compile-time
-  warning** ("this text is frozen when saved; it won't track later changes") so the
-  restriction is loud rather than silent.
+  emitter emits it unbranded → `encodeValue` freezes it. This is correct for the common use
+  (such templates are almost always *printed transiently*, never stored). When such a
+  template is **assigned to a field or global**, the emitter emits a **compile-time warning**
+  ("this text template will be frozen when saved…") naming the captured binding, so the
+  restriction is loud rather than silent (built; `tests/textwarn`).
 
 ## Interactions
 
@@ -205,8 +205,13 @@ text, and `[the noun]`-style context that isn't saved state).
   persists live, while a transient action `self` (`{type, action, actor}`, not in the name
   registry) freezes to its current render. This is full I7 parity: what persists live is what
   I7 persists; what freezes is what I7 also can't.
-- **The compile warning** for a field assigned an unpersistable (frozen) template is still a
-  follow-up (freeze is already the behavior; the warning would just make it loud).
+- **The compile warning (built).** Assigning a text template to a persistent slot (a field
+  or global) that will freeze on save — because it captures a `let`/loop var/shadowed name —
+  emits a non-fatal compile warning to stderr naming the captured binding
+  (`maybeWarnFrozenTemplate` in the emitter; printed by `src/lantern/index.js`). Test
+  `tests/textwarn`. It does *not* warn on a `{self}` capture (brandable; ambiguous at compile
+  time — persists in a change handler, freezes in an action), so the transient-`self` freeze
+  stays silent; and a `freeze`-d string never triggers it (an explicit snapshot).
 
 Regression goldens: `textlive1` (construction, global + named instance), `textlive2`
 (rule-assigned named instance), `textlive3` (change-handler `self`) — all undo *and*

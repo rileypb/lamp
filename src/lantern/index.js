@@ -117,7 +117,11 @@ function runCompilation() {
     const mergedProgram = { kind: "Program", nodes: deduplicateFunctions(allNodes) };
     checkProgram(mergedProgram, { nativeFunctionNames });
 
-    const emittedJs = emitProgram(mergedProgram, { nativeJsContents, mainFilePath: inputFile, encodeStrings });
+    const warnings = [];
+    const emittedJs = emitProgram(mergedProgram, { nativeJsContents, mainFilePath: inputFile, encodeStrings, warnings });
+    for (const warning of warnings) {
+        console.error(warning);
+    }
 
     // Build identity: a content hash over the compilation source inputs (not the
     // emitted JS, so it is invariant under --encode-strings). The runtime stamps

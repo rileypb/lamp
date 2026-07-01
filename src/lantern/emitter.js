@@ -116,11 +116,17 @@ let templateRegistrations = [];
 // module const *unless* a local shadows the name. See devdocs/text-persistence.md (Phase 2a).
 let localScope = new Set();
 
+// Optional sink for non-fatal compile warnings (an array supplied by the caller). Used to
+// flag a text template assigned to a persistent slot that will freeze on save. Null → no
+// collection. See devdocs/text-persistence.md.
+let emitWarnings = null;
+
 function emitProgram(programAst, options = {}) {
     variationSiteCounter = 0;
     templateIdCounter = 0;
     templateRegistrations = [];
     localScope = new Set();
+    emitWarnings = options.warnings || null;
     const nativeJsContents = options.nativeJsContents || [];
     const globalDeclNodes = programAst.nodes.filter((node) => node.kind === "GlobalDecl");
     const globalAssignNodes = programAst.nodes.filter((node) => node.kind === "GlobalAssign");
@@ -860,6 +866,7 @@ function emitStatementLines(statement, indentLevel, globalNames = new Set(), bar
         return [`${indent}lamplighter.print(${emitExpression(statement.expr, globalNames)});`];
     }
     if (statement.kind === "AssignStatement") {
+        maybeWarnFrozenTemplate(statement, globalNames);
         const [head, ...tail] = statement.targetChain;
         // Globals are keyed by their *coerced* name (`my_score` → "my score"); the
         // raw identifier names a local. Coerce for the global lookup + setGlobal key,
@@ -1015,6 +1022,23 @@ const UNKNOWN_CAPTURE = " unknown";
 
 function collectTemplateCaptures(parts, globalNames, out) {
     for (const part of parts) collectPartCaptures(part, globalNames, out);
+}
+
+// Warn when a template *literal* assigned to a persistent slot (a field or a global — not a
+// bare local) captures a binding that makes it unpersistable, so it will be frozen to a dead
+// string on save/undo/restore instead of tracking live state. Silent otherwise; a `freeze`-d
+// string (an explicit snapshot) never triggers it. See devdocs/text-persistence.md.
+function maybeWarnFrozenTemplate(statement, globalNames) {
+    if (!emitWarnings || !statement.expr || statement.expr.kind !== "TemplateLiteral") return;
+    const [head, ...tail] = statement.targetChain;
+    const persists = tail.length > 0 || globalNames.has(coerceName(head));
+    if (!persists) return;
+    const captures = new Set();
+    collectTemplateCaptures(statement.expr.parts, globalNames, captures);
+    if (captures.size === 0 || (captures.size === 1 && captures.has("self"))) return;
+    const named = [...captures].filter((n) => n !== UNKNOWN_CAPTURE);
+    const detail = named.length ? ` (captures ${named.map((n) => `'${n}'`).join(", ")})` : "";
+    emitWarnings.push(`${statement.filePath}:${statement.lineNumber}: warning: this text template will be frozen when saved${detail}, so it won't track later changes across undo/save/restore. Read the changing state through a global or named object, or store a \`freeze\`-d string.`);
 }
 
 function collectPartCaptures(part, globalNames, out) {

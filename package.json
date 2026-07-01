@@ -22,6 +22,7 @@
     "test:state": "node tests/state/run-state.js",
     "test:save": "node tests/save/run-save.js",
     "test:transcript": "node tests/transcript/run-transcript.js",
+    "test:textwarn": "node tests/textwarn/run-textwarn.js",
     "test:release": "node tests/release/run-release.js",
     "test:tui": "node tests/tui/run-tui.js"
   },

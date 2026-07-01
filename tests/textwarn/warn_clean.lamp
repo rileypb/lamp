@@ -1,0 +1,23 @@
+lib advent
+
+# A rule assigns a field a template reading a NAMED INSTANCE (not shadowed) — persistable,
+# so no warning.
+type gizmo < item:
+    int level = 0
+    string label = ""
+
+gizmo widget
+
+action zap:
+    direct gizmo target
+    syntax:
+        "zap [target]"
+
+do zap:
+    self.target.label = "level [widget.level]."
+
+game W:
+    start hall
+
+room hall:
+    description "hall"

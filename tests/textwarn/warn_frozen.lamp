@@ -1,0 +1,24 @@
+lib advent
+
+# A rule assigns a field a template that captures a LOCAL (`widget`, shadowing the object),
+# so it will freeze on save — the compiler should warn.
+type gizmo < item:
+    int level = 0
+    string label = ""
+
+gizmo widget
+
+action zap:
+    direct gizmo target
+    syntax:
+        "zap [target]"
+
+do zap:
+    let widget = self.target
+    self.target.label = "level [widget.level]."
+
+game W:
+    start hall
+
+room hall:
+    description "hall"
