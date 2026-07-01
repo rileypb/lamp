@@ -50,39 +50,34 @@ change if a genuinely new value kind is ever added (e.g. a keyed map) is
 **`text` values are not a new kind.** A `text` value (a lazily-rendered template;
 see `devdocs/text.md` K2 and the `text` primitive in `specs.md`) is a transient,
 computed value — a thunk, like a function reference — and is deliberately kept
-*out* of the algebra. When `encodeValue` meets a `text` in a captured field, it
-**freezes it to its current rendered string** (`isTextValue(value) ? value() :
-…`), which is an ordinary scalar. So a field holding a template is saveable, and a
-restored game gets the frozen string rather than a live template. Freezing is
-**forced by serialization** — a save is JSON on disk, and a closure can't be
-serialized — so it cannot simply be turned off for saves.
+*out* of the algebra. A `text` is **program (a rendering rule), not state**, so it is
+never serialized as a closure. Instead, a template literal that captures no lexical
+binding gets a build-stable **id** (assigned by the emitter, registered at module load),
+and a `text`-valued field serializes as a reference to it — `{$tmpl: id}` — which restore
+rebuilds into a **live** thunk (`instantiateTemplate`). So a stored template stays dynamic
+across undo/save/restore. See `devdocs/text-persistence.md` (Phase 1). Text that *can't* be
+referenced this way — a template capturing `self`/a local/the action context, or one
+composed at runtime — falls back to **freezing to its current rendered string** (an
+ordinary scalar): still saveable, but a dead string that no longer tracks.
 
-> **Known limitation — snapshot freezes live templates (undo *and* save/restore).**
-> The freeze is lossless **only at the instant of restore**: the frozen string equals
-> what the template rendered against the state being restored. It becomes **lossy the
-> moment that state changes and the field is re-rendered** — the frozen string is a dead
-> scalar and no longer tracks. This needs **no** context-dependent sugar; a plain
-> interpolation of a mutable global exhibits it today. Minimal repro (a copy lives at
-> `bump.lamp` in the repo root during this investigation): a room
-> `description "...reveal=[reveal]."` plus a `bump` action that does
-> `reveal = reveal + 1`, then `look / bump / look / undo / bump / look` — the final
-> `look` shows the pre-undo `reveal`, not the live one. Substituting `save`+`restore`
-> for `undo` gives the **identical** result: it is not an undo bug but a property of the
-> single `captureState`/`encodeValue` codepath that undo, save, and restore all share.
+> **Resolved (2026-07-01) for the common case; residual fallback documented.** Previously
+> `encodeValue` froze *every* `text` field, so undo, save, and restore all turned a live
+> template into a dead string that went stale on the next state change (`bump.lamp` repro:
+> `look / bump / look / undo / bump / look` showed the pre-undo value; `save`+`restore`
+> was identical). Phase 1 of `devdocs/text-persistence.md` fixes this for every template
+> that reads only globals/functions/literals — i.e. **all construction descriptions** (a
+> construction default has no `self`/local scope by design) and rule-assigned templates
+> like `now description is "I said [FOO]."`. Regression: golden `textlive1` (undo *and*
+> save/restore). As a bonus, a persisted template is no longer *rendered* at capture, so it
+> no longer advances `[first time]`/`[cycling]` cursors as a side effect (the
+> `devdocs/text.md` "read-only render flag" issue, on the capture path).
 >
-> A real fix must repair undo **and** save/restore together (an in-memory-only fix would
-> make undo diverge from restore), and has only two honest shapes: **(1)** serialize the
-> template's *structure* so restore can rebuild the thunk — hard, because its
-> interpolations are themselves closures; or **(2)** stop treating a template-valued
-> field as *state* at all — it is a rendering *rule* fixed at construction, and the state
-> is the globals/fields it reads (the Inform model: dynamic text is re-evaluated on
-> print, never stored as a frozen value) — a real refactor that collides with the
-> delete-and-reassign restore path. Related to the **read-only render flag** TODO
-> (`devdocs/text.md`): rendering-at-capture also advances `[first time]`/`[cycling]`
-> cursors as a side effect. Until then, persistent/dynamic state should hold a
-> `freeze`-d string or a plain field the template reads, not a live `text`.
-> **Note:** RESTART via reload (see "RESTART" below) is unaffected — it never snapshots;
-> a fresh module load rebuilds every template thunk from construction.
+> **Residual fallback (freezes, as before):** a template that captures a lexical binding —
+> `self`, a `let`, or the transient action context — or one composed at runtime (`a + b`).
+> These are exactly what I7 also can't persist. Phase 2 (`text-persistence.md`) adds
+> `self`-capture; the rest stays freeze-and-document. So a *runtime-composed* or
+> *local-capturing* stored template should still use a `freeze`-d string or a plain field
+> the template reads.
 
 **The render context is render-local and never saved.** Slice 3's adaptive sugar
 reads a per-render context (the third-person `subject`, the verb `agreement`

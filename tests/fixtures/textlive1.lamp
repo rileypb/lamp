@@ -1,0 +1,24 @@
+lib advent
+
+# Regression: a stored text template (the room description reads the mutable global
+# `reveal`) must stay LIVE across undo AND save/restore — not freeze to a dead string.
+# The freeze bug showed the pre-undo/pre-restore value on the final look; the fix
+# (persistable templates) keeps it tracking the live global. See devdocs/text-persistence.md.
+
+global int reveal = 0
+
+action bump:
+    syntax:
+        "bump"
+
+do bump:
+    reveal = reveal + 1
+
+report bump:
+    print "reveal is now [reveal]."
+
+game TextLive:
+    start hall
+
+room hall:
+    description "wall: reveal=[reveal]."

@@ -103,8 +103,17 @@ function emitNameList(names) {
 // devdocs/text.md F8/F9.
 let variationSiteCounter = 0;
 
+// Persistable text templates (devdocs/text-persistence.md, Phase 1). Each no-capture
+// template literal gets a build-stable id and a `registerTemplate` call collected here;
+// the whole batch is emitted at module top (before construction) so instantiateTemplate
+// can resolve any id, whether the literal is a construction default or assigned by a rule.
+let templateIdCounter = 0;
+let templateRegistrations = [];
+
 function emitProgram(programAst, options = {}) {
     variationSiteCounter = 0;
+    templateIdCounter = 0;
+    templateRegistrations = [];
     const nativeJsContents = options.nativeJsContents || [];
     const globalDeclNodes = programAst.nodes.filter((node) => node.kind === "GlobalDecl");
     const globalAssignNodes = programAst.nodes.filter((node) => node.kind === "GlobalAssign");
@@ -183,6 +192,10 @@ function emitProgram(programAst, options = {}) {
     }
 
     lines.push("");
+    // Reserve the slot where the text-template registry is emitted. The registrations are
+    // collected while emitting expressions below, then spliced in here (before any
+    // construction), so instantiateTemplate resolves at load. See devdocs/text-persistence.md.
+    const templateRegistryIndex = lines.length;
 
     for (const kindNode of kindNodes) {
         lines.push(emitKindDecl(kindNode));
@@ -395,6 +408,10 @@ function emitProgram(programAst, options = {}) {
     lines.push("");
     lines.push("lamplighter.run();");
     lines.push("");
+
+    if (templateRegistrations.length > 0) {
+        lines.splice(templateRegistryIndex, 0, "// Persistable text templates (devdocs/text-persistence.md).", ...templateRegistrations, "");
+    }
 
     return `${lines.join("\n")}`;
 }
@@ -958,6 +975,88 @@ function emitTemplateFrags(parts, globalNames) {
     return parts.map((part) => emitTemplateFrag(part, globalNames)).join(", ");
 }
 
+// Whether a template literal reads any *lexical* binding — `self`, a `let`/param, or the
+// action context — as opposed to only globals (which resolve via getGlobal), literals, and
+// function calls. A no-capture template can be rebuilt from its id at module load, so it is
+// persistable (devdocs/text-persistence.md, Phase 1); a capturing one is emitted inline and
+// freezes on save. Conservative by construction: any AST shape not positively recognized as
+// capture-free counts as a capture, so we never brand a template we can't safely reconstruct.
+function templatePartsCaptureLexical(parts, globalNames) {
+    return parts.some((part) => templatePartCapturesLexical(part, globalNames));
+}
+
+function templatePartCapturesLexical(part, globalNames) {
+    switch (part.kind) {
+        case "text":
+        case "pluralSuffix":
+            return false;
+        case "expr":
+            return exprCapturesLexical(part.expr, globalNames);
+        case "style":
+        case "firstTime":
+            return templatePartsCaptureLexical(part.parts, globalNames);
+        case "oneOf":
+            return part.alternatives.some((alt) => templatePartsCaptureLexical(alt, globalNames));
+        case "cond":
+            return part.branches.some((b) =>
+                (b.cond !== null && exprCapturesLexical(b.cond, globalNames))
+                || templatePartsCaptureLexical(b.parts, globalNames));
+        default:
+            return true;
+    }
+}
+
+function exprCapturesLexical(expr, globalNames) {
+    if (!expr || typeof expr !== "object") return false;
+    switch (expr.kind) {
+        case "StringLiteral":
+        case "NumberLiteral":
+        case "BooleanLiteral":
+        case "NoneLiteral":
+        case "GlobalExpr":
+        case "FunctionRefExpr":
+        case "ParenNameExpr":
+            return false;
+        case "VariableExpr":
+            return !globalNames.has(expr.name);
+        case "PropertyAccess":
+            return !globalNames.has(coerceName(expr.chain[0]));
+        case "MemberAccess":
+            return exprCapturesLexical(expr.object, globalNames);
+        case "MessageExpr":
+            return exprCapturesLexical(expr.defaultExpr, globalNames);
+        case "IndexExpr":
+            return exprCapturesLexical(expr.target, globalNames) || exprCapturesLexical(expr.index, globalNames);
+        case "ListLiteral":
+            return expr.elements.some((e) => exprCapturesLexical(e, globalNames));
+        case "TemplateLiteral":
+            return templatePartsCaptureLexical(expr.parts, globalNames);
+        case "FreezeExpr":
+        case "NegateExpr":
+        case "NotExpr":
+            return exprCapturesLexical(expr.expr, globalNames);
+        case "Concat":
+        case "EqualsExpr":
+        case "LessThanExpr":
+        case "LessOrEqualExpr":
+        case "MultiplyExpr":
+        case "SubtractExpr":
+        case "DivideExpr":
+        case "ModExpr":
+        case "DivExpr":
+        case "PowerExpr":
+        case "AndExpr":
+        case "OrExpr":
+            return exprCapturesLexical(expr.left, globalNames) || exprCapturesLexical(expr.right, globalNames);
+        case "CallExpr":
+        case "FollowExpr":
+            // The callee is a top-level function/rulebook (no capture); arguments may capture.
+            return (expr.args || []).some((a) => exprCapturesLexical(a, globalNames));
+        default:
+            return true;
+    }
+}
+
 function emitTemplateFrag(part, globalNames) {
     if (part.kind === "text") return emitStringLiteral(part.value);
     // Value substitutions go through interp() so an interpolated number is recorded
@@ -1022,7 +1121,18 @@ function emitExpression(expr, globalNames = new Set()) {
         // so an object renders as its name, a list as its prose, etc. A `cond` part
         // (inline `[if]`/`[else if]`/`[else]`) emits a ternary chain that renders the
         // chosen branch's nested parts.
-        return `lamplighter.makeText(() => lamplighter.renderTemplate([${emitTemplateFrags(expr.parts, globalNames)}]))`;
+        const thunk = `lamplighter.makeText(() => lamplighter.renderTemplate([${emitTemplateFrags(expr.parts, globalNames)}]))`;
+        // A template that captures a lexical binding (self / a local / action context)
+        // can't be rebuilt from an id at module load, so emit it inline — encodeValue
+        // freezes it on save (the documented fallback). A no-capture template is registered
+        // by id and instantiated, so a stored copy survives save/undo/restore as a live
+        // thunk rather than a frozen string. See devdocs/text-persistence.md.
+        if (templatePartsCaptureLexical(expr.parts, globalNames)) {
+            return thunk;
+        }
+        const id = templateIdCounter++;
+        templateRegistrations.push(`lamplighter.registerTemplate(${id}, () => ${thunk});`);
+        return `lamplighter.instantiateTemplate(${id})`;
     }
     if (expr.kind === "FreezeExpr") {
         return `lamplighter.renderText(${emitExpression(expr.expr, globalNames)})`;

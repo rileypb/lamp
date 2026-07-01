@@ -1437,6 +1437,25 @@ function isTextValue(value) {
     return typeof value === "function" && value.__lampText === true;
 }
 
+// Persistable text templates (devdocs/text-persistence.md, Phase 1). Every compile-time
+// template literal that captures no lexical binding is assigned a build-stable id by the
+// emitter and registered here at module load. A `text`-valued field then serializes as
+// `{$tmpl:id}` and is rebuilt on restore as a *live* thunk (instantiateTemplate), instead
+// of being frozen to a dead string. The build id gates cross-build restores, so ids only
+// need be stable within a build. Templates that capture `self`/a local/action context (or
+// are runtime-composed) are emitted unbranded and still freeze on capture — the fallback.
+const templateRegistry = new Map();
+function registerTemplate(id, factory) {
+    templateRegistry.set(id, factory);
+}
+function instantiateTemplate(id) {
+    const factory = templateRegistry.get(id);
+    if (!factory) throw new Error(`no registered text template #${id}`);
+    const value = factory();
+    value.__tmplId = id;
+    return value;
+}
+
 function renderText(value) {
     return isTextValue(value) ? renderTextValue(value) : String(formatValue(value));
 }
@@ -1699,11 +1718,13 @@ function kind(name) {
 // `throw` surfaces any unrecognized value rather than silently dropping it.
 function encodeValue(value) {
     if (value === null || value === undefined) return null;
-    // A `text` thunk is a transient/computed value, not a member of the closed
-    // save algebra (like a function). Freeze it to its current rendered string at
-    // capture, so a field holding a template is still saveable. For Slice 1 (no
-    // context-dependent substitution) this is lossless. See devdocs/state.md.
-    if (isTextValue(value)) return renderTextValue(value);
+    // A `text` thunk is program (a rendering rule), not a member of the closed save
+    // algebra. A template with a build-stable id (assigned by the emitter to a no-capture
+    // literal) serializes as a reference to it (`{$tmpl:id}`), so restore rebuilds a live
+    // thunk — the field stays dynamic. A branded-less text (captures a lexical, or is
+    // runtime-composed) has no id, so it falls back to freezing to its current rendered
+    // string. See devdocs/text-persistence.md.
+    if (isTextValue(value)) return value.__tmplId != null ? { $tmpl: value.__tmplId } : renderTextValue(value);
     if (isListValue(value)) return { $list: value.items.map(encodeValue) };
     if (typeof value === "object") {
         if (typeof value.name === "string" && nameRegistry.get(value.name) === value) {
@@ -1719,6 +1740,10 @@ function decodeValue(data) {
     if (typeof data === "object") {
         if ("$ref" in data) return nameRegistry.get(data.$ref) ?? null;
         if ("$list" in data) return makeList(data.$list.map(decodeValue));
+        // A persistable text template: rebuild a fresh live thunk from the registry
+        // (devdocs/text-persistence.md). A plain string (a frozen fallback text, or any
+        // old save) decodes below as itself.
+        if ("$tmpl" in data) return instantiateTemplate(data.$tmpl);
         throw new Error("cannot restore value: unrecognized encoded object");
     }
     return data;
@@ -2368,6 +2393,8 @@ module.exports = {
     concat,
     renderTemplate,
     makeText,
+    registerTemplate,
+    instantiateTemplate,
     renderText,
     renderSubject,
     renderSetSubject,

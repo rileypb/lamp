@@ -561,10 +561,11 @@ is the "render context" proper.
    > looking at or saving it. Plan: a runtime global boolean (e.g. `renderReadOnly`) set
    > around such evaluations; the site-advance helpers (`variationAdvance`/`variationPick`
    > and the first-time counter) read the current state but **skip the mutation** when it
-   > is set. Tackle later. **Related:** the same rendering-at-capture also *freezes* a
-   > template field to a dead string, so it goes stale after undo/save/restore — see
-   > `devdocs/state.md` → "Known limitation — snapshot freezes live templates" (repro:
-   > `bump.lamp`).
+   > is set. Tackle later — but note the **SAVE** half is now moot: persistable templates
+   > (`devdocs/text-persistence.md`, Phase 1) no longer *render* a stored template at
+   > capture, so save/undo/restore no longer advance its cursors (that also fixed the
+   > freeze-to-dead-string bug — `devdocs/state.md`). SHOWME's inspect-render is the
+   > remaining case for a read-only flag.
 
 3. **Output-stream state.** Pending-break state (ensure-at-least N newlines) plus a
    **printed-since-break** flag for `[run on]` / `[par if printed]` (H2/H3) and the

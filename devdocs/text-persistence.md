@@ -1,9 +1,20 @@
 # Persisting `text` values across save/undo/restore (design spec)
 
-**Status:** design, not built. This specifies "Option C" — a template-ID registry that
-lets a stored `text` field survive snapshot/restore as a *live* template, matching I7.
-It supersedes the "Option A" stopgap (skip/preserve text fields), whose limits are
-recorded at the end.
+**Status:** **Phase 1 built (2026-07-01)**; Phase 2 (`self`-capture) not yet. This
+specifies "Option C" — a template-ID registry that lets a stored `text` field survive
+snapshot/restore as a *live* template, matching I7. It supersedes the "Option A" stopgap
+(skip/preserve text fields), whose limits are recorded at the end.
+
+**Phase 1 as built.** Emitter (`src/lantern/emitter.js`): each no-capture `TemplateLiteral`
+gets an id (`templateIdCounter`); its factory is collected into a `registerTemplate(...)`
+batch spliced in at module top (before construction); the use site emits
+`instantiateTemplate(id)`. A template that captures a lexical (`templatePartsCaptureLexical`
+/ `exprCapturesLexical` — conservative: anything not provably capture-free is treated as a
+capture) is emitted inline as before. Runtime (`src/lamplighter/index.js`):
+`templateRegistry` + `registerTemplate`/`instantiateTemplate` (brands the text with
+`__tmplId`); `encodeValue` emits `{$tmpl:id}` for a branded text (else freezes);
+`decodeValue` rebuilds via `instantiateTemplate`. Regression golden `textlive1` (undo *and*
+save/restore stay live). Fixes `bump.lamp` and the `[FOO]` reassignment.
 
 ## Problem
 

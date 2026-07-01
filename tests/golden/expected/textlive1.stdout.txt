@@ -1,0 +1,39 @@
+hall
+wall: reveal=0.
+
+> bump
+reveal is now 1.
+
+> look
+hall
+wall: reveal=1.
+
+> undo
+[Previous turn undone.]
+
+> bump
+reveal is now 2.
+
+> look
+hall
+wall: reveal=2.
+
+> save
+Name for saved game: s
+Game saved.
+
+> bump
+reveal is now 3.
+
+> restore
+Name of saved game: s
+Game restored.
+
+> bump
+reveal is now 3.
+
+> look
+hall
+wall: reveal=3.
+
+> quit

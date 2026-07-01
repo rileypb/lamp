@@ -351,25 +351,22 @@ core edit is contained. Names (default): `contains`/`place`/`contained`, keyword
   around such evaluations; the site-advance helpers (`variationAdvance`/`variationPick`, the
   first-time counter) read state but skip the mutation when set. Surfaced by SHOWME; deferred.
   See `devdocs/text.md` ("read-only render flag").
-- **Snapshot freezes live templates → stale after undo/save/restore.** `captureState`
-  freezes a `text`-thunk field by *rendering it to a string* (`encodeValue`), so after a
-  snapshot-restore the field is a dead scalar that no longer tracks the state it read. This
-  is **not** an undo-specific bug — undo, save, and restore share the one codepath, so all
-  three exhibit it; and it needs **no** context-dependent sugar (a plain `[global]`
-  interpolation shows it). Minimal repro — a room `description "...reveal=[reveal]."` plus a
-  `bump` action doing `reveal = reveal + 1`, then `look / bump / look / undo / bump / look`
-  ends stale; swapping `save`+`restore` for `undo` is identical. (A copy lives at `bump.lamp`
-  in the repo root during this investigation.) A fix must repair undo **and** save/restore together (freezing is forced for
-  disk saves — a closure can't be JSON'd — so an in-memory-only fix would make undo diverge
-  from restore) and has two honest shapes: **(1)** serialize the template's *structure* so
-  restore rebuilds the thunk (hard — its interpolations are closures), or **(2)** stop
-  treating a template-valued field as *state* (it's a construction-time rendering rule; the
-  state is what it reads — the Inform "re-evaluate on print" model), which collides with the
-  delete-and-reassign restore path. Related to the read-only-render item above (both stem
-  from rendering-at-capture). Full write-up: `devdocs/state.md` → value algebra, "Known
-  limitation — snapshot freezes live templates". **Independent of RESTART** (item 3), which
-  via reload never snapshots. **Where:** `src/lamplighter/index.js`
-  (`encodeValue`/`decodeValue`/`captureState`/`restoreState`).
+- ~~**Snapshot freezes live templates → stale after undo/save/restore.**~~ **Phase 1 DONE
+  (2026-07-01).** `captureState`/`encodeValue` used to freeze a `text`-thunk field by
+  rendering it to a string, so after a snapshot-restore the field was a dead scalar that no
+  longer tracked the state it read — undo, save, and restore all exhibited it (repro
+  `bump.lamp`; not undo-specific, no context-dependent sugar needed). **Fixed** by
+  persistable templates (`devdocs/text-persistence.md`): the emitter gives each no-capture
+  template literal a build-stable id + module-load `registerTemplate`, a stored `text`
+  serializes as `{$tmpl:id}`, and restore rebuilds a **live** thunk (`instantiateTemplate`).
+  Covers all construction descriptions + rule-assigned templates reading only globals (the
+  `[FOO]` reassignment). Regression golden `textlive1` (undo *and* save/restore). Also
+  removed the render-at-capture cursor side-effect (the read-only-render item, save half).
+  **Remaining — Phase 2 / fallbacks:** templates that capture `self` need Phase 2
+  (free-variable + `{$ref}` env plumbing); templates capturing a `let` local / action
+  context, or composed at runtime (`a + b`), still freeze (documented — what I7 also can't
+  persist). **Where:** `src/lantern/emitter.js` (id assignment, `templatePartsCaptureLexical`),
+  `src/lamplighter/index.js` (`templateRegistry`, `encodeValue`/`decodeValue`).
 - **advent debug commands (Inform-style) — in progress** (`lib/advent/debug.lamp`).
   Built on `out_of_world` + a new **`world_scope`** action modifier (object slots resolve
   against every `physical` object, not just scope — parser/ast/emitter + runtime

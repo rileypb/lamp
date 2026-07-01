@@ -1,0 +1,13 @@
+bump
+look
+undo
+bump
+look
+save
+s
+bump
+restore
+s
+bump
+look
+quit
