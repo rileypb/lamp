@@ -215,19 +215,23 @@ Built in `src/lighthouse/web/` as the bundle's template assets:
 
 ## Status
 
-Web v1 is built, smoke-tested (`npm run test:lighthouse`), and **verified live in
-a browser**: a bundle built with `buildWeb` registers the service worker, becomes
-cross-origin isolated, and plays through the full loop (worker blocks on
-`Atomics.wait`, shell fills the SAB on submit). Minor shell/UX details remain to
-polish. The remaining automation gap is a *headless* browser test for CI; the
-manual run is confirmed.
+Web v1 is built, smoke-tested, **verified live in a browser** (service worker
+registers, page becomes cross-origin isolated, the full loop plays), and — since
+2026-07-01 — **end-to-end tested headlessly in CI** with no browser dependency:
+`npm run test:lighthouse` drives the built (minified) worker bundle through the
+real wire protocol via `tests/lighthouse/drive-bundle.js`, which hosts
+`game.worker.js` in a Node `worker_thread` behind a `self` shim (Node supplies
+`SharedArrayBuffer`/`Atomics`/`TextDecoder`) and plays the shell's side: SAB
+input fill, `save_prompt`/`restore_prompt` modal replies, `save_write`/
+`save_read` storage, and `transcript_*` accumulation. The e2e test covers play,
+SAVE/RESTORE through the picker protocol, transcript capture (with the
+closing-message-is-screen-only contract), RESTART + confirmation, and a clean
+`done`. The one layer no headless check reaches is `shell.js`'s own DOM behavior
+(modals, scrolling, [more] paging, the transcript download click) — that stays a
+manual browser pass.
 
 ## Open Questions
 
-- **Headless browser test for CI.** The live run is verified manually; the Node
-  smoke test still only validates the artifact. A Playwright/Puppeteer test would
-  automate the live loop but adds a heavy dependency — decide whether it is worth
-  it for CI.
 - **Shell/UX polish.** Minor details observed in the first live run remain to be
   pinned down and fixed (to be enumerated).
 - **`lamp build` CLI surface.** Currently `npm run build:web -- <game.lamp>

@@ -261,21 +261,20 @@ guard needs that world contract.
 
 ## Optional / hardening
 
-### 5. Lighthouse web bundle — headless CI test (optional; no heavy dep needed)
-Web v1 is **built, verified live, shell-polished, and hardened for distribution**
-(string encoding + esbuild minify, both covered by `npm run test:lighthouse` /
-`npm run test:encode`). **Remaining (optional):** a *headless* test that drives the
-live loop (worker `Atomics.wait` + shell SAB fill). **Proven feasible with zero new
-deps (2026-07-01):** Node `worker_threads` has everything the bundle needs
-(`SharedArrayBuffer`/`Atomics`/`TextDecoder`) — a throwaway harness hosted
-`game.worker.js` behind a `self` shim and drove the phobos release bundle
-end-to-end through the real browser-worker protocol (readline/prompt SAB fill,
-`save_prompt`/`restore_prompt` modal replies, `save_write`/`save_read`, `done`),
-verifying RESTART + confirmation, SAVE/RESTORE via the picker path, and UNDO. To
-close the gap for CI: promote that harness into `tests/lighthouse` (it stands in
-for the shell, so shell.js DOM logic itself stays manual — the only remaining
-uncovered piece). Also still open: whether to default `--encode-strings` on for
-distribution builds. **Where:** `src/lighthouse/`, `tests/lighthouse/`.
+### 5. Lighthouse web bundle — headless e2e test DONE (2026-07-01, zero new deps)
+Web v1 is **built, verified live, shell-polished, hardened for distribution, and
+now end-to-end tested headlessly in CI**. `tests/lighthouse/drive-bundle.js` hosts
+the built `game.worker.js` in a Node `worker_thread` behind a `self` shim (Node has
+`SharedArrayBuffer`/`Atomics`/`TextDecoder` — no Playwright/Puppeteer needed) and
+plays the shell's side of the wire protocol; `npm run test:lighthouse` drives the
+**minified** cloak bundle through play, SAVE/RESTORE via the `save_prompt`/
+`restore_prompt` picker protocol, transcript capture (closing message screen-only),
+RESTART + confirmation (intro must print twice), undo-cleared-after-restore, and a
+clean `done`. The driver fails fast on worker error / timeout / script-ran-dry.
+**Only remaining uncovered layer:** `shell.js`'s own DOM behavior (modals,
+scrolling, [more] paging, the transcript download click) — manual browser pass.
+Still open: whether to default `--encode-strings` on for distribution builds.
+**Where:** `tests/lighthouse/{run-lighthouse,drive-bundle}.js`.
 
 ### 6. Malformed-world startup check (optional hardening)
 Carryover from arch issue C. When the parser is used, assert at startup that a
