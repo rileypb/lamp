@@ -99,25 +99,34 @@ Default output directory is `dist/<game-name>/`.
 
 ## Continuous deployment (GitHub Pages)
 
-`.github/workflows/deploy-pages.yml` builds the Cloak of Darkness samples and
-publishes them to GitHub Pages on every push to `main` (and on manual
-`workflow_dispatch`). GitHub serves one Pages site per repo, so **multiple games
-ship in a single deployment as subdirectories of one artifact** rather than as
-separate deployments. The workflow builds each game into its own subdirectory of
-`dist/` — `sample/cloak.lamp` → `dist/cloak` (served at `<pages>/cloak/`) and
-`sample/cloak_fr.lamp` → `dist/cloak_fr` (`<pages>/cloak_fr/`) — writes a small
-`dist/index.html` landing page linking to both, then uploads the whole `dist/`
-via `actions/upload-pages-artifact` and publishes it with `actions/deploy-pages`.
-Both builds pass `--encode-strings` (the published build hides prose/spoilers from
-view-source). This works because a bundle uses only **relative** URLs and
-registers its service worker at `./sw.js`, so its scope is its own
-subdirectory — each game gets isolation headers within its subpath and the two
-service workers don't collide. To add another game, add a build step into a new
-`dist/<name>` and a link on the landing page. No server header configuration is
-needed: each bundle's service worker synthesizes the cross-origin-isolation
-headers (see below), so `SharedArrayBuffer` is available on plain Pages. Pages
-must be enabled for the repo with **Build and deployment → Source: GitHub
-Actions**.
+`.github/workflows/deploy-pages.yml` publishes the sample games to GitHub Pages
+on every push to `main` (and on manual `workflow_dispatch`). GitHub serves one
+Pages site per repo, so **multiple games ship in a single deployment as
+subdirectories of one artifact** rather than as separate deployments. Two
+publication policies coexist:
+
+- **Rebuilt from source each push** (the Cloak samples): `sample/cloak.lamp` →
+  `dist/cloak` (served at `<pages>/cloak/`) and `sample/cloak_fr.lamp` →
+  `dist/cloak_fr` (`<pages>/cloak_fr/`), both with `--encode-strings`. This also
+  doubles as a live check that Lighthouse still builds on `main`.
+- **Pre-built, committed bundle** (Phobos): the workflow **copies**
+  `sample/phobos/web/` → `dist/phobos` without rebuilding, so ongoing Lamp
+  changes on `main` can never break the published game — Phobos intentionally
+  trails Lamp revisions. To update it, run **`npm run build:phobos`** (builds
+  `sample/phobos/phobos.lamp` → `sample/phobos/web` with `--encode-strings`,
+  release mode) and commit the bundle.
+
+The workflow then writes a small `dist/index.html` landing page linking to all
+games and uploads the whole `dist/` via `actions/upload-pages-artifact` /
+`actions/deploy-pages`. This works because a bundle uses only **relative** URLs
+and registers its service worker at `./sw.js`, so its scope is its own
+subdirectory — each game gets isolation headers within its subpath and the
+service workers don't collide. To add another game, add a build (or copy) step
+into a new `dist/<name>` and a link on the landing page. No server header
+configuration is needed: each bundle's service worker synthesizes the
+cross-origin-isolation headers (see below), so `SharedArrayBuffer` is available
+on plain Pages. Pages must be enabled for the repo with **Build and deployment →
+Source: GitHub Actions**.
 
 ## String encoding (`--encode-strings`)
 

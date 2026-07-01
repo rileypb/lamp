@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Phobos by Phil Riley</title>
+    <link rel="stylesheet" href="./shell.css">
+    <script>
+        // Register the cross-origin-isolation service worker before the shell
+        // runs. On first visit the page loads without the isolation headers (the
+        // worker controls the page only after it activates), so reload once the
+        // worker takes control; the reloaded page loads isolated and the shell's
+        // SharedArrayBuffer succeeds. If already isolated, do nothing. See sw.js.
+        (function () {
+            if (window.crossOriginIsolated) return;
+            if (!window.isSecureContext || !("serviceWorker" in navigator)) return;
+            navigator.serviceWorker.addEventListener("controllerchange", function () {
+                window.location.reload();
+            });
+            navigator.serviceWorker.register("./sw.js").then(function (registration) {
+                if (registration.active && !navigator.serviceWorker.controller) {
+                    window.location.reload();
+                }
+            }).catch(function () {
+                // No service worker means no isolation; the shell shows a notice.
+            });
+        })();
+    </script>
+</head>
+<body>
+    <!-- Host shell: renders worker output as text nodes, captures one line of
+         input at a time, and brokers it to the game worker. Contains no game
+         logic. See devdocs/sandbox.md and devdocs/lighthouse.md. -->
+    <main id="screen">
+        <!-- Traditional status line: room name (left) and turn count (right) in a
+             fixed-width reverse-video bar. Content comes from the runtime via the
+             `status` message; hidden until the first update. See devdocs/windows.md. -->
+        <div id="status-bar" role="status" aria-live="off" hidden><span
+            id="status-left"></span><span id="status-right"></span></div>
+        <!-- The input lives at the tail of the transcript; output is inserted
+             before it, so the input always sits inline right after the last
+             output (no separate bottom-pinned prompt). -->
+        <div id="transcript" aria-live="polite"><input id="input-line" type="text"
+            aria-label="Enter a command" autocomplete="off" autocapitalize="off"
+            autocorrect="off" spellcheck="false" disabled></div>
+        <!-- "[more]" pager: shown when a turn's output overflows the transcript
+             viewport. A flex row below the transcript (so it shrinks the scroll area
+             rather than covering text); any key or a click reveals the next page. See
+             devdocs/windows.md. -->
+        <div id="more-bar" role="button" tabindex="0" aria-label="Show more output"
+            hidden>[more]</div>
+    </main>
+    <!-- The service worker that synthesizes COOP/COEP is added in step (d). Until
+         then the page is not cross-origin isolated and the shell shows a notice
+         instead of constructing a SharedArrayBuffer. -->
+    <script src="./shell.js"></script>
+</body>
+</html>

@@ -1,0 +1,275 @@
+/* Host shell styling. Deliberately minimal: a scrolling transcript over a single
+   input line. Prose and the input field use a proportional system font (modern
+   style); fixed-width is a per-span style (.style-fixed), not the default — that is
+   the only place columns align. The shell renders game output as text nodes into
+   #transcript (white-space preserved so intentional spacing survives); it never
+   sets innerHTML from game text. */
+
+:root {
+    --bg: #1a1a1a;
+    --fg: #e6e6e6;
+    --dim: #8a8a8a;
+    --accent: #cda434;
+}
+
+* {
+    box-sizing: border-box;
+}
+
+html, body {
+    margin: 0;
+    height: 100%;
+    background: var(--bg);
+    color: var(--fg);
+    font: 16px/1.5 system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+}
+
+#screen {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    max-width: 80ch;
+    margin: 0 auto;
+    padding: 1rem;
+}
+
+#transcript {
+    flex: 1 1 auto;
+    overflow-y: auto;
+    white-space: pre-wrap;
+    word-break: break-word;
+}
+
+/* Traditional status line: a fixed-width (monospace) bar with reverse-video colors
+   (foreground/background swapped from the main area). Content is two segments the
+   runtime supplies; flexbox pins the left segment flush-left and the right segment
+   flush-right, so the shell handles justification without knowing column counts. */
+#status-bar {
+    flex: 0 0 auto;
+    display: flex;
+    justify-content: space-between;
+    gap: 1ch;
+    margin-bottom: 0.5rem;
+    padding: 0.1rem 0.5rem;
+    background: var(--fg);
+    color: var(--bg);
+    font-family: "SFMono-Regular", "Consolas", "Liberation Mono", Menlo, monospace;
+    white-space: pre;
+    overflow: hidden;
+}
+#status-bar[hidden] {
+    display: none;
+}
+#status-left {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+#status-right {
+    flex: 0 0 auto;
+    white-space: nowrap;
+}
+
+/* "[more]" pager bar: a reverse-video, full-width row below the transcript, shown
+   only while paused. Being a flex row (not an overlay) it shrinks the scroll area, so
+   it never covers transcript text. Any key or a click advances a page. */
+#more-bar {
+    flex: 0 0 auto;
+    margin-top: 0.5rem;
+    padding: 0.1rem 0.5rem;
+    background: var(--fg);
+    color: var(--bg);
+    font-family: "SFMono-Regular", "Consolas", "Liberation Mono", Menlo, monospace;
+    text-align: center;
+    cursor: pointer;
+    user-select: none;
+}
+#more-bar[hidden] {
+    display: none;
+}
+
+.prompt-text {
+    color: var(--accent);
+}
+
+.player-echo {
+    color: var(--accent);
+}
+
+.shell-notice {
+    color: var(--dim);
+    font-style: italic;
+}
+
+.shell-error {
+    color: #e06c5a;
+}
+
+/* Type styles (text.md I3). Prose is proportional, so .style-fixed is the monospace
+   island — the one place column/indent alignment holds (combined with the inherited
+   pre-wrap whitespace). A style the shell doesn't define renders plain
+   (fail-silently). */
+.style-bold {
+    font-weight: bold;
+}
+
+.style-italic {
+    font-style: italic;
+}
+
+.style-fixed {
+    font-family: "SFMono-Regular", "Consolas", "Liberation Mono", Menlo, monospace;
+    white-space: pre-wrap;
+}
+
+/* Save / restore modals (host-rendered save UX; see devdocs/sandbox.md). The
+   dialog is built by shell.js, not present in index.html. */
+.modal-overlay {
+    position: fixed;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(0, 0, 0, 0.55);
+    z-index: 10;
+}
+
+.modal-dialog {
+    width: min(30rem, 92vw);
+    background: #242424;
+    border: 1px solid #3a3a3a;
+    border-radius: 8px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+    padding: 1.25rem;
+}
+
+.modal-dialog h2 {
+    margin: 0 0 1rem;
+    font-size: 1.05rem;
+    font-weight: 600;
+}
+
+.modal-field {
+    width: 100%;
+    background: #1c1c1c;
+    border: 1px solid #3a3a3a;
+    border-radius: 5px;
+    color: var(--accent);
+    caret-color: var(--accent);
+    font: inherit;
+    padding: 0.5rem 0.65rem;
+    outline: none;
+}
+.modal-field:focus {
+    border-color: var(--accent);
+}
+
+.modal-list-label {
+    color: var(--dim);
+    font-size: 0.85rem;
+    margin: 1rem 0 0.4rem;
+}
+
+.modal-slots {
+    border: 1px solid #3a3a3a;
+    border-radius: 5px;
+    max-height: 11rem;
+    overflow-y: auto;
+}
+
+.modal-slot {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.45rem 0.6rem 0.45rem 0.5rem;
+    border-left: 3px solid transparent;
+    cursor: pointer;
+}
+.modal-slot + .modal-slot {
+    border-top: 1px solid #3a3a3a;
+}
+.modal-slot:hover {
+    background: #2a2a2a;
+}
+.modal-slot.selected {
+    background: #2f2a18;
+    border-left-color: var(--accent);
+}
+
+.slot-name {
+    flex: 1 1 auto;
+}
+.slot-meta {
+    color: var(--dim);
+    font-size: 0.82rem;
+    white-space: nowrap;
+}
+.slot-del {
+    visibility: hidden;
+    background: none;
+    border: none;
+    color: var(--dim);
+    cursor: pointer;
+    font-size: 0.95rem;
+    padding: 0 0.2rem;
+}
+.modal-slot:hover .slot-del,
+.modal-slot.selected .slot-del {
+    visibility: visible;
+}
+.slot-del:hover {
+    color: var(--shell-error, #e06c5a);
+}
+
+.modal-empty {
+    color: var(--dim);
+    font-style: italic;
+    padding: 1.25rem 0.25rem;
+    text-align: center;
+}
+
+.modal-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.5rem;
+    margin-top: 1.25rem;
+}
+
+.modal-btn {
+    font: inherit;
+    border-radius: 5px;
+    padding: 0.4rem 1rem;
+    cursor: pointer;
+    border: 1px solid #3a3a3a;
+    background: transparent;
+    color: var(--fg);
+}
+.modal-btn:hover {
+    border-color: var(--dim);
+}
+.modal-btn.primary {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: var(--bg);
+    font-weight: 600;
+}
+.modal-btn.primary:hover {
+    filter: brightness(1.08);
+}
+
+/* Inline so it flows directly after the prompt text on the same line; a generous
+   fixed width keeps long commands on one line (the field scrolls horizontally
+   past it). */
+#input-line {
+    display: inline-block;
+    width: 40ch;
+    max-width: 100%;
+    background: transparent;
+    border: none;
+    color: var(--accent);
+    caret-color: var(--accent);
+    font: inherit;
+    outline: none;
+    padding: 0;
+    vertical-align: baseline;
+}

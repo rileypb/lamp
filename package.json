@@ -10,6 +10,7 @@
     "exe": "node src/lantern/exe.js",
     "play": "node src/lamplighter/play.js",
     "build:web": "node src/lighthouse/build.js",
+    "build:phobos": "node src/lighthouse/build.js sample/phobos/phobos.lamp sample/phobos/web --encode-strings",
     "test": "node tests/golden/run-golden.js",
     "test:sandbox": "node tests/sandbox/run-sandbox.js",
     "test:lighthouse": "node tests/lighthouse/run-lighthouse.js",

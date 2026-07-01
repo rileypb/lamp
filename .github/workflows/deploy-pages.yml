@@ -1,11 +1,15 @@
-name: Deploy Cloak of Darkness to GitHub Pages
+name: Deploy Lamp games to GitHub Pages
 
-# Builds the Cloak of Darkness samples with Lighthouse and publishes them to
-# GitHub Pages. GitHub serves one Pages site per repo, so both games ship in one
-# deployment as subdirectories of a single artifact:
-#   <pages>/cloak/      — English (sample/cloak.lamp)
-#   <pages>/cloak_fr/   — French  (sample/cloak_fr.lamp, locale "fr-FR")
-#   <pages>/            — a small landing page linking to both
+# Publishes the sample games to GitHub Pages. GitHub serves one Pages site per
+# repo, so all games ship in one deployment as subdirectories of a single artifact:
+#   <pages>/phobos/     — Phobos (pre-built bundle, committed at sample/phobos/web)
+#   <pages>/cloak/      — English (sample/cloak.lamp, rebuilt from source each push)
+#   <pages>/cloak_fr/   — French  (sample/cloak_fr.lamp, rebuilt from source each push)
+#   <pages>/            — a small landing page linking to all
+# The Cloak samples are rebuilt from source on every push, doubling as a live check
+# that Lighthouse still builds. Phobos is deliberately NOT rebuilt here: it deploys
+# the committed bundle so ongoing Lamp changes can't break the published game — to
+# update it, run `npm run build:phobos` and commit sample/phobos/web.
 # The bundles use only relative URLs and each registers its own service worker
 # (scoped to its subdirectory) to synthesize the COOP/COEP isolation headers, so
 # they run on plain Pages with no server config. See devdocs/lighthouse.md.
@@ -45,6 +49,9 @@ jobs:
       - name: Build the French bundle (cloak_fr)
         run: node src/lighthouse/build.js sample/cloak_fr.lamp dist/cloak_fr --encode-strings
 
+      - name: Copy the pre-built Phobos bundle
+        run: cp -R sample/phobos/web dist/phobos
+
       - name: Write the landing page
         run: |
           cat > dist/index.html <<'HTML'
@@ -53,7 +60,7 @@ jobs:
           <head>
             <meta charset="utf-8">
             <meta name="viewport" content="width=device-width, initial-scale=1">
-            <title>Cloak of Darkness — Lamp</title>
+            <title>Lamp — sample games</title>
             <style>
               body { font: 16px/1.5 system-ui, sans-serif; max-width: 32rem;
                      margin: 4rem auto; padding: 0 1rem; }
@@ -64,10 +71,11 @@ jobs:
             </style>
           </head>
           <body>
-            <h1>Cloak of Darkness — built with Lamp</h1>
+            <h1>Games built with Lamp</h1>
             <ul>
-              <li><a href="./cloak/">Play in English</a></li>
-              <li><a href="./cloak_fr/">Jouer en français</a></li>
+              <li><a href="./phobos/">Phobos - A Galaxy Jones Story</a></li>
+              <li><a href="./cloak/">Cloak of Darkness</a></li>
+              <li><a href="./cloak_fr/">Manteau de l'obscurité (en français)</a></li>
             </ul>
           </body>
           </html>
