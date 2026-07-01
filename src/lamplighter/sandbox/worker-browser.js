@@ -141,6 +141,25 @@ function installSaveChannel(saveBuffer) {
             return blockForReply();
         },
     });
+
+    // Transcript output shares the save reply buffer, exactly as in worker.js: `start`
+    // blocks for the host's "ok"/error status (so SCRIPT can report failure), while
+    // `write`/`stop` are fire-and-forget — appends must not stall each printed line, and
+    // message order preserves the transcript's sequence. The shell accumulates the text
+    // and offers it as a .txt download when the transcript closes. See devdocs/sandbox.md.
+    lamplighter.setTranscriptChannel({
+        start(key) {
+            Atomics.store(ctrl, 0, 0);
+            self.postMessage({ type: "transcript_start", key });
+            return blockForReply();
+        },
+        write(text) {
+            self.postMessage({ type: "transcript_write", data: text });
+        },
+        stop() {
+            self.postMessage({ type: "transcript_stop" });
+        },
+    });
 }
 
 // The build step (Lighthouse) wraps the body-only game module as a factory

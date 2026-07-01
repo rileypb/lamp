@@ -350,9 +350,14 @@ core edit is contained. Names (default): `contains`/`place`/`contained`, keyword
   fire-and-forget `write`/`stop` (`worker.js`/`host.js`; CLI writes `<key>.txt` under
   `LAMP_TRANSCRIPT_DIR`). Unit tests `tests/transcript` (the primitives + capture mechanism),
   e2e golden `transcript1`; docs in `devdocs/state.md` ("Transcript (scripting)") +
-  `devdocs/sandbox.md` ("Transcript broker protocol"). **Follow-ups:** browser/Electron
-  transcript UX (today's browser worker installs no channel, so `transcript_available` is
-  false and SCRIPT reports unavailable — same gap as the browser save picker). **Applied
+  `devdocs/sandbox.md` ("Transcript broker protocol"). **Browser transcript DONE
+  (2026-07-01):** `worker-browser.js` wires the same channel (save-buffer sharing, same
+  broker messages) and the shell accumulates the mirrored text in memory, triggering a
+  `<name>.txt` **download** when the transcript closes (SCRIPT OFF, or game end with one
+  open — the analogue of the CLI's close-on-exit; a page closed mid-transcript loses it).
+  Verified end-to-end by driving the phobos release bundle through the worker protocol
+  (the item-5 harness); static wiring assertions in `tests/lighthouse`. Remaining:
+  Electron, if that host ever lands. **Applied
   the same split to SAVE/RESTORE *and* UNDO (2026-06-30; see items 1–2), retiring the
   native meta-verb dispatch table (`outOfWorldCommands`/`registerOutOfWorld`) entirely — so
   all player commands now resolve through one grammar path.**

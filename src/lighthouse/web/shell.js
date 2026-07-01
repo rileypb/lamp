@@ -200,6 +200,29 @@
         Atomics.notify(sctrl, 0);
     }
 
+    // Transcript (SCRIPT/TRANSCRIPT): the browser has no working directory to drop a
+    // file into, so the shell accumulates the mirrored text in memory and offers it as
+    // a .txt download when the transcript closes (SCRIPT OFF, or the game ending with
+    // one still open — the parity of the CLI host closing its stream on worker exit).
+    // A page closed mid-transcript loses the accumulation; documented limitation.
+    let transcriptName = null;
+    let transcriptText = "";
+
+    function downloadTranscript() {
+        if (transcriptName === null) return;
+        const blob = new Blob([transcriptText], { type: "text/plain" });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement("a");
+        link.href = url;
+        link.download = `${transcriptName}.txt`;
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+        URL.revokeObjectURL(url);
+        transcriptName = null;
+        transcriptText = "";
+    }
+
     // Enumerate this game's saved slots from the metadata sidecars (keys
     // "<prefix>…#meta"), newest first. Reads only the unobfuscated meta, never the
     // blobs. Each row carries the blob storage key (the sidecar key minus the prefix
@@ -271,6 +294,17 @@
             case "restore_prompt":
                 showRestoreModal(msg.prefix);
                 break;
+            case "transcript_start":
+                transcriptName = msg.key;
+                transcriptText = "";
+                replySave("ok");
+                break;
+            case "transcript_write":
+                if (transcriptName !== null) transcriptText += msg.data;
+                break;
+            case "transcript_stop":
+                downloadTranscript();
+                break;
             case "done":
                 endGame(null);
                 break;
@@ -331,6 +365,9 @@
     });
 
     function endGame(errorMessage) {
+        // A transcript still open when the game ends is delivered rather than lost —
+        // the same closure the CLI host does on worker exit.
+        downloadTranscript();
         // Drop any [more] pause so the final message is shown, not hidden below a fold.
         paged = false;
         promptDeferred = false;

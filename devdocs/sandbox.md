@@ -239,8 +239,11 @@ sequence. `key` is the player's chosen name, sanitized — **not** game-namespac
 save key (a transcript is a human-named artifact, not a slot in a shared store). The CLI
 host writes `<key>.txt` under `LAMP_TRANSCRIPT_DIR` (default: the current working
 directory, where a terminal player can find it) and closes any open stream on worker
-exit. A host that installs no transcript channel (e.g. the current browser worker)
-leaves `SCRIPT` reporting it is unavailable.
+exit. The **browser worker** wires the same channel (`worker-browser.js`, same buffer
+sharing); the shell has no working directory, so it accumulates the chunks in memory and
+triggers a `<key>.txt` **download** when the transcript closes — on `transcript_stop`, or
+on `done`/`error` with a transcript still open (the analogue of the CLI's close-on-exit).
+A host that installs no transcript channel leaves `SCRIPT` reporting it is unavailable.
 
 ## Host Environments
 

@@ -401,8 +401,16 @@ transcript rather than disrupting play.
 seam), `lib/sys/{functions,index}.{lamp,js}` (native bridge), `lib/advent/transcript.lamp`
 (verbs + wording), `src/lamplighter/sandbox/{worker,host}.js` (broker + file writes). The
 wire protocol is in `devdocs/sandbox.md` → "Transcript broker protocol". A host that
-installs no transcript channel (today's browser worker) makes `transcript_available`
-false, so SCRIPT reports it unavailable — a follow-up, like the browser save UX.
+installs no transcript channel makes `transcript_available` false, so SCRIPT reports it
+unavailable.
+
+**Browser transcript (download-on-close).** The browser worker
+(`sandbox/worker-browser.js`) wires the same channel over the save reply buffer, exactly
+as the CLI worker does; the shell (`src/lighthouse/web/shell.js`) has no working directory
+to drop a file into, so it accumulates the mirrored text in memory and triggers a
+`<name>.txt` **download** when the transcript closes — on SCRIPT OFF, or on the game
+ending with one still open (the parity of the CLI host closing its stream on worker
+exit). A page closed mid-transcript loses the accumulation; documented limitation.
 
 ## RESTART (Option C — in-process pre-startup baseline)
 

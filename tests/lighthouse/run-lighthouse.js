@@ -81,6 +81,21 @@ try {
         assert.ok(shell.includes("saveBuffer"), "shell save buffer missing");
     });
 
+    test("transcript: worker wires the channel and the shell accumulates + downloads", () => {
+        const worker = fs.readFileSync(path.join(outDir, "game.worker.js"), "utf8");
+        assert.ok(worker.includes("setTranscriptChannel"), "worker transcript channel wiring missing");
+        assert.ok(
+            worker.includes("transcript_start") && worker.includes("transcript_write") && worker.includes("transcript_stop"),
+            "transcript broker messages missing",
+        );
+        const shell = fs.readFileSync(path.join(outDir, "shell.js"), "utf8");
+        assert.ok(
+            shell.includes('case "transcript_start"') && shell.includes('case "transcript_write"') && shell.includes('case "transcript_stop"'),
+            "shell transcript handlers missing",
+        );
+        assert.ok(shell.includes("downloadTranscript"), "shell transcript download missing");
+    });
+
     test("status line: worker forwards it and the shell renders it", () => {
         const worker = fs.readFileSync(path.join(outDir, "game.worker.js"), "utf8");
         assert.ok(worker.includes("setStatusChannel") && worker.includes('"status"'),
