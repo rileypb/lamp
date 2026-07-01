@@ -253,14 +253,21 @@ guard needs that world contract.
 
 ## Optional / hardening
 
-### 5. Lighthouse web bundle — headless CI test (optional)
+### 5. Lighthouse web bundle — headless CI test (optional; no heavy dep needed)
 Web v1 is **built, verified live, shell-polished, and hardened for distribution**
 (string encoding + esbuild minify, both covered by `npm run test:lighthouse` /
-`npm run test:encode`). **Remaining (optional):** a *headless* browser test that
-drives the live loop (worker `Atomics.wait` + shell SAB fill) — closes the last
-automation gap but needs a heavy Playwright/Puppeteer dep; decide if worth it for
-CI. Also still open: whether to default `--encode-strings` on for distribution
-builds. **Where:** `src/lighthouse/`.
+`npm run test:encode`). **Remaining (optional):** a *headless* test that drives the
+live loop (worker `Atomics.wait` + shell SAB fill). **Proven feasible with zero new
+deps (2026-07-01):** Node `worker_threads` has everything the bundle needs
+(`SharedArrayBuffer`/`Atomics`/`TextDecoder`) — a throwaway harness hosted
+`game.worker.js` behind a `self` shim and drove the phobos release bundle
+end-to-end through the real browser-worker protocol (readline/prompt SAB fill,
+`save_prompt`/`restore_prompt` modal replies, `save_write`/`save_read`, `done`),
+verifying RESTART + confirmation, SAVE/RESTORE via the picker path, and UNDO. To
+close the gap for CI: promote that harness into `tests/lighthouse` (it stands in
+for the shell, so shell.js DOM logic itself stays manual — the only remaining
+uncovered piece). Also still open: whether to default `--encode-strings` on for
+distribution builds. **Where:** `src/lighthouse/`, `tests/lighthouse/`.
 
 ### 6. Malformed-world startup check (optional hardening)
 Carryover from arch issue C. When the parser is used, assert at startup that a
