@@ -324,7 +324,7 @@ descriptions can't be ported verbatim. (Durable note also in agent memory
 
 | I7 element (story.ni) | What it does | Status |
 |---|---|---|
-| story title / author (L1, 42–43) | bibliographic | **Done** — `game Phobos` |
+| story title / author (L1, 42–43) | bibliographic | **Done** — `game Phobos` + `title "Phobos - A Galaxy Jones Story"` (banner display title) |
 | When play begins (L59–80) | intro narration | **Done** — `rule startup_rules` |
 | Passage End | start room | **Done** — `base.lamp` |
 | `about` verb (L107–110) | one-line blurb | **Done** — `action about` (see Deferred: out-of-world) |

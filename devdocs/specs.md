@@ -1830,15 +1830,21 @@ The advent `on startup` handler prints a title banner before any `startup_rules`
 contributions, reading it from the game object's fields:
 
 ```
-<game name>
+<game.title, or the game identifier when title is blank>
 <game.tagline> by <game.author>
 Version <game.version> <game.release>
 ```
 
 The banner is **gated on `tagline`**: a game opts in by setting it; games that
 leave it blank (the `""` default) get no banner. The base `game` type
-(`lib/sys/types.lamp`) defaults the banner fields — `tagline = ""`,
+(`lib/sys/types.lamp`) defaults the banner fields — `title = ""`, `tagline = ""`,
 `version = 0`, `release = dev` — so a game need only set the ones it cares about.
+
+**`title`** is the display title: a game identifier can't hold spaces, punctuation,
+or accents, so a game whose title needs them (e.g. phobos's
+`title "Phobos - A Galaxy Jones Story"`) sets `title`; blank falls back to the
+identifier. `title` is display-only — save identity still keys on the identifier
+(`gameInfo()` reads `game.name`), so setting a title never invalidates saves.
 
 **Placement.** The banner is a callable **`print_banner()`** (it does the `tagline`
 gate itself, so calling it with no tagline is a no-op). `on startup` auto-prints it

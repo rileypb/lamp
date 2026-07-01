@@ -2,6 +2,10 @@
 
 type game:
 	string author
+	# Display title for the banner. The game object's identifier can't hold spaces,
+	# punctuation, or accents, so a game whose title needs them sets `title`; blank
+	# (the default) falls back to the identifier. See lib/advent/startup.lamp.
+	string title = ""
 	string tagline = ""
 	int version = 0
 	reltype release = dev

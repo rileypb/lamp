@@ -573,9 +573,10 @@ function checkStatements(statements, typeSchema, kindSchema, localTypes, functio
                 throw typeError(stmt.filePath, stmt.lineNumber, `local "${stmt.name}" shadows global "${stmt.name}"`);
             }
             const varType = inferExprType(stmt.expr, typeSchema, kindSchema, localTypes, functionSchema);
-            if (varType) {
-                localTypes.set(stmt.name, varType);
-            }
+            // Register the local even when its type can't be inferred (null), so a later
+            // assignment to it isn't misreported as undeclared; a null type reads as
+            // "unknown" everywhere localTypes is consulted.
+            localTypes.set(stmt.name, varType || null);
         } else if (stmt.kind === "AssignStatement") {
             const head = stmt.targetChain[0];
             if (stmt.targetChain.length === 1 && !localTypes.has(head) && !globalNames.has(coerceName(head))) {
@@ -1034,6 +1035,9 @@ function resolveChainType(chain, typeSchema, kindSchema, localTypes) {
                 currentType = token;
             } else if (localTypes.has(token)) {
                 currentType = localTypes.get(token);
+                // An unknown-typed local (registered by `let` without an inferable type)
+                // can't anchor a field chain — same outcome as before it was registered.
+                if (currentType === null) return null;
             } else {
                 return null;
             }

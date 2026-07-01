@@ -53,8 +53,13 @@ function void update_status_line():
 # game may call this itself (with `auto_banner false`) to place the banner mid-narration.
 function void print_banner():
 	let this_game = game.all.first
+	# The display title when set (identifiers can't hold spaces/punctuation/accents),
+	# else the game object's identifier.
+	let shown = this_game.name
+	if not (this_game.title == ""):
+		shown = this_game.title
 	if not (this_game.tagline == ""):
-		print "[bold][this_game.name][/bold][line break]"
+		print "[bold][shown][/bold][line break]"
 		print "[this_game.tagline]"
 		print banner_by:" by "
 		print "[this_game.author][line break]"

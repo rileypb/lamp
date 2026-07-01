@@ -57,9 +57,9 @@ put_on_not_carrying: "Vous ne portez pas cela."
 put_on_cant: "Vous ne pouvez rien poser là-dessus."
 
 # --- title banner, end-of-story banner, and quit prompt (startup prose) ---
-# The game name in the banner is the identifier ("Manteau de l obscurite"); a
-# proper accented/apostrophed title needs a title field on the game type (not yet
-# available). "Version" is the same word in French, so it is left at its default.
+# The game name in the banner is the identifier ("Manteau de l obscurite") unless the
+# game sets the `title` field (lib/sys/types.lamp), which allows a proper accented/
+# apostrophed title. "Version" is the same word in French, so it is left at its default.
 banner_by: " par "
 story_won: "*** Vous avez gagné ***[line break]"
 story_lost: "*** Vous avez perdu ***[line break]"

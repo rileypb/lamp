@@ -7,6 +7,7 @@ lib phobos
 
 game Phobos:
   author "Phil Riley"
+  title "Phobos - A Galaxy Jones Story"
   tagline "A Looming Disaster"
   version 0
   release dev
