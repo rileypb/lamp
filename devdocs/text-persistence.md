@@ -13,8 +13,12 @@ batch spliced in at module top (before construction); the use site emits
 capture) is emitted inline as before. Runtime (`src/lamplighter/index.js`):
 `templateRegistry` + `registerTemplate`/`instantiateTemplate` (brands the text with
 `__tmplId`); `encodeValue` emits `{$tmpl:id}` for a branded text (else freezes);
-`decodeValue` rebuilds via `instantiateTemplate`. Regression golden `textlive1` (undo *and*
-save/restore stay live). Fixes `bump.lamp` and the `[FOO]` reassignment.
+`decodeValue` rebuilds via `instantiateTemplate`. **Phase 1.5 also built:** a construction
+default may reference a **named instance** (`[clock.hour]`) and still persist, since a named
+instance is a module `const` — gated by `emittingConstructionDefault` so a rule-body `let`
+can't shadow it (`capturesName`). Regression golden `textlive1` covers undo *and*
+save/restore for both a global (`reveal`) and a named-instance (`widget.level`) template.
+Fixes `bump.lamp`, `clock.lamp`, and the `[FOO]` reassignment.
 
 ## Problem
 
@@ -119,16 +123,27 @@ reference `self`; everything else is ID-only.
 
 ### Faithful vs. fallback
 
-| Stored `text` field holds…                             | Handling            | Faithful? |
-| ------------------------------------------------------ | ------------------- | --------- |
-| Construction template (globals/literals; no `self`)    | `{$tmpl:id}`        | ✅ live    |
-| Rule-assigned template reading only globals (`[FOO]`)  | `{$tmpl:id}`        | ✅ live    |
-| Rule-assigned template reading `self` fields           | `{$tmpl:id, env:{self}}` | ✅ live |
-| Template composed at runtime (`textA + textB`, concat) | freeze → string     | ⚠️ frozen |
-| Template capturing a `let` local / action context      | freeze → string     | ⚠️ frozen |
+| Stored `text` field holds…                                      | Handling            | Faithful? |
+| --------------------------------------------------------------- | ------------------- | --------- |
+| Construction template reading globals/literals (`[reveal]`)     | `{$tmpl:id}`        | ✅ live (Phase 1) |
+| Construction template reading a **named instance** (`[clock.hour]`) | `{$tmpl:id}`    | ✅ live (Phase 1.5, built) |
+| Rule-assigned template reading only globals (`[FOO]`)           | `{$tmpl:id}`        | ✅ live (Phase 1) |
+| Rule-assigned template reading `self` fields                    | `{$tmpl:id, env:{self}}` | ⚠️ Phase 2 (not built) |
+| Rule-assigned template reading a **named instance**             | freeze → string     | ⚠️ frozen (shadowing risk — needs scope tracking) |
+| Template composed at runtime (`textA + textB`, concat)          | freeze → string     | ⚠️ frozen |
+| Template capturing a `let` local / action context               | freeze → string     | ⚠️ frozen |
 
-The two fallbacks are exactly the cases **I7 also cannot persist** (runtime-composed text,
-and `[the noun]`-style context that isn't saved state).
+**Phase 1.5 (named instances in construction defaults) is built.** A named instance
+compiles to a module-level `const`, so a construction-default template like
+`description "The clock reads [clock.hour]."` is persistable by id alone — no env needed.
+The emitter only relaxes this **inside a construction default** (`emittingConstructionDefault`
++ `knownObjectNames` in `capturesName`), because a *rule body* could bind a `let` that
+shadows the object name, and the hoisted factory would then silently read the module const
+instead of the local. Safely persisting a rule-body named-instance reference needs the same
+scope tracking as Phase 2.
+
+The remaining fallbacks are essentially what **I7 also cannot persist** (runtime-composed
+text, and `[the noun]`-style context that isn't saved state).
 
 ### Fallbacks in detail
 

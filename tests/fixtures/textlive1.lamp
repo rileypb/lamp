@@ -1,11 +1,17 @@
 lib advent
 
-# Regression: a stored text template (the room description reads the mutable global
-# `reveal`) must stay LIVE across undo AND save/restore — not freeze to a dead string.
-# The freeze bug showed the pre-undo/pre-restore value on the final look; the fix
-# (persistable templates) keeps it tracking the live global. See devdocs/text-persistence.md.
+# Regression: stored text templates must stay LIVE across undo AND save/restore — both a
+# template reading a global (`reveal`) and one reading another named instance's field
+# (`widget.level`, the named-instance branding path). The freeze bug turned them into dead
+# strings showing the pre-undo/pre-restore values; the fix keeps them tracking live state.
+# See devdocs/text-persistence.md.
 
 global int reveal = 0
+
+type gizmo:
+    int level = 0
+
+gizmo widget
 
 action bump:
     syntax:
@@ -14,11 +20,17 @@ action bump:
 do bump:
     reveal = reveal + 1
 
-report bump:
-    print "reveal is now [reveal]."
+# Targets the gizmo (self.target) rather than assigning a bare object name.
+action tick:
+    direct gizmo target
+    syntax:
+        "tick [target]"
+
+do tick:
+    self.target.level = self.target.level + 1
 
 game TextLive:
     start hall
 
 room hall:
-    description "wall: reveal=[reveal]."
+    description "reveal=[reveal] level=[widget.level]."

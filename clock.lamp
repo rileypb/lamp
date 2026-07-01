@@ -1,0 +1,66 @@
+lib advent
+
+# ============================================================================
+# The named-instance gap in persistable templates (Phase 1.5 case).
+# ============================================================================
+#
+# The lab's description reads ANOTHER named object's field — `clock.hour`. A named
+# instance compiles to a module-level `const` (like a global), so this template *could*
+# be persisted as a live reference — but Phase 1's capture predicate conservatively
+# treats any non-global identifier (including `clock`) as a lexical capture, so it emits
+# the template inline and `encodeValue` FREEZES it. After save/restore the lab's
+# description is a dead string that no longer tracks the clock.
+#
+# This is the natural, common case (cross-object references in descriptions: a dial that
+# shows a machine's state, "the guard watches you", etc.). It is NOT the `self`-capture
+# case — see devdocs/text-persistence.md.
+#
+# ----------------------------------------------------------------------------
+# Repro (pipe in, or type):
+#
+#     look
+#     wind clock
+#     look
+#     save
+#     s
+#     wind clock
+#     restore
+#     s
+#     wind clock
+#     look
+#
+# What you SEE (buggy):
+#     > look          The clock reads 3.
+#     > wind clock    You wind it. Now 4.
+#     > look          The clock reads 4.        <- live
+#     > save / s      Game saved.               (description frozen to "reads 4")
+#     > wind clock    You wind it. Now 5.
+#     > restore / s   Game restored.            (hour back to 4; description = frozen string)
+#     > wind clock    You wind it. Now 5.       (hour is now 5)
+#     > look          The clock reads 4.        <- BUG: frozen at 4, clock is 5
+#
+# What the last line SHOULD say: "The clock reads 5."
+# Control (no save/restore): look / wind clock / wind clock / look -> "reads 5." (live)
+# ----------------------------------------------------------------------------
+
+type timepiece:
+    int hour = 3
+
+timepiece clock
+
+action wind:
+    direct timepiece target
+    syntax:
+        "wind [target]"
+
+do wind:
+    self.target.hour = self.target.hour + 1
+
+report wind:
+    print "You wind it. Now [self.target.hour]."
+
+game Clock:
+    start lab
+
+room lab:
+    description "The clock reads [clock.hour]."

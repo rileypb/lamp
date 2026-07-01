@@ -64,20 +64,21 @@ ordinary scalar): still saveable, but a dead string that no longer tracks.
 > `encodeValue` froze *every* `text` field, so undo, save, and restore all turned a live
 > template into a dead string that went stale on the next state change (`bump.lamp` repro:
 > `look / bump / look / undo / bump / look` showed the pre-undo value; `save`+`restore`
-> was identical). Phase 1 of `devdocs/text-persistence.md` fixes this for every template
-> that reads only globals/functions/literals — i.e. **all construction descriptions** (a
-> construction default has no `self`/local scope by design) and rule-assigned templates
-> like `now description is "I said [FOO]."`. Regression: golden `textlive1` (undo *and*
-> save/restore). As a bonus, a persisted template is no longer *rendered* at capture, so it
+> was identical). Phase 1 (+1.5) of `devdocs/text-persistence.md` fixes this for every
+> template that reads globals/functions/literals **or a named instance** (`[clock.hour]`) —
+> i.e. **all construction descriptions** (a construction default has no `self`/local scope by
+> design) and rule-assigned templates like `now description is "I said [FOO]."`. Regression:
+> golden `textlive1` (undo *and* save/restore, global + named-instance). As a bonus, a persisted template is no longer *rendered* at capture, so it
 > no longer advances `[first time]`/`[cycling]` cursors as a side effect (the
 > `devdocs/text.md` "read-only render flag" issue, on the capture path).
 >
 > **Residual fallback (freezes, as before):** a template that captures a lexical binding —
-> `self`, a `let`, or the transient action context — or one composed at runtime (`a + b`).
-> These are exactly what I7 also can't persist. Phase 2 (`text-persistence.md`) adds
-> `self`-capture; the rest stays freeze-and-document. So a *runtime-composed* or
-> *local-capturing* stored template should still use a `freeze`-d string or a plain field
-> the template reads.
+> `self`, a `let`, or the transient action context — a *rule-body* reference to a named
+> instance (safe only in a construction default, where nothing can shadow the name), or one
+> composed at runtime (`a + b`). These are essentially what I7 also can't persist. Phase 2
+> (`text-persistence.md`) adds `self`-capture; the rest stays freeze-and-document. So a
+> *runtime-composed* or *local-capturing* stored template should still use a `freeze`-d
+> string or a plain field the template reads.
 
 **The render context is render-local and never saved.** Slice 3's adaptive sugar
 reads a per-render context (the third-person `subject`, the verb `agreement`

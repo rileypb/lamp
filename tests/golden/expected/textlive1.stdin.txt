@@ -1,13 +1,15 @@
 bump
-look
+tick widget
 undo
-bump
+tick widget
 look
 save
 s
 bump
+tick widget
 restore
 s
 bump
+tick widget
 look
 quit

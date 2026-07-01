@@ -359,13 +359,15 @@ core edit is contained. Names (default): `contains`/`place`/`contained`, keyword
   persistable templates (`devdocs/text-persistence.md`): the emitter gives each no-capture
   template literal a build-stable id + module-load `registerTemplate`, a stored `text`
   serializes as `{$tmpl:id}`, and restore rebuilds a **live** thunk (`instantiateTemplate`).
-  Covers all construction descriptions + rule-assigned templates reading only globals (the
-  `[FOO]` reassignment). Regression golden `textlive1` (undo *and* save/restore). Also
-  removed the render-at-capture cursor side-effect (the read-only-render item, save half).
-  **Remaining — Phase 2 / fallbacks:** templates that capture `self` need Phase 2
-  (free-variable + `{$ref}` env plumbing); templates capturing a `let` local / action
-  context, or composed at runtime (`a + b`), still freeze (documented — what I7 also can't
-  persist). **Where:** `src/lantern/emitter.js` (id assignment, `templatePartsCaptureLexical`),
+  Covers all construction descriptions (reading globals **or named instances** —
+  `[clock.hour]`, Phase 1.5) + rule-assigned templates reading only globals (the `[FOO]`
+  reassignment). Regression golden `textlive1` (undo *and* save/restore, global +
+  named-instance). Also removed the render-at-capture cursor side-effect (the read-only-render
+  item, save half). **Remaining — Phase 2 / fallbacks:** templates that capture `self`, or a
+  *rule-body* named-instance reference, need Phase 2 (free-variable + scope tracking +
+  `{$ref}` env plumbing); templates capturing a `let` local / action context, or composed at
+  runtime (`a + b`), still freeze (documented — what I7 also can't persist). **Where:**
+  `src/lantern/emitter.js` (`templatePartsCaptureLexical`/`capturesName`),
   `src/lamplighter/index.js` (`templateRegistry`, `encodeValue`/`decodeValue`).
 - **advent debug commands (Inform-style) — in progress** (`lib/advent/debug.lamp`).
   Built on `out_of_world` + a new **`world_scope`** action modifier (object slots resolve

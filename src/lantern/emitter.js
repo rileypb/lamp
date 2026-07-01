@@ -109,11 +109,17 @@ let variationSiteCounter = 0;
 // can resolve any id, whether the literal is a construction default or assigned by a rule.
 let templateIdCounter = 0;
 let templateRegistrations = [];
+// True only while emitting an object field default, which (unlike a rule body) has no
+// local/`self` scope — so a bare identifier there can only be a global or a named
+// instance, never a `let` that could shadow one. This lets the capture predicate treat a
+// named-instance reference (a module `const`) as no-capture *safely* in that context.
+let emittingConstructionDefault = false;
 
 function emitProgram(programAst, options = {}) {
     variationSiteCounter = 0;
     templateIdCounter = 0;
     templateRegistrations = [];
+    emittingConstructionDefault = false;
     const nativeJsContents = options.nativeJsContents || [];
     const globalDeclNodes = programAst.nodes.filter((node) => node.kind === "GlobalDecl");
     const globalAssignNodes = programAst.nodes.filter((node) => node.kind === "GlobalAssign");
@@ -620,8 +626,15 @@ function emitValue(valueNode) {
     // A template/freeze default emits as a normal expression. Embedded bare
     // globals self-emit as getGlobal (so they resolve); a default template has no
     // local/`self` scope, so referencing `self` there is unsupported by design.
+    // The flag lets a template's capture predicate persist named-instance references
+    // (safe here — no locals — see devdocs/text-persistence.md).
     if (valueNode.kind === "TemplateLiteral" || valueNode.kind === "FreezeExpr") {
-        return emitExpression(valueNode, new Set());
+        emittingConstructionDefault = true;
+        try {
+            return emitExpression(valueNode, new Set());
+        } finally {
+            emittingConstructionDefault = false;
+        }
     }
     throw new Error(`Unsupported value kind: ${valueNode.kind}`);
 }
@@ -1006,6 +1019,18 @@ function templatePartCapturesLexical(part, globalNames) {
     }
 }
 
+// Whether a bare identifier used as a value head inside a template is a lexical capture
+// (so the template can't be rebuilt from an id at module load). A global reads via
+// getGlobal — name-based, never a capture. A named instance is a module `const`, a safe
+// non-capture *only* in a construction default, where no `let` can shadow the name (a rule
+// body could, and the hoisted factory would then silently read the const). Anything else —
+// a local, `self`, the action context — is a capture. See devdocs/text-persistence.md.
+function capturesName(name, globalNames) {
+    if (globalNames.has(name)) return false;
+    if (emittingConstructionDefault && knownObjectNames.has(name)) return false;
+    return true;
+}
+
 function exprCapturesLexical(expr, globalNames) {
     if (!expr || typeof expr !== "object") return false;
     switch (expr.kind) {
@@ -1018,9 +1043,9 @@ function exprCapturesLexical(expr, globalNames) {
         case "ParenNameExpr":
             return false;
         case "VariableExpr":
-            return !globalNames.has(expr.name);
+            return capturesName(expr.name, globalNames);
         case "PropertyAccess":
-            return !globalNames.has(coerceName(expr.chain[0]));
+            return capturesName(coerceName(expr.chain[0]), globalNames);
         case "MemberAccess":
             return exprCapturesLexical(expr.object, globalNames);
         case "MessageExpr":
