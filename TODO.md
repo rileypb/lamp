@@ -110,6 +110,14 @@ edge behaviours — pressing from another room, examining the KIM mid-hack — a
 **Infra DONE:** golden
 discovery now walks one level into subdirs, so `sample/phobos/phobos.lamp` is a golden (`test
 endgame` → the full winning transcript) — the whole game is a deterministic regression check.
+**Web release DONE (2026-07-01):** Phobos ships on GitHub Pages at `<pages>/phobos/` as a
+**pre-built committed bundle** (`sample/phobos/web`, built with `npm run build:phobos` —
+release + `--encode-strings`) that the deploy workflow copies without rebuilding, so Lamp
+changes on `main` can't break the published game (unlike Cloak, which rebuilds each push as
+a live Lighthouse check). To update the published Phobos: rebuild, commit the bundle. Banner
+title is the full `"Phobos - A Galaxy Jones Story"` (the game `title` field). **Next:** merge
+the `restart` branch to `main` to trigger the first deploy; a manual browser pass on the
+Pages URL (modals, transcript download, [more] paging — the layer headless checks don't cover).
 
 ### 0. README onboarding — DONE / follow-ups
 Top-level `README.md` now describes the system and how to run Lantern, the
