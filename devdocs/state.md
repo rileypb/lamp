@@ -53,12 +53,36 @@ computed value — a thunk, like a function reference — and is deliberately ke
 *out* of the algebra. When `encodeValue` meets a `text` in a captured field, it
 **freezes it to its current rendered string** (`isTextValue(value) ? value() :
 …`), which is an ordinary scalar. So a field holding a template is saveable, and a
-restored game gets the frozen string rather than a live template. For Slice 1
-(substitutions are plain expressions, no render-context dependence) this is
-lossless; once context-dependent sugar lands (a stored `text` whose rendering
-depends on a subject/tense set elsewhere), freezing at capture time is a
-deliberate, documented simplification to revisit — persistent state should
-generally hold a `freeze`-d string, not a live `text`.
+restored game gets the frozen string rather than a live template. Freezing is
+**forced by serialization** — a save is JSON on disk, and a closure can't be
+serialized — so it cannot simply be turned off for saves.
+
+> **Known limitation — snapshot freezes live templates (undo *and* save/restore).**
+> The freeze is lossless **only at the instant of restore**: the frozen string equals
+> what the template rendered against the state being restored. It becomes **lossy the
+> moment that state changes and the field is re-rendered** — the frozen string is a dead
+> scalar and no longer tracks. This needs **no** context-dependent sugar; a plain
+> interpolation of a mutable global exhibits it today. Minimal repro (a copy lives at
+> `bump.lamp` in the repo root during this investigation): a room
+> `description "...reveal=[reveal]."` plus a `bump` action that does
+> `reveal = reveal + 1`, then `look / bump / look / undo / bump / look` — the final
+> `look` shows the pre-undo `reveal`, not the live one. Substituting `save`+`restore`
+> for `undo` gives the **identical** result: it is not an undo bug but a property of the
+> single `captureState`/`encodeValue` codepath that undo, save, and restore all share.
+>
+> A real fix must repair undo **and** save/restore together (an in-memory-only fix would
+> make undo diverge from restore), and has only two honest shapes: **(1)** serialize the
+> template's *structure* so restore can rebuild the thunk — hard, because its
+> interpolations are themselves closures; or **(2)** stop treating a template-valued
+> field as *state* at all — it is a rendering *rule* fixed at construction, and the state
+> is the globals/fields it reads (the Inform model: dynamic text is re-evaluated on
+> print, never stored as a frozen value) — a real refactor that collides with the
+> delete-and-reassign restore path. Related to the **read-only render flag** TODO
+> (`devdocs/text.md`): rendering-at-capture also advances `[first time]`/`[cycling]`
+> cursors as a side effect. Until then, persistent/dynamic state should hold a
+> `freeze`-d string or a plain field the template reads, not a live `text`.
+> **Note:** RESTART via reload (see "RESTART" below) is unaffected — it never snapshots;
+> a fresh module load rebuilds every template thunk from construction.
 
 **The render context is render-local and never saved.** Slice 3's adaptive sugar
 reads a per-render context (the third-person `subject`, the verb `agreement`
@@ -381,6 +405,48 @@ seam), `lib/sys/{functions,index}.{lamp,js}` (native bridge), `lib/advent/transc
 wire protocol is in `devdocs/sandbox.md` → "Transcript broker protocol". A host that
 installs no transcript channel (today's browser worker) makes `transcript_available`
 false, so SCRIPT reports it unavailable — a follow-up, like the browser save UX.
+
+## RESTART (design — reload, not snapshot)
+
+RESTART throws away the current game and begins again from the start. It is **not yet
+implemented**; this section records the design decision so it isn't re-litigated.
+
+**Requirement.** RESTART must re-run `on startup`, because that is where the introductory
+text is shown *and* where any startup randomness (`randomize()`) is rolled. Restoring a
+post-startup snapshot (skip the intro, freeze the randomness) is therefore not RESTART.
+
+**Why not an in-process snapshot baseline (rejected).** The tempting cheap path is to
+snapshot the world in `run()` *before* `fireEvent("startup")`, then on RESTART restore
+that baseline and re-dispatch `startup`. It fails on two counts, and the second is
+fundamental:
+
+1. **It crashes.** `captureState` freezes templates by *rendering* them (see the value
+   algebra above). Capturing pre-startup renders every object's description against a
+   world that isn't built yet — doors unwired, the player placed nowhere, and globals
+   that `startup_rules` initializes still at their declaration defaults. phobos's
+   `siriusian` cipher reads the `scan_levels` global (`none` until startup) and throws;
+   list-literal global defaults don't compile, so it can't even be defaulted away.
+2. **It's incoherent.** "The state of the world before it has been set up" is not a
+   world — it is a pile of constructed objects with no relationships, no placement, and
+   uninitialized globals. The rendering crash is the symptom: a description can't render
+   because it describes a world that doesn't cohere yet. The notion of "the initial state
+   to restart to" only exists *after* initialization. Re-running startup on top of a
+   snapshot of the pre-init rubble is backwards — and templates can't be snapshotted
+   faithfully anyway (the freeze limitation above).
+
+**Decision — reload (host respawn).** "Start over" means **re-initialize**, and raw
+construction isn't snapshottable — it is *code* that must re-execute. So RESTART
+re-executes the module: the host **terminates and re-spawns the worker** on the same
+generated file (`src/lamplighter/sandbox/host.js`), giving a fresh module load — fresh
+construction (live template thunks, a clean object graph) and `on startup` from scratch.
+This is truly pristine and sidesteps `captureState` entirely, so it inherits none of the
+template-freeze problems. Cost: per-host respawn logic (CLI now; the browser
+worker/shell later) plus guarding the `exit` handler so a restart isn't read as
+"game over". (An in-process `reset()` + re-execute keeps it host-agnostic but must clear
+*every* registry correctly — one miss is silent corruption — so the respawn, which gets a
+fresh module scope for free, is preferred.) Recognition mirrors QUIT: RESTART is
+session-control (it unwinds the loop), so the library command loop recognizes it, not the
+parser. See TODO item 3.
 
 ## Inputs and Outputs
 

@@ -1,0 +1,61 @@
+lib advent
+
+# ============================================================================
+# Minimal repro: UNDO freezes a text template into a dead string.
+# ============================================================================
+#
+# The room description below is a TEXT TEMPLATE (a thunk) that reads the mutable
+# global `reveal` at render time — so `look` reflects whatever `reveal` currently is.
+# The `bump` action increments `reveal`.
+#
+# The bug: `captureState()` (called at each turn's undo checkpoint) freezes text
+# templates by RENDERING them to a plain string. On `undo`, `restoreState` writes that
+# frozen string back into the live field — so the description stops being a template and
+# becomes a dead string that ignores `reveal` from then on.
+#
+# ----------------------------------------------------------------------------
+# Repro sequence (pipe this in, or type it):
+#
+#     look
+#     bump
+#     look
+#     undo
+#     bump
+#     look
+#
+# What you SEE (buggy):
+#     > look    The wall reads: reveal=0.
+#     > bump    Reveal is now 1.
+#     > look    The wall reads: reveal=1.        <- live, correct
+#     > undo    [Previous turn undone.]          <- reverts the *look*, so reveal is 1 again
+#     > bump    Reveal is now 2.                 <- reveal is now genuinely 2
+#     > look    The wall reads: reveal=1.        <- BUG: frozen at 1, ignores reveal=2
+#
+# What it SHOULD say on that last line: "The wall reads: reveal=2."
+#
+# Control (no undo) — proves the template is otherwise live:
+#     look / bump / bump / look   ->   ends "The wall reads: reveal=2."
+#
+# Why `undo` and not the two `bump`s is the culprit: the checkpoint restored by `undo`
+# holds `reveal`'s field values AND the frozen (rendered-to-string) copy of the room
+# description. Restoring it swaps the live template for that string. The later `bump`
+# changes `reveal`, but the description is no longer a template, so it can't react.
+# ----------------------------------------------------------------------------
+
+global int reveal = 0
+
+action bump:
+	syntax:
+		"bump"
+
+do bump:
+	reveal = reveal + 1
+
+report bump:
+	print "Reveal is now [reveal]."
+
+game Repro:
+	start hall
+
+room hall:
+	description "The wall reads: reveal=[reveal]."

@@ -561,7 +561,10 @@ is the "render context" proper.
    > looking at or saving it. Plan: a runtime global boolean (e.g. `renderReadOnly`) set
    > around such evaluations; the site-advance helpers (`variationAdvance`/`variationPick`
    > and the first-time counter) read the current state but **skip the mutation** when it
-   > is set. Tackle later.
+   > is set. Tackle later. **Related:** the same rendering-at-capture also *freezes* a
+   > template field to a dead string, so it goes stale after undo/save/restore — see
+   > `devdocs/state.md` → "Known limitation — snapshot freezes live templates" (repro:
+   > `bump.lamp`).
 
 3. **Output-stream state.** Pending-break state (ensure-at-least N newlines) plus a
    **printed-since-break** flag for `[run on]` / `[par if printed]` (H2/H3) and the
