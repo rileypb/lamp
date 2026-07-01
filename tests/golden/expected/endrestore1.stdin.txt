@@ -1,0 +1,10 @@
+mark
+save
+slot1
+mark
+mark
+doom
+restore
+slot1
+mark
+quit

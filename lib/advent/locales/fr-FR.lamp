@@ -63,7 +63,7 @@ put_on_cant: "Vous ne pouvez rien poser là-dessus."
 banner_by: " par "
 story_won: "*** Vous avez gagné ***[line break]"
 story_lost: "*** Vous avez perdu ***[line break]"
-quit_prompt: "Tapez QUIT pour quitter le jeu."
+quit_prompt: "Tapez RESTART pour recommencer, RESTORE pour reprendre une partie sauvegardée, ou QUIT pour quitter le jeu."
 
 # --- parser feedback (engine messages, routed through the message registry) ---
 parser_cant_see: "Vous ne voyez rien de tel ici."

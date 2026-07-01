@@ -35,5 +35,5 @@ Le message, soigneusement tracé dans la sciure, dit…
 
 *** Vous avez gagné ***
 
-Tapez QUIT pour quitter le jeu.
+Tapez RESTART pour recommencer, RESTORE pour reprendre une partie sauvegardée, ou QUIT pour quitter le jeu.
 > quit

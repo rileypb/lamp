@@ -210,7 +210,11 @@ parser): `is_restart_command` in `lib/advent/startup.lamp` → availability chec
 Infocom **confirmation** ("Do you wish to restart? (Y is affirmative): "; Y/YES confirms,
 else "Ok.") → the `request_restart()` primitive → break; run() does the restore-and-re-fire.
 Accepted mid-play **and** at the end-of-story prompt (no confirmation there — the player is
-already answering an explicit "type RESTART … or QUIT" prompt).
+already answering an explicit prompt). **The end-of-story prompt is the full Infocom triad**
+("Please type RESTART, RESTORE, or QUIT."): RESTORE routes through the normal restore verb,
+`story` comes back with the snapshot, and the handler's session loop (an outer
+`while playing:`) resumes the command loop — golden `endrestore1`; fr-FR `quit_prompt`
+updated to match.
 **Why viable now (once crashed):** pre-startup capture used to render templates against an
 unbuilt world (phobos's `scan_levels` cipher threw); the persistable-templates work
 (branded `{$tmpl:id,env}`, no render at capture) removed that. Capture is try/catch-guarded
@@ -226,8 +230,7 @@ move rooms → RESTART → intro reprints, counter reset, back in the start room
 rationale in `devdocs/state.md` → "RESTART (Option C — in-process pre-startup baseline)".
 **Where:** `src/lamplighter/index.js` (`run`/`requestRestart`/`restartAvailable`),
 `lib/sys/{functions,index}` (`restart_available`/`request_restart`), `lib/advent/startup.lamp`.
-**Follow-ups (optional):** accept RESTORE at the end-of-story prompt too (needs routing
-that loop through the parser). (The Infocom confirmation prompt is DONE — see above.)
+**Follow-ups:** none — the confirmation prompt and end-of-story RESTORE are both done.
 
 ### 4. Runtime error diagnostics — Lamp-ish failures, not JS stacks
 Make a failure during play trace back to a precise Lamp line (where available) or a

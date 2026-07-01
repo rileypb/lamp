@@ -463,9 +463,15 @@ calls the `request_restart()` primitive (arms `restartRequested`) and breaks; `r
 does the restore-and-re-fire. This mirrors the UNDO/SAVE/RESTORE split: the runtime owns the
 baseline + restore mechanism (`src/lamplighter/index.js`, bridged in `lib/sys`), the library
 owns the trigger words and wording (all named/overridable: `restart_confirm`,
-`restart_declined`, `restart_unavailable`). RESTART is also accepted at the end-of-story
-prompt (alongside QUIT), **without** the confirmation — the player is already answering an
-explicit "type RESTART … or QUIT" prompt there.
+`restart_declined`, `restart_unavailable`).
+
+**The end-of-story prompt offers the Infocom triad** — "Please type RESTART, RESTORE, or
+QUIT." RESTART there skips the confirmation (the player is already answering an explicit
+prompt). RESTORE routes through the normal restore verb (name prompt / host picker and all
+its wording); on success `story` comes back with the snapshot (to `ongoing`) and the
+handler's session loop — an outer `while playing:` around the command loop and the
+end-of-story sequence — resumes the command loop. A cancelled or failed restore stays at
+the prompt. QUIT and an armed RESTART clear `playing` and exit the handler.
 
 **Why not host respawn (the earlier plan).** Terminating and re-spawning the worker gives a
 fresh module scope "for free" (no reset needed) and additionally resets immutable structure

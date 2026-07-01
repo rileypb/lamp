@@ -1,0 +1,31 @@
+lib advent
+
+# Exercises RESTORE at the end-of-story prompt (devdocs/state.md → RESTART): the player
+# saves mid-game, loses, and types RESTORE at the "RESTART, RESTORE, or QUIT" prompt. The
+# restore routes through the normal verb (name prompt included), `story` comes back with
+# the snapshot (to ongoing), and the session loop resumes the command loop — marks picks
+# up from the saved value, not the pre-doom one.
+
+global int marks = 0
+
+action mark:
+	syntax:
+		"mark"
+
+do mark:
+	marks = marks + 1
+	print "marks is now [marks]."
+
+action doom:
+	syntax:
+		"doom"
+
+do doom:
+	print "The world ends."
+	story = lost
+
+game EndRestore:
+	start hall
+
+room hall:
+	description "A plain hall."

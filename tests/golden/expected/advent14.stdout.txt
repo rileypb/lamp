@@ -5,5 +5,5 @@ A small room.
 
 *** Game over, friend. ***
 
-Please type RESTART to start over, or QUIT to exit.
+Please type RESTART, RESTORE, or QUIT.
 > quit

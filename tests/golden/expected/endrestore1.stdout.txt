@@ -1,0 +1,30 @@
+hall
+A plain hall.
+
+> mark
+marks is now 1.
+
+> save
+Name for saved game: slot1
+Game saved.
+
+> mark
+marks is now 2.
+
+> mark
+marks is now 3.
+
+> doom
+The world ends.
+
+*** You have lost ***
+
+Please type RESTART, RESTORE, or QUIT.
+> restore
+Name of saved game: slot1
+Game restored.
+
+> mark
+marks is now 2.
+
+> quit
