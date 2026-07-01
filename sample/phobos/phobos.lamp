@@ -8,9 +8,9 @@ lib phobos
 game Phobos:
   author "Phil Riley"
   title "Phobos - A Galaxy Jones Story"
-  tagline "A Looming Disaster"
-  version 0
-  release dev
+  tagline "A Lamp Port of A Looming Disaster"
+  version 1
+  release beta
   start Passage_End
   # The banner is placed by startup_rules (intro -> banner -> reveal), not auto-printed first.
   auto_banner false
