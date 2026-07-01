@@ -1,0 +1,33 @@
+== Fresh start. marks=0. ==
+
+hall
+A plain hall. A passage leads north.
+
+> mark
+marks is now 1.
+
+> mark
+marks is now 2.
+
+> north
+attic
+A dusty attic.
+
+> restart
+Do you wish to restart? (Y is affirmative): n
+Ok.
+
+> mark
+marks is now 3.
+
+> restart
+Do you wish to restart? (Y is affirmative): y
+== Fresh start. marks=0. ==
+
+hall
+A plain hall. A passage leads north.
+
+> mark
+marks is now 1.
+
+> quit

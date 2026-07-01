@@ -404,47 +404,76 @@ wire protocol is in `devdocs/sandbox.md` → "Transcript broker protocol". A hos
 installs no transcript channel (today's browser worker) makes `transcript_available`
 false, so SCRIPT reports it unavailable — a follow-up, like the browser save UX.
 
-## RESTART (design — reload, not snapshot)
+## RESTART (Option C — in-process pre-startup baseline)
 
-RESTART throws away the current game and begins again from the start. It is **not yet
-implemented**; this section records the design decision so it isn't re-litigated.
+RESTART throws away the current game and begins again from the start. It is **implemented**
+in-process: no host respawn, no killed process.
 
 **Requirement.** RESTART must re-run `on startup`, because that is where the introductory
 text is shown *and* where any startup randomness (`randomize()`) is rolled. Restoring a
 post-startup snapshot (skip the intro, freeze the randomness) is therefore not RESTART.
 
-**Why not an in-process snapshot baseline (rejected).** The tempting cheap path is to
-snapshot the world in `run()` *before* `fireEvent("startup")`, then on RESTART restore
-that baseline and re-dispatch `startup`. It fails on two counts, and the second is
-fundamental:
+**Mechanism.** `run()` captures `captureState()` once as `initialBaseline` — the world's
+post-construction, *pre*-`fireEvent("startup")` state — then fires startup. On RESTART the
+runtime `restoreState(initialBaseline)`, clears the undo history, and re-fires startup:
 
-1. **It crashes.** `captureState` freezes templates by *rendering* them (see the value
-   algebra above). Capturing pre-startup renders every object's description against a
-   world that isn't built yet — doors unwired, the player placed nowhere, and globals
-   that `startup_rules` initializes still at their declaration defaults. phobos's
-   `siriusian` cipher reads the `scan_levels` global (`none` until startup) and throws;
-   list-literal global defaults don't compile, so it can't even be defaulted away.
-2. **It's incoherent.** "The state of the world before it has been set up" is not a
-   world — it is a pile of constructed objects with no relationships, no placement, and
-   uninitialized globals. The rendering crash is the symptom: a description can't render
-   because it describes a world that doesn't cohere yet. The notion of "the initial state
-   to restart to" only exists *after* initialization. Re-running startup on top of a
-   snapshot of the pre-init rubble is backwards — and templates can't be snapshotted
-   faithfully anyway (the freeze limitation above).
+```
+run():
+  initialBaseline = captureState()   # guarded; see below
+  fireEvent("startup")               # plays; the library loop arms restartRequested on RESTART
+  while restartRequested:
+    restoreState(initialBaseline)     # world back to pre-startup construction state
+    clearUndoHistory()
+    fireEvent("startup")              # doors/parts rewired, intro reprinted, randomness re-rolled
+```
 
-**Decision — reload (host respawn).** "Start over" means **re-initialize**, and raw
-construction isn't snapshottable — it is *code* that must re-execute. So RESTART
-re-executes the module: the host **terminates and re-spawns the worker** on the same
-generated file (`src/lamplighter/sandbox/host.js`), giving a fresh module load — fresh
-construction (live template thunks, a clean object graph) and `on startup` from scratch.
-This is truly pristine and sidesteps `captureState` entirely, so it inherits none of the
-template-freeze problems. Cost: per-host respawn logic (CLI now; the browser
-worker/shell later) plus guarding the `exit` handler so a restart isn't read as
-"game over". (An in-process `reset()` + re-execute keeps it host-agnostic but must clear
-*every* registry correctly — one miss is silent corruption — so the respawn, which gets a
-fresh module scope for free, is preferred.) Recognition mirrors QUIT: RESTART is
-session-control (it unwinds the loop), so the library command loop recognizes it, not the
-parser. See TODO item 3.
+The pre-startup baseline **is** the intended reset target: it is the coherent
+post-construction state (objects created, top-level `contains` edges in place) *before*
+startup wires doors, places the player, or runs `startup_rules`. Re-firing startup on top
+of it reproduces exactly what a fresh module load does — but without re-executing
+construction. This works because it reuses the **state-provider registry** (the trusted
+enumeration of all mutable game state that already backs undo and save/restore): restore
+resets exactly that state to the baseline; immutable program structure (types, grammar,
+rules, the template registry) is untouched because it never changes during play.
+
+**Why this is now viable (it once crashed).** Earlier, capturing pre-startup crashed:
+`captureState` froze text templates by *rendering* them, and rendering a description against
+an un-set-up world threw (e.g. phobos's `siriusian` cipher reads the `scan_levels` global,
+`none` until startup). The persistable-templates work (see *Persisting text values*, and
+`devdocs/text-persistence.md`) removed that: branded templates now encode as
+`{$tmpl:id, env}` **without rendering**, so pre-startup capture no longer evaluates
+descriptions. As a safety net the capture is wrapped in try/catch — a game with a
+frozen-fallback template that reads an uninitialized global at construction leaves
+`initialBaseline` null, and `restart_available()` reports RESTART unavailable rather than
+crashing at load.
+
+**Baseline is not persisted, by design.** Raw construction is deterministic (randomness is
+rolled in `startup`, not construction), so the baseline need not ride in the save blob: a
+save gates on an identical build, and a fresh session's `run()` recaptures an identical
+baseline. Within a session the baseline is a plain module variable, untouched by
+`restoreState` (it is not a state provider), so RESTART works after a SAVE/RESTORE too.
+
+**Recognition (mechanism/policy split).** Like QUIT, RESTART is session-control — it unwinds
+the command loop rather than running as an in-world action — so the **library** command loop
+recognizes it (`is_restart_command` in `lib/advent/startup.lamp`), not the parser. Mid-game,
+a match first checks `restart_available()` (false → "Restart isn't available right now."),
+then **confirms** — the Infocom convention, "Do you wish to restart? (Y is affirmative): "
+(`confirm_restart`; Y/YES confirms, anything else prints "Ok." and play continues) — then
+calls the `request_restart()` primitive (arms `restartRequested`) and breaks; `run()` then
+does the restore-and-re-fire. This mirrors the UNDO/SAVE/RESTORE split: the runtime owns the
+baseline + restore mechanism (`src/lamplighter/index.js`, bridged in `lib/sys`), the library
+owns the trigger words and wording (all named/overridable: `restart_confirm`,
+`restart_declined`, `restart_unavailable`). RESTART is also accepted at the end-of-story
+prompt (alongside QUIT), **without** the confirmation — the player is already answering an
+explicit "type RESTART … or QUIT" prompt there.
+
+**Why not host respawn (the earlier plan).** Terminating and re-spawning the worker gives a
+fresh module scope "for free" (no reset needed) and additionally resets immutable structure
+and any out-of-contract native state — but structure doesn't change during play, and native
+state outside the providers already breaks save/restore, so respawn resets things that don't
+need it at the cost of per-host lifecycle machinery (terminate/respawn, re-wire buffers,
+guard the `exit` handler). Option C is host-agnostic, contained to the runtime, and reuses
+the proven snapshot machinery, so it is preferred now that the crash blocker is gone.
 
 ## Inputs and Outputs
 

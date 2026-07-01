@@ -1,0 +1,10 @@
+mark
+mark
+north
+restart
+n
+mark
+restart
+y
+mark
+quit

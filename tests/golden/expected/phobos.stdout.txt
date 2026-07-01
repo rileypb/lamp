@@ -744,5 +744,5 @@ Galaxy Jones has saved Mars from the Sirius Syndicate.
 
 This earns Galaxy the rank of Queen of Mars.
 
-Please type QUIT to exit.
+Please type RESTART to start over, or QUIT to exit.
 > quit

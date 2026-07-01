@@ -86,6 +86,17 @@ native function string restore_apply_blob(string blob)
 # owns only the wording. See devdocs/state.md → UNDO.
 native function bool undo_turn()
 
+# RESTART primitives. RESTART throws away the current game and starts over, re-running
+# `on startup` (so the intro reprints and any startup randomness re-rolls). The runtime
+# captures the world's initial (post-construction, pre-startup) state once and owns the
+# restore-and-re-fire mechanism; the library command loop (lib/advent/startup.lamp) owns
+# recognition and wording — the same mechanism/policy split as UNDO/SAVE/RESTORE.
+# `restart_available` reports whether an initial baseline was captured (false disables
+# RESTART gracefully); `request_restart` arms a restart, returning true or false when
+# unavailable. See devdocs/state.md → RESTART.
+native function bool restart_available()
+native function bool request_restart()
+
 # Set the host status line's two segments. The library composes the content (it
 # knows the world model); this is only the transport. A host with a status bar (the
 # web shell) renders `left` flush-left and `right` flush-right in a fixed-width,

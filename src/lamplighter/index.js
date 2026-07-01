@@ -1083,12 +1083,50 @@ function runCommand(line, actor) {
     return false;
 }
 
-// World-model contract: fires the `startup` event, which the world library hooks
-// to build the world and drive the command loop.
+// RESTART (Option C — in-process baseline). The world's post-construction, pre-startup
+// state is captured once as `initialBaseline`; RESTART restores it and re-fires `startup`,
+// yielding a fresh game (intro reprinted, startup randomness re-rolled) without re-executing
+// construction or respawning the host. Capture is guarded: a game whose pre-startup templates
+// can't render (a frozen-fallback template reading an uninitialized global) leaves the
+// baseline null and RESTART reports unavailable rather than crashing at load. Because raw
+// construction is deterministic (randomness is rolled in `startup`, not construction), the
+// baseline needn't be persisted — a save gates on an identical build, and a fresh session's
+// run() recaptures an identical baseline. See devdocs/state.md → RESTART.
+let initialBaseline = null;
+let restartRequested = false;
+
+function restartAvailable() {
+    return initialBaseline !== null;
+}
+
+// Arm a restart: the library command loop calls this on a RESTART command, then unwinds its
+// loop so control returns to run(), which restores the baseline and re-fires startup. Returns
+// false (unarmed) when no baseline was captured, so the library can report it unavailable.
+function requestRestart() {
+    if (initialBaseline === null) return false;
+    restartRequested = true;
+    return true;
+}
+
+// World-model contract: fires the `startup` event, which the world library hooks to build the
+// world and drive the command loop. On RESTART the library unwinds that loop with the restart
+// flag armed; here we restore the pre-startup baseline and re-fire startup for a fresh game.
 function run() {
     pronounIt = null;
     buildVocabIndex();
+    try {
+        initialBaseline = captureState();
+    } catch (err) {
+        initialBaseline = null;
+    }
     fireEvent("startup");
+    while (restartRequested) {
+        restartRequested = false;
+        pronounIt = null;
+        restoreState(initialBaseline);
+        clearUndoHistory();
+        fireEvent("startup");
+    }
 }
 
 function fireEvent(eventName) {
@@ -2450,6 +2488,8 @@ module.exports = {
     setField,
     dispatch: fireEvent,
     run,
+    restartAvailable,
+    requestRestart,
     print,
     message,
     registerMessageOverride,

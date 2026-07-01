@@ -1,0 +1,35 @@
+lib advent
+
+# Exercises RESTART (devdocs/state.md → RESTART). A startup rule prints a recognizable
+# intro line reading a global; the player bumps that global and moves rooms, then types
+# RESTART. The runtime must restore the pre-startup baseline (counter back to its default,
+# player back in the start room) and re-fire startup (the intro reprints) without the
+# process quitting — a final QUIT ends the run. If RESTART were broken, the second run
+# would either not appear (still in the attic, counter unreset) or the counter would carry
+# over. See src/lamplighter/index.js → run() and lib/advent/startup.lamp.
+
+global int marks = 0
+
+rule startup_rules:
+	print "== Fresh start. marks=[marks]. =="
+	print "[par]"
+
+action mark:
+	out_of_world
+	syntax:
+		"mark"
+
+do mark:
+	marks = marks + 1
+	print "marks is now [marks]."
+
+game RestartDemo:
+	start hall
+
+room hall:
+	description "A plain hall. A passage leads north."
+
+room attic:
+	description "A dusty attic."
+
+bidi connects hall north attic

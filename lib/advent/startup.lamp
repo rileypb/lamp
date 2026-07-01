@@ -7,6 +7,25 @@ function bool is_quit_command(string line):
 		return true
 	return false
 
+# RESTART discards the game and begins again from `on startup`. Like QUIT it is session-control
+# — the command loop recognizes it directly and unwinds the loop (the runtime's run() then
+# restores the pre-startup baseline and re-fires startup), rather than resolving through the
+# parser as an in-world action. See devdocs/state.md → RESTART.
+function bool is_restart_command(string line):
+	return to_lower(line) == "restart"
+
+# Mid-game RESTART confirms before discarding progress — the Infocom convention ("Do you
+# wish to restart? (Y is affirmative)"). Y/YES confirms; anything else declines. The
+# end-of-story prompt skips this: the player is already answering an explicit
+# "type RESTART ... or QUIT" prompt there.
+function bool confirm_restart():
+	let reply = to_lower(prompt(restart_confirm:"Do you wish to restart? (Y is affirmative): "))
+	if reply == "y":
+		return true
+	if reply == "yes":
+		return true
+	return false
+
 # Traditional status line: the current room (left) and the turn count (right). The
 # host lays the two segments out in a fixed-width, reverse-video bar; a host without
 # a status bar ignores it. Redrawn at the top of each turn. See devdocs/windows.md.
@@ -60,23 +79,38 @@ on startup:
 		input = prompt("> ")
 		if is_quit_command(input):
 			break
-		# Fire every-turn rules only when the command actually spent a turn (not on a
-		# parse failure, a disambiguation prompt, or undo) and the story is still going.
-		# `[par if printed]` separates any every-turn output into its own paragraph after
-		# the action's report (and is a no-op when the action printed nothing).
-		if run_command(input, player):
-			if story == ongoing:
-				print "[par if printed]"
-				follow every_turn_rules()
-	# End-of-story sequence: print the win/lose banner, then accept only QUIT.
-	# (RESTART is not yet supported.)
+		if is_restart_command(input):
+			# Report unavailability before asking (no baseline was captured), so the player
+			# isn't asked to confirm a restart that can't happen. Otherwise confirm, then arm
+			# the restart and unwind: run() restores the baseline and re-fires startup.
+			if not restart_available():
+				print restart_unavailable:"Restart isn't available right now."
+			else:
+				if confirm_restart():
+					request_restart()
+					break
+				print restart_declined:"Ok."
+		else:
+			# Fire every-turn rules only when the command actually spent a turn (not on a
+			# parse failure, a disambiguation prompt, or undo) and the story is still going.
+			# `[par if printed]` separates any every-turn output into its own paragraph after
+			# the action's report (and is a no-op when the action printed nothing).
+			if run_command(input, player):
+				if story == ongoing:
+					print "[par if printed]"
+					follow every_turn_rules()
+	# End-of-story sequence: print the win/lose banner, then accept RESTART or QUIT.
 	if not (story == ongoing):
 		print "[par]"
 		follow end_story_rules()
 		print "[par]"
-		print quit_prompt:"Please type QUIT to exit."
+		print quit_prompt:"Please type RESTART to start over, or QUIT to exit."
 		while true:
 			input = prompt("> ")
 			if is_quit_command(input):
 				break
+			if is_restart_command(input):
+				if request_restart():
+					break
+				print restart_unavailable:"Restart isn't available right now."
 

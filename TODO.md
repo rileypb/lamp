@@ -197,25 +197,37 @@ convenience layer).
 - **Where:** rulebook driver in `src/lamplighter/index.js`, `run_command` loop.
 - **See:** `devdocs/rulebooks.md` roadmap, `devdocs/game_parser.md` v2.
 
-### 3. RESTART support for the end-of-story sequence
-The end-of-story mechanism (`story` global, `end_story_rules`, the post-game loop
-in `lib/advent/startup.lamp`) is in place but only offers QUIT — there is no state
-reset, so RESTART was deferred. **Approach decided (2026-07-01): reload, not snapshot.**
-Full rationale in `devdocs/state.md` → "RESTART (design — reload, not snapshot)". In
-brief: RESTART must re-run `on startup` (intro text + startup randomness), which needs a
-pristine initial world. An **in-process pre-startup snapshot baseline was explored and
-rejected** — capturing state before startup renders templates against an unbuilt world
-(crashes, e.g. phobos's `scan_levels`-dependent cipher; also blocked by the template
-freeze, item under "Smaller"), and "the world before it is set up" is semantically
-incoherent. So RESTART **re-executes the module** via a **host worker respawn**: a
-`restart` signal → host terminates + re-spawns the worker on the same generated file
-(fresh construction + `on startup` from scratch), which sidesteps `captureState` entirely.
-Needs: RESTART recognized as session-control in the loop (like QUIT — `is_restart_command`
-+ a signal native), a `restart`/respawn message type, host handling in `playFile`
-(terminate + respawn, guarding the `exit` handler so restart ≠ game-over), and the browser
-worker/shell later. Alternative (messier, not chosen): a runtime-wide `reset()` + re-run —
-host-agnostic but must clear *every* registry correctly (one miss = silent corruption).
-**Where:** `src/lamplighter/sandbox/host.js` + `worker.js`, `lib/advent/startup.lamp`.
+### 3. RESTART — DONE (2026-07-01, Option C: in-process pre-startup baseline)
+RESTART discards the game and starts over from `on startup`, **implemented in-process** —
+no host respawn, no killed process. `run()` captures `captureState()` once as
+`initialBaseline` (post-construction, *pre*-`fireEvent("startup")`), then on RESTART
+`restoreState(initialBaseline)` + `clearUndoHistory()` + re-fires startup (intro reprints,
+startup randomness re-rolls). This reuses the **state-provider registry** (the trusted
+enumeration of all mutable state behind undo/save/restore); immutable program structure
+(types/grammar/rules/template registry) is untouched because it never changes during play.
+**Recognition mirrors QUIT** (session-control, so the library loop recognizes it, not the
+parser): `is_restart_command` in `lib/advent/startup.lamp` → availability check → the
+Infocom **confirmation** ("Do you wish to restart? (Y is affirmative): "; Y/YES confirms,
+else "Ok.") → the `request_restart()` primitive → break; run() does the restore-and-re-fire.
+Accepted mid-play **and** at the end-of-story prompt (no confirmation there — the player is
+already answering an explicit "type RESTART … or QUIT" prompt).
+**Why viable now (once crashed):** pre-startup capture used to render templates against an
+unbuilt world (phobos's `scan_levels` cipher threw); the persistable-templates work
+(branded `{$tmpl:id,env}`, no render at capture) removed that. Capture is try/catch-guarded
+— a game whose pre-startup template can't render leaves `initialBaseline` null and
+`restart_available()`/`request_restart()` report it unavailable rather than crashing at
+load. **Baseline not persisted** (construction is deterministic; a save gates on identical
+build and a fresh session recaptures an identical baseline) — and it survives SAVE/RESTORE
+in-session because it is a plain module var, not a state provider (verified manually).
+**Host respawn (the earlier plan) not taken:** it resets immutable structure + native state
+that don't change during play, at the cost of per-host lifecycle machinery; Option C is
+host-agnostic and reuses the proven snapshot core. Regression golden `restart1` (mutate +
+move rooms → RESTART → intro reprints, counter reset, back in the start room). Full
+rationale in `devdocs/state.md` → "RESTART (Option C — in-process pre-startup baseline)".
+**Where:** `src/lamplighter/index.js` (`run`/`requestRestart`/`restartAvailable`),
+`lib/sys/{functions,index}` (`restart_available`/`request_restart`), `lib/advent/startup.lamp`.
+**Follow-ups (optional):** accept RESTORE at the end-of-story prompt too (needs routing
+that loop through the parser). (The Infocom confirmation prompt is DONE — see above.)
 
 ### 4. Runtime error diagnostics — Lamp-ish failures, not JS stacks
 Make a failure during play trace back to a precise Lamp line (where available) or a
