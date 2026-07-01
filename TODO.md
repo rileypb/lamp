@@ -362,17 +362,20 @@ core edit is contained. Names (default): `contains`/`place`/`contained`, keyword
   Covers construction descriptions **and rule-assigned templates** reading globals or a
   **named instance** (`[clock.hour]`) — the emitter tracks lexical scope (`localScope`,
   maintained by `emitStatementList`, consulted in `capturesName`) so a named instance
-  persists as a module const unless a local shadows it (Phases 1.5 + 2a). Regression goldens
-  `textlive1` (construction) + `textlive2` (rule-assigned). Also removed the
-  render-at-capture cursor side-effect (the read-only-render item, save half).
-  (A no-shadow-on-objects checker rule was tried for 2a and **reverted** — object names are
-  too numerous to reserve against locals, e.g. `let count` collides with an object.)
-  **Remaining — Phase 2b / fallbacks:** a template capturing `self` fields needs 2b
-  (`env:{self}` + `{$ref}` round-trip + runtime freeze-on-unserializable-capture); templates
-  capturing a `let`/param/loop var (incl. a shadowed object name) or the action context, or
-  composed at runtime (`a + b`), still freeze (documented — what I7 also can't persist).
-  **Where:** `src/lantern/emitter.js` (`localScope`/`capturesName`),
-  `src/lamplighter/index.js` (`templateRegistry`, `encodeValue`/`decodeValue`).
+  persists as a module const unless a local shadows it (Phases 1.5 + 2a) — **and templates
+  capturing `self`** when `self` is a persistent instance (Phase 2b): the capture predicate
+  collects captured names, `{self}` brands with a `(self) =>` factory + `env:[self]`, and
+  `encodeValue` `{$ref}`s the env, freezing if `self` is a transient action. **This is full
+  I7 parity** — what persists live is what I7 persists; what still freezes (transient-`self`,
+  `let`/shadowed-name capture, runtime-composed `a + b`) is what I7 also can't. Regression
+  goldens `textlive1`/`textlive2`/`textlive3`. Also removed the render-at-capture cursor
+  side-effect. (A no-shadow-on-objects checker rule was tried for 2a and **reverted** —
+  object names are too numerous to reserve against locals, e.g. `let count` collides with an
+  object.) **Only follow-up:** an optional compile-time *warning* when a field is assigned an
+  unpersistable (frozen) template, so the restriction is loud. **Where:**
+  `src/lantern/emitter.js` (`localScope`/`capturesName`/`collectTemplateCaptures`),
+  `src/lamplighter/index.js` (`templateRegistry`, `instantiateTemplate`,
+  `encodeValue`/`decodeValue`).
 - **advent debug commands (Inform-style) — in progress** (`lib/advent/debug.lamp`).
   Built on `out_of_world` + a new **`world_scope`** action modifier (object slots resolve
   against every `physical` object, not just scope — parser/ast/emitter + runtime

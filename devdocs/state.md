@@ -73,12 +73,14 @@ ordinary scalar): still saveable, but a dead string that no longer tracks.
 > no longer advances `[first time]`/`[cycling]` cursors as a side effect (the
 > `devdocs/text.md` "read-only render flag" issue, on the capture path).
 >
-> **Residual fallback (freezes, as before):** a template that captures a lexical binding —
-> `self` fields, a `let`/param/loop var (including one that *shadows* an object name), or the
-> transient action context — or one composed at runtime (`a + b`). These are essentially what
-> I7 also can't persist. Phase 2b (`text-persistence.md`) adds `self`-capture (change-handler
-> self); the rest stays freeze-and-document. So a *runtime-composed* or *local-capturing*
-> stored template should still use a `freeze`-d string or a plain field the template reads.
+> A template capturing **`self`** persists too when `self` is a persistent instance (a
+> change handler's), via an `env:[self]` `{$ref}` round-trip (Phase 2b) — full I7 parity.
+>
+> **Residual fallback (freezes — and what I7 also can't persist):** a template capturing a
+> *transient* `self` (an action instance, not in the name registry), a `let`/param/loop var
+> (including one that *shadows* an object name), or one composed at runtime (`a + b`). So a
+> *runtime-composed* or *local-capturing* stored template should still use a `freeze`-d string
+> or a plain field the template reads.
 
 **The render context is render-local and never saved.** Slice 3's adaptive sugar
 reads a per-render context (the third-person `subject`, the verb `agreement`

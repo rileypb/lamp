@@ -1,0 +1,12 @@
+boost dial
+x dial
+raise dial
+x dial
+save
+s
+raise dial
+restore
+s
+raise dial
+x dial
+quit

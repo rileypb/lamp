@@ -1,0 +1,41 @@
+lib advent
+
+# Regression (Phase 2b): a template that captures `self` must persist live across
+# save/restore when `self` is a persistent named instance (a change-handler's instance).
+# The display is (re)built on a `power` change and reads `level`, which changes
+# independently — so the self-capturing template must keep tracking `self.level` after
+# restore, not freeze. See devdocs/text-persistence.md.
+
+type gauge < item:
+    int power = 0
+    int level = 0
+
+gauge dial:
+    description "idle"
+
+on gauge.power change:
+    self.description = "level is [self.level]."
+
+action boost:
+    direct gauge target
+    syntax:
+        "boost [target]"
+
+do boost:
+    self.target.power = self.target.power + 1
+
+action raise:
+    direct gauge target
+    syntax:
+        "raise [target]"
+
+do raise:
+    self.target.level = self.target.level + 1
+
+game TextLive3:
+    start hall
+
+room hall:
+    description "A hall."
+
+contains hall dial

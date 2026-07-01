@@ -1,9 +1,9 @@
 # Persisting `text` values across save/undo/restore (design spec)
 
-**Status:** **Phase 1 built (2026-07-01)**; Phase 2 (`self`-capture) not yet. This
-specifies "Option C" — a template-ID registry that lets a stored `text` field survive
-snapshot/restore as a *live* template, matching I7. It supersedes the "Option A" stopgap
-(skip/preserve text fields), whose limits are recorded at the end.
+**Status:** **All phases built (2026-07-01) — full I7 parity.** Phases 1, 1.5, 2a, and 2b
+are implemented. This specifies "Option C" — a template-ID registry that lets a stored
+`text` field survive snapshot/restore as a *live* template, matching I7. It supersedes the
+"Option A" stopgap (skip/preserve text fields), whose limits are recorded at the end.
 
 **Phase 1 as built.** Emitter (`src/lantern/emitter.js`): each no-capture `TemplateLiteral`
 gets an id (`templateIdCounter`); its factory is collected into a `registerTemplate(...)`
@@ -13,14 +13,14 @@ batch spliced in at module top (before construction); the use site emits
 capture) is emitted inline as before. Runtime (`src/lamplighter/index.js`):
 `templateRegistry` + `registerTemplate`/`instantiateTemplate` (brands the text with
 `__tmplId`); `encodeValue` emits `{$tmpl:id}` for a branded text (else freezes);
-`decodeValue` rebuilds via `instantiateTemplate`. **Phase 1.5 + 2a also built:** a template
-that reads a **named instance** (`[clock.hour]`) persists — in a construction default *or* a
-rule body — because a named instance is a module `const`; the emitter tracks lexical scope
-(`localScope`, maintained by `emitStatementList`, consulted in `capturesName`) so this is
-allowed *unless* a local shadows the name. Regression goldens: `textlive1` (construction
-templates over a global + a named instance, undo *and* save/restore) and `textlive2` (a
-rule-*assigned* template over a named instance). Fixes `bump.lamp`, `clock.lamp`, and the
-`[FOO]` reassignment.
+`decodeValue` rebuilds via `instantiateTemplate`. **Phases 1.5, 2a, 2b also built:** a
+template reading a **named instance** (`[clock.hour]`) persists in a construction default *or*
+a rule body (the emitter tracks lexical scope — `localScope`, maintained by
+`emitStatementList`, consulted in `capturesName` — so it's a module const *unless* a local
+shadows it); and a template capturing **`self`** persists when `self` is a persistent
+instance, via an `env:[self]` `{$ref}` round-trip that freezes if `self` is a transient
+action. Regression goldens `textlive1`/`textlive2`/`textlive3`. Fixes `bump.lamp`,
+`clock.lamp`, and the `[FOO]` reassignment.
 
 ## Problem
 
@@ -130,10 +130,11 @@ reference `self`; everything else is ID-only.
 | Construction template reading globals/literals (`[reveal]`)     | `{$tmpl:id}`        | ✅ live (Phase 1) |
 | Construction template reading a **named instance** (`[clock.hour]`) | `{$tmpl:id}`    | ✅ live (Phase 1.5) |
 | Rule-assigned template reading only globals (`[FOO]`)           | `{$tmpl:id}`        | ✅ live (Phase 1) |
-| Rule-assigned template reading a **named instance** (not shadowed) | `{$tmpl:id}`     | ✅ live (Phase 2a, built) |
-| Rule-assigned template reading `self` fields                    | `{$tmpl:id, env:{self}}` | ⚠️ Phase 2b (not built) |
+| Rule-assigned template reading a **named instance** (not shadowed) | `{$tmpl:id}`     | ✅ live (Phase 2a) |
+| Template capturing `self` where `self` is a **persistent** instance (change handler) | `{$tmpl:id, env:[self]}` | ✅ live (Phase 2b) |
+| Template capturing `self` where `self` is a **transient** action | `{$tmpl:id, env:[self]}` → freeze on save | ⚠️ frozen (self not serializable) |
 | Template composed at runtime (`textA + textB`, concat)          | freeze → string     | ⚠️ frozen |
-| Template capturing a `let` local / action context / shadowed name | freeze → string   | ⚠️ frozen |
+| Template capturing a `let` local / a shadowed name              | freeze → string     | ⚠️ frozen |
 
 **Phase 1.5 + 2a (named instances) are built.** A named instance compiles to a
 module-level `const`, so a template reading `[clock.hour]` is persistable by id alone — no
@@ -195,15 +196,21 @@ text, and `[the noun]`-style context that isn't saved state).
   *unless* a local shadows the name. This is what a no-shadow-on-objects rule would have
   given cheaply — but that rule was tried and **reverted** (object names are too numerous to
   reserve; `let count` collides with an object), so the emitter tracks scope instead.
-- **Phase 2b — `self` capture (not built).** `env:{self}` plumbing + the `{$ref}` round-trip
-  + the runtime freeze-on-unserializable-capture fallback. Adds rule-assigned templates that
-  read `self` fields (change-handler `self` persists; action/relation `self` freezes, since
-  it isn't a serializable named instance). Reaches full I7 parity.
+- **Phase 2b — `self` capture (built).** The capture predicate became a *collector*
+  (`collectTemplateCaptures` → the set of captured names); a template captured `{}` brands
+  with no env, `{self}` brands with a `(self) => …` factory + `instantiateTemplate(id,
+  [self])`, anything else falls back. `instantiateTemplate(id, env)` brands the text with its
+  env; `encodeValue` serializes the env (a named-instance `self` → `{$ref}`) and **freezes on
+  any capture that isn't serializable** — so change-handler `self` (a persistent world object)
+  persists live, while a transient action `self` (`{type, action, actor}`, not in the name
+  registry) freezes to its current render. This is full I7 parity: what persists live is what
+  I7 persists; what freezes is what I7 also can't.
 - **The compile warning** for a field assigned an unpersistable (frozen) template is still a
   follow-up (freeze is already the behavior; the warning would just make it loud).
 
-Phases 1–2a cover what real games store (descriptions, refusals, `feels` — over
-globals/named-instance state); 2b is the last parity increment.
+Regression goldens: `textlive1` (construction, global + named instance), `textlive2`
+(rule-assigned named instance), `textlive3` (change-handler `self`) — all undo *and*
+save/restore.
 
 ## Open questions
 

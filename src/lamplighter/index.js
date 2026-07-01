@@ -1448,11 +1448,15 @@ const templateRegistry = new Map();
 function registerTemplate(id, factory) {
     templateRegistry.set(id, factory);
 }
-function instantiateTemplate(id) {
+// `env` supplies the template's captured object references (Phase 2b — currently just a
+// captured `self`), in the order the factory's params expect; `[]` for a no-capture
+// template. The produced text is branded with both, so encodeValue can re-serialize the env.
+function instantiateTemplate(id, env = []) {
     const factory = templateRegistry.get(id);
     if (!factory) throw new Error(`no registered text template #${id}`);
-    const value = factory();
+    const value = factory(...env);
     value.__tmplId = id;
+    value.__tmplEnv = env;
     return value;
 }
 
@@ -1724,7 +1728,21 @@ function encodeValue(value) {
     // thunk — the field stays dynamic. A branded-less text (captures a lexical, or is
     // runtime-composed) has no id, so it falls back to freezing to its current rendered
     // string. See devdocs/text-persistence.md.
-    if (isTextValue(value)) return value.__tmplId != null ? { $tmpl: value.__tmplId } : renderTextValue(value);
+    if (isTextValue(value)) {
+        if (value.__tmplId == null) return renderTextValue(value);
+        const env = value.__tmplEnv || [];
+        if (env.length === 0) return { $tmpl: value.__tmplId };
+        try {
+            // Serialize the captured refs (a named-instance self → {$ref}); on restore the
+            // factory rebuilds a live thunk bound to them.
+            return { $tmpl: value.__tmplId, env: env.map(encodeValue) };
+        } catch (err) {
+            // A capture that isn't a serializable named instance — a transient action `self`.
+            // Freeze to the current render, like an unbranded template (what I7 also can't
+            // persist). See devdocs/text-persistence.md.
+            return renderTextValue(value);
+        }
+    }
     if (isListValue(value)) return { $list: value.items.map(encodeValue) };
     if (typeof value === "object") {
         if (typeof value.name === "string" && nameRegistry.get(value.name) === value) {
@@ -1740,10 +1758,10 @@ function decodeValue(data) {
     if (typeof data === "object") {
         if ("$ref" in data) return nameRegistry.get(data.$ref) ?? null;
         if ("$list" in data) return makeList(data.$list.map(decodeValue));
-        // A persistable text template: rebuild a fresh live thunk from the registry
-        // (devdocs/text-persistence.md). A plain string (a frozen fallback text, or any
-        // old save) decodes below as itself.
-        if ("$tmpl" in data) return instantiateTemplate(data.$tmpl);
+        // A persistable text template: rebuild a fresh live thunk from the registry, binding
+        // any captured refs from the env (devdocs/text-persistence.md). A plain string (a
+        // frozen fallback text, or any old save) decodes below as itself.
+        if ("$tmpl" in data) return instantiateTemplate(data.$tmpl, (data.env || []).map(decodeValue));
         throw new Error("cannot restore value: unrecognized encoded object");
     }
     return data;

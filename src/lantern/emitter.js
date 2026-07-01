@@ -1004,34 +1004,42 @@ function emitTemplateFrags(parts, globalNames) {
     return parts.map((part) => emitTemplateFrag(part, globalNames)).join(", ");
 }
 
-// Whether a template literal reads any *lexical* binding — `self`, a `let`/param, or the
-// action context — as opposed to only globals (which resolve via getGlobal), literals, and
-// function calls. A no-capture template can be rebuilt from its id at module load, so it is
-// persistable (devdocs/text-persistence.md, Phase 1); a capturing one is emitted inline and
-// freezes on save. Conservative by construction: any AST shape not positively recognized as
-// capture-free counts as a capture, so we never brand a template we can't safely reconstruct.
-function templatePartsCaptureLexical(parts, globalNames) {
-    return parts.some((part) => templatePartCapturesLexical(part, globalNames));
+// Collects the *lexical* names a template captures — `self`, a `let`/param/loop var, or an
+// unrecognized shape (the `UNKNOWN_CAPTURE` sentinel, forcing a fallback) — as opposed to
+// globals (resolved via getGlobal), named instances (module consts), literals, and function
+// calls, which need no capture. A template whose captures are empty is rebuildable from its
+// id alone; captures of exactly `{self}` are rebuildable with an env (Phase 2b); anything
+// else falls back to freezing. Conservative: any AST shape not positively recognized adds
+// the sentinel. See devdocs/text-persistence.md.
+const UNKNOWN_CAPTURE = " unknown";
+
+function collectTemplateCaptures(parts, globalNames, out) {
+    for (const part of parts) collectPartCaptures(part, globalNames, out);
 }
 
-function templatePartCapturesLexical(part, globalNames) {
+function collectPartCaptures(part, globalNames, out) {
     switch (part.kind) {
         case "text":
         case "pluralSuffix":
-            return false;
+            return;
         case "expr":
-            return exprCapturesLexical(part.expr, globalNames);
+            collectExprCaptures(part.expr, globalNames, out);
+            return;
         case "style":
         case "firstTime":
-            return templatePartsCaptureLexical(part.parts, globalNames);
+            collectTemplateCaptures(part.parts, globalNames, out);
+            return;
         case "oneOf":
-            return part.alternatives.some((alt) => templatePartsCaptureLexical(alt, globalNames));
+            for (const alt of part.alternatives) collectTemplateCaptures(alt, globalNames, out);
+            return;
         case "cond":
-            return part.branches.some((b) =>
-                (b.cond !== null && exprCapturesLexical(b.cond, globalNames))
-                || templatePartsCaptureLexical(b.parts, globalNames));
+            for (const b of part.branches) {
+                if (b.cond !== null) collectExprCaptures(b.cond, globalNames, out);
+                collectTemplateCaptures(b.parts, globalNames, out);
+            }
+            return;
         default:
-            return true;
+            out.add(UNKNOWN_CAPTURE);
     }
 }
 
@@ -1049,8 +1057,8 @@ function capturesName(name, globalNames) {
     return true;
 }
 
-function exprCapturesLexical(expr, globalNames) {
-    if (!expr || typeof expr !== "object") return false;
+function collectExprCaptures(expr, globalNames, out) {
+    if (!expr || typeof expr !== "object") return;
     switch (expr.kind) {
         case "StringLiteral":
         case "NumberLiteral":
@@ -1059,25 +1067,36 @@ function exprCapturesLexical(expr, globalNames) {
         case "GlobalExpr":
         case "FunctionRefExpr":
         case "ParenNameExpr":
-            return false;
+            return;
         case "VariableExpr":
-            return capturesName(expr.name, globalNames);
-        case "PropertyAccess":
-            return capturesName(coerceName(expr.chain[0]), globalNames);
+            if (capturesName(expr.name, globalNames)) out.add(expr.name);
+            return;
+        case "PropertyAccess": {
+            const head = coerceName(expr.chain[0]);
+            if (capturesName(head, globalNames)) out.add(head);
+            return;
+        }
         case "MemberAccess":
-            return exprCapturesLexical(expr.object, globalNames);
+            collectExprCaptures(expr.object, globalNames, out);
+            return;
         case "MessageExpr":
-            return exprCapturesLexical(expr.defaultExpr, globalNames);
+            collectExprCaptures(expr.defaultExpr, globalNames, out);
+            return;
         case "IndexExpr":
-            return exprCapturesLexical(expr.target, globalNames) || exprCapturesLexical(expr.index, globalNames);
+            collectExprCaptures(expr.target, globalNames, out);
+            collectExprCaptures(expr.index, globalNames, out);
+            return;
         case "ListLiteral":
-            return expr.elements.some((e) => exprCapturesLexical(e, globalNames));
+            for (const e of expr.elements) collectExprCaptures(e, globalNames, out);
+            return;
         case "TemplateLiteral":
-            return templatePartsCaptureLexical(expr.parts, globalNames);
+            collectTemplateCaptures(expr.parts, globalNames, out);
+            return;
         case "FreezeExpr":
         case "NegateExpr":
         case "NotExpr":
-            return exprCapturesLexical(expr.expr, globalNames);
+            collectExprCaptures(expr.expr, globalNames, out);
+            return;
         case "Concat":
         case "EqualsExpr":
         case "LessThanExpr":
@@ -1090,13 +1109,16 @@ function exprCapturesLexical(expr, globalNames) {
         case "PowerExpr":
         case "AndExpr":
         case "OrExpr":
-            return exprCapturesLexical(expr.left, globalNames) || exprCapturesLexical(expr.right, globalNames);
+            collectExprCaptures(expr.left, globalNames, out);
+            collectExprCaptures(expr.right, globalNames, out);
+            return;
         case "CallExpr":
         case "FollowExpr":
             // The callee is a top-level function/rulebook (no capture); arguments may capture.
-            return (expr.args || []).some((a) => exprCapturesLexical(a, globalNames));
+            for (const a of (expr.args || [])) collectExprCaptures(a, globalNames, out);
+            return;
         default:
-            return true;
+            out.add(UNKNOWN_CAPTURE);
     }
 }
 
@@ -1165,17 +1187,23 @@ function emitExpression(expr, globalNames = new Set()) {
         // (inline `[if]`/`[else if]`/`[else]`) emits a ternary chain that renders the
         // chosen branch's nested parts.
         const thunk = `lamplighter.makeText(() => lamplighter.renderTemplate([${emitTemplateFrags(expr.parts, globalNames)}]))`;
-        // A template that captures a lexical binding (self / a local / action context)
-        // can't be rebuilt from an id at module load, so emit it inline — encodeValue
-        // freezes it on save (the documented fallback). A no-capture template is registered
-        // by id and instantiated, so a stored copy survives save/undo/restore as a live
-        // thunk rather than a frozen string. See devdocs/text-persistence.md.
-        if (templatePartsCaptureLexical(expr.parts, globalNames)) {
+        // Persistability turns on what the template captures. Nothing → rebuildable from its
+        // id alone. Exactly `{self}` → rebuildable with an env carrying `self` (Phase 2b); the
+        // factory takes `self`, the use site passes the current one, and encodeValue serializes
+        // it as a {$ref} (freezing at save if `self` is a transient action, not a named
+        // instance). Any other capture (a local, a shadowed name, an unknown shape) → emit
+        // inline, so encodeValue freezes it (the documented fallback). See
+        // devdocs/text-persistence.md.
+        const captures = new Set();
+        collectTemplateCaptures(expr.parts, globalNames, captures);
+        const brandable = captures.size === 0 || (captures.size === 1 && captures.has("self"));
+        if (!brandable) {
             return thunk;
         }
+        const params = [...captures]; // [] or ["self"]
         const id = templateIdCounter++;
-        templateRegistrations.push(`lamplighter.registerTemplate(${id}, () => ${thunk});`);
-        return `lamplighter.instantiateTemplate(${id})`;
+        templateRegistrations.push(`lamplighter.registerTemplate(${id}, (${params.join(", ")}) => ${thunk});`);
+        return `lamplighter.instantiateTemplate(${id}, [${params.join(", ")}])`;
     }
     if (expr.kind === "FreezeExpr") {
         return `lamplighter.renderText(${emitExpression(expr.expr, globalNames)})`;

@@ -1,0 +1,27 @@
+hall
+A hall.
+
+You see a dial here.
+
+> boost dial
+> x dial
+level is 0.
+
+> raise dial
+> x dial
+level is 1.
+
+> save
+Name for saved game: s
+Game saved.
+
+> raise dial
+> restore
+Name of saved game: s
+Game restored.
+
+> raise dial
+> x dial
+level is 2.
+
+> quit
