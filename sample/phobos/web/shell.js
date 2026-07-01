@@ -166,7 +166,9 @@
     function requestInput() {
         awaitingInput = true;
         inputLine.disabled = false;
-        inputLine.focus();
+        // Scrolling is owned by the explicit scrollToBottom calls (the prompt/output
+        // that precede this already scrolled); focus itself must never move the view.
+        inputLine.focus({ preventScroll: true });
     }
 
     function deliverLine(line) {
@@ -356,11 +358,14 @@
 
     // Clicking the transcript advances the pager while paused, otherwise focuses the
     // input while it is awaited (so the player need not aim for the inline field).
+    // preventScroll: the click routes keystrokes to the input, it must not yank a
+    // player who scrolled up back to the bottom (submitting a line still does, via
+    // the echo's scrollToBottom).
     transcript.addEventListener("click", () => {
         if (paged) {
             advancePage();
         } else if (awaitingInput && window.getSelection().isCollapsed) {
-            inputLine.focus();
+            inputLine.focus({ preventScroll: true });
         }
     });
 
@@ -396,7 +401,9 @@
 
     function resolveModal(payload) {
         closeModal();
-        if (awaitingInput) inputLine.focus();
+        // preventScroll for the same reason as the transcript click handler: closing
+        // an overlay must not move the view the player had.
+        if (awaitingInput) inputLine.focus({ preventScroll: true });
         replySave(payload);
     }
 
