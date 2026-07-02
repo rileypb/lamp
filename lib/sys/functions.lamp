@@ -19,11 +19,18 @@ native function int code_at(string s, int i)
 native function string substring(string s, int start, int end)
 
 # Apply an object->string function to each element of a list, returning the list of
-# results. The general list-transform primitive (Lamp has no list literal/append, so
-# building a derived list needs a native); `fn` is any single-argument function
+# results. The general list-transform primitive (a native because Lamp has no
+# generics — the element/return types are open); `fn` is any single-argument function
 # passed by name. Used e.g. to render a list of objects to prose:
 # `format_list(map_strings(things, describe))`.
 native function list<string> map_strings(list<object> xs, function fn)
+
+# Append an item to a list, in place (like shuffle, mutating the list so a list held
+# in a global/field grows durably and the append survives undo/save). The general
+# list-builder: with map_strings and a `for` loop it expresses filter/collect, which
+# Lamp has no literal syntax for. A native because it is generic over the element type
+# (pass any list<T> and a matching item).
+native function void append(list<object> xs, object item)
 
 # Parse one line of input and run the matched action on behalf of `actor` (see
 # devdocs/game_parser.md). The actor is supplied by the caller — typically the

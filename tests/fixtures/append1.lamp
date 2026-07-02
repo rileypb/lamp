@@ -1,0 +1,30 @@
+# Building lists with append (REVIEW 4.1a): the filter/collect idiom — append into a
+# fresh list inside a loop, which the fixed-length list literal can't express — plus
+# appending object references. append mutates in place, so the list grows durably.
+
+game Append_Demo
+
+type gizmo:
+	string label
+
+gizmo widget:
+	label "a widget"
+gizmo gadget:
+	label "a gadget"
+
+on startup:
+	let nums = [1, 2, 3, 4, 5, 6]
+	let evens = []
+	for n in nums:
+		if n mod 2 == 0:
+			append(evens, n)
+	print "evens count: [evens.size][line break]"
+	for e in evens:
+		print "  even [e][line break]"
+	let things = []
+	append(things, widget)
+	append(things, gadget)
+	print "things count: [things.size][line break]"
+	print "first thing: [things.first][line break]"
+	for t in things:
+		print "  thing [t][line break]"

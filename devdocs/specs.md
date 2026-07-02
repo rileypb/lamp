@@ -15,7 +15,8 @@
     - `readline() → string` — reads one line of player input, blocking until the player submits. Input is brokered through the sandbox's input channel; `readline` is not available outside the sandbox.
     - `split(string) → list<string>` — splits a string on whitespace and returns the words as a list.
     - `length(string) → int`, `char_at(string, int) → string`, `code_at(string, int) → int`, `substring(string, int start, int end) → string` — the string-character primitives. All **codepoint-based** (an astral character counts as one) and **0-indexed** (matching list indexing). `char_at` returns `""` and `code_at` returns `-1` when the index is out of range; `substring` is the half-open range `[start, end)`, tolerant of out-of-range bounds. With `to_lower` and `+` these are enough to express text algorithms (ciphers, hashing, tokenisation) in Lamp rather than a native.
-    - `map_strings(list<object>, function) → list<string>` — applies an object→string function (passed by name) to each element, returning the list of results. The general list-transform primitive (Lamp has list literals `[…]` but no append, so *deriving* a transformed list still needs a native); pairs with the locale's `format_list` to render a list of objects to prose (`format_list(map_strings(things, describe))`).
+    - `map_strings(list<object>, function) → list<string>` — applies an object→string function (passed by name) to each element, returning the list of results. The general list-transform primitive (a native because Lamp has no generics — the element/return types are open); pairs with the locale's `format_list` to render a list of objects to prose (`format_list(map_strings(things, describe))`).
+    - `append(list<object>, object)` — appends an item to a list **in place** (mutating the list, like `shuffle`), so a list held in a global/field grows durably and the append is captured by undo/save. It is the general list-builder: with `map_strings` and a `for` loop it expresses filter/collect, which Lamp has no literal syntax for (e.g. `let evens = []` then `append(evens, n)` inside a loop). A native because it is generic over the element type.
     - `run_command(string, object) → bool` — parses one line of player input against registered action templates, resolves slot objects in scope, and runs the matched action for the given actor. Returns **true iff a turn was spent** (an action actually ran), so the caller can fire every-turn rules; false for a parse failure, a disambiguation prompt, or an out-of-world verb.
 - `lib/en-US/` is the **default locale pack** — English *language data* for the text-substitution layer (article functions `the`/`a`/`an`, case functions `cap`/`upper`/`lower`/`title`, and the list-to-prose formatter `format_list` with its "and"/Oxford comma). Like `lib/sys`, it auto-loads on every invocation, inserted **immediately after `lib/sys/` and before any imported library**. It is the swappable language layer (a future `lib/en-GB`/`lib/fr-FR` replaces it) — `lib/sys` holds only language-agnostic mechanism. See `devdocs/text.md` (three-layer split).
 - Other subdirectories of `lib/` (e.g. `lib/test/`, `lib/advent/`) are optional libraries that must be imported explicitly with `lib LIBNAME`.
@@ -1691,6 +1692,15 @@ Indexing into an out-of-bounds position returns `undefined` (no runtime error). 
 ```lamp
 nums[0] = 99
 order[i] = order[j]
+```
+
+- **Growing a list** — there is no list-append *operator*; use the `append(list, item)` sys native, which appends in place (durable, like element assignment). With a `for` loop this is how a derived list — a filter or collect — is built, since the list literal is fixed-length:
+
+```lamp
+let evens = []
+for n in nums:
+    if n mod 2 == 0:
+        append(evens, n)
 ```
 
 - **Follow expression** — `follow NAME(args)` invokes a rulebook and produces its result value (see Rulebooks):
