@@ -1,0 +1,28 @@
+# Free-text pronouns under fr-FR (scope-2): a subject carries a `pronouns` preset
+# (il/elle/iel) or a full custom set, and the [They]/[them]/[their]/[theirs]/[themself]
+# sugar reads it — so elle, the nonbinary iel, and custom neopronouns all render in
+# French. When `pronouns` is empty a game still falls back to grammatical gender.
+
+locale "fr-FR"
+
+game Pronoms_FR:
+	author "Lamp"
+
+type person:
+	string printed_name = ""
+	string pronouns = ""
+
+person alice:
+	printed_name "Alice"
+	pronouns "elle"
+person robin:
+	printed_name "Robin"
+	pronouns "iel"
+person sacha:
+	printed_name "Sacha"
+	pronouns "ael/aer/aes/le sien/se"
+
+on startup:
+	print "[regarding alice][They] [them] [their] [theirs] [themself][line break]"
+	print "[regarding robin][They] [them] [their] [theirs] [themself][line break]"
+	print "[regarding sacha][They] [them] [their] [theirs] [themself][line break]"
