@@ -93,9 +93,25 @@ its suggested order:
    "Phobos", now "Phobos - A Galaxy Jones Story"). Removes Lighthouse's tokenizer
    dependency. New test `titled.lamp` in `tests/lighthouse` + existing cloak title
    test (name-fallback) both pass; plain compiles write no sidecar (flag-gated).
-Remaining findings (duplicated selector resolver, `gender` vocabulary mismatch
-between advent/en-US/fr-FR, QUIT/RESTART recognition split, `scopeOf` hot-loop
-indexing, contract-surface documentation) are triaged in the file itself. Overlaps with existing items:
+7. ~~**[M] `gender` vocabulary mismatch (§1.8)**~~ **DONE (2026-07-02) — reframed as
+   free-text pronouns.** Rather than reconcile the enum vocabularies, dropped the gender
+   enum from the pronoun path entirely: an object carries free-text `pronouns` (a preset
+   key `she`/`he`/`they`/`it`, or a full custom set `subject/object/det/pron/reflexive`
+   like `xe/xem/xyr/xyrs/xemself`), and en-US's `[they]`/`[we]` families + verb agreement
+   read it — so any pronouns work and singular "they" takes a plural verb. Maximally
+   inclusive, and the three-way mismatch is gone (no enum to disagree on). Grammatical
+   gender (a noun's language property, for fr-FR le/la — legitimately closed) is split
+   into a separate `grammatical_gender` field that only gendered locales read. New golden
+   `pronouns1` (she / singular-they / neopronoun); `showme1` re-baselined (renamed fields);
+   206 others byte-invariant. **Scope-1 done (English-first); deferred follow-up:** rewire
+   fr-FR to pronoun sets too (it still derives il/elle from `grammatical_gender`), and
+   decide whether grammatical gender should be locale-owned data rather than an advent
+   field. **Also flag:** `sample/phobos/web` (the committed deploy bundle) is now a stale
+   snapshot — still self-consistent and correct, but a Phobos redeploy should
+   `npm run build:phobos` to pick up the pronoun change (and the §1.5 page-title fix).
+Remaining findings (duplicated selector resolver, QUIT/RESTART recognition split,
+`scopeOf` hot-loop indexing, contract-surface documentation) are triaged in the file
+itself. Overlaps with existing items:
 the type topo-sort and the bare-object-assignment emitter bug are already
 tracked below; REVIEW §1.4 argues for raising the priority of the
 library-contributed consistency pass (door-check follow-up B / item 7).
