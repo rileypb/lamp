@@ -1,4 +1,5 @@
 const { coerceName } = require("./tokenizer");
+const { resolveSelector } = require("./selector");
 
 const PRIMITIVE_TYPES = new Set(["string", "int", "bool", "real", "text"]);
 
@@ -165,7 +166,7 @@ function checkPhaseRule(node, typeSchema, kindSchema, functionSchema, globalName
     let selfType = node.actionName;
     let label = `"${node.actionName}"`;
     if (node.selector) {
-        const targets = resolveSelectorActions(node.selector);
+        const targets = resolveSelector(node.selector, actionSchema.keys(), actionTagSchema, typeError);
         checkSelectorSlotSafety(node, targets);
         selfType = targets[0];
         label = "selector rule";
@@ -186,39 +187,6 @@ function checkPhaseRule(node, typeSchema, kindSchema, functionSchema, globalName
 // Slots available on every action instance regardless of declaration, so a
 // multi-action rule may always reference them.
 const UNIVERSAL_SLOTS = new Set(["actor", "action", "reason"]);
-
-// Resolves a selector AST to a sorted action-name array, throwing on an unknown
-// atom or an empty result. Mirrors the emitter's resolver (kept separate so the
-// checker can report errors before emission).
-function resolveSelectorActions(node) {
-    const universe = new Set(actionSchema.keys());
-    function resolveSet(n) {
-        if (n.kind === "SelAny") return new Set(universe);
-        if (n.kind === "SelAtom") {
-            if (universe.has(n.name)) return new Set([n.name]);
-            if (actionTagSchema.has(n.name)) return new Set(actionTagSchema.get(n.name));
-            throw typeError(n.filePath, n.lineNumber, `unknown action or tag "${n.name}"`);
-        }
-        if (n.kind === "SelNot") {
-            const inner = resolveSet(n.operand);
-            return new Set([...universe].filter((a) => !inner.has(a)));
-        }
-        if (n.kind === "SelAnd") {
-            const l = resolveSet(n.left);
-            const r = resolveSet(n.right);
-            return new Set([...l].filter((a) => r.has(a)));
-        }
-        if (n.kind === "SelOr") {
-            return new Set([...resolveSet(n.left), ...resolveSet(n.right)]);
-        }
-        throw new Error(`Unsupported selector node: ${n.kind}`);
-    }
-    const result = resolveSet(node);
-    if (result.size === 0) {
-        throw typeError(node.filePath, node.lineNumber, "action selector matches no actions");
-    }
-    return [...result].sort();
-}
 
 // In a multi-action rule, `self.SLOT` is only valid for a universal slot or a slot
 // every targeted action declares — otherwise the slot may be absent at runtime.

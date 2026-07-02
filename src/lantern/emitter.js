@@ -1,5 +1,6 @@
 const { encode } = require("../strcodec");
 const { coerceName } = require("./tokenizer");
+const { resolveSelector } = require("./selector");
 
 // Expressions whose emitted form is already self-delimiting (literals, variable
 // names, property-access chains, function calls) and never need extra parens.
@@ -762,7 +763,7 @@ function emitPhaseRule(node, globalNames = new Set()) {
     // A multi-action selector expands to one registration per resolved action;
     // the guard and body emit identically for each. See devdocs/rulebooks.md.
     const targets = node.selector
-        ? resolveSelector(node.selector)
+        ? resolveSelector(node.selector, allActionNames, actionTagMembers, emitSelectorError)
         : [node.actionName];
     const bodyLines = [];
     if (node.whenExpr) {
@@ -778,37 +779,10 @@ function emitPhaseRule(node, globalNames = new Set()) {
     return lines.join("\n");
 }
 
-// Resolves a selector AST to a sorted array of action names. Each atom denotes a
-// set; `and`/`or`/`not` are set ops over the action universe. Throws a compile
-// error on an unknown atom or an empty result.
-function resolveSelector(node) {
-    const universe = new Set(allActionNames);
-    function resolveSet(n) {
-        if (n.kind === "SelAny") return new Set(universe);
-        if (n.kind === "SelAtom") {
-            if (universe.has(n.name)) return new Set([n.name]);
-            if (actionTagMembers.has(n.name)) return new Set(actionTagMembers.get(n.name));
-            throw new Error(`${n.filePath}:${n.lineNumber}: unknown action or tag "${n.name}"`);
-        }
-        if (n.kind === "SelNot") {
-            const inner = resolveSet(n.operand);
-            return new Set([...universe].filter((a) => !inner.has(a)));
-        }
-        if (n.kind === "SelAnd") {
-            const l = resolveSet(n.left);
-            const r = resolveSet(n.right);
-            return new Set([...l].filter((a) => r.has(a)));
-        }
-        if (n.kind === "SelOr") {
-            return new Set([...resolveSet(n.left), ...resolveSet(n.right)]);
-        }
-        throw new Error(`Unsupported selector node: ${n.kind}`);
-    }
-    const result = resolveSet(node);
-    if (result.size === 0) {
-        throw new Error(`${node.filePath}:${node.lineNumber}: action selector matches no actions`);
-    }
-    return [...result].sort();
+// Emitter-side diagnostic for the shared selector resolver: a bare
+// `file:line: message` (the checker prefixes "type error:" via its own factory).
+function emitSelectorError(filePath, lineNumber, message) {
+    return new Error(`${filePath}:${lineNumber}: ${message}`);
 }
 
 function emitChangeHandler(node, globalNames = new Set()) {
