@@ -697,7 +697,23 @@ function checkFollowCall(stmt, typeSchema, kindSchema, localTypes, functionSchem
     checkCallArgs(stmt.name, stmt.args, rb, "rulebook", stmt.filePath, stmt.lineNumber, typeSchema, kindSchema, localTypes, functionSchema);
 }
 
+// Every name callable as NAME(...) at compile time: a declared function or native
+// (functionSchema), a rulebook dispatcher (rulebookSchema), the built-in `pick`, or
+// a `function`-typed local/parameter holding a first-class function (e.g. the `fn`
+// passed to map_strings). Natives must be declared and functions/rulebooks are
+// collected up front, so an unknown name is a typo that would be a runtime
+// ReferenceError — reject it now.
+function isKnownCallable(name, functionSchema, localTypes) {
+    return name === "pick"
+        || functionSchema.has(name)
+        || rulebookSchema.has(name)
+        || (localTypes ? localTypes.get(name) === "function" : false);
+}
+
 function checkCallStatement(stmt, typeSchema, kindSchema, localTypes, functionSchema) {
+    if (!isKnownCallable(stmt.name, functionSchema, localTypes)) {
+        throw typeError(stmt.filePath, stmt.lineNumber, `call to undefined function "${stmt.name}"`);
+    }
     const fn = functionSchema.get(stmt.name);
     if (!fn) return;
     checkCallArgs(stmt.name, stmt.args, fn, "function", stmt.filePath, stmt.lineNumber, typeSchema, kindSchema, localTypes, functionSchema);
@@ -730,12 +746,6 @@ function checkTryStatement(stmt, typeSchema, kindSchema, localTypes, functionSch
     }
 }
 
-// Recursively validates every call/follow embedded in an expression — the
-// expression-position counterpart to the statement-level checks above, so
-// `print follow f(1, 2)` and `x == g(a)` are checked the same as `f(...)` and
-// `follow f(...)` statements. Unknown function names stay lenient (natives,
-// forward refs); an unknown rulebook is an error, matching follow-statement
-// behavior.
 // `typeName` names a declared object type (something with instances), as opposed
 // to a primitive or a kind/enum.
 function isDeclaredObjectType(typeName, typeSchema, kindSchema) {
@@ -758,6 +768,12 @@ function checkObjectNameComparison(expr, typeSchema, kindSchema, localTypes, fun
     }
 }
 
+// Recursively validates every call/follow embedded in an expression — the
+// expression-position counterpart to the statement-level checks above, so
+// `print follow f(1, 2)` and `x == g(a)` are checked the same as `f(...)` and
+// `follow f(...)` statements. An unknown function name (or rulebook) is a compile
+// error, matching checkCallStatement — natives are declared and functions/rulebooks
+// are collected up front, so the callable set is fully known.
 function checkExprCalls(expr, typeSchema, kindSchema, localTypes, functionSchema) {
     if (!expr || typeof expr !== "object") return;
     if (expr.kind === "EqualsExpr") {
@@ -768,6 +784,8 @@ function checkExprCalls(expr, typeSchema, kindSchema, localTypes, functionSchema
             if (expr.args.length < 1 || expr.args.length > 2) {
                 throw typeError(expr.filePath, expr.lineNumber, `"pick" expects 1 or 2 arguments (a list and an optional mode), got ${expr.args.length}`);
             }
+        } else if (!isKnownCallable(expr.name, functionSchema, localTypes)) {
+            throw typeError(expr.filePath, expr.lineNumber, `call to undefined function "${expr.name}"`);
         } else {
             const fn = functionSchema.get(expr.name);
             if (fn) {
@@ -783,15 +801,17 @@ function checkExprCalls(expr, typeSchema, kindSchema, localTypes, functionSchema
     } else if (expr.kind === "TryExpr") {
         checkTryStatement(expr, typeSchema, kindSchema, localTypes, functionSchema);
     }
-    for (const key of ["left", "right", "expr", "target", "index", "defaultExpr", "overrideExpr"]) {
-        if (expr[key]) checkExprCalls(expr[key], typeSchema, kindSchema, localTypes, functionSchema);
-    }
-    if (Array.isArray(expr.args)) {
-        for (const arg of expr.args) checkExprCalls(arg, typeSchema, kindSchema, localTypes, functionSchema);
-    }
-    if (Array.isArray(expr.fields)) {
-        for (const field of expr.fields) {
-            if (field && field.value) checkExprCalls(field.value, typeSchema, kindSchema, localTypes, functionSchema);
+    // Recurse into every child expression generically, so a call nested anywhere —
+    // a member-access object, a list element, a template substitution/branch — is
+    // still validated (a hand-kept key list silently missed those). Skips the
+    // non-expression bookkeeping keys; AST nodes are acyclic, so this terminates.
+    for (const key of Object.keys(expr)) {
+        if (key === "kind" || key === "filePath" || key === "lineNumber") continue;
+        const child = expr[key];
+        if (Array.isArray(child)) {
+            for (const item of child) checkExprCalls(item, typeSchema, kindSchema, localTypes, functionSchema);
+        } else if (child && typeof child === "object") {
+            checkExprCalls(child, typeSchema, kindSchema, localTypes, functionSchema);
         }
     }
 }

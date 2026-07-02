@@ -1,0 +1,3 @@
+Compile error: tests/fixtures/call_nested_arity.lamp:12: type error: function "add" expects 2 argument(s), got 1
+  12 | 	let xs = [add(1)]
+    |  ^

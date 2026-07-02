@@ -1,0 +1,3 @@
+Compile error: tests/fixtures/call_undefined.lamp:8: type error: call to undefined function "frobnicate"
+  8 | 	frobnicate(3)
+    |  ^

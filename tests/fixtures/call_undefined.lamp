@@ -1,0 +1,8 @@
+# A call to a name that is not a declared function, native, rulebook, `pick`, or a
+# function-typed local is a compile error (previously a silent runtime
+# ReferenceError). See REVIEW 4.3a.
+
+game Call_Undef
+
+on startup:
+	frobnicate(3)

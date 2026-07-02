@@ -1,0 +1,13 @@
+# checkExprCalls now recurses into every child expression, so an arg-count error in
+# a call nested inside a list literal (an `elements` array the old hand-kept key
+# list never walked) is caught at compile time. The same generic walk also covers
+# member-access objects and text substitutions. See REVIEW 4.3c.
+
+game Nested_Arity
+
+function int add(int a, int b):
+	return a + b
+
+on startup:
+	let xs = [add(1)]
+	print xs.size
