@@ -70,9 +70,15 @@ its suggested order:
      an undefined call). `is_container` is ported off JS to `return x is container`
      (native deleted). Goldens `is1` (hierarchy/none/if/not) + `is_unknown_type`
      (compile error); specs.md documents the operator/precedence/reserved word.
-   - remaining unblocks: the actual port of the remaining `lib/advent/index.js` list
-     helpers (`contents_of`/`listable_contents`/`describe_supporters`) now that append
-     + `is` exist, and the `holder` native-vs-Lamp decision (§3.2).
+   - ~~port the remaining `lib/advent/index.js` list helpers~~ **DONE (2026-07-02):**
+     `contents_of`, `listable_contents`, and `describe_supporters` are now pure Lamp in
+     `rooms.lamp` (using `item.all` + `holder` + `append` + `is`), the three natives
+     deleted. `supporter_phrase` is promoted to a declared locale native (en-US + fr-FR
+     `functions.lamp`, following `contained_phrase`) so the now-Lamp `describe_supporters`
+     can call it. Suite byte-invariant (`nestlist1`/`frnested1`/`openclose1`/phobos).
+     `lib/advent/index.js` now holds only genuinely-native code (containment seam
+     `holder`, door/part wiring, scope providers, debug introspection).
+   - remaining: the `holder` native-vs-Lamp decision (§3.2).
 Remaining findings (duplicated selector resolver, Lighthouse page-title
 metadata drift, `gender` vocabulary mismatch between advent/en-US/fr-FR,
 QUIT/RESTART recognition split, `scopeOf` hot-loop indexing, contract-surface
