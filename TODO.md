@@ -42,9 +42,18 @@ its suggested order:
    "le manteau" strips; French prompt). This also sidesteps the interpolable-message
    problem the "route through message()" idea hit — the renderer takes the runtime
    value as an argument. Golden `frparser1`; i18n.md/game_parser.md updated (REVIEW §1.2).
-4. Checker hardening: unknown-function calls should be compile errors;
-   `checkExprCalls` misses MemberAccess/ListLiteral/template children
-   (REVIEW §4.3a/c).
+4. ~~Checker hardening (REVIEW §4.3a/c)~~ **DONE (2026-07-01):** a call to an
+   undefined name (not a declared function/native, rulebook, `pick`, or a
+   `function`-typed local) is now a compile error instead of a runtime
+   ReferenceError (`isKnownCallable`, used by `checkCallStatement` and
+   `checkExprCalls`). And `checkExprCalls` now recurses generically into every
+   child expression (replacing the hand-kept key list), so a call nested in a
+   member-access object, a list element, or a text substitution is validated too.
+   Goldens `call_undefined` (§4.3a) + `call_nested_arity` (§4.3c); whole suite
+   (incl. phobos) byte-invariant, proving no undeclared-native calls existed.
+   Minor pre-existing caveat surfaced: a checker error on a call *inside a `[...]`
+   substitution* reports line 1 (the substitution is re-tokenized as its own
+   source) — a diagnostics-location bug tracked with item 4 below, not fixed here.
 5. JS→Lamp: port `wire_parts` to Lamp now (no blocker, REVIEW §3.1); the big
    unblocks are list filter/append + an `x is TYPE` test (REVIEW §4.1).
 Remaining findings (duplicated selector resolver, Lighthouse page-title
