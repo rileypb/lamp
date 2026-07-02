@@ -5,21 +5,18 @@
 game Locale_One:
     author "Lamp"
 
-type article
-article proper
-article plural
-
 type thing:
     string printed_name = ""
-    article article
+    bool proper = false
+    bool plural = false
 
 thing lantern
 thing apple
 thing alice:
     printed_name "Alice"
-    article proper
+    proper
 thing scissors:
-    article plural
+    plural
 
 on startup:
     print "[The lantern] glows; [A apple] sits nearby."

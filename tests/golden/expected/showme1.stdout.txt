@@ -7,6 +7,8 @@ You see a safe here.
 gem (item)
   location: safe
   private_name: false
+  proper: false
+  plural: false
   pronouns: ""
   grammatical_gender: "masculine"
   feels: ""
@@ -30,6 +32,8 @@ gem (item)
 safe (box)
   location: Hall
   private_name: false
+  proper: false
+  plural: false
   pronouns: ""
   grammatical_gender: "masculine"
   feels: ""

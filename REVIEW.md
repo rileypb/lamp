@@ -113,7 +113,20 @@ can't run LOOK/TAKE — preserving the traditional restricted screen while unify
 `xyzzy`, `q` exits). **Consequence, not done here:** the words are now grammar verbs, so a future
 general verb-localization mechanism (none exists for any verb yet) would let fr-FR translate them.
 
-### 1.7 [L] Two parallel proper/plural mechanisms, one of them triple-implemented
+### 1.7 [L] Two parallel proper/plural mechanisms — DONE (2026-07-02)
+**Resolved: boolean fields are canonical, the `article` enum is gone.** advent's `physical`
+now carries `bool proper`/`bool plural` (the representation the locales already read); the
+`type article`, its four enum members (`count`/`definite`/`proper`/`plural`), and the
+`article article` field are deleted. All usages migrated (`article proper` → `proper`,
+`article plural` → `plural`) across phobos and the standalone locale fixtures. The
+back-compat `x.article && x.article.name === …` branch is dropped from `is_proper`/`is_plural`
+in both `lib/en-US` and `lib/fr-FR` — now a plain `Boolean(x && x.proper)`. The runtime copy
+(`isProperNamed`) was already gone (§1.2). Suite byte-invariant except `showme1` (its field
+dump now lists `proper`/`plural` instead of `article` — re-baselined). **Bonus finding while
+migrating:** the checker does *not* validate object-body field assignments against the type
+schema — `nonexistent_field proper` on an object compiles silently (a typo'd field name is a
+no-op, not an error). Tracked as a new validation-gap item (overlaps §4.3). (Original text below.)
+
 Objects can be marked proper/plural either by boolean fields (`proper`,
 `plural` — what the locales document as the contract) or by advent's
 `article` enum objects (`article proper`, `lib/advent/globals.lamp:13-16`).

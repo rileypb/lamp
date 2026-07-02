@@ -12,7 +12,7 @@ room Room:
 
 person bob:
 	printed_name "Bob"
-	article proper
+	proper
 	understand "bob/man"
 	description "An ordinary man."
 

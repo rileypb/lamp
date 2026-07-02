@@ -9,8 +9,6 @@ type thing:
 	# must not answer to "locker"). See buildVocabIndex (runtime).
 	bool private_name = false
 
-type article
-
 # Failure reasons raised by `check` rules and rendered by `report failed` rules
 # (see devdocs/rulebooks.md). An open type so games can add their own reasons.
 type stop_reason
@@ -22,7 +20,12 @@ type game:
 
 type physical < thing:
 	string description
-	article article
+	# Naming policy read by the locale packs (lib/en-US/lib/fr-FR): `proper` suppresses the
+	# article ("Galaxy Jones", not "the Galaxy Jones"); `plural` takes a plural article/verb
+	# ("some boots", "they are"). These are the canonical representation — a single boolean
+	# each, no separate article enum. See devdocs/i18n.md.
+	bool proper = false
+	bool plural = false
 	bool supporter
 	# Pronouns for adaptive pronoun/verb rendering ([they]/[them]/… and, for a
 	# third-person player, [we]). Free text: a preset key ("she"/"he"/"they"/"it") or

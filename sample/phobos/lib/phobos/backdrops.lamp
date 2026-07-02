@@ -93,7 +93,7 @@ function bool ceilinged(room r):
 # --- Walls (Walls.i7x) -------------------------------------------------------
 backdrop walls:
 	printed_name "wall"
-	article plural
+	plural
 	scenery
 	understand "wall/walls"
 

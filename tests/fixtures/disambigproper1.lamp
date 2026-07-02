@@ -11,7 +11,7 @@ room Lab:
 
 person alice:
 	printed_name "Alice"
-	article proper
+	proper
 	understand "alice"
 	description "A scientist named Alice."
 

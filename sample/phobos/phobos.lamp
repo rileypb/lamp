@@ -97,7 +97,7 @@ person yourself:
 	# Full, proper identification name — shown by `[the player]` and disambiguation ("Galaxy Jones",
 	# no article). Narration uses the short `viewpoint_name` ("Galaxy") set in the game block above.
 	printed_name "Galaxy Jones"
-	article proper
+	proper
 	pronouns "she"
 	understand "galaxy/jones/woman"
 	feels "Galaxy Jones pinches herself. She feels the same as always."

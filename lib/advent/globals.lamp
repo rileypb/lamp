@@ -16,12 +16,6 @@ global story_state story = ongoing
 # true for the instant between the verb and the loop's break, never during active play.
 global bool session_over = false
 
-# article enum values
-article count
-article definite
-article proper
-article plural
-
 # failure reasons (see actions.lamp check / report failed rules)
 stop_reason already_carrying
 stop_reason cant_take_that
