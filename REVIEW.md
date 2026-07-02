@@ -50,7 +50,15 @@ the prompt) and locale-registered article/pronoun/self-word sets. Until then, at
 minimum route the two hardcoded failure strings through `message()` like their
 siblings.
 
-### 1.3 [M] The documented runtime↔world contract understates the real surface
+### 1.3 [M] The documented runtime↔world contract understates the real surface — DONE (2026-07-02, doc)
+**Resolved by enumerating.** The contract block in `index.js` now lists the full hardcoded
+surface: object fields (`understand`, `private_name`, `printed_name`), globals (`act`,
+`undo limit`), and the `game` type + `name`/`author` fields — each previously documented only
+at its use site. Two of the review's original entries no longer applied: `player` was removed
+from the runtime by §1.1 (the block already notes no `player` global is assumed), and the
+`proper`/`article` proper-name convention is now locale presentation policy (§1.2/§1.7), not
+engine contract — the block says so explicitly. (Original finding text below.)
+
 The contract block (`index.js:46-70`) lists four names (`contains`, `physical`,
 `succeeded`/`failed`, `startup`). The runtime actually also hardcodes, each
 documented only at its use site:
@@ -371,20 +379,21 @@ than maintained in `addRelation`/`removeRelation`, so it can't drift from the ed
 fixpoint remains O(instances) passes (no ×edges now) — a BFS over a container→contents
 index would make it linear, but it's invisible at Phobos scale. Suite byte-invariant.
 
-### 5.2 [L] `encodeValue` can't snapshot a relation edge held in a value
-An anonymous edge (from a query result) stored in a global or field throws
-"cannot snapshot value" at the next checkpoint (`index.js:1786-1789`) — i.e. a
-legal Lamp program (`global object exit_edge`, assigned from `connects … ?first`
-… of a *named* edge is fine, an anonymous one isn't) breaks UNDO. Either give
-edges a serialization ($edge by type+fields) or document the restriction in
-state.md and fail with a message naming the global/field.
+### 5.2 [L] `encodeValue` can't snapshot a relation edge held in a value — DONE (2026-07-02, doc + diagnostic)
+Took the "document + better error" path (not per-edge serialization — edges are cheap to
+re-query and giving anonymous records save-identity would enlarge the closed algebra). The
+snapshot throw now special-cases an anonymous relation edge with a clear message ("cannot
+snapshot an anonymous `connects` relation edge: only a named edge survives … "), and the two
+structural encode callers (`encodeFields`, the globals provider) wrap it to name the offending
+field/global. Documented in `devdocs/state.md` under the value algebra. Per-edge serialization
+remains available later if a real use case appears.
 
-### 5.3 [L] `formatValue` can return non-strings into the stream layer
-`formatValue` returns numbers (and `undefined` for unset reference fields)
-verbatim; `streamWrite`/`streamEmitRun` then rely on JS coercion quirks
-(`run.length` on a number is `undefined`, which happens to behave). It works,
-but the stream layer's invariants ("run is a string") are maintained by
-accident. `return String(value)` at `formatValue`'s tail makes it deliberate.
+### 5.3 [L] `formatValue` can return non-strings into the stream layer — DONE (2026-07-02)
+`formatValue`'s tail is now `return String(value)`, so the stream layer's "a run is a
+string" invariant holds deliberately rather than via JS coercion quirks. Byte-invariant
+(210 goldens): every other caller already wrapped in `String(...)`, and the one raw path
+(`print`) only ever receives numbers here (an `undefined`/`null` would have thrown at
+`streamEmitRun`'s `run.length` before, so it never reached it).
 
 ---
 

@@ -65,9 +65,28 @@ const ANY = Symbol("relation-wildcard");
 //   - event `startup`    — fired once by run(); the world library hooks it to set
 //                          up the world and drive the command loop.
 //
+// A few more names are hardcoded, historically documented only at their use sites.
+// They follow the same D1 "IF runtime by design" decision; enumerated here so a
+// world-library author sees the whole surface in one place:
+//
+//   - object fields: `understand` (extra vocabulary tokens, `/`-separated) and
+//                    `private_name` (suppress the identifier tokens, Inform's
+//                    "privately-named") — both read by buildVocabIndex/objectVocab;
+//                    `printed_name` (display override for the canonical name) —
+//                    read by objectDisplayName/formatValue.
+//   - globals: `act` (the running action instance; bound transiently by runAction
+//                    and skipped by the globals state provider — execution state,
+//                    not world state) and `undo limit` (the undo-stack depth,
+//                    read by undoLimit).
+//   - type `game` with fields `name`/`author` — read by gameInfo for the save
+//                    header and the web page title.
+//
 // The commanding actor is NOT in this contract — it is passed into run_command
-// explicitly (no `player` global is assumed). Each site that depends on a contract
-// name is tagged "world-model contract" below.
+// explicitly (no `player` global is assumed). Proper/plural naming is likewise NOT
+// here: it is locale presentation policy (the `proper`/`plural` fields the locale
+// packs read, see lib/en-US/index.js), installed via setParserLanguage, not engine
+// contract. Each site that depends on a contract name is tagged "world-model
+// contract" below.
 
 // All game output flows through the output-stream manager (paragraph control,
 // text.md H) to this raw sink, which owns newlines. The sandbox worker swaps it for
@@ -1688,7 +1707,9 @@ function formatValue(value) {
     if (value && typeof value === "object" && relationRegistry.has(value.type)) {
         return formatRelationValue(value);
     }
-    return value;
+    // Everything else (numbers, booleans) becomes a string here, so the stream layer's
+    // "a run is a string" invariant holds deliberately rather than by JS coercion quirk.
+    return String(value);
 }
 
 function formatRelationValue(instance) {
@@ -1863,6 +1884,9 @@ function encodeValue(value) {
         if (typeof value.name === "string" && nameRegistry.get(value.name) === value) {
             return { $ref: value.name };
         }
+        if (relationRegistry.has(value.type)) {
+            throw new Error(`cannot snapshot an anonymous \`${value.type}\` relation edge: only a named edge survives save/undo/restore, so do not keep an unnamed relation-query result across a turn (see devdocs/state.md)`);
+        }
         throw new Error("cannot snapshot value: unrecognized object (not a named instance or list)");
     }
     return value;
@@ -1908,7 +1932,11 @@ function encodeFields(record, skip) {
     const fields = {};
     for (const key of Object.keys(record)) {
         if (skip.has(key)) continue;
-        fields[key] = encodeValue(record[key]);
+        try {
+            fields[key] = encodeValue(record[key]);
+        } catch (err) {
+            throw new Error(`${err.message} — held in field \`${key}\` of ${record.name || record.type}`);
+        }
     }
     return fields;
 }
@@ -1962,7 +1990,12 @@ registerStateProvider({
         const out = {};
         // `act` is transient execution state (the running action), not world state.
         for (const [name, value] of globalRegistry) {
-            if (name !== "act") out[name] = encodeValue(value);
+            if (name === "act") continue;
+            try {
+                out[name] = encodeValue(value);
+            } catch (err) {
+                throw new Error(`${err.message} — held in global \`${name}\``);
+            }
         }
         return out;
     },

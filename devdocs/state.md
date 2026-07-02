@@ -47,6 +47,18 @@ change if a genuinely new value kind is ever added (e.g. a keyed map) is
 `encodeValue`/`decodeValue` — a single, localized extension point, guarded by a
 `throw` on any unrecognized value.
 
+> **Object references must be *named* instances.** The "object reference" kind is a
+> live **named** world instance (resolved by name on restore, `{$ref: name}`). A
+> relation **edge** is an object too, but an *anonymous* one — the result of a relation
+> query (`connects … ?first`) is an unnamed edge record. Storing such an edge in a
+> global or field is legal at runtime but **cannot be snapshotted**: the next checkpoint
+> throws, naming the offending global/field (e.g. ``cannot snapshot an anonymous
+> `connects` relation edge … — held in global `exit_edge` ``). Keep a *named* edge
+> (`connects … name some_edge`) instead, or store the endpoint value (a named room), not
+> the edge. Edges are deliberately not given their own serialization: they are cheap to
+> re-query and giving anonymous records identity across a restore would enlarge the closed
+> algebra for little gain.
+
 **`text` values are not a new kind.** A `text` value (a lazily-rendered template;
 see `devdocs/text.md` K2 and the `text` primitive in `specs.md`) is a transient,
 computed value — a thunk, like a function reference — and is deliberately kept

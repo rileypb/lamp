@@ -146,9 +146,25 @@ its suggested order:
    byte-invariant; new golden `metaend1`. This retires the last parallel command-recognition
    mechanism — every player word now resolves through one grammar path. (Full verb localization
    for fr-FR is a separate, unbuilt feature.)
-Remaining findings (contract-surface documentation) are triaged in the file itself. Overlaps
-with existing items:
-the type topo-sort and the bare-object-assignment emitter bug are already
+11. ~~**[L] proper/plural mechanism + [M] contract-surface doc + two [L] runtime notes**~~ **DONE
+   (2026-07-02):** cleared the remaining triaged findings in one batch. **§1.7** — advent's
+   proper/plural now lives in `bool proper`/`bool plural` on `physical`; the `type article`, its
+   enum members, and the `article article` field are deleted, all usages migrated (phobos +
+   locale fixtures), and the locales' `is_proper`/`is_plural` simplified to a plain boolean read.
+   `showme1` re-baselined; else byte-invariant. **§1.3** — the runtime↔world contract block now
+   enumerates the full hardcoded surface (`understand`/`private_name`/`printed_name`, `act`/`undo
+   limit`, `game.name`/`author`). **§5.2** — the anonymous-relation-edge snapshot throw now has a
+   clear message naming the field/global, documented in state.md (no per-edge serialization).
+   **§5.3** — `formatValue` returns `String(value)` so the stream's "run is a string" invariant
+   is deliberate.
+12. **[M] Checker doesn't validate object-body field assignments** (found while doing §1.7):
+   an object body may assign a field the type never declares (`nonexistent_field proper`) and it
+   compiles silently — the value is emitted and the misspelled field is a no-op, not an error.
+   A typo'd field name should be a compile error, like the undefined-call/`is`-type checks
+   already added (§4.3). **Where:** `src/lantern/checker.js` (object-decl checking); overlaps the
+   §4.3 validation-gap family.
+All triaged REVIEW findings are now resolved except the new item 12 above. Overlaps with existing
+items: the type topo-sort and the bare-object-assignment emitter bug are already
 tracked below; REVIEW §1.4 argues for raising the priority of the
 library-contributed consistency pass (door-check follow-up B / item 7).
 
