@@ -199,13 +199,16 @@ use an ordinary reference (`[the self.actor]`), not a pronoun word.
 - **D7. Person setting.** Choose 1st/2nd/3rd person narration globally (Inform lets
   a story be told in any person); the player verbs adapt accordingly. **DONE.** Person and
   number are narration choices — the globals `viewpoint_person` (1/2/3, default 2 → "you")
-  and `viewpoint_plural` (default false), declared in `lib/sys/globals.lamp`. **Gender is
-  not a global:** in third person it is read off the *player object's* `gender` field (the
-  same source the subject pronouns use), so it tracks the main character — reassign `player`
-  and the pronoun follows, with nothing to keep in sync. So `[We] [see]` renders "You see" /
-  "I see" / "She sees" / "He sees" / "It sees" by `viewpoint_person` + `player.gender`, and
-  the verb agrees. (Phobos: `viewpoint_person = 3` + `gender "female"` on `yourself` → "She
-  …".) **Named third-person viewpoint (DONE):** set `viewpoint_named = true` (a `lib/sys`
+  and `viewpoint_plural` (default false), declared in `lib/sys/globals.lamp`. **The pronoun
+  set is not a global:** in third person it is read off the *player object's* `pronouns`
+  field (the same source the subject pronouns use), so it tracks the main character —
+  reassign `player` and the pronoun follows, with nothing to keep in sync. `pronouns` is
+  free text — a preset key ("she"/"he"/"they"/"it") or a full custom set
+  "subject/object/det/pron/reflexive" (e.g. "xe/xem/xyr/xyrs/xemself"), so any pronouns
+  work, not a fixed gender enum; singular "they" takes a plural verb. So `[We] [see]`
+  renders "You see" / "I see" / "She sees" / "They see" / "Xe sees" by `viewpoint_person` +
+  `player.pronouns`, and the verb agrees. (Phobos: `viewpoint_person = 3` + `pronouns "she"`
+  on `yourself` → "She …".) **Named third-person viewpoint (DONE):** set `viewpoint_named = true` (a `lib/sys`
   global) and, in third person, `[We]` emits the player's **name** on its first use in a render
   ("Galaxy") and pronominalizes later references in that render ("she"). It uses a per-render
   `viewpointNamed` flag in the runtime (`renderViewpointNamed`/`renderSetViewpointNamed`); the

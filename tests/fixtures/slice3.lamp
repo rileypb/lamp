@@ -10,7 +10,7 @@ game Slice_Three:
 type person:
     string printed_name = ""
     int grammatical_person = 3
-    string gender = "neuter"
+    string pronouns = ""
     bool plural = false
 
 type thing:
@@ -21,7 +21,7 @@ person you:
     grammatical_person 2
 person alice:
     printed_name "Alice"
-    gender "female"
+    pronouns "she"
 person twins:
     printed_name "twins"
     plural true

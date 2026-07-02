@@ -475,8 +475,12 @@ Built-in primitive types:
     type (Lamp has no generics — cf. `map_strings`). These read a
     **render-local context** that resets per render and is never saved. The
     world-model→locale contract for a referent is the optional fields
-    `grammatical_person` (1/2/3, default 3), `gender` ("male"/"female"/"neuter"), and
-    `plural`; the player object sets `grammatical_person 2`. See `devdocs/text.md` D.
+    `grammatical_person` (1/2/3, default 3), `pronouns` (free text — a preset key
+    "she"/"he"/"they"/"it" or a full custom set "subject/object/det/pron/reflexive",
+    e.g. "xe/xem/xyr/xyrs/xemself"), and `plural`; the player object sets
+    `grammatical_person 2`. Gendered locales (fr-FR) additionally read a
+    `grammatical_gender` field for article agreement — a language property of the noun,
+    distinct from `pronouns`. See `devdocs/text.md` D.
 - A **`verb` declaration** — `verb WORD, WORD, …` at top level — registers
   conjugation-sugar words so a template `[drop]` is rewritten to a `conjugate("drop")`
   call rather than read as an object reference. It has no runtime effect (the
@@ -1805,7 +1809,7 @@ described below.
 | Type | Parent | Key fields |
 |---|---|---|
 | `thing` | — | `string printed_name`, `string understand`, `bool private_name` |
-| `physical` | `thing` | `article article`, `string description`, `string gender` (default `"masculine"`), `string feels` (default `""`), `bool feelable` (default `true`), `bool far_away`, `bool obstructed`, `bool edificial`, `string take_refusal`, `string attack_refusal`, `bool lit` (Inform's `lit`; darkness is room-level so this only annotates the inventory row `(providing light)`) |
+| `physical` | `thing` | `article article`, `string description`, `string pronouns` (default `""`, free-text pronoun set), `string grammatical_gender` (default `"masculine"`, for gendered-locale articles), `string feels` (default `""`), `bool feelable` (default `true`), `bool far_away`, `bool obstructed`, `bool edificial`, `string take_refusal`, `string attack_refusal`, `bool lit` (Inform's `lit`; darkness is room-level so this only annotates the inventory row `(providing light)`) |
 | `room` | `container` | `string description`, `bool lighted` (default `true`) |
 | `item` | `physical` | `bool scenery`, `bool wearable`, `string initial_appearance` (default `""`), `bool handled` |
 | `box` | `item, container` | `bool closable`, `bool closed`, `bool locked` |

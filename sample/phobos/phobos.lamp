@@ -53,7 +53,7 @@ rule startup_rules:
 	# Third-person, name-based narration: advent's player-facing `[We]`/verb messages render with
 	# Galaxy's *name* ("Galaxy can't reach that.", "Galaxy sees a … here."), pronominalizing later
 	# references in the same message ("she"). `viewpoint_named` turns on the name form; `viewpoint_person
-	# = 3` + Galaxy's `gender` (on `yourself` below) give the third-person pronoun/verb agreement.
+	# = 3` + Galaxy's `pronouns` (on `yourself` below) give the third-person pronoun/verb agreement.
 	# `viewpoint_name` is the short narration name ("Galaxy"), kept separate from the player's full
 	# `printed_name` ("Galaxy Jones") so identification contexts — `[the player]`, disambiguation —
 	# show the full proper name while narration stays first-name (matching I7's `[Player]` substitution).
@@ -98,7 +98,7 @@ person yourself:
 	# no article). Narration uses the short `viewpoint_name` ("Galaxy") set in the game block above.
 	printed_name "Galaxy Jones"
 	article proper
-	gender "female"
+	pronouns "she"
 	understand "galaxy/jones/woman"
 	feels "Galaxy Jones pinches herself. She feels the same as always."
 	# Examined undisguised; the disguise variants (X ME while wearing the cyborg gear) override via

@@ -24,10 +24,17 @@ type physical < thing:
 	string description
 	article article
 	bool supporter
-	# Grammatical gender for locales with gendered articles (fr-FR's le/la,
-	# un/une). Gender-neutral locales like en-US ignore it; default masculine, a
-	# game sets `gender "feminine"` on a feminine-named object. See devdocs/i18n.md.
-	string gender = "masculine"
+	# Pronouns for adaptive pronoun/verb rendering ([they]/[them]/… and, for a
+	# third-person player, [we]). Free text: a preset key ("she"/"he"/"they"/"it") or
+	# a full custom set "subject/object/det/pron/reflexive" (e.g.
+	# "xe/xem/xyr/xyrs/xemself"). Empty (the default) reads as "it" for a thing and
+	# "they" for a grammatically `plural` one — so set it on people. See devdocs/text.md D.
+	string pronouns = ""
+	# Grammatical gender for locales with gendered articles (fr-FR's le/la, un/une) — a
+	# language property of the noun, distinct from `pronouns`. Gender-neutral locales
+	# like en-US ignore it; default masculine, a game sets `grammatical_gender
+	# "feminine"` on a feminine-named object. See devdocs/i18n.md.
+	string grammatical_gender = "masculine"
 	# TOUCH / FEEL (see actions.lamp, ported from Can't Touch This.i7x). `feels` is the
 	# optional sensation text printed when the thing is touched; empty means the default
 	# "feel nothing unexpected" reply. The traits gate reach: an `unfeelable` thing can't be

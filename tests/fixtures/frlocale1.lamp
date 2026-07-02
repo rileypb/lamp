@@ -12,20 +12,20 @@ game Locale_FR:
 
 type thing:
     string printed_name = ""
-    string gender = "masculine"
+    string grammatical_gender = "masculine"
     bool plural = false
     bool proper = false
 
 thing crochet
 thing lampe:
-    gender "feminine"
+    grammatical_gender "feminine"
 thing armoire:
-    gender "feminine"
+    grammatical_gender "feminine"
 thing horloge:
-    gender "feminine"
+    grammatical_gender "feminine"
 thing cles:
     printed_name "clés"
-    gender "feminine"
+    grammatical_gender "feminine"
     plural
 thing alice:
     printed_name "Alice"

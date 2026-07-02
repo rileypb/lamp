@@ -12,7 +12,7 @@ game Touch:
 	start Room
 
 person yourself:
-	gender "female"
+	pronouns "she"
 
 rule startup_rules:
 	viewpoint_person = 3

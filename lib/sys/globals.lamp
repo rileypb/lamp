@@ -12,9 +12,10 @@ global int undo_limit = 32
 # viewpoint() (lib/en-US, lib/fr-FR); saved, so a chosen viewpoint survives restore. The
 # defaults reproduce the second-person "you" exactly.
 #
-# Gender is deliberately NOT here: in third person it comes from the *player object's*
-# `gender` field (advent's `physical.gender`), so it tracks the main character — change who
-# `player` is and the pronoun follows, with nothing to keep in sync.
+# The third-person pronoun set is deliberately NOT here: it comes from the *player
+# object's* `pronouns` field (advent's `physical.pronouns`, free text — a preset or a
+# custom set), so it tracks the main character — change who `player` is and the pronoun
+# follows, with nothing to keep in sync.
 global int viewpoint_person = 2
 global bool viewpoint_plural = false
 

@@ -39,7 +39,7 @@ room Bar:
 	lighted false
 	item sawdust:
 		printed_name "sciure"
-		gender "feminine"
+		grammatical_gender "feminine"
 		scenery
 		understand "sciure/message/écrit/sol"
 

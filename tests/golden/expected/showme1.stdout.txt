@@ -7,7 +7,8 @@ You see a safe here.
 gem (item)
   location: safe
   private_name: false
-  gender: "masculine"
+  pronouns: ""
+  grammatical_gender: "masculine"
   feels: ""
   feelable: true
   far_away: false
@@ -29,7 +30,8 @@ gem (item)
 safe (box)
   location: Hall
   private_name: false
-  gender: "masculine"
+  pronouns: ""
+  grammatical_gender: "masculine"
   feels: ""
   feelable: true
   far_away: false

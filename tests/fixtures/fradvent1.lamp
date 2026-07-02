@@ -25,7 +25,7 @@ bidi connects salon south cave
 item cle:
     printed_name "clé"
     description "Une petite clé en laiton."
-    gender "feminine"
+    grammatical_gender "feminine"
 
 item manteau:
     description "Un manteau de velours noir."

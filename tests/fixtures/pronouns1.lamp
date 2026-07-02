@@ -1,0 +1,26 @@
+# Free-text pronouns (replacing a gender enum): a subject carries a `pronouns` preset
+# ("she"/"he"/"they"/"it") or a full custom set. The [They]/[Their]/[theirs]/[themself]
+# sugar and verb agreement read it, so she / singular-they / neopronouns all render —
+# and singular "they" takes a plural verb ("they see"). Maximally inclusive; no enum.
+
+game Pronoun_Demo:
+	author "Lamp"
+
+type person:
+	string printed_name = ""
+	string pronouns = ""
+
+person alice:
+	printed_name "Alice"
+	pronouns "she"
+person robin:
+	printed_name "Robin"
+	pronouns "they"
+person xandra:
+	printed_name "Xandra"
+	pronouns "xe/xem/xyr/xyrs/xemself"
+
+on startup:
+	print "[regarding alice][They] [see] [themself]. [Their] bag is [theirs].[line break]"
+	print "[regarding robin][They] [see] [themself]. [Their] bag is [theirs].[line break]"
+	print "[regarding xandra][They] [see] [themself]. [Their] bag is [theirs].[line break]"

@@ -19,7 +19,7 @@ native function string upper(string s)
 native function string lower(string s)
 native function string title(string s)
 
-# Articles. French agreement is grammatical: an object's `gender` field
+# Articles. French agreement is grammatical: an object's `grammatical_gender` field
 # ("feminine"/"masculine", default masculine) and `plural` select le/la/l'/les
 # (definite) and un/une/des (indefinite). `the(x)`/`indefinite(x)` elide le/la to
 # l' before a vowel or h. `an` has no French counterpart and maps to the

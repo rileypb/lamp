@@ -1,8 +1,8 @@
 # Story viewpoint (text.md D7): a game narrates in 1st/2nd/3rd person via the globals
 # viewpoint_person / viewpoint_plural, and advent's player-facing `[We]`/verb messages
-# adapt. Gender is NOT a global — in third person it is read off the player object's
-# `gender` field, so it tracks the main character. Here a third-person player with
-# `gender "female"` turns the room-contents listing "You see ... here." into "She sees ...
+# adapt. The pronoun set is NOT a global — in third person it is read off the player
+# object's `pronouns` field, so it tracks the main character. Here a third-person player with
+# `pronouns "she"` turns the room-contents listing "You see ... here." into "She sees ...
 # here." and examine of an undescribed object into "She sees nothing unusual ...". The verb
 # agrees with the singular player ("sees"), not the listed items.
 
@@ -15,9 +15,9 @@ game Viewpoint_Third:
 rule startup_rules:
     viewpoint_person = 3
 
-# The main character carries the gender; the viewpoint reads it (not a global).
+# The main character carries the pronouns; the viewpoint reads them (not a global).
 person yourself:
-    gender "female"
+    pronouns "she"
 
 room study:
     description "A small panelled study."

@@ -21,22 +21,22 @@ box coffre:
 box boite:
     printed_name "boîte"
     description "Une petite boîte."
-    gender "feminine"
+    grammatical_gender "feminine"
 
 item bille:
     printed_name "bille"
     description "Une bille de verre."
-    gender "feminine"
+    grammatical_gender "feminine"
 
 item perle:
     printed_name "perle"
     description "Une perle nacrée."
-    gender "feminine"
+    grammatical_gender "feminine"
 
 item table:
     printed_name "table"
     description "Une table basse."
-    gender "feminine"
+    grammatical_gender "feminine"
     supporter
 
 item livre:
@@ -50,14 +50,14 @@ item chapeau:
 item etagere:
     printed_name "étagère"
     description "Une étagère poussiéreuse."
-    gender "feminine"
+    grammatical_gender "feminine"
     scenery
     supporter
 
 item fiole:
     printed_name "fiole"
     description "Une petite fiole."
-    gender "feminine"
+    grammatical_gender "feminine"
 
 item crayon:
     description "Un crayon mâché."
