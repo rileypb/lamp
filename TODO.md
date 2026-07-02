@@ -64,9 +64,15 @@ its suggested order:
      `for` loop this makes filter/collect plain Lamp — so `contents_of`/
      `listable_contents`/`describe_supporters` (which filter `item.all` by
      `holder`/`.scenery`) are now portable off JS. Golden `append1`; specs.md updated.
-   - remaining unblocks: an `x is TYPE` membership test (§4.1b, for `is_container`),
-     the actual port of the `lib/advent/index.js` list helpers now that append exists,
-     and the `holder` native-vs-Lamp decision (§3.2).
+   - ~~an `x is TYPE` membership test (§4.1b)~~ **DONE (2026-07-02):** `is` is now a
+     keyword infix operator (`EXPR is TYPE` → bool, `isTypeOrSubtype`; null-guarded via
+     runtime `isType`). The type name is validated at compile time (typo → error, like
+     an undefined call). `is_container` is ported off JS to `return x is container`
+     (native deleted). Goldens `is1` (hierarchy/none/if/not) + `is_unknown_type`
+     (compile error); specs.md documents the operator/precedence/reserved word.
+   - remaining unblocks: the actual port of the remaining `lib/advent/index.js` list
+     helpers (`contents_of`/`listable_contents`/`describe_supporters`) now that append
+     + `is` exist, and the `holder` native-vs-Lamp decision (§3.2).
 Remaining findings (duplicated selector resolver, Lighthouse page-title
 metadata drift, `gender` vocabulary mismatch between advent/en-US/fr-FR,
 QUIT/RESTART recognition split, `scopeOf` hot-loop indexing, contract-surface
