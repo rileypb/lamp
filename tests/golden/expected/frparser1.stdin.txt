@@ -1,0 +1,4 @@
+x manteau
+rouge
+prends le manteau bleu
+quit

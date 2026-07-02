@@ -746,12 +746,19 @@ function resolvePool(slotType, scope) {
 // token → Set<object>. Populated by buildVocabIndex() at run() time.
 let vocabIndex = new Map();
 
-const ARTICLES = new Set(["a", "an", "the", "some"]);
+// Parser language data — the noun-phrase vocabulary (articles, pronouns, self
+// words) and the failure/disambiguation prose — is locale-owned, installed via
+// setParserLanguage (below), mirroring setListFormatter. The engine ships only
+// neutral fallbacks (empty vocab, article-less prose) so it holds no language
+// policy of its own; lib/en-US installs the English set, lib/fr-FR the French.
+// A locale-less program (no locale pack) simply doesn't strip articles.
+let parserArticles = new Set();
 
-// Pronouns the player may use in place of a noun. v1 supports only "it"
-// (him/her/them are deferred — see devdocs/game_parser.md). A pronoun span
-// resolves to the antecedent tracked in `pronounIt`, not via the vocab index.
-const PRONOUNS = new Set(["it"]);
+// Pronouns the player may use in place of a noun. v1 supports only a single
+// antecedent ("it" in English; him/her/them are deferred — see
+// devdocs/game_parser.md). A pronoun span resolves to the antecedent tracked in
+// `pronounIt`, not via the vocab index.
+let parserPronouns = new Set();
 
 // The antecedent for "it": the last single object the player referred to.
 // Updated whenever a noun phrase binds to exactly one physical object.
@@ -773,14 +780,14 @@ function noteAntecedent(obj) {
 // The player's phrase tokens for a noun span: the span with leading/internal
 // articles dropped (but never reduced to nothing — a bare article stays).
 function strippedPhraseTokens(span) {
-    const stripped = span.filter((t) => !ARTICLES.has(t));
+    const stripped = span.filter((t) => !parserArticles.has(t));
     return stripped.length > 0 ? stripped : span;
 }
 
 // The pronoun word if `span` is exactly one pronoun (e.g. "it"), else null.
 function pronounOf(span) {
     const tokens = strippedPhraseTokens(span);
-    return tokens.length === 1 && PRONOUNS.has(tokens[0]) ? tokens[0] : null;
+    return tokens.length === 1 && parserPronouns.has(tokens[0]) ? tokens[0] : null;
 }
 
 // Self words — "me"/"myself" — resolve to the commanding actor (the agent running
@@ -788,10 +795,11 @@ function pronounOf(span) {
 // the current `player` (the library passes it into run_command), so "me" still
 // follows a reassigned protagonist. The player's own name synonyms (if any) stay
 // object-bound. World-model contract: the engine reads no `player` global here.
-const SELF_WORDS = new Set(["me", "myself"]);
+// The words are locale data (English "me"/"myself"), installed via setParserLanguage.
+let parserSelfWords = new Set();
 function isSelfWord(span) {
     const tokens = strippedPhraseTokens(span);
-    return tokens.length === 1 && SELF_WORDS.has(tokens[0]);
+    return tokens.length === 1 && parserSelfWords.has(tokens[0]);
 }
 
 // A pronoun used among `spans` that has no antecedent yet, else null. This is
@@ -852,7 +860,7 @@ function objectsForTokens(tokens) {
 
 // All in-scope objects of the slot's type whose vocabulary matches the noun span.
 // `actor` is the commanding agent, so "me"/"myself" resolve to it (not a `player`
-// global) — see the runtime↔world-model contract and SELF_WORDS above.
+// global) — see the runtime↔world-model contract and parserSelfWords above.
 function resolveCandidates(span, scope, slotType, actor) {
     const phraseTokens = strippedPhraseTokens(span);
     const scopeSet = new Set(scope);
@@ -891,20 +899,29 @@ function objectDisplayName(obj) {
     return String(obj.name).replace(/_/g, " ");
 }
 
-// A proper-named object takes no definite article ("Galaxy Jones", not "the Galaxy Jones"). Mirrors
-// the locale's is_proper: a boolean `proper` field or advent's `article` enum set to `proper`.
-function isProperNamed(obj) {
-    return Boolean(obj && (obj.proper || (obj.article && obj.article.name === "proper")));
+// Parser prose is locale-owned (see parserArticles above). The engine's fallbacks
+// are deliberately crude and article-less — a locale (lib/en-US, lib/fr-FR) installs
+// the real renderers via setParserLanguage, so proper-name handling and definite
+// articles live in the locale's the(), not here.
+//   disambiguationRenderer(candidates) -> the "Which do you mean" prompt string.
+//   unknownReferenceRenderer(word)      -> the "I don't know what X refers to" string.
+let disambiguationRenderer = (candidates) =>
+    "Which do you mean: " + candidates.map(objectDisplayName).join(" or ") + "?";
+let unknownReferenceRenderer = (word) => `I don't know what "${word}" refers to.`;
+
+// The single seam a locale calls to own the parser's language: the noun-phrase
+// vocabulary and the two prose renderers. Each key is optional (a partial install
+// keeps the current value), so a locale can override only what it needs.
+function setParserLanguage(spec) {
+    if (spec.articles) parserArticles = new Set(spec.articles);
+    if (spec.pronouns) parserPronouns = new Set(spec.pronouns);
+    if (spec.selfWords) parserSelfWords = new Set(spec.selfWords);
+    if (spec.disambiguation) disambiguationRenderer = spec.disambiguation;
+    if (spec.unknownReference) unknownReferenceRenderer = spec.unknownReference;
 }
 
 function printDisambiguationPrompt(candidates) {
-    const names = candidates.map((obj) => (isProperNamed(obj) ? "" : "the ") + objectDisplayName(obj));
-    if (names.length === 2) {
-        print(`Which do you mean: ${names[0]} or ${names[1]}?`);
-    } else {
-        const last = names[names.length - 1];
-        print(`Which do you mean: ${names.slice(0, -1).join(", ")}, or ${last}?`);
-    }
+    print(disambiguationRenderer(candidates));
 }
 
 // Pending disambiguation: set when a slot matches multiple candidates.
@@ -994,7 +1011,7 @@ function runCommand(line, actor) {
 
     if (pendingDisambiguation) {
         const { actionName, instance, field, candidates, remainingSlots, scope, slotTypes } = pendingDisambiguation;
-        const stripped = tokens.filter((t) => !ARTICLES.has(t));
+        const stripped = tokens.filter((t) => !parserArticles.has(t));
         const phraseTokens = stripped.length > 0 ? stripped : tokens;
         const narrowed = candidates.filter((obj) => phraseTokens.every((t) => objectVocab(obj).has(t)));
         if (narrowed.length === 1) {
@@ -1015,7 +1032,7 @@ function runCommand(line, actor) {
             if (status === "unresolved") {
                 // Already committed to this action — no backtracking here.
                 const unbound = unboundPronounIn(remainingSlots.map(([, span]) => span));
-                print(unbound ? `I don't know what "${unbound}" refers to.` : message("parser_cant_see", "You can't see any such thing."));
+                print(unbound ? unknownReferenceRenderer(unbound) : message("parser_cant_see", "You can't see any such thing."));
             }
             // No action ran (unresolved, or a fresh disambiguation) — no turn.
             return false;
@@ -1080,7 +1097,7 @@ function runCommand(line, actor) {
     // its own message ahead of the generic scope/grammar failures.
     const unbound = unboundPronounIn(unresolvedSpans);
     if (unbound) {
-        print(`I don't know what "${unbound}" refers to.`);
+        print(unknownReferenceRenderer(unbound));
         return false;
     }
     print(sawVerbMatch
@@ -2513,6 +2530,7 @@ module.exports = {
     makeList,
     listItems,
     setListFormatter,
+    setParserLanguage,
     decode,
     captureState,
     restoreState,

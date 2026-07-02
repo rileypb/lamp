@@ -1,0 +1,15 @@
+salon
+Un petit salon.
+
+Vous voyez un manteau rouge et un manteau bleu ici.
+
+> x manteau
+Lequel voulez-vous dire : le manteau rouge ou le manteau bleu ?
+
+> rouge
+Un manteau rouge.
+
+> prends le manteau bleu
+Pris.
+
+> quit

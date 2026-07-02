@@ -158,9 +158,13 @@ The design targets these Inform 7/10 parser capabilities, grouped by stage:
 - Scope: the set of objects the player can currently refer to (room contents,
   carried items, contents of open/transparent containers, recursively).
 - Disambiguation prompts ("Which do you mean: the brass lamp or the lantern?"). Each candidate is
-  named with its definite article, except a **proper-named** object (a `proper` field, or advent's
-  `article` set to `proper`), which takes no article — "… or Galaxy Jones?" (`isProperNamed`,
-  mirroring the locale's `is_proper`). "Deciding which one" rules remain deferred.
+  named with its definite article, except a **proper-named** object, which takes no article — "… or
+  Galaxy Jones?". The prompt text, the definite-article rendering, and the noun-phrase vocabulary
+  (articles, pronouns, self-words) are **locale-owned**, installed via `setParserLanguage` (like
+  `setListFormatter`): the runtime holds only neutral fallbacks, `lib/en-US` installs the English
+  set, `lib/fr-FR` the French (so "le manteau" strips and the prompt reads "Lequel voulez-vous
+  dire : …"). Proper-name handling therefore lives in the locale's `the()`, not the runtime.
+  "Deciding which one" rules remain deferred.
 - Reachability/visibility distinction (you can *see* through a window but not
   *take* through it) — modeled as accessibility checks in the action rules.
 

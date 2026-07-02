@@ -1,0 +1,29 @@
+# Locale-owned parser language (fr-FR): the French locale installs its own article
+# vocabulary and disambiguation prose via the setParserLanguage seam. So the player
+# can type the French article "le" (stripped before noun matching — "prends le
+# manteau bleu" resolves), and an ambiguous noun raises the prompt in French. Before
+# the seam these were hardcoded English in the runtime (couldn't type "le", prompt in
+# English). See REVIEW §1.2, devdocs/i18n.md.
+
+locale "fr-FR"
+lib advent
+
+game Analyseur_FR:
+	author "Lamp"
+	start salon
+
+room salon:
+	description "Un petit salon."
+
+item manteau_rouge:
+	printed_name "manteau rouge"
+	understand "manteau/rouge"
+	description "Un manteau rouge."
+
+item manteau_bleu:
+	printed_name "manteau bleu"
+	understand "manteau/bleu"
+	description "Un manteau bleu."
+
+contains salon manteau_rouge
+contains salon manteau_bleu
