@@ -78,7 +78,13 @@ its suggested order:
      can call it. Suite byte-invariant (`nestlist1`/`frnested1`/`openclose1`/phobos).
      `lib/advent/index.js` now holds only genuinely-native code (containment seam
      `holder`, door/part wiring, scope providers, debug introspection).
-   - remaining: the `holder` native-vs-Lamp decision (§3.2).
+   - ~~the `holder` native-vs-Lamp decision (§3.2)~~ **DONE (2026-07-02): moved to Lamp.**
+     `holder` is now `function physical holder(physical x): return contains ?only x` in
+     rooms.lamp (return type corrected `container`→`physical`, the relation's `place`
+     type), the native wrapper deleted. The engine still uses its own `containerOf`
+     internally (scopeOf/moveObject/scope providers) — only the author-facing wrapper
+     moved. Suite byte-invariant. `lib/advent/index.js` now holds only irreducibly-native
+     code (door/part wiring, scope providers/barrier, debug introspection).
 Remaining findings (duplicated selector resolver, Lighthouse page-title
 metadata drift, `gender` vocabulary mismatch between advent/en-US/fr-FR,
 QUIT/RESTART recognition split, `scopeOf` hot-loop indexing, contract-surface
