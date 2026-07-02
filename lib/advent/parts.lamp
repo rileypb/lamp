@@ -13,7 +13,15 @@ relation part_of:
 	to physical whole
 	syntax "part_of [part] [whole]"
 
-native function void wire_parts()
+# Materialize each `part_of PART WHOLE` edge as containment (the whole contains the
+# part), so a part rides scope's containment fixpoint — in scope wherever its whole
+# is, and moving with it. Called once at startup, after objects and their part_of
+# edges exist. Pure Lamp (was a native): for every part, assert `contains` for each
+# whole it belongs to.
+function void wire_parts():
+	for p in physical.all:
+		for w in part_of p ?all:
+			contains w p
 
 # Query helper: the whole a part belongs to (none if it isn't a part).
 function physical whole_of(physical part):
