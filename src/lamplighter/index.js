@@ -113,7 +113,9 @@ function bootstrapBuiltins() {
 // than the literal "undefined". Reference-typed fields (object/other types) are
 // left unset — their absence is meaningful "none", and the convention is to
 // declare an explicit `= none` where that matters (e.g. `room start = none`).
-const PRIMITIVE_ZEROS = { string: "", int: 0, real: 0, bool: false };
+// `text`'s zero is the empty string (a string satisfies a text position), so an
+// unset text field renders as "" like an unset string field.
+const PRIMITIVE_ZEROS = { string: "", int: 0, real: 0, bool: false, text: "" };
 
 // The merged field->type schema for a type, including inherited fields.
 function collectFieldSchema(typeName) {

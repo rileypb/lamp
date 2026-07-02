@@ -1,0 +1,23 @@
+# text-typed positions accept plain strings and behave like string for zeros:
+# a quoted string assigned to a `text` field/param is prose, not an object reference
+# (the emitter must classify `text` as primitive, like the checker does), and an
+# unset `text` field reads as "" (prints empty), matching an unset string field.
+
+game Textfield
+
+type note:
+	text body
+	text remark = "A default remark."
+	text blank
+
+note memo:
+	body "Written words."
+
+function void show(text t):
+	print "shown: [t]"
+
+on startup:
+	print "body: [memo.body]"
+	print "remark: [memo.remark]"
+	print "blank: <[memo.blank]>"
+	show("Direct prose.")

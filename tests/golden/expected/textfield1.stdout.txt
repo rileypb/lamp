@@ -1,0 +1,3 @@
+body: Written words.
+remark: A default remark.
+blank: <>shown: Direct prose.

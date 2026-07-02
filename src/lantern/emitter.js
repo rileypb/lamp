@@ -429,7 +429,11 @@ function emitProgram(programAst, options = {}) {
     return `${lines.join("\n")}`;
 }
 
-const PRIMITIVE_TYPES = new Set(["bool", "int", "real", "string"]);
+// Must agree with the checker's PRIMITIVE_TYPES: a type named here is a value
+// type, so a StringLiteral in such a position is prose, never an object
+// reference (see valueIsObjectRef). Omitting one (as `text` once was) makes the
+// emitter treat plain strings in that position as object lookups.
+const PRIMITIVE_TYPES = new Set(["bool", "int", "real", "string", "text"]);
 
 function resolveFieldType(typeName, fieldName, mergedTypes) {
     const visited = new Set();
