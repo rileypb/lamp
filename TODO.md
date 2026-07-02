@@ -16,6 +16,40 @@ Sourced from the staged roadmaps and prerequisite lists in
 
 ## Active
 
+### Code review 2026-07-01 — triage `REVIEW.md`
+A full design review of `src/` + `lib/` is recorded in `REVIEW.md` (layering,
+duplication, JS→Lamp opportunities, missing features). Top items to act on, in
+its suggested order:
+1. ~~**[H] Thread the actor into `resolveCandidates`**~~ **DONE (2026-07-01):**
+   "me"/"myself" now resolve to the commanding actor passed through
+   `resolveSlots(instance.actor)`, not `getGlobal("player")`, closing the
+   world-model-contract violation and the latent NPC-actor bug (REVIEW §1.1).
+   `selfword1` byte-invariant; new regression golden `selfword2` (an action runs
+   `run_command("x me", robot)` → the robot's "me" is the robot, not the player).
+2. ~~**[H] Align the `text` primitive sets**~~ **DONE (2026-07-01):** the emitter's
+   `PRIMITIVE_TYPES` now includes `text` (a plain string in a `text` field/param
+   was misread as an object reference → spurious "unknown object" compile error —
+   reproduced before fixing), and runtime `PRIMITIVE_ZEROS` gives `text` the `""`
+   zero, so an unset text field prints empty, not `undefined`. specs.md
+   "Unset field values" updated. Regression golden `textfield1`; suite
+   byte-invariant (REVIEW §4.3b).
+3. **[H] Parser prose below the locale layer** — route the two hardcoded parser
+   strings through `message()`; schedule a locale seam for the disambiguation
+   prompt + article/pronoun/self-word vocabulary (REVIEW §1.2; extends the
+   i18n item's "remaining gaps").
+4. Checker hardening: unknown-function calls should be compile errors;
+   `checkExprCalls` misses MemberAccess/ListLiteral/template children
+   (REVIEW §4.3a/c).
+5. JS→Lamp: port `wire_parts` to Lamp now (no blocker, REVIEW §3.1); the big
+   unblocks are list filter/append + an `x is TYPE` test (REVIEW §4.1).
+Remaining findings (duplicated selector resolver, Lighthouse page-title
+metadata drift, `gender` vocabulary mismatch between advent/en-US/fr-FR,
+QUIT/RESTART recognition split, `scopeOf` hot-loop indexing, contract-surface
+documentation) are triaged in the file itself. Overlaps with existing items:
+the type topo-sort and the bare-object-assignment emitter bug are already
+tracked below; REVIEW §1.4 argues for raising the priority of the
+library-contributed consistency pass (door-check follow-up B / item 7).
+
 ### Phobos 1:1 parity (drives advent/Lamp features)
 Goal: a **1:1 port** of Phobos to prove out Lamp (memory `phobos-1to1-goal`). The authoritative,
 tickable checklist lives in `sample/phobos/PORTING.md` → "Remaining for 1:1 parity"; work it one
