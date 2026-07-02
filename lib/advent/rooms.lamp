@@ -1,7 +1,13 @@
 native function list<item> contents_of(physical r)
-native function bool is_container(physical x)
 native function list<item> listable_contents(room r)
 native function void describe_supporters(room r)
+
+# Whether `x` is a container kind (a box, or any `container` subtype) — as opposed to
+# a person or other physical that merely holds things. Pure Lamp via the `is` type
+# test (was a native); gates the examine-time contents listing so examining a person
+# doesn't spill their inventory.
+function bool is_container(physical x):
+	return x is container
 
 # An object's container (the source of its `contains` edge). Author code reads
 # containment through this rather than any field.

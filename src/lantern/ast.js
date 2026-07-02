@@ -154,6 +154,12 @@ function createEqualsExpr(left, right, filePath, lineNumber) {
     return { kind: "EqualsExpr", left, right, filePath, lineNumber };
 }
 
+// `object is TYPE` — a runtime type-membership test (true iff object's type is TYPE
+// or a subtype). `typeName` is a bare type name, not an expression.
+function createIsExpr(object, typeName, filePath, lineNumber) {
+    return { kind: "IsExpr", object, typeName, filePath, lineNumber };
+}
+
 function createKindDecl(name, kindExpr) {
     return { kind: "KindDecl", name, kindExpr };
 }
@@ -419,6 +425,7 @@ module.exports = {
     createMemberAccess,
     createConcat,
     createEqualsExpr,
+    createIsExpr,
     createMultiplyExpr,
     createModExpr,
     createDivExpr,

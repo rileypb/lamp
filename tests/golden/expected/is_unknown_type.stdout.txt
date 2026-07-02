@@ -1,0 +1,3 @@
+Compile error: tests/fixtures/is_unknown_type.lamp:10: type error: unknown type "wodget" in 'is' expression
+  10 | 	if gizmo is wodget:
+    |  ^

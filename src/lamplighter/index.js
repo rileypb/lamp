@@ -1718,6 +1718,13 @@ function getInstancesForTypeAndSubtypes(typeName) {
     return results;
 }
 
+// Value-level type test behind the `x is TYPE` operator: true iff `value` is an
+// object whose type is `typeName` or a subtype. Null-guarded (a `none` value is
+// never a member), so `x is item` on an unset reference is false, not a crash.
+function isType(value, typeName) {
+    return Boolean(value && typeof value === "object" && isTypeOrSubtype(value.type, typeName));
+}
+
 function isTypeOrSubtype(candidateTypeName, ancestorTypeName) {
     const stack = [candidateTypeName];
     const visited = new Set();
@@ -2531,6 +2538,7 @@ module.exports = {
     listItems,
     setListFormatter,
     setParserLanguage,
+    isType,
     decode,
     captureState,
     restoreState,

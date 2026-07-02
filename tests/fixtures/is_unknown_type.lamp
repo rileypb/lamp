@@ -1,0 +1,11 @@
+# A typo'd / undeclared type in an `is` test is a compile error (like an undefined
+# function call), not a silently-always-false comparison. See REVIEW 4.1b / 4.3a.
+
+game Is_Bad
+
+type widget
+widget gizmo
+
+on startup:
+	if gizmo is wodget:
+		print "unreachable"

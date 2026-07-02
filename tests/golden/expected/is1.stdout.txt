@@ -1,0 +1,8 @@
+rex is dog: true
+rex is animal: true
+rex is cat: false
+felix is animal: true
+pebble is animal: false
+nobody is animal: false
+rex qualifies.
+pebble does not.

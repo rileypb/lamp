@@ -19,6 +19,8 @@ const BP = { EQEQ: 5, LT: 5, GT: 5, LTE: 5, GTE: 5, PLUS: 10, MINUS: 10, STAR: 2
 function getInfixBP(token) {
     if (token.type === "KEYWORD" && token.value === "or") return 1;
     if (token.type === "KEYWORD" && token.value === "and") return 2;
+    // `is` (type-membership test) binds like the comparison operators.
+    if (token.type === "KEYWORD" && token.value === "is") return BP.EQEQ;
     // mod/div are multiplicative keyword operators, binding like * and /.
     if (token.type === "KEYWORD" && (token.value === "mod" || token.value === "div")) return BP.STAR;
     return BP[token.type];
@@ -1845,6 +1847,11 @@ function createParser(tokens, filePath, globalNames, functionNames = new Set(), 
         if (op.type === "GTE") return ast.createLessOrEqualExpr(parseExpression(BP.GTE, localNames), left);
         if (op.type === "KEYWORD" && op.value === "and") return ast.createAndExpr(left, parseExpression(2, localNames));
         if (op.type === "KEYWORD" && op.value === "or") return ast.createOrExpr(left, parseExpression(1, localNames));
+        // `EXPR is TYPE` — the right side is a bare type name, not an expression.
+        if (op.type === "KEYWORD" && op.value === "is") {
+            const typeName = plainName("type name after 'is'");
+            return ast.createIsExpr(left, typeName, filePath, op.line);
+        }
         if (op.type === "KEYWORD" && op.value === "mod") return ast.createModExpr(left, parseExpression(BP.STAR, localNames));
         if (op.type === "KEYWORD" && op.value === "div") return ast.createDivExpr(left, parseExpression(BP.STAR, localNames));
         if (op.type === "LBRACKET") {

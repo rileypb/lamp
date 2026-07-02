@@ -1,0 +1,27 @@
+# `x is TYPE` — runtime type-membership test (REVIEW 4.1b): true iff x's type is TYPE
+# or a subtype. Null-guarded (a none reference is never a member). Also usable in a
+# condition and under `not`. The advent is_container port (rooms.lamp) uses it too.
+
+game Is_Demo
+
+type animal
+type dog < animal
+type cat < animal
+type rock
+
+dog rex
+cat felix
+rock pebble
+
+on startup:
+	print "rex is dog: [rex is dog][line break]"
+	print "rex is animal: [rex is animal][line break]"
+	print "rex is cat: [rex is cat][line break]"
+	print "felix is animal: [felix is animal][line break]"
+	print "pebble is animal: [pebble is animal][line break]"
+	let nobody = none
+	print "nobody is animal: [nobody is animal][line break]"
+	if rex is animal:
+		print "rex qualifies.[line break]"
+	if not pebble is animal:
+		print "pebble does not.[line break]"

@@ -2,6 +2,11 @@ const { coerceName } = require("./tokenizer");
 
 const PRIMITIVE_TYPES = new Set(["string", "int", "bool", "real", "text"]);
 
+// Runtime-bootstrapped types (bootstrapBuiltins) that are not declared as TypeDecl
+// nodes, so buildTypeSchema never sees them — but they are still valid targets for
+// an `is` type test.
+const BUILTIN_TYPES = new Set(["object", "type", "event", "string", "int", "bool", "real", "list", "action"]);
+
 // Relation field schemas (relationName -> Map(fieldName -> typeName)), set at the
 // start of checkProgram so inferExprType can type value queries by their output
 // slot. Module-scoped to avoid threading it through every inference call.
@@ -779,6 +784,11 @@ function checkExprCalls(expr, typeSchema, kindSchema, localTypes, functionSchema
     if (expr.kind === "EqualsExpr") {
         checkObjectNameComparison(expr, typeSchema, kindSchema, localTypes, functionSchema);
     }
+    if (expr.kind === "IsExpr") {
+        if (!typeSchema.typeFields.has(expr.typeName) && !BUILTIN_TYPES.has(expr.typeName)) {
+            throw typeError(expr.filePath, expr.lineNumber, `unknown type "${expr.typeName}" in 'is' expression`);
+        }
+    }
     if (expr.kind === "CallExpr") {
         if (expr.name === "pick") {
             if (expr.args.length < 1 || expr.args.length > 2) {
@@ -938,6 +948,9 @@ function inferExprType(expr, typeSchema, kindSchema, localTypes, functionSchema 
         return inferConcatType(leftType, rightType, kindSchema);
     }
     if (expr.kind === "EqualsExpr") {
+        return "bool";
+    }
+    if (expr.kind === "IsExpr") {
         return "bool";
     }
     if (expr.kind === "LessThanExpr") {

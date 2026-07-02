@@ -5,7 +5,7 @@ const { coerceName } = require("./tokenizer");
 // names, property-access chains, function calls) and never need extra parens.
 const SAFE_ATOM = new Set([
     "StringLiteral", "TemplateLiteral", "FreezeExpr", "NumberLiteral", "BooleanLiteral", "NoneLiteral",
-    "VariableExpr", "PropertyAccess", "GlobalExpr", "ParenNameExpr", "Concat", "DivideExpr", "ModExpr", "DivExpr", "CallExpr", "FunctionRefExpr", "FollowExpr", "IndexExpr", "MemberAccess",
+    "VariableExpr", "PropertyAccess", "GlobalExpr", "ParenNameExpr", "Concat", "DivideExpr", "ModExpr", "DivExpr", "CallExpr", "FunctionRefExpr", "FollowExpr", "IndexExpr", "MemberAccess", "IsExpr",
 ]);
 
 // JS operator precedence for the binary/unary expression kinds we emit.
@@ -1336,6 +1336,12 @@ function emitExpression(expr, globalNames = new Set()) {
     }
     if (expr.kind === "NotExpr") {
         return `!(${emitExpression(expr.expr, globalNames)})`;
+    }
+    if (expr.kind === "IsExpr") {
+        // `x is TYPE` — runtime type-membership test (null-guarded in isType). The
+        // type name is a registry key (like other type names, routed through emitName
+        // so --encode-strings stays consistent; it decodes to the same key at load).
+        return `lamplighter.isType(${emitExpression(expr.object, globalNames)}, ${emitName(expr.typeName)})`;
     }
     if (expr.kind === "RelationQuery") {
         return emitRelationQuery(expr, globalNames);
