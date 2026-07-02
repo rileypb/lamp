@@ -114,9 +114,18 @@ its suggested order:
    committed deploy bundle) is now a stale
    snapshot — still self-consistent and correct, but a Phobos redeploy should
    `npm run build:phobos` to pick up the pronoun change (and the §1.5 page-title fix).
-Remaining findings (duplicated selector resolver, QUIT/RESTART recognition split,
-`scopeOf` hot-loop indexing, contract-surface documentation) are triaged in the file
-itself. Overlaps with existing items:
+8. ~~**[M] Duplicated action-selector resolver (§2.1)**~~ **DONE (2026-07-02):** the
+   identical selector set-algebra that lived in both `checker.js`
+   (`resolveSelectorActions`, over `actionSchema`) and `emitter.js`
+   (`resolveSelector`, over `allActionNames`) is extracted to one
+   `src/lantern/selector.js` `resolveSelector(node, actionNames, tagMembers,
+   makeError)`. Both passes call it with their own universe/tag maps and an error
+   factory, so each keeps its diagnostic format (checker prefixes "type error:",
+   emitter stays bare) but the drift-prone algebra exists once. Suite byte-invariant
+   (209 tests), incl. the `selector_unknown_tag`/`selector_bad_slot` error goldens.
+Remaining findings (QUIT/RESTART recognition split, `scopeOf` hot-loop indexing,
+contract-surface documentation) are triaged in the file itself. Overlaps with existing
+items:
 the type topo-sort and the bare-object-assignment emitter bug are already
 tracked below; REVIEW §1.4 argues for raising the priority of the
 library-contributed consistency pass (door-check follow-up B / item 7).

@@ -134,13 +134,14 @@ set (accept both spellings in both locales, or standardize and document one).
 
 ## 2. Duplication of functionality
 
-### 2.1 [M] Action-selector resolution: checker and emitter each have a full copy
-`resolveSelectorActions` (`src/lantern/checker.js:188-216`) and `resolveSelector`
-(`src/lantern/emitter.js:780-808`) implement the identical set algebra over the
-identical schemas, acknowledged as "kept separate" — but they can drift (the
-error wording already differs), and the checker's copy exists only to report
-before emission. Extract one resolver (e.g. `selector.js`) taking the
-universe/tag maps as arguments; both passes call it.
+### 2.1 [M] Action-selector resolution: checker and emitter each have a full copy — DONE (2026-07-02)
+`resolveSelectorActions` (checker) and `resolveSelector` (emitter) implemented the
+identical set algebra over the identical schemas, acknowledged as "kept separate" —
+but they could drift, and the checker's copy existed only to report before emission.
+**Extracted** to one `src/lantern/selector.js` `resolveSelector(node, actionNames,
+tagMembers, makeError)`; both passes call it with their own universe/tag maps and an
+error factory (checker's `typeError`, emitter's bare `emitSelectorError`), so each
+keeps its diagnostic format while the algebra lives once. Suite byte-invariant (209).
 
 ### 2.2 [L] The `[slot]`/literal template splitter exists in both compiler and runtime
 `parseTemplateParts` (`src/lantern/index.js:310-315`) and `parseGrammarTemplate`
