@@ -103,10 +103,15 @@ its suggested order:
    gender (a noun's language property, for fr-FR le/la — legitimately closed) is split
    into a separate `grammatical_gender` field that only gendered locales read. New golden
    `pronouns1` (she / singular-they / neopronoun); `showme1` re-baselined (renamed fields);
-   206 others byte-invariant. **Scope-1 done (English-first); deferred follow-up:** rewire
-   fr-FR to pronoun sets too (it still derives il/elle from `grammatical_gender`), and
-   decide whether grammatical gender should be locale-owned data rather than an advent
-   field. **Also flag:** `sample/phobos/web` (the committed deploy bundle) is now a stale
+   206 others byte-invariant. **Scope-2 DONE (2026-07-02): fr-FR rewired to pronoun sets
+   too.** A French object's `pronouns` (preset `il`/`elle`/`iel`/…, or a full custom set)
+   drives il/elle/iel rendering; empty falls back to `grammatical_gender` + number, so the
+   five French goldens are byte-invariant. Golden `frpronouns1` (elle / iel / custom
+   neopronoun). Note: French verb/participle agreement is still not modeled (the pack's
+   `conjugate` is identity), so a custom set surfaces in pronouns but not accord.
+   **Remaining follow-up:** decide whether grammatical gender should be locale-owned data
+   rather than an advent field (low priority). **Also flag:** `sample/phobos/web` (the
+   committed deploy bundle) is now a stale
    snapshot — still self-consistent and correct, but a Phobos redeploy should
    `npm run build:phobos` to pick up the pronoun change (and the §1.5 page-title fix).
 Remaining findings (duplicated selector resolver, QUIT/RESTART recognition split,
