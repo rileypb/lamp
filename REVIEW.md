@@ -337,18 +337,22 @@ Consolidating scattered in-code notes so they're tracked as features:
 
 ## 5. Runtime design notes
 
-### 5.1 [M] Scope computation is re-done per grammar candidate and is quadratic
-Inside `runCommand`'s grammar loop, `scopeOf(actor)` is recomputed for every
-structurally-matching grammar entry (`index.js:1050-1053`) — overlapping
-syntaxes like `go [way]` / `[way]` pay it twice per command. `scopeOf` itself
-sweeps every instance and, per instance, `containerOf` does a linear scan of all
-`contains` edges (`queryRelation`), inside a fixpoint loop
-(`index.js:696-731`) — worst-case O(instances² × edges) per command. Fixes, in
-order of payoff: hoist one `scopeOf` call per `runCommand` (world-scope actions
-aside); index `contains` edges by target (the `unique` invariant makes this a
-plain Map kept in `addRelation`/`removeRelation`); optionally make the fixpoint
-a BFS over a container→contents index. Invisible at Phobos scale, but scope is
-the hottest loop in the engine and the fix is contained.
+### 5.1 [M] Scope computation is re-done per grammar candidate and is quadratic — DONE (2026-07-02)
+`scopeOf(actor)` was recomputed for every structurally-matching grammar entry in
+`runCommand`'s loop, and each `scopeOf` scanned all `contains` edges per instance
+(via `queryRelation`) inside a fixpoint — worst-case O(instances² × edges) per
+command. **Fixed (both landed):** (1) `runCommand` computes the actor's scope once
+and memoizes it across candidates (`actorScope()`), sound because no action runs —
+so the world can't change — until a candidate resolves and returns; world-scope
+actions keep their own pool. (2) `scopeOf` builds a `target → container` Map once
+(`buildContainmentIndex`; the `contained` endpoint's `unique` invariant makes the
+Map exact) and `containerOf(inst, index)` answers O(1) from it, dropping the ×edges
+factor. The index is built fresh from the edge list each scope computation rather
+than maintained in `addRelation`/`removeRelation`, so it can't drift from the edges
+(and doesn't couple to the direct-manipulation snapshot-restore path); one-off
+`containerOf` callers omit the index and keep the query path. **Still optional:** the
+fixpoint remains O(instances) passes (no ×edges now) — a BFS over a container→contents
+index would make it linear, but it's invisible at Phobos scale. Suite byte-invariant.
 
 ### 5.2 [L] `encodeValue` can't snapshot a relation edge held in a value
 An anonymous edge (from a query result) stored in a global or field throws

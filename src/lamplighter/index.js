@@ -651,7 +651,29 @@ function matchGrammar(parts, tokens) {
 // the source of the object's `contains` edge (the object is the target); the `to`
 // endpoint is `unique`, so there is at most one. Returns null when uncontained (or
 // when the world declares no `contains` relation). See devdocs/world-model.md.
-function containerOf(inst) {
+// A `target -> container` index over the `contains` relation. Its `contained`
+// (target) endpoint is `unique`, so each object has at most one container and a
+// plain Map is exact. Returns null when the world declares no `contains` relation.
+// Built fresh from the edge list by whoever needs O(1) lookups (scopeOf) rather
+// than maintained across edge mutations, so it can never drift from the edges.
+function buildContainmentIndex() {
+    const def = relationRegistry.get("contains");
+    if (!def) return null;
+    const index = new Map();
+    for (const edge of (relationInstanceRegistry.get("contains") || [])) {
+        index.set(edge[def.targetField], edge[def.sourceField]);
+    }
+    return index;
+}
+
+// The object directly containing `inst`, or null. Pass a prebuilt containment
+// index (buildContainmentIndex) for an O(1) answer — scopeOf does this to avoid a
+// per-object relation scan in its hot loop; one-off callers omit it and pay a
+// single query. A null index means "no `contains` relation", same as omitting it.
+function containerOf(inst, index) {
+    if (index !== undefined) {
+        return index === null ? null : (index.get(inst) ?? null);
+    }
     const def = relationRegistry.get("contains");
     if (!def) return null;
     const query = {};
@@ -696,12 +718,13 @@ function sealsContents(container) {
 // registered scope providers contribute. Reachability is computed over containment
 // (containerOf): the `contains` relation.
 function scopeOf(actor) {
-    const location = containerOf(actor);
+    const containment = buildContainmentIndex();
+    const location = containerOf(actor, containment);
     const inScope = new Set();
 
     for (const instances of instanceRegistry.values()) {
         for (const inst of instances) {
-            const container = containerOf(inst);
+            const container = containerOf(inst, containment);
             if (container === location || container === actor) {
                 inScope.add(inst);
             }
@@ -720,7 +743,7 @@ function scopeOf(actor) {
         for (const instances of instanceRegistry.values()) {
             for (const inst of instances) {
                 if (inScope.has(inst)) continue;
-                const container = containerOf(inst);
+                const container = containerOf(inst, containment);
                 if (container && inScope.has(container) && !sealsContents(container)) {
                     inScope.add(inst);
                     changed = true;
@@ -1066,6 +1089,13 @@ function runCommand(line, actor) {
     // lone `xyzzy`.
     let sawVerbMatch = false;
     const unresolvedSpans = [];
+    // The actor's scope is invariant across grammar candidates (no action runs, so
+    // the world can't change, until a candidate resolves and we return), so compute
+    // it once and reuse it — overlapping syntaxes like `go [way]`/`[way]` no longer
+    // recompute the engine's hottest sweep per candidate. World-scope actions use
+    // their own pool and never touch this.
+    let actorScopeCache = null;
+    const actorScope = () => (actorScopeCache ??= scopeOf(actor));
     for (const entry of grammarRegistry) {
         const matched = matchGrammar(entry.parts, tokens);
         if (!matched) continue;
@@ -1073,7 +1103,7 @@ function runCommand(line, actor) {
         // physical object), so a debug verb can name something out of scope.
         const scope = isWorldScope(entry.actionName)
             ? getInstancesForTypeAndSubtypes("physical")
-            : scopeOf(actor);
+            : actorScope();
         const slotTypes = (typeRegistry.get(entry.actionName) || {}).fields || {};
         const instance = { type: entry.actionName, action: entry.actionName, actor };
         const status = resolveSlots(Object.entries(matched), instance, scope, slotTypes);
