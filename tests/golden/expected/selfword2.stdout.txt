@@ -1,0 +1,10 @@
+Room
+A bare room.
+
+> x me
+You are an ordinary adventurer.
+
+> possess
+A boxy little robot.
+
+> quit

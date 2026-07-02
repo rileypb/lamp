@@ -781,8 +781,11 @@ function pronounOf(span) {
     return tokens.length === 1 && PRONOUNS.has(tokens[0]) ? tokens[0] : null;
 }
 
-// Self words — "me"/"myself" — resolve to the *current* `player` global (not a fixed object), so
-// they follow a reassigned protagonist. The player's own name synonyms (if any) stay object-bound.
+// Self words — "me"/"myself" — resolve to the commanding actor (the agent running
+// the command), so an NPC actor's "me" is the NPC. For a player command the actor is
+// the current `player` (the library passes it into run_command), so "me" still
+// follows a reassigned protagonist. The player's own name synonyms (if any) stay
+// object-bound. World-model contract: the engine reads no `player` global here.
 const SELF_WORDS = new Set(["me", "myself"]);
 function isSelfWord(span) {
     const tokens = strippedPhraseTokens(span);
@@ -846,7 +849,9 @@ function objectsForTokens(tokens) {
 }
 
 // All in-scope objects of the slot's type whose vocabulary matches the noun span.
-function resolveCandidates(span, scope, slotType) {
+// `actor` is the commanding agent, so "me"/"myself" resolve to it (not a `player`
+// global) — see the runtime↔world-model contract and SELF_WORDS above.
+function resolveCandidates(span, scope, slotType, actor) {
     const phraseTokens = strippedPhraseTokens(span);
     const scopeSet = new Set(scope);
     if (pronounOf(span)) {
@@ -856,9 +861,8 @@ function resolveCandidates(span, scope, slotType) {
         return [];
     }
     if (isSelfWord(span)) {
-        const self = getGlobal("player");
-        if (self && scopeSet.has(self) && (!slotType || isTypeOrSubtype(self.type, slotType))) {
-            return [self];
+        if (actor && scopeSet.has(actor) && (!slotType || isTypeOrSubtype(actor.type, slotType))) {
+            return [actor];
         }
         return [];
     }
@@ -946,7 +950,7 @@ function resolveSlots(slots, instance, scope, slotTypes) {
             instance[field] = value;
             continue;
         }
-        const candidates = resolveCandidates(span, resolvePool(slotTypes[field], scope), slotTypes[field]);
+        const candidates = resolveCandidates(span, resolvePool(slotTypes[field], scope), slotTypes[field], instance.actor);
         if (candidates.length === 0) {
             return "unresolved";
         }

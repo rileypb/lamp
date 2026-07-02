@@ -1,0 +1,29 @@
+# Self words resolve to the *commanding actor*, not the `player` global. Here the player
+# (yourself) stays the player, but an action runs a command on behalf of the robot via
+# `run_command(line, robot)`; the robot's "x me" must describe the robot, not the player —
+# proving the engine reads the actor, not a player global. See runtime resolveCandidates.
+
+lib advent
+
+game SelfActor:
+	start Room
+
+room Room:
+	description "A bare room."
+
+person yourself:
+	description "You are an ordinary adventurer."
+
+person robot:
+	understand "robot"
+	description "A boxy little robot."
+
+contains Room robot
+
+# Run "x me" as the robot (a non-player actor). The self-word must bind to the robot.
+action possess:
+	syntax:
+		"possess"
+
+do possess:
+	run_command("x me", robot)
