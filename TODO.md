@@ -59,7 +59,13 @@ its suggested order:
      Lamp function in `lib/advent/parts.lamp` (`for p in physical.all: for w in
      part_of p ?all: contains w p`), the native deleted from `lib/advent/index.js`.
      `parts1` + the full phobos game byte-invariant (REVIEW §3.1).
-   - the big unblocks remain: list filter/append + an `x is TYPE` test (REVIEW §4.1),
+   - ~~list append (§4.1a)~~ **DONE (2026-07-02):** `append(list, item)` sys native
+     (in place, like `shuffle`; durable across undo/save). With `map_strings` + a
+     `for` loop this makes filter/collect plain Lamp — so `contents_of`/
+     `listable_contents`/`describe_supporters` (which filter `item.all` by
+     `holder`/`.scenery`) are now portable off JS. Golden `append1`; specs.md updated.
+   - remaining unblocks: an `x is TYPE` membership test (§4.1b, for `is_container`),
+     the actual port of the `lib/advent/index.js` list helpers now that append exists,
      and the `holder` native-vs-Lamp decision (§3.2).
 Remaining findings (duplicated selector resolver, Lighthouse page-title
 metadata drift, `gender` vocabulary mismatch between advent/en-US/fr-FR,
