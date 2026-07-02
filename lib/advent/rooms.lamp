@@ -1,7 +1,3 @@
-native function list<item> contents_of(physical r)
-native function list<item> listable_contents(room r)
-native function void describe_supporters(room r)
-
 # Whether `x` is a container kind (a box, or any `container` subtype) — as opposed to
 # a person or other physical that merely holds things. Pure Lamp via the `is` type
 # test (was a native); gates the examine-time contents listing so examining a person
@@ -12,6 +8,44 @@ function bool is_container(physical x):
 # An object's container (the source of its `contains` edge). Author code reads
 # containment through this rather than any field.
 native function container holder(physical x)
+
+# The non-scenery item objects held by `r` (a room, or an open container — a closed
+# one has no visible contents). Returns the objects, not rendered strings, so the
+# caller picks the article at render time. Pure Lamp (was a native) via item.all +
+# holder + append.
+function list<item> contents_of(physical r):
+	let result = []
+	if r.closed:
+		return result
+	for x in item.all:
+		if holder(x) == r and not x.scenery:
+			append(result, x)
+	return result
+
+# The room contents for the standard "[We] [see] … here." list: contents_of minus any
+# item still showing its initial appearance (a non-empty initial_appearance, not yet
+# handled) — those describe themselves in their own paragraph. Pure Lamp (was a native).
+function list<item> listable_contents(room r):
+	let result = []
+	for x in contents_of(r):
+		if x.handled or x.initial_appearance == "":
+			append(result, x)
+	return result
+
+# Print the visible contents of each scenery supporter resting in room `r` ("On the
+# hook is a cloak."). advent decides which supporters and what rests on them; the
+# locale's supporter_phrase renders the sentence, so the listing localizes. Pure Lamp
+# (was a native).
+function void describe_supporters(room r):
+	for s in item.all:
+		if holder(s) == r and s.scenery and s.supporter:
+			let on_it = []
+			for x in item.all:
+				if holder(x) == s and not x.scenery:
+					append(on_it, x)
+			if not (on_it.first == none):
+				print "[par]"
+				print supporter_phrase(s, on_it)
 
 # Room-description heading. Factored into a rulebook so a game can replace it (a
 # game contributes a `rule room_heading_rules:` from its author file, which runs
