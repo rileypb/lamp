@@ -33,10 +33,15 @@ its suggested order:
    zero, so an unset text field prints empty, not `undefined`. specs.md
    "Unset field values" updated. Regression golden `textfield1`; suite
    byte-invariant (REVIEW §4.3b).
-3. **[H] Parser prose below the locale layer** — route the two hardcoded parser
-   strings through `message()`; schedule a locale seam for the disambiguation
-   prompt + article/pronoun/self-word vocabulary (REVIEW §1.2; extends the
-   i18n item's "remaining gaps").
+3. ~~**[H] Parser prose below the locale layer**~~ **DONE (2026-07-01):** added a
+   locale-owned `setParserLanguage` seam (mirroring `setListFormatter`) covering the
+   noun-phrase vocabulary (articles/pronouns/self-words) and the two prose renderers
+   (disambiguation prompt, unbound-pronoun message). The runtime keeps only neutral
+   fallbacks; `lib/en-US` installs the English set (byte-invariant — `disambigproper1`/
+   `advent5`/`parser_it` unchanged), `lib/fr-FR` installs French (articles so
+   "le manteau" strips; French prompt). This also sidesteps the interpolable-message
+   problem the "route through message()" idea hit — the renderer takes the runtime
+   value as an argument. Golden `frparser1`; i18n.md/game_parser.md updated (REVIEW §1.2).
 4. Checker hardening: unknown-function calls should be compile errors;
    `checkExprCalls` misses MemberAccess/ListLiteral/template children
    (REVIEW §4.3a/c).
