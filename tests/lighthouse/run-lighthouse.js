@@ -131,6 +131,19 @@ try {
         );
     });
 
+    await test("index.html title uses the display `title` field, not the identifier", () => {
+        // The game's identifier is `Analytical`, but it sets a `title` with spaces and
+        // punctuation an identifier can't hold. The page title must use the title field
+        // (via Lantern's --meta sidecar), not the identifier — REVIEW 1.5.
+        const titledOut = fs.mkdtempSync(path.join(os.tmpdir(), "lamp-lighthouse-titled-"));
+        buildWeb(path.join(__dirname, "titled.lamp"), titledOut, { minify: false });
+        const html = fs.readFileSync(path.join(titledOut, "index.html"), "utf8");
+        assert.ok(
+            html.includes("<title>The Analytical Engine - A Difference Story by Ada Lovelace</title>"),
+            `page title should use the title field, got: ${(html.match(/<title>[\s\S]*?<\/title>/) || [])[0]}`,
+        );
+    });
+
     await test("minified bundle parses and is smaller", () => {
         buildWeb(GAME, minOutDir, { minify: true });
         const min = fs.readFileSync(path.join(minOutDir, "game.worker.js"), "utf8");

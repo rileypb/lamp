@@ -91,9 +91,13 @@ thin CLI). Steps:
    `--encode-strings`.
 4. Copy the shell assets (`index.html`, `shell.css`, `shell.js`, `sw.js`) into
    the output directory. `index.html` is the one templated asset: its `<title>`
-   is set to `Name by Author` (or just `Name`, or `Lamp Game` as fallbacks),
-   read from the game source's `game NAME:` declaration and `author` field via the
-   Lantern tokenizer.
+   is set to `Title by Author` (or just the title, or `Lamp Game` as fallbacks).
+   The title/name/author come from a **game-identity sidecar** Lantern writes when
+   invoked with `--meta <path>` (Lighthouse passes it) — read from the parsed AST, so
+   the display `title` field is used (the game's identifier can't hold spaces or
+   punctuation), falling back to the identifier when no `title` is set. This replaces
+   an earlier lossy source re-scan and removes Lighthouse's dependency on the Lantern
+   tokenizer.
 
 Default output directory is `dist/<game-name>/`.
 

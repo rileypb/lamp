@@ -24,11 +24,11 @@ function runCompilation() {
     const args = process.argv.slice(2);
     const encodeStrings = args.includes("--encode-strings");
     const releaseBuild = args.includes("--release");
-    const { localeFlag, positionals } = parseArgs(args);
+    const { localeFlag, metaFlag, positionals } = parseArgs(args);
     const [inputFileArg, outputFileArg] = positionals;
 
     if (!inputFileArg) {
-        console.error("Usage: node src/lantern/index.js <input.lamp> [output.js] [--locale <tag>] [--encode-strings]");
+        console.error("Usage: node src/lantern/index.js <input.lamp> [output.js] [--locale <tag>] [--encode-strings] [--meta <path>]");
         process.exit(1);
     }
 
@@ -132,6 +132,13 @@ function runCompilation() {
 
     fs.mkdirSync(path.dirname(outputFile), { recursive: true });
     fs.writeFileSync(outputFile, outputJs, "utf8");
+
+    // Optional game-identity sidecar for downstream tooling (Lighthouse's page title),
+    // taken from the parsed AST — so it uses the real `title` field, not a lossy source
+    // re-scan. Written only when --meta is given, so a plain compile drops no extra file.
+    if (metaFlag) {
+        fs.writeFileSync(metaFlag, JSON.stringify(extractGameMeta(allNodes)), "utf8");
+    }
 
     console.log(`Lantern compiled ${includedFiles.length} file(s) to ${outputFile}${releaseBuild ? " (release)" : ""}`);
 }
@@ -249,6 +256,7 @@ function gatherNativeJs(libDirs) {
 // --encode-strings) are handled by their own `includes` checks and dropped here.
 function parseArgs(args) {
     let localeFlag = null;
+    let metaFlag = null;
     const positionals = [];
     for (let i = 0; i < args.length; i += 1) {
         const arg = args[i];
@@ -261,10 +269,20 @@ function parseArgs(args) {
             localeFlag = arg.slice("--locale=".length);
             continue;
         }
+        // --meta <path>: write a game-identity JSON sidecar (see extractGameMeta).
+        if (arg === "--meta") {
+            metaFlag = args[i + 1];
+            i += 1;
+            continue;
+        }
+        if (arg.startsWith("--meta=")) {
+            metaFlag = arg.slice("--meta=".length);
+            continue;
+        }
         if (arg.startsWith("--")) continue;
         positionals.push(arg);
     }
-    return { localeFlag: localeFlag || null, positionals };
+    return { localeFlag: localeFlag || null, metaFlag: metaFlag || null, positionals };
 }
 
 // Reads a `locale "tag"` source declaration (the first one wins). Comment- and
@@ -305,6 +323,27 @@ function resolveLibDir(libName, projectRoot, userFileDir) {
 
 function hasGameObject(nodes) {
     return nodes.some((node) => node.kind === "ObjectDecl" && node.typeName === "game");
+}
+
+// The game's display identity for downstream tooling (Lighthouse's page title), read
+// from the parsed AST rather than a source re-scan — so it uses the real `title` field
+// (identifiers can't hold spaces/punctuation). `name` is the game object's coerced
+// identifier; `title`/`author` are its string-literal fields when set, else null.
+// Reopened game blocks merge last-wins, mirroring the emitter.
+function extractGameMeta(nodes) {
+    let name = null;
+    let title = null;
+    let author = null;
+    for (const node of nodes) {
+        if (node.kind !== "ObjectDecl" || node.typeName !== "game") continue;
+        name = node.objectName;
+        for (const field of node.fields) {
+            if (!field.value || field.value.kind !== "StringLiteral") continue;
+            if (field.fieldName === "title") title = field.value.value;
+            else if (field.fieldName === "author") author = field.value.value;
+        }
+    }
+    return { name, title, author };
 }
 
 function parseTemplateParts(template) {

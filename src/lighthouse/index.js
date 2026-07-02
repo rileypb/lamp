@@ -10,7 +10,6 @@ const { execFileSync } = require("child_process");
 const fs = require("fs");
 const path = require("path");
 const esbuild = require("esbuild");
-const { tokenize, coerceName } = require("../lantern/tokenizer");
 
 const PROJECT_ROOT = path.resolve(__dirname, "..", "..");
 const LANTERN_CLI = path.join(PROJECT_ROOT, "src", "lantern", "index.js");
@@ -23,11 +22,12 @@ const SHELL_ASSETS = ["index.html", "shell.css", "shell.js", "sw.js"];
 // `require`, and `console` as free globals.
 function compileGame(inputFile, buildDir, { encodeStrings = false, release = false } = {}) {
     const generatedPath = path.join(buildDir, `${path.basename(inputFile, ".lamp")}.generated.js`);
-    const args = [LANTERN_CLI, inputFile, generatedPath];
+    const metaPath = path.join(buildDir, `${path.basename(inputFile, ".lamp")}.meta.json`);
+    const args = [LANTERN_CLI, inputFile, generatedPath, "--meta", metaPath];
     if (encodeStrings) args.push("--encode-strings");
     if (release) args.push("--release");
     execFileSync("node", args, { stdio: "inherit" });
-    return generatedPath;
+    return { generatedPath, metaPath };
 }
 
 // Wrap the body-only module as the `runGame` factory the bootstrap expects. The
@@ -46,43 +46,23 @@ function wrapAsWorkerEntry(generatedCode) {
     ].join("\n");
 }
 
-// Reads the game's display name and author from the source so the page title can
-// be "Name by Author". Uses the Lantern tokenizer (comments/strings handled),
-// scanning logical lines for the top-level `game NAME:` declaration and the
-// `author "..."` field. Missing pieces degrade gracefully.
-function extractGameMeta(source, filePath) {
-    let tokens;
+// Reads the game-identity sidecar Lantern emits (--meta), so the page title uses the
+// author-parsed name/title/author rather than a lossy source re-scan here. Degrades
+// gracefully to an empty record if the sidecar is missing or unreadable.
+function readGameMeta(metaPath) {
     try {
-        tokens = tokenize(source, filePath);
+        return JSON.parse(fs.readFileSync(metaPath, "utf8"));
     } catch {
-        return { name: null, author: null };
+        return { name: null, title: null, author: null };
     }
-    let name = null;
-    let author = null;
-    let depth = 0;
-    let line = [];
-    const consider = () => {
-        const [a, b] = line;
-        if (name === null && depth === 0 && a && a.type === "IDENT" && a.value === "game" && b && b.type === "IDENT") {
-            name = coerceName(b.value);
-        }
-        if (author === null && a && a.type === "IDENT" && a.value === "author" && b && b.type === "STRING") {
-            author = b.value;
-        }
-        line = [];
-    };
-    for (const token of tokens) {
-        if (token.type === "INDENT") depth += 1;
-        else if (token.type === "DEDENT") depth -= 1;
-        else if (token.type === "NEWLINE" || token.type === "EOF") consider();
-        else line.push(token);
-    }
-    return { name, author };
 }
 
-function pageTitle({ name, author }) {
-    if (name && author) return `${name} by ${author}`;
-    if (name) return name;
+// The page title: the display `title` when the game set one (it may hold spaces and
+// punctuation the identifier can't), else the game object's identifier name.
+function pageTitle({ name, title, author }) {
+    const displayName = title || name;
+    if (displayName && author) return `${displayName} by ${author}`;
+    if (displayName) return displayName;
     return "Lamp Game";
 }
 
@@ -97,7 +77,7 @@ function buildWeb(inputFile, outDir, { encodeStrings = false, minify = true, rel
     fs.mkdirSync(buildDir, { recursive: true });
     fs.mkdirSync(absOut, { recursive: true });
 
-    const generatedPath = compileGame(absInput, buildDir, { encodeStrings, release });
+    const { generatedPath, metaPath } = compileGame(absInput, buildDir, { encodeStrings, release });
     const generatedCode = fs.readFileSync(generatedPath, "utf8");
 
     const entryPath = path.join(buildDir, `${path.basename(absInput, ".lamp")}.worker-entry.js`);
@@ -118,7 +98,7 @@ function buildWeb(inputFile, outDir, { encodeStrings = false, minify = true, rel
         legalComments: "none",
     });
 
-    const title = escapeHtml(pageTitle(extractGameMeta(fs.readFileSync(absInput, "utf8"), absInput)));
+    const title = escapeHtml(pageTitle(readGameMeta(metaPath)));
     for (const asset of SHELL_ASSETS) {
         const src = path.join(SHELL_DIR, asset);
         const dest = path.join(absOut, asset);

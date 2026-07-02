@@ -1,0 +1,7 @@
+# Minimal game with a display `title` that the identifier can't hold (spaces +
+# punctuation) — proves Lighthouse's page title uses the parsed title field, not the
+# identifier. See REVIEW 1.5.
+
+game Analytical:
+	author "Ada Lovelace"
+	title "The Analytical Engine - A Difference Story"
