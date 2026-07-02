@@ -5,9 +5,13 @@
 function bool is_container(physical x):
 	return x is container
 
-# An object's container (the source of its `contains` edge). Author code reads
-# containment through this rather than any field.
-native function container holder(physical x)
+# An object's container: the one place that contains x (the `unique` contained
+# endpoint means at most one, so `?only` is safe — none when uncontained). Author code
+# reads containment through this rather than any field. Pure Lamp (was a native
+# wrapping the runtime's containerOf, which the engine still uses internally). Returns
+# `physical` — a container room/box, or a person holding inventory.
+function physical holder(physical x):
+	return contains ?only x
 
 # The non-scenery item objects held by `r` (a room, or an open container — a closed
 # one has no visible contents). Returns the objects, not rendered strings, so the
