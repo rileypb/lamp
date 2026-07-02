@@ -85,10 +85,17 @@ its suggested order:
      internally (scopeOf/moveObject/scope providers) — only the author-facing wrapper
      moved. Suite byte-invariant. `lib/advent/index.js` now holds only irreducibly-native
      code (door/part wiring, scope providers/barrier, debug introspection).
-Remaining findings (duplicated selector resolver, Lighthouse page-title
-metadata drift, `gender` vocabulary mismatch between advent/en-US/fr-FR,
-QUIT/RESTART recognition split, `scopeOf` hot-loop indexing, contract-surface
-documentation) are triaged in the file itself. Overlaps with existing items:
+6. ~~**[M] Lighthouse page-title metadata drift (§1.5)**~~ **DONE (2026-07-02):**
+   Lighthouse no longer re-scans source with the Lantern tokenizer for the page
+   title. Lantern writes a game-identity JSON sidecar (name/title/author, from the
+   parsed AST) when given `--meta <path>`; Lighthouse passes it and reads it, so the
+   `<title>` uses the display `title` field (was: the identifier — e.g. Phobos showed
+   "Phobos", now "Phobos - A Galaxy Jones Story"). Removes Lighthouse's tokenizer
+   dependency. New test `titled.lamp` in `tests/lighthouse` + existing cloak title
+   test (name-fallback) both pass; plain compiles write no sidecar (flag-gated).
+Remaining findings (duplicated selector resolver, `gender` vocabulary mismatch
+between advent/en-US/fr-FR, QUIT/RESTART recognition split, `scopeOf` hot-loop
+indexing, contract-surface documentation) are triaged in the file itself. Overlaps with existing items:
 the type topo-sort and the bare-object-assignment emitter bug are already
 tracked below; REVIEW §1.4 argues for raising the priority of the
 library-contributed consistency pass (door-check follow-up B / item 7).
