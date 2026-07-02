@@ -54,8 +54,13 @@ its suggested order:
    Minor pre-existing caveat surfaced: a checker error on a call *inside a `[...]`
    substitution* reports line 1 (the substitution is re-tokenized as its own
    source) — a diagnostics-location bug tracked with item 4 below, not fixed here.
-5. JS→Lamp: port `wire_parts` to Lamp now (no blocker, REVIEW §3.1); the big
-   unblocks are list filter/append + an `x is TYPE` test (REVIEW §4.1).
+5. JS→Lamp:
+   - ~~port `wire_parts` to Lamp~~ **DONE (2026-07-02):** `wire_parts` is now a pure
+     Lamp function in `lib/advent/parts.lamp` (`for p in physical.all: for w in
+     part_of p ?all: contains w p`), the native deleted from `lib/advent/index.js`.
+     `parts1` + the full phobos game byte-invariant (REVIEW §3.1).
+   - the big unblocks remain: list filter/append + an `x is TYPE` test (REVIEW §4.1),
+     and the `holder` native-vs-Lamp decision (§3.2).
 Remaining findings (duplicated selector resolver, Lighthouse page-title
 metadata drift, `gender` vocabulary mismatch between advent/en-US/fr-FR,
 QUIT/RESTART recognition split, `scopeOf` hot-loop indexing, contract-surface
