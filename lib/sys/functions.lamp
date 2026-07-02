@@ -40,6 +40,11 @@ native function void append(list<object> xs, object item)
 # out-of-world verb (undo/save/restore).
 native function bool run_command(string line, object actor)
 
+# Like run_command, but executes only out-of-world session verbs (QUIT/RESTART/RESTORE/…);
+# an in-world or unrecognized command is silently ignored (no output, returns false). Backs
+# the restricted end-of-story RESTART/RESTORE/QUIT prompt, where the game is already over.
+native function bool run_meta_command(string line, object actor)
+
 # The player's most recent command line, as typed (original casing, trimmed). Use
 # it in narration as `[player_command()]` — e.g. "I don't understand
 # \"[player_command()]\"." Empty before the first command. See devdocs/text.md J1.

@@ -1,0 +1,33 @@
+lib advent
+
+# Exercises the session-control unification (REVIEW §1.6): QUIT and RESTART are now
+# out-of-world grammar verbs, and the end-of-story RESTART/RESTORE/QUIT prompt runs only
+# session verbs (run_meta_command). After the story ends, an in-world command (`mark`)
+# and an unrecognized one (`xyzzy`) are both silently ignored — the game stays over, marks
+# does NOT advance — and the QUIT shorthand `q` (a syntax word on the quit verb) exits from
+# the prompt. If the restriction regressed, `mark` would print "marks is now 2." at the
+# end-of-story prompt. See lib/advent/startup.lamp and src/lamplighter/index.js runMetaCommand.
+
+global int marks = 0
+
+action mark:
+	syntax:
+		"mark"
+
+do mark:
+	marks = marks + 1
+	print "marks is now [marks]."
+
+action doom:
+	syntax:
+		"doom"
+
+do doom:
+	print "The world ends."
+	story = lost
+
+game MetaEnd:
+	start hall
+
+room hall:
+	description "A plain hall."

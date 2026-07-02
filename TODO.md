@@ -123,9 +123,31 @@ its suggested order:
    factory, so each keeps its diagnostic format (checker prefixes "type error:",
    emitter stays bare) but the drift-prone algebra exists once. Suite byte-invariant
    (209 tests), incl. the `selector_unknown_tag`/`selector_bad_slot` error goldens.
-Remaining findings (QUIT/RESTART recognition split, `scopeOf` hot-loop indexing,
-contract-surface documentation) are triaged in the file itself. Overlaps with existing
-items:
+9. ~~**[M] Quadratic per-command scope computation (§5.1)**~~ **DONE (2026-07-02):**
+   `scopeOf(actor)` was recomputed per matching grammar candidate, and each call
+   scanned all `contains` edges per instance (O(instances² × edges)/command). Two
+   fixes: (a) `runCommand` memoizes one `actorScope()` across candidates (sound —
+   nothing mutates the world until a candidate resolves and returns; world-scope
+   actions keep their own pool); (b) `scopeOf` builds a `target → container` Map once
+   (`buildContainmentIndex`, exact by the `unique` invariant) and `containerOf(inst,
+   index)` reads it in O(1). The index is built fresh from the edges each computation
+   (no drift, no coupling to the snapshot-restore path); one-off callers keep the
+   query path. Fixpoint BFS left as optional. Suite byte-invariant (209 + state/save/
+   parser/lighthouse).
+10. ~~**[M] QUIT/RESTART recognition split (§1.6)**~~ **DONE (2026-07-02):** QUIT, RESTART,
+   and end-of-story RESTORE were recognized by `to_lower(line) == "…"` string-compares in
+   `startup.lamp` — a second, un-localizable recognizer parallel to the grammar path. Now
+   `quit`/`q` and `restart` are `out_of_world` grammar actions (like undo/save/restore); their
+   bodies set a `session_over` global the command loop reads and unwinds on (QUIT → `run()`
+   exits; RESTART arms `request_restart()`). RESTART's confirmation/availability moved into the
+   action body. The end-of-story prompt uses a new `run_meta_command` primitive (out-of-world
+   verbs only; in-world/unrecognized input silently ignored) so the ended game can't run
+   LOOK/TAKE. The three `is_*_command` recognizers deleted. `restart1`/`endrestore1`
+   byte-invariant; new golden `metaend1`. This retires the last parallel command-recognition
+   mechanism — every player word now resolves through one grammar path. (Full verb localization
+   for fr-FR is a separate, unbuilt feature.)
+Remaining findings (contract-surface documentation) are triaged in the file itself. Overlaps
+with existing items:
 the type topo-sort and the bare-object-assignment emitter bug are already
 tracked below; REVIEW §1.4 argues for raising the priority of the
 library-contributed consistency pass (door-check follow-up B / item 7).

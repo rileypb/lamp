@@ -1,0 +1,15 @@
+hall
+A plain hall.
+
+> mark
+marks is now 1.
+
+> doom
+The world ends.
+
+*** You have lost ***
+
+Please type RESTART, RESTORE, or QUIT.
+> mark
+> xyzzy
+> q

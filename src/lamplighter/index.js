@@ -1027,7 +1027,11 @@ function playerCommand() {
     return lastCommand;
 }
 
-function runCommand(line, actor) {
+// metaOnly restricts execution to out-of-world session verbs (QUIT/RESTART/RESTORE/…):
+// an in-world or unrecognized command is silently ignored (returns false, prints nothing),
+// which backs the restricted end-of-story RESTART/RESTORE/QUIT screen — the game is over,
+// so LOOK/TAKE must not run, and unrecognized input just re-prompts.
+function runCommand(line, actor, metaOnly = false) {
     lastCommand = String(line).trim();
     const tokens = String(line).toLowerCase().trim().split(/\s+/).filter(Boolean);
     if (tokens.length === 0) return;
@@ -1111,6 +1115,9 @@ function runCommand(line, actor) {
             // An out-of-world action runs without the turn clock and reports no turn
             // spent; an in-world action checkpoints (for undo) and advances the turn.
             const oow = isOutOfWorld(entry.actionName);
+            // A meta-only prompt skips in-world actions (treats them as unrecognized) so
+            // the ended game stays ended.
+            if (metaOnly && !oow) continue;
             if (!oow) { checkpoint(); advanceTurn(); }
             runAction(entry.actionName, instance);
             return !oow;
@@ -1127,13 +1134,23 @@ function runCommand(line, actor) {
     // its own message ahead of the generic scope/grammar failures.
     const unbound = unboundPronounIn(unresolvedSpans);
     if (unbound) {
+        if (metaOnly) return false;
         print(unknownReferenceRenderer(unbound));
         return false;
     }
+    // A meta-only prompt swallows parser failures: unrecognized input silently re-prompts,
+    // matching the traditional restricted end-of-story screen.
+    if (metaOnly) return false;
     print(sawVerbMatch
         ? message("parser_cant_see", "You can't see any such thing.")
         : message("parser_no_understand", "I don't understand that."));
     return false;
+}
+
+// Runs LINE but executes only out-of-world session verbs; backs the restricted
+// end-of-story prompt via the lib/sys `run_meta_command` primitive.
+function runMetaCommand(line, actor) {
+    return runCommand(line, actor, true);
 }
 
 // RESTART (Option C — in-process baseline). The world's post-construction, pre-startup
@@ -2541,6 +2558,7 @@ module.exports = {
     setOutOfWorld,
     setWorldScope,
     runCommand,
+    runMetaCommand,
     playerCommand,
     registerChangeHandler,
     registerRelationAddHandler,

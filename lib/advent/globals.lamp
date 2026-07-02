@@ -9,6 +9,13 @@ global string input = none
 kind story_state = enum(ongoing, won, lost)
 global story_state story = ongoing
 
+# Session-control signal. The QUIT and RESTART verbs (out-of-world actions) set this;
+# the command loop reads it after each command and unwinds. QUIT then lets the runtime
+# `run()` exit; an armed RESTART (via `request_restart`) makes `run()` restore the
+# pre-startup baseline and re-fire startup — which resets this to false. It is only ever
+# true for the instant between the verb and the loop's break, never during active play.
+global bool session_over = false
+
 # article enum values
 article count
 article definite

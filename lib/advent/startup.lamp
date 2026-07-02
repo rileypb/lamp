@@ -1,24 +1,39 @@
-# QUIT and its shorthand Q both end the command loop (and satisfy the end-of-story prompt).
-function bool is_quit_command(string line):
-	let cmd = to_lower(line)
-	if cmd == "quit":
-		return true
-	if cmd == "q":
-		return true
-	return false
+# QUIT and RESTART are session-control meta-verbs: they unwind the command loop rather than
+# spending a turn. Like UNDO/SAVE/RESTORE they are out-of-world grammar actions (one vocabulary
+# path — recognized, disambiguated, and overridable like every other verb), but instead of a
+# runtime primitive they set the `session_over` signal the loop reads. RESTORE at the end-of-story
+# prompt reuses the normal restore verb (save.lamp). See devdocs/state.md → RESTART.
 
-# RESTART discards the game and begins again from `on startup`. Like QUIT it is session-control
-# — the command loop recognizes it directly and unwinds the loop (the runtime's run() then
-# restores the pre-startup baseline and re-fires startup), rather than resolving through the
-# parser as an in-world action. See devdocs/state.md → RESTART.
-function bool is_restart_command(string line):
-	return to_lower(line) == "restart"
+# QUIT (and its shorthand Q) ends the session: the loop unwinds and run() exits.
+action quit:
+	out_of_world
+	syntax:
+		"quit"
+		"q"
 
-# RESTORE is accepted at the end-of-story prompt too (the Infocom triad: RESTART, RESTORE,
-# or QUIT). It routes through the normal restore verb; a successful restore brings `story`
-# back with the snapshot (to `ongoing`), and the session loop resumes the command loop.
-function bool is_restore_command(string line):
-	return to_lower(line) == "restore"
+do quit:
+	session_over = true
+
+# RESTART discards the game and begins again from `on startup` (run() restores the pre-startup
+# baseline and re-fires startup). Mid-game it confirms first; at the end-of-story prompt the
+# player already chose RESTART explicitly, so confirmation is skipped (story is not ongoing there).
+action restart:
+	out_of_world
+	syntax:
+		"restart"
+
+do restart:
+	# Report unavailability up front (no baseline captured) so the player isn't asked to
+	# confirm a restart that can't happen.
+	if not restart_available():
+		print restart_unavailable:"Restart isn't available right now."
+		stop
+	if story == ongoing:
+		if not confirm_restart():
+			print restart_declined:"Ok."
+			stop
+	request_restart()
+	session_over = true
 
 # Mid-game RESTART confirms before discarding progress — the Infocom convention ("Do you
 # wish to restart? (Y is affirmative)"). Y/YES confirms; anything else declines. The
@@ -88,39 +103,27 @@ on startup:
 	# RESTART clear `playing` and exit the handler.
 	let playing = true
 	while playing:
-		# Command loop. Exits when the player quits or a command ends the story (sets
-		# `story` away from `ongoing`).
+		# Command loop. Exits when a session-control verb sets `session_over` (QUIT/RESTART)
+		# or a command ends the story (sets `story` away from `ongoing`).
 		while story == ongoing:
 			update_status_line()
 			print "[par if printed]"
 			input = prompt("> ")
-			if is_quit_command(input):
+			# Fire every-turn rules only when the command actually spent a turn (not on a
+			# parse failure, a disambiguation prompt, or an out-of-world verb) and the story
+			# is still going. `[par if printed]` separates any every-turn output into its own
+			# paragraph after the action's report (a no-op when the action printed nothing).
+			if run_command(input, player):
+				if story == ongoing:
+					print "[par if printed]"
+					follow every_turn_rules()
+			if session_over:
 				playing = false
 				break
-			if is_restart_command(input):
-				# Report unavailability before asking (no baseline was captured), so the player
-				# isn't asked to confirm a restart that can't happen. Otherwise confirm, then arm
-				# the restart and unwind: run() restores the baseline and re-fires startup.
-				if not restart_available():
-					print restart_unavailable:"Restart isn't available right now."
-				else:
-					if confirm_restart():
-						request_restart()
-						playing = false
-						break
-					print restart_declined:"Ok."
-			else:
-				# Fire every-turn rules only when the command actually spent a turn (not on a
-				# parse failure, a disambiguation prompt, or undo) and the story is still going.
-				# `[par if printed]` separates any every-turn output into its own paragraph after
-				# the action's report (and is a no-op when the action printed nothing).
-				if run_command(input, player):
-					if story == ongoing:
-						print "[par if printed]"
-						follow every_turn_rules()
 		# End-of-story sequence: print the win/lose banner, then accept RESTART, RESTORE,
 		# or QUIT. (Skipped when the player quit/restarted mid-game — `story` is still
-		# `ongoing` then.)
+		# `ongoing` then.) `run_meta_command` runs only the session verbs, so an in-world
+		# command can't run now that the game is over.
 		if not (story == ongoing):
 			print "[par]"
 			follow end_story_rules()
@@ -128,18 +131,12 @@ on startup:
 			print quit_prompt:"Please type RESTART, RESTORE, or QUIT."
 			while true:
 				input = prompt("> ")
-				if is_quit_command(input):
+				run_meta_command(input, player)
+				if session_over:
 					playing = false
 					break
-				if is_restart_command(input):
-					if request_restart():
-						playing = false
-						break
-					print restart_unavailable:"Restart isn't available right now."
-				if is_restore_command(input):
-					# Route through the normal restore verb (name prompt / host picker and
-					# all its wording); on success `story` is back to `ongoing` — resume.
-					run_command(input, player)
-					if story == ongoing:
-						break
+				# A successful RESTORE brings `story` back to `ongoing` (it rides in the
+				# snapshot) — resume the command loop.
+				if story == ongoing:
+					break
 

@@ -96,18 +96,22 @@ already parsed correctly) that Lighthouse reads, instead of re-scanning source
 with a lossy line heuristic. That also removes Lighthouse's dependency on the
 Lantern tokenizer internals.
 
-### 1.6 [M] Two mechanisms for meta-verbs: grammar actions vs. string-compares in the loop
-UNDO/SAVE/RESTORE/SCRIPT are proper `out_of_world` Lamp actions resolving through
-the one grammar path (the 2026-06-30 unification, done well). But QUIT, RESTART,
-and the end-of-story RESTORE are recognized by `to_lower(line) == "…"`
-string-compares in `lib/advent/startup.lamp:1-33` — a second, parallel
-recognition mechanism with its own synonym handling (`q` but not `exit`;
-`is_restore_command` duplicates the restore action's verb word, so renaming one
-silently strands the other). The session-control rationale (they unwind the loop)
-is real, but the *recognition* could still go through the grammar: an
-out-of-world `quit`/`restart` action that sets a session flag the loop reads,
-keeping one vocabulary path and making the words overridable/localizable like
-every other verb. (The fr-FR pack currently cannot translate QUIT/RESTART at all.)
+### 1.6 [M] Two mechanisms for meta-verbs: grammar actions vs. string-compares in the loop — DONE (2026-07-02)
+UNDO/SAVE/RESTORE/SCRIPT were `out_of_world` Lamp actions on the one grammar path
+(the 2026-06-30 unification), but QUIT, RESTART, and the end-of-story RESTORE were
+recognized by `to_lower(line) == "…"` string-compares in `startup.lamp` — a second,
+parallel recognizer with its own hand-kept synonyms, un-localizable and un-overridable.
+**Fixed:** `quit` (with `q`) and `restart` are now `out_of_world` grammar actions like the
+others; their bodies set a `session_over` global (globals.lamp) that the command loop reads
+and unwinds on (QUIT → `run()` exits; RESTART arms `request_restart()` so `run()` restores
+the baseline and re-fires startup). RESTART's confirmation/availability moved into the action
+body (confirm only mid-game, i.e. `story == ongoing`). The three `is_*_command` string
+recognizers are deleted. The end-of-story prompt now uses a new `run_meta_command` primitive
+(runs only out-of-world verbs, silently ignores in-world/unrecognized input) so the ended game
+can't run LOOK/TAKE — preserving the traditional restricted screen while unifying recognition.
+`restart1`/`endrestore1` byte-invariant; new golden `metaend1` (end-of-story ignores `mark`/
+`xyzzy`, `q` exits). **Consequence, not done here:** the words are now grammar verbs, so a future
+general verb-localization mechanism (none exists for any verb yet) would let fr-FR translate them.
 
 ### 1.7 [L] Two parallel proper/plural mechanisms, one of them triple-implemented
 Objects can be marked proper/plural either by boolean fields (`proper`,
