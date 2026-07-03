@@ -1,0 +1,3 @@
+Compile error: tests/fixtures/unknown_field.lamp:14: type error: object "widget" of type "item" has no field "nonexistent_field"
+  14 | 	nonexistent_field true
+    |  ^

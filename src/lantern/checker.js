@@ -503,11 +503,19 @@ const DOOR_DIRECTION_FIELDS = ["north", "northeast", "east", "southeast", "south
                                "southwest", "west", "northwest", "up", "down"];
 
 function checkObjectDecl(node, typeSchema, kindSchema) {
+    // An object's declared type must exist (a builtin, or a declared `type`); otherwise
+    // every field below would spuriously read as unknown.
+    if (!typeSchema.typeFields.has(node.typeName) && !BUILTIN_TYPES.has(node.typeName)) {
+        throw typeError(node.filePath, node.lineNumber,
+            `unknown type "${node.typeName}" for object "${node.objectName}"`);
+    }
     const allFields = getAllFields(node.typeName, typeSchema);
     for (const fieldAssign of node.fields) {
         const fieldTypeName = allFields.get(fieldAssign.fieldName);
         if (!fieldTypeName) {
-            continue;
+            // A field the type never declares: a typo silently no-op'd before this check.
+            throw typeError(fieldAssign.filePath, fieldAssign.lineNumber,
+                `object "${node.objectName}" of type "${node.typeName}" has no field "${fieldAssign.fieldName}"`);
         }
         checkValueCompatibility(
             fieldAssign.value,

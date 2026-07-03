@@ -32,7 +32,6 @@ game Locked_Study:
     author "Sample Author"
     version 1
     release dev
-    start foyer
 
 type room:
     string description

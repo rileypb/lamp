@@ -1,0 +1,14 @@
+lib advent
+
+# An object body may only set fields its type declares. A typo'd or nonexistent field
+# used to be silently skipped by the checker (a no-op at runtime); now it is a compile
+# error, like an undefined-function call. See src/lantern/checker.js checkObjectDecl.
+
+game Unknown_Field:
+	start hall
+
+room hall:
+	description "A hall."
+
+item widget:
+	nonexistent_field true
