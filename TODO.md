@@ -496,6 +496,19 @@ core edit is contained. Names (default): `contains`/`place`/`contained`, keyword
 **Where:** `src/lantern/{tokenizer,parser_rd,emitter,checker}.js`, `src/lamplighter/index.js`, `lib/advent/*`, `devdocs/{relations,world-model}.md`.
 
 ## Smaller / opportunistic
+- ~~**Auto-created stop_reasons (declare-by-use).**~~ **DONE (2026-07-03):** failure reasons no
+  longer need a `stop_reason X` declaration — the prescan harvests reason names from `stop failed X`
+  (and `self.reason = X`) producer sites, adds them to `objectNames` so every reason (single- OR
+  multi-word) resolves uniformly as an object, and index.js injects a synthetic `stop_reason X`
+  singleton for each (deduped against explicit declarations, guarded on the `stop_reason` type
+  existing). This also fixed the pre-existing quirk where an undeclared *multi-word* reason
+  (`not_drinkable` → `getObject("not drinkable")`) crashed at runtime while single-word ones
+  silently fell back to strings. Removed the 26 advent declarations (globals/doors/conversation).
+  **Typo net:** generalized `checkObjectNameComparison` so a `self.reason == REASON` (or any
+  object-typed comparison) against a name that no producer creates is a compile error, not a
+  silent never-match — catches reason typos, single- and multi-word. Golden `autoreason1`; 214
+  goldens + all suites byte-invariant; specs.md updated. (Samples keep their explicit declarations,
+  which still work via dedup.)
 - ~~**DRINK action completion.**~~ **DONE (2026-07-03):** the DRINK verb was in-progress and
   compiled but was unusable — it referenced two undeclared names (property/enum reads aren't
   checked). Added `bool drinkable = false` to `physical` (types.lamp, next to `feelable`/
