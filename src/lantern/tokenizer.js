@@ -225,6 +225,15 @@ function tokenizeLine(s, lineNumber, filePath, tokens, rawLines, li) {
             continue;
         }
 
+        // `!=` is inequality (desugared to `not (a == b)` in the parser). A bare `!` is
+        // not an operator — Lamp spells logical negation `not` — so it falls through to
+        // the unexpected-character error below.
+        if (ch === "!" && s[i + 1] === "=") {
+            tokens.push({ type: "NEQ", line: lineNumber });
+            i += 2;
+            continue;
+        }
+
         if (ch === "<") {
             if (s[i + 1] === "=") {
                 tokens.push({ type: "LTE", line: lineNumber });

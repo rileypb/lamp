@@ -1632,10 +1632,11 @@ not (x == 0 or y == 0)
 
 `not` has higher precedence than `and`, which has higher precedence than `or`. So `not a or b and c` parses as `(not a) or (b and c)`.
 
-- **Comparison** — `==`, `<`, `<=`, `>`, and `>=` compare two expressions and produce `bool`. `!=` is not supported.
+- **Comparison** — `==`, `!=`, `<`, `<=`, `>`, and `>=` compare two expressions and produce `bool`. `==` compares by identity for objects/relation edges and by value for scalars (numbers, enum labels, booleans, strings); `a != b` is exactly `not (a == b)` (it desugars to that), so it works wherever `==` does and at the same precedence. (A bare `!` is not an operator — Lamp spells logical negation `not`.)
 
 ```lamp
 this_game.release == final
+this_game.release != final
 i < 5
 count > 0
 score >= 100

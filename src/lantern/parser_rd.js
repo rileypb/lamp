@@ -14,7 +14,7 @@ const ast = require("./ast");
 const { tokenize, coerceName } = require("./tokenizer");
 
 const JS_IDENT = /^[A-Za-z_][A-Za-z0-9_]*$/;
-const BP = { EQEQ: 5, LT: 5, GT: 5, LTE: 5, GTE: 5, PLUS: 10, MINUS: 10, STAR: 20, SLASH: 20, CARET: 30, LBRACKET: 40 };
+const BP = { EQEQ: 5, NEQ: 5, LT: 5, GT: 5, LTE: 5, GTE: 5, PLUS: 10, MINUS: 10, STAR: 20, SLASH: 20, CARET: 30, LBRACKET: 40 };
 
 function getInfixBP(token) {
     if (token.type === "KEYWORD" && token.value === "or") return 1;
@@ -1841,6 +1841,8 @@ function createParser(tokens, filePath, globalNames, functionNames = new Set(), 
         if (op.type === "SLASH") return ast.createDivideExpr(left, parseExpression(BP.SLASH, localNames));
         if (op.type === "CARET") return ast.createPowerExpr(left, parseExpression(BP.CARET - 1, localNames));
         if (op.type === "EQEQ") return ast.createEqualsExpr(left, parseExpression(BP.EQEQ, localNames), filePath, op.line);
+        // `a != b` desugars to `not (a == b)` — reuses the equality + negation machinery.
+        if (op.type === "NEQ") return ast.createNotExpr(ast.createEqualsExpr(left, parseExpression(BP.NEQ, localNames), filePath, op.line));
         if (op.type === "LT") return ast.createLessThanExpr(left, parseExpression(BP.LT, localNames));
         if (op.type === "GT") return ast.createLessThanExpr(parseExpression(BP.GT, localNames), left);
         if (op.type === "LTE") return ast.createLessOrEqualExpr(left, parseExpression(BP.LTE, localNames));

@@ -1,0 +1,31 @@
+# `a != b` — inequality, desugared to `not (a == b)`. Works wherever `==` does: numbers,
+# enum values, object references, in conditions and template substitutions. Same precedence
+# as `==`. See src/lantern/{tokenizer,parser_rd}.js.
+
+game Neq_Demo
+
+kind tone = enum(alpha, beta)
+
+type widget:
+	int size = 0
+	tone hue = alpha
+
+widget small
+widget big:
+	size 5
+	hue beta
+
+on startup:
+	print "3 != 4: [3 != 4][line break]"
+	print "3 != 3: [3 != 3][line break]"
+	print "small.size != big.size: [small.size != big.size][line break]"
+	print "small.hue != beta: [small.hue != beta][line break]"
+	print "big.hue != beta: [big.hue != beta][line break]"
+	print "small != big: [small != big][line break]"
+	print "small != small: [small != small][line break]"
+	# Precedence: binds like ==, so `1 + 1 != 3` is `(1 + 1) != 3`.
+	print "1 + 1 != 3: [1 + 1 != 3][line break]"
+	if small.size != big.size:
+		print "sizes differ.[line break]"
+	if not (small != small):
+		print "small equals itself.[line break]"

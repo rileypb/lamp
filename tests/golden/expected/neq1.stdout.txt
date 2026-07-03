@@ -1,0 +1,10 @@
+3 != 4: true
+3 != 3: false
+small.size != big.size: true
+small.hue != beta: true
+big.hue != beta: false
+small != big: true
+small != small: false
+1 + 1 != 3: true
+sizes differ.
+small equals itself.
