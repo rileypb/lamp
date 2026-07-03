@@ -563,3 +563,26 @@ report failed drink:
 	if self.reason == not_drinkable:
 		print drink_not_drinkable:"[We] can't drink that."
 		stop
+
+action eat:
+	direct item food
+	syntax:
+		"eat [food]"
+
+check eat:
+	if not self.food.edible:
+		stop failed not_edible
+
+do eat:
+	remove contains _ self.food
+
+report eat:
+	if self.actor == player:
+		print eat_report:"[We] [eat] [the act.food]."
+	else:
+		print eat_report_other:"[The act.actor] [eat] [the act.food]."
+
+report failed eat:
+	if self.reason == not_edible:
+		print eat_not_edible:"[We] can't eat that."
+		stop

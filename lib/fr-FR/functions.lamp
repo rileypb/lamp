@@ -104,4 +104,4 @@ native function string plural_suffix(string word)
 # English default templates parse. A translation pack overrides the message, so
 # these conjugate to themselves (see conjugate above).
 verb is, are, has, have, does, do, goes, go
-verb drop, take, get, put, look, examine, open, close, wear, carry, hold, see, feel
+verb drop, take, get, put, look, examine, open, close, wear, carry, hold, see, feel, drink, eat

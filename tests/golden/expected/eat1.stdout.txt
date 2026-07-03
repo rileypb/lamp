@@ -1,0 +1,18 @@
+pantry
+A small pantry.
+
+You see an apple and a brick here.
+
+> take apple
+Taken.
+
+> eat brick
+You can't eat that.
+
+> eat apple
+You eat the apple.
+
+> inventory
+You are carrying nothing.
+
+> quit

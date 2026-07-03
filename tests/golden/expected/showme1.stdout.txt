@@ -17,6 +17,7 @@ gem (item)
   obstructed: false
   edificial: false
   drinkable: false
+  edible: false
   take_refusal: ""
   attack_refusal: ""
   lit: false
@@ -43,6 +44,7 @@ safe (box)
   obstructed: false
   edificial: false
   drinkable: false
+  edible: false
   take_refusal: ""
   attack_refusal: ""
   lit: false

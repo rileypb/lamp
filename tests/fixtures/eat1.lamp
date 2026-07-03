@@ -1,0 +1,21 @@
+lib advent
+
+# EAT (lib/advent/actions.lamp): an `edible` thing is consumed — the action removes its
+# `contains` edge, so it leaves play. A non-edible thing is refused. Mirrors DRINK; the
+# `not_edible` reason is auto-created from use (no declaration).
+
+game Eat_Demo:
+	start pantry
+
+room pantry:
+	description "A small pantry."
+
+item apple:
+	printed_name "apple"
+	edible true
+
+item brick:
+	printed_name "brick"
+
+contains pantry apple
+contains pantry brick

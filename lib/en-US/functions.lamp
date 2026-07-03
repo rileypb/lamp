@@ -118,4 +118,4 @@ native function string plural_suffix(string word)
 # conjugation *rules* live in conjugate() above, so a newly declared regular verb
 # conjugates for free. `do` is a keyword, accepted here as a verb word.
 verb is, are, has, have, does, do, goes, go
-verb drop, take, get, put, look, examine, open, close, wear, carry, hold, see, feel
+verb drop, take, get, put, look, examine, open, close, wear, carry, hold, see, feel, drink, eat
