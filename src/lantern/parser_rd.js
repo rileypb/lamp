@@ -95,6 +95,10 @@ function desugarArticleSugar(src) {
 const PRONOUN_SUGAR_FNS = {
     we: "we", us: "us", our: "our", ours: "ours",
     they: "they", them: "them", their: "their", theirs: "theirs", themself: "themself",
+    // Demonstrative: `[those]` renders "that"/"those" by the number of the current context
+    // subject (set by `[regarding X]` or by naming a thing). Same zero-arg/agreement machinery
+    // as the pronouns; `[Those]` capitalizes. See text.md D and lib/en-US `those`.
+    those: "those",
 };
 
 // Paragraph-control marker phrases (H1/H2/H3) → their lib/sys output-stream calls.

@@ -194,6 +194,12 @@ use an ordinary reference (`[the self.actor]`), not a pronoun word.
 - **D5. `[regarding EXPR]`.** Inform: `[regarding the noun]`. **Lamp:**
   `[regarding self.noun]` — takes a Lamp **expression** naming the subject the
   following pronoun/verb words adapt to, when it isn't the default actor.
+- **D5a. `[those]` — number-agreeing demonstrative.** Inform: `[regarding the noun][those]`.
+  **Lamp:** `[those]` renders "that" for a singular context subject and "those" for a plural
+  one, reading the same agreement descriptor as the pronouns/verbs; `[Those]` capitalizes.
+  Point it at a thing with `[regarding EXPR]` first — the advent refusals use
+  `"[We] can't eat [regarding self.food][those]."` so the message reads "…eat that." or
+  "…eat those." by the food's number. A zero-arg locale call (`those()`), like the pronouns.
 - **D6. Story tense.** Render adaptive text in past/present/future (Inform's "story
   tense"): `[We] [had jumped]`. DEFER until we add story tense
 - **D7. Person setting.** Choose 1st/2nd/3rd person narration globally (Inform lets

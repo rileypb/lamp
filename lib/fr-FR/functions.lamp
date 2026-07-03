@@ -50,6 +50,9 @@ native function string themself()
 # to the empty string.
 native function string regarding(object x)
 
+# `[those]` — number-agreeing demonstrative (gender not modeled in this worked pack).
+native function string those()
+
 # `conjugate(word)` returns a verb's surface form agreeing with the context
 # subject. French conjugation is out of scope for this worked pack: a translation
 # spells the verb out in its override, so this returns the word unchanged (the

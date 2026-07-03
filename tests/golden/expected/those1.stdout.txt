@@ -1,0 +1,15 @@
+pantry
+A pantry.
+
+You see a rock and some scissors here.
+
+> eat rock
+You can't eat that.
+
+> eat scissors
+You can't eat those.
+
+> demo
+Those are sharp. That is dull.
+
+> quit

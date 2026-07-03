@@ -81,7 +81,7 @@ report failed take:
 		print "[act.taken.take_refusal]"
 		stop
 	if self.reason == already_carrying:
-		print take_already_carrying:"You're already carrying that."
+		print take_already_carrying:"You're already carrying [regarding self.taken][those]."
 		stop
 	if self.reason == cant_take_that:
 		print take_cant_take:"That's not something [we] can take."
@@ -151,7 +151,7 @@ report drop:
 
 report failed drop:
 	if self.reason == not_carrying:
-		print drop_not_carrying:"You aren't carrying that."
+		print drop_not_carrying:"You aren't carrying [regarding self.dropped][those]."
 		stop
 
 action wear:
@@ -189,7 +189,7 @@ report failed wear:
 		print wear_not_wearable:"That's not something [we] can wear."
 		stop
 	if self.reason == already_worn:
-		print wear_already_worn:"You're already wearing that."
+		print wear_already_worn:"You're already wearing [regarding self.clothing][those]."
 		stop
 
 action doff:
@@ -213,7 +213,7 @@ report doff:
 
 report failed doff:
 	if self.reason == not_worn:
-		print doff_not_worn:"You're not wearing that."
+		print doff_not_worn:"You're not wearing [regarding self.clothing][those]."
 		stop
 
 # OPEN / CLOSE for containers. The action takes any `item`; a `box` flagged `closable`
@@ -317,7 +317,7 @@ report examine:
 
 report failed examine:
 	if self.reason == too_dark:
-		print examine_too_dark:"It's too dark to see that."
+		print examine_too_dark:"It's too dark to see [regarding self.target][those]."
 		stop
 
 # TOUCH / FEEL (Inform's "touching", ported from Can't Touch This.i7x). Touching changes nothing
@@ -535,10 +535,10 @@ report put_on:
 
 report failed put_on:
 	if self.reason == not_carrying:
-		print put_on_not_carrying:"You aren't carrying that."
+		print put_on_not_carrying:"You aren't carrying [regarding self.put_item][those]."
 		stop
 	if self.reason == cant_put_on_that:
-		print put_on_cant:"[We] can't put things on that."
+		print put_on_cant:"[We] can't put things on [regarding self.destination][those]."
 		stop
 
 action drink:
@@ -561,7 +561,7 @@ report drink:
 
 report failed drink:
 	if self.reason == not_drinkable:
-		print drink_not_drinkable:"[We] can't drink that."
+		print drink_not_drinkable:"[We] can't drink [regarding self.liquid][those]."
 		stop
 
 action eat:
@@ -584,5 +584,5 @@ report eat:
 
 report failed eat:
 	if self.reason == not_edible:
-		print eat_not_edible:"[We] can't eat that."
+		print eat_not_edible:"[We] can't eat [regarding self.food][those]."
 		stop

@@ -1,0 +1,30 @@
+lib advent
+
+# `[those]` — the number-agreeing demonstrative. Paired with `[regarding X]` it renders "that"
+# for a singular thing and "those" for a plural one; `[Those]` capitalizes. The advent refusals
+# use it (e.g. "[We] can't eat [regarding self.food][those]."). Here: eat a singular rock ("that")
+# and plural scissors ("those"), plus a startup line showing the capitalized form.
+
+action demo:
+	out_of_world
+	syntax:
+		"demo"
+
+do demo:
+	print "[regarding scissors][Those] are sharp. [regarding rock][Those] is dull."
+
+game Those_Demo:
+	start pantry
+
+room pantry:
+	description "A pantry."
+
+item rock:
+	printed_name "rock"
+
+item scissors:
+	printed_name "scissors"
+	plural
+
+contains pantry rock
+contains pantry scissors

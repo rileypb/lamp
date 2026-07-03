@@ -1,0 +1,4 @@
+eat rock
+eat scissors
+demo
+quit

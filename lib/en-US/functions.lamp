@@ -49,6 +49,11 @@ native function string themself()
 # it is not the default actor; it renders to the empty string. See text.md D5.
 native function string regarding(object x)
 
+# `[those]` — the number-agreeing demonstrative: "that" (singular) or "those" (plural),
+# by the current context subject. Pair with `[regarding EXPR]` to point it at a thing, as
+# in "[We] can't eat [regarding self.food][those]." `[Those]` capitalizes.
+native function string those()
+
 # `conjugate(word)` returns the surface form of an English verb agreeing with the
 # context subject's person and number ("drop"/"drops", "is"/"are", "has"/"have").
 # The bare-word sugar `[drop]` desugars to `conjugate("drop")`. The verb word must
