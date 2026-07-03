@@ -1,0 +1,18 @@
+bar
+A dim bar.
+
+You see a potion and a rock here.
+
+> take potion
+Taken.
+
+> drink rock
+You can't drink that.
+
+> drink potion
+You drink the potion.
+
+> inventory
+You are carrying nothing.
+
+> quit

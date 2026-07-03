@@ -540,3 +540,26 @@ report failed put_on:
 	if self.reason == cant_put_on_that:
 		print put_on_cant:"[We] can't put things on that."
 		stop
+
+action drink:
+	direct item liquid
+	syntax:
+		"drink [liquid]"
+
+check drink:
+	if not self.liquid.drinkable:
+		stop failed not_drinkable
+	
+do drink:
+	remove contains _ self.liquid
+
+report drink:
+	if self.actor == player:
+		print drink_report:"[We] [drink] [the act.liquid]."
+	else:
+		print drink_report_other:"[The act.actor] [drink] [the act.liquid]."
+
+report failed drink:
+	if self.reason == not_drinkable:
+		print drink_not_drinkable:"[We] can't drink that."
+		stop

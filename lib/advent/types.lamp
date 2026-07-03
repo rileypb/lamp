@@ -48,6 +48,9 @@ type physical < thing:
 	bool far_away = false
 	bool obstructed = false
 	bool edificial = false
+	# DRINK (see actions.lamp): a `drinkable` thing can be drunk (consumed — DRINK removes its
+	# containment edge); the default reply refuses anything else. Most things aren't drinkable.
+	bool drinkable = false
 	# Custom refusal messages (Can't Take That.i7x / Can't Hit That.i7x). When non-empty, they
 	# replace the default refusal: `take_refusal` overrides any TAKE failure for this thing (e.g.
 	# "It's bolted down."), `attack_refusal` the ATTACK refusal (e.g. "Hitting it accomplishes

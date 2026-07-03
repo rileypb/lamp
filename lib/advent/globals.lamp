@@ -40,6 +40,7 @@ stop_reason cant_touch
 stop_reason cant_reach
 stop_reason cant_take_unfeelable
 stop_reason too_massive
+stop_reason not_drinkable
 
 # directions
 #

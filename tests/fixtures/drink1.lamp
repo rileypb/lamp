@@ -1,0 +1,21 @@
+lib advent
+
+# DRINK (lib/advent/actions.lamp): a `drinkable` thing is consumed — the action removes its
+# `contains` edge, so it leaves play (out of scope, not in inventory). A non-drinkable thing is
+# refused with "[We] can't drink that." Exercises the drinkable trait added to `physical`.
+
+game Drink_Demo:
+	start bar
+
+room bar:
+	description "A dim bar."
+
+item potion:
+	printed_name "potion"
+	drinkable true
+
+item rock:
+	printed_name "rock"
+
+contains bar potion
+contains bar rock

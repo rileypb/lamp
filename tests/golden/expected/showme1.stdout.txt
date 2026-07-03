@@ -16,6 +16,7 @@ gem (item)
   far_away: false
   obstructed: false
   edificial: false
+  drinkable: false
   take_refusal: ""
   attack_refusal: ""
   lit: false
@@ -41,6 +42,7 @@ safe (box)
   far_away: false
   obstructed: false
   edificial: false
+  drinkable: false
   take_refusal: ""
   attack_refusal: ""
   lit: false
