@@ -5,6 +5,7 @@ const path = require("path");
 const crypto = require("crypto");
 const { tokenize } = require("./tokenizer");
 const { prescanDeclarations, prescanTypes } = require("./prescan");
+const ast = require("./ast");
 const { parseTokens } = require("./parser_rd");
 const { orderedLampFiles } = require("./liborder");
 const { extractTopLevelFunctionNames } = require("./native_scan");
@@ -75,6 +76,7 @@ function runCompilation() {
     const relationNames = new Set();
     const actionNames = new Set();
     const objectNames = new Set();
+    const reasonNames = new Set();
     const typeNames = new Set();
     const fieldNames = new Set();
     const tagNames = new Set();
@@ -96,6 +98,7 @@ function runCompilation() {
         for (const name of decls.relationNames) relationNames.add(name);
         for (const name of decls.actionNames) actionNames.add(name);
         for (const name of decls.objectNames) objectNames.add(name);
+        for (const name of decls.reasonNames) reasonNames.add(name);
         for (const name of decls.tagNames) tagNames.add(name);
         for (const name of decls.verbNames) verbNames.add(name);
         for (const [name, params] of decls.rulebookParams) rulebookParams.set(name, params);
@@ -105,8 +108,21 @@ function runCompilation() {
     const relationTemplates = buildRelationTemplateDispatch(rawTemplates);
 
     for (const { sourceFile, tokens } of tokenizedFiles) {
-        const ast = parseTokens(tokens, sourceFile, globalNames, functionNames, relationNames, relationTemplates, actionNames, objectNames, tagNames, rulebookParams, verbNames, typeNames, fieldNames);
-        allNodes.push(...ast.nodes);
+        const parsed = parseTokens(tokens, sourceFile, globalNames, functionNames, relationNames, relationTemplates, actionNames, objectNames, tagNames, rulebookParams, verbNames, typeNames, fieldNames);
+        allNodes.push(...parsed.nodes);
+    }
+
+    // Auto-create a `stop_reason` singleton for every reason used but not explicitly declared
+    // (the declare-by-use path — reasonNames are harvested from `stop failed X` producers in the
+    // prescan). Guarded on the `stop_reason` type existing (only the action machinery uses
+    // reasons) and deduped against real declarations, so an explicit `stop_reason X` still wins.
+    if (typeNames.has("stop_reason")) {
+        const declaredObjects = new Set(allNodes.filter((n) => n.kind === "ObjectDecl").map((n) => n.objectName));
+        for (const reason of reasonNames) {
+            if (!declaredObjects.has(reason)) {
+                allNodes.push(ast.createObjectDecl("stop_reason", reason, [], "<auto stop_reason>", 0));
+            }
+        }
     }
 
     if (!hasGameObject(allNodes)) {

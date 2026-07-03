@@ -1194,10 +1194,16 @@ rule for a declared action.)
 stop failed REASON
 ```
 
-`REASON` is any object of a `stop_reason` type (an open type whose instances are
-declared like ordinary objects: `stop_reason not_carrying`). When a `stop failed
-REASON` halts the action, the reason is stored in `self.reason` on the action
-instance and is available to the `report failed` band.
+`REASON` is an object of a `stop_reason` type. Reasons are **auto-created from use**:
+a bare `stop failed not_carrying` (or a direct `self.reason = not_carrying`) declares
+the singleton implicitly — no explicit `stop_reason not_carrying` object declaration is
+needed (though one is still allowed and takes precedence). The compiler harvests reason
+names from these producer sites and injects the singleton, so a reason is a real object
+compared by identity. Because a produced reason *is* a declared object, a mistyped reason
+in a `self.reason == REASON` comparison names no object and is a **compile error**
+(`unknown object "…" compared with a value of type "stop_reason"`) rather than a silently
+never-matching branch. When a `stop failed REASON` halts the action, the reason is stored
+in `self.reason` on the action instance and is available to the `report failed` band.
 
 A seventh band, **`report failed`**, runs only when the action outcome is
 `failed`. It is declared like any other band:

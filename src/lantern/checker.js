@@ -27,6 +27,11 @@ let actionSchema = new Map();
 // validating multi-action rule selectors. See devdocs/rulebooks.md.
 let actionTagSchema = new Map();
 
+// Every declared object name (coerced), used to flag a bare name that resolves to an
+// object reference but names no declared object — e.g. a mistyped `stop failed` reason
+// (reasons are auto-created singletons, so a typo silently mints a distinct one).
+let declaredObjectNames = new Set();
+
 function buildActionTagSchema(nodes) {
     const schema = new Map();
     for (const node of nodes) {
@@ -72,6 +77,7 @@ function checkProgram(programAst, options = {}) {
     rulebookSchema = buildRulebookSchema(programAst.nodes);
     actionSchema = buildActionSchema(programAst.nodes);
     actionTagSchema = buildActionTagSchema(programAst.nodes);
+    declaredObjectNames = new Set(programAst.nodes.filter((n) => n.kind === "ObjectDecl").map((n) => n.objectName));
     const kindSchema = buildKindSchema(programAst.nodes);
     const typeSchema = buildTypeSchema(programAst.nodes, kindSchema);
     const globalTypes = buildGlobalTypeSchema(programAst.nodes);
@@ -741,10 +747,22 @@ function isDeclaredObjectType(typeName, typeSchema, kindSchema) {
 // never equal an object, so the comparison is silently always false. Flag it.
 function checkObjectNameComparison(expr, typeSchema, kindSchema, localTypes, functionSchema) {
     for (const [nameSide, otherSide] of [[expr.left, expr.right], [expr.right, expr.left]]) {
-        if (nameSide.kind !== "StringLiteral") continue;
+        // A bare name compared against an object-typed value: a single-word name falls back to
+        // a string literal, a multi-word (or otherwise-non-JS-ident) one to an object reference.
+        // Either way, if it names no declared object it can never match — a typo. This is what
+        // catches a mistyped `stop failed`/`self.reason ==` reason now that reasons are
+        // auto-created from use (a produced reason IS a declared object; a typo'd one is not).
+        let badName = null;
+        if (nameSide.kind === "StringLiteral" && !declaredObjectNames.has(nameSide.value)) {
+            badName = nameSide.value;
+        } else if (nameSide.kind === "ParenNameExpr" && nameSide.fieldChain.length === 0
+                && !declaredObjectNames.has(nameSide.objectName)) {
+            badName = nameSide.objectName;
+        }
+        if (badName === null) continue;
         const otherType = inferExprType(otherSide, typeSchema, kindSchema, localTypes, functionSchema);
         if (isDeclaredObjectType(otherType, typeSchema, kindSchema)) {
-            throw typeError(expr.filePath, expr.lineNumber, `unknown object "${nameSide.value}" compared with a value of type "${otherType}"`);
+            throw typeError(expr.filePath, expr.lineNumber, `unknown object "${badName}" compared with a value of type "${otherType}"`);
         }
     }
 }

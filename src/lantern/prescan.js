@@ -99,6 +99,7 @@ function prescanDeclarations(tokens, knownTypeNames = new Set(), knownFieldNames
     const relationNames = new Set();
     const actionNames = new Set();
     const objectNames = new Set();
+    const reasonNames = new Set();
     const tagNames = new Set();
     const verbNames = new Set();
     const rulebookParams = new Map();
@@ -218,6 +219,27 @@ function prescanDeclarations(tokens, knownTypeNames = new Set(), knownFieldNames
             return;
         }
 
+        // Reason producers: `stop <outcome> <reason>` (the failure-reason form) and a direct
+        // `… reason = <reason>` assignment. A reason names a `stop_reason` singleton; harvesting
+        // it here means the author needn't declare `stop_reason X` — index.js injects a synthetic
+        // declaration. Also add it to objectNames so the parser resolves every reason (single- OR
+        // multi-word) uniformly as an object reference, not sometimes a bare string.
+        if (isKeyword(head, "stop") && line.length === 3
+                && isIdent(line[1]) && (line[1].value === "failed" || line[1].value === "succeeded")
+                && isIdent(line[2])) {
+            const r = coerceName(line[2].value);
+            objectNames.add(r);
+            reasonNames.add(r);
+            return;
+        }
+        const eqIdx = line.findIndex((t) => t.type === "EQUALS");
+        if (eqIdx > 1 && isIdent(line[eqIdx - 1]) && line[eqIdx - 1].value === "reason"
+                && line.length === eqIdx + 2 && isIdent(line[eqIdx + 1])) {
+            const r = coerceName(line[eqIdx + 1].value);
+            objectNames.add(r);
+            reasonNames.add(r);
+        }
+
     });
 
     return {
@@ -226,6 +248,7 @@ function prescanDeclarations(tokens, knownTypeNames = new Set(), knownFieldNames
         relationNames,
         actionNames,
         objectNames,
+        reasonNames,
         typeNames,
         tagNames,
         verbNames,

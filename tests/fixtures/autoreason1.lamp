@@ -1,0 +1,42 @@
+lib advent
+
+# Failure reasons are auto-created from use — no `stop_reason X` declaration needed. Here two
+# undeclared reasons (a multi-word `too_big_to_poke` and a single-word `pointless`) are raised by
+# `stop failed` and matched by `report failed` rules. The reason harvest (prescan) + synthetic
+# declaration (index.js) make every reason a `stop_reason` singleton, so identity comparison works.
+
+action poke:
+	direct item target
+	syntax:
+		"poke [target]"
+
+check poke:
+	if self.target.edificial:
+		stop failed too_big_to_poke
+	if self.target == pebble:
+		stop failed pointless
+
+report poke:
+	print "You poke [the act.target]."
+
+report failed poke:
+	if self.reason == too_big_to_poke:
+		print "That is far too big to poke."
+	if self.reason == pointless:
+		print "Poking it would accomplish nothing."
+
+game AutoReason:
+	start hall
+
+room hall:
+	description "A bare hall."
+
+item pebble:
+	printed_name "pebble"
+
+item monument:
+	printed_name "monument"
+	edificial true
+
+contains hall pebble
+contains hall monument

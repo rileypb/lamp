@@ -48,7 +48,6 @@ report tell:
 # SAY fails by default (there's no listener, or nothing the listener reacts to); a game adds
 # `instead say` rules for the utterances that land and `stop succeeded`, letting anything its
 # guards don't match fall through (no `stop`) to the default reply.
-stop_reason nothing_to_say
 
 action say:
 	string topic

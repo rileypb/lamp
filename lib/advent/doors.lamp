@@ -27,8 +27,6 @@ relation doorway:
 	to door barrier
 	syntax "doorway [side] [dir] [barrier]"
 
-stop_reason door_closed
-
 native function void wire_doors()
 
 # A closed door blocks movement through it. Order-independent vs. the cant-go check:

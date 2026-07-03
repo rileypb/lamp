@@ -1,0 +1,12 @@
+hall
+A bare hall.
+
+You see a pebble and a monument here.
+
+> poke monument
+That is far too big to poke.
+
+> poke pebble
+Poking it would accomplish nothing.
+
+> quit

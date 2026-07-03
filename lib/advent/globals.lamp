@@ -16,31 +16,9 @@ global story_state story = ongoing
 # true for the instant between the verb and the loop's break, never during active play.
 global bool session_over = false
 
-# failure reasons (see actions.lamp check / report failed rules)
-stop_reason already_carrying
-stop_reason cant_take_that
-stop_reason not_carrying
-stop_reason cant_put_on_that
-stop_reason cant_go_that_way
-stop_reason not_wearable
-stop_reason already_worn
-stop_reason not_worn
-stop_reason too_dark
-stop_reason attack_pointless
-stop_reason not_openable
-stop_reason not_closable
-stop_reason already_open
-stop_reason already_closed
-stop_reason locked_shut
-stop_reason nothing_happens
-stop_reason cant_enter
-stop_reason give_declined
-stop_reason show_declined
-stop_reason cant_touch
-stop_reason cant_reach
-stop_reason cant_take_unfeelable
-stop_reason too_massive
-stop_reason not_drinkable
+# Failure reasons (raised by `stop failed X` in check rules, matched by `report failed`
+# rules) are auto-created from use — a bare `stop failed some_reason` needs no declaration.
+# See the `stop_reason` type (types.lamp) and the reason harvest in src/lantern/prescan.js.
 
 # directions
 #
