@@ -131,9 +131,11 @@ back-compat `x.article && x.article.name === …` branch is dropped from `is_pro
 in both `lib/en-US` and `lib/fr-FR` — now a plain `Boolean(x && x.proper)`. The runtime copy
 (`isProperNamed`) was already gone (§1.2). Suite byte-invariant except `showme1` (its field
 dump now lists `proper`/`plural` instead of `article` — re-baselined). **Bonus finding while
-migrating:** the checker does *not* validate object-body field assignments against the type
-schema — `nonexistent_field proper` on an object compiles silently (a typo'd field name is a
-no-op, not an error). Tracked as a new validation-gap item (overlaps §4.3). (Original text below.)
+migrating:** the checker did *not* validate object-body field assignments against the type
+schema — `nonexistent_field proper` on an object compiled silently (a typo'd field name was a
+no-op). **Now fixed** (checkObjectDecl errors on an unknown field or unknown object type; §4.3
+family), which caught a real dead field in `sample/study.lamp`. Golden `unknown_field`.
+(Original text below.)
 
 Objects can be marked proper/plural either by boolean fields (`proper`,
 `plural` — what the locales document as the contract) or by advent's

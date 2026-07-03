@@ -157,13 +157,15 @@ its suggested order:
    clear message naming the field/global, documented in state.md (no per-edge serialization).
    **§5.3** — `formatValue` returns `String(value)` so the stream's "run is a string" invariant
    is deliberate.
-12. **[M] Checker doesn't validate object-body field assignments** (found while doing §1.7):
-   an object body may assign a field the type never declares (`nonexistent_field proper`) and it
-   compiles silently — the value is emitted and the misspelled field is a no-op, not an error.
-   A typo'd field name should be a compile error, like the undefined-call/`is`-type checks
-   already added (§4.3). **Where:** `src/lantern/checker.js` (object-decl checking); overlaps the
-   §4.3 validation-gap family.
-All triaged REVIEW findings are now resolved except the new item 12 above. Overlaps with existing
+12. ~~**[M] Checker doesn't validate object-body field assignments**~~ **DONE (2026-07-02):**
+   `checkObjectDecl` now errors on a field the object's type never declares (was: silently
+   skipped, so a typo'd field was a no-op) and on an unknown object *type* (was: also silent,
+   which would otherwise make every field read as unknown). Both mirror the undefined-call/`is`
+   checks (§4.3 family). The stricter check immediately caught a real dead field — `start foyer`
+   on `sample/study.lamp`'s standalone `game` (lib/sys `game` has no `start`; that's advent-only,
+   and study places the player via its own `holder` field) — now removed. New compile-error
+   golden `unknown_field`; suite otherwise byte-invariant (211).
+All triaged REVIEW findings are now resolved. Overlaps with existing
 items: the type topo-sort and the bare-object-assignment emitter bug are already
 tracked below; REVIEW §1.4 argues for raising the priority of the
 library-contributed consistency pass (door-check follow-up B / item 7).
