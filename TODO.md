@@ -496,6 +496,12 @@ core edit is contained. Names (default): `contains`/`place`/`contained`, keyword
 **Where:** `src/lantern/{tokenizer,parser_rd,emitter,checker}.js`, `src/lamplighter/index.js`, `lib/advent/*`, `devdocs/{relations,world-model}.md`.
 
 ## Smaller / opportunistic
+- ~~**EAT action (mirrors DRINK).**~~ **DONE (2026-07-03):** `eat [food]` consumes an `edible`
+  thing (removes its `contains` edge), refuses anything else (`not_edible`, auto-created reason).
+  Added `bool edible` to `physical`; golden `eat1`; `showme1` re-baselined (dump lists `edible`).
+  Also registered `drink`/`eat` as conjugation verbs in en-US/fr-FR — `[drink]`/`[eat]` now inflect
+  in third person (`report *_other`: "Galaxy eats the apple"), retroactively fixing DRINK's latent
+  uninflected 3rd-person report (2nd-person was already correct, so byte-invariant).
 - ~~**Auto-created stop_reasons (declare-by-use).**~~ **DONE (2026-07-03):** failure reasons no
   longer need a `stop_reason X` declaration — the prescan harvests reason names from `stop failed X`
   (and `self.reason = X`) producer sites, adds them to `objectNames` so every reason (single- OR
