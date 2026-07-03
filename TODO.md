@@ -496,6 +496,13 @@ core edit is contained. Names (default): `contains`/`place`/`contained`, keyword
 **Where:** `src/lantern/{tokenizer,parser_rd,emitter,checker}.js`, `src/lamplighter/index.js`, `lib/advent/*`, `devdocs/{relations,world-model}.md`.
 
 ## Smaller / opportunistic
+- ~~**DRINK action completion.**~~ **DONE (2026-07-03):** the DRINK verb was in-progress and
+  compiled but was unusable — it referenced two undeclared names (property/enum reads aren't
+  checked). Added `bool drinkable = false` to `physical` (types.lamp, next to `feelable`/
+  `edificial`) and `stop_reason not_drinkable` (globals.lamp). Fixed the `do drink` body (the
+  invalid `remove … from` → `remove contains _ self.liquid`, so a drunk liquid leaves play).
+  Golden `drink1` (refuse a non-drinkable rock, drink a potion, confirm it's consumed); `showme1`
+  re-baselined (its field dump now lists `drinkable`).
 - ~~**`!=` inequality operator.**~~ **DONE (2026-07-02):** `a != b` desugars to `not (a == b)`
   at parse time (tokenizer emits a `NEQ` token on `!=`; a bare `!` still errors — Lamp spells
   negation `not`), reusing the existing equality + negation machinery, so no emitter/checker/AST
