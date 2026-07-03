@@ -496,6 +496,13 @@ core edit is contained. Names (default): `contains`/`place`/`contained`, keyword
 **Where:** `src/lantern/{tokenizer,parser_rd,emitter,checker}.js`, `src/lamplighter/index.js`, `lib/advent/*`, `devdocs/{relations,world-model}.md`.
 
 ## Smaller / opportunistic
+- ~~**`!=` inequality operator.**~~ **DONE (2026-07-02):** `a != b` desugars to `not (a == b)`
+  at parse time (tokenizer emits a `NEQ` token on `!=`; a bare `!` still errors — Lamp spells
+  negation `not`), reusing the existing equality + negation machinery, so no emitter/checker/AST
+  changes. Same precedence as `==`; works in conditions, guards, and template substitutions.
+  Golden `neq1`; specs.md "Comparison" updated. **Optional follow-up:** ~54 existing
+  `not (X == Y)` sites in lib/advent (+ samples) could be simplified to `X != Y` — byte-invariant,
+  but a noisy multi-file churn, so left for a dedicated pass if wanted.
 - ~~**SCRIPT / TRANSCRIPT (scripting) — advent transcript command.**~~ **DONE
   (2026-06-30):** `SCRIPT`/`SCRIPT ON`/`TRANSCRIPT`/`TRANSCRIPT ON` start, `SCRIPT OFF`/
   `TRANSCRIPT OFF` stop, mirroring the session's output + the player's prompts/commands to
