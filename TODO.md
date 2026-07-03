@@ -496,6 +496,15 @@ core edit is contained. Names (default): `contains`/`place`/`contained`, keyword
 **Where:** `src/lantern/{tokenizer,parser_rd,emitter,checker}.js`, `src/lamplighter/index.js`, `lib/advent/*`, `devdocs/{relations,world-model}.md`.
 
 ## Smaller / opportunistic
+- ~~**`[those]` number-agreeing demonstrative.**~~ **DONE (2026-07-03):** a `[those]` bare-word
+  substitution (Inform's `[regarding X][those]` idiom) renders "that"/"those" by the number of
+  the context subject, reading the same agreement descriptor as the adaptive pronouns/verbs;
+  `[Those]` capitalizes. Added `those` to the parser sugar set and a `those()` native to en-US
+  (and fr-FR, masculine number-only — French demonstratives also inflect for gender, not modeled).
+  Rewrote the 9 advent "…that." refusals (take/drop/wear/doff/examine/put-on ×2/drink/eat) as
+  `[regarding self.X][those]`, so a plural object now reads "those". Golden `those1`; 216 goldens
+  byte-invariant (existing fixtures use singular objects). **Follow-up:** fr-FR `those()` needs
+  gender (celui-là/celle-là/ceux-là/celles-là) when French demonstratives get modeled.
 - ~~**EAT action (mirrors DRINK).**~~ **DONE (2026-07-03):** `eat [food]` consumes an `edible`
   thing (removes its `contains` edge), refuses anything else (`not_edible`, auto-created reason).
   Added `bool edible` to `physical`; golden `eat1`; `showme1` re-baselined (dump lists `edible`).
