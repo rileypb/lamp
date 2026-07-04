@@ -1,0 +1,24 @@
+lib advent
+
+# KISS is universally refused by default (lib/advent/actions.lamp): kissing anything gives the
+# default "would appreciate that" message unless a game overrides it with `instead kiss when …`.
+# Here a rock and a guard are both present; the guard has a custom response, the rock doesn't.
+
+person guard:
+	printed_name "guard"
+
+item rock:
+	printed_name "rock"
+
+instead kiss when self.target == guard:
+	print "The guard blushes and looks away."
+	stop
+
+game Kiss_Demo:
+	start hall
+
+room hall:
+	description "A quiet hall."
+
+contains hall rock
+contains hall guard

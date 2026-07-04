@@ -1,0 +1,12 @@
+hall
+A quiet hall.
+
+You see a rock here.
+
+> kiss rock
+You do not think the rock would appreciate that.
+
+> kiss guard
+The guard blushes and looks away.
+
+> quit

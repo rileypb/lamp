@@ -376,6 +376,20 @@ report failed attack when self.reason == attack_pointless:
 		stop
 	print attack_violence:"Violence isn't the answer to this one."
 
+# KISS — a social action universally refused by default (Inform's "kissing"). Like ATTACK it
+# always fails, so the default is a `report failed` message; a game contributes `instead kiss X`
+# rules for anything that should respond. The refusal is a named, retheme-able message.
+action kiss:
+	direct physical target
+	syntax:
+		"kiss [target]"
+
+check kiss:
+	stop failed kiss_pointless
+
+report failed kiss when self.reason == kiss_pointless:
+	print kiss_refused:"[We] [do] not think [the act.target] would appreciate that."
+
 # PUSH for buttons, switches and the like (Inform's "pushing a thing"). Like ATTACK, the
 # action *fails* by default — most things don't respond — so the default is a `report failed`
 # message and a game contributes `instead push` rules for the controls that do (e.g. a button
