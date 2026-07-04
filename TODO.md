@@ -496,6 +496,13 @@ core edit is contained. Names (default): `contains`/`place`/`contained`, keyword
 **Where:** `src/lantern/{tokenizer,parser_rd,emitter,checker}.js`, `src/lamplighter/index.js`, `lib/advent/*`, `devdocs/{relations,world-model}.md`.
 
 ## Smaller / opportunistic
+- ~~**KISS action.**~~ **DONE (2026-07-04):** `kiss [target]` — a social action universally
+  refused by default (mirrors ATTACK): `check kiss` always `stop failed kiss_pointless` (reason
+  auto-created), and `report failed kiss` prints the retheme-able `kiss_refused` message ("[We]
+  [do] not think [the act.target] would appreciate that."). A game overrides per-object with
+  `instead kiss when self.target == X`. Registered `kiss` as a conjugation verb (en-US/fr-FR) so
+  custom responses can use `[kiss]`. Golden `kiss1` (default block + override); 217 goldens,
+  existing byte-invariant.
 - ~~**`[those]` number-agreeing demonstrative.**~~ **DONE (2026-07-03):** a `[those]` bare-word
   substitution (Inform's `[regarding X][those]` idiom) renders "that"/"those" by the number of
   the context subject, reading the same agreement descriptor as the adaptive pronouns/verbs;
