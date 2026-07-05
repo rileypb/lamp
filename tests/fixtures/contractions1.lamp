@@ -1,0 +1,52 @@
+lib advent
+
+# Adaptive contractions (text.md D9): [we're]/[we've]/[we'll]/[we'd] (subject-pronoun), the
+# [they'…] referent siblings, [don't]/[aren't]/[haven't] (negated auxiliaries), and [that's]
+# (demonstrative). They adapt to the viewpoint/subject's person and number. A named third-person
+# viewpoint spells out ("Galaxy is"), never contracting onto the name; later pronominalized
+# references in the same render do contract ("She'll").
+
+item scissors:
+	printed_name "scissors"
+	plural
+
+action second:
+	out_of_world
+	syntax:
+		"second"
+do second:
+	print "[We're]/[We've]/[We'll]/[We'd] | [We] [don't]/[aren't]/[haven't] | [That's]"
+
+action refplural:
+	out_of_world
+	syntax:
+		"refplural"
+do refplural:
+	print "[regarding scissors][That's] sharp; [regarding scissors][They're] sharp; [regarding scissors][they've] gone."
+
+action third:
+	out_of_world
+	syntax:
+		"third"
+do third:
+	viewpoint_person = 3
+	yourself.pronouns = "she"
+	print "[We're] | [We] [don't]/[aren't]/[haven't] | [That's]"
+
+action named:
+	out_of_world
+	syntax:
+		"named"
+do named:
+	viewpoint_person = 3
+	viewpoint_named = true
+	viewpoint_name = "Galaxy"
+	print "[We're] here; [We'll] wait; [We] [don't] know."
+
+game Contractions:
+	start hall
+
+room hall:
+	description "A hall."
+
+contains hall scissors

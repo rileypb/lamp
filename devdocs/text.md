@@ -237,12 +237,18 @@ use an ordinary reference (`[the self.actor]`), not a pronoun word.
   "Alice" through the *same* token; choosing pronoun vs. name is the author's, made
   explicit in the template. This is the payoff that justifies D1–D7.
 - **D9. Adaptive contractions.** Inform: contracted forms (`[We're]`, `[don't]`) ride the same
-  verb/pronoun engine. **Lamp (PLANNED — spec).** A contraction token reads the same per-render
-  agreement descriptor `{person, plural}` (§ *Render context*) as the pronouns (D1), verbs (D3),
-  and demonstrative (D5a), so a message may be written contracted and still adapt. Contractions
-  are **zero-arg locale sugar words** like `[we]`/`[those]`; `[We're]`/`[Don't]` capitalize via
-  the B5/D1 mechanism. Three families, and a set of **invariant** contractions deliberately left
-  as literal text.
+  verb/pronoun engine. **Lamp — mechanism DONE (2026-07-04, en-US); advent re-theme + fr-FR
+  deferred.** A contraction token reads the same per-render agreement descriptor `{person, plural}`
+  (§ *Render context*) as the pronouns (D1), verbs (D3), and demonstrative (D5a), so a message may
+  be written contracted and still adapt. Contractions are **zero-arg locale sugar words** like
+  `[we]`/`[those]` (the parser's `PRONOUN_SUGAR_FNS`, extended to allow a straight apostrophe in
+  the bare word) backed by `lib/en-US` natives; `[We're]`/`[Don't]` capitalize via the B5/D1
+  mechanism. Three families, and a set of **invariant** contractions deliberately left as literal
+  text. Golden `contractions1`. **Not re-themed into advent's shared refusals yet:** those default
+  messages compile under *both* locales, and English contractions don't map to single French
+  tokens (French negation is discontinuous "ne … pas"; French doesn't contract subject+verb), so
+  re-theming them would force a fr-FR contraction story that needs its own design. The sugar is
+  **en-US-only**: a fr-FR game using `[we're]` gets a clear "undefined function" compile error.
 
   **D9a. Subject-pronoun contractions** — the `[We]` subject fused with a following auxiliary.
   Each renders the viewpoint subject **plus** the verb: **contracted** when the subject surfaces
@@ -1080,8 +1086,8 @@ Fixtures `list1` / `numbers1` / `plural1` + goldens; parser unit tests
 
 - **D6** story tense — when tense is introduced.
 - **D7** person setting — when alternate narrator viewpoints are introduced.
-- **D9** adaptive contractions — **spec'd, ready to build** (no prerequisite; the agreement
-  engine already exists). See the D9 entry for the full token set and the named-viewpoint rule.
+- **D9** adaptive contractions — **mechanism DONE (en-US)**; the advent shared-message re-theme
+  and a fr-FR contraction story remain (English contractions don't map to single French tokens).
 - **G3** count-driven agreement (`is`/`are`, `that`/`those`) — surface syntax
   undecided; the underlying `.size` + plural flag come earlier.
 - **H4** spacing normalization; **H5** indentation helpers.

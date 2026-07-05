@@ -99,6 +99,13 @@ const PRONOUN_SUGAR_FNS = {
     // subject (set by `[regarding X]` or by naming a thing). Same zero-arg/agreement machinery
     // as the pronouns; `[Those]` capitalizes. See text.md D and lib/en-US `those`.
     those: "those",
+    // Adaptive contractions (text.md D9), same machinery. D9a subject-pronoun (fused with the
+    // viewpoint subject; a named third person spells out); the `they'…` family agrees with the
+    // antecedent/`[regarding]` referent. D9b negated auxiliaries. D9c demonstrative `[that's]`.
+    "we're": "we_re", "we've": "we_ve", "we'll": "we_ll", "we'd": "we_would",
+    "they're": "they_re", "they've": "they_ve", "they'll": "they_ll", "they'd": "they_would",
+    "don't": "dont", "aren't": "arent", "weren't": "werent", "haven't": "havent",
+    "that's": "thats",
 };
 
 // Paragraph-control marker phrases (H1/H2/H3) → their lib/sys output-stream calls.
@@ -190,7 +197,9 @@ function desugarSugar(src, verbNames) {
         const call = `${helper}(${rest})`;
         return /^[A-Z]/.test(isAre[1]) ? `cap(${call})` : call;
     }
-    if (/^[A-Za-z]+$/.test(src)) {
+    // Letters, plus a straight apostrophe so contraction sugar (`[we're]`, `[don't]`, D9)
+    // is a single bare word alongside the pronouns/verbs.
+    if (/^[A-Za-z']+$/.test(src)) {
         const lower = src.toLowerCase();
         const wrap = (call) => (src === lower ? call : `cap(${call})`);
         if (PRONOUN_SUGAR_FNS[lower]) return wrap(`${PRONOUN_SUGAR_FNS[lower]}()`);

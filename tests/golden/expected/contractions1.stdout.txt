@@ -1,0 +1,18 @@
+hall
+A hall.
+
+You see some scissors here.
+
+> second
+You're/You've/You'll/You'd | You don't/aren't/haven't | That's
+
+> refplural
+Those are sharp; They're sharp; they've gone.
+
+> third
+She's | She doesn't/isn't/hasn't | That's
+
+> named
+Galaxy is here; She'll wait; She doesn't know.
+
+> quit

@@ -54,6 +54,26 @@ native function string regarding(object x)
 # in "[We] can't eat [regarding self.food][those]." `[Those]` capitalizes.
 native function string those()
 
+# Adaptive contractions (text.md D9), zero-arg sugar words like the pronouns. D9a: subject-pronoun
+# contractions fuse the viewpoint subject with an auxiliary ([we're]/[we've]/[we'll]/[we'd]); a
+# named third-person viewpoint spells out ("Galaxy is"), never contracting onto the name. The
+# [they'…] family agrees with the antecedent/[regarding] referent instead. D9b: negated auxiliaries
+# ([don't]/[aren't]/[weren't]/[haven't]), agreeing with the current subject. D9c: [that's] ("that's"
+# / "those are"), the contraction pair to [those]. All capitalize (`[We're]`, `[Don't]`).
+native function string we_re()
+native function string we_ve()
+native function string we_ll()
+native function string we_would()
+native function string they_re()
+native function string they_ve()
+native function string they_ll()
+native function string they_would()
+native function string dont()
+native function string arent()
+native function string werent()
+native function string havent()
+native function string thats()
+
 # `conjugate(word)` returns the surface form of an English verb agreeing with the
 # context subject's person and number ("drop"/"drops", "is"/"are", "has"/"have").
 # The bare-word sugar `[drop]` desugars to `conjugate("drop")`. The verb word must
