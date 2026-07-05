@@ -496,6 +496,18 @@ core edit is contained. Names (default): `contains`/`place`/`contained`, keyword
 **Where:** `src/lantern/{tokenizer,parser_rd,emitter,checker}.js`, `src/lamplighter/index.js`, `lib/advent/*`, `devdocs/{relations,world-model}.md`.
 
 ## Smaller / opportunistic
+- ~~**Action-verb synonyms + adjacent-slot check.**~~ **DONE (2026-07-04):** reviewed a batch of
+  added verb synonyms (look around; take: pick up/pick X up; drop: throw/put down/put X down;
+  wear: don/put on/put X on; doff: doff/take X off; kiss: smooch; drink: sip/gulp/quaff/swig) —
+  all safe and verified, including the `put`/`take` overlaps that share leading literals across
+  drop/wear/put_on/doff (the runtime backtracks over every structurally-matching grammar). **Two
+  were broken:** the reversed datives `"give [recipient] [gift]"` / `"show [recipient] [shown]"`
+  silently never matched — two adjacent slots with no literal between them, which `matchGrammar`
+  can't split (the first slot greedily eats the rest). Removed them (the `... to ...` forms remain).
+  **Guard added:** `checkNoAdjacentSlots` in the checker rejects any action `syntax:`/`understand`
+  template with adjacent slots at compile time (relation `syntax` exempt — parsed at compile time).
+  Golden `adjacent_slots`; 218 goldens; specs.md documents the rule. **Possible future feature:**
+  adjacent-slot (dative) grammar support would need noun-phrase-boundary parsing in the matcher.
 - ~~**KISS action.**~~ **DONE (2026-07-04):** `kiss [target]` — a social action universally
   refused by default (mirrors ATTACK): `check kiss` always `stop failed kiss_pointless` (reason
   auto-created), and `report failed kiss` prints the retheme-able `kiss_refused` message ("[We]
