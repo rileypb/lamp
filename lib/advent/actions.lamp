@@ -27,7 +27,7 @@ action wait:
 		"z"
 
 report wait:
-	print message wait_report
+	print message wait_report  # "Time passes."
 
 action take:
 	direct item taken
@@ -70,9 +70,9 @@ do take:
 # elsewhere renders against the current action.
 report take:
 	if self.actor == player:
-		print message take_report
+		print message take_report  # "Taken."
 	else:
-		print message take_report_other
+		print message take_report_other  # "[The act.actor] [take] [the act.taken]."
 
 # Failure text lives here, keyed by reason, so a game can retheme a refusal
 # without restating the `check` condition (see devdocs/rulebooks.md).
@@ -84,19 +84,19 @@ report failed take:
 		print "[act.taken.take_refusal]"
 		stop
 	if self.reason == already_carrying:
-		print message take_already_carrying
+		print message take_already_carrying  # "You're already carrying [regarding act.taken][those]."
 		stop
 	if self.reason == cant_take_that:
-		print message take_cant_take
+		print message take_cant_take  # "That's not something [we] can take."
 		stop
 	if self.reason == cant_take_unfeelable:
-		print message take_cant_unfeelable
+		print message take_cant_unfeelable  # "[We] can't take [the act.taken]."
 		stop
 	if self.reason == cant_reach:
-		print message take_cant_reach
+		print message take_cant_reach  # "[We] can't reach [the act.taken]."
 		stop
 	if self.reason == too_massive:
-		print message take_too_massive
+		print message take_too_massive  # "[The act.taken] [is] much too massive to take."
 		stop
 
 action inventory:
@@ -109,7 +109,7 @@ report inventory:
 	for x in item.all:
 		if holder(x) == self.actor:
 			if not found:
-				print message inventory_header
+				print message inventory_header  # "[We] [are] carrying:[line break]"
 				found = true
 			# The item name references the loop variable `x` (not the action), so it
 			# stays a plain print (a message may only reference `act`/globals); the
@@ -119,12 +119,12 @@ report inventory:
 			# English-only `with_article`) so the row localizes — "une clé" under fr-FR.
 			print "  [indefinite(x)]"
 			if wears self.actor x:
-				print message inventory_worn
+				print message inventory_worn  # " (worn)"
 			if x.lit:
-				print message inventory_providing_light
+				print message inventory_providing_light  # " (providing light)"
 			print "[line break]"
 	if not found:
-		print message inventory_empty
+		print message inventory_empty  # "[We] [are] carrying nothing."
 
 action drop:
 	direct item dropped
@@ -141,7 +141,7 @@ check drop:
 do drop:
 	if wears self.actor self.dropped:
 		if (self.actor == player):
-			print message drop_first_doff
+			print message drop_first_doff  # "(first taking off [the act.dropped])[line break]"
 		silently try doff:
 			clothing self.dropped
 			actor self.actor
@@ -151,13 +151,13 @@ do drop:
 
 report drop:
 	if self.actor == player:
-		print message drop_report
+		print message drop_report  # "Dropped."
 	else:
-		print message drop_report_other
+		print message drop_report_other  # "[The act.actor] [drop] [the act.dropped]."
 
 report failed drop:
 	if self.reason == not_carrying:
-		print message drop_not_carrying
+		print message drop_not_carrying  # "You aren't carrying [regarding act.dropped][those]."
 		stop
 
 action wear:
@@ -179,7 +179,7 @@ check wear:
 do wear:
 	if not (holder(self.clothing) == self.actor):
 		if (self.actor == player):
-			print message wear_first_take
+			print message wear_first_take  # "(first taking [the act.clothing])[line break]"
 		try take:
 			taken self.clothing
 			actor self.actor
@@ -189,16 +189,16 @@ do wear:
 
 report wear:
 	if self.actor == player:
-		print message wear_report
+		print message wear_report  # "[We] [put] on [the act.clothing]."
 	else:
-		print message wear_report_other
+		print message wear_report_other  # "[The act.actor] [put] on [the act.clothing]."
 
 report failed wear:
 	if self.reason == not_wearable:
-		print message wear_not_wearable
+		print message wear_not_wearable  # "That's not something [we] can wear."
 		stop
 	if self.reason == already_worn:
-		print message wear_already_worn
+		print message wear_already_worn  # "You're already wearing [regarding act.clothing][those]."
 		stop
 
 action doff:
@@ -218,13 +218,13 @@ do doff:
 
 report doff:
 	if self.actor == player:
-		print message doff_report
+		print message doff_report  # "[We] [take] off [the act.clothing]."
 	else:
-		print message doff_report_other
+		print message doff_report_other  # "[The act.actor] [take] off [the act.clothing]."
 
 report failed doff:
 	if self.reason == not_worn:
-		print message doff_not_worn
+		print message doff_not_worn  # "You're not wearing [regarding act.clothing][those]."
 		stop
 
 # OPEN / CLOSE for containers. The action takes any `item`; a `box` flagged `closable`
@@ -255,19 +255,19 @@ report open:
 	# By report time the box is open, so contents_of returns its (now unsealed) contents.
 	let inner = contents_of(self.target)
 	if inner.first == none:
-		print message open_report
+		print message open_report  # "[We] [open] [the act.target]."
 	else:
-		print message open_report_revealing
+		print message open_report_revealing  # "[We] [open] [the act.target], revealing [render_contents(act.target)]."
 
 report failed open:
 	if self.reason == not_openable:
-		print message open_not_openable
+		print message open_not_openable  # "That's not something [we] can open."
 		stop
 	if self.reason == already_open:
-		print message open_already_open
+		print message open_already_open  # "[The act.target] [is] already open."
 		stop
 	if self.reason == locked_shut:
-		print message open_locked
+		print message open_locked  # "It seems to be locked."
 		stop
 
 action close:
@@ -286,14 +286,14 @@ do close:
 	self.target.closed = true
 
 report close:
-	print message close_report
+	print message close_report  # "[We] [close] [the act.target]."
 
 report failed close:
 	if self.reason == not_closable:
-		print message close_not_closable
+		print message close_not_closable  # "That's not something [we] can close."
 		stop
 	if self.reason == already_closed:
-		print message close_already_closed
+		print message close_already_closed  # "[The act.target] [is] already closed."
 		stop
 
 # Targets any `physical` (not just `item`) so people and other non-item scenery can be examined.
@@ -312,9 +312,9 @@ check examine:
 # reads as ""). Both are named messages, so a game or translation can retheme them.
 report examine:
 	if self.target.description == "":
-		print message examine_nothing
+		print message examine_nothing  # "[We] [see] nothing unusual about [the act.target]."
 	else:
-		print message examine_report
+		print message examine_report  # "[act.target.description][line break]"
 	# Inform's examine-a-container behaviour: list the contents of an open container (`contents_of`
 	# already yields nothing for a closed one). Gated to real container kinds so examining a person or
 	# other holder doesn't spill its contents. `is`/`are` agrees with how many things are inside.
@@ -322,13 +322,13 @@ report examine:
 		let inside = contents_of(self.target)
 		if not (inside.first == none):
 			if inside.size == 1:
-				print message examine_in_container
+				print message examine_in_container  # "[par]In [the act.target] is [render_contents(act.target)]."
 			else:
-				print message examine_in_container_plural
+				print message examine_in_container_plural  # "[par]In [the act.target] are [render_contents(act.target)]."
 
 report failed examine:
 	if self.reason == too_dark:
-		print message examine_too_dark
+		print message examine_too_dark  # "It's too dark to see [regarding act.target][those]."
 		stop
 
 # TOUCH / FEEL (Inform's "touching", ported from Can't Touch This.i7x). Touching changes nothing
@@ -351,16 +351,16 @@ check touch:
 
 report touch:
 	if self.target.feels == "":
-		print message touch_nothing
+		print message touch_nothing  # "[We] [feel] nothing unexpected."
 	else:
-		print message touch_feels
+		print message touch_feels  # "[act.target.feels]"
 
 report failed touch:
 	if self.reason == cant_touch:
-		print message touch_cant
+		print message touch_cant  # "[We] can't touch [the act.target]."
 		stop
 	if self.reason == cant_reach:
-		print message touch_cant_reach
+		print message touch_cant_reach  # "[We] can't reach [the act.target]."
 		stop
 
 # A generic reaction to violence against any item (also ATTACK/HIT/SMASH/PUNCH). The
@@ -385,7 +385,7 @@ report failed attack when self.reason == attack_pointless:
 	if not (self.target.attack_refusal == ""):
 		print "[act.target.attack_refusal]"
 		stop
-	print message attack_violence
+	print message attack_violence  # "Violence isn't the answer to this one."
 
 # KISS — a social action universally refused by default (Inform's "kissing"). Like ATTACK it
 # always fails, so the default is a `report failed` message; a game contributes `instead kiss X`
@@ -400,7 +400,7 @@ check kiss:
 	stop failed kiss_pointless
 
 report failed kiss when self.reason == kiss_pointless:
-	print message kiss_refused
+	print message kiss_refused  # "[We] [do] not think [the act.target] would appreciate that."
 
 # PUSH for buttons, switches and the like (Inform's "pushing a thing"). Like ATTACK, the
 # action *fails* by default — most things don't respond — so the default is a `report failed`
@@ -418,7 +418,7 @@ check push:
 	stop failed nothing_happens
 
 report failed push when self.reason == nothing_happens:
-	print message push_inert
+	print message push_inert  # "Nothing obvious happens."
 
 # PULL — the counterpart to PUSH (Inform's "pulling a thing"), for levers and the like. Same
 # fail-by-default shape: a game adds `instead pull` rules for things that respond. Shares the
@@ -432,7 +432,7 @@ check pull:
 	stop failed nothing_happens
 
 report failed pull when self.reason == nothing_happens:
-	print message pull_inert
+	print message pull_inert  # "Nothing obvious happens."
 
 # GIVE / SHOW a thing to someone. Both *fail* by default (most recipients don't react), so the
 # default is a refusal message; a game adds `instead give`/`instead show` rules for recipients
@@ -447,7 +447,7 @@ check give:
 	stop failed give_declined
 
 report failed give when self.reason == give_declined:
-	print message give_declined_msg
+	print message give_declined_msg  # "[The act.recipient] [do] not seem interested."
 
 action show:
 	direct item shown
@@ -459,7 +459,7 @@ check show:
 	stop failed show_declined
 
 report failed show when self.reason == show_declined:
-	print message show_declined_msg
+	print message show_declined_msg  # "[The act.recipient] [are] unimpressed."
 
 # ENTER a thing (Inform's "entering"). advent has no enterable-supporter/vehicle model yet, so
 # the action *fails* by default; a game adds `instead enter` rules for things that can be entered
@@ -474,7 +474,7 @@ check enter:
 	stop failed cant_enter
 
 report failed enter when self.reason == cant_enter:
-	print message cant_enter_msg
+	print message cant_enter_msg  # "That's not something [we] can enter."
 
 action go:
 	direction way
@@ -499,15 +499,15 @@ do go:
 report failed go:
 	if self.reason == cant_go_that_way:
 		if self.way == up:
-			print message go_cant_up
+			print message go_cant_up  # "[We] can neither climb walls nor fly."
 			stop
 		if self.way == down:
-			print message go_cant_down
+			print message go_cant_down  # "[We] can't just dig downward."
 			stop
 		if self.way == inward:
-			print message go_cant_in
+			print message go_cant_in  # "What [do] [we] want to enter?"
 			stop
-		print message go_cant
+		print message go_cant  # "[We] can't go that way."
 		stop
 
 # go needs no report: moving the actor fires the `contains add` handler, which
@@ -544,7 +544,7 @@ check put_on:
 do put_on:
 	if wears self.actor self.put_item:
 		if (self.actor == player):
-			print message put_on_first_doff
+			print message put_on_first_doff  # "(first taking off [the act.put_item])[line break]"
 		silently try doff:
 			clothing self.put_item
 			actor self.actor
@@ -555,16 +555,16 @@ do put_on:
 
 report put_on:
 	if self.actor == player:
-		print message put_on_report
+		print message put_on_report  # "[We] [put] [the act.put_item] on [the act.destination]."
 	else:
-		print message put_on_report_other
+		print message put_on_report_other  # "[The act.actor] [put] [the act.put_item] on [the act.destination]."
 
 report failed put_on:
 	if self.reason == not_carrying:
-		print message put_on_not_carrying
+		print message put_on_not_carrying  # "You aren't carrying [regarding act.put_item][those]."
 		stop
 	if self.reason == cant_put_on_that:
-		print message put_on_cant
+		print message put_on_cant  # "[We] can't put things on [regarding act.destination][those]."
 		stop
 
 action drink:
@@ -585,13 +585,13 @@ do drink:
 
 report drink:
 	if self.actor == player:
-		print message drink_report
+		print message drink_report  # "[We] [drink] [the act.liquid]."
 	else:
-		print message drink_report_other
+		print message drink_report_other  # "[The act.actor] [drink] [the act.liquid]."
 
 report failed drink:
 	if self.reason == not_drinkable:
-		print message drink_not_drinkable
+		print message drink_not_drinkable  # "[We] can't drink [regarding act.liquid][those]."
 		stop
 
 action eat:
@@ -608,11 +608,11 @@ do eat:
 
 report eat:
 	if self.actor == player:
-		print message eat_report
+		print message eat_report  # "[We] [eat] [the act.food]."
 	else:
-		print message eat_report_other
+		print message eat_report_other  # "[The act.actor] [eat] [the act.food]."
 
 report failed eat:
 	if self.reason == not_edible:
-		print message eat_not_edible
+		print message eat_not_edible  # "[We] can't eat [regarding act.food][those]."
 		stop

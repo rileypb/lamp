@@ -108,8 +108,8 @@ rulebook bool every_turn_rules():
 rulebook bool end_story_rules():
 	default true
 	when story == won:
-		print message story_won
+		print message story_won  # "*** You have won ***[line break]"
 		stop true
 	when story == lost:
-		print message story_lost
+		print message story_lost  # "*** You have lost ***[line break]"
 		stop true

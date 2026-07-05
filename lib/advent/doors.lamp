@@ -42,5 +42,5 @@ check go:
 
 report failed go:
 	if self.reason == door_closed:
-		print message door_closed_msg
+		print message door_closed_msg  # "[The blocking_door] is closed."
 		stop

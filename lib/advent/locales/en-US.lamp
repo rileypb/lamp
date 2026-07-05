@@ -8,6 +8,10 @@
 #
 # Top-level overrides compile in top-level scope, so substitutions reference the
 # running action through the `act` global (never a lexical `self`).
+#
+# Readability note: advent's use sites mirror these texts in trailing comments
+# (`print message NAME  # "…"`, and the prompt(...) calls likewise) — when editing
+# a text here, update the comment at the use site.
 
 # --- actions.lamp ---
 wait_report: "Time passes."
