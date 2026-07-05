@@ -496,15 +496,19 @@ core edit is contained. Names (default): `contains`/`place`/`contained`, keyword
 **Where:** `src/lantern/{tokenizer,parser_rd,emitter,checker}.js`, `src/lamplighter/index.js`, `lib/advent/*`, `devdocs/{relations,world-model}.md`.
 
 ## Smaller / opportunistic
-- **Adaptive contractions (`[we're]`/`[don't]`/`[that's]`) — spec'd, ready to build.** `devdocs/text.md`
-  D9 defines the full set: **D9a** subject-pronoun (`[we're]`/`[we've]`/`[we'll]`/`[we'd]` + referent
-  siblings `[they're]`/…), **D9b** negated-auxiliary (`[don't]`/`[aren't]`/`[weren't]`/`[haven't]`),
-  **D9c** demonstrative (`[that's]` → that's/those are, pairs with `[those]`). All read the existing
-  `{person, plural}` agreement descriptor; add as zero-arg locale sugar words (parser
-  `PRONOUN_SUGAR_FNS` + `those()`-style natives). **Decision:** a `viewpoint_named` third person
-  spells out (no contraction onto the name — "Galaxy is", not "Galaxy's"). Invariant contractions
-  (`can't`/`won't`/`didn't`/…) stay literal. Once built, re-theme the advent hardcodes (13 isn't/aren't,
-  5 don't/doesn't, 3 You're, 5 That's, 1 hasn't). No prerequisite — the agreement engine exists.
+- ~~**Adaptive contractions (`[we're]`/`[don't]`/`[that's]`) — mechanism.**~~ **DONE (2026-07-04,
+  en-US):** the full D9 token set is live — **D9a** subject-pronoun (`[we're]`/`[we've]`/`[we'll]`/
+  `[we'd]` + referent siblings `[they're]`/…, spelling out for a `viewpoint_named` third person:
+  "Galaxy is", then "She'll" once pronominalized), **D9b** negated-auxiliary (`[don't]`/`[aren't]`/
+  `[weren't]`/`[haven't]`), **D9c** demonstrative (`[that's]` → that's/those are). Zero-arg sugar
+  (parser `PRONOUN_SUGAR_FNS`, apostrophe allowed) + en-US natives reading the `{person, plural}`
+  agreement. Golden `contractions1`; suite byte-invariant. **Remaining:** re-theme advent's shared
+  refusals — blocked because those messages compile under *both* locales and English contractions
+  don't map to single French tokens (French "ne … pas" is discontinuous, and French doesn't
+  contract subject+verb); needs a **fr-FR contraction story** first. Until then the sugar is
+  en-US-only (a fr-FR game using `[we're]` gets an undefined-function error). Re-theme targets: the
+  ~27 hardcodes (13 isn't/aren't, 5 don't/doesn't, 3 You're, 5 That's, 1 hasn't) — byte-invariant
+  in 2nd person, adaptive for a 3rd-person English game like Phobos.
 - ~~**Action-verb synonyms + adjacent-slot check.**~~ **DONE (2026-07-04):** reviewed a batch of
   added verb synonyms (look around; take: pick up/pick X up; drop: throw/put down/put X down;
   wear: don/put on/put X on; doff: doff/take X off; kiss: smooch; drink: sip/gulp/quaff/swig) —
