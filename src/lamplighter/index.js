@@ -1400,7 +1400,10 @@ function registerMessageOverride(name, textValue) {
     messageOverrides.set(name, textValue);
 }
 function message(name, defaultValue) {
-    return messageOverrides.has(name) ? messageOverrides.get(name) : defaultValue;
+    if (messageOverrides.has(name)) return messageOverrides.get(name);
+    // A default-less reference (`message NAME`) is compile-checked for coverage,
+    // so a miss here should be unreachable — fail loudly, not blank.
+    return defaultValue !== undefined ? defaultValue : `[missing message: ${name}]`;
 }
 
 function defineGlobal(name, value) {

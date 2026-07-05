@@ -528,27 +528,34 @@ core edit is contained. Names (default): `contains`/`place`/`contained`, keyword
      quoted words, and the bare-sugar word test admits accented letters (`[être]`). Golden `frconj1`;
      spec in i18n.md "French verb conjugation". Known limitation: 1sg elision ("je ai") awaits the
      elision-sugar item.
-  3. **Architectural direction (bigger):** move default message *text* out of advent into the locale
-     packs (advent = keys + world logic; en-US owns English prose + English sugar; fr-FR owns French
-     prose + French sugar). Then locale sugar never leaks cross-locale and the shared-re-theme problem
-     disappears; also fixes partial-translation mixing.
+  3. ~~**Architectural direction (bigger):** move default message *text* out of advent into the locale
+     packs.~~ **DONE (2026-07-05) — the layer-3 split.** New default-less message reference
+     `message NAME` (contextual keyword; emits `lamplighter.message(name)` with no fallback) plus a
+     checker **completeness check**: every default-less reference must have a `NAME: "…"` registration
+     in some loaded file, else compile error (golden `missing_message`) — a partial translation fails
+     the build instead of mixing languages. All 105 advent message defaults migrated out of the rules
+     into `lib/advent/locales/en-US.lamp` (loaded under the default locale by the same per-library
+     mechanism as fr-FR.lamp; migrated texts' `self.` → `act.`); the French file gained the 68 missing
+     translations (now complete, compiler-enforced). Two local-reference gaps closed by routing the
+     value through a global: `blocking_door` (doors.lamp — the closed-door refusal is finally a named,
+     translated message) and `points_awarded` (scoring.lamp). Whole suite byte-invariant (224 goldens,
+     Phobos included). **Where:** `src/lantern/{parser_rd,ast,emitter,checker}.js`,
+     `src/lamplighter/index.js` (message fallback), `lib/advent/*` + `locales/{en-US,fr-FR}.lamp`;
+     spec in messages.md, i18n.md "Layer 3".
   **Follow-through:** demonstrate layer 1 by adding contraction overrides to Phobos's messages;
   layer 2's remaining item is elision sugar (`[l' X]`, and "je"+vowel → "j'").
-- **English tokens inside `lib/fr-FR` (observed 2026-07-05).** The pack's `verb` list and `sugar`
-  declarations are English words (`the`, `we`, `take`, …) — deliberate today: advent's shared
-  default templates are English and must compile under fr-FR. **Step (a) DONE (2026-07-05):**
-  fr-FR declares French aliases (`sugar operand le as the, la as the, les as the` +
-  `un/une/des as indefinite`) and `lib/advent/locales/fr-FR.lamp` is swept to them, so the
-  French translations read as French end to end ("[Le act.actor] prend [le act.taken]."). The
-  alias hits the same native, which picks gender/number/elision from the object (`[le table]` →
-  "la table"). Golden `fralias1`; all French goldens byte-invariant; `frlocale1` still covers
-  the English-token compatibility path. English tokens remain only as parse compatibility for
-  untranslated defaults. (Bare-pronoun aliases deferred: `we()` renders the *viewpoint* pronoun —
-  "vous" by default — so the French token name isn't obvious, and no French translation currently
-  uses bare-pronoun sugar.) **(b) full fix** is layer 3 above — default prose moves into the
-  locale packs, after which fr-FR drops the English `verb`/`sugar` entries entirely. Native
-  *names* (`the()`, `contained_phrase()`, …) stay English regardless: they're the cross-locale
-  API contract, not surface text.
+- ~~**English tokens inside `lib/fr-FR` (observed 2026-07-05).**~~ **RESOLVED (2026-07-05), in two
+  steps.** **(a)** fr-FR declares French aliases (`sugar operand le as the, la as the, les as the` +
+  `un/une/des as indefinite`) and `lib/advent/locales/fr-FR.lamp` is swept to them, so the French
+  translations read as French end to end ("[Le act.actor] prend [le act.taken]."; golden `fralias1`).
+  **(b)** the layer-3 message split (above) removed the reason the English vocabulary existed: no
+  English prose compiles under fr-FR anymore, so the English `verb` list and the `the`/`a`/`an`
+  sugar tokens are **deleted** from `lib/fr-FR/functions.lamp` — the pack is purely French except
+  the adaptive-pronoun tokens (`[we]`/`[they]`/`[those]`), kept under their lib/en-US names as the
+  cross-locale API for the pronoun natives (French alias spellings are an open naming question:
+  `we()` renders the viewpoint pronoun, "vous" by default). Native *names* (`the()`,
+  `contained_phrase()`, …) stay English by design: they're the cross-locale API contract, not
+  surface text.
 - ~~**Declarable grammar sugar (locale-extensibility gap).**~~ **DONE (2026-07-05):** the
   template-sugar token vocabulary (`[the]`/`[we]`/`[those]`/`[we're]` → native calls) moved out of the
   parser's hardcoded `ARTICLE_SUGAR_FNS`/`PRONOUN_SUGAR_FNS` tables into locale-declared `sugar

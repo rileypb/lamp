@@ -16,6 +16,11 @@ global story_state story = ongoing
 # true for the instant between the verb and the loop's break, never during active play.
 global bool session_over = false
 
+# The door that most recently refused a `go` (set by the closed-door check just
+# before `stop failed door_closed`). Exists so the refusal message can name the
+# door: a named message may reference only `act`/globals, never a rule local.
+global object blocking_door = none
+
 # Failure reasons (raised by `stop failed X` in check rules, matched by `report failed`
 # rules) are auto-created from use — a bare `stop failed some_reason` needs no declaration.
 # See the `stop_reason` type (types.lamp) and the reason harvest in src/lantern/prescan.js.
@@ -103,8 +108,8 @@ rulebook bool every_turn_rules():
 rulebook bool end_story_rules():
 	default true
 	when story == won:
-		print story_won:"*** You have won ***[line break]"
+		print message story_won
 		stop true
 	when story == lost:
-		print story_lost:"*** You have lost ***[line break]"
+		print message story_lost
 		stop true

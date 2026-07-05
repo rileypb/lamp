@@ -7,12 +7,18 @@ lib advent
 global int score = 0
 global int max_score = 0
 
+# The size of the most recent award (set just before the notification prints).
+# Exists so `score_up_many` can name the amount: a named message may reference
+# only `act`/globals, never award_points' local `n`.
+global int points_awarded = 0
+
 function void award_points(int n):
 	score = score + n
+	points_awarded = n
 	if n == 1:
-		print score_up_one:"\[Your score has just gone up by one point.\]"
+		print message score_up_one
 	else:
-		print score_up_many:"\[Your score has just gone up by [n] points.\]"
+		print message score_up_many
 
 action request_score:
 	out_of_world
@@ -21,6 +27,6 @@ action request_score:
 
 report request_score:
 	if max_score > 0:
-		print score_report:"[We] [have] scored [score] out of a possible [max_score]."
+		print message score_report
 	else:
-		print score_report_nomax:"[We] [have] scored [score]."
+		print message score_report_nomax

@@ -32,9 +32,9 @@ thing alice:
     proper
 
 on startup:
-    print "Défini : [the crochet], [the lampe], [the armoire], [the horloge], [the cles], [the alice]."
-    print "Indéfini : [a crochet], [a lampe], [a armoire], [a cles], [a alice]."
-    print "Capitale : [The crochet] brille ; [The armoire] aussi."
+    print "Défini : [le crochet], [le lampe], [le armoire], [le horloge], [le cles], [le alice]."
+    print "Indéfini : [un crochet], [un lampe], [un armoire], [un cles], [un alice]."
+    print "Capitale : [Le crochet] brille ; [Le armoire] aussi."
     print "Liste définie : [the_list(thing.all)]."
     print "Liste indéfinie : [a_list(thing.all)]."
     print "Copule : un objet [are(1)] là, deux objets [are(2)] là."

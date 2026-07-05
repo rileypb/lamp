@@ -16,9 +16,9 @@ action undo:
 
 do undo:
 	if undo_turn():
-		print undo_done:"\[Previous turn undone.\]"
+		print message undo_done
 	else:
-		print undo_none:"You can't undo any further."
+		print message undo_none
 
 action save:
 	out_of_world
@@ -27,20 +27,20 @@ action save:
 
 do save:
 	if not save_available():
-		print save_unavailable:"Saving isn't available here."
+		print message save_unavailable
 		stop
 	let name = ""
 	if save_has_picker():
 		name = save_pick_name()
 	else:
-		name = prompt(save_name_prompt:"Name for saved game: ")
+		name = prompt(message save_name_prompt)
 	if name == "":
-		print save_cancelled:"Save cancelled."
+		print message save_cancelled
 		stop
 	if save_to_slot(name):
-		print save_done:"Game saved."
+		print message save_done
 	else:
-		print save_failed:"Save failed."
+		print message save_failed
 
 action restore:
 	out_of_world
@@ -49,36 +49,36 @@ action restore:
 
 do restore:
 	if not save_available():
-		print restore_unavailable:"Restoring isn't available here."
+		print message restore_unavailable
 		stop
 	let blob = ""
 	if restore_has_picker():
 		# The host picker returns the chosen blob directly (one round-trip).
 		blob = restore_pick_blob()
 		if blob == "":
-			print restore_cancelled:"Restore cancelled."
+			print message restore_cancelled
 			stop
 	else:
-		let name = prompt(restore_name_prompt:"Name of saved game: ")
+		let name = prompt(message restore_name_prompt)
 		if name == "":
-			print restore_cancelled:"Restore cancelled."
+			print message restore_cancelled
 			stop
 		blob = restore_read_slot(name)
 		if blob == "":
-			print restore_none:"There is no saved game by that name."
+			print message restore_none
 			stop
 	# restore_apply_blob gates on build compatibility and returns a status word.
 	let status = restore_apply_blob(blob)
 	if status == "ok":
-		print restore_done:"Game restored."
+		print message restore_done
 		stop
 	if status == "game":
-		print restore_wrong_game:"That saved game is for a different game."
+		print message restore_wrong_game
 		stop
 	if status == "version":
-		print restore_wrong_version:"That saved game is from a different version of this game."
+		print message restore_wrong_version
 		stop
 	if status == "corrupt":
-		print restore_corrupt:"That saved game is corrupted."
+		print message restore_corrupt
 		stop
-	print restore_bad_format:"That saved game is in an unrecognized format."
+	print message restore_bad_format

@@ -26,11 +26,11 @@ do restart:
 	# Report unavailability up front (no baseline captured) so the player isn't asked to
 	# confirm a restart that can't happen.
 	if not restart_available():
-		print restart_unavailable:"Restart isn't available right now."
+		print message restart_unavailable
 		stop
 	if story == ongoing:
 		if not confirm_restart():
-			print restart_declined:"Ok."
+			print message restart_declined
 			stop
 	request_restart()
 	session_over = true
@@ -40,7 +40,7 @@ do restart:
 # end-of-story prompt skips this: the player is already answering an explicit
 # "type RESTART, RESTORE, or QUIT" prompt there.
 function bool confirm_restart():
-	let reply = to_lower(prompt(restart_confirm:"Do you wish to restart? (Y is affirmative): "))
+	let reply = to_lower(prompt(message restart_confirm))
 	if reply == "y":
 		return true
 	if reply == "yes":
@@ -76,9 +76,9 @@ function void print_banner():
 	if not (this_game.tagline == ""):
 		print "[bold][shown][/bold][line break]"
 		print "[this_game.tagline]"
-		print banner_by:" by "
+		print message banner_by
 		print "[this_game.author][line break]"
-		print banner_version:"Version "
+		print message banner_version
 		print "[this_game.version] [this_game.release][par]"
 
 on startup:
@@ -128,7 +128,7 @@ on startup:
 			print "[par]"
 			follow end_story_rules()
 			print "[par]"
-			print quit_prompt:"Please type RESTART, RESTORE, or QUIT."
+			print message quit_prompt
 			while true:
 				input = prompt("> ")
 				run_meta_command(input, player)

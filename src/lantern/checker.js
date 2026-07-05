@@ -100,6 +100,7 @@ function checkProgram(programAst, options = {}) {
     checkNativeFunctions(programAst.nodes, nativeFunctionNames);
     checkFunctionOverloads(programAst.nodes, typeSchema, kindSchema, functionSchema);
     checkRelationDecls(programAst.nodes, typeSchema);
+    checkMessageCompleteness(programAst.nodes);
 
     for (const node of programAst.nodes) {
         if (node.kind === "ObjectDecl") {
@@ -298,6 +299,28 @@ function checkRulebookRule(node, typeSchema, kindSchema, functionSchema, globalN
         }
     }
     checkStatements(node.body, typeSchema, kindSchema, new Map(paramTypes), functionSchema, schema.returnType, globalNames);
+}
+
+// A default-less message reference (`message NAME`) has no fallback text: some
+// loaded file — normally the active locale pack — must register `NAME: "…"`.
+// Enforced program-wide so a missing translation is a compile error, not silent
+// empty output or another language's text bleeding through (devdocs/messages.md).
+// Generic deep walk: message references sit at arbitrary expression depth.
+function checkMessageCompleteness(nodes) {
+    const registered = new Set(nodes.filter((n) => n.kind === "MessageOverride").map((n) => n.name));
+    const walk = (value) => {
+        if (!value || typeof value !== "object") return;
+        if (Array.isArray(value)) {
+            for (const item of value) walk(item);
+            return;
+        }
+        if (value.kind === "MessageExpr" && value.defaultExpr === null && !registered.has(value.name)) {
+            throw typeError(value.filePath, value.lineNumber,
+                `message "${value.name}" has no text: no loaded file registers '${value.name}: "…"' (is the active locale pack missing this message?)`);
+        }
+        for (const key of Object.keys(value)) walk(value[key]);
+    };
+    walk(nodes);
 }
 
 function checkRelationDecls(nodes, typeSchema) {
@@ -930,6 +953,7 @@ function inferExprType(expr, typeSchema, kindSchema, localTypes, functionSchema 
         return "text";
     }
     if (expr.kind === "MessageExpr") {
+        if (expr.defaultExpr === null) return "text";
         return inferExprType(expr.defaultExpr, typeSchema, kindSchema, localTypes, functionSchema);
     }
     if (expr.kind === "FreezeExpr") {

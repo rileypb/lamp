@@ -18,21 +18,21 @@ action script_on:
 
 do script_on:
 	if transcript_running():
-		print transcript_already:"A transcript is already running."
+		print message transcript_already
 		stop
 	if not transcript_available():
-		print transcript_unavailable:"Transcripting isn't available here."
+		print message transcript_unavailable
 		stop
-	let name = prompt(transcript_name_prompt:"Name for transcript file: ")
+	let name = prompt(message transcript_name_prompt)
 	if name == "":
-		print transcript_cancelled:"Transcript cancelled."
+		print message transcript_cancelled
 		stop
 	# transcript_start opens the file before this returns, so the confirmation below is
 	# captured as the transcript's first line.
 	if transcript_start(name):
-		print transcript_started:"Transcript started."
+		print message transcript_started
 	else:
-		print transcript_failed:"Transcript failed."
+		print message transcript_failed
 
 action script_off:
 	out_of_world
@@ -42,8 +42,8 @@ action script_off:
 
 do script_off:
 	if not transcript_running():
-		print transcript_not_running:"No transcript is running."
+		print message transcript_not_running
 		stop
 	# Stop first so this closing line is screen-only, not the file's last line.
 	transcript_stop()
-	print transcript_ended:"Transcript ended."
+	print message transcript_ended

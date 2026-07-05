@@ -75,6 +75,113 @@ darkness_description: "Il fait nuit noire, et vous n'y voyez rien."
 room_contents_intro: "[par]Vous voyez "
 room_contents_outro: " ici."
 
+# --- wait ---
+wait_report: "Le temps passe."
+
+# --- take: reach/feel/mass refusals (Can't Touch This traits) ---
+# Adjective agreement (massif/massive) is not modeled, so refusals lean on the
+# neutral "c'est … " / infinitive phrasings that stay invariable.
+take_cant_unfeelable: "Vous ne pouvez pas prendre [le act.taken]."
+take_cant_reach: "Vous ne pouvez pas atteindre [le act.taken]."
+take_too_massive: "C'est beaucoup trop massif à emporter."
+
+# --- inventory: light marker ---
+inventory_providing_light: " (donne de la lumière)"
+
+# --- open / close ---
+open_report: "Vous ouvrez [le act.target]."
+open_report_revealing: "Vous ouvrez [le act.target], révélant [render_contents(act.target)]."
+open_not_openable: "Ce n'est pas quelque chose que vous pouvez ouvrir."
+open_already_open: "C'est déjà ouvert."
+open_locked: "Cela semble verrouillé."
+close_report: "Vous fermez [le act.target]."
+close_not_closable: "Ce n'est pas quelque chose que vous pouvez fermer."
+close_already_closed: "C'est déjà fermé."
+
+# --- examine: description body and container contents ---
+examine_report: "[act.target.description][line break]"
+examine_in_container: "[par]Dans [le act.target] se trouve [render_contents(act.target)]."
+examine_in_container_plural: "[par]Dans [le act.target] se trouvent [render_contents(act.target)]."
+
+# --- touch ---
+touch_nothing: "Vous ne sentez rien d'inattendu."
+touch_feels: "[act.target.feels]"
+touch_cant: "Vous ne pouvez pas toucher [le act.target]."
+touch_cant_reach: "Vous ne pouvez pas atteindre [le act.target]."
+
+# --- attack / kiss / push / pull ---
+attack_violence: "La violence n'est pas la solution."
+kiss_refused: "Vous ne pensez pas que [le act.target] apprécierait."
+push_inert: "Rien d'évident ne se produit."
+pull_inert: "Rien d'évident ne se produit."
+
+# --- give / show / enter ---
+give_declined_msg: "[Le act.recipient] ne [sembler] pas s'y intéresser."
+show_declined_msg: "Cela ne fait guère d'effet [au act.recipient]."
+cant_enter_msg: "Ce n'est pas quelque chose où vous pouvez entrer."
+
+# --- go: directional refusals ---
+go_cant_up: "Vous ne savez ni escalader les murs ni voler."
+go_cant_down: "Vous ne pouvez pas simplement creuser vers le bas."
+go_cant_in: "Où voulez-vous entrer ?"
+
+# --- drink / eat ---
+drink_report: "Vous buvez [le act.liquid]."
+drink_report_other: "[Le act.actor] [boire] [le act.liquid]."
+drink_not_drinkable: "Vous ne pouvez pas boire cela."
+eat_report: "Vous mangez [le act.food]."
+eat_report_other: "[Le act.actor] [manger] [le act.food]."
+eat_not_edible: "Vous ne pouvez pas manger cela."
+
+# --- doors ---
+# Phrased around the participle ("fermée") — gender agreement of predicative
+# adjectives is not modeled, and "barre le passage" stays invariable.
+door_closed_msg: "[Le blocking_door] vous barre le passage."
+
+# --- debug ---
+purloin_report: "[Le act.target] : subtilisé."
+
+# --- undo / save / restore ---
+undo_done: "\[Tour précédent annulé.\]"
+undo_none: "Impossible d'annuler davantage."
+save_unavailable: "La sauvegarde n'est pas disponible ici."
+save_name_prompt: "Nom de la sauvegarde : "
+save_cancelled: "Sauvegarde annulée."
+save_done: "Partie sauvegardée."
+save_failed: "Échec de la sauvegarde."
+restore_unavailable: "La restauration n'est pas disponible ici."
+restore_cancelled: "Restauration annulée."
+restore_name_prompt: "Nom de la partie sauvegardée : "
+restore_none: "Aucune sauvegarde ne porte ce nom."
+restore_done: "Partie restaurée."
+restore_wrong_game: "Cette sauvegarde appartient à un autre jeu."
+restore_wrong_version: "Cette sauvegarde provient d'une autre version de ce jeu."
+restore_corrupt: "Cette sauvegarde est corrompue."
+restore_bad_format: "Cette sauvegarde est dans un format inconnu."
+
+# --- scoring ---
+score_up_one: "\[Votre score vient d'augmenter d'un point.\]"
+score_up_many: "\[Votre score vient d'augmenter de [points_awarded] points.\]"
+score_report: "Vous avez obtenu [score] points sur [max_score] possibles."
+score_report_nomax: "Vous avez obtenu [score] points."
+
+# --- restart ---
+# The confirm keeps Y: startup.lamp accepts "y"/"yes", not locale-specific letters.
+restart_unavailable: "Le redémarrage n'est pas disponible pour le moment."
+restart_declined: "D'accord."
+restart_confirm: "Voulez-vous recommencer ? (Y est affirmatif) : "
+banner_version: "Version "
+
+# --- transcript ---
+transcript_already: "Une transcription est déjà en cours."
+transcript_unavailable: "La transcription n'est pas disponible ici."
+transcript_name_prompt: "Nom du fichier de transcription : "
+transcript_cancelled: "Transcription annulée."
+transcript_started: "Transcription commencée."
+transcript_failed: "Échec de la transcription."
+transcript_not_running: "Aucune transcription en cours."
+transcript_ended: "Transcription terminée."
+
 # --- French command grammar (layer 3) ---
 #
 # `understand "…" as ACTION` adds a surface template to an existing action (the

@@ -1,0 +1,3 @@
+Compile error: tests/fixtures/missing_message.lamp:15: type error: message "unregistered_greeting" has no text: no loaded file registers 'unregistered_greeting: "…"' (is the active locale pack missing this message?)
+  15 | 	print message unregistered_greeting
+    |  ^

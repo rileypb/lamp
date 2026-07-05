@@ -36,7 +36,9 @@ function createMoveStatement(contained, container, filePath, lineNumber) {
 
 // Named message: `NAME:"DEFAULT"`. Evaluates to the override registered for NAME,
 // else the inline default. The override (a top-level `NAME: "TEXT"`) is the
-// MessageOverride below.
+// MessageOverride below. `defaultExpr` is null for the default-less reference form
+// `message NAME` (the prose lives entirely in a locale pack's override; the checker
+// enforces one is loaded).
 function createMessageExpr(name, defaultExpr, filePath, lineNumber) {
     return { kind: "MessageExpr", name, defaultExpr, filePath, lineNumber };
 }

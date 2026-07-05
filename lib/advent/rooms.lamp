@@ -72,8 +72,8 @@ function void describe_room(room r):
 			print "[r.description][line break]"
 		list_room_contents(r)
 	else:
-		print darkness_name:"Darkness[line break]"
-		print darkness_description:"It is pitch dark, and [we] can't see a thing."
+		print message darkness_name
+		print message darkness_description
 
 # Recursive content listing: each visible thing is rendered with the things it
 # holds in a parenthetical — "a box (in which is a thimble (in which is a marble))".
@@ -110,9 +110,9 @@ function void list_room_contents(room r):
 		# translation reshapes the frame around the contents — "Vous voyez … ici."
 		# `[We] [see]` renders by the story viewpoint: "You see" (2nd person, default),
 		# "She sees"/"He sees"/"I see" under a 1st/3rd-person viewpoint.
-		print room_contents_intro:"[par][We] [see] "
+		print message room_contents_intro
 		print "[render_list(listed)]"
-		print room_contents_outro:" here."
+		print message room_contents_outro
 	describe_supporters(r)
 
 # Describe the room the player arrives in. Containment changes fire `contains add`

@@ -1,20 +1,22 @@
 # Default messages and localization (design)
 
-Status: **mechanism complete; advent's action messages converted.** Part 1 (the
-`act` global), Part 2 (the named-message mechanism), and Part 3 for all of advent's
-**action** messages (take/drop/wear/doff/examine/go/put_on reports + failures and the
-implicit-action parentheticals; inventory header/empty + the `(worn)` marker) are
-implemented. Only the inventory item *name* stays a plain print — it references the
-loop-local `x`, and a message can reference only `act`/globals — but it is split out
-so the `(worn)` marker beside it is still a named message. **Remaining (optional):** the
-non-action strings have now been named too (for the French translation; see
-devdocs/i18n.md): the darkness line and room-contents frame in rooms.lamp
-(`darkness_name`/`darkness_description`, `room_contents_intro`/
-`room_contents_outro`), the title-banner connectives and `quit_prompt` in
-startup.lamp (`banner_by`/`banner_version`), and the end-of-story banner in
-globals.lamp (`story_won`/`story_lost`). The engine's parser feedback also routes
-through the registry (`parser_cant_see`/`parser_no_understand`). A worked French
-pack exists at `lib/advent/locales/fr-FR.lamp`.
+Status: **layer-3 split complete (2026-07-05) — advent's rules hold no prose.** Every
+named message in lib/advent is a default-less reference (`message NAME`); the English
+text lives in `lib/advent/locales/en-US.lamp` (loaded under the default locale by the
+same per-library mechanism as the French pack), the French in `locales/fr-FR.lamp`,
+and the compiler's **completeness check** errors when the active locale misses a key.
+Consequence: no English prose or English template sugar compiles under fr-FR, so
+`lib/fr-FR` declares no English vocabulary at all (see devdocs/i18n.md). Only the
+inventory item *name* stays a plain print — it references the loop-local `x`, and a
+message can reference only `act`/globals — split out so the `(worn)` marker beside it
+is still a named message. Two former local-reference gaps were closed by routing the
+value through a global the message can read: the closed-door refusal
+(`blocking_door`, doors.lamp) and the score notification (`points_awarded`,
+scoring.lamp). The engine's parser feedback also routes through the registry
+(`parser_cant_see`/`parser_no_understand`, with engine-side defaults).
+
+Earlier stages, all done: Part 1 (the `act` global), Part 2 (the named-message
+mechanism), Part 3 (advent's action + non-action strings named).
 
 ## Problem
 
@@ -91,6 +93,35 @@ so the override registry holds only overrides:
 
 No hoisting or AST-walking is needed: the default is inline, the override is a
 load-time registration, and `message()` prefers the override regardless of order.
+
+## Default-less references and the completeness check (layer 3 — done)
+
+The inline-default form left advent's English prose (and its English template sugar)
+compiling under every locale — a partial translation silently mixed languages, and a
+locale pack had to declare English vocabulary just to parse text it never rendered.
+The layer-3 split moves the prose out:
+
+- **`message NAME`** (expression) — a message reference with *no* inline default;
+  emits `lamplighter.message("NAME")`. `message` is contextual: two adjacent
+  identifiers are invalid otherwise, so a local or object named `message` still
+  parses as a plain identifier.
+- **Completeness check** (checker, whole merged program): every default-less
+  reference must have a `NAME: "…"` registration in *some* loaded file — normally
+  the library's locale file `lib/<lib>/locales/<tag>.lamp`. A missing key is a
+  compile error naming the reference site (golden `missing_message`), so a partial
+  translation fails the build instead of rendering blank or falling back to another
+  language. Runtime `message()` keeps a loud `[missing message: NAME]` fallback for
+  the unreachable case.
+- **Ownership**: advent's rules say `print message take_report`; the English text
+  lives in `lib/advent/locales/en-US.lamp` (the default locale loads it exactly like
+  fr-FR loads the French file), French in `locales/fr-FR.lamp` — both complete, both
+  compiler-enforced. A game file, loaded last, still overrides by name as before.
+  The inline-default form remains for game-authored messages (`print my_msg:"…"`),
+  where source language and play language coincide.
+- **The `act`/globals constraint bites at migration**: a moved default may not
+  reference rule locals. The two cases in advent were fixed by routing the value
+  through a global (`blocking_door`, `points_awarded`); the migrated texts' lexical
+  `self.` became `act.` (identical inside the running action).
 
 Deferred: runtime-set messages with arbitrary computed text (needs a runtime
 substitution evaluator); runtime locale switching.

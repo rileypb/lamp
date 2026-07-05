@@ -19,7 +19,7 @@ do purloin:
 	move self.target to self.actor
 
 report purloin:
-	print purloin_report:"[The act.target]: purloined."
+	print message purloin_report
 
 # SHOWME [thing] — dump a thing's identity, location, fields, and contents. `world_scope`,
 # so it inspects any object (a room, an item out of sight, …), and targets `physical` so it

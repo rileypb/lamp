@@ -1,0 +1,133 @@
+# English (en-US) text for lib/advent's player-facing messages.
+#
+# advent's rules reference these by name (`message NAME`); the prose lives here,
+# in the library's en-US locale file, loaded automatically after advent's own
+# files when the en-US locale (the default) is active. A game file, loaded last,
+# can still override any of them. The French counterpart is locales/fr-FR.lamp;
+# the compiler errors if the active locale misses a key (devdocs/messages.md).
+#
+# Top-level overrides compile in top-level scope, so substitutions reference the
+# running action through the `act` global (never a lexical `self`).
+
+# --- actions.lamp ---
+wait_report: "Time passes."
+take_report: "Taken."
+take_report_other: "[The act.actor] [take] [the act.taken]."
+take_already_carrying: "You're already carrying [regarding act.taken][those]."
+take_cant_take: "That's not something [we] can take."
+take_cant_unfeelable: "[We] can't take [the act.taken]."
+take_cant_reach: "[We] can't reach [the act.taken]."
+take_too_massive: "[The act.taken] [is] much too massive to take."
+inventory_header: "[We] [are] carrying:[line break]"
+inventory_worn: " (worn)"
+inventory_providing_light: " (providing light)"
+inventory_empty: "[We] [are] carrying nothing."
+drop_first_doff: "(first taking off [the act.dropped])[line break]"
+drop_report: "Dropped."
+drop_report_other: "[The act.actor] [drop] [the act.dropped]."
+drop_not_carrying: "You aren't carrying [regarding act.dropped][those]."
+wear_first_take: "(first taking [the act.clothing])[line break]"
+wear_report: "[We] [put] on [the act.clothing]."
+wear_report_other: "[The act.actor] [put] on [the act.clothing]."
+wear_not_wearable: "That's not something [we] can wear."
+wear_already_worn: "You're already wearing [regarding act.clothing][those]."
+doff_report: "[We] [take] off [the act.clothing]."
+doff_report_other: "[The act.actor] [take] off [the act.clothing]."
+doff_not_worn: "You're not wearing [regarding act.clothing][those]."
+open_report: "[We] [open] [the act.target]."
+open_report_revealing: "[We] [open] [the act.target], revealing [render_contents(act.target)]."
+open_not_openable: "That's not something [we] can open."
+open_already_open: "[The act.target] [is] already open."
+open_locked: "It seems to be locked."
+close_report: "[We] [close] [the act.target]."
+close_not_closable: "That's not something [we] can close."
+close_already_closed: "[The act.target] [is] already closed."
+examine_nothing: "[We] [see] nothing unusual about [the act.target]."
+examine_report: "[act.target.description][line break]"
+examine_in_container: "[par]In [the act.target] is [render_contents(act.target)]."
+examine_in_container_plural: "[par]In [the act.target] are [render_contents(act.target)]."
+examine_too_dark: "It's too dark to see [regarding act.target][those]."
+touch_nothing: "[We] [feel] nothing unexpected."
+touch_feels: "[act.target.feels]"
+touch_cant: "[We] can't touch [the act.target]."
+touch_cant_reach: "[We] can't reach [the act.target]."
+attack_violence: "Violence isn't the answer to this one."
+kiss_refused: "[We] [do] not think [the act.target] would appreciate that."
+push_inert: "Nothing obvious happens."
+pull_inert: "Nothing obvious happens."
+give_declined_msg: "[The act.recipient] [do] not seem interested."
+show_declined_msg: "[The act.recipient] [are] unimpressed."
+cant_enter_msg: "That's not something [we] can enter."
+go_cant_up: "[We] can neither climb walls nor fly."
+go_cant_down: "[We] can't just dig downward."
+go_cant_in: "What [do] [we] want to enter?"
+go_cant: "[We] can't go that way."
+put_on_first_doff: "(first taking off [the act.put_item])[line break]"
+put_on_report: "[We] [put] [the act.put_item] on [the act.destination]."
+put_on_report_other: "[The act.actor] [put] [the act.put_item] on [the act.destination]."
+put_on_not_carrying: "You aren't carrying [regarding act.put_item][those]."
+put_on_cant: "[We] can't put things on [regarding act.destination][those]."
+drink_report: "[We] [drink] [the act.liquid]."
+drink_report_other: "[The act.actor] [drink] [the act.liquid]."
+drink_not_drinkable: "[We] can't drink [regarding act.liquid][those]."
+eat_report: "[We] [eat] [the act.food]."
+eat_report_other: "[The act.actor] [eat] [the act.food]."
+eat_not_edible: "[We] can't eat [regarding act.food][those]."
+
+# --- debug.lamp ---
+purloin_report: "[The act.target]: purloined."
+
+# --- doors.lamp ---
+door_closed_msg: "[The blocking_door] is closed."
+
+# --- globals.lamp ---
+story_won: "*** You have won ***[line break]"
+story_lost: "*** You have lost ***[line break]"
+
+# --- rooms.lamp ---
+darkness_name: "Darkness[line break]"
+darkness_description: "It is pitch dark, and [we] can't see a thing."
+room_contents_intro: "[par][We] [see] "
+room_contents_outro: " here."
+
+# --- save.lamp ---
+undo_done: "\[Previous turn undone.\]"
+undo_none: "You can't undo any further."
+save_unavailable: "Saving isn't available here."
+save_name_prompt: "Name for saved game: "
+save_cancelled: "Save cancelled."
+save_done: "Game saved."
+save_failed: "Save failed."
+restore_unavailable: "Restoring isn't available here."
+restore_cancelled: "Restore cancelled."
+restore_name_prompt: "Name of saved game: "
+restore_none: "There is no saved game by that name."
+restore_done: "Game restored."
+restore_wrong_game: "That saved game is for a different game."
+restore_wrong_version: "That saved game is from a different version of this game."
+restore_corrupt: "That saved game is corrupted."
+restore_bad_format: "That saved game is in an unrecognized format."
+
+# --- scoring.lamp ---
+score_up_one: "\[Your score has just gone up by one point.\]"
+score_up_many: "\[Your score has just gone up by [points_awarded] points.\]"
+score_report: "[We] [have] scored [score] out of a possible [max_score]."
+score_report_nomax: "[We] [have] scored [score]."
+
+# --- startup.lamp ---
+restart_unavailable: "Restart isn't available right now."
+restart_declined: "Ok."
+restart_confirm: "Do you wish to restart? (Y is affirmative): "
+banner_by: " by "
+banner_version: "Version "
+quit_prompt: "Please type RESTART, RESTORE, or QUIT."
+
+# --- transcript.lamp ---
+transcript_already: "A transcript is already running."
+transcript_unavailable: "Transcripting isn't available here."
+transcript_name_prompt: "Name for transcript file: "
+transcript_cancelled: "Transcript cancelled."
+transcript_started: "Transcript started."
+transcript_failed: "Transcript failed."
+transcript_not_running: "No transcript is running."
+transcript_ended: "Transcript ended."

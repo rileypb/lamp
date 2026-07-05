@@ -37,13 +37,10 @@ check go:
 	let barrier = doorway here self.way ?first
 	if not (barrier == none):
 		if barrier.closed:
+			blocking_door = barrier
 			stop failed door_closed
 
-# Plain print (not a named message): it names the blocking door, a non-slot local,
-# which a named message may not reference. (i18n gap noted in PORTING.md.)
 report failed go:
 	if self.reason == door_closed:
-		let here = holder(self.actor)
-		let barrier = doorway here self.way ?first
-		print "[The barrier] is closed."
+		print message door_closed_msg
 		stop

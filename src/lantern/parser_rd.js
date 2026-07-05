@@ -1812,6 +1812,15 @@ function createParser(tokens, filePath, globalNames, functionNames = new Set(), 
                 const strTok = next();
                 return ast.createMessageExpr(token.value, parseStringExpr(strTok, localNames), filePath, token.line);
             }
+            // Default-less message reference: `message NAME` — the text comes entirely
+            // from a registered `NAME: "…"` override (a locale pack owns the prose; the
+            // checker requires one to be loaded). `message` is contextual: two adjacent
+            // identifiers are invalid otherwise, so a plain `message` local/object still
+            // parses as an identifier. See devdocs/messages.md.
+            if (token.value === "message" && at("IDENT")) {
+                const nameTok = next();
+                return ast.createMessageExpr(nameTok.value, null, filePath, token.line);
+            }
             // A relation query in expression position (`connects foyer north hall`).
             // Guard on `!at("DOT")` so the type handle (`connects.all`) stays a
             // property access rather than being parsed as a query.

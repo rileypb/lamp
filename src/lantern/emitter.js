@@ -1297,6 +1297,11 @@ function emitExpression(expr, globalNames = new Set()) {
     }
     if (expr.kind === "MessageExpr") {
         // The registered override for this name, else the inline default (both text).
+        // A default-less reference (`message NAME`) has no fallback argument — the
+        // checker guarantees a registration is loaded.
+        if (expr.defaultExpr === null) {
+            return `lamplighter.message(${JSON.stringify(expr.name)})`;
+        }
         return `lamplighter.message(${JSON.stringify(expr.name)}, ${emitExpression(expr.defaultExpr, globalNames)})`;
     }
     if (expr.kind === "TryExpr") {

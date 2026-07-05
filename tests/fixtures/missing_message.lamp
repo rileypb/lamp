@@ -1,0 +1,21 @@
+lib advent
+
+# A default-less message reference (`message NAME`) carries no fallback text, so
+# some loaded file — normally the active locale pack — must register `NAME: "…"`.
+# A missing registration is a compile error (the layer-3 completeness guarantee:
+# a partial translation fails the build instead of rendering blank or falling
+# back to another language). See devdocs/messages.md.
+
+action wave:
+	out_of_world
+	syntax:
+		"wave"
+
+do wave:
+	print message unregistered_greeting
+
+game Missing_Message:
+	start salle
+
+room salle:
+	description "A room."

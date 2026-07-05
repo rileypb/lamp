@@ -8,7 +8,6 @@ vous : Vous prenez le tout et êtes ici.
 cap : Êtes-vous là ?
 il : Il est lourd, tient bon et voit tout.
 ils : ils prennent, enlèvent, mangent et boivent.
-compat : Vous take et look.
 tu : tu prends et es rapide.
 je : je prends et fais vite.
 nous : nous mangeons et allons loin.
