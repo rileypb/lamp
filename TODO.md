@@ -523,6 +523,18 @@ core edit is contained. Names (default): `contains`/`place`/`contained`, keyword
      disappears; also fixes partial-translation mixing.
   **Follow-through:** demonstrate layer 1 by adding contraction overrides to Phobos's messages; scope
   layer 2's French verb conjugation as the next French investment.
+- **Declarable grammar sugar (locale-extensibility gap) — designed + scoped (2026-07-05).** The
+  template-sugar token vocabulary (`[the]`/`[we]`/`[those]`/`[we're]` → native calls) is hardcoded in
+  the parser (`ARTICLE_SUGAR_FNS`/`PRONOUN_SUGAR_FNS`), not the locale pack — so a locale can replace a
+  native but can't *add a token*. A language needing novel sugar (French `[du]`/`[au]`, German case
+  articles, Tamil postpositions) currently requires **editing the compiler**; verbs are the only
+  locale-declarable sugar today (`verb …`). Fix: make sugar declarable, generalizing the `verb`
+  mechanism — locale packs declare token→native pairs (bare/operand shape), the prescan collects them
+  (like `verbNames`), the parser desugarer consults the collected set, and the built-ins migrate into
+  `lib/en-US`/`lib/fr-FR` (byte-invariant). Full design + 5-step scope in `devdocs/i18n.md` ("Grammar
+  sugar is compiler-hardcoded"). Effort medium; the one real design choice is the declaration syntax.
+  Unblocks structurally-different locales and removes an engine↔English coupling (REVIEW layer
+  boundaries).
 - ~~**Action-verb synonyms + adjacent-slot check.**~~ **DONE (2026-07-04):** reviewed a batch of
   added verb synonyms (look around; take: pick up/pick X up; drop: throw/put down/put X down;
   wear: don/put on/put X on; doff: doff/take X off; kiss: smooch; drink: sip/gulp/quaff/swig) —
