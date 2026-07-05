@@ -81,6 +81,7 @@ function runCompilation() {
     const fieldNames = new Set();
     const tagNames = new Set();
     const verbNames = new Set();
+    const sugarMap = new Map();
     const rulebookParams = new Map();
     const rawTemplates = [];
     // Type and field names first, across all files, so nested-object detection in
@@ -101,6 +102,7 @@ function runCompilation() {
         for (const name of decls.reasonNames) reasonNames.add(name);
         for (const name of decls.tagNames) tagNames.add(name);
         for (const name of decls.verbNames) verbNames.add(name);
+        for (const [token, entry] of decls.sugarDecls) sugarMap.set(token, entry);
         for (const [name, params] of decls.rulebookParams) rulebookParams.set(name, params);
         rawTemplates.push(...decls.relationTemplates);
     }
@@ -108,7 +110,7 @@ function runCompilation() {
     const relationTemplates = buildRelationTemplateDispatch(rawTemplates);
 
     for (const { sourceFile, tokens } of tokenizedFiles) {
-        const parsed = parseTokens(tokens, sourceFile, globalNames, functionNames, relationNames, relationTemplates, actionNames, objectNames, tagNames, rulebookParams, verbNames, typeNames, fieldNames);
+        const parsed = parseTokens(tokens, sourceFile, globalNames, functionNames, relationNames, relationTemplates, actionNames, objectNames, tagNames, rulebookParams, verbNames, typeNames, fieldNames, sugarMap);
         allNodes.push(...parsed.nodes);
     }
 

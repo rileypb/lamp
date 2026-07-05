@@ -330,6 +330,13 @@ function createVerbDecl() {
     return { kind: "VerbDecl" };
 }
 
+// A locale's template-sugar declaration (`sugar bare we` / `sugar operand the`). Inert like
+// VerbDecl: the token->native map is gathered in the prescan and drives the desugarer; the AST
+// node carries no runtime behavior. See devdocs/i18n.md ("declarable grammar sugar").
+function createSugarDecl() {
+    return { kind: "SugarDecl" };
+}
+
 // `understand "TEMPLATE" as ACTION` — contributes one extra grammar phrasing to
 // an already-declared action without redeclaring it (so a game can add a verb
 // for a library action). Emits a single registerGrammar call.
@@ -461,6 +468,7 @@ module.exports = {
     createFollowExpr,
     createActionDecl,
     createVerbDecl,
+    createSugarDecl,
     createUnderstandDecl,
     createPhaseRule,
     createRulebookRule,

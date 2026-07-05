@@ -28,6 +28,13 @@ native function string the(object x)
 native function string indefinite(object x)
 native function string an(object x)
 
+# Preposition + article contraction (French-only sugar): `[du X]` = de + article (du/des/de la/
+# de l'), `[au X]` = à + article (au/aux/à la/à l'). Declared as `sugar operand` below, so a
+# French message writes "… [du X]" instead of rephrasing to dodge "de le". Added purely in this
+# locale pack — no compiler change (declarable grammar sugar, devdocs/i18n.md).
+native function string du(object x)
+native function string au(object x)
+
 # Plural display name: an author-set `plural_name` wins; otherwise the head word
 # is pluralized via French rules (-s, -x after -au/-eu, -aux for -al; -s/-x/-z
 # invariable).
@@ -108,3 +115,17 @@ native function string plural_suffix(string word)
 # these conjugate to themselves (see conjugate above).
 verb is, are, has, have, does, do, goes, go
 verb drop, take, get, put, look, examine, open, close, wear, carry, hold, see, feel, drink, eat, kiss
+
+# Template-sugar tokens (devdocs/i18n.md), mirroring lib/en-US so advent's English default
+# templates (`[the X]`, `[We]`, `[those]`) compile under fr-FR; the natives render French. The
+# English contraction sugar ([we're]/[don't]/…) is intentionally *not* declared here — French
+# writes negation/agreement out in its message translations, so a fr-FR template using `[we're]`
+# is a clear "unknown sugar" error rather than wrong French. A French pack can add its own tokens
+# (e.g. `sugar operand du`) without touching the compiler — the whole point of declarable sugar.
+sugar operand the
+sugar operand a as indefinite
+sugar operand an
+sugar bare we, us, our, ours, they, them, their, theirs, themself, those
+# French-only preposition+article contraction — a token English doesn't have, added here alone.
+sugar operand du
+sugar operand au

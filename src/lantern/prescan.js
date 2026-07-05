@@ -102,6 +102,7 @@ function prescanDeclarations(tokens, knownTypeNames = new Set(), knownFieldNames
     const reasonNames = new Set();
     const tagNames = new Set();
     const verbNames = new Set();
+    const sugarDecls = new Map();
     const rulebookParams = new Map();
     const relationTemplates = [];
     let currentRelation = null;
@@ -194,6 +195,29 @@ function prescanDeclarations(tokens, knownTypeNames = new Set(), knownFieldNames
             return;
         }
 
+        // sugar bare|operand TOKEN[, TOKEN]  — a locale's template-sugar tokens. Each TOKEN is a
+        // word (or `"quoted" as native`) mapping to a native call. The parser's desugarer reads
+        // this map. See devdocs/i18n.md ("declarable grammar sugar").
+        if (isKeyword(head, "sugar") && isIdent(line[1])
+                && (line[1].value === "bare" || line[1].value === "operand")) {
+            const shape = line[1].value;
+            let i = 2;
+            while (i < line.length) {
+                const tok = line[i];
+                if (tok.type === "COMMA") { i += 1; continue; }
+                if (tok.type !== "IDENT" && tok.type !== "KEYWORD" && tok.type !== "STRING") { i += 1; continue; }
+                const token = String(tok.value).toLowerCase();
+                let native = coerceName(tok.value);
+                i += 1;
+                if (i + 1 < line.length && line[i].type === "IDENT" && line[i].value === "as") {
+                    native = line[i + 1].value;
+                    i += 2;
+                }
+                sugarDecls.set(token, { native, shape });
+            }
+            return;
+        }
+
         // rulebook TYPE name(params)  → name before `(`, params inside.
         if (isKeyword(head, "rulebook")) {
             const lp = line.findIndex((t) => t.type === "LPAREN");
@@ -249,6 +273,7 @@ function prescanDeclarations(tokens, knownTypeNames = new Set(), knownFieldNames
         actionNames,
         objectNames,
         reasonNames,
+        sugarDecls,
         typeNames,
         tagNames,
         verbNames,

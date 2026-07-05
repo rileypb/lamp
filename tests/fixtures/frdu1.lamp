@@ -1,0 +1,42 @@
+locale "fr-FR"
+lib advent
+
+# Declarable grammar sugar, French payoff (devdocs/i18n.md): fr-FR adds `[du X]`/`[au X]`
+# (preposition + article contraction) as its own `sugar operand` tokens — a construction English
+# has no equivalent for, added in the locale pack with no compiler change. `du()`/`au()` contract
+# de/à with the article by gender/number/elision: du/des/de la/de l' and au/aux/à la/à l'.
+
+item caillou:
+	printed_name "caillou"
+
+item table:
+	printed_name "table"
+	grammatical_gender "feminine"
+
+item cles:
+	printed_name "clés"
+	plural
+	grammatical_gender "feminine"
+
+item arbre:
+	printed_name "arbre"
+
+action montre:
+	out_of_world
+	syntax:
+		"montre"
+
+do montre:
+	print "de: [du caillou] / [du table] / [du cles] / [du arbre][line break]"
+	print "à: [au caillou] / [au table] / [au cles] / [au arbre]"
+
+game Du_FR:
+	start salle
+
+room salle:
+	description "Une salle."
+
+contains salle caillou
+contains salle table
+contains salle cles
+contains salle arbre

@@ -1,0 +1,28 @@
+lib advent
+
+# Declarable grammar sugar (devdocs/i18n.md): a game (or a locale pack) adds its own template-sugar
+# tokens with no compiler change. Here `[yo]` aliases the subject pronoun and `[thing X]` the
+# definite article; they render exactly like the built-in `[we]`/`[the X]` — proving the sugar
+# vocabulary lives in the locale/library, not the parser.
+
+sugar bare yo as we
+sugar operand thing as the
+
+item cloak:
+	printed_name "cloak"
+
+action demo:
+	out_of_world
+	syntax:
+		"demo"
+
+do demo:
+	print "[Yo] see [thing cloak]. [We] see [the cloak]."
+
+game Decl_Sugar:
+	start hall
+
+room hall:
+	description "A hall."
+
+contains hall cloak

@@ -1,0 +1,9 @@
+hall
+A hall.
+
+You see a cloak here.
+
+> demo
+You see the cloak. You see the cloak.
+
+> quit

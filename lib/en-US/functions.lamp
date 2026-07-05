@@ -144,3 +144,20 @@ native function string plural_suffix(string word)
 # conjugates for free. `do` is a keyword, accepted here as a verb word.
 verb is, are, has, have, does, do, goes, go
 verb drop, take, get, put, look, examine, open, close, wear, carry, hold, see, feel, drink, eat, kiss
+
+# Template-sugar tokens (devdocs/i18n.md "declarable grammar sugar"): the bare word in a
+# substitution — `[the X]`, `[We]`, `[those]`, `[we're]` — maps to this locale's native call. The
+# compiler no longer bakes in any language sugar; each locale (or a game) declares its own, so a
+# new language never needs a compiler change. `operand` sugar takes a reference (`[the X]` → the(X));
+# `bare` sugar is zero-arg (`[we]` → we()). `as NATIVE` renames when the token isn't a valid native
+# name (an apostrophe: `"we're" as we_re`) or when the word differs from the function (`a` →
+# indefinite, to avoid shadowing a local variable named `a`).
+sugar operand the
+sugar operand a as indefinite
+sugar operand an
+sugar bare we, us, our, ours, they, them, their, theirs, themself, those
+# Adaptive contractions (D9) — English-only sugar; a translation writes the target language out.
+sugar bare "we're" as we_re, "we've" as we_ve, "we'll" as we_ll, "we'd" as we_would
+sugar bare "they're" as they_re, "they've" as they_ve, "they'll" as they_ll, "they'd" as they_would
+sugar bare "don't" as dont, "aren't" as arent, "weren't" as werent, "haven't" as havent
+sugar bare "that's" as thats

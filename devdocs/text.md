@@ -788,10 +788,10 @@ the "and"/Oxford comma) **moved from `lib/sys` to `lib/en-US`**. Fixture
    override wins, else the head word is pluralized via an irregular table
    (sheep/child/person/…) + regular `+s`/`+es`/`+ies` rules. Fixture `locale2.lamp`.
 
-**Slice 2 is functionally complete** (B3–B7, C1/C3/C4, K5). Deferred refinements:
-real **per-locale sugar words** + **locale swapping** — the article-sugar word set
-(`the`/`a`/`an`) is hardcoded English in the parser and `lib/en-US` is
-hard-auto-loaded; generalize both when a non-English locale lands.
+**Slice 2 is functionally complete** (B3–B7, C1/C3/C4, K5). **Per-locale sugar words are
+now declarable (DONE 2026-07-05):** the article/pronoun/contraction token vocabulary is no
+longer hardcoded in the parser — a locale pack declares it with `sugar bare|operand …`
+(the compiler bakes in no language sugar). See devdocs/i18n.md ("declarable grammar sugar").
 
 ### Slice 3 — the adaptive engine (headline)
 
@@ -874,9 +874,11 @@ with `[regarding the player]` / `[regarding you]`: `"[We] [take] [the cloak] and
 override in both Lamp and Inform. (A decorative article in `[regarding the player]`
 is stripped — it names the player object, not its rendered name.)
 
-**Sugar words are English, in the parser** (`PRONOUN_SUGAR_FNS`, the verb-word set,
-`regarding`), the same small coupling the article words already have. Real
-per-locale sugar words remain the deferred refinement noted under Slice 2.
+**Sugar words are locale-declared (DONE 2026-07-05):** the pronoun/article/contraction
+token vocabulary moved out of the parser into `sugar bare|operand …` declarations in the
+locale packs (`lib/en-US`/`lib/fr-FR`); the parser bakes in no language sugar. Only the
+structural sugar (`regarding`, `is/are LIST`, markers, style/variation control words) stays
+in the parser — it is language-neutral. See devdocs/i18n.md ("declarable grammar sugar").
 
 ### Slice 4 — variation & conditionals
 

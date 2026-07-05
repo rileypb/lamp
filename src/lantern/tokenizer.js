@@ -52,6 +52,7 @@ const KEYWORDS = new Set([
     "action",
     "try",
     "verb",
+    "sugar",
     "move",
     "mod",
     "div",

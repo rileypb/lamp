@@ -28,16 +28,16 @@ function getInfixBP(token) {
 
 const PHASE_WORDS = new Set(["before", "instead", "check", "do", "after", "report"]);
 
-function parseSource(sourceText, filePath, globalNames = new Set(), functionNames = new Set(), relationNames = new Set(), relationTemplates = new Map(), actionNames = new Set(), objectNames = new Set(), tagNames = new Set(), rulebookParams = new Map(), verbNames = new Set(), typeNames = new Set(), fieldNames = new Set()) {
+function parseSource(sourceText, filePath, globalNames = new Set(), functionNames = new Set(), relationNames = new Set(), relationTemplates = new Map(), actionNames = new Set(), objectNames = new Set(), tagNames = new Set(), rulebookParams = new Map(), verbNames = new Set(), typeNames = new Set(), fieldNames = new Set(), sugarMap = new Map()) {
     const tokens = tokenize(sourceText, filePath);
-    return parseTokens(tokens, filePath, globalNames, functionNames, relationNames, relationTemplates, actionNames, objectNames, tagNames, rulebookParams, verbNames, typeNames, fieldNames);
+    return parseTokens(tokens, filePath, globalNames, functionNames, relationNames, relationTemplates, actionNames, objectNames, tagNames, rulebookParams, verbNames, typeNames, fieldNames, sugarMap);
 }
 
 // Parses an already-tokenized file. The driver (src/lantern/index.js) tokenizes
 // each file once, runs the token-level prescan over those tokens, then parses
 // from the same tokens — so tokenization happens exactly once per file.
-function parseTokens(tokens, filePath, globalNames = new Set(), functionNames = new Set(), relationNames = new Set(), relationTemplates = new Map(), actionNames = new Set(), objectNames = new Set(), tagNames = new Set(), rulebookParams = new Map(), verbNames = new Set(), typeNames = new Set(), fieldNames = new Set()) {
-    return createParser(tokens, filePath, globalNames, functionNames, relationNames, relationTemplates, actionNames, objectNames, tagNames, rulebookParams, verbNames, typeNames, fieldNames).parseProgram();
+function parseTokens(tokens, filePath, globalNames = new Set(), functionNames = new Set(), relationNames = new Set(), relationTemplates = new Map(), actionNames = new Set(), objectNames = new Set(), tagNames = new Set(), rulebookParams = new Map(), verbNames = new Set(), typeNames = new Set(), fieldNames = new Set(), sugarMap = new Map()) {
+    return createParser(tokens, filePath, globalNames, functionNames, relationNames, relationTemplates, actionNames, objectNames, tagNames, rulebookParams, verbNames, typeNames, fieldNames, sugarMap).parseProgram();
 }
 
 // Applies Inform's single-quote convention to a literal text run: a `'` flanked
@@ -61,52 +61,29 @@ function applyQuoteConvention(run) {
     return out;
 }
 
-// Bare-word article sugar: a substitution of exactly `<article> <reference>`
-// (two whitespace-separated tokens, the operand starting with a letter/underscore)
-// rewrites to the locale's article function call, so `[the velvet_cloak]` ==
-// `[the(velvet_cloak)]` and `[The velvet_cloak]` == `[cap(the(velvet_cloak))]`.
-// Anything more complex (operators, multiple operands) is left alone — write the
-// explicit call form, e.g. `[the(box.first)]`. The indefinite word `a`/`an` maps
-// to `indefinite(...)`, not a one-letter `a(...)` function (which would shadow the
-// common local variable `a`); so `[a + b]` with a local `a` is untouched (three
-// tokens) and `[a apple]` desugars to `indefinite(apple)`. NOTE: the recognized
-// words are English, a deliberate small coupling to the active locale's article
-// functions; real per-locale sugar words are a later refinement. See text.md B3-B5.
-const ARTICLE_SUGAR_FNS = { the: "the", a: "indefinite", an: "an" };
-function desugarArticleSugar(src) {
-    const m = src.match(/^(the|a|an|The|A|An)\s+([A-Za-z_]\S*)$/);
+// Template sugar is locale-declared, not baked into the compiler: a locale pack's `sugar`
+// declarations (collected in the prescan into `sugarMap`, token → { native, shape }) drive the
+// desugarer, so a new language never needs a parser change. `operand` sugar takes one reference
+// (`[the X]` → the(X)); `bare` sugar is zero-arg (`[we]` → we()). See devdocs/i18n.md
+// ("declarable grammar sugar") and lib/en-US/functions.lamp for the English set.
+function sugarNative(word, sugarMap, shape) {
+    const entry = sugarMap.get(word);
+    return entry && entry.shape === shape ? entry.native : undefined;
+}
+// `[the X]`: an operand-shape sugar word applied to a single reference token. Anything more
+// complex (operators, multiple operands) is left alone — write the explicit call form, e.g.
+// `[the(box.first)]`. A word→function rename (`a` → indefinite) keeps `[a + b]` with a local `a`
+// untouched (three tokens, no match) while `[a apple]` desugars to `indefinite(apple)`.
+function desugarOperandSugar(src, sugarMap) {
+    const m = src.match(/^([A-Za-z']+)\s+([A-Za-z_]\S*)$/);
     if (!m) return src;
     const word = m[1];
     const operand = m[2];
-    const lower = word.toLowerCase();
-    const call = `${ARTICLE_SUGAR_FNS[lower]}(${operand})`;
-    return word === lower ? call : `cap(${call})`;
+    const native = sugarNative(word.toLowerCase(), sugarMap, "operand");
+    if (!native) return src;
+    const call = `${native}(${operand})`;
+    return word === word.toLowerCase() ? call : `cap(${call})`;
 }
-
-// Closed pronoun sugar set (D1/D2). A single bare pronoun word maps to a zero-arg
-// locale call that reads the render context: the `we`/`us`/`our`/`ours` family
-// agrees with the context *subject* (the actor; "you" for the player), the
-// `they`/`them`/`their`/`theirs`/`themself` family with the context *antecedent*
-// (the most recently named thing). The locale functions own the actual words;
-// these are the canonical English tokens that name them — a deliberate coupling to
-// the active locale, the same one the article words have. Capitalized input wraps
-// the call in cap(...). The subject's possessive pronoun is `[ours]`, which adapts
-// by person (so it reads "yours" for the 2nd-person player). See text.md D1/D2.
-const PRONOUN_SUGAR_FNS = {
-    we: "we", us: "us", our: "our", ours: "ours",
-    they: "they", them: "them", their: "their", theirs: "theirs", themself: "themself",
-    // Demonstrative: `[those]` renders "that"/"those" by the number of the current context
-    // subject (set by `[regarding X]` or by naming a thing). Same zero-arg/agreement machinery
-    // as the pronouns; `[Those]` capitalizes. See text.md D and lib/en-US `those`.
-    those: "those",
-    // Adaptive contractions (text.md D9), same machinery. D9a subject-pronoun (fused with the
-    // viewpoint subject; a named third person spells out); the `they'…` family agrees with the
-    // antecedent/`[regarding]` referent. D9b negated auxiliaries. D9c demonstrative `[that's]`.
-    "we're": "we_re", "we've": "we_ve", "we'll": "we_ll", "we'd": "we_would",
-    "they're": "they_re", "they've": "they_ve", "they'll": "they_ll", "they'd": "they_would",
-    "don't": "dont", "aren't": "arent", "weren't": "werent", "haven't": "havent",
-    "that's": "thats",
-};
 
 // Paragraph-control marker phrases (H1/H2/H3) → their lib/sys output-stream calls.
 // `[run on]` is an alias for `[no break]` (both cancel a pending break). These are
@@ -170,7 +147,7 @@ function classifyControl(src) {
 // locale call (D1/D2); a declared verb word becomes a conjugate() call agreeing
 // with the subject (D3); otherwise the article sugar (B3-B5) applies, and anything
 // it does not match is returned verbatim as an ordinary expression.
-function desugarSugar(src, verbNames) {
+function desugarSugar(src, verbNames, sugarMap) {
     // Paragraph-control markers (H1/H2/H3): inline substitutions that desugar to the
     // lib/sys output-stream functions. See devdocs/text.md H.
     if (MARKER_CALLS[src]) return MARKER_CALLS[src];
@@ -202,10 +179,11 @@ function desugarSugar(src, verbNames) {
     if (/^[A-Za-z']+$/.test(src)) {
         const lower = src.toLowerCase();
         const wrap = (call) => (src === lower ? call : `cap(${call})`);
-        if (PRONOUN_SUGAR_FNS[lower]) return wrap(`${PRONOUN_SUGAR_FNS[lower]}()`);
+        const native = sugarNative(lower, sugarMap, "bare");
+        if (native) return wrap(`${native}()`);
         if (verbNames.has(src) || verbNames.has(lower)) return wrap(`conjugate("${lower}")`);
     }
-    return desugarArticleSugar(src);
+    return desugarOperandSugar(src, sugarMap);
 }
 
 // Splits a string-literal value (in expression position) into template parts: an
@@ -271,7 +249,7 @@ function splitTemplate(rawValue, fail) {
     return { parts, hasSub };
 }
 
-function createParser(tokens, filePath, globalNames, functionNames = new Set(), relationNames = new Set(), relationTemplates = new Map(), actionNames = new Set(), objectNames = new Set(), tagNames = new Set(), rulebookParams = new Map(), verbNames = new Set(), typeNames = new Set(), fieldNames = new Set()) {
+function createParser(tokens, filePath, globalNames, functionNames = new Set(), relationNames = new Set(), relationTemplates = new Map(), actionNames = new Set(), objectNames = new Set(), tagNames = new Set(), rulebookParams = new Map(), verbNames = new Set(), typeNames = new Set(), fieldNames = new Set(), sugarMap = new Map()) {
     let pos = 0;
     // Nested/reference object placements (`item hook:` inside a room body) parse to
     // hoisted top-level nodes — the nested ObjectDecl plus a `contains` placement —
@@ -377,6 +355,7 @@ function createParser(tokens, filePath, globalNames, functionNames = new Set(), 
                 case "rulebook": return parseRulebookDecl();
                 case "action": return parseActionDecl();
                 case "verb": return parseVerbDecl();
+                case "sugar": return parseSugarDecl();
                 default: throw err(`Unexpected '${token.value}' at top level`);
             }
         }
@@ -1082,6 +1061,34 @@ function createParser(tokens, filePath, globalNames, functionNames = new Set(), 
         return ast.createVerbDecl();
     }
 
+    // `sugar bare WORD[, …]` / `sugar operand WORD[, …]` — a locale declares template-sugar
+    // tokens (WORD → native call). Each WORD is a bare identifier or a `"quoted" as native`
+    // pair (a token can carry an apostrophe/accent a native name can't, e.g. `"we're" as we_re`).
+    // Inert here (the prescan builds the token→native map that drives desugaring); this only
+    // validates the syntax. See devdocs/i18n.md ("declarable grammar sugar").
+    function parseSugarDecl() {
+        expectKeyword("sugar");
+        const shape = peek();
+        if (shape.type !== "IDENT" || (shape.value !== "bare" && shape.value !== "operand")) {
+            throw err("Expected 'bare' or 'operand' after 'sugar'");
+        }
+        next();
+        do {
+            const t = peek();
+            if (t.type !== "IDENT" && t.type !== "KEYWORD" && t.type !== "STRING") {
+                throw err("Expected a sugar token (a word, or \"quoted\" as native)");
+            }
+            next();
+            if (at("IDENT") && peek().value === "as") {
+                next();
+                if (!at("IDENT")) throw err("Expected a native name after 'as'");
+                next();
+            }
+        } while (at("COMMA") && (next(), true));
+        expectNewline();
+        return ast.createSugarDecl();
+    }
+
     function parseActionDecl() {
         const keyword = expectKeyword("action");
         const name = plainName("action name");
@@ -1674,7 +1681,7 @@ function createParser(tokens, filePath, globalNames, functionNames = new Set(), 
             }
             const ctrl = classifyControl(p.src);
             if (!ctrl) {
-                top().items.push({ kind: "expr", expr: parseEmbeddedExpression(desugarSugar(p.src, verbNames), line, localNames) });
+                top().items.push({ kind: "expr", expr: parseEmbeddedExpression(desugarSugar(p.src, verbNames, sugarMap), line, localNames) });
                 continue;
             }
             if (ctrl.type === "plural") {
@@ -1780,7 +1787,7 @@ function createParser(tokens, filePath, globalNames, functionNames = new Set(), 
         } catch (e) {
             throw err(`invalid substitution "[${src}]": ${e.message}`, line);
         }
-        const sub = createParser(subTokens, filePath, globalNames, functionNames, relationNames, relationTemplates, actionNames, objectNames, tagNames, rulebookParams, verbNames, typeNames, fieldNames);
+        const sub = createParser(subTokens, filePath, globalNames, functionNames, relationNames, relationTemplates, actionNames, objectNames, tagNames, rulebookParams, verbNames, typeNames, fieldNames, sugarMap);
         try {
             return sub.parseWholeExpression(localNames);
         } catch (e) {
