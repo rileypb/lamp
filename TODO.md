@@ -523,6 +523,21 @@ core edit is contained. Names (default): `contains`/`place`/`contained`, keyword
      disappears; also fixes partial-translation mixing.
   **Follow-through:** demonstrate layer 1 by adding contraction overrides to Phobos's messages; scope
   layer 2's French verb conjugation as the next French investment.
+- **English tokens inside `lib/fr-FR` (observed 2026-07-05).** The pack's `verb` list and `sugar`
+  declarations are English words (`the`, `we`, `take`, …) — deliberate today: advent's shared
+  default templates are English and must compile under fr-FR. **Step (a) DONE (2026-07-05):**
+  fr-FR declares French aliases (`sugar operand le as the, la as the, les as the` +
+  `un/une/des as indefinite`) and `lib/advent/locales/fr-FR.lamp` is swept to them, so the
+  French translations read as French end to end ("[Le act.actor] prend [le act.taken]."). The
+  alias hits the same native, which picks gender/number/elision from the object (`[le table]` →
+  "la table"). Golden `fralias1`; all French goldens byte-invariant; `frlocale1` still covers
+  the English-token compatibility path. English tokens remain only as parse compatibility for
+  untranslated defaults. (Bare-pronoun aliases deferred: `we()` renders the *viewpoint* pronoun —
+  "vous" by default — so the French token name isn't obvious, and no French translation currently
+  uses bare-pronoun sugar.) **(b) full fix** is layer 3 above — default prose moves into the
+  locale packs, after which fr-FR drops the English `verb`/`sugar` entries entirely. Native
+  *names* (`the()`, `contained_phrase()`, …) stay English regardless: they're the cross-locale
+  API contract, not surface text.
 - ~~**Declarable grammar sugar (locale-extensibility gap).**~~ **DONE (2026-07-05):** the
   template-sugar token vocabulary (`[the]`/`[we]`/`[those]`/`[we're]` → native calls) moved out of the
   parser's hardcoded `ARTICLE_SUGAR_FNS`/`PRONOUN_SUGAR_FNS` tables into locale-declared `sugar

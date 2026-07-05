@@ -12,7 +12,7 @@
 
 # --- take ---
 take_report: "Pris."
-take_report_other: "[The act.actor] prend [the act.taken]."
+take_report_other: "[Le act.actor] prend [le act.taken]."
 take_already_carrying: "Vous portez déjà cela."
 take_cant_take: "Ce n'est pas quelque chose que vous pouvez prendre."
 
@@ -22,37 +22,37 @@ inventory_worn: " (porté)"
 inventory_empty: "Vous ne portez rien."
 
 # --- drop ---
-drop_first_doff: "(vous enlevez d'abord [the act.dropped])[line break]"
+drop_first_doff: "(vous enlevez d'abord [le act.dropped])[line break]"
 drop_report: "Laissé."
-drop_report_other: "[The act.actor] laisse [the act.dropped]."
+drop_report_other: "[Le act.actor] laisse [le act.dropped]."
 drop_not_carrying: "Vous ne portez pas cela."
 
 # --- wear ---
-wear_first_take: "(vous prenez d'abord [the act.clothing])[line break]"
-wear_report: "Vous mettez [the act.clothing]."
-wear_report_other: "[The act.actor] met [the act.clothing]."
+wear_first_take: "(vous prenez d'abord [le act.clothing])[line break]"
+wear_report: "Vous mettez [le act.clothing]."
+wear_report_other: "[Le act.actor] met [le act.clothing]."
 wear_not_wearable: "Ce n'est pas quelque chose que vous pouvez porter."
 wear_already_worn: "Vous portez déjà cela."
 
 # --- doff (remove) ---
-doff_report: "Vous enlevez [the act.clothing]."
-doff_report_other: "[The act.actor] enlève [the act.clothing]."
+doff_report: "Vous enlevez [le act.clothing]."
+doff_report_other: "[Le act.actor] enlève [le act.clothing]."
 doff_not_worn: "Vous ne portez pas cela."
 
 # --- examine ---
 # Phrased to avoid a "de/à + le/les" contraction (du/des), which the() can't
-# produce — it doesn't see the preceding preposition. "[The act.target] n'a rien…"
+# produce — it doesn't see the preceding preposition. "[Le act.target] n'a rien…"
 # sidesteps it: "Le caillou n'a rien d'inhabituel."
-examine_nothing: "[The act.target] n'a rien d'inhabituel."
+examine_nothing: "[Le act.target] n'a rien d'inhabituel."
 examine_too_dark: "Il fait trop sombre pour voir cela."
 
 # --- go ---
 go_cant: "Vous ne pouvez pas aller par là."
 
 # --- put on ---
-put_on_first_doff: "(vous enlevez d'abord [the act.put_item])[line break]"
-put_on_report: "Vous posez [the act.put_item] sur [the act.destination]."
-put_on_report_other: "[The act.actor] pose [the act.put_item] sur [the act.destination]."
+put_on_first_doff: "(vous enlevez d'abord [le act.put_item])[line break]"
+put_on_report: "Vous posez [le act.put_item] sur [le act.destination]."
+put_on_report_other: "[Le act.actor] pose [le act.put_item] sur [le act.destination]."
 put_on_not_carrying: "Vous ne portez pas cela."
 put_on_cant: "Vous ne pouvez rien poser là-dessus."
 

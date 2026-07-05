@@ -1,0 +1,44 @@
+locale "fr-FR"
+lib advent
+
+# French alias sugar tokens (devdocs/i18n.md): `[le X]`/`[un X]` (and La/Une/les/des
+# spellings) alias the same `the()`/`indefinite()` natives the English tokens map to,
+# so a French translation reads as French end to end. The native picks the real
+# surface form from the object — `[le table]` renders "la table", `[un cles]` "des
+# clés" — the token spelling is only what the writer types.
+
+item caillou:
+	printed_name "caillou"
+
+item table:
+	printed_name "table"
+	grammatical_gender "feminine"
+
+item cles:
+	printed_name "clés"
+	plural
+	grammatical_gender "feminine"
+
+item arbre:
+	printed_name "arbre"
+
+action montre:
+	out_of_world
+	syntax:
+		"montre"
+
+do montre:
+	print "défini : [le caillou] / [le table] / [les cles] / [le arbre][line break]"
+	print "indéfini : [un caillou] / [une table] / [des cles] / [un arbre][line break]"
+	print "capitale : [Le table] tient. [Un arbre] pousse."
+
+game Alias_FR:
+	start salle
+
+room salle:
+	description "Une salle."
+
+contains salle caillou
+contains salle table
+contains salle cles
+contains salle arbre

@@ -129,3 +129,10 @@ sugar bare we, us, our, ours, they, them, their, theirs, themself, those
 # French-only preposition+article contraction — a token English doesn't have, added here alone.
 sugar operand du
 sugar operand au
+# French alias tokens so translated messages read as French end to end ("[Le act.actor] prend
+# [le act.taken]."). All map to the same natives, which pick the real surface form (gender,
+# number, elision) from the object — the token spelling is just what the writer types, so
+# `[le table]` still renders "la table". The English tokens above stay for advent's
+# untranslated default templates.
+sugar operand le as the, la as the, les as the
+sugar operand un as indefinite, une as indefinite, des as indefinite
