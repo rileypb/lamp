@@ -78,6 +78,13 @@ const cases = [
         },
     },
     {
+        name: "verb words: quoted form carries letters an identifier can't (accents)",
+        run() {
+            const d = scan('verb prendre, "être"');
+            assert.deepStrictEqual([...d.verbNames].sort(), ["prendre", "être"]);
+        },
+    },
+    {
         name: "rulebook params: typed list, and empty",
         run() {
             const d = scan([

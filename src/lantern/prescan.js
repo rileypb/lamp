@@ -187,10 +187,13 @@ function prescanDeclarations(tokens, knownTypeNames = new Set(), knownFieldNames
         // verb a, b, c  — registers conjugation-sugar words so the parser rewrites
         // `[drop]` in a template to a conjugate() call (vs. an object reference).
         // A word may itself be a keyword (`verb do`), so collect IDENT and KEYWORD
-        // tokens alike, skipping the comma separators. See devdocs/text.md D3.
+        // tokens alike, skipping the comma separators; a STRING carries letters an
+        // identifier can't (`verb "être"`). See devdocs/text.md D3.
         if (isKeyword(head, "verb")) {
             for (let i = 1; i < line.length; i += 1) {
-                if (line[i].type === "IDENT" || line[i].type === "KEYWORD") verbNames.add(line[i].value);
+                if (line[i].type === "IDENT" || line[i].type === "KEYWORD" || line[i].type === "STRING") {
+                    verbNames.add(line[i].value);
+                }
             }
             return;
         }

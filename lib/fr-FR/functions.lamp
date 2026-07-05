@@ -9,9 +9,9 @@
 #
 # The native *declarations* below are language-neutral (identical signatures to
 # lib/en-US); only their implementations in index.js differ. The verb vocabulary
-# matches en-US so a world model whose default message templates use English
-# verb sugar (`[take]`, `[drop]`) still parses — a French translation pack spells
-# the verb out in its override, so conjugate() is not exercised for those.
+# is dual: the English set keeps a world model's default templates (`[take]`)
+# parsing (rendered unchanged), and the French set (infinitive citation:
+# `[prendre]`) conjugates to the render subject — see conjugate below.
 
 # Case transforms (Unicode case handles accented letters).
 native function string cap(string s)
@@ -61,9 +61,10 @@ native function string regarding(object x)
 native function string those()
 
 # `conjugate(word)` returns a verb's surface form agreeing with the context
-# subject. French conjugation is out of scope for this worked pack: a translation
-# spells the verb out in its override, so this returns the word unchanged (the
-# verb vocabulary below only keeps `[take]`-style sugar parsing).
+# subject. French verbs cite as the infinitive: `[prendre]` renders prend/prennent/
+# prenez by the render agreement, with 2nd-singular polite "vous" unless the
+# `viewpoint_familiar` global is set ("tu"). Present tense only; a word without a
+# French conjugation row (the English compat verbs below) passes through unchanged.
 native function string conjugate(string word)
 
 # List rendering with articles and the empty test. a_list / the_list map each
@@ -110,11 +111,19 @@ native function string ordinal(int n)
 # returning its French plural unless the governing count is 1.
 native function string plural_suffix(string word)
 
-# The locale's default verb vocabulary — mirrors lib/en-US so a world model's
-# English default templates parse. A translation pack overrides the message, so
-# these conjugate to themselves (see conjugate above).
+# English compat verb vocabulary — mirrors lib/en-US so a world model's English
+# default templates parse. These have no French conjugation row, so they render
+# unchanged; a translation pack replaces the message with French.
 verb is, are, has, have, does, do, goes, go
 verb drop, take, get, put, look, examine, open, close, wear, carry, hold, see, feel, drink, eat, kiss
+
+# The French verb vocabulary (infinitive citation form — devdocs/i18n.md "French verb
+# conjugation"): `[prendre]` in a template conjugates to the render subject. The set
+# mirrors the English one above, verb for verb. `être` is quoted: an identifier can't
+# carry the accent (same as the quoted contraction sugar in lib/en-US).
+verb prendre, poser, laisser, mettre, enlever, porter, tenir, regarder, examiner
+verb ouvrir, fermer, voir, sentir, boire, manger, embrasser, aller, faire, avoir
+verb "être"
 
 # Template-sugar tokens (devdocs/i18n.md), mirroring lib/en-US so advent's English default
 # templates (`[the X]`, `[We]`, `[those]`) compile under fr-FR; the natives render French. The

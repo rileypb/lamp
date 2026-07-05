@@ -485,7 +485,9 @@ Built-in primitive types:
   conjugation-sugar words so a template `[drop]` is rewritten to a `conjugate("drop")`
   call rather than read as an object reference. It has no runtime effect (the
   conjugation rules live in the locale's `conjugate()`); the locale ships the
-  default verbs and a game adds its own. A word may itself be a keyword (`verb do`).
+  default verbs and a game adds its own. A word may itself be a keyword (`verb do`),
+  or quoted when it carries letters an identifier can't — accents: `verb "être"`
+  (parallel to the quoted form in `sugar` declarations).
 - A **`sugar` declaration** — `sugar bare WORD[, …]` / `sugar operand WORD[, …]` at top
   level — registers a locale's other template-sugar tokens (the article/pronoun/
   demonstrative/contraction words), so `[the X]` → `the(X)` and `[we]` → `we()`. A `bare`

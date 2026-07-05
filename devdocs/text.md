@@ -214,7 +214,12 @@ use an ordinary reference (`[the self.actor]`), not a pronoun word.
   work, not a fixed gender enum; singular "they" takes a plural verb. So `[We] [see]`
   renders "You see" / "I see" / "She sees" / "They see" / "Xe sees" by `viewpoint_person` +
   `player.pronouns`, and the verb agrees. (Phobos: `viewpoint_person = 3` + `pronouns "she"`
-  on `yourself` → "She …".) **Named third-person viewpoint (DONE):** set `viewpoint_named = true` (a `lib/sys`
+  on `yourself` → "She …".) A third narration global, `viewpoint_familiar` (default false),
+  is the T–V politeness choice for languages that distinguish (French tu/vous): false narrates
+  a 2nd-singular viewpoint with the polite form — fr-FR renders "vous" with plural verb
+  morphology while grammatical *number* stays singular — true gives the familiar "tu".
+  English has no distinction; lib/en-US ignores it (see devdocs/i18n.md "French verb
+  conjugation"). **Named third-person viewpoint (DONE):** set `viewpoint_named = true` (a `lib/sys`
   global) and, in third person, `[We]` emits the player's **name** on its first use in a render
   ("Galaxy") and pronominalizes later references in that render ("she"). It uses a per-render
   `viewpointNamed` flag in the runtime (`renderViewpointNamed`/`renderSetViewpointNamed`); the

@@ -1,0 +1,43 @@
+locale "fr-FR"
+lib advent
+
+# French verb conjugation (devdocs/i18n.md "French verb conjugation"): the infinitive
+# citation form `[prendre]` renders the present form agreeing with the render subject
+# — with the T–V politeness default (2nd-singular viewpoint narrates as "vous" until
+# `viewpoint_familiar` is set), irregular/stem-change rows (être/enlever/manger),
+# the regular -er pattern, and identity passthrough for the English compat verbs.
+
+item caillou:
+	printed_name "caillou"
+
+item gardes:
+	printed_name "gardes"
+	plural
+
+action montre:
+	out_of_world
+	syntax:
+		"montre"
+
+do montre:
+	print "vous : [We] [prendre] le tout et [être] ici.[line break]"
+	print "cap : [Être]-[we] là ?[line break]"
+	print "il : [regarding caillou][They] [être] lourd, [tenir] bon et [voir] tout.[line break]"
+	print "ils : [regarding gardes][they] [prendre], [enlever], [manger] et [boire].[line break]"
+	print "compat : [We] [take] et [look].[line break]"
+	viewpoint_familiar = true
+	print "tu : [we] [prendre] et [être] rapide.[line break]"
+	viewpoint_familiar = false
+	viewpoint_person = 1
+	print "je : [we] [prendre] et [faire] vite.[line break]"
+	viewpoint_plural = true
+	print "nous : [we] [manger] et [aller] loin."
+
+game Conj_FR:
+	start salle
+
+room salle:
+	description "Une salle."
+
+contains salle caillou
+contains salle gardes

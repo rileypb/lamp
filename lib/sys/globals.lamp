@@ -19,6 +19,13 @@ global int undo_limit = 32
 global int viewpoint_person = 2
 global bool viewpoint_plural = false
 
+# T–V politeness for a second-person viewpoint, in languages that distinguish
+# (French tu/vous, German du/Sie): false (the default) narrates with the polite
+# form — fr-FR renders 2nd-singular as "vous" with plural verb morphology, but
+# grammatical *number* stays singular (nouns and `[s]` never pluralize). Set true
+# for the familiar form ("tu"). English has no distinction; lib/en-US ignores it.
+global bool viewpoint_familiar = false
+
 # Named third-person viewpoint: when true (and `viewpoint_person` is 3), `[We]` renders the player's
 # *name* on its first use in a render (e.g. "Galaxy") and pronominalizes later references in the same
 # render ("she"), instead of always using the pronoun. For a name-based house style (e.g. "Galaxy

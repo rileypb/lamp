@@ -514,15 +514,26 @@ core edit is contained. Names (default): `contains`/`place`/`contained`, keyword
      a fused pronoun+verb has no honest identity fallback (unlike a verb, whose `conjugate()` is
      identity in fr-FR).
   2. **French's real needs, separately** (when French adaptive text matters): generalize the existing
-     `elides()` into elision sugar (`[l' X]`); prep+article (du/des/au/aux); and the **foundational
-     gap — French verb conjugation** (fr-FR `conjugate()` is currently identity; nothing French
-     adapts well until this exists — bigger impact than contractions).
+     `elides()` into elision sugar (`[l' X]` — the remaining layer-2 item; also covers the "je ai" →
+     "j'ai" limitation noted below); ~~prep+article (du/des/au/aux)~~ **DONE (2026-07-05, `frdu1`)**;
+     and ~~the **foundational gap — French verb conjugation**~~ **DONE (2026-07-05):** fr-FR
+     `conjugate()` now conjugates the present tense from a six-form table (infinitive citation:
+     `[prendre]` → prend/prennent/prenez; explicit rows for irregulars/stem-changers, regular -er
+     generated; English compat verbs still pass through unchanged). French verb vocabulary declared
+     in the pack (`verb prendre, poser, …` + quoted `verb "être"`). **T–V politeness:** new lib/sys
+     narration global `viewpoint_familiar` (default false) — fr-FR renders a 2nd-singular viewpoint
+     as polite "vous" (pronoun set + verb form; grammatical number stays singular), "tu" when set;
+     this also fixed the latent `[We]` → "Tu" inconsistency (no golden depended on it). Two compiler
+     generalizations (both ASCII-ident assumptions leaking into locale vocabulary): `verb` accepts
+     quoted words, and the bare-sugar word test admits accented letters (`[être]`). Golden `frconj1`;
+     spec in i18n.md "French verb conjugation". Known limitation: 1sg elision ("je ai") awaits the
+     elision-sugar item.
   3. **Architectural direction (bigger):** move default message *text* out of advent into the locale
      packs (advent = keys + world logic; en-US owns English prose + English sugar; fr-FR owns French
      prose + French sugar). Then locale sugar never leaks cross-locale and the shared-re-theme problem
      disappears; also fixes partial-translation mixing.
-  **Follow-through:** demonstrate layer 1 by adding contraction overrides to Phobos's messages; scope
-  layer 2's French verb conjugation as the next French investment.
+  **Follow-through:** demonstrate layer 1 by adding contraction overrides to Phobos's messages;
+  layer 2's remaining item is elision sugar (`[l' X]`, and "je"+vowel → "j'").
 - **English tokens inside `lib/fr-FR` (observed 2026-07-05).** The pack's `verb` list and `sugar`
   declarations are English words (`the`, `we`, `take`, …) — deliberate today: advent's shared
   default templates are English and must compile under fr-FR. **Step (a) DONE (2026-07-05):**

@@ -175,8 +175,10 @@ function desugarSugar(src, verbNames, sugarMap) {
         return /^[A-Z]/.test(isAre[1]) ? `cap(${call})` : call;
     }
     // Letters, plus a straight apostrophe so contraction sugar (`[we're]`, `[don't]`, D9)
-    // is a single bare word alongside the pronouns/verbs.
-    if (/^[A-Za-z']+$/.test(src)) {
+    // is a single bare word alongside the pronouns/verbs. Accented Latin letters are
+    // admitted so a locale's verb/sugar vocabulary isn't limited to ASCII (`[être]`);
+    // words that match nothing fall through to the operand path exactly as before.
+    if (/^[A-Za-z'À-ɏ]+$/.test(src)) {
         const lower = src.toLowerCase();
         const wrap = (call) => (src === lower ? call : `cap(${call})`);
         const native = sugarNative(lower, sugarMap, "bare");
@@ -1052,7 +1054,9 @@ function createParser(tokens, filePath, globalNames, functionNames = new Set(), 
         expectKeyword("verb");
         do {
             const t = peek();
-            if (t.type !== "IDENT" && t.type !== "KEYWORD") {
+            // A quoted word carries letters an identifier can't (accents: `verb "être"`),
+            // parallel to the quoted form in sugar declarations.
+            if (t.type !== "IDENT" && t.type !== "KEYWORD" && t.type !== "STRING") {
                 throw err("Expected a verb word after 'verb'");
             }
             next();
