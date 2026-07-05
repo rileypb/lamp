@@ -1151,6 +1151,16 @@ generic `put_on` action a game-specific `hang … on …` phrasing:
 understand "hang [put_item] on [destination]" as put_on
 ```
 
+An action needs no `syntax:` block at all — `understand` templates (or `try`) can
+be its only entry points, and an action with neither slots nor flags may be
+declared bare (`action wait`, no colon). lib/advent uses this throughout: its
+`action` declarations carry only slots and flags, and the English surface
+templates live as `understand` lines in `lib/advent/locales/en-US.lamp` (French
+in `locales/fr-FR.lamp`) — command grammar is locale vocabulary, like message
+prose (see devdocs/i18n.md "Layer 3"). Exception: debug.lamp's verbs (PURLOIN,
+SHOWME, …) keep inline `syntax:` — developer tooling, available under every
+locale.
+
 (`understand` is contextual: at top level followed by a string it is this
 declaration; inside an object body, `understand "n"` is an ordinary field
 assignment.) It emits a single `registerGrammar` call — the same one an action's

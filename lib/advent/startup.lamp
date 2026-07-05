@@ -7,9 +7,6 @@
 # QUIT (and its shorthand Q) ends the session: the loop unwinds and run() exits.
 action quit:
 	out_of_world
-	syntax:
-		"quit"
-		"q"
 
 do quit:
 	session_over = true
@@ -19,8 +16,6 @@ do quit:
 # player already chose RESTART explicitly, so confirmation is skipped (story is not ongoing there).
 action restart:
 	out_of_world
-	syntax:
-		"restart"
 
 do restart:
 	# Report unavailability up front (no baseline captured) so the player isn't asked to

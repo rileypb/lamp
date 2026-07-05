@@ -8,4 +8,4 @@ défini : le caillou / la table / les clés / l'arbre
 indéfini : un caillou / une table / des clés / un arbre
 capitale : La table tient. Un arbre pousse.
 
-> quit
+> quitter

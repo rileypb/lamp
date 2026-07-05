@@ -22,8 +22,6 @@ function void award_points(int n):
 
 action request_score:
 	out_of_world
-	syntax:
-		"score"
 
 report request_score:
 	if max_score > 0:

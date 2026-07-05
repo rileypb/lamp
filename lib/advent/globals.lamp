@@ -32,42 +32,31 @@ global object blocking_door = none
 # exit (e.g. `bidi connects A north B` makes `connects B south ?first` yield A).
 direction north:
 	inverse south
-	understand "n"
 direction northeast:
 	inverse southwest
-	understand "ne"
 direction east:
 	inverse west
-	understand "e"
 direction southeast:
 	inverse northwest
-	understand "se"
 direction south:
 	inverse north
-	understand "s"
 direction southwest:
 	inverse northeast
-	understand "sw"
 direction west:
 	inverse east
-	understand "w"
 direction northwest:
 	inverse southeast
-	understand "nw"
 direction up:
 	inverse down
-	understand "u"
 direction down:
 	inverse up
-	understand "d"
 # In/out directions. Named `inward`/`outward` because `in` is a reserved keyword (the `for … in`
-# operator); the player still types "in"/"out" via the understand words below.
+# operator); the player types "in"/"out" via the locale's direction words
+# (locales/en-US.lamp — direction vocabulary is locale-owned, like all command grammar).
 direction inward:
 	inverse outward
-	understand "in/inside"
 direction outward:
 	inverse inward
-	understand "out/outside/exit"
 
 relation connects:
 	from room source

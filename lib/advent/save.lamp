@@ -11,8 +11,6 @@
 
 action undo:
 	out_of_world
-	syntax:
-		"undo"
 
 do undo:
 	if undo_turn():
@@ -22,8 +20,6 @@ do undo:
 
 action save:
 	out_of_world
-	syntax:
-		"save"
 
 do save:
 	if not save_available():
@@ -44,8 +40,6 @@ do save:
 
 action restore:
 	out_of_world
-	syntax:
-		"restore"
 
 do restore:
 	if not save_available():

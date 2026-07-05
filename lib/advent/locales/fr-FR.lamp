@@ -63,7 +63,7 @@ put_on_cant: "Vous ne pouvez rien poser là-dessus."
 banner_by: " par "
 story_won: "*** Vous avez gagné ***[line break]"
 story_lost: "*** Vous avez perdu ***[line break]"
-quit_prompt: "Tapez RESTART pour recommencer, RESTORE pour reprendre une partie sauvegardée, ou QUIT pour quitter le jeu."
+quit_prompt: "Tapez RECOMMENCER, CHARGER pour reprendre une partie sauvegardée, ou QUITTER pour quitter le jeu."
 
 # --- parser feedback (engine messages, routed through the message registry) ---
 parser_cant_see: "Vous ne voyez rien de tel ici."
@@ -185,18 +185,25 @@ transcript_ended: "Transcription terminée."
 # --- French command grammar (layer 3) ---
 #
 # `understand "…" as ACTION` adds a surface template to an existing action (the
-# same mechanism a game uses for synonyms). These are *additive*: the English
-# templates still match, so under fr-FR the player may type either language. A
-# game supplies `understand` synonyms for its own accented nouns (the parser
-# matches an object by its name/understand tokens, not its printed_name).
+# same mechanism a game uses for synonyms). Since the grammar split, advent's
+# `action` declarations carry no surface templates: command grammar is locale
+# vocabulary, so under fr-FR the player types French only (the English templates
+# live in locales/en-US.lamp and are not loaded). The IF-universal abbreviations
+# (x, i, z, q) are kept — they are conventions, not English. A game supplies
+# `understand` synonyms for its own accented nouns (the parser matches an object
+# by its name/understand tokens, not its printed_name).
 
 understand "regarder" as look
+
+understand "attendre" as wait
+understand "z" as wait
 
 understand "prendre [taken]" as take
 understand "prends [taken]" as take
 understand "ramasser [taken]" as take
 
 understand "inventaire" as inventory
+understand "i" as inventory
 
 understand "poser [dropped]" as drop
 understand "laisser [dropped]" as drop
@@ -213,11 +220,74 @@ understand "ôter [clothing]" as doff
 understand "examiner [target]" as examine
 understand "observer [target]" as examine
 understand "regarder [target]" as examine
+understand "x [target]" as examine
 
 understand "aller [way]" as go
+# The bare-direction grammar ("nord" alone moves north) — each locale declares it
+# alongside its go verb since the grammar split.
+understand "[way]" as go
 
 understand "poser [put_item] sur [destination]" as put_on
 understand "mettre [put_item] sur [destination]" as put_on
+
+understand "ouvrir [target]" as open
+understand "ouvre [target]" as open
+
+understand "fermer [target]" as close
+understand "ferme [target]" as close
+
+understand "toucher [target]" as touch
+understand "touche [target]" as touch
+
+understand "attaquer [target]" as attack
+understand "attaque [target]" as attack
+understand "frapper [target]" as attack
+
+understand "embrasser [target]" as kiss
+understand "embrasse [target]" as kiss
+
+understand "pousser [target]" as push
+understand "pousse [target]" as push
+understand "appuyer sur [target]" as push
+
+understand "tirer [target]" as pull
+understand "tire [target]" as pull
+
+# The à/a pair: the accented form is the real spelling; the bare "a" variant
+# accepts unaccented typing (common at a game prompt).
+understand "donner [gift] à [recipient]" as give
+understand "donner [gift] a [recipient]" as give
+
+understand "montrer [shown] à [recipient]" as show
+understand "montrer [shown] a [recipient]" as show
+
+understand "entrer dans [target]" as enter
+
+understand "boire [liquid]" as drink
+understand "bois [liquid]" as drink
+
+understand "manger [food]" as eat
+understand "mange [food]" as eat
+
+# Session-control verbs (out-of-world). The endgame prompt (quit_prompt above)
+# names these words.
+understand "annuler" as undo
+
+understand "sauvegarder" as save
+understand "sauver" as save
+
+understand "charger" as restore
+understand "restaurer" as restore
+
+understand "score" as request_score
+
+understand "quitter" as quit
+understand "q" as quit
+
+understand "recommencer" as restart
+
+understand "transcription" as script_on
+understand "fin de transcription" as script_off
 
 # French direction words, added to advent's direction objects (reopening merges
 # with their `inverse` declarations in globals.lamp). The bare `[way]` grammar
@@ -238,3 +308,11 @@ direction southeast:
 	understand "sud-est/se"
 direction southwest:
 	understand "sud-ouest/so"
+direction up:
+	understand "haut/monter"
+direction down:
+	understand "bas/descendre"
+direction inward:
+	understand "dedans/entrer"
+direction outward:
+	understand "dehors/sortir"

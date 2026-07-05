@@ -12,4 +12,4 @@ tu : tu prends et es rapide.
 je : je prends et fais vite.
 nous : nous mangeons et allons loin.
 
-> quit
+> quitter

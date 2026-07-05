@@ -3,44 +3,44 @@ Un petit salon, simplement meublé.
 
 Vous voyez une clé et un manteau ici.
 
-> examine cle
+> examiner cle
 Une petite clé en laiton.
 
-> take cle
+> prendre cle
 Pris.
 
 > i
 Vous portez :
   une clé
 
-> wear manteau
+> porter manteau
 (vous prenez d'abord le manteau)
 Pris.
 Vous mettez le manteau.
 
-> remove manteau
+> enlever manteau
 Vous enlevez le manteau.
 
-> drop manteau
+> poser manteau
 Laissé.
 
-> drop cle
+> poser cle
 Laissé.
 
 > i
 Vous ne portez rien.
 
-> east
+> est
 Vous ne pouvez pas aller par là.
 
-> south
+> sud
 Obscurité
 Il fait nuit noire, et vous n'y voyez rien.
 
-> north
+> nord
 salon
 Un petit salon, simplement meublé.
 
 Vous voyez une clé et un manteau ici.
 
-> quit
+> quitter

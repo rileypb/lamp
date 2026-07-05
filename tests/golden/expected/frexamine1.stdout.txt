@@ -9,4 +9,4 @@ Le caillou n'a rien d'inhabituel.
 > nord
 couloir
 
-> quit
+> quitter

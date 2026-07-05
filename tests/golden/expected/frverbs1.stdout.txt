@@ -46,4 +46,4 @@ Vous ne voyez rien de tel ici.
 > xyzzy
 Je ne comprends pas cela.
 
-> quit
+> quitter

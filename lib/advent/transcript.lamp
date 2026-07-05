@@ -10,11 +10,6 @@
 
 action script_on:
 	out_of_world
-	syntax:
-		"script"
-		"script on"
-		"transcript"
-		"transcript on"
 
 do script_on:
 	if transcript_running():
@@ -36,9 +31,6 @@ do script_on:
 
 action script_off:
 	out_of_world
-	syntax:
-		"script off"
-		"transcript off"
 
 do script_off:
 	if not transcript_running():

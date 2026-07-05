@@ -7,11 +7,7 @@
 # `do` performs the world change, `report` prints the result. Keeping them
 # separate lets a game override reporting without touching the world change.
 
-action look:
-	syntax:
-		"look"
-		"l"
-		"look around"
+action look
 
 # look changes nothing; its whole effect is to describe, so it lives in report.
 report look:
@@ -21,21 +17,13 @@ report look:
 # band; but it is an ordinary in-world action, so it still spends the turn and every-turn rules fire
 # — the whole point of waiting (let a daemon, countdown, or NPC advance). The message is named, so a
 # game or locale can retheme it.
-action wait:
-	syntax:
-		"wait"
-		"z"
+action wait
 
 report wait:
 	print message wait_report  # "Time passes."
 
 action take:
 	direct item taken
-	syntax:
-		"take [taken]"
-		"get [taken]"
-		"pick up [taken]"
-		"pick [taken] up"
 
 check take:
 	if holder(self.taken) == self.actor:
@@ -99,10 +87,7 @@ report failed take:
 		print message take_too_massive  # "[The act.taken] [is] much too massive to take."
 		stop
 
-action inventory:
-	syntax:
-		"inventory"
-		"i"
+action inventory
 
 report inventory:
 	let found = false
@@ -128,11 +113,6 @@ report inventory:
 
 action drop:
 	direct item dropped
-	syntax:
-		"drop [dropped]"
-		"throw [dropped]"
-		"put down [dropped]"
-		"put [dropped] down"
 
 check drop:
 	if not (holder(self.dropped) == self.actor):
@@ -162,11 +142,6 @@ report failed drop:
 
 action wear:
 	direct item clothing
-	syntax:
-		"wear [clothing]"
-		"don [clothing]"
-		"put on [clothing]"
-		"put [clothing] on"
 
 check wear:
 	if not self.clothing.wearable:
@@ -203,11 +178,6 @@ report failed wear:
 
 action doff:
 	direct item clothing
-	syntax:
-		"remove [clothing]"
-		"take off [clothing]"
-		"doff [clothing]"
-		"take [clothing] off"
 
 check doff:
 	if not (wears self.actor self.clothing):
@@ -235,8 +205,6 @@ report failed doff:
 # they adapt to the story viewpoint ("You open …" / "She opens …").
 action open:
 	direct item target
-	syntax:
-		"open [target]"
 
 check open:
 	# A locked thing reports "locked" before anything else — including a door, which isn't `closable`
@@ -272,9 +240,6 @@ report failed open:
 
 action close:
 	direct item target
-	syntax:
-		"close [target]"
-		"shut [target]"
 
 check close:
 	if not self.target.closable:
@@ -299,10 +264,6 @@ report failed close:
 # Targets any `physical` (not just `item`) so people and other non-item scenery can be examined.
 action examine:
 	direct physical target
-	syntax:
-		"examine [target]"
-		"x [target]"
-		"read [target]"
 
 check examine:
 	if in_darkness(self.actor) and in_darkness(self.target):
@@ -339,9 +300,6 @@ report failed examine:
 # touching prints that instead of the default reply. (Touching works in the dark — no light check.)
 action touch:
 	direct physical target
-	syntax:
-		"touch [target]"
-		"feel [target]"
 
 check touch:
 	if not self.target.feelable:
@@ -371,11 +329,6 @@ report failed touch:
 # default unprinted. The message is named, so a game or locale can retheme it.
 action attack:
 	direct physical target
-	syntax:
-		"attack [target]"
-		"hit [target]"
-		"smash [target]"
-		"punch [target]"
 
 check attack:
 	stop failed attack_pointless
@@ -392,9 +345,6 @@ report failed attack when self.reason == attack_pointless:
 # rules for anything that should respond. The refusal is a named, retheme-able message.
 action kiss:
 	direct physical target
-	syntax:
-		"kiss [target]"
-		"smooch [target]"
 
 check kiss:
 	stop failed kiss_pointless
@@ -411,8 +361,6 @@ report failed kiss when self.reason == kiss_pointless:
 # see Phobos's `press_key`. PUSH stays the item verb so the two never collide.)
 action push:
 	direct item target
-	syntax:
-		"push [target]"
 
 check push:
 	stop failed nothing_happens
@@ -425,8 +373,6 @@ report failed push when self.reason == nothing_happens:
 # `nothing_happens` reason with PUSH but has its own named default message.
 action pull:
 	direct item target
-	syntax:
-		"pull [target]"
 
 check pull:
 	stop failed nothing_happens
@@ -440,8 +386,6 @@ report failed pull when self.reason == nothing_happens:
 action give:
 	direct item gift
 	physical recipient
-	syntax:
-		"give [gift] to [recipient]"
 
 check give:
 	stop failed give_declined
@@ -452,8 +396,6 @@ report failed give when self.reason == give_declined:
 action show:
 	direct item shown
 	physical recipient
-	syntax:
-		"show [shown] to [recipient]"
 
 check show:
 	stop failed show_declined
@@ -467,8 +409,6 @@ report failed show when self.reason == show_declined:
 # back to it.
 action enter:
 	direct item target
-	syntax:
-		"enter [target]"
 
 check enter:
 	stop failed cant_enter
@@ -478,9 +418,6 @@ report failed enter when self.reason == cant_enter:
 
 action go:
 	direction way
-	syntax:
-		"go [way]"
-		"[way]"
 
 # `here` binds the actor's location first: a relation-query slot may hold a value,
 # variable, or property chain, but not a function call like `holder(self.actor)`.
@@ -530,8 +467,6 @@ on contains remove:
 action put_on:
 	direct item put_item
 	item destination
-	syntax:
-		"put [put_item] on [destination]"
 
 check put_on:
 	if not (holder(self.put_item) == self.actor):
@@ -569,12 +504,6 @@ report failed put_on:
 
 action drink:
 	direct item liquid
-	syntax:
-		"drink [liquid]"
-		"sip [liquid]"
-		"gulp [liquid]"
-		"quaff [liquid]"
-		"swig [liquid]"
 
 check drink:
 	if not self.liquid.drinkable:
@@ -596,8 +525,6 @@ report failed drink:
 
 action eat:
 	direct item food
-	syntax:
-		"eat [food]"
 
 check eat:
 	if not self.food.edible:

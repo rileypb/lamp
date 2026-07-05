@@ -1,12 +1,12 @@
-examine cle
-take cle
+examiner cle
+prendre cle
 i
-wear manteau
-remove manteau
-drop manteau
-drop cle
+porter manteau
+enlever manteau
+poser manteau
+poser cle
 i
-east
-south
-north
-quit
+est
+sud
+nord
+quitter

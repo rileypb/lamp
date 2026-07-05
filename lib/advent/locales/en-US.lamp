@@ -135,3 +135,132 @@ transcript_started: "Transcript started."
 transcript_failed: "Transcript failed."
 transcript_not_running: "No transcript is running."
 transcript_ended: "Transcript ended."
+
+# --- English command grammar ---
+#
+# The surface templates for advent's actions, moved out of their `action`
+# declarations (which now declare only slots/flags): command grammar is locale
+# vocabulary, owned by the locale file like the message prose above. The French
+# counterpart lives in locales/fr-FR.lamp; debug.lamp's verbs (PURLOIN, SHOWME, …)
+# keep their syntax in advent — developer tooling, not player-facing language.
+
+understand "look" as look
+understand "l" as look
+understand "look around" as look
+
+understand "wait" as wait
+understand "z" as wait
+
+understand "take [taken]" as take
+understand "get [taken]" as take
+understand "pick up [taken]" as take
+understand "pick [taken] up" as take
+
+understand "inventory" as inventory
+understand "i" as inventory
+
+understand "drop [dropped]" as drop
+understand "throw [dropped]" as drop
+understand "put down [dropped]" as drop
+understand "put [dropped] down" as drop
+
+understand "wear [clothing]" as wear
+understand "don [clothing]" as wear
+understand "put on [clothing]" as wear
+understand "put [clothing] on" as wear
+
+understand "remove [clothing]" as doff
+understand "take off [clothing]" as doff
+understand "doff [clothing]" as doff
+understand "take [clothing] off" as doff
+
+understand "open [target]" as open
+
+understand "close [target]" as close
+understand "shut [target]" as close
+
+understand "examine [target]" as examine
+understand "x [target]" as examine
+understand "read [target]" as examine
+
+understand "touch [target]" as touch
+understand "feel [target]" as touch
+
+understand "attack [target]" as attack
+understand "hit [target]" as attack
+understand "smash [target]" as attack
+understand "punch [target]" as attack
+
+understand "kiss [target]" as kiss
+understand "smooch [target]" as kiss
+
+understand "push [target]" as push
+
+understand "pull [target]" as pull
+
+understand "give [gift] to [recipient]" as give
+
+understand "show [shown] to [recipient]" as show
+
+understand "enter [target]" as enter
+
+understand "go [way]" as go
+understand "[way]" as go
+
+understand "put [put_item] on [destination]" as put_on
+
+understand "drink [liquid]" as drink
+understand "sip [liquid]" as drink
+understand "gulp [liquid]" as drink
+understand "quaff [liquid]" as drink
+understand "swig [liquid]" as drink
+
+understand "eat [food]" as eat
+
+understand "undo" as undo
+
+understand "save" as save
+
+understand "restore" as restore
+
+understand "score" as request_score
+
+understand "quit" as quit
+understand "q" as quit
+
+understand "restart" as restart
+
+understand "script" as script_on
+understand "script on" as script_on
+understand "transcript" as script_on
+understand "transcript on" as script_on
+
+understand "script off" as script_off
+understand "transcript off" as script_off
+
+# Direction abbreviations (single-letter and in/out words), moved from the
+# direction declarations in globals.lamp — reopening merges with `inverse`.
+direction north:
+	understand "n"
+direction northeast:
+	understand "ne"
+direction east:
+	understand "e"
+direction southeast:
+	understand "se"
+direction south:
+	understand "s"
+direction southwest:
+	understand "sw"
+direction west:
+	understand "w"
+direction northwest:
+	understand "nw"
+direction up:
+	understand "u"
+direction down:
+	understand "d"
+direction inward:
+	understand "in/inside"
+direction outward:
+	understand "out/outside/exit"

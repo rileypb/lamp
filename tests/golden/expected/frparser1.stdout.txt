@@ -12,4 +12,4 @@ Un manteau rouge.
 > prends le manteau bleu
 Pris.
 
-> quit
+> quitter

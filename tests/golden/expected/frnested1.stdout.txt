@@ -5,4 +5,4 @@ Vous voyez une table (sur laquelle se trouve un livre), un chapeau et un coffre 
 
 Sur l'étagère se trouvent une fiole et un crayon.
 
-> quit
+> quitter

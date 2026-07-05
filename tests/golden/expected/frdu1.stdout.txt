@@ -7,4 +7,4 @@ Vous voyez un caillou, une table, des clés et un arbre ici.
 de: du caillou / de la table / des clés / de l'arbre
 à: au caillou / à la table / aux clés / à l'arbre
 
-> quit
+> quitter

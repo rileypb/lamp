@@ -9,4 +9,4 @@ nord
 examiner clé
 prendre licorne
 xyzzy
-quit
+quitter

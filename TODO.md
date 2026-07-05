@@ -542,6 +542,17 @@ core edit is contained. Names (default): `contains`/`place`/`contained`, keyword
      Phobos included). **Where:** `src/lantern/{parser_rd,ast,emitter,checker}.js`,
      `src/lamplighter/index.js` (message fallback), `lib/advent/*` + `locales/{en-US,fr-FR}.lamp`;
      spec in messages.md, i18n.md "Layer 3".
+     **Command grammar followed (2026-07-05):** advent's `action` declarations carry no surface
+     templates — the 64 English `syntax:` templates (30 actions) and the direction abbreviations
+     moved to `locales/en-US.lamp` as `understand` lines (no parser change needed: template-less and
+     bare `action NAME` declarations were already legal); the French pack's grammar completed for
+     every player-facing action + the bare `"[way]"` direction grammar + haut/bas/dedans/dehors.
+     Behavior change: French games no longer accept English commands (French goldens' scripts swept
+     to French; fr quit_prompt now names RECOMMENCER/CHARGER/QUITTER). debug.lamp verbs keep inline
+     syntax (dev tooling, every locale). en-US suite byte-invariant. **Open question:** no
+     compile-time completeness check for grammar — a locale missing a verb makes it untypeable
+     (unlike messages, where a missing key is a compile error); is there a principled check (e.g.
+     warn when a locale file covers some but not all actions that another locale file covers)?
   **Follow-through:** demonstrate layer 1 by adding contraction overrides to Phobos's messages;
   layer 2's remaining item is elision sugar (`[l' X]`, and "je"+vowel → "j'").
 - ~~**English tokens inside `lib/fr-FR` (observed 2026-07-05).**~~ **RESOLVED (2026-07-05), in two
