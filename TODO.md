@@ -523,18 +523,19 @@ core edit is contained. Names (default): `contains`/`place`/`contained`, keyword
      disappears; also fixes partial-translation mixing.
   **Follow-through:** demonstrate layer 1 by adding contraction overrides to Phobos's messages; scope
   layer 2's French verb conjugation as the next French investment.
-- **Declarable grammar sugar (locale-extensibility gap) — designed + scoped (2026-07-05).** The
-  template-sugar token vocabulary (`[the]`/`[we]`/`[those]`/`[we're]` → native calls) is hardcoded in
-  the parser (`ARTICLE_SUGAR_FNS`/`PRONOUN_SUGAR_FNS`), not the locale pack — so a locale can replace a
-  native but can't *add a token*. A language needing novel sugar (French `[du]`/`[au]`, German case
-  articles, Tamil postpositions) currently requires **editing the compiler**; verbs are the only
-  locale-declarable sugar today (`verb …`). Fix: make sugar declarable, generalizing the `verb`
-  mechanism — locale packs declare token→native pairs (bare/operand shape), the prescan collects them
-  (like `verbNames`), the parser desugarer consults the collected set, and the built-ins migrate into
-  `lib/en-US`/`lib/fr-FR` (byte-invariant). Full design + 5-step scope in `devdocs/i18n.md` ("Grammar
-  sugar is compiler-hardcoded"). Effort medium; the one real design choice is the declaration syntax.
-  Unblocks structurally-different locales and removes an engine↔English coupling (REVIEW layer
-  boundaries).
+- ~~**Declarable grammar sugar (locale-extensibility gap).**~~ **DONE (2026-07-05):** the
+  template-sugar token vocabulary (`[the]`/`[we]`/`[those]`/`[we're]` → native calls) moved out of the
+  parser's hardcoded `ARTICLE_SUGAR_FNS`/`PRONOUN_SUGAR_FNS` tables into locale-declared `sugar
+  bare|operand …` declarations. A locale pack (or a game) declares token→native pairs; the prescan
+  collects them (`sugarDecls`, like `verbNames`), `index.js` unions into `sugarMap`, threaded to the
+  parser, which desugars from the map — the compiler now bakes in **no** language sugar. Built-ins
+  migrated into `lib/en-US` (articles/pronouns/D9 contractions) and `lib/fr-FR` (shared set), the two
+  parser tables + fallback removed. Byte-invariant (220 goldens; parser sugar tests re-pointed at an
+  injected map); golden `declsugar1` proves a game adds novel tokens (`[yo]`/`[thing X]`) with no
+  compiler change. Removes the engine↔English coupling (REVIEW layer boundaries) and unblocks
+  structurally-different locales (French `[du]`, German case articles) as pure library work.
+  `sugar` is a new reserved keyword. **Where:** `src/lantern/{tokenizer,parser_rd,prescan,ast,index}.js`,
+  `lib/en-US`/`lib/fr-FR` `functions.lamp`; docs in i18n.md/specs.md/text.md.
 - ~~**Action-verb synonyms + adjacent-slot check.**~~ **DONE (2026-07-04):** reviewed a batch of
   added verb synonyms (look around; take: pick up/pick X up; drop: throw/put down/put X down;
   wear: don/put on/put X on; doff: doff/take X off; kiss: smooch; drink: sip/gulp/quaff/swig) —
