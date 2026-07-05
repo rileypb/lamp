@@ -502,13 +502,27 @@ core edit is contained. Names (default): `contains`/`place`/`contained`, keyword
   "Galaxy is", then "She'll" once pronominalized), **D9b** negated-auxiliary (`[don't]`/`[aren't]`/
   `[weren't]`/`[haven't]`), **D9c** demonstrative (`[that's]` → that's/those are). Zero-arg sugar
   (parser `PRONOUN_SUGAR_FNS`, apostrophe allowed) + en-US natives reading the `{person, plural}`
-  agreement. Golden `contractions1`; suite byte-invariant. **Remaining:** re-theme advent's shared
-  refusals — blocked because those messages compile under *both* locales and English contractions
-  don't map to single French tokens (French "ne … pas" is discontinuous, and French doesn't
-  contract subject+verb); needs a **fr-FR contraction story** first. Until then the sugar is
-  en-US-only (a fr-FR game using `[we're]` gets an undefined-function error). Re-theme targets: the
-  ~27 hardcodes (13 isn't/aren't, 5 don't/doesn't, 3 You're, 5 That's, 1 hasn't) — byte-invariant
-  in 2nd person, adaptive for a 3rd-person English game like Phobos.
+  agreement. Golden `contractions1`; suite byte-invariant.
+  **French-contraction strategy — DECIDED (2026-07-05):** English and French "contractions" are
+  *different phenomena* (English fuses pronoun+aux / aux+not, adapting to person/number; French has
+  phonological *elision* — l'/j'/n'/qu' — triggered by the next word, plus prep+article du/au, and
+  *discontinuous* negation "ne … pas" that is syntax, not a token). So we do **not** port `[we're]`/
+  `[don't]` to French. Three layers, in order:
+  1. **Contractions stay en-US locale sugar; advent's shared defaults stay contraction-free** (the
+     current resting state — correct, zero work). An English game that wants them (Phobos, 3rd-person
+     named) uses them in *its own* message overrides (compiled only for that game). No fr-FR stubs —
+     a fused pronoun+verb has no honest identity fallback (unlike a verb, whose `conjugate()` is
+     identity in fr-FR).
+  2. **French's real needs, separately** (when French adaptive text matters): generalize the existing
+     `elides()` into elision sugar (`[l' X]`); prep+article (du/des/au/aux); and the **foundational
+     gap — French verb conjugation** (fr-FR `conjugate()` is currently identity; nothing French
+     adapts well until this exists — bigger impact than contractions).
+  3. **Architectural direction (bigger):** move default message *text* out of advent into the locale
+     packs (advent = keys + world logic; en-US owns English prose + English sugar; fr-FR owns French
+     prose + French sugar). Then locale sugar never leaks cross-locale and the shared-re-theme problem
+     disappears; also fixes partial-translation mixing.
+  **Follow-through:** demonstrate layer 1 by adding contraction overrides to Phobos's messages; scope
+  layer 2's French verb conjugation as the next French investment.
 - ~~**Action-verb synonyms + adjacent-slot check.**~~ **DONE (2026-07-04):** reviewed a batch of
   added verb synonyms (look around; take: pick up/pick X up; drop: throw/put down/put X down;
   wear: don/put on/put X on; doff: doff/take X off; kiss: smooch; drink: sip/gulp/quaff/swig) —
