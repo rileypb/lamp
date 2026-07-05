@@ -1112,7 +1112,13 @@ action take:
 An action body may also include a `syntax:` block of quoted surface templates
 that the Game Parser matches player input against. In a template, `[slot]` binds
 the matched words to that slot; every other token is a literal. (`syntax` is a
-contextual keyword inside an action body.)
+contextual keyword inside an action body.) **Two slots may not be adjacent** —
+every pair of slots must have a literal word between them (`"give [gift] to
+[recipient]"`, not `"give [recipient] [gift]"`). A slot matches greedily up to the
+next literal, so adjacent slots can never be split and the grammar would be
+silently dead; this is a compile error (in both `syntax:` blocks and `understand`
+templates). (Relation `syntax` templates are exempt: they are parsed at compile
+time for assertions/queries, not matched against player input.)
 
 ```lamp
 action take:

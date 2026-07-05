@@ -1,0 +1,18 @@
+lib advent
+
+# Two slots with no literal word between them ("give [recipient] [gift]", the reversed dative)
+# can never match at runtime — the grammar matcher fills the first slot greedily and the second
+# gets nothing — so it is a compile error. Separate the slots with a literal ("... to ...").
+# (Relation `syntax` templates may have adjacent slots; those are parsed at compile time.)
+
+action bestow:
+	direct item gift
+	physical recipient
+	syntax:
+		"bestow [recipient] [gift]"
+
+game Adjacent_Slots:
+	start hall
+
+room hall:
+	description "A hall."

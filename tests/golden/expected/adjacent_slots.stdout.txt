@@ -1,0 +1,3 @@
+Compile error: tests/fixtures/adjacent_slots.lamp:8: type error: syntax template of action "bestow" has adjacent slots "[recipient] [gift]" with no word between them, which can never match (the first slot would consume the rest of the command). Separate them with a literal word.
+  8 | action bestow:
+    | ^

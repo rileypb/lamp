@@ -11,6 +11,7 @@ action look:
 	syntax:
 		"look"
 		"l"
+		"look around"
 
 # look changes nothing; its whole effect is to describe, so it lives in report.
 report look:
@@ -33,6 +34,8 @@ action take:
 	syntax:
 		"take [taken]"
 		"get [taken]"
+		"pick up [taken]"
+		"pick [taken] up"
 
 check take:
 	if holder(self.taken) == self.actor:
@@ -127,6 +130,9 @@ action drop:
 	direct item dropped
 	syntax:
 		"drop [dropped]"
+		"throw [dropped]"
+		"put down [dropped]"
+		"put [dropped] down"
 
 check drop:
 	if not (holder(self.dropped) == self.actor):
@@ -158,6 +164,9 @@ action wear:
 	direct item clothing
 	syntax:
 		"wear [clothing]"
+		"don [clothing]"
+		"put on [clothing]"
+		"put [clothing] on"
 
 check wear:
 	if not self.clothing.wearable:
@@ -197,6 +206,8 @@ action doff:
 	syntax:
 		"remove [clothing]"
 		"take off [clothing]"
+		"doff [clothing]"
+		"take [clothing] off"
 
 check doff:
 	if not (wears self.actor self.clothing):
@@ -383,6 +394,7 @@ action kiss:
 	direct physical target
 	syntax:
 		"kiss [target]"
+		"smooch [target]"
 
 check kiss:
 	stop failed kiss_pointless
@@ -559,6 +571,10 @@ action drink:
 	direct item liquid
 	syntax:
 		"drink [liquid]"
+		"sip [liquid]"
+		"gulp [liquid]"
+		"quaff [liquid]"
+		"swig [liquid]"
 
 check drink:
 	if not self.liquid.drinkable:

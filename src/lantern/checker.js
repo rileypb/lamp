@@ -139,6 +139,22 @@ function checkProgram(programAst, options = {}) {
 
 // `understand "TEMPLATE" as ACTION` must name a declared action, and each `[slot]`
 // in the template must be one of that action's slots.
+// Two slots with no literal word between them can never match at runtime: the grammar matcher
+// fills the first slot greedily up to the next literal, so it swallows the whole span and the
+// second slot gets nothing. (Relation `syntax` templates are exempt — those are parsed at
+// compile time for assertions, not matched at play time.) Reject the silently-dead grammar; a
+// literal word between the slots fixes it ("give [gift] to [recipient]", not "give [x] [y]").
+function checkNoAdjacentSlots(template, label, filePath, lineNumber) {
+    const isSlotWord = (w) => /^\[[A-Za-z_][A-Za-z0-9_]*\]$/.test(w);
+    const words = template.trim().split(/\s+/);
+    for (let i = 1; i < words.length; i += 1) {
+        if (isSlotWord(words[i]) && isSlotWord(words[i - 1])) {
+            throw typeError(filePath, lineNumber,
+                `${label} has adjacent slots "${words[i - 1]} ${words[i]}" with no word between them, which can never match (the first slot would consume the rest of the command). Separate them with a literal word.`);
+        }
+    }
+}
+
 function checkUnderstandDecl(node) {
     const slots = actionSchema.get(node.actionName);
     if (!slots) {
@@ -149,9 +165,11 @@ function checkUnderstandDecl(node) {
             throw typeError(node.filePath, node.lineNumber, `understand template for action "${node.actionName}" references unknown slot "${match[1]}"`);
         }
     }
+    checkNoAdjacentSlots(node.template, `understand template for action "${node.actionName}"`, node.filePath, node.lineNumber);
 }
 
-// Each `[slot]` in an action's syntax templates must name a declared slot.
+// Each `[slot]` in an action's syntax templates must name a declared slot, and no two slots
+// may be adjacent (the runtime grammar matcher can't split them).
 function checkActionDecl(node) {
     const slotNames = new Set(node.slots.map((s) => s.fieldName));
     for (const template of (node.templates || [])) {
@@ -160,6 +178,7 @@ function checkActionDecl(node) {
                 throw typeError(node.filePath, node.lineNumber, `syntax template of action "${node.name}" references unknown slot "${match[1]}"`);
             }
         }
+        checkNoAdjacentSlots(template, `syntax template of action "${node.name}"`, node.filePath, node.lineNumber);
     }
 }
 
