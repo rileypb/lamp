@@ -496,6 +496,15 @@ core edit is contained. Names (default): `contains`/`place`/`contained`, keyword
 **Where:** `src/lantern/{tokenizer,parser_rd,emitter,checker}.js`, `src/lamplighter/index.js`, `lib/advent/*`, `devdocs/{relations,world-model}.md`.
 
 ## Smaller / opportunistic
+- **Adaptive contractions (`[we're]`/`[don't]`/`[that's]`) — spec'd, ready to build.** `devdocs/text.md`
+  D9 defines the full set: **D9a** subject-pronoun (`[we're]`/`[we've]`/`[we'll]`/`[we'd]` + referent
+  siblings `[they're]`/…), **D9b** negated-auxiliary (`[don't]`/`[aren't]`/`[weren't]`/`[haven't]`),
+  **D9c** demonstrative (`[that's]` → that's/those are, pairs with `[those]`). All read the existing
+  `{person, plural}` agreement descriptor; add as zero-arg locale sugar words (parser
+  `PRONOUN_SUGAR_FNS` + `those()`-style natives). **Decision:** a `viewpoint_named` third person
+  spells out (no contraction onto the name — "Galaxy is", not "Galaxy's"). Invariant contractions
+  (`can't`/`won't`/`didn't`/…) stay literal. Once built, re-theme the advent hardcodes (13 isn't/aren't,
+  5 don't/doesn't, 3 You're, 5 That's, 1 hasn't). No prerequisite — the agreement engine exists.
 - ~~**Action-verb synonyms + adjacent-slot check.**~~ **DONE (2026-07-04):** reviewed a batch of
   added verb synonyms (look around; take: pick up/pick X up; drop: throw/put down/put X down;
   wear: don/put on/put X on; doff: doff/take X off; kiss: smooch; drink: sip/gulp/quaff/swig) —

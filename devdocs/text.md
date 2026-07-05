@@ -236,6 +236,61 @@ use an ordinary reference (`[the self.actor]`), not a pronoun word.
   pronoun sugar stays pronouns — at the cost that a report cannot say both "You" and
   "Alice" through the *same* token; choosing pronoun vs. name is the author's, made
   explicit in the template. This is the payoff that justifies D1–D7.
+- **D9. Adaptive contractions.** Inform: contracted forms (`[We're]`, `[don't]`) ride the same
+  verb/pronoun engine. **Lamp (PLANNED — spec).** A contraction token reads the same per-render
+  agreement descriptor `{person, plural}` (§ *Render context*) as the pronouns (D1), verbs (D3),
+  and demonstrative (D5a), so a message may be written contracted and still adapt. Contractions
+  are **zero-arg locale sugar words** like `[we]`/`[those]`; `[We're]`/`[Don't]` capitalize via
+  the B5/D1 mechanism. Three families, and a set of **invariant** contractions deliberately left
+  as literal text.
+
+  **D9a. Subject-pronoun contractions** — the `[We]` subject fused with a following auxiliary.
+  Each renders the viewpoint subject **plus** the verb: **contracted** when the subject surfaces
+  as a *pronoun*, **spelled out** when it surfaces as a *name*. **Decision: a named third-person
+  viewpoint never contracts onto its proper noun** (`viewpoint_named`, D7) — `[we're]` → "Galaxy
+  is", not "Galaxy's" — because name+clitic reads poorly (esp. `'ll`/`'d`); the pronoun forms
+  contract normally.
+
+  | token | verb | 1sg | 2 (sg/pl) | 3sg (she/he/it) | 1pl | 3pl | named 3rd |
+  |---|---|---|---|---|---|---|---|
+  | `[we're]` | be (pres.) | I'm | you're | she's / he's / it's | we're | they're | "Galaxy is" |
+  | `[we've]` | have | I've | you've | she's / he's / it's | we've | they've | "Galaxy has" |
+  | `[we'll]` | will | I'll | you'll | she'll / he'll / it'll | we'll | they'll | "Galaxy will" |
+  | `[we'd]` | would | I'd | you'd | she'd / he'd / it'd | we'd | they'd | "Galaxy would" |
+
+  Third-person-**referent** siblings `[they're]`/`[they've]`/`[they'll]`/`[they'd]` agree with the
+  antecedent / `[regarding X]` subject (the D1 `[they]` family) instead of the viewpoint. They
+  always render a pronoun (a referent is never a bare name — that is an explicit `[the X]`), so
+  they always contract: "[The box] — [it's] locked" → "it's".
+
+  **D9b. Negated-auxiliary contractions** — auxiliary + *not*, the negated forms of the D3/D4
+  adaptive verbs. They render **no** subject (just the verb), so naming does not affect them;
+  they agree with the current subject's person/number:
+
+  | token | verb + not | 3sg | all other persons |
+  |---|---|---|---|
+  | `[don't]` | do | doesn't | don't |
+  | `[aren't]` | be (pres.) | isn't | aren't |
+  | `[weren't]` | be (past) | wasn't | weren't |
+  | `[haven't]` | have | hasn't | haven't |
+
+  **D9c. Demonstrative contraction** — `[that's]`: "That's" for a singular context subject,
+  "Those are" for a plural one (that + be, the number-agreeing pair to `[those]`, D5a). E.g.
+  `"[regarding self.food][that's] not edible."` → "That's …" / "Those aren't …".
+
+  **Invariant contractions (excluded — stay literal).** These do not vary by person/number, so a
+  message writes them as plain text and only the adjacent `[We]` adapts (`"[We] can't …"` already
+  works): modals `can't`, `won't`, `cannot`, `wouldn't`, `couldn't`, `shouldn't`, `mustn't`,
+  `shan't`, `needn't`; past auxiliaries `didn't`, `hadn't`; modal+have `could've`/`would've`/
+  `should've`/`might've`/`must've`; and fixed `let's`, dummy-subject `there's`/`here's`, `that'll`.
+
+  **Caveats.** (1) `[we'd]`/`[they'd]` mean **would** (the common modal); the rare past-perfect
+  auxiliary "had" is spelled `[We] had`, since `'d` can't be disambiguated for spell-out. (2)
+  1st-person negative *be* has no clean contraction — `[aren't]` at 1sg yields "'m not"/"aren't";
+  1st person is rare in IF viewpoints, so accept it or spell out. (3) A **dummy/existential**
+  subject must stay literal: "It's too dark" (weather *it*) and "There's a door" (existential)
+  are *not* `[we're]` — only a referential subject uses the adaptive token. (4) `'s` = *is* or
+  *has* is harmless: the surface is identical, so `[we're]`/`[we've]` share the 3sg "she's".
 
 ## E. Conditional text (`WI 5.7`)
 
@@ -1025,6 +1080,8 @@ Fixtures `list1` / `numbers1` / `plural1` + goldens; parser unit tests
 
 - **D6** story tense — when tense is introduced.
 - **D7** person setting — when alternate narrator viewpoints are introduced.
+- **D9** adaptive contractions — **spec'd, ready to build** (no prerequisite; the agreement
+  engine already exists). See the D9 entry for the full token set and the named-viewpoint rule.
 - **G3** count-driven agreement (`is`/`are`, `that`/`those`) — surface syntax
   undecided; the underlying `.size` + plural flag come earlier.
 - **H4** spacing normalization; **H5** indentation helpers.
