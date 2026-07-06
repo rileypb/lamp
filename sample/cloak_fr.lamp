@@ -15,6 +15,7 @@ locale "fr-FR"
 lib advent
 
 game Manteau_de_l_obscurite:
+	title "Manteau de l'obscurité"
 	author "Roger Firth"
 	tagline "Un portage Lamp du classique de l'aventure textuelle"
 	version 0
