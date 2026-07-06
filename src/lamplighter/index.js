@@ -937,7 +937,9 @@ function objectVocab(obj) {
 }
 
 function objectDisplayName(obj) {
-    if (obj.printed_name) return String(obj.printed_name);
+    // `printed_name` may hold a text template (a name with substitutions, e.g.
+    // "wooden [slot(...)]"); renderText renders a thunk and passes strings through.
+    if (obj.printed_name) return renderText(obj.printed_name);
     return String(obj.name).replace(/_/g, " ");
 }
 
@@ -1829,8 +1831,10 @@ function formatValue(value) {
     }
     if (value && typeof value === "object" && typeof value.name === "string") {
         // A `printed_name` field, when set, overrides the canonical `name` for
-        // display only (the registry key stays `name`). See devdocs/text.md B2.
+        // display only (the registry key stays `name`). It may hold a text
+        // template (a name with substitutions). See devdocs/text.md B2.
         const printed = value.printed_name;
+        if (isTextValue(printed)) return renderTextValue(printed);
         return typeof printed === "string" && printed.length > 0 ? printed : value.name;
     }
     if (value && typeof value === "object" && relationRegistry.has(value.type)) {

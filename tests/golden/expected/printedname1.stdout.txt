@@ -1,0 +1,32 @@
+hall
+A bare hall.
+
+You see a plain chest here.
+
+> x chest
+A plain chest.
+
+> take chest
+Taken.
+
+> i
+You are carrying:
+  a plain chest
+
+> push chest
+There. Painted.
+
+> i
+You are carrying:
+  a painted chest
+
+> drop chest
+Dropped.
+
+> look
+hall
+A bare hall.
+
+You see a painted chest here.
+
+> quit

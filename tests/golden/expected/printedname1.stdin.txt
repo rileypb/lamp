@@ -1,0 +1,8 @@
+x chest
+take chest
+i
+push chest
+i
+drop chest
+look
+quit

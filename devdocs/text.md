@@ -120,6 +120,11 @@ gap is **flagged as a new primitive**.
   **Lamp:** `"[velvet_cloak]"` / `"[self.noun]"` — a bare object expression prints
   its `name`, the same way `print` already renders an object. Overridden when a
   `printed_name` field is set on the object (the displayed-name escape hatch).
+  `printed_name` may itself hold a template (`printed_name "wooden [slot(x)]"`,
+  styles included): every display site — listings, articles, inventory,
+  disambiguation — renders it live via `renderText` (runtime `objectDisplayName`
+  / `formatValue`, locale `display_name`). Golden `printedname1` (2026-07-06;
+  first consumer: Crosslexia's bold swappable words inside object names).
 - **B3. Definite article.** Inform: `[the noun]`. **Lamp (sugar):** `[the
   velvet_cloak]` → "the velvet cloak" — `the` is an article word over a bare object
   reference, *not* a function call. Explicit fallback when the object is computed:

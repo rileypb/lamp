@@ -1,0 +1,32 @@
+lib advent
+
+# Regression: `printed_name` may hold a text template — substitutions (calls,
+# styles) render everywhere the display name appears: room listings, articles
+# ([the]/indefinite), inventory, and report messages. The template re-renders
+# live when the state it reads changes. Styles inside the name degrade to plain
+# text on a plain host.
+
+global bool painted = false
+
+function string chest_color():
+	if painted:
+		return "painted"
+	return "plain"
+
+game PrintedName:
+	start hall
+
+room hall:
+	description "A bare hall."
+
+item chest:
+	printed_name "[chest_color()] [bold]chest[/bold]"
+	understand "chest"
+	description "A [chest_color()] chest."
+
+contains hall chest
+
+instead push when self.target == chest:
+	painted = true
+	print "There. Painted."
+	stop failed

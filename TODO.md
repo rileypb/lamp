@@ -531,6 +531,64 @@ core edit is contained. Names (default): `contains`/`place`/`contained`, keyword
 5. Nesting syntax (below) on top — desugars `room R:`/`item hook:` to `contains R hook`.
 **Where:** `src/lantern/{tokenizer,parser_rd,emitter,checker}.js`, `src/lamplighter/index.js`, `lib/advent/*`, `devdocs/{relations,world-model}.md`.
 
+### Crosslexia port (external project, started 2026-07-06)
+A minimal advent-based starter now lives at `/Users/rileypb/dev/CrosslexiaLamp`
+(`crosslexia.lamp` + README; compiles against this repo's `lib/advent` via the
+compiler's repo-lib resolution — verified compile + smoke run). It is a
+**placeholder world** — the real work is porting the Inform 7 source at
+`/Users/rileypb/dev/Crosslexia`. Scanned 2026-07-06: story.ni is only a shell;
+the real game lives in the author's own extensions under
+`Crosslexia.materials/Extensions/Philip Riley/` (~1,100 lines of game code:
+Word Swapping — the core SWAP X AND Y mechanic over replacement/blank pairs +
+a transformations table of handler rules; Prologue — bedroom scene, eyes/leg
+puzzles; Chapter1 — Mrs. Ainsley / TV / Lawrence of Arabia swaps; Chapter1
+flashbacks; small support exts: Talking, Incorporeal, States of Being,
+Flashback, Swappable Details). Third-party deps: Far Away (distant/untouchable
+things), Non-binary Gender (they/them), Basic Screen Effects (center + keypress);
+Zorkmids/Dynamic Objects are commented out; Chapters 2–5/Epilogue are stubs.
+**Decision (2026-07-06): the Lamp port is the PRIMARY version** (I7 is reference
+only, no 1:1 fidelity constraint). **Swap-engine spike DONE (2026-07-06):**
+`CrosslexiaLamp/lib/swap/swap.lamp` ports Word Swapping.i7x — `replacement <
+thing` (non-physical → global slot resolution, the conversation-subject path),
+`blank` + `owner`, `fills` relation (`unique`, needs a `syntax` template for
+queries/assertions to parse), `transformation` objects + game-contributed
+`rule swap_handlers when t == X:` handlers owning all consequences (I7
+semantics), availability by blank-owner co-location, and the two refusals.
+Verified in-game: the Prologue's open/closed swap re-renders the bedroom live,
+either word order, first-person viewpoint (`viewpoint_person = 1`) renders all
+advent messages correctly ("That's not something I can take."). One workaround:
+`let b = Bedroom` before field assignment (the bare-object-assignment emitter
+bug tracked under text windows — third consumer to hit it; priority ↑).
+**Prologue port DONE (2026-07-06):** all four swaps (open/closed, leg/heart,
+plate/chest with the toppling-table crash + spill, wallet-open/door-closed),
+eyes-closed gating, stand/bed state (an `on_bed` global — advent can't put the
+player ON a supporter; `look` describes `holder(actor)`, so containment-on-bed
+would break it — enterable supporters remain an advent gap, also deferred by
+Phobos's chair), the far_away trio (chest/blinds/door), the itch nag, the
+`[first time]` room-description prefix, and the bedroom door as an advent
+`door` (down/up sides; the swap handler just clears closed+locked). `test room`
+walks the whole scene to the Common Room stub. **Engine work this drove
+(uncommitted, on `windows` branch): `printed_name` may hold a text template** —
+runtime `objectDisplayName`/`formatValue` + locale `display_name` (en-US,
+fr-FR) now route it through `renderText`, so names with substitutions/styles
+("wooden [slot(...)]", bold swapped words) render live at every display site.
+Golden `printedname1`; text.md B2 updated; all 227 goldens + every other suite
+green (226 pre-existing byte-invariant). Also: lib/swap availability now counts
+a room's *doors* as present (doorway-relation check — a door is contained in no
+room, which had made door-owned blanks unswappable).
+**Web build verified (2026-07-06):** `npm run build:web <path>/crosslexia.lamp`
+works after moving the `test_script` into `lib/crosslexia/debug.lamp`
+(`not_for_release` — release builds drop advent's debug.lamp and with it the
+`test_script` type, so test scripts must live in a debug-marked file; the
+Phobos pattern). `lib/crosslexia/` is now the home for game content files.
+**Next:** nonsense-swap fallback (`swap [text]` catch-all — needs
+grammar-overlap check); keypress-wait for chapter title cards (engine gap;
+`prompt()` is the stopgap); Chapter 1 (common room, Mrs. Ainsley, TV/Lawrence
+of Arabia swaps, TALK TO); scene machinery (Prologue→Chapter1 trigger on
+entering the common room); past-tense narration for flashbacks (new engine
+feature, deferred). Consider committing the engine change separately from the
+windows work it sits on top of.
+
 ## Smaller / opportunistic
 - ~~**Mobile: virtual keyboard covers new output after Enter.**~~ **DONE (2026-07-06,
   verified on device).** On real mobile (not desktop emulation) the keyboard
