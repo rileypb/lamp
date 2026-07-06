@@ -1,0 +1,5 @@
+look
+x widget
+panes
+hide panel
+quit

@@ -1,0 +1,21 @@
+Lab
+A bare lab.
+
+You see a widget here.
+
+> look
+Lab
+A bare lab.
+
+You see a widget here.
+
+> x widget
+A small widget.
+
+> panes
+No side panes here.
+
+> hide panel
+Panel hidden.
+
+> quit

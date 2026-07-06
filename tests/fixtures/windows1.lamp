@@ -1,0 +1,51 @@
+# Text windows, step 1 (devdocs/text-windows.md): the `window` type + primitives
+# compile and run end-to-end on the plain host — which renders no panes, so nothing
+# here may change stdout; the wire-level behavior is covered by tests/windows.
+# Exercises the declaration, the window_refresh_rules cadence, all four content
+# primitives, arrangement mutation, and window_available (false on the plain host).
+
+lib advent
+
+game Windows1:
+	start Lab
+
+room Lab:
+	description "A bare lab."
+
+item widget:
+	description "A small widget."
+
+contains Lab widget
+
+window side_panel:
+	dock right
+	size 20
+	title "Mission"
+
+rule window_refresh_rules:
+	window_rule(side_panel, "=")
+	window_line(side_panel, bold("Mission"))
+	window_line_split(side_panel, "Turns", "[turns_taken()]")
+
+action panes:
+	out_of_world
+	syntax:
+		"panes"
+
+do panes:
+	if window_available("right"):
+		print "The host shows side panes."
+	else:
+		print "No side panes here."
+
+action hide_panel:
+	out_of_world
+	syntax:
+		"hide panel"
+
+do hide_panel:
+	# `let` binding sidesteps the bare-object-name assignment-target emitter bug (TODO).
+	let w = side_panel
+	w.visible = false
+	window_clear(w)
+	print "Panel hidden."

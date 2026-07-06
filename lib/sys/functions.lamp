@@ -116,6 +116,26 @@ native function bool request_restart()
 # general content windows. See devdocs/windows.md.
 native function void status_line(string left, string right)
 
+# Text-window primitives (devdocs/text-windows.md). A `window`-typed object declares a
+# pane (its dock/size/visible are ordinary fields — assign them to rearrange; they
+# revert with undo/restore); these primitives buffer the pane's content and push it to
+# the host. window_line appends one flush-left line (style wrappers like bold(...)
+# survive as styled runs); window_line_split appends one line with `left` flush-left
+# and `right` flush-right (the host fills the slack); window_rule appends a full-width
+# rule of `ch`; window_clear discards the pane's buffered lines. window_sync flushes
+# every declared window's arrangement + content to the host and drains the buffers —
+# the library calls it once per prompt (after following window_refresh_rules); a game
+# may also call it mid-turn for a dramatic update. window_available reports whether
+# the host renders panes on `dock` ("top"/"bottom"/"left"/"right"), so a game can fall
+# back (e.g. keep pane content reachable by a verb) rather than silently hiding
+# information from players on a windowless host.
+native function void window_line(object w, string text)
+native function void window_line_split(object w, string left, string right)
+native function void window_rule(object w, string ch)
+native function void window_clear(object w)
+native function void window_sync()
+native function bool window_available(string dock)
+
 # Paragraph-control markers (text.md H). Each returns an output-stream control token
 # meant to be printed in place; the bare-word sugar [line break] / [par] / [no break]
 # / [run on] / [par if printed] desugars to these calls. line_break/paragraph request

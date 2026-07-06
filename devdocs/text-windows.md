@@ -1,6 +1,7 @@
 # Text Windows — design brainstorm & candidate spec
 
-> Status: **axes decided 2026-07-06 — candidate spec below (not yet built).**
+> Status: **axes decided 2026-07-06; step 1 (runtime + Lamp surface) built —
+> hosts render nothing yet** (step 2 web, step 3 TUI, step 4 consumers pending).
 > The brainstorm sections that follow record the options considered; the
 > "Candidate spec" section at the end states the chosen shape. This
 > generalizes the status line (devdocs/windows.md) into real *text windows* on
@@ -365,6 +366,20 @@ recommended, except the last, which adds the Phobos-EX twist):
    claim; EX is where Lamp-native enhancements live).
 
 ## Candidate spec
+
+> **Step 1 is built (2026-07-06, branch `windows`):** the `window` type
+> (lib/sys/types.lamp), the six primitives (lib/sys), the runtime buffer +
+> `window_set`/`window_update` messages + `setWindowChannel`/
+> `setHostCapabilities` (src/lamplighter/index.js), the advent cadence
+> (`window_refresh_rules` + `window_sync()` at the status-line site), unit
+> tests (`tests/windows`, `npm run test:windows`), and the plain-path golden
+> `windows1`. All 225 goldens byte-invariant. No host renders panes yet.
+> Two implementation notes: the primitives declare their pane parameter as
+> `object` (not `window`) — no lib native yet takes a lib-declared type and
+> step 1 doesn't gamble on it; and mutating arrangement from game code
+> currently needs the `let w = pane` workaround for the known
+> bare-object-name assignment-target emitter bug (see TODO), which windows
+> now make worth fixing.
 
 ### The `window` type (lib/sys)
 

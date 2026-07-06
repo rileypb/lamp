@@ -1446,6 +1446,132 @@ function setStatusLine(left, right) {
     if (statusImpl) statusImpl(String(left), String(right));
 }
 
+// Text windows (devdocs/text-windows.md). The runtime owns the transient per-window
+// line buffer (render state — deliberately not a state provider; content re-derives
+// from world state at the next sync) and the two wire messages; the library owns the
+// compose cadence (lib/advent window_refresh_rules); a host that renders panes
+// installs a window channel (none ⇒ messages drop, so the plain host stays
+// byte-invariant by construction). A window's *arrangement* lives in ordinary fields
+// on `window`-typed instances (lib/sys), so it is snapshot-covered like any state.
+let windowImpl = null;
+function setWindowChannel(nextWindowImpl) {
+    windowImpl = nextWindowImpl;
+}
+
+// Host capabilities, sent once by a host adapter before the game loop starts (so
+// delivery never collides with the worker blocking on input). Only `windows.docks`
+// is defined today.
+let hostCapabilities = null;
+function setHostCapabilities(caps) {
+    hostCapabilities = caps || null;
+}
+
+function windowAvailable(dock) {
+    const windows = hostCapabilities && hostCapabilities.windows;
+    const docks = windows && windows.docks;
+    return Array.isArray(docks) && docks.includes(String(dock));
+}
+
+// Split a rendered string into wire runs [{ text, styles? }], honoring the style
+// push/pop sentinels with a local depth (independent of the main output stream's
+// style state) and dropping break sentinels — a window line is exactly one line.
+function parseStyledRuns(s) {
+    const runs = [];
+    const depth = { bold: 0, italic: 0, fixed: 0 };
+    let run = "";
+    const flush = () => {
+        if (run.length === 0) return;
+        const styles = [];
+        for (const name of STYLE_ORDER) {
+            if (depth[name] > 0) styles.push(name);
+        }
+        runs.push(styles.length ? { text: run, styles } : { text: run });
+        run = "";
+    };
+    for (const ch of String(s)) {
+        if (STYLE_PUSH_BY_CHAR[ch] !== undefined) {
+            flush();
+            depth[STYLE_PUSH_BY_CHAR[ch]] += 1;
+        } else if (STYLE_POP_BY_CHAR[ch] !== undefined) {
+            flush();
+            if (depth[STYLE_POP_BY_CHAR[ch]] > 0) depth[STYLE_POP_BY_CHAR[ch]] -= 1;
+        } else if (ch === STREAM_LINE_BREAK || ch === STREAM_PAR_BREAK
+            || ch === STREAM_NO_BREAK || ch === STREAM_PAR_IF_PRINTED) {
+            // Break markers are stream concerns; window content is line-structured.
+        } else {
+            run += ch;
+        }
+    }
+    flush();
+    return runs;
+}
+
+const windowBuffers = new Map();
+
+function windowBufferFor(w) {
+    const key = w && w.name;
+    if (!key) throw new Error("window primitive called with no window object");
+    let lines = windowBuffers.get(key);
+    if (!lines) {
+        lines = [];
+        windowBuffers.set(key, lines);
+    }
+    return lines;
+}
+
+function windowLine(w, text) {
+    windowBufferFor(w).push(parseStyledRuns(renderText(text)));
+}
+
+// One line: left segment, a space fill run consuming the slack, right segment —
+// the status-line shape.
+function windowLineSplit(w, left, right) {
+    const line = parseStyledRuns(renderText(left));
+    line.push({ text: " ", fill: true });
+    for (const run of parseStyledRuns(renderText(right))) line.push(run);
+    windowBufferFor(w).push(line);
+}
+
+// A full-width rule: one char the host repeats to fill the line.
+function windowRule(w, ch) {
+    const c = Array.from(String(renderText(ch)))[0] || "-";
+    windowBufferFor(w).push([{ text: c, fill: true }]);
+}
+
+function windowClear(w) {
+    windowBuffers.delete(w && w.name);
+}
+
+const WINDOW_DOCKS = new Set(["top", "bottom", "left", "right"]);
+
+// Flush: for every declared `window`-typed instance send the idempotent arrangement
+// (window_set, read fresh from its fields — the host diffs) then its buffered
+// content (window_update), and drain the buffers. Buffers drain even with no channel
+// installed, so a pane recomposed every turn on a windowless host can't accumulate.
+// Dock validation happens here rather than in the checker because dock is data a
+// game may reassign at play time.
+function windowSync() {
+    const buffered = new Map(windowBuffers);
+    windowBuffers.clear();
+    if (!windowImpl || !typeRegistry.has("window")) return;
+    for (const inst of getInstancesForTypeAndSubtypes("window")) {
+        const dock = String(inst.dock);
+        if (!WINDOW_DOCKS.has(dock)) {
+            throw new Error(`window "${inst.name}" has invalid dock "${dock}" (expected top, bottom, left, or right)`);
+        }
+        windowImpl({
+            type: "window_set",
+            id: inst.name,
+            dock,
+            size: Number(inst.size) || 0,
+            priority: Number(inst.priority) || 0,
+            visible: !!inst.visible,
+            title: String(inst.title == null ? "" : inst.title),
+        });
+        windowImpl({ type: "window_update", id: inst.name, lines: buffered.get(inst.name) || [] });
+    }
+}
+
 // Player input is a brokered host capability. The host owns stdin and the worker
 // installs an input channel via setInputChannel; readLine blocks on that channel.
 // A game run outside the sandbox has no channel and cannot read input — the
@@ -2655,4 +2781,12 @@ module.exports = {
     transcriptAvailable,
     setStatusChannel,
     setStatusLine,
+    setWindowChannel,
+    setHostCapabilities,
+    windowAvailable,
+    windowLine,
+    windowLineSplit,
+    windowRule,
+    windowClear,
+    windowSync,
 };

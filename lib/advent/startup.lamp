@@ -109,6 +109,10 @@ on startup:
 		# or a command ends the story (sets `story` away from `ongoing`).
 		while story == ongoing:
 			update_status_line()
+			# Recompose + push declared text windows at the status-line cadence
+			# (devdocs/text-windows.md); no-ops for games without windows.
+			follow window_refresh_rules()
+			window_sync()
 			print "[par if printed]"
 			input = prompt("> ")
 			# Fire every-turn rules only when the command actually spent a turn (not on a

@@ -465,9 +465,15 @@ input (UTF-8 chunk reassembly + code-point editing + display-width column math) 
 **Bigger (candidate spec ready, 2026-07-06):** general text windows are spec'd in
 `devdocs/text-windows.md` — all eight design axes decided (plain `window`-typed object,
 repaint-block content, no size exposure, upfront capability handshake, status line
-aliased untouched, TUI top/bottom docks, align+fill line atoms). Build order: (1)
+aliased untouched, TUI top/bottom docks, align+fill line atoms). Build order: ~~(1)
 runtime buffer + primitives (`window_line`/`window_line_split`/`window_rule`/
-`window_sync`/`window_available`) + wire messages + `tests/windows`; (2) web shell CSS-
+`window_sync`/`window_available`) + wire messages + `tests/windows`~~ **(1) DONE
+(2026-07-06, branch `windows`):** `window` type + six primitives in lib/sys, runtime
+buffer/channel/capabilities + `window_set`/`window_update`, advent `window_refresh_rules`
+cadence, `npm run test:windows` (10 unit tests) + plain-path golden `windows1`; all 225
+goldens byte-invariant. Note: the fixture needed the `let w = pane` workaround for the
+bare-object-name assignment-target emitter bug — windows raise that bug's priority
+(arrangement mutation is now a mainline pattern); (2) web shell CSS-
 grid panes + `capabilities` message; (3) TUI top/bottom reserved rows; (4) first
 consumers — a test fixture + **Phobos EX** (`sample/phobos_ex/`, a copy so the original
 stays byte-identical to the I7 port) with a mission-status pane. Follow-ups: re-express

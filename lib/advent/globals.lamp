@@ -90,6 +90,15 @@ rulebook bool startup_rules():
 rulebook bool every_turn_rules():
 	default false
 
+# window_refresh_rules: recomposes declared text windows, followed once per prompt at
+# the status-line cadence; the command loop then window_sync()s the buffered content
+# to the host (both are no-ops for games that declare no `window` objects, and on
+# hosts without window support). A game contributes `rule window_refresh_rules:
+# window_line(pane, "…")`; rules should not `stop`, so every pane refreshes.
+# See devdocs/text-windows.md.
+rulebook bool window_refresh_rules():
+	default false
+
 # end_story_rules: prints the end-of-game message once `story` leaves `ongoing`.
 # The game loop follows it after the ending command. Games may contribute rules
 # (e.g. `rule end_story_rules when story == won:`) to customize or replace the

@@ -13,3 +13,18 @@ type game:
 	# `startup_rules`). Set `auto_banner false` to suppress that and call `print_banner()` yourself
 	# at the right moment — e.g. between an intro narration and a reveal. See lib/advent/startup.lamp.
 	bool auto_banner = true
+
+# A text window: a pane docked to an edge of the play area, sized in rows (top/bottom)
+# or columns (left/right) of its own text. Arrangement lives in these ordinary fields —
+# assign them to resize or show/hide a pane (they are snapshot-covered, so undo/restore
+# revert arrangement with the rest of the world); content is composed per turn via
+# window_line(...) and pushed by window_sync(). A host without window support ignores
+# panes entirely. See devdocs/text-windows.md.
+type window:
+	string dock = "top"
+	int size = 1
+	# Stacking order among same-edge windows; lower is nearer the screen edge.
+	int priority = 0
+	bool visible = true
+	# Optional pane heading; a host may render it (the web shell) or ignore it (the TUI).
+	string title = ""
