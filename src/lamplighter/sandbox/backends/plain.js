@@ -131,6 +131,11 @@ function createPlainBackend({ out, err, fs }) {
         setStatus() {
             // Plain stdio has no status region; the status update is ignored.
         },
+        windowSet() {
+            // No pane support (and no `capabilities`, so window_available reports
+            // false); window messages are ignored and captured output is unchanged.
+        },
+        windowUpdate() {},
         requestLine(prompt, deliver) {
             col = 0; // the prompt/echo leaves the cursor on a fresh line
             rowsOnPage = 0; // a new turn starts a fresh page budget

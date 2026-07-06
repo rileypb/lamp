@@ -1,7 +1,8 @@
 # Text Windows — design brainstorm & candidate spec
 
-> Status: **axes decided 2026-07-06; steps 1–2 built** — runtime + Lamp surface,
-> and the web shell renders panes (step 3 TUI, step 4 consumers pending).
+> Status: **axes decided 2026-07-06; steps 1–3 built** — runtime + Lamp surface,
+> the web shell renders panes on all four docks, and the CLI TUI renders
+> top/bottom panes (step 4, the first real consumers, pending).
 > The brainstorm sections that follow record the options considered; the
 > "Candidate spec" section at the end states the chosen shape. This
 > generalizes the status line (devdocs/windows.md) into real *text windows* on
@@ -398,6 +399,24 @@ recommended, except the last, which adds the Phobos-EX twist):
 > asserts capabilities reach `window_available`, arrangement + visibility
 > toggle arrive, and the run encoding matches the spec. The shell's actual
 > DOM painting stays a manual browser check (the standing modal/pager gap).
+>
+> **Step 3 is built (2026-07-06):** the CLI worker forwards window messages
+> and reads `capabilities` off `workerData` (the CLI's pre-start delivery —
+> it has no init message); the host passes the chosen backend's
+> `capabilities` through, so the handshake reflects the real renderer. The
+> TUI backend advertises `["top","bottom"]` and generalizes its pinned rows:
+> visible top panes reserve rows under the status/spacer, bottom panes take
+> the last rows (priority ascending toward each edge), the game area's
+> `gameTop`/`viewH` are computed from the reservations, and the `[more]`
+> pager measures the reduced viewport. Pane lines render through a terminal
+> mirror of the web's flex layout (`paneLineString`: alignment becomes
+> implicit space fills, slack is split across fill runs, styles are SGR,
+> width-aware truncation). Left/right docks are ignored if they arrive
+> (the handshake already said no). The plain backend gains explicit no-ops
+> and no capabilities, keeping piped/golden output byte-invariant. Seven new
+> TUI unit tests cover reservation geometry, priority order, fill/split/style
+> rendering, hide/re-show, ignored side docks, and pane-aware pagination.
+> Live terminal rendering stays a manual check, like the rest of the TUI.
 
 ### The `window` type (lib/sys)
 

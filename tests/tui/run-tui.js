@@ -293,6 +293,114 @@ test("output longer than the screen pauses with [more] and pages on a keypress",
     b.stop();
 });
 
+// --- text-window panes (devdocs/text-windows.md) ----------------------------
+// The wire messages the host routes: windowSet (arrangement) + windowUpdate
+// (repaint-block content). Helpers extract what a screen row holds by finding
+// the last write after a moveTo(row, 1).
+function rowContent(buf, row) {
+    const marker = `\x1b[${row};1H\x1b[2K`;
+    const at = buf.lastIndexOf(marker);
+    if (at < 0) return null;
+    const rest = buf.slice(at + marker.length);
+    const next = rest.indexOf("\x1b[");
+    return next < 0 ? rest : rest.slice(0, next);
+}
+
+test("backend advertises top/bottom dock capabilities", () => {
+    const b = createTuiBackend({ out: mockOut(), input: mockIn(), exit() {} });
+    assert.deepStrictEqual(b.capabilities, { windows: { docks: ["top", "bottom"] } });
+});
+
+test("a top pane reserves rows under the spacer and shifts the game area down", () => {
+    const out = mockOut(40, 12);
+    const b = createTuiBackend({ out, input: mockIn(), exit() {} });
+    b.start();
+    b.windowSet({ type: "window_set", id: "hud", dock: "top", size: 2, priority: 0, visible: true, title: "" });
+    b.windowUpdate({ type: "window_update", id: "hud", lines: [[{ text: "Quests" }], [{ text: "- find lamp" }]] });
+    out.buf = "";
+    b.write("You are in a foyer.\n");
+    assert.strictEqual(rowContent(out.buf, 3), "Quests", "pane line 1 at row 3");
+    assert.strictEqual(rowContent(out.buf, 4), "- find lamp", "pane line 2 at row 4");
+    assert.strictEqual(rowContent(out.buf, 5), "You are in a foyer.", "game area starts below the pane");
+    b.stop();
+});
+
+test("a bottom pane occupies the last rows; lower priority is nearer the bottom edge", () => {
+    const out = mockOut(40, 12);
+    const b = createTuiBackend({ out, input: mockIn(), exit() {} });
+    b.start();
+    b.windowSet({ type: "window_set", id: "bar", dock: "bottom", size: 1, priority: 0, visible: true, title: "" });
+    b.windowUpdate({ type: "window_update", id: "bar", lines: [[{ text: "nearest edge" }]] });
+    b.windowSet({ type: "window_set", id: "info", dock: "bottom", size: 1, priority: 5, visible: true, title: "" });
+    out.buf = "";
+    b.windowUpdate({ type: "window_update", id: "info", lines: [[{ text: "above it" }]] });
+    // rows=12, two 1-row bottom panes: game area 3..10, panes at 11 (info) and 12 (bar).
+    assert.strictEqual(rowContent(out.buf, 11), "above it");
+    assert.strictEqual(rowContent(out.buf, 12), "nearest edge");
+    b.stop();
+});
+
+test("pane lines render styles, fill rules, and the left/right split at full width", () => {
+    const out = mockOut(20, 12);
+    const b = createTuiBackend({ out, input: mockIn(), exit() {} });
+    b.start();
+    b.windowSet({ type: "window_set", id: "hud", dock: "top", size: 3, priority: 0, visible: true, title: "" });
+    out.buf = "";
+    b.windowUpdate({
+        type: "window_update",
+        id: "hud",
+        lines: [
+            [{ text: "=", fill: true }],
+            [{ text: "Mission", styles: ["bold"] }],
+            [{ text: "Turns" }, { text: " ", fill: true }, { text: "12" }],
+        ],
+    });
+    assert.ok(out.buf.includes("=".repeat(20)), "fill rule spans the full width");
+    assert.ok(out.buf.includes("\x1b[1mMission\x1b[0m"), "bold pane run rendered as SGR");
+    assert.ok(out.buf.includes("Turns" + " ".repeat(13) + "12"), "split line justifies right segment to the edge");
+    b.stop();
+});
+
+test("a hidden pane reserves nothing; re-showing restores it", () => {
+    const out = mockOut(40, 12);
+    const b = createTuiBackend({ out, input: mockIn(), exit() {} });
+    b.start();
+    b.windowSet({ type: "window_set", id: "hud", dock: "top", size: 1, priority: 0, visible: true, title: "" });
+    b.windowUpdate({ type: "window_update", id: "hud", lines: [[{ text: "HUD" }]] });
+    b.windowSet({ type: "window_set", id: "hud", dock: "top", size: 1, priority: 0, visible: false, title: "" });
+    out.buf = "";
+    b.write("You are in a foyer.\n");
+    assert.strictEqual(rowContent(out.buf, 3), "You are in a foyer.", "game area back at row 3 when the pane hides");
+    b.windowSet({ type: "window_set", id: "hud", dock: "top", size: 1, priority: 0, visible: true, title: "" });
+    assert.strictEqual(rowContent(out.buf, 3), "HUD", "pane content kept and re-shown");
+    b.stop();
+});
+
+test("left/right docks are ignored on the terminal (no rows reserved)", () => {
+    const out = mockOut(40, 12);
+    const b = createTuiBackend({ out, input: mockIn(), exit() {} });
+    b.start();
+    b.windowSet({ type: "window_set", id: "side", dock: "right", size: 20, priority: 0, visible: true, title: "" });
+    b.windowUpdate({ type: "window_update", id: "side", lines: [[{ text: "sideways" }]] });
+    out.buf = "";
+    b.write("You are in a foyer.\n");
+    assert.strictEqual(rowContent(out.buf, 3), "You are in a foyer.", "game area unmoved by an unsupported dock");
+    assert.ok(!out.buf.includes("sideways"), "side-pane content is not drawn");
+    b.stop();
+});
+
+test("pagination accounts for reserved pane rows", () => {
+    const out = mockOut(40, 8);
+    const input = mockIn();
+    const b = createTuiBackend({ out, input, exit() {} });
+    b.start();
+    // rows=8: without panes viewH=6; a 3-row pane shrinks it to 3.
+    b.windowSet({ type: "window_set", id: "hud", dock: "top", size: 3, priority: 0, visible: true, title: "" });
+    for (let n = 0; n < 5; n += 1) b.write(`line ${n}\n`); // 5 rows > 3 → must page
+    assert.ok(out.buf.includes("[more]"), "[more] triggers at the pane-reduced viewport");
+    b.stop();
+});
+
 test("Ctrl-C restores the terminal and exits via the injected exit", () => {
     const out = mockOut();
     const input = mockIn();

@@ -127,6 +127,17 @@ function main() {
         parentPort.postMessage({ type: "status", left, right });
     });
 
+    // Text windows: window_set/window_update messages carry their own `type`, so
+    // the channel forwards them verbatim (fire-and-forget, like output). The TUI
+    // backend renders top/bottom panes; the plain backend ignores them. Host
+    // capabilities ride workerData (fixed before the game starts — the CLI worker
+    // has no init message), so window_available reflects the chosen backend.
+    // See devdocs/text-windows.md.
+    lamplighter.setWindowChannel((msg) => {
+        parentPort.postMessage(msg);
+    });
+    if (workerData.capabilities) lamplighter.setHostCapabilities(workerData.capabilities);
+
     installInputChannel(workerData.inputBuffer);
     installSaveChannel(workerData.saveBuffer);
 

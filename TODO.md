@@ -481,7 +481,13 @@ sends `capabilities` on `init`, and the browser worker forwards window messages 
 applies capabilities pre-loop; e2e drives a built windows1 bundle through the real
 wire (capabilities → `window_available`, arrangement, visibility toggle, run
 encoding) — the shell's DOM painting stays a manual browser check, like the modals;
-(3) TUI top/bottom reserved rows; (4) first
+~~(3) TUI top/bottom reserved rows~~ **(3) DONE (2026-07-06):** the TUI generalizes its
+pinned rows — top panes under the status/spacer, bottom panes on the last rows,
+priority ascending toward each edge, pane-aware `gameTop`/`viewH` + `[more]` math, and
+a terminal mirror of the web's line layout (fills/align/SGR styles); CLI worker reads
+capabilities off `workerData` from the chosen backend (TUI: top/bottom; plain: none,
+explicit no-ops). Seven new TUI unit tests; all suites green, goldens byte-invariant.
+Live terminal rendering stays a manual check, like the rest of the TUI; (4) first
 consumers — a test fixture + **Phobos EX** (`sample/phobos_ex/`, a copy so the original
 stays byte-identical to the I7 port) with a mission-status pane. Follow-ups: re-express
 the status line as a 1-row window, then freestyle windows (boundary-sketched in the

@@ -277,6 +277,107 @@ function createTuiBackend({ out, err, input, exit } = {}) {
         return bar + " ".repeat(Math.max(0, cols - textWidth(bar)));
     }
 
+    // --- Text-window panes (top/bottom docks; devdocs/text-windows.md) ------
+    // A visible pane reserves `size` rows outside the scroll region: top panes
+    // right under the status row + spacer, bottom panes on the last rows. Content
+    // is a repaint block of run-encoded lines (styles/align/fill); lines beyond
+    // the reserved rows are clipped (the declared size is a reservation, not a
+    // scroll area). Left/right docks are unsupported on a terminal — the
+    // capability handshake says so — and are ignored if a game sends them anyway.
+    const panes = new Map(); // id → { dock, size, priority, visible, lines }
+
+    function panesFor(dock) {
+        const list = [];
+        for (const p of panes.values()) {
+            if (p.visible && p.dock === dock && p.size > 0) list.push(p);
+        }
+        list.sort((a, b) => a.priority - b.priority); // lower = nearer the screen edge
+        return list;
+    }
+
+    function paneRowCount(dock) {
+        let n = 0;
+        for (const p of panesFor(dock)) n += p.size;
+        return n;
+    }
+
+    // Screen geometry with panes reserved: row 1 status, row 2 spacer, top panes,
+    // the game area (viewH rows), then bottom panes on the last rows.
+    function geometry() {
+        const cols = out.columns || 80;
+        const rows = out.rows || 24;
+        const topRows = paneRowCount("top");
+        const bottomRows = paneRowCount("bottom");
+        const gameTop = 3 + topRows;
+        const viewH = Math.max(1, rows - 2 - topRows - bottomRows);
+        return { cols, rows, gameTop, viewH };
+    }
+
+    function runSgr(styles) {
+        const codes = [];
+        if (styles && styles.includes("bold")) codes.push("1");
+        if (styles && styles.includes("italic")) codes.push("3");
+        return codes.length ? `\x1b[${codes.join(";")}m` : "";
+    }
+
+    // Render one pane line to at most `cols` columns: alignment materializes as
+    // implicit space fills, then the slack is split across the fill runs (each
+    // fill's char repeated to its share) — the terminal mirror of the web shell's
+    // flex layout, so rules and the left/right split render the same way.
+    function paneLineString(line, cols) {
+        const runs = [];
+        for (const run of line) {
+            if (!run.fill && (run.align === "right" || run.align === "center")) runs.push({ text: " ", fill: true });
+            runs.push(run);
+            if (!run.fill && run.align === "center") runs.push({ text: " ", fill: true });
+        }
+        let fixed = 0;
+        let fills = 0;
+        for (const r of runs) {
+            if (r.fill) fills += 1;
+            else fixed += textWidth(String(r.text));
+        }
+        const slack = Math.max(0, cols - fixed);
+        const base = fills > 0 ? Math.floor(slack / fills) : 0;
+        let extra = fills > 0 ? slack % fills : 0;
+        let s = "";
+        let vis = 0;
+        for (const r of runs) {
+            let text = String(r.text);
+            if (r.fill) {
+                const ch = text || " ";
+                let share = base;
+                if (extra > 0) { share += 1; extra -= 1; }
+                const w = Math.max(1, textWidth(ch));
+                text = ch.repeat(Math.floor(share / w)) + " ".repeat(share % w);
+            }
+            text = truncateToWidth(text, Math.max(0, cols - vis));
+            if (text.length === 0) continue;
+            vis += textWidth(text);
+            const open = runSgr(r.styles);
+            s += open ? open + text + RESET : text;
+            if (vis >= cols) break;
+        }
+        return s;
+    }
+
+    // Draw a dock's panes starting at `startRow`. Bottom panes draw in reverse
+    // priority order so a lower priority lands nearer the bottom edge.
+    function paneBlock(dock, startRow, cols) {
+        let list = panesFor(dock);
+        if (dock === "bottom") list = list.slice().reverse();
+        let buf = "";
+        let row = startRow;
+        for (const p of list) {
+            for (let i = 0; i < p.size; i += 1) {
+                buf += moveTo(row, 1) + CLEAR_LINE;
+                if (p.lines[i]) buf += paneLineString(p.lines[i], cols);
+                row += 1;
+            }
+        }
+        return buf;
+    }
+
     // Wrapped content rows (committed lines + the partial pending line), the unit both
     // the viewport and the pager measure in. The live input row is added separately.
     function contentRows(cols) {
@@ -294,8 +395,8 @@ function createTuiBackend({ out, err, input, exit } = {}) {
     // page at a time. No-op while an input prompt is showing (we don't paginate input).
     function maybePage() {
         if (!awaiting) {
-            const viewH = Math.max(1, (out.rows || 24) - 2);
-            if (contentRows(out.columns || 80).length - seenRows > viewH) more = true;
+            const g = geometry();
+            if (contentRows(g.cols).length - seenRows > g.viewH) more = true;
         }
         render();
     }
@@ -303,10 +404,10 @@ function createTuiBackend({ out, err, input, exit } = {}) {
     // Advance one screenful at a [more] pause. When the player catches up, leave paged
     // mode and, if an input request was deferred, show it now.
     function advancePage() {
-        const viewH = Math.max(1, (out.rows || 24) - 2);
-        seenRows += Math.max(1, viewH - 1);
-        const total = contentRows(out.columns || 80).length;
-        if (total - seenRows > viewH) {
+        const g = geometry();
+        seenRows += Math.max(1, g.viewH - 1);
+        const total = contentRows(g.cols).length;
+        if (total - seenRows > g.viewH) {
             render();
             return;
         }
@@ -332,12 +433,11 @@ function createTuiBackend({ out, err, input, exit } = {}) {
     }
 
     // Paged view: one screenful of unseen content from `seenRows`, with a reverse-video
-    // [more] pinned on the bottom game row (no input row, cursor hidden).
-    function renderMore(displayRows, cols, gameTop, viewH) {
+    // [more] pinned on the bottom game row (no input row, cursor hidden). `chrome` is
+    // the already-drawn status/spacer/pane rows.
+    function renderMore(chrome, displayRows, cols, gameTop, viewH) {
         const pageRows = displayRows.slice(seenRows, seenRows + Math.max(0, viewH - 1));
-        let buf = CURSOR_HIDE;
-        buf += moveTo(1, 1) + CLEAR_LINE + REVERSE + statusBar(cols) + RESET;
-        buf += moveTo(2, 1) + CLEAR_LINE;
+        let buf = chrome;
         for (let i = 0; i < viewH; i += 1) {
             buf += moveTo(gameTop + i, 1) + CLEAR_LINE;
             if (i < viewH - 1) {
@@ -351,15 +451,20 @@ function createTuiBackend({ out, err, input, exit } = {}) {
 
     function render() {
         if (stopped) return;
-        const cols = out.columns || 80;
-        const rows = out.rows || 24;
-        const gameTop = 3; // after status (1) + blank spacer (2)
-        const viewH = Math.max(1, rows - 2); // game area: rows 3..rows
+        const { cols, gameTop, viewH } = geometry();
 
         const displayRows = contentRows(cols);
 
+        // Screen chrome shared by both views: status row, spacer, and the reserved
+        // pane rows (top under the spacer, bottom under the game area).
+        let chrome = CURSOR_HIDE;
+        chrome += moveTo(1, 1) + CLEAR_LINE + REVERSE + statusBar(cols) + RESET;
+        chrome += moveTo(2, 1) + CLEAR_LINE; // blank spacer between status and transcript
+        chrome += paneBlock("top", 3, cols);
+        chrome += paneBlock("bottom", gameTop + viewH, cols);
+
         if (more) {
-            renderMore(displayRows, cols, gameTop, viewH);
+            renderMore(chrome, displayRows, cols, gameTop, viewH);
             return;
         }
 
@@ -385,9 +490,7 @@ function createTuiBackend({ out, err, input, exit } = {}) {
         const startIdx = Math.max(0, combined.length - viewH - scrollOffset);
         const slice = combined.slice(startIdx, startIdx + viewH);
 
-        let buf = CURSOR_HIDE;
-        buf += moveTo(1, 1) + CLEAR_LINE + REVERSE + statusBar(cols) + RESET;
-        buf += moveTo(2, 1) + CLEAR_LINE; // blank spacer between status and transcript
+        let buf = chrome;
         for (let i = 0; i < viewH; i += 1) {
             buf += moveTo(gameTop + i, 1) + CLEAR_LINE + (slice[i] != null ? rowToString(slice[i], cols) : "");
         }
@@ -576,6 +679,9 @@ function createTuiBackend({ out, err, input, exit } = {}) {
     }
 
     return {
+        // Window capability handshake: the host forwards this to the worker before
+        // the game starts, so window_available reflects what this backend renders.
+        capabilities: { windows: { docks: ["top", "bottom"] } },
         start() {
             if (started) return;
             started = true;
@@ -605,6 +711,23 @@ function createTuiBackend({ out, err, input, exit } = {}) {
         setStatus(left, right) {
             statusLeft = String(left == null ? "" : left);
             statusRight = String(right == null ? "" : right);
+            render();
+        },
+        windowSet(msg) {
+            const p = panes.get(msg.id) || { lines: [] };
+            p.dock = String(msg.dock);
+            p.size = Math.max(0, msg.size | 0);
+            p.priority = msg.priority | 0;
+            p.visible = !!msg.visible;
+            panes.set(msg.id, p);
+            render();
+        },
+        windowUpdate(msg) {
+            const p = panes.get(msg.id);
+            // An update for an undeclared pane is dropped (window_set always
+            // precedes window_update in a sync).
+            if (!p) return;
+            p.lines = msg.lines || [];
             render();
         },
         requestLine(prompt, deliver) {

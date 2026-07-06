@@ -128,7 +128,14 @@ function playFile(generatedPath, { out = process.stdout, err = process.stderr } 
 
     return new Promise((resolve, reject) => {
         const worker = new Worker(workerPath, {
-            workerData: { generatedPath: path.resolve(generatedPath), inputBuffer, saveBuffer },
+            workerData: {
+                generatedPath: path.resolve(generatedPath),
+                inputBuffer,
+                saveBuffer,
+                // The backend's window capabilities (TUI: top/bottom docks; plain:
+                // none), fixed before the game starts. See devdocs/text-windows.md.
+                capabilities: backend.capabilities || null,
+            },
         });
 
         worker.on("message", (msg) => {
@@ -138,6 +145,10 @@ function playFile(generatedPath, { out = process.stdout, err = process.stderr } 
                 backend.log(msg.value);
             } else if (msg.type === "status") {
                 backend.setStatus(msg.left, msg.right);
+            } else if (msg.type === "window_set") {
+                backend.windowSet(msg);
+            } else if (msg.type === "window_update") {
+                backend.windowUpdate(msg);
             } else if (msg.type === "readline") {
                 backend.requestLine(null, deliverLine);
             } else if (msg.type === "prompt_readline") {
