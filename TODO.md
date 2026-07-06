@@ -462,10 +462,19 @@ wrapping an over-long typed command (hard-wrapped by column), and multi-byte/emo
 input (UTF-8 chunk reassembly + code-point editing + display-width column math) are
 **done**. Still deferred: batched redraws and keeping the transcript on exit
 (alt-screen clears it now).
-**Bigger (deferred):** generalize to arbitrary named content windows (the status line
-collapses into one), a host capability handshake + headless fallback, and author
-override of the status content (e.g. score games). **Where:**
-`src/lighthouse/web/`, `src/lamplighter/sandbox/backends/`, `lib/sys`, `lib/advent`.
+**Bigger (candidate spec ready, 2026-07-06):** general text windows are spec'd in
+`devdocs/text-windows.md` — all eight design axes decided (plain `window`-typed object,
+repaint-block content, no size exposure, upfront capability handshake, status line
+aliased untouched, TUI top/bottom docks, align+fill line atoms). Build order: (1)
+runtime buffer + primitives (`window_line`/`window_line_split`/`window_rule`/
+`window_sync`/`window_available`) + wire messages + `tests/windows`; (2) web shell CSS-
+grid panes + `capabilities` message; (3) TUI top/bottom reserved rows; (4) first
+consumers — a test fixture + **Phobos EX** (`sample/phobos_ex/`, a copy so the original
+stays byte-identical to the I7 port) with a mission-status pane. Follow-ups: re-express
+the status line as a 1-row window, then freestyle windows (boundary-sketched in the
+doc, spec'd separately). **Where:** `src/lighthouse/web/`,
+`src/lamplighter/sandbox/{worker,worker-browser}.js` + `backends/`, `lib/sys`,
+`lib/advent`.
 
 ## Active (design decided 2026-06-25)
 

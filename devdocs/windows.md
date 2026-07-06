@@ -3,6 +3,10 @@
 > Status: **status line implemented (web + CLI TUI)**; general content windows are a
 > deferred design direction. The status line is built as its own special-purpose
 > mechanism now, to be re-expressed as a window once that model lands.
+> **Candidate spec for the general model: `devdocs/text-windows.md`** (axes
+> decided 2026-07-06; text windows first, freestyle windows boundary-sketched
+> there and spec'd later; the status line stays on this channel until
+> re-expressed as a 1-row window).
 
 ## Purpose
 
