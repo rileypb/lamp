@@ -110,10 +110,8 @@ its suggested order:
    neopronoun). Note: French verb/participle agreement is still not modeled (the pack's
    `conjugate` is identity), so a custom set surfaces in pronouns but not accord.
    **Remaining follow-up:** decide whether grammatical gender should be locale-owned data
-   rather than an advent field (low priority). **Also flag:** `sample/phobos/web` (the
-   committed deploy bundle) is now a stale
-   snapshot — still self-consistent and correct, but a Phobos redeploy should
-   `npm run build:phobos` to pick up the pronoun change (and the §1.5 page-title fix).
+   rather than an advent field (low priority). (The stale `sample/phobos/web` bundle flagged
+   here was rebuilt in `c1e9fce`, picking up the pronoun change and the §1.5 page-title fix.)
 8. ~~**[M] Duplicated action-selector resolver (§2.1)**~~ **DONE (2026-07-02):** the
    identical selector set-algebra that lived in both `checker.js`
    (`resolveSelectorActions`, over `actionSchema`) and `emitter.js`
@@ -269,8 +267,9 @@ endgame` → the full winning transcript) — the whole game is a deterministic 
 release + `--encode-strings`) that the deploy workflow copies without rebuilding, so Lamp
 changes on `main` can't break the published game (unlike Cloak, which rebuilds each push as
 a live Lighthouse check). To update the published Phobos: rebuild, commit the bundle. Banner
-title is the full `"Phobos - A Galaxy Jones Story"` (the game `title` field). **Next:** merge
-the `restart` branch to `main` to trigger the first deploy; a manual browser pass on the
+title is the full `"Phobos - A Galaxy Jones Story"` (the game `title` field). The `restart`
+branch is merged to `main` and the bundle rebuilt post-merge (`c1e9fce`, picking up the
+free-text-pronoun + page-title changes). **Next:** a manual browser pass on the
 Pages URL (modals, transcript download, [more] paging — the layer headless checks don't cover).
 
 ### 0. README onboarding — DONE / follow-ups
@@ -1197,17 +1196,16 @@ core edit is contained. Names (default): `contains`/`place`/`contained`, keyword
   yes" / "say I am human") and is generally useful (typo/synonym fixups, "x"→"examine" style aliases
   beyond grammar). **Where:** `src/lamplighter/index.js` (`runCommand`/`run_command`), specs.md;
   Phobos would add a rule mapping the bare utterances in `guard_persuasion.lamp`.
-- **Demonstrative sugar `[that]`/`[those]` (agreeing with a target).** Inform's refusal
-  messages refer back to the noun with a number-agreeing demonstrative — "[We] can't touch
-  [regarding the noun][those]." renders "can't touch that" (singular) / "can't touch those"
-  (plural). advent has no such sugar, so the ported TOUCH/TAKE refusals from `Can't Touch
-  This.i7x` ([lib/advent/actions.lamp](lib/advent/actions.lamp), `touch_cant`/`touch_cant_reach`/
-  `take_cant_unfeelable`/`take_cant_reach`) use the object **name** instead ("can't touch the
-  wall") — same meaning, advent house style, but not byte-faithful to the I7 wording. To close
-  the gap: add a `[that]`/`[those]` template (locale native, agreeing with the `[regarding]`/named
-  subject like `[they]`/`[them]` do — `it`/`they` set the agreement; demonstrative reads "that"
-  singular / "those" plural), then swap the refusal messages to use it. Also a localization win
-  (French ce/cette/ces). **Where:** `lib/en-US/index.js` (+ `lib/fr-FR`), `lib/advent/actions.lamp`.
+- ~~**Demonstrative sugar — residual: the four touch/reach refusals.**~~ **DONE (2026-07-05):**
+  the ported TOUCH/TAKE-reach refusals from `Can't Touch This.i7x` (`touch_cant`/
+  `touch_cant_reach`/`take_cant_unfeelable`/`take_cant_reach` in
+  `lib/advent/locales/en-US.lamp`) now use `[regarding …][those]` — "can't touch that/those",
+  byte-faithful to I7 — closing the last gap of the `[those]` item above (whose mechanism +
+  9 other refusals were already done). Use-site mirror comments (actions.lamp) + the specs.md
+  touch-row quotes updated; `touch1` golden re-baselined ("She can't touch that."), all other
+  goldens + save/state/parser suites byte-invariant. fr-FR keeps the name form ("[le
+  act.target]") — French demonstratives need gender (celui-là/celle-là/…), the follow-up
+  noted under the `[those]` entry.
 - **Remaining pronouns (`him`/`her`/`them`).** `it` is implemented with
   explicit `direct` slot marking (the `direct item NAME` annotation on action
   field declarations sets the antecedent; at most one per action; enforced at

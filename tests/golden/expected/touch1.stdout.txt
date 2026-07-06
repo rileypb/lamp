@@ -16,16 +16,16 @@ She feels nothing unexpected.
 She feels nothing unexpected.
 
 > touch ghost
-She can't touch the ghost.
+She can't touch that.
 
 > touch star
-She can't reach the star.
+She can't reach that.
 
 > take ghost
-She can't take the ghost.
+She can't take that.
 
 > take star
-She can't reach the star.
+She can't reach that.
 
 > take statue
 The statue is much too massive to take.

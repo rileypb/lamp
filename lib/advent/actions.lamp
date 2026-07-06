@@ -78,10 +78,10 @@ report failed take:
 		print message take_cant_take  # "That's not something [we] can take."
 		stop
 	if self.reason == cant_take_unfeelable:
-		print message take_cant_unfeelable  # "[We] can't take [the act.taken]."
+		print message take_cant_unfeelable  # "[We] can't take [regarding act.taken][those]."
 		stop
 	if self.reason == cant_reach:
-		print message take_cant_reach  # "[We] can't reach [the act.taken]."
+		print message take_cant_reach  # "[We] can't reach [regarding act.taken][those]."
 		stop
 	if self.reason == too_massive:
 		print message take_too_massive  # "[The act.taken] [is] much too massive to take."
@@ -315,10 +315,10 @@ report touch:
 
 report failed touch:
 	if self.reason == cant_touch:
-		print message touch_cant  # "[We] can't touch [the act.target]."
+		print message touch_cant  # "[We] can't touch [regarding act.target][those]."
 		stop
 	if self.reason == cant_reach:
-		print message touch_cant_reach  # "[We] can't reach [the act.target]."
+		print message touch_cant_reach  # "[We] can't reach [regarding act.target][those]."
 		stop
 
 # A generic reaction to violence against any item (also ATTACK/HIT/SMASH/PUNCH). The
