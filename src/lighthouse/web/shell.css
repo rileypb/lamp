@@ -33,11 +33,110 @@ html, body {
     padding: 1rem;
 }
 
+/* Text-window layout (devdocs/text-windows.md): top panes / a middle row of
+   left panes + transcript + right panes / bottom panes. Empty containers (and
+   hidden panes) collapse to nothing, so a game without windows renders exactly
+   as before. The right/bottom containers reverse their flex direction so a
+   lower `order` (= the game's priority) is always nearer its screen edge. */
+#main-row {
+    flex: 1 1 auto;
+    min-height: 0;
+    display: flex;
+}
+#win-top {
+    display: flex;
+    flex-direction: column;
+}
+#win-bottom {
+    display: flex;
+    flex-direction: column-reverse;
+}
+#win-left {
+    display: flex;
+    flex-direction: row;
+}
+#win-right {
+    display: flex;
+    flex-direction: row-reverse;
+}
+
 #transcript {
     flex: 1 1 auto;
+    min-width: 0;
     overflow-y: auto;
     white-space: pre-wrap;
     word-break: break-word;
+}
+
+/* A text-window pane: monospace (the game composes lines expecting columns to
+   hold), fixed size in its own text metrics (shell.js sets width for side panes,
+   height for top/bottom, from the game's declared rows/cols), overflow clipped —
+   the declared size is a reservation, not a scroll area. Margins sit on the pane
+   (not the container) so hidden panes contribute no gap. */
+.pane {
+    flex: 0 0 auto;
+    background: #222;
+    border: 1px solid #3a3a3a;
+    border-radius: 4px;
+    padding: 0.25rem 0.5rem;
+    font-family: "SFMono-Regular", "Consolas", "Liberation Mono", Menlo, monospace;
+    font-size: 0.9rem;
+    line-height: 1.4;
+    overflow: hidden;
+}
+.pane[hidden] {
+    display: none;
+}
+#win-top .pane {
+    margin-bottom: 0.5rem;
+}
+#win-bottom .pane {
+    margin-top: 0.5rem;
+}
+#win-left .pane {
+    margin-right: 0.75rem;
+}
+#win-right .pane {
+    margin-left: 0.75rem;
+}
+/* The host may clamp a declared size (spec: layout is the host's): side panes
+   never crush the transcript below ~half the screen. */
+.pane-side {
+    max-width: 45%;
+}
+
+.pane-title {
+    color: var(--dim);
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    margin-bottom: 0.25rem;
+}
+
+/* One content line: runs laid out on a flex row so fill runs consume the slack.
+   min-height keeps a deliberately blank line one row tall. */
+.pane-line {
+    display: flex;
+    min-height: 1.4em;
+}
+.pane-run {
+    white-space: pre;
+    flex: 0 0 auto;
+}
+/* A fill run: its (repeated) char fills whatever slack the line has; clipped at
+   the line's edge. This is how rules and the left/right split render. */
+.pane-fill {
+    flex: 1 1 auto;
+    overflow: hidden;
+    white-space: pre;
+    min-width: 0;
+}
+.pane-align-right {
+    margin-left: auto;
+}
+.pane-align-center {
+    margin-left: auto;
+    margin-right: auto;
 }
 
 /* Traditional status line: a fixed-width (monospace) bar with reverse-video colors

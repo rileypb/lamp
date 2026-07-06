@@ -189,6 +189,12 @@ function startIfReady() {
     lamplighter.setStatusChannel((left, right) => {
         self.postMessage({ type: "status", left, right });
     });
+    // Text windows: window_set/window_update messages already carry their `type`
+    // field, so the channel forwards them verbatim (fire-and-forget, like output).
+    // See devdocs/text-windows.md → Wire protocol.
+    lamplighter.setWindowChannel((msg) => {
+        self.postMessage(msg);
+    });
     installInputChannel(pendingInputBuffer);
     installSaveChannel(pendingSaveBuffer);
 
@@ -218,6 +224,10 @@ self.addEventListener("message", (event) => {
         // Optional: a save buffer enables SAVE/RESTORE. Absent → save channel
         // stays uninstalled and the save verbs report it is unavailable.
         if (msg.saveBuffer instanceof SharedArrayBuffer) pendingSaveBuffer = msg.saveBuffer;
+        // Host capabilities ride the init message — the one host→worker delivery
+        // guaranteed to precede the game loop, so it never collides with the worker
+        // blocking on input. Absent → window_available reports false everywhere.
+        if (msg.capabilities) lamplighter.setHostCapabilities(msg.capabilities);
         startIfReady();
     }
 });

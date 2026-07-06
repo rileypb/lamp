@@ -45,6 +45,7 @@ function driveBundle(bundleDir, commands, { timeoutMs = 30000, saveSlotName = "e
 
         const saves = new Map();
         const transcripts = new Map();
+        const windowMessages = [];
         let openTranscript = null;
         let output = "";
         const queue = [...commands];
@@ -94,6 +95,10 @@ function driveBundle(bundleDir, commands, { timeoutMs = 30000, saveSlotName = "e
                 case "status":
                 case "log":
                     break;
+                case "window_set":
+                case "window_update":
+                    windowMessages.push(msg);
+                    break;
                 case "readline":
                 case "prompt_readline": {
                     if (msg.type === "prompt_readline") output += msg.prompt;
@@ -138,7 +143,7 @@ function driveBundle(bundleDir, commands, { timeoutMs = 30000, saveSlotName = "e
                     openTranscript = null;
                     break;
                 case "done":
-                    finish(resolve, { output, saves, transcripts });
+                    finish(resolve, { output, saves, transcripts, windowMessages });
                     break;
                 case "error":
                     fail(new Error(`worker error: ${msg.message}; output so far:\n${output}`));
@@ -150,7 +155,14 @@ function driveBundle(bundleDir, commands, { timeoutMs = 30000, saveSlotName = "e
 
         worker.on("error", fail);
 
-        worker.postMessage({ type: "init", inputBuffer, saveBuffer });
+        // Capabilities ride init exactly as the real shell sends them, so
+        // window_available in the game sees a four-dock host.
+        worker.postMessage({
+            type: "init",
+            inputBuffer,
+            saveBuffer,
+            capabilities: { windows: { docks: ["top", "bottom", "left", "right"] } },
+        });
     });
 }
 

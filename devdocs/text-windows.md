@@ -1,7 +1,7 @@
 # Text Windows — design brainstorm & candidate spec
 
-> Status: **axes decided 2026-07-06; step 1 (runtime + Lamp surface) built —
-> hosts render nothing yet** (step 2 web, step 3 TUI, step 4 consumers pending).
+> Status: **axes decided 2026-07-06; steps 1–2 built** — runtime + Lamp surface,
+> and the web shell renders panes (step 3 TUI, step 4 consumers pending).
 > The brainstorm sections that follow record the options considered; the
 > "Candidate spec" section at the end states the chosen shape. This
 > generalizes the status line (devdocs/windows.md) into real *text windows* on
@@ -380,6 +380,24 @@ recommended, except the last, which adds the Phobos-EX twist):
 > currently needs the `let w = pane` workaround for the known
 > bare-object-name assignment-target emitter bug (see TODO), which windows
 > now make worth fixing.
+>
+> **Step 2 is built (2026-07-06):** the browser worker forwards window
+> messages verbatim (`setWindowChannel`) and applies `capabilities` off the
+> `init` message before the game starts; the shell posts a four-dock
+> capability set, docks panes into `#win-top`/`#win-bottom`/`#win-left`/
+> `#win-right` around a new `#main-row` (empty containers collapse — a
+> windowless game renders exactly as before), sizes side panes in `ch` and
+> top/bottom panes in line-height units, orders same-edge panes by `priority`
+> via flex `order` (right/bottom containers reverse direction so lower is
+> nearer the edge), renders runs as `textContent`-only spans reusing the
+> `style-*` classes, fills via a clipped repeated char, and clamps side panes
+> to 45% width. The pane `title` renders as a header on side panes only
+> (top/bottom rows are reserved by `size`). E2E: `drive-bundle.js` sends the
+> same capabilities as the shell and collects window messages;
+> `run-lighthouse.js` builds the `windows1` fixture as a real bundle and
+> asserts capabilities reach `window_available`, arrangement + visibility
+> toggle arrive, and the run encoding matches the spec. The shell's actual
+> DOM painting stays a manual browser check (the standing modal/pager gap).
 
 ### The `window` type (lib/sys)
 
@@ -450,7 +468,9 @@ blocking, never transcript-captured):
 cache to skip no-op relayouts. There is **no** `window_close`: `visible:
 false` returns the space to the transcript. `align` is `left` (default) /
 `center` / `right` per run; `fill: true` marks a run whose single-char `text`
-repeats to consume the line's slack. `id` is the object's name.
+repeats to consume the line's slack. `id` is the object's canonical runtime
+name — note that a multi-word identifier is coerced (`side_panel` →
+`"side panel"`), same as every object name.
 
 Host → worker, once, before the game loop starts (riding the existing boot
 sequence, so it never hits the blocked-worker constraint):

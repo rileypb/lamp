@@ -28,6 +28,12 @@
     const statusLeft = document.getElementById("status-left");
     const statusRight = document.getElementById("status-right");
     const moreBar = document.getElementById("more-bar");
+    const winContainers = {
+        top: document.getElementById("win-top"),
+        bottom: document.getElementById("win-bottom"),
+        left: document.getElementById("win-left"),
+        right: document.getElementById("win-right"),
+    };
 
     const encoder = new TextEncoder();
 
@@ -276,6 +282,85 @@
         return rows;
     }
 
+    // --- Text-window panes (devdocs/text-windows.md) -----------------------
+    // The game composes pane content; the shell only docks, sizes, and paints it.
+    // window_set is idempotent (re-sent each sync) and carries the arrangement;
+    // window_update replaces the pane's whole content. Everything renders via
+    // textContent — pane text is game output and follows the same no-innerHTML
+    // rule as the transcript.
+    const panes = new Map(); // id → { el, titleEl, content }
+    // A fill run's single char repeated enough to cross any pane; .pane-fill clips
+    // the excess, so the run visually fills the line's slack (rules, dot leaders,
+    // the left/right split).
+    const FILL_REPEAT = 256;
+
+    function paneFor(id) {
+        let pane = panes.get(id);
+        if (pane) return pane;
+        const el = document.createElement("div");
+        el.className = "pane";
+        el.setAttribute("role", "complementary");
+        const titleEl = document.createElement("div");
+        titleEl.className = "pane-title";
+        titleEl.hidden = true;
+        const content = document.createElement("div");
+        content.className = "pane-content";
+        el.appendChild(titleEl);
+        el.appendChild(content);
+        pane = { el, titleEl, content };
+        panes.set(id, pane);
+        return pane;
+    }
+
+    function applyWindowSet(msg) {
+        const pane = paneFor(msg.id);
+        const container = winContainers[msg.dock];
+        if (!container) return; // unknown dock: leave the pane unattached (fail-silently)
+        if (pane.el.parentElement !== container) container.appendChild(pane.el);
+        // Priority orders panes within a dock via flex `order`; the right/bottom
+        // containers reverse their flex direction, so lower is nearer the edge on
+        // every dock without re-sorting the DOM.
+        pane.el.style.order = String(msg.priority || 0);
+        pane.el.hidden = !msg.visible;
+        const sideways = msg.dock === "left" || msg.dock === "right";
+        pane.el.classList.toggle("pane-side", sideways);
+        if (sideways) {
+            // size = columns of the pane's own (monospace) text, plus its padding.
+            pane.el.style.width = `calc(${msg.size}ch + 1rem)`;
+            pane.el.style.height = "";
+        } else {
+            // size = rows at the pane line-height (1.4), plus vertical padding.
+            pane.el.style.height = `calc(${msg.size * 1.4}em + 0.5rem)`;
+            pane.el.style.width = "";
+        }
+        // The title renders as a header on side panes only — top/bottom rows are
+        // reserved by `size`, and a header there would eat declared content rows.
+        pane.titleEl.textContent = sideways ? msg.title || "" : "";
+        pane.titleEl.hidden = !(sideways && msg.title);
+        pane.el.setAttribute("aria-label", msg.title || msg.id);
+    }
+
+    function applyWindowUpdate(msg) {
+        const pane = paneFor(msg.id);
+        pane.content.textContent = "";
+        for (const line of msg.lines || []) {
+            const lineEl = document.createElement("div");
+            lineEl.className = "pane-line";
+            for (const run of line) {
+                const span = document.createElement("span");
+                let cls = "pane-run";
+                for (const s of run.styles || []) cls += ` style-${s}`;
+                if (run.fill) cls += " pane-fill";
+                else if (run.align === "right") cls += " pane-align-right";
+                else if (run.align === "center") cls += " pane-align-center";
+                span.className = cls;
+                span.textContent = run.fill ? String(run.text).repeat(FILL_REPEAT) : run.text;
+                lineEl.appendChild(span);
+            }
+            pane.content.appendChild(lineEl);
+        }
+    }
+
     const worker = new Worker(WORKER_URL);
 
     worker.addEventListener("message", (event) => {
@@ -291,6 +376,12 @@
                 statusLeft.textContent = msg.left || "";
                 statusRight.textContent = msg.right || "";
                 statusBar.hidden = !(msg.left || msg.right);
+                break;
+            case "window_set":
+                applyWindowSet(msg);
+                break;
+            case "window_update":
+                applyWindowUpdate(msg);
                 break;
             case "log":
                 console.log(msg.value);
@@ -650,5 +741,13 @@
     }
 
     // Hand the worker the shared buffers; the bootstrap starts the game on receipt.
-    worker.postMessage({ type: "init", inputBuffer, saveBuffer });
+    // Capabilities ride the init message (the pre-loop delivery, so it never races
+    // the worker blocking on input): this shell docks text-window panes on all four
+    // edges. See devdocs/text-windows.md.
+    worker.postMessage({
+        type: "init",
+        inputBuffer,
+        saveBuffer,
+        capabilities: { windows: { docks: ["top", "bottom", "left", "right"] } },
+    });
 })();

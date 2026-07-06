@@ -40,12 +40,23 @@
              `status` message; hidden until the first update. See devdocs/windows.md. -->
         <div id="status-bar" role="status" aria-live="off" hidden><span
             id="status-left"></span><span id="status-right"></span></div>
-        <!-- The input lives at the tail of the transcript; output is inserted
-             before it, so the input always sits inline right after the last
-             output (no separate bottom-pinned prompt). -->
-        <div id="transcript" aria-live="polite"><input id="input-line" type="text"
-            aria-label="Enter a command" autocomplete="off" autocapitalize="off"
-            autocorrect="off" spellcheck="false" disabled></div>
+        <!-- Text-window pane containers (devdocs/text-windows.md): panes are built
+             by shell.js on window_set and docked here. Empty containers collapse
+             to nothing, so a game without windows renders exactly as before. The
+             right/bottom containers run in reverse flex order so a lower priority
+             is always nearer its screen edge. -->
+        <div id="win-top"></div>
+        <div id="main-row">
+            <div id="win-left"></div>
+            <!-- The input lives at the tail of the transcript; output is inserted
+                 before it, so the input always sits inline right after the last
+                 output (no separate bottom-pinned prompt). -->
+            <div id="transcript" aria-live="polite"><input id="input-line" type="text"
+                aria-label="Enter a command" autocomplete="off" autocapitalize="off"
+                autocorrect="off" spellcheck="false" disabled></div>
+            <div id="win-right"></div>
+        </div>
+        <div id="win-bottom"></div>
         <!-- "[more]" pager: shown when a turn's output overflows the transcript
              viewport. A flex row below the transcript (so it shrinks the scroll area
              rather than covering text); any key or a click reveals the next page. See

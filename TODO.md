@@ -473,8 +473,15 @@ buffer/channel/capabilities + `window_set`/`window_update`, advent `window_refre
 cadence, `npm run test:windows` (10 unit tests) + plain-path golden `windows1`; all 225
 goldens byte-invariant. Note: the fixture needed the `let w = pane` workaround for the
 bare-object-name assignment-target emitter bug — windows raise that bug's priority
-(arrangement mutation is now a mainline pattern); (2) web shell CSS-
-grid panes + `capabilities` message; (3) TUI top/bottom reserved rows; (4) first
+(arrangement mutation is now a mainline pattern); ~~(2) web shell panes + `capabilities`
+message~~ **(2) DONE (2026-07-06):** the shell docks panes on all four edges (flex
+containers around a new `#main-row`; priority via flex `order`; runs as textContent
+spans reusing `style-*`; fill = clipped repeated char; side panes clamped to 45%),
+sends `capabilities` on `init`, and the browser worker forwards window messages +
+applies capabilities pre-loop; e2e drives a built windows1 bundle through the real
+wire (capabilities → `window_available`, arrangement, visibility toggle, run
+encoding) — the shell's DOM painting stays a manual browser check, like the modals;
+(3) TUI top/bottom reserved rows; (4) first
 consumers — a test fixture + **Phobos EX** (`sample/phobos_ex/`, a copy so the original
 stays byte-identical to the I7 port) with a mission-status pane. Follow-ups: re-express
 the status line as a 1-row window, then freestyle windows (boundary-sketched in the

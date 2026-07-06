@@ -110,6 +110,24 @@ try {
         assert.ok(css.includes("#status-bar"), "status bar styling missing");
     });
 
+    await test("text windows: worker forwards messages + capabilities; shell docks panes", () => {
+        const worker = fs.readFileSync(path.join(outDir, "game.worker.js"), "utf8");
+        assert.ok(worker.includes("setWindowChannel"), "worker window channel wiring missing");
+        assert.ok(worker.includes("setHostCapabilities"), "worker capabilities wiring missing");
+        const shell = fs.readFileSync(path.join(outDir, "shell.js"), "utf8");
+        assert.ok(
+            shell.includes('case "window_set"') && shell.includes('case "window_update"'),
+            "shell window handlers missing",
+        );
+        assert.ok(shell.includes("capabilities"), "shell capabilities in init missing");
+        const html = fs.readFileSync(path.join(outDir, "index.html"), "utf8");
+        for (const id of ["win-top", "win-bottom", "win-left", "win-right"]) {
+            assert.ok(html.includes(`id="${id}"`), `pane container ${id} missing`);
+        }
+        const css = fs.readFileSync(path.join(outDir, "shell.css"), "utf8");
+        assert.ok(css.includes(".pane") && css.includes(".pane-fill"), "pane styling missing");
+    });
+
     await test("service worker parses and sets isolation headers", () => {
         const code = fs.readFileSync(path.join(outDir, "sw.js"), "utf8");
         assertParses(code, "sw.js");
@@ -185,6 +203,36 @@ try {
             "transcript should capture the command and its output");
         assert.ok(!log.includes("Transcript ended."),
             "the closing message must be screen-only, not in the transcript file");
+    });
+
+    // End-to-end for text windows: build the windows1 fixture as a real bundle and
+    // drive it — capabilities must reach window_available in the game, and the pane's
+    // arrangement + content must stream over the wire with the spec'd run encoding
+    // (devdocs/text-windows.md). Only the shell's DOM rendering stays manual.
+    await test("windows bundle end-to-end: capabilities reach the game; panes stream over the wire", async () => {
+        const winOut = fs.mkdtempSync(path.join(os.tmpdir(), "lamp-lighthouse-win-"));
+        try {
+            buildWeb(path.join(__dirname, "..", "fixtures", "windows1.lamp"), winOut, { minify: false });
+            const { output, windowMessages } = await driveBundle(winOut, ["panes", "hide panel", "quit"]);
+            assert.ok(output.includes("The host shows side panes."),
+                "window_available should see the host's four-dock capabilities");
+            const sets = windowMessages.filter((m) => m.type === "window_set" && m.id === "side panel");
+            assert.ok(sets.length >= 2, "window_set should arrive at every prompt");
+            assert.deepStrictEqual(
+                { dock: sets[0].dock, size: sets[0].size, visible: sets[0].visible, title: sets[0].title },
+                { dock: "right", size: 20, visible: true, title: "Mission" },
+                "first window_set should carry the declared arrangement");
+            assert.strictEqual(sets[sets.length - 1].visible, false,
+                "HIDE PANEL should surface as visible:false in the next window_set");
+            const upd = windowMessages.find((m) => m.type === "window_update" && m.id === "side panel" && m.lines.length);
+            assert.ok(upd, "no window_update with content arrived");
+            assert.deepStrictEqual(upd.lines[0], [{ text: "=", fill: true }], "rule line encoding");
+            assert.deepStrictEqual(upd.lines[1], [{ text: "Mission", styles: ["bold"] }], "styled line encoding");
+            assert.strictEqual(upd.lines[2][0].text, "Turns", "split line left segment");
+            assert.strictEqual(upd.lines[2][1].fill, true, "split line fill run");
+        } finally {
+            fs.rmSync(winOut, { recursive: true, force: true });
+        }
     });
 } finally {
     fs.rmSync(outDir, { recursive: true, force: true });
