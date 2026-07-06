@@ -495,8 +495,8 @@ core edit is contained. Names (default): `contains`/`place`/`contained`, keyword
 **Where:** `src/lantern/{tokenizer,parser_rd,emitter,checker}.js`, `src/lamplighter/index.js`, `lib/advent/*`, `devdocs/{relations,world-model}.md`.
 
 ## Smaller / opportunistic
-- **Mobile: virtual keyboard covers new output after Enter (fix shipped 2026-07-06,
-  awaiting on-device verification).** On real mobile (not desktop emulation) the keyboard
+- ~~**Mobile: virtual keyboard covers new output after Enter.**~~ **DONE (2026-07-06,
+  verified on device).** On real mobile (not desktop emulation) the keyboard
   overlays the page without shrinking the layout viewport, so `#screen { height: 100% }`
   leaves the transcript tail behind it; the browser's pan-to-focused-field snaps away when
   Enter disables the input, hiding the new turn's text. Fix: viewport meta gains
@@ -504,8 +504,7 @@ core edit is contained. Names (default): `contains`/`place`/`contained`, keyword
   `shell.js` tracks `window.visualViewport` for iOS — `#screen` is sized to the visual
   height and translated to the visible region while the keyboard is up; scroll re-pins to
   bottom only if it was already there (never yanks scrollback reading), and pinch-zoom is
-  exempt. Not reproducible headlessly — verify on a phone: type a command with the
-  keyboard up, the response must appear above the keyboard.
+  exempt. Verified on a real phone 2026-07-06 (commit `aca53f0`).
 - ~~**Mobile: input field wraps below the `>` prompt.**~~ **DONE (2026-07-06):**
   `#input-line` (an inline-block, `width: 40ch`) had `max-width: 100%`, which caps at the
   full transcript width — not the space remaining after the inline `> ` prompt span — so
@@ -514,9 +513,8 @@ core edit is contained. Names (default): `contains`/`place`/`contained`, keyword
   calc(100% - 3ch)` in `src/lighthouse/web/shell.css`, reserving room for the standard
   `> ` prompt (a game supplying a much longer prompt string could still wrap —
   acceptable). `sample/phobos/web` rebuilt (`npm run build:phobos`), which also picked up
-  the lib/message commits since the last bundle build; 224 goldens green. Remaining
-  verification is manual: load the Pages URL on a portrait phone and confirm the caret
-  sits on the prompt line.
+  the lib/message commits since the last bundle build; 224 goldens green. Verified on a
+  real phone 2026-07-06 (the manual pass that surfaced the keyboard-overlay bug above).
 - ~~**Adaptive contractions (`[we're]`/`[don't]`/`[that's]`) — mechanism.**~~ **DONE (2026-07-04,
   en-US):** the full D9 token set is live — **D9a** subject-pronoun (`[we're]`/`[we've]`/`[we'll]`/
   `[we'd]` + referent siblings `[they're]`/…, spelling out for a `viewpoint_named` third person:
