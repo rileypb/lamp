@@ -495,6 +495,17 @@ core edit is contained. Names (default): `contains`/`place`/`contained`, keyword
 **Where:** `src/lantern/{tokenizer,parser_rd,emitter,checker}.js`, `src/lamplighter/index.js`, `lib/advent/*`, `devdocs/{relations,world-model}.md`.
 
 ## Smaller / opportunistic
+- ~~**Mobile: input field wraps below the `>` prompt.**~~ **DONE (2026-07-06):**
+  `#input-line` (an inline-block, `width: 40ch`) had `max-width: 100%`, which caps at the
+  full transcript width — not the space remaining after the inline `> ` prompt span — so
+  on viewports narrower than ~42ch (≈360px at 16px system-ui; portrait phones) the whole
+  input box wrapped to the next line and the caret sat below the `>`. Fix: `max-width:
+  calc(100% - 3ch)` in `src/lighthouse/web/shell.css`, reserving room for the standard
+  `> ` prompt (a game supplying a much longer prompt string could still wrap —
+  acceptable). `sample/phobos/web` rebuilt (`npm run build:phobos`), which also picked up
+  the lib/message commits since the last bundle build; 224 goldens green. Remaining
+  verification is manual: load the Pages URL on a portrait phone and confirm the caret
+  sits on the prompt line.
 - ~~**Adaptive contractions (`[we're]`/`[don't]`/`[that's]`) — mechanism.**~~ **DONE (2026-07-04,
   en-US):** the full D9 token set is live — **D9a** subject-pronoun (`[we're]`/`[we've]`/`[we'll]`/
   `[we'd]` + referent siblings `[they're]`/…, spelling out for a `viewpoint_named` third person:

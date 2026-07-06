@@ -259,11 +259,12 @@ html, body {
 
 /* Inline so it flows directly after the prompt text on the same line; a generous
    fixed width keeps long commands on one line (the field scrolls horizontally
-   past it). */
+   past it). The max-width reserves room for the "> " prompt span, so on narrow
+   (mobile) viewports the field shrinks instead of wrapping below the prompt. */
 #input-line {
     display: inline-block;
     width: 40ch;
-    max-width: 100%;
+    max-width: calc(100% - 3ch);
     background: transparent;
     border: none;
     color: var(--accent);
