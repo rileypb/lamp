@@ -46,6 +46,9 @@ function parseTokens(tokens, filePath, globalNames = new Set(), functionNames = 
 // renders as "foo". The `[']` form (handled in splitTemplate) forces a literal
 // apostrophe where this rule would otherwise convert. This is an English-prose
 // convention; a future locale pass could own it. See devdocs/text.md A5.
+// The word test includes accented Latin letters — French elisions sit against
+// them constantly ("d'évident"), and an ASCII-only class silently turned those
+// apostrophes into quotes.
 function applyQuoteConvention(run) {
     if (run.indexOf("'") === -1) return run;
     let out = "";
@@ -54,8 +57,8 @@ function applyQuoteConvention(run) {
             out += run[k];
             continue;
         }
-        const wordBefore = k > 0 && /[A-Za-z0-9]/.test(run[k - 1]);
-        const wordAfter = k + 1 < run.length && /[A-Za-z0-9]/.test(run[k + 1]);
+        const wordBefore = k > 0 && /[A-Za-z0-9À-ɏ]/.test(run[k - 1]);
+        const wordAfter = k + 1 < run.length && /[A-Za-z0-9À-ɏ]/.test(run[k + 1]);
         out += wordBefore && wordAfter ? "'" : '"';
     }
     return out;

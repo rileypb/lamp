@@ -553,6 +553,18 @@ core edit is contained. Names (default): `contains`/`place`/`contained`, keyword
      compile-time completeness check for grammar — a locale missing a verb makes it untypeable
      (unlike messages, where a missing key is a compile error); is there a principled check (e.g.
      warn when a locale file covers some but not all actions that another locale file covers)?
+     **cloak_fr playthrough audit (2026-07-05):** a full French session (all verbs, dark branch,
+     both endings, save/restore/transcript cancels, mid-game + endgame restart) surfaced and fixed:
+     the A5 quote convention's word test was ASCII-only, so `"d'évident"` rendered as `d"évident`
+     (parser `applyQuoteConvention` now includes accented letters; text.md A5 updated); the French
+     porter-ambiguity trio (take_already_carrying said "Vous portez déjà cela." — identical to
+     wear_already_worn — now "Vous avez déjà cela."; drop/put_on_not_carrying likewise → "Vous
+     n'avez pas cela."); score said "0 points"/"1 points" (plural not count-driven) → rephrased
+     "Votre score est de [score]…"; the quit prompt's asymmetric RECOMMENCER gloss; and the restart
+     confirm now accepts o/oui alongside y/yes (prompt says "(O pour oui)"). **Open question
+     (localization):** yes/no vocabulary is hardcoded in startup.lamp logic (a message holds prose,
+     not a word list) — a per-locale channel for accepted replies wants a design (word-list
+     messages split on "/", or a locale native).
   **Follow-through:** demonstrate layer 1 by adding contraction overrides to Phobos's messages;
   layer 2's remaining item is elision sugar (`[l' X]`, and "je"+vowel → "j'").
 - ~~**English tokens inside `lib/fr-FR` (observed 2026-07-05).**~~ **RESOLVED (2026-07-05), in two

@@ -6,14 +6,14 @@
 # file, loaded last, can still override them). See devdocs/i18n.md.
 #
 # Top-level overrides compile in top-level scope, so substitutions reference the
-# running action through the `act` global (never a lexical `self`). Verbs are
-# spelled out — the locale pack does not conjugate French (see lib/fr-FR).
-# The "_other" variants render only for a non-player actor.
+# running action through the `act` global (never a lexical `self`). Player-directed
+# messages spell "vous" out; the "_other" variants (rendered only for a non-player
+# actor) use the conjugating verb sugar ([Le act.actor] [prendre] …, see lib/fr-FR).
 
 # --- take ---
 take_report: "Pris."
 take_report_other: "[Le act.actor] [prendre] [le act.taken]."
-take_already_carrying: "Vous portez déjà cela."
+take_already_carrying: "Vous avez déjà cela."
 take_cant_take: "Ce n'est pas quelque chose que vous pouvez prendre."
 
 # --- inventory ---
@@ -25,7 +25,7 @@ inventory_empty: "Vous ne portez rien."
 drop_first_doff: "(vous enlevez d'abord [le act.dropped])[line break]"
 drop_report: "Laissé."
 drop_report_other: "[Le act.actor] [laisser] [le act.dropped]."
-drop_not_carrying: "Vous ne portez pas cela."
+drop_not_carrying: "Vous n'avez pas cela."
 
 # --- wear ---
 wear_first_take: "(vous prenez d'abord [le act.clothing])[line break]"
@@ -53,7 +53,7 @@ go_cant: "Vous ne pouvez pas aller par là."
 put_on_first_doff: "(vous enlevez d'abord [le act.put_item])[line break]"
 put_on_report: "Vous posez [le act.put_item] sur [le act.destination]."
 put_on_report_other: "[Le act.actor] [poser] [le act.put_item] sur [le act.destination]."
-put_on_not_carrying: "Vous ne portez pas cela."
+put_on_not_carrying: "Vous n'avez pas cela."
 put_on_cant: "Vous ne pouvez rien poser là-dessus."
 
 # --- title banner, end-of-story banner, and quit prompt (startup prose) ---
@@ -63,7 +63,7 @@ put_on_cant: "Vous ne pouvez rien poser là-dessus."
 banner_by: " par "
 story_won: "*** Vous avez gagné ***[line break]"
 story_lost: "*** Vous avez perdu ***[line break]"
-quit_prompt: "Tapez RECOMMENCER, CHARGER pour reprendre une partie sauvegardée, ou QUITTER pour quitter le jeu."
+quit_prompt: "Tapez RECOMMENCER pour rejouer, CHARGER pour reprendre une partie sauvegardée, ou QUITTER pour quitter le jeu."
 
 # --- parser feedback (engine messages, routed through the message registry) ---
 parser_cant_see: "Vous ne voyez rien de tel ici."
@@ -162,14 +162,13 @@ restore_bad_format: "Cette sauvegarde est dans un format inconnu."
 # --- scoring ---
 score_up_one: "\[Votre score vient d'augmenter d'un point.\]"
 score_up_many: "\[Votre score vient d'augmenter de [points_awarded] points.\]"
-score_report: "Vous avez obtenu [score] points sur [max_score] possibles."
-score_report_nomax: "Vous avez obtenu [score] points."
+score_report: "Votre score est de [score] sur un maximum de [max_score]."
+score_report_nomax: "Votre score est de [score]."
 
 # --- restart ---
-# The confirm keeps Y: startup.lamp accepts "y"/"yes", not locale-specific letters.
 restart_unavailable: "Le redémarrage n'est pas disponible pour le moment."
 restart_declined: "D'accord."
-restart_confirm: "Voulez-vous recommencer ? (Y est affirmatif) : "
+restart_confirm: "Voulez-vous recommencer ? (O pour oui) : "
 banner_version: "Version "
 
 # --- transcript ---

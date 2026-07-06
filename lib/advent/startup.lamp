@@ -36,9 +36,16 @@ do restart:
 # "type RESTART, RESTORE, or QUIT" prompt there.
 function bool confirm_restart():
 	let reply = to_lower(prompt(message restart_confirm))  # "Do you wish to restart? (Y is affirmative): "
+	# The affirmative words are accepted across locales (y/yes English, o/oui French)
+	# rather than locale-owned: a message holds prose, not a word list, so there is no
+	# clean per-locale channel for accepted replies yet (open question in TODO.md).
 	if reply == "y":
 		return true
 	if reply == "yes":
+		return true
+	if reply == "o":
+		return true
+	if reply == "oui":
 		return true
 	return false
 

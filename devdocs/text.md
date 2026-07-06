@@ -107,6 +107,9 @@ gap is **flagged as a new primitive**.
   conventions (`[']`, smart-quote substitution). Lamp may not need the apostrophe
   rule but should decide on smart vs. straight quotes.
   - use quote rules exactly as Inform does. i.e., `print "'fo[']o'"` prints `"fo'o"`.
+  - the "flanked by word characters" test includes accented Latin letters (fixed
+    2026-07-05): French elisions sit against them constantly — `"d'évident"` was
+    silently rendered as `d"évident` when the class was ASCII-only.
 
 ## B. Naming values & objects (`WI 5.3`, `WI 5.5`)
 
