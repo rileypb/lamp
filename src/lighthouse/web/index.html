@@ -2,7 +2,10 @@
 <html lang="en">
 <head>
     <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <!-- interactive-widget: the virtual keyboard shrinks the layout viewport
+         (Android Chrome 108+), keeping the transcript tail above it. iOS ignores
+         this; shell.js compensates by tracking the visual viewport. -->
+    <meta name="viewport" content="width=device-width, initial-scale=1, interactive-widget=resizes-content">
     <title>Lamp Game</title>
     <link rel="stylesheet" href="./shell.css">
     <script>

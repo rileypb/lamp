@@ -495,6 +495,17 @@ core edit is contained. Names (default): `contains`/`place`/`contained`, keyword
 **Where:** `src/lantern/{tokenizer,parser_rd,emitter,checker}.js`, `src/lamplighter/index.js`, `lib/advent/*`, `devdocs/{relations,world-model}.md`.
 
 ## Smaller / opportunistic
+- **Mobile: virtual keyboard covers new output after Enter (fix shipped 2026-07-06,
+  awaiting on-device verification).** On real mobile (not desktop emulation) the keyboard
+  overlays the page without shrinking the layout viewport, so `#screen { height: 100% }`
+  leaves the transcript tail behind it; the browser's pan-to-focused-field snaps away when
+  Enter disables the input, hiding the new turn's text. Fix: viewport meta gains
+  `interactive-widget=resizes-content` (Android Chrome shrinks the layout viewport), and
+  `shell.js` tracks `window.visualViewport` for iOS — `#screen` is sized to the visual
+  height and translated to the visible region while the keyboard is up; scroll re-pins to
+  bottom only if it was already there (never yanks scrollback reading), and pinch-zoom is
+  exempt. Not reproducible headlessly — verify on a phone: type a command with the
+  keyboard up, the response must appear above the keyboard.
 - ~~**Mobile: input field wraps below the `>` prompt.**~~ **DONE (2026-07-06):**
   `#input-line` (an inline-block, `width: 40ch`) had `max-width: 100%`, which caps at the
   full transcript width — not the space remaining after the inline `> ` prompt span — so

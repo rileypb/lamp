@@ -90,6 +90,36 @@
         transcript.scrollTop = transcript.scrollHeight;
     }
 
+    // Mobile virtual keyboard: iOS (and Androids ignoring the interactive-widget
+    // viewport hint) overlays the keyboard without shrinking the layout viewport,
+    // so the transcript tail — newest output, prompt, input — sits behind it, and
+    // the browser's own pan to the focused field snaps away on blur (Enter disables
+    // the input). Compensate by pinning #screen to the visual viewport: size it to
+    // the visible height and translate it to the visible region, so the transcript's
+    // scroll bottom lands above the keyboard. Re-pin the scroll only if it was
+    // already at the bottom — a resize must not yank a player reading scrollback
+    // (same rule as the transcript click handler). Skipped while pinch-zoomed:
+    // offsetTop then reflects the player's panning, not the keyboard.
+    const screenEl = document.getElementById("screen");
+    if (window.visualViewport) {
+        const vv = window.visualViewport;
+        const syncToVisualViewport = () => {
+            const wasAtBottom =
+                transcript.scrollTop + transcript.clientHeight >= transcript.scrollHeight - 2;
+            const layoutHeight = document.documentElement.clientHeight;
+            if (vv.scale > 1.01 || layoutHeight - vv.height < 1) {
+                screenEl.style.height = "";
+                screenEl.style.transform = "";
+            } else {
+                screenEl.style.height = `${vv.height}px`;
+                screenEl.style.transform = `translateY(${vv.offsetTop}px)`;
+            }
+            if (wasAtBottom && !paged) scrollToBottom();
+        };
+        vv.addEventListener("resize", syncToVisualViewport);
+        vv.addEventListener("scroll", syncToVisualViewport);
+    }
+
     // Show the [more] bar and scroll so the first unseen page sits at the top of the
     // viewport. Showing the bar shrinks the scroll area, so read the viewport after.
     function enterPaged() {
