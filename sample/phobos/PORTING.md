@@ -5,6 +5,10 @@ top-down from `story.ni`, then the Philip Riley extensions. Records what is
 ported, what is **blocked** by a missing Lamp/advent feature (so we can revisit),
 and **open questions** for the author.
 
+> **This port is a frozen 1:1 fidelity artifact.** Lamp-native enhancements
+> beyond the I7 original (text windows, etc.) go in the **Phobos EX** copy at
+> `sample/phobos_ex/` (see its README) — never here.
+
 I7 sources:
 - Story shell: `Phobos.inform/Source/story.ni`
 - Extensions: `Phobos.materials/Extensions/Philip Riley/*.i7x` (third-party

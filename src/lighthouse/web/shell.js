@@ -338,6 +338,13 @@
         pane.titleEl.textContent = sideways ? msg.title || "" : "";
         pane.titleEl.hidden = !(sideways && msg.title);
         pane.el.setAttribute("aria-label", msg.title || msg.id);
+        // Widen the play area while any side pane is visible, so the pane extends
+        // the layout instead of eating the transcript's width (see shell.css).
+        let anySide = false;
+        for (const p of panes.values()) {
+            if (!p.el.hidden && p.el.classList.contains("pane-side") && p.el.parentElement) anySide = true;
+        }
+        screenEl.classList.toggle("has-side-panes", anySide);
     }
 
     function applyWindowUpdate(msg) {

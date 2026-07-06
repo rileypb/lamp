@@ -1,0 +1,117 @@
+lib advent
+
+# Custom TAKE and ATTACK refusals (Phobos Polish.i7x — Table of Frustrated Taking + Table of
+# Attacking). The I7 originals key the per-object messages off tables; the port mirrors them as the
+# `take_refusal` / `attack_refusal` fields on `physical` (advent), set here by reopening each object
+# so all the refusal flavour lives in one place. Objects not yet ported (suit light, reset button,
+# the in-prose signs, sleeping pods, handprint scanners, counters/tile, the PA System) carry their
+# refusals when they land. The push/pull "move message" column is deferred (lower value; conflicts
+# with the levers' own PULL rules).
+#
+# Powered ATTACK is mostly identical to unpowered, so one `attack_refusal` field suffices; the lone
+# ported exception (the Moon Sled, which the suit-powered Galaxy "would rather not damage") gets a
+# small powered-only rule at the end. Doors take the powered smash (suit.lamp), so their entries are
+# the *unpowered* lines only.
+
+# --- Starting gear & tools ---------------------------------------------------
+person yourself:
+	attack_refusal "Why would Galaxy beat herself up?"
+item galaxy_suit:
+	attack_refusal "Galaxy Jones is not going to attack her own suit."
+item chocolate_bar:
+	attack_refusal "Chocolate is a delicious treat, not something to be attacked."
+item KIM:
+	attack_refusal "The KIM is a valuable piece of equipment, not something to destroy arbitrarily."
+item cyberhelmet:
+	attack_refusal "The Cyberhelmet is a valuable piece of equipment, not something to destroy arbitrarily."
+item cybercarapace:
+	attack_refusal "That looks like a valuable piece of equipment, not something to destroy arbitrarily."
+
+# --- The Moon Sled (Passage End) ---------------------------------------------
+item moon_sled:
+	attack_refusal "Galaxy Jones pounds pointlessly on the moonsled's hull."
+
+# (Door refusals are set inline in base.lamp — reopening a `door` here would trip the
+# "exactly two sides" consistency check.)
+
+# --- Containers --------------------------------------------------------------
+box cabinet:
+	take_refusal "The cabinet is firmly attached to the wall."
+box locker:
+	take_refusal "The locker is too bulky and unwieldy to take."
+	attack_refusal "Galaxy pounds uselessly on the locker."
+
+# --- Documents ---------------------------------------------------------------
+item form:
+	attack_refusal "Galaxy should probably read the form instead -- or maybe scan it?"
+
+# --- Reactor Room fixtures ---------------------------------------------------
+item reactor_control_board:
+	take_refusal "The reactor control board is firmly attached to the wall."
+	attack_refusal "No! Galaxy might need that later!"
+item left_reactor_arming_lever:
+	take_refusal "The left reactor arming lever is firmly attached to the wall."
+	attack_refusal "Why would Galaxy attack a poor, defenseless lever?"
+item right_reactor_arming_lever:
+	take_refusal "The right reactor arming lever is firmly attached to the wall."
+	attack_refusal "Why would Galaxy attack a poor, defenseless lever?"
+item reactor_arming_levers:
+	take_refusal "The reactor arming levers are firmly attached to the wall."
+	attack_refusal "Why would Galaxy attack poor, defenseless levers?"
+
+# --- Control Room fixtures ---------------------------------------------------
+item central_control_panel:
+	take_refusal "The control panel is firmly attached to the wall."
+	attack_refusal "That seems like it could be counterproductive."
+item screens:
+	take_refusal "The screens are firmly attached to the wall."
+	attack_refusal "There's no point in destroying something useful."
+item control_room_chair:
+	take_refusal "The chair is firmly attached to the floor."
+	attack_refusal "Galaxy is not one to attack chairs."
+item buttons:
+	attack_refusal "Attack buttons? What a silly idea!"
+item launch_button:
+	attack_refusal "Why not press it instead?"
+item self_destruct_button:
+	attack_refusal "Why not press it instead?"
+
+# --- Flight Deck / ship ------------------------------------------------------
+item static_force_field:
+	take_refusal "Galaxy can't take a force field!"
+	attack_refusal "Galaxy can't attack a force field!"
+item stickney_crater:
+	take_refusal "Not a chance."
+	attack_refusal "As if that were possible."
+item mars:
+	take_refusal "Not a chance."
+item siriusian_ship:
+	take_refusal "That's much too big to take."
+	attack_refusal "Galaxy isn't going to attack her means of escape."
+item pilots_seat:
+	take_refusal "The pilot's seat is firmly attached to the floor."
+item ship_control_panel:
+	take_refusal "The control panel is firmly fixed in place."
+
+# --- Backdrops ---------------------------------------------------------------
+backdrop walls:
+	take_refusal "Galaxy Jones can't take the walls!"
+	attack_refusal "Galaxy Jones is not going to attack the walls."
+backdrop floor:
+	take_refusal "Galaxy Jones can't take the floor!"
+	attack_refusal "Galaxy Jones is not going to attack the floor."
+backdrop ceiling:
+	# Indoors only; the outdoors "sky" take is the more-specific `instead take` in backdrops.lamp
+	# ("[We] can't take the sky.", matching Ceilings.i7x's block-taking-the-sky rule).
+	take_refusal "Galaxy Jones can't take the ceiling!"
+	attack_refusal "Galaxy Jones is not going to attack the ceiling."
+
+# --- The fallen guard --------------------------------------------------------
+item dead_guard:
+	attack_refusal "Let the poor thing rest in peace."
+
+# Powered ATTACK on the Moon Sled differs (she won't damage her own ship); everything else's powered
+# message matches its unpowered one, so the `attack_refusal` field covers them.
+instead attack when self.target == moon_sled and powered_up:
+	print "Galaxy would rather not damage her ship."
+	stop failed

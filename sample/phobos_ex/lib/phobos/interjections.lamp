@@ -1,0 +1,67 @@
+lib advent
+
+# The guard's random interjections (Guard.i7x "Volume - Interjections"). While Galaxy is in the
+# control room with the guard during the disguised meeting — before the alliance — the guard tosses
+# out the occasional unprompted aside on a quiet turn. Each of the seven is spoken at most once.
+#
+# `no_interjection_this_turn` is set by `g_say` (guard.lamp) whenever the guard speaks for any other
+# reason (greeting, gift reactions, ask/tell/say replies), so an interjection is never piled on top
+# of a line the guard already said this turn. It is cleared at the end of every turn below.
+#
+# Like the PA broadcasts: a release build shuffles the order at startup and rolls a 1-in-3 chance per
+# eligible turn; a debug build removes both (natural order, exactly every 3rd eligible turn) for a
+# deterministic transcript. (In the test walkthrough the guard speaks every meeting turn, so none
+# fire and the golden is untouched; verified by hand.)
+
+global bool no_interjection_this_turn = false
+global list<int> interj_order = none
+global int interj_next = 0
+global int interj_tick = 0
+
+rule startup_rules:
+	interj_order = [0, 1, 2, 3, 4, 5, 6]
+	if not debug_mode:
+		shuffle(interj_order)
+
+# The seven interjections (verbatim from the Table of Interjections): English narration + the
+# guard's Siriusian aside (via g_say, so it is scan-aware like all guard speech).
+function void interjection(int i):
+	if i == 0:
+		print "The guard sighs."
+		g_say("It's such a drag living on the base.")
+	if i == 1:
+		print "The guard brightens up."
+		g_say("At least we're almost done with the mission. Soon we can go home.")
+	if i == 2:
+		print "The guard says to Galaxy,"
+		g_say("!NB563FFAA, I can't overstate the importance of good Cyberhelmet maintenance. You should really get yours checked out.")
+	if i == 3:
+		print "The guard says,"
+		g_say("I'm sure you, like everyone else on the base, think I'm a bit crazy. But it's not crazy to think about what's right and wrong, is it?")
+	if i == 4:
+		print "The guard says to Galaxy,"
+		g_say("If you learned there was even one good human, would you change your mind about our mission?")
+	if i == 5:
+		print "The guard stares off into the distance."
+		g_say("Do you know how many people live on Mars? It's a lot. A real big lot.")
+	if i == 6:
+		print "The guard looks apprehensive."
+		g_say("How many people do you think the Humans will kill on Sirius if we destroy Mars? I don't know, but I bet it's a lot. Like, more than you can count.")
+
+# On a quiet turn during the meeting (disguised, guard present, not yet allied), maybe air the next
+# unspoken interjection. The flag is always cleared afterward, so it is fresh each turn.
+rule every_turn_rules:
+	if met_guard and not guard_allied and holder(player) == Control_Room and holder(guard) == Control_Room and not no_interjection_this_turn and interj_next < 7:
+		interj_tick = interj_tick + 1
+		let fire = false
+		if debug_mode:
+			if interj_tick mod 3 == 0:
+				fire = true
+		else:
+			if random(3) == 0:
+				fire = true
+		if fire:
+			print "[par]"
+			interjection(interj_order[interj_next])
+			interj_next = interj_next + 1
+	no_interjection_this_turn = false

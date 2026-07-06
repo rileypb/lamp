@@ -487,13 +487,22 @@ priority ascending toward each edge, pane-aware `gameTop`/`viewH` + `[more]` mat
 a terminal mirror of the web's line layout (fills/align/SGR styles); CLI worker reads
 capabilities off `workerData` from the chosen backend (TUI: top/bottom; plain: none,
 explicit no-ops). Seven new TUI unit tests; all suites green, goldens byte-invariant.
-Live terminal rendering stays a manual check, like the rest of the TUI; (4) first
-consumers — a test fixture + **Phobos EX** (`sample/phobos_ex/`, a copy so the original
-stays byte-identical to the I7 port) with a mission-status pane. Follow-ups: re-express
-the status line as a 1-row window, then freestyle windows (boundary-sketched in the
-doc, spec'd separately). **Where:** `src/lighthouse/web/`,
+Live terminal rendering stays a manual check, like the rest of the TUI; ~~(4) first
+consumers~~ **(4) DONE (2026-07-06):** **Phobos EX** (`sample/phobos_ex/` + README; game
+object `Phobos_EX` so builds/saves never collide) adds `lib/phobos/windows.lamp` — the
+mission-status pane (score/rank/scans splits + doom-clock once indoors, Siriusian digits
+vs Cyberhelmet numerals), right-docked on the web, re-docked to a 4-row top pane at
+startup when only top/bottom exist (the TUI set), absent on windowless hosts where SCORE
+stays authoritative. Golden `phobos_ex` runs the full `test endgame` walkthrough
+(byte-identical to phobos's transcript except the banner title — the pane adds zero
+plain-host output); lighthouse e2e drives the built EX bundle under both capability sets.
+The original `sample/phobos/` is untouched. **Text windows v1 is COMPLETE (steps 1–4).**
+Follow-ups: re-express the status line as a 1-row window (then retire the `status`
+message); a manual browser + terminal pass on the actual painting (web: run a build with
+phobos_ex; TUI: `npm run play` on the EX build); freestyle windows (boundary-sketched in
+the doc, spec'd separately). **Where:** `src/lighthouse/web/`,
 `src/lamplighter/sandbox/{worker,worker-browser}.js` + `backends/`, `lib/sys`,
-`lib/advent`.
+`lib/advent`, `sample/phobos_ex/`.
 
 ## Active (design decided 2026-06-25)
 

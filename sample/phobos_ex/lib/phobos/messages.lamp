@@ -1,0 +1,16 @@
+# Library-message overrides (Polish.i7x "Volume 1 - Some Better Responses"). advent's defaults are
+# second-person ("You…"); Phobos narrates in the third person, so these are re-themed to match.
+
+# "can't drop what's already dropped" → drop something Galaxy isn't holding. (I7's "[We] [don't] have
+# that." renders "Galaxy doesn't have that."; the negative contraction isn't an adaptive form here, and
+# the protagonist is fixed, so the rendered third-person text is written directly.)
+drop_not_carrying: "Galaxy doesn't have that."
+
+# Parser "no such thing" — referring to something that isn't here.
+parser_cant_see: "There is nothing there."
+
+# Third-person re-themes of advent's contracted second-person refusals (the non-contracted "[We]"
+# defaults already adapt to the viewpoint; these don't, lacking an adaptive be-contraction form).
+take_already_carrying: "Galaxy is already carrying that."
+wear_already_worn: "Galaxy is already wearing that."
+doff_not_worn: "Galaxy isn't wearing that."

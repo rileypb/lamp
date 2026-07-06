@@ -234,6 +234,55 @@ try {
             fs.rmSync(winOut, { recursive: true, force: true });
         }
     });
+
+    // Phobos EX (the first real windows consumer, devdocs/text-windows.md step 4):
+    // the mission-status pane docks right on a four-dock host, and its startup rule
+    // re-docks it to a 4-row top pane when only top/bottom are available (the TUI's
+    // capability set) — the capability-handshake + mutable-arrangement path, driven
+    // end-to-end through a real built bundle.
+    await test("phobos_ex mission panel: right dock on the web set, top-dock fallback on the TUI set", async () => {
+        const exOut = fs.mkdtempSync(path.join(os.tmpdir(), "lamp-lighthouse-ex-"));
+        try {
+            buildWeb(path.join(__dirname, "..", "..", "sample", "phobos_ex", "phobos_ex.lamp"), exOut, { minify: false });
+
+            const web = await driveBundle(exOut, ["quit"], { timeoutMs: 60000 });
+            const webSet = web.windowMessages.find((m) => m.type === "window_set" && m.id === "mission panel");
+            assert.ok(webSet, "mission panel window_set missing");
+            assert.strictEqual(webSet.dock, "right", "four-dock host keeps the right dock");
+            assert.strictEqual(webSet.size, 26);
+            assert.strictEqual(webSet.title, "Mission");
+            const upd = web.windowMessages.find((m) => m.type === "window_update" && m.id === "mission panel" && m.lines.length);
+            assert.ok(upd, "mission panel content missing");
+            assert.deepStrictEqual(upd.lines[0], [{ text: "Galaxy Jones", styles: ["bold"] }]);
+            assert.deepStrictEqual(upd.lines[1], [{ text: "-", fill: true }]);
+            assert.strictEqual(upd.lines[2][0].text, "Score", "score split line present");
+            assert.ok(upd.lines.some((l) => l[0] && l[0].text === "Rank"), "rank line present");
+            assert.ok(!upd.lines.some((l) => l[0] && l[0].text === "Countdown"),
+                "no countdown line at Passage End (Galaxy hasn't heard the PA yet)");
+
+            const tui = await driveBundle(exOut, ["quit"], {
+                timeoutMs: 60000,
+                capabilities: { windows: { docks: ["top", "bottom"] } },
+            });
+            const tuiSet = tui.windowMessages.find((m) => m.type === "window_set" && m.id === "mission panel");
+            assert.ok(tuiSet, "mission panel window_set missing on the TUI set");
+            assert.strictEqual(tuiSet.dock, "top", "startup rule re-docks to top when right is unavailable");
+            assert.strictEqual(tuiSet.size, 3, "top-dock fallback shrinks to 3 rows");
+            // The refresh composes a compact layout for the row-precious top dock:
+            // two fields per row, no rule, everything within the reserved rows.
+            const tuiUpd = tui.windowMessages.find((m) => m.type === "window_update" && m.id === "mission panel" && m.lines.length);
+            assert.ok(tuiUpd, "mission panel content missing on the TUI set");
+            assert.ok(tuiUpd.lines.length <= tuiSet.size, "compact layout fits the reserved rows");
+            assert.deepStrictEqual(tuiUpd.lines[0][0], { text: "Galaxy Jones", styles: ["bold"] },
+                "compact first row leads with the bold header");
+            assert.ok(tuiUpd.lines[0].some((r) => r.text && r.text.startsWith("Score")),
+                "compact first row carries the score");
+            assert.ok(tuiUpd.lines[1].some((r) => r.text && r.text.startsWith("Scans")),
+                "compact second row carries the scans (previously clipped on the TUI)");
+        } finally {
+            fs.rmSync(exOut, { recursive: true, force: true });
+        }
+    });
 } finally {
     fs.rmSync(outDir, { recursive: true, force: true });
     fs.rmSync(minOutDir, { recursive: true, force: true });

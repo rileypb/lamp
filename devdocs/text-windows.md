@@ -1,8 +1,11 @@
 # Text Windows — design brainstorm & candidate spec
 
-> Status: **axes decided 2026-07-06; steps 1–3 built** — runtime + Lamp surface,
-> the web shell renders panes on all four docks, and the CLI TUI renders
-> top/bottom panes (step 4, the first real consumers, pending).
+> Status: **axes decided 2026-07-06; all four build steps done.** Runtime +
+> Lamp surface, the web shell renders panes on all four docks, the CLI TUI
+> renders top/bottom panes, and the first real consumers exist (the `windows1`
+> golden + **Phobos EX**'s mission-status pane). Remaining follow-ups: the
+> status-line re-expression, and a manual browser/terminal pass on the actual
+> painting.
 > The brainstorm sections that follow record the options considered; the
 > "Candidate spec" section at the end states the chosen shape. This
 > generalizes the status line (devdocs/windows.md) into real *text windows* on
@@ -417,6 +420,28 @@ recommended, except the last, which adds the Phobos-EX twist):
 > TUI unit tests cover reservation geometry, priority order, fill/split/style
 > rendering, hide/re-show, ignored side docks, and pane-aware pagination.
 > Live terminal rendering stays a manual check, like the rest of the TUI.
+>
+> **Step 4 is built (2026-07-06):** **Phobos EX** (`sample/phobos_ex/`, see its
+> README) — a copy of Phobos (game object `Phobos_EX`, so builds/saves never
+> collide) whose `lib/phobos/windows.lamp` adds the mission-status pane:
+> score/rank/scan-progress split lines under a bold header + rule, and the
+> doom-clock once Galaxy is indoors (Siriusian digits; plain numerals with the
+> Cyberhelmet — the pane mirrors exactly what the PA announcements tell her).
+> It exercises the capability handshake + mutable arrangement for real: right
+> dock on a four-dock host, re-docked at startup to a 3-row top pane when only
+> top/bottom exist (the TUI), and never rendered on a windowless host, where
+> the SCORE verb stays authoritative. The refresh rule composes
+> **dock-aware**: the roomy right dock gets header + rule + one field per row;
+> the row-precious top dock gets a compact two-fields-per-row layout with no
+> rule, so nothing is clipped by the reservation (found in the first manual
+> TUI pass, where the 4-row vertical layout clipped Scans and the doom-clock).
+> Content reading the pane's own `dock`/fields is the intended pattern —
+> arrangement is ordinary world state. The full `test endgame` walkthrough is
+> golden `phobos_ex` — byte-identical to the original Phobos transcript except
+> the banner title, proving the pane machinery adds zero plain-host output —
+> and the lighthouse e2e drives the built EX bundle under both the web and
+> TUI capability sets (`driveBundle` now takes a `capabilities` override).
+> The original `sample/phobos/` is untouched.
 
 ### The `window` type (lib/sys)
 

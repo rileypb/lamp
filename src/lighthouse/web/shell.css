@@ -32,6 +32,11 @@ html, body {
     margin: 0 auto;
     padding: 1rem;
 }
+/* With a visible side pane (shell.js toggles the class), widen the play area so
+   the pane extends the layout instead of eating the transcript's 80ch. */
+#screen.has-side-panes {
+    max-width: 118ch;
+}
 
 /* Text-window layout (devdocs/text-windows.md): top panes / a middle row of
    left panes + transcript + right panes / bottom panes. Empty containers (and
@@ -51,13 +56,24 @@ html, body {
     display: flex;
     flex-direction: column-reverse;
 }
+/* Side-dock containers are fixed-size flanks: flex 0 0 auto so the transcript
+   (min-width: 0) absorbs any squeeze, clamped to 45% of the row so a huge
+   declared pane never crushes the transcript below half. The clamp must live
+   HERE, not on .pane — a percentage max-width on the pane would resolve
+   against this auto-sized container (circular) and crush the pane itself. */
 #win-left {
     display: flex;
     flex-direction: row;
+    flex: 0 0 auto;
+    max-width: 45%;
+    overflow: hidden;
 }
 #win-right {
     display: flex;
     flex-direction: row-reverse;
+    flex: 0 0 auto;
+    max-width: 45%;
+    overflow: hidden;
 }
 
 #transcript {
@@ -99,11 +115,9 @@ html, body {
 #win-right .pane {
     margin-left: 0.75rem;
 }
-/* The host may clamp a declared size (spec: layout is the host's): side panes
-   never crush the transcript below ~half the screen. */
-.pane-side {
-    max-width: 45%;
-}
+/* .pane-side is a JS hook (title header, has-side-panes tracking); the width
+   clamp lives on the dock containers above, where percentages resolve against
+   the definite #main-row width. */
 
 .pane-title {
     color: var(--dim);

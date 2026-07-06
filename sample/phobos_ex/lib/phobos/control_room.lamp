@@ -1,0 +1,76 @@
+lib advent
+
+# Control Room button behaviour (Guard.i7x "Book - Control Room"). The two big buttons drive the
+# endgame. PUSH is advent's generic item verb (lib/advent/actions.lamp); these `instead push` rules
+# give the launch and self-destruct buttons their responses.
+#
+# Guard-present overrides come FIRST (so they win by source order): while the guard is in the
+# control room and not yet allied — i.e. during the disguised meeting — reaching for either button
+# blows Galaxy's cover and she's shot as a spy (guard_spy_death, in guard_persuasion.lamp). Once the
+# guard has left to lead the arming (or died), these fall through to the no-guard behaviour below.
+
+# Set once the self-destruct button is pushed (the control-room half of the sequence). The
+# guard-led reactor lever arming (guard_endgame.lamp) then sets `self_destruct_in_progress`
+# (countdown.lamp), which the doom-clock reads to switch the zero ending from loss to the heroic win.
+global bool self_destruct_pushed = false
+
+# The ending-specific final banner. When non-empty, end_story_rules (phobos.lamp) prints it
+# instead of the generic win/lose line — the Lamp analogue of I7's `end the story saying "…"`.
+# (Reused by the Guard's death endings later.)
+global string ending_override = ""
+
+# Guard-present spy-death overrides (Guard.i7x). More specific than the no-guard rules below and
+# declared first, so they fire while the guard is present and unallied; otherwise they bow out.
+instead push when self.target == launch_button and holder(guard) == Control_Room and not guard_allied:
+	print "As Galaxy reaches for the launch button, the Siriusian guard looks at her with sudden suspicion and shouts,"
+	guard_spy_death()
+	stop succeeded
+instead push when self.target == self_destruct_button and holder(guard) == Control_Room and not guard_allied:
+	print "As Galaxy reaches for the self-destruct button, the Siriusian guard looks at her with sudden suspicion and shouts,"
+	guard_spy_death()
+	stop succeeded
+
+# Pushing the green Launch button fires the thruster — an immediate loss (Galaxy destroys Mars
+# herself, the worst ending).
+instead push when self.target == launch_button:
+	print "Galaxy Jones presses the large green button marked '[siriusian(\"Launch\")]'. The control panel lights up, and a voice says,"
+	g_say("Launch sequence initiated. Thank you for your cooperation in the destruction of Mars.")
+	print "[par]Galaxy watches the screens in horror as the vast mass of Phobos begins to move, slowly at first, but then picking up speed. The base shakes as the asteroid begins to accelerate. The screens show the surface of Mars growing larger and larger, until it fills the entire screen. Galaxy Jones feels absolutely terrible that she has just destroyed an entire planet, but there is nothing she can do about it now."
+	ending_override = "Galaxy Jones has destroyed Mars."
+	story = lost
+	stop succeeded
+
+# Pushing the red Self-Destruct button starts the sequence — but the reactor's arming levers
+# must still be engaged (the guard-led arming, guard_endgame.lamp), so this only arms the
+# control-room half. Pushing it again just reports it is already running.
+instead push when self.target == self_destruct_button:
+	if self_destruct_pushed:
+		print "The self-destruct sequence has already been initiated."
+		stop succeeded
+	print "Galaxy Jones presses the large red button marked '[siriusian(\"Self-Destruct\")]'. The control panel lights up, and a voice says,"
+	g_say("Self-Destruct sequence initiated. We would like to take a moment here to say just how sorry we are that the mission to destroy Mars seems to have ended in abject failure. Your names shall live in ignominy forevermore.")
+	print "A red light begins to flash on the control panel, and a voice says,"
+	g_say("To initiate the self-destruct sequence, the arming levers on the base reactor must be engaged.")
+	print "The message is repeated on the screen."
+	self_destruct_pushed = true
+	stop succeeded
+
+# --- Reactor arming levers (Base.i7x "Book - Reactor Room", no-guard variants) ----------------
+# The self-destruct's confirmation half. Arming requires *two* people pulling the levers at once,
+# so Galaxy alone can't do it: a single lever springs back, and grabbing for both is hopeless.
+# The actual arming — the Siriusian guard pulls the left lever and holds it, Galaxy pulls the
+# right, setting `self_destruct_in_progress` (countdown.lamp) and so the heroic win — is
+# guard-driven (Guard.i7x): the guard pulls the left lever and holds it, Galaxy pulls the right
+# (see guard_endgame.lamp). These are the "guard not present" fallbacks, so they bow out once the
+# guard is in the reactor leading the arming.
+instead pull when self.target == left_reactor_arming_lever and not (holder(guard) == Reactor_Room):
+	print "Galaxy pulls the lever. It springs back to its original position. Nothing else happens."
+	stop succeeded
+
+instead pull when self.target == right_reactor_arming_lever and not (holder(guard) == Reactor_Room):
+	print "Galaxy pulls the lever. It springs back to its original position. Nothing else happens."
+	stop succeeded
+
+instead pull when self.target == reactor_arming_levers:
+	print "The levers are too far apart for one person to pull at once."
+	stop succeeded

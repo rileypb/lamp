@@ -1,0 +1,60 @@
+lib advent
+
+# The Cyberhelmet and Cybercarapace (ported from Cyborg.i7x): the two pieces of Siriusian
+# cyborg gear that, worn together, disguise Galaxy as a cyborg. This first slice ports them
+# as wearables with their wear messages and the "disguised" completion. The disguise's
+# payoff — the purple-door visual-identity gate and the guard interactions — ported with the
+# purple door / endgame. The Cyberhelmet's number-translation (the doom-clock count reads in
+# plain numerals while it is worn) is wired in countdown.lamp.
+
+item cyberhelmet:
+	printed_name "Cyberhelmet"
+	understand "silver/helmet"
+	wearable
+	feels "The Cyberhelmet's durable polymer shell feels smooth to the touch, and the interior padding is soft and comfortable."
+	description "The Cyberhelmet is a silver helmet that looks just about the right size for Galaxy."
+
+item cybercarapace:
+	printed_name "Cybercarapace"
+	understand "armor/carapace"
+	wearable
+	feels "The Cybercarapace's durable polymer shell feels smooth to the touch, and the interior padding is soft and comfortable."
+	initial_appearance "The sole remaining piece of equipment is a Cybercarapace."
+	description "The Cybercarapace is a piece of armor worn by Siriusian cyborgs on their torso and legs. Combined with the Cyberhelmet, it completes the transformation of the organic protocyborg into a full-fledged cyborg. This one is labeled '[siriusian(\"Cybercarapace Serial Number $NB563FFAA\")]'."
+
+# The Cyberhelmet sits in the North Barracks cabinet (OPEN it to reveal the helmet); the
+# Cybercarapace is loose in the armory, behind the red door.
+contains cabinet cyberhelmet
+contains armory cybercarapace
+
+# Wearing either piece prints its own message and, once the pair is complete, the disguise
+# line — mirroring Cyborg.i7x's After/last-report rules. An `after` rule runs before the
+# report band and `stop`s it, so it replaces advent's default "You put on …" report (which
+# is also second-person — wrong for Phobos). At this point `do wear` has already asserted
+# the `wears` relation, so the other-piece check reflects the just-completed outfit.
+after wear when self.clothing == cyberhelmet:
+	print "Upon putting on the Cyberhelmet, Galaxy feels her mind expand. Something about her hearing is different than before."
+	if wears player cybercarapace:
+		print "[line break]She is now disguised as a Siriusian cyborg."
+	stop succeeded
+
+after wear when self.clothing == cybercarapace:
+	print "Galaxy puts on the Cybercarapace."
+	if wears player cyberhelmet:
+		print "[line break]She is now disguised as a Siriusian cyborg."
+	stop succeeded
+
+# Examine-self varies with the disguise (GJ Basics.i7x): undisguised shows her own description;
+# half-disguised she "looks a bit silly"; fully disguised she passes as a Siriusian cyborg.
+instead examine when self.target == player:
+	if not (wears player cyberhelmet) and not (wears player cybercarapace):
+		print "[player.description]"
+	else:
+		if not (wears player cyberhelmet):
+			print "Galaxy Jones is wearing a Cybercarapace, but the Cyberhelmet is missing. As a result, she looks a bit silly."
+		else:
+			if not (wears player cybercarapace):
+				print "Galaxy Jones is wearing a Cyberhelmet, but the Cybercarapace is missing. As a result, she looks a bit silly."
+			else:
+				print "Galaxy Jones is fully disguised as a Siriusian cyborg, with a Cyberhelmet and Cybercarapace."
+	stop succeeded

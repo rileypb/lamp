@@ -1,0 +1,412 @@
+lib advent
+
+# Third-person room-heading hooks, added to advent's `room` by reopening the type (so advent
+# stays free of presentation concerns specific to this game). Consumed by Phobos's
+# `room_heading_rules` override in phobos.lamp — `preposition` reads "in the foyer" / "on the
+# deck"; `always_indefinite` renders the name with "a"/"an" rather than "the". Rooms below set
+# them where they differ from the defaults.
+type room:
+	string preposition = "in"
+	bool always_indefinite = false
+	# Indoors/outdoors (PBR Common's room model, simplified — Phobos has no floating rooms).
+	# Drives the walls/floor/ceiling backdrops (lib/phobos/backdrops.lamp): indoors rooms have
+	# walls and a (too-high) ceiling; outdoors has neither, only open sky. All but the flight
+	# deck are indoors.
+	bool outdoors = false
+
+# Siriusian glyph cipher (a Lamp function in lib/phobos/linguistics.lamp): renders
+# English as the alien script. Used in descriptions via [siriusian("...")].
+
+room Passage_End:
+	description "South of here a maze of passages leads back to the surface. But it is north that Galaxy must go, into the heart of the base, to stop the Siriusian plot to destroy Mars. The Moon Sled is parked here, out of fuel. A heavy green door to the north is labeled '[siriusian(\"This way to the secret base\")]'. The door is [if green_door.closed]closed[else]open[end if]."
+
+# --- Rooms (Base.i7x "Volume - Rooms") -------------------------------------
+# Descriptions ported from Base.i7x. Siriusian signage uses the static cipher
+# [siriusian("…")] (always alien — same as the Passage End door label; making the
+# labels scan-aware via the translation filter is a follow-up). Door-state shows via
+# [if <door>.closed]. The signs/form/poster and the levers/buttons/control-panel are ported as
+# real objects (lib/phobos/scenery.lamp, refusals.lamp, control_room.lamp).
+
+room Southern_Spoke:
+	description "This is a nondescript hallway. An opening to the west is labeled '[siriusian(\"Storeroom\")]'. The hallway continues north and south."
+room Storeroom:
+	always_indefinite true   # I7 "a storeroom"
+	description "Apparently the previous occupants have cleared out. There is a sign on the wall that reads '[siriusian(\"Please sign out any supplies or equipment before taking them\")].'[par]The exit is to the east."
+room Hub_Junction:
+	description "Three indistinguishable corridors lead off from here. The western one is labeled '[siriusian(\"Science\")]', the southern one, '[siriusian(\"Storage\")]', and the eastern one, '[siriusian(\"Personnel\")]'. A purple door labeled '[siriusian(\"Control Room\")]' stands [if purple_door.closed]closed[else]open[end if] to the north."
+room Western_Spoke:
+	description "This is a nondescript hallway. An opening to the north is labeled '[siriusian(\"Science\")]'. The red door to the south ([if red_door.closed]closed[else]open[end if]) is labeled '[siriusian(\"Armory\")]', and the yellow door at the west end of the hallway is labeled '[siriusian(\"Reactor Room\")]'. It is [if yellow_door.closed]closed[else]open[end if]."
+room Science_Lab:
+	description "Since it's cleaned out, this identification is based purely on the antiseptic nature of the place -- white tile floor, walls, and counters. The exit is to the south."
+room Eastern_Spoke:
+	description "This is a nondescript hallway. An opening to the north is labeled '[siriusian(\"Barracks A\")]', one to the south is labeled '[siriusian(\"Barracks B\")]', and the blue door at the east end of the hallway is labeled '[siriusian(\"Commander's Quarters\")]'. It is [if blue_door.closed]closed[else]open[end if]."
+room North_Barracks:
+	description "Like most of the base, it's been cleared out, although someone left behind a poster on the wall showing some happy cyborgs. There is a cabinet against the wall next to the sleeping pods. It is [if cabinet.closed]closed[else]open[end if].[par]The exit is to the south."
+
+# Ported in full (unlike its neighbours): its description carries no Siriusian markup,
+# only door/locker-state conditionals. The locker is the locker-puzzle's container.
+room South_Barracks:
+	description "Like most of the base, it's been cleared out. By one of the sleeping pods stands what could only be a storage locker, which is [if locker.closed]closed[else]open[end if][if not locker.closed and holder(diary) == locker]. A diary is inside the locker[end if]. The exit is to the north."
+
+# A scenery container, starts closed + locked + sealed; the KIM's four-button puzzle opens
+# it (see lib/phobos/hacking.lamp), which clears `locked`. Closed, its contents (the diary)
+# are hidden from the room listing and scope. `closable` + `locked` so OPEN refuses it until
+# the hack unlocks it (no bypass), after which OPEN/CLOSE work normally.
+box locker:
+	scenery
+	closable true
+	closed true
+	locked true
+	feels "It is made of metal."
+	description "In any language, it's pretty clear that this is a container meant to hold personal effects. It is labeled '[siriusian(\"!mfk5plas\")]'. [if locker.closed]It is closed.[else]It is open.[end if]"
+
+# A textual thing (see lib/phobos/linguistics.lamp): reading it renders the content
+# through the Siriusian translation filter, alien until scanned. `/` marks a paragraph
+# break; `!` marks an always-alien proper noun (these stay alien even fully scanned);
+# `[']` forces a literal apostrophe where the quote convention would otherwise convert
+# a word-final `'`. Full diary text ported from Texts.i7x (content1 + content2).
+item diary:
+	textual true
+	scan_level 2
+	feels "It feels like a standard diary, with a hard cover and paper pages."
+	content "Phobos is bleak even for a moon. The horizon is so close it seems like you could reach out and touch it. Without an atmosphere like we have on !MyHomeworld, there is no sky, just the infinite blackness of space. The only sights to see here are the great crater that dominates the landscape, and the oppressive bulk of Mars in the sky above. /
+		!x34agclw, my commander, has tasked me with final watch, when only I stay on to watch over the base before launch. They think it is a punishment, but I don't mind. I like the quiet. I like the solitude. By myself, I can think and remember. /
+		Oh !MyHomeworld, how I miss you. The rolling red hills, the violet skies. The sweet smell of the flowers in the fields. The sound of the wind in the trees. Playing cyborg games with my friends, running through the fields, laughing and shouting, breaking my carapace and leaking oil all over the house. /
+		But when I was eight years old, the end of it all. Our star Sirius breathed out the strongest solar flare in recorded history. It was so powerful that it fried !SiriusI, !TheirVersionOfMars, and !MyHomeworld -- every settlement in the solar system -- destroying everything in a moment. The devastation was unimaginable. /
+		But what I remember most these days are the humans. Their kindness and compassion in the face of such tragedy. They barely knew us, but they came to help us rebuild. They shared their technology and their resources with us. They showed us that they were not our enemies, but our friends. /
+		Yet when I was an adult of fifteen, I found myself constrained -- even oppressed -- by those same humans. Years went by and we rebuilt with their help, but the humans always seemed to keep us from standing by ourselves. Those who had once been our saviors now seemed our masters. On !MyHomeworld, we faced years of depression, which the humans clicked their tongues at yet prolonged with their austerity policies. I was poor and rarely employed, and I saw my friends suffer the same. I was angry, and just waiting to be radicalized. So when my love !Cleopatra was killed in a protest, I was ripe for the Sirius Syndicate's recruitment pitch. They promised us a new life free from the humans['] oppression, where we could prosper and thrive. They promised us a new home, a new future, a new beginning. They promised us vengeance. /
+		So I joined the Syndicate, determined to free Sirius from the humans['] control. And when the Phobos mission was announced, I was one of the first to volunteer. I thought we would be heroes, forces of liberation, bringing freedom to our people. But when I realized our mission was to destroy Mars, I was horrified. I want to free Sirius, not to destroy humankind. /
+		I am a Siriusian cyborg, bound by oath to the Syndicate. The fact that I do not wish to destroy Mars does not mean that I absolve humankind of its sins. So I must continue to serve the Syndicate, even though I know it is wrong. /
+		But still, I hunger for a sign that there is hope for a better future. A sign that the humans are not as evil as the Syndicate claims. A sign that we can find a way to live together in peace."
+
+contains locker diary
+contains South_Barracks locker
+
+# North Barracks cabinet — a scenery container holding the Cyberhelmet (lib/phobos/
+# cyborg.lamp). Starts closed (sealing the helmet out of scope); the player OPENs it with
+# advent's OPEN verb, which reveals the helmet.
+box cabinet:
+	scenery
+	closable true
+	closed true
+	feels "The cabinet is made of cold metal, and feels smooth to the touch."
+	description "A cabinet stands against the wall, such as might hold equipment. It is [if cabinet.closed]closed[else]open[end if]."
+
+contains North_Barracks cabinet
+
+# Reached through a locked door (wired below).
+room Reactor_Room:
+	description "Unlike the rest of the rooms on the base, this one is still functioning. The actual reactor is not in this room, but beyond the far wall and its enormous control board. Two levers bookend the control board, too far apart for one person to pull at once. A yellow security door stands [if yellow_door.closed]closed[else]open[end if] to the east."
+room armory:
+	always_indefinite true   # I7 "an armory"
+	description "This is evidently where the base kept weapons and armor. A red door, [if red_door.closed]closed[else]open[end if], stands to the north."
+room Commanders_Quarters:
+	printed_name "Commander's Quarters"
+	description "Like everywhere else on the base, it is mostly cleared out. A blue door, [if blue_door.closed]closed[else]open[end if], is to the west."
+room Control_Room:
+	description "The inner sanctum of the base is dominated by a large control panel, covered with buttons, switches and screens. Two large buttons, one green and one red, stand out among the rest.[par]A chair sits in front of the control panel. A purple door stands [if purple_door.closed]closed[else]open[end if] to the south, while the door to the flight deck, [if flight_deck_door.closed]closed[else]open[end if], is to the north."
+room Flight_Deck:
+	preposition "on"         # "Galaxy is on the flight deck"
+	outdoors true            # exposed to space: no walls, no ceiling — only sky (backdrops.lamp)
+	description "The platform stands exposed to the blackness above. The expanse of Stickney Crater stretches to the north, and the immense face of Mars dominates the southern sky. A door to the south, [if flight_deck_door.closed]closed[else]open[end if], leads back to the control room."
+
+# The Moon Sled Galaxy arrived on (Base.i7x): scenery at the Passage End, out of fuel so it goes
+# nowhere — its only interactive use is FLY/DRIVE it (flight_deck.lamp), which reports the empty
+# tank. `edificial` (too massive to take).
+item moon_sled:
+	printed_name "Moon Sled"
+	scenery
+	edificial true
+	feels "Feels like polished metal and glass."
+	understand "sled/vehicle"
+	description "A small, one-person vehicle designed for fast short-range travel. It is almost undetectable, making it ideal for stealth missions. It is currently out of fuel, so it can't go anywhere."
+
+contains Passage_End moon_sled
+
+# Door-free connections.
+bidi connects Southern_Spoke west Storeroom
+bidi connects Southern_Spoke north Hub_Junction
+bidi connects Hub_Junction west Western_Spoke
+bidi connects Western_Spoke north Science_Lab
+bidi connects Hub_Junction east Eastern_Spoke
+bidi connects Eastern_Spoke north North_Barracks
+bidi connects Eastern_Spoke south South_Barracks
+
+# Doors (advent door subsystem). Reading: `<direction> <room>` = the room reached
+# by going that direction. closed (default) + locked + not lockable, matching the
+# I7 base. Each door carries its description (the handprint-scanner line, with the
+# open/closed state conditional) and feels; the scanner itself is a `part_of` object
+# (lib/phobos/scenery.lamp). Doors are opened by HACK (lib/phobos/hacking.lamp).
+door green_door:
+	description "A cyborg handprint scanner adorns the center of the door, which is [if green_door.closed]closed[else]open[end if]."
+	feels "The door is smooth cold metal."
+	take_refusal "Galaxy could probably rip the green door off its hinges if she used the Galaxy Suit, if that's what she wants to use the charges up for."
+	attack_refusal "Galaxy pounds uselessly on the green door."
+	north Southern_Spoke
+	south Passage_End
+	scenery
+	locked true
+	lockable false
+door yellow_door:
+	description "A cyborg handprint scanner adorns the center of the door, which is [if yellow_door.closed]closed[else]open[end if]."
+	feels "The door is smooth cold metal."
+	take_refusal "Galaxy could probably rip the yellow door off its hinges if she used the Galaxy Suit, if that's what she wants to use the charges up for."
+	attack_refusal "Galaxy pounds uselessly on the yellow door."
+	west Reactor_Room
+	east Western_Spoke
+	scenery
+	locked true
+	lockable false
+door red_door:
+	description "A cyborg handprint scanner adorns the center of the door, which is [if red_door.closed]closed[else]open[end if]."
+	feels "The door is smooth cold metal."
+	take_refusal "Galaxy could probably rip the red door off its hinges if she used the Galaxy Suit, if that's what she wants to use the charges up for."
+	attack_refusal "Galaxy pounds uselessly on the red door."
+	south armory
+	north Western_Spoke
+	scenery
+	locked true
+	lockable false
+door blue_door:
+	description "A cyborg handprint scanner adorns the center of the door, which is [if blue_door.closed]closed[else]open[end if]."
+	feels "The door is smooth cold metal."
+	take_refusal "Galaxy could probably rip the blue door off its hinges if she used the Galaxy Suit, if that's what she wants to use the charges up for."
+	attack_refusal "Galaxy pounds uselessly on the blue door."
+	east Commanders_Quarters
+	west Eastern_Spoke
+	scenery
+	locked true
+	lockable false
+door purple_door:
+	description "A cyborg handprint scanner adorns the center of the door, which is [if purple_door.closed]closed[else]open[end if]."
+	feels "The door is smooth cold metal."
+	take_refusal "Galaxy could probably rip the purple door off its hinges if she used the Galaxy Suit, if that's what she wants to use the charges up for."
+	attack_refusal "Galaxy pounds uselessly on the purple door."
+	north Control_Room
+	south Hub_Junction
+	scenery
+	locked true
+	lockable false
+door flight_deck_door:
+	description "A cyborg handprint scanner adorns the center of the door, which is [if flight_deck_door.closed]closed[else]open[end if]."
+	feels "The door is smooth cold metal."
+	take_refusal "Galaxy could probably rip the flight deck door off its hinges if she used the Galaxy Suit, if that's what she wants to use the charges up for."
+	attack_refusal "Galaxy pounds uselessly on the flight deck door."
+	north Flight_Deck
+	south Control_Room
+	scenery
+	locked true
+	lockable false
+
+# --- Textual documents (Texts.i7x) -------------------------------------------
+# Four more textual things, one per remaining difficulty tier (the diary above is
+# tier 2): the sign-out form (1), science notebook (3), reactor manual (4), and the
+# commander's log (5). Together with the diary they cover all five tiers, so scanning
+# every document unlocks full translation — the tier-20 `#` security-key words in the
+# log reveal only once all five tiers have been scanned. Examine/read renders each
+# through the Siriusian filter (lib/phobos/linguistics.lamp). Markers: `!` proper noun
+# (always alien, angle-bracketed), `$` control word (always alien), `#` security-key word
+# (reveals only at full scan, dropping the `#`), `[']` literal apostrophe, `/` break.
+# Each carries its Texts.i7x `feels` text (TOUCH/FEEL).
+
+# The sign-out form — tier 1, on the storeroom wall. Unlike the other documents it has a
+# physical description, shown before the readable content by the textual-examine rule.
+item form:
+	textual true
+	scan_level 1
+	feels "It feels exactly like paper."
+	initial_appearance "A form hangs on the wall beneath the sign."
+	description "It's a form attached to the wall. The top line reads '[siriusian(\"Sign-Out Form\")]'. The rest of the form is a lot of Siriusian scribbles of what look like minor bureaucratic details. It reads in part:"
+	content "Equipment Sign-out Form /
+		Name Date Equipment /
+		!fred !flintstone 34256 8 feet of rubber tubing /
+		!barney !rubble 34258 power drill /
+		!wilma !flintstone 34261 toothbrush repair kit /
+		!betty !rubble 34262 bolt cutter /
+		!barney !rubble 34263 new power drill /
+		!anderson !cooper 34267 metal polisher /
+		!barney !rubble 34268 power drill manual"
+
+contains Storeroom form
+
+# Science notebook — tier 3, in the science lab.
+item science_notebook:
+	textual true
+	scan_level 3
+	feels "It feels like a standard scientific notebook, with a cardboard cover and paper pages."
+	initial_appearance "Someone has left behind a science notebook on one of the counters."
+	content "Mission Day 13 -- Measurements indicate the target (Mars) is some distance away from the proposed missile, Phobos, necessitating some sort of propulsion system. We are relaying our new requirements to Syndicate HQ. / Mission day 14 -- HQ responds that we may need to construct a fusion reactor. We are currently assessing the feasibility of this approach, first by asking HQ what a fusion reactor is. / Mission Day 17 -- Fusion reactor it is, I guess. We will need to wait several weeks while HQ ships the necessary components and people who know something about nuclear physics. In the meantime we are working on the control center chair design, as well as having a lively debate about the colors of the Launch and Self-Destruct buttons."
+
+contains Science_Lab science_notebook
+
+# Reactor manual — tier 4, in the reactor room (the self-destruct confirmation procedure).
+item reactor_manual:
+	textual true
+	scan_level 4
+	feels "It's a paper book with a plastic cover."
+	initial_appearance "A manual for the reactor control board rests on the control board. It is titled '[siriusian(\"Reactor Control Manual\")]'."
+	content "Reactor Manual page 122 -- Reactor Self-Destruct Confirmation Phase / Upon the activation of the reactor self-destruct from the central control room, the reactor will enter a confirmation phase. During this phase, both arming levers must be pulled simultaneously to confirm the self-destruct. Note that one cyborg alone cannot activate the self-destruct, as the levers are too far apart."
+
+contains Reactor_Room reactor_manual
+
+# Commander's log — tier 5, in the commander's quarters. The final `#`-tagged sentence is
+# the security key for the purple-door control code; the code itself is produced by the control-code
+# system (hacking.lamp) and revealed when the log is fully scanned (the `instead examine` there), so
+# the description field omits the key value and the sentence ends at "is".
+item commanders_log:
+	printed_name "Commander's Log"
+	textual true
+	scan_level 5
+	feels "It feels like a standard military logbook, with a hard cover and paper pages."
+	initial_appearance "Discarded on the floor, as if by accident, is the commander's log."
+	content "Commander's Log, 34269 / !mfk5plas continues to be a problem. I trust them completely, but their kind of free-thinking can infect entire crews and sap their will. I spoke with them today and I believe I may have gotten through to them. I've assigned them to take final watch before launch, which they surely think of as a punishment, but which I hope they will come to understand is my gesture of faith in them as a soldier. / And my penance. May they never find out that I am the one who ordered the death of !Cleopatra. They may be loyal to the Syndicate, but loyalty has its limits. / We can't be done with this soon enough. Spending this much time in the $stupid rats['] home system makes me feel dirty. Let's wipe Mars out of existence and get out of here. / Important: #The #new #security #key #for #control #is"
+
+contains Commanders_Quarters commanders_log
+
+# --- Control Room furniture (Base.i7x "Book - Control Room") ------------------
+# The control room's fixtures, ported as plain scenery (EXAMINE only). I7 models the
+# screens/buttons/launch/self-destruct as "part of" the central control panel and the
+# chair as an enterable supporter; advent has neither part-of nor SIT yet, so each is a
+# standalone scenery item reachable by its own synonyms. Each carries its Base.i7x `feels`
+# text (TOUCH/FEEL). The buttons' PUSH behaviour (the launch/self-destruct endgame) is
+# in lib/phobos/control_room.lamp.
+#
+# Shared vocabulary mirrors I7: the bare word "button" matches all three button objects
+# (so EXAMINE BUTTON disambiguates), while "buttons" resolves to the collective, "green"
+# to launch, and "red" to self-destruct.
+item central_control_panel:
+	scenery
+	understand "controls"
+	feels "It feels like a control panel, however that is. With the huge number of buttons, switches, and screens, it hardly feels like a single object at all."
+	description "This bank of buttons, switches and screens is the heart of the base's control system. A large green button marked '[siriusian(\"Launch\")]' and a large red button marked '[siriusian(\"Self-Destruct\")]' stand out among the rest."
+item screens:
+	scenery
+	understand "screen"
+	feels "Don't touch the screens! You don't want to get your fingerprints all over them!"
+	description "The screens display various information about the base's systems, including power levels, security status, and environmental controls."
+item control_room_chair:
+	scenery
+	understand "chair"
+	feels "The chair's seat is made of a soft, padded material perfect for sitting on for long periods of time."
+	description "If this chair proves nothing else, it's that humans and Siriusians have very comparable buttocks."
+item buttons:
+	scenery
+	understand "switch/switches/button"
+	feels "Galaxy touches the buttons and switches, feeling nothing too surprising."
+	description "These buttons and switches are far beyond Galaxy's understanding, but they are clearly part of the base's control system. Two large buttons stand out: a green launch button and a red self-destruct button."
+item launch_button:
+	scenery
+	understand "green/button"
+	feels "Galaxy touches the button, feeling nothing too surprising."
+	description "A big green button marked '[siriusian(\"Launch\")]'. Presumably, pressing it will fire the base's thruster, propelling Phobos towards Mars."
+item self_destruct_button:
+	printed_name "self-destruct button"
+	scenery
+	understand "red/selfdestruct/self-destruct/button"
+	feels "Galaxy touches the button, feeling nothing too surprising."
+	description "A big red button marked '[siriusian(\"Self-Destruct\")]'. Presumably, pressing it will initiate the base's self-destruct sequence."
+
+contains Control_Room central_control_panel
+contains Control_Room screens
+contains Control_Room control_room_chair
+contains Control_Room buttons
+contains Control_Room launch_button
+contains Control_Room self_destruct_button
+
+# --- Reactor Room furniture (Base.i7x "Book - Reactor Room") ------------------
+# The reactor control board and the two arming levers (plus the collective "levers"). Scenery,
+# EXAMINE only here; the levers' PULL behaviour is in lib/phobos/control_room.lamp (the reactor
+# half of the self-destruct sequence). The reactor manual is a textual document, defined above.
+# Vocab: "left"/"right" pick a single lever; "lever" disambiguates the two; "levers" resolves to
+# the collective. ("screen"/"screens"/"panel" overlap the Control Room fixtures, but the rooms
+# are never in scope together.)
+item reactor_control_board:
+	scenery
+	understand "knobs/dials/knob/dial/keyboard/keys/screen/screens/panel"
+	feels "It feels like a control board, however that is. With the huge number of buttons, switches, and screens, it hardly feels like a single object at all."
+	description "The control board is so dense with knobs, dials, keyboard and screens that it's hard to see how anyone would operate it."
+item left_reactor_arming_lever:
+	printed_name "left reactor arming lever"
+	scenery
+	understand "left"
+	feels "The lever is made of metal with a rubber grip."
+	description "This lever is mounted on the wall to the left of the control board."
+item right_reactor_arming_lever:
+	printed_name "right reactor arming lever"
+	scenery
+	understand "right"
+	feels "The lever is made of metal with a rubber grip."
+	description "This lever is mounted on the wall to the right of the control board."
+item reactor_arming_levers:
+	printed_name "reactor arming levers"
+	scenery
+	understand "levers/arming"
+	feels "The levers are made of metal with rubber grips."
+	description "These two levers are mounted on the wall, one to the left and one to the right of the control board. They are designed to be pulled simultaneously to arm the reactor's self-destruct sequence."
+
+contains Reactor_Room reactor_control_board
+contains Reactor_Room left_reactor_arming_lever
+contains Reactor_Room right_reactor_arming_lever
+contains Reactor_Room reactor_arming_levers
+
+# --- Flight Deck + Siriusian ship (Base.i7x "Book - Flight Deck") -------------
+# The escape platform and the ship Galaxy flees in. The Flight_Deck room itself is defined
+# above; here are its scenery and the ship, plus the ship's interior room. The crater and Mars
+# carry I7's `far_away` trait (TOUCH/TAKE report "can't reach"); the force field and the ship
+# carry their `feels` text, and the ship is `edificial` (too massive to take). The ENTER-the-ship
+# and FLY behaviour — and the win/loss endings — are in lib/phobos/flight_deck.lamp.
+item stickney_crater:
+	printed_name "Stickney Crater"
+	proper
+	scenery
+	far_away true
+	understand "crater"
+	description "Stickney Crater, the largest crater on Phobos, is a vast expanse of rock and dust, stretching out to the north. At this distance, one can barely see the lines where the crater will open up to reveal the huge Siriusian thrusters."
+item mars:
+	printed_name "Mars"
+	proper
+	scenery
+	far_away true
+	description "Mars sits in the southern sky, oblivious to the events unfolding on Phobos."
+item static_force_field:
+	scenery
+	understand "field/forcefield"
+	feels "Galaxy touches the field, recoiling as a shock runs through her body. The field is solid, and she can't pass through it."
+	description "An invisible force field prevents the atmosphere from escaping from the flight deck."
+item siriusian_ship:
+	printed_name "Siriusian ship"
+	understand "ship/hatch"
+	edificial true
+	feels "The ship is made of a smooth, metallic material that feels cold to the touch. The surface is covered in a pattern of small, hexagonal plates that give it a slightly textured feel."
+	initial_appearance "A Siriusian ship rests on the platform, an open hatch awaiting."
+	description "The ship is roughly cylindrical, with a complete lack of windows. An open hatch awaits."
+
+# The ship's interior, reached by entering the ship (flight_deck.lamp) or going north/in.
+room Inside_The_Ship:
+	printed_name "Siriusian ship"   # the heading rule adds "the"; I7's name carried it
+	preposition "inside"
+	description "It's a small, cramped, utilitarian space with three seats and a control panel. Even Star Trek's shuttlecraft were cooler than this. The only way to go is out, to the flight deck."
+item pilots_seat:
+	printed_name "pilot's seat"
+	scenery
+	understand "seat/seats"
+	feels "The seat is a mesh which stretches when Galaxy touches it."
+	description "The seat is shaped somewhat strangely, designed as it was for a Siriusian. It is perched directly in front of the control panel."
+item ship_control_panel:
+	printed_name "control panel"
+	scenery
+	understand "control/panel/buttons/switches/controls/screen"
+	feels "Galaxy Jones runs her hand over it, concluding that it feels like a control panel."
+	description "The control panel is a simple array of buttons and switches, with a single large screen in the center. Galaxy Jones has no trouble understanding how to operate it."
+
+contains Flight_Deck stickney_crater
+contains Flight_Deck mars
+contains Flight_Deck static_force_field
+contains Flight_Deck siriusian_ship
+contains Inside_The_Ship pilots_seat
+contains Inside_The_Ship ship_control_panel
+
+# Entering is via the ship (flight_deck.lamp's `instead enter`) or "in"/"north"; leaving is "out"
+# (the inverse of the bidi `inward` edge).
+bidi connects Flight_Deck inward Inside_The_Ship
+connects Flight_Deck north Inside_The_Ship

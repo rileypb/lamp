@@ -1,0 +1,274 @@
+lib advent
+
+# The Guard — persuasion + the alliance reveal (Guard.i7x). Galaxy can win the guard over by a
+# "pleasing action" (give/drop the disruptor pistol, give the commander's log, give the chocolate
+# bar); once pleased, removing the Cyberhelmet or Cybercarapace reveals her as human and the guard
+# allies with her, slamming the self-destruct button. Reaching the control room undisguised (or
+# uncovering before pleasing the guard) gets Galaxy shot.
+#
+# All guard speech goes through `g_say` -> `siriusian()` (scan-aware), so it reads in English once
+# Galaxy has scanned the documents, while two marker classes stay alien glyphs: `!` proper nouns
+# (the serial "!NB563FFAA", the commander "!x34agclw", "!Cleopatra") and `$` censored Siriusian
+# swears ("$godforsaken", "$effin'n", "$dammit", "$hell" — the running bleep joke).
+#
+# SAY/ANSWER free text is ported (below): "say I am human" / "I am from earth" opens the alliance
+# with no gift, and the loyalty yes/no answers the guard's question after the log. It uses the
+# conversation lib's `say` action (a free-text `string` topic, distinct from ASK/TELL ABOUT).
+
+# Galaxy's starting gear (GJ Basics.i7x): both carried from the start.
+item disruptor_pistol:
+	printed_name "disruptor pistol"
+	understand "gun/weapon/laser/pistol/disruptor"
+	feels "The disruptor pistol is made of a lightweight polymer, and it feels perfectly balanced in the hand."
+	description "A compact instrument of death, with only one setting: kill."
+item chocolate_bar:
+	printed_name "chocolate bar"
+	understand "chocolate/bar/candy"
+	feels "Feels like a chocolate bar, alright. Don't touch it too much, though, or it will get all melty."
+	description "It's a Mars Bar. The label says 'May contain nuts.' Galaxy often carries a snack on a mission. You never know when it might come in handy."
+
+contains yourself disruptor_pistol
+contains yourself chocolate_bar
+
+# Persuasion state. `pleased_by` records which pleasing action won the guard over (it shapes the
+# guard's "why didn't you kill me?" line at the reveal); `guard_allied` latches the alliance.
+global bool guard_pleased = false
+global bool guard_allied = false
+global string pleased_by = ""
+global bool met_guard = false
+
+# SAY/ANSWER state (Guard.i7x). `player_assert_humanity` latches once Galaxy claims to be human;
+# it spares her from the detection rule and opens the alliance reveal with no gift. The loyalty
+# yes/no is answerable only on the turn right after the commander's log is given — modelled with a
+# one-turn window: the give-log rule sets `asked_about_loyalty`, and the shift rule below moves it
+# into `..._last_turn` (which the answer rules read) before clearing it.
+global bool player_assert_humanity = false
+global bool asked_about_loyalty = false
+global bool asked_about_loyalty_last_turn = false
+
+# Free-text matchers for the SAY/ANSWER utterances. The parser lowercases input, so these compare
+# against lowercase forms; they cover the phrasings the original accepts (Guard.i7x's command-
+# rewrite + answer rules). Apostrophe contractions are matched too ("i'm human").
+function bool is_human_claim(string t):
+	if t == "i am human":
+		return true
+	if t == "i'm human":
+		return true
+	if t == "i am a human":
+		return true
+	if t == "i'm a human":
+		return true
+	if t == "human":
+		return true
+	if t == "i am from earth":
+		return true
+	if t == "i'm from earth":
+		return true
+	return false
+
+function bool is_yes(string t):
+	return t == "yes"
+
+function bool is_no(string t):
+	return t == "no"
+
+# The Galaxy Suit, powered up, reflects the guard's fire back (Guard.i7x) — on an undisguised
+# arrival or when the spy is caught reaching for a button. The guard dies: the live object is
+# stashed off-screen (as in the commando finale) and the corpse placed. Killing one's would-be ally
+# is a dead end, but the original allows it.
+function void guard_suit_deflect():
+	print "Swiftly, a gun barrel extends from their armor and fires a barrage of disruptor fire."
+	power_banner()
+	print "The Galaxy Suit, powered up and ready, reflects the fire back at the guard, who goes down with dramatic finality."
+	use_charge()
+	move guard to Reactor_Room
+	move dead_guard to Control_Room
+
+# Caught reaching for a button while still disguised but not yet allied (Guard.i7x): the guard
+# smells a spy. Powered up, the suit saves her (and kills the guard); else she is gunned down and
+# unmasked. Shared by both button overrides (control_room.lamp).
+function void guard_spy_death():
+	g_say("Hey, what are you doing? You're not !NB563FFAA at all! You're a spy!")
+	if powered_up:
+		guard_suit_deflect()
+	else:
+		print "[par]Before Galaxy can react, a gun barrel extends from the guard's armor, and they proceed to blow her to pieces with a hail of disruptor fire.[par]As the life ebbs from Galaxy's body, the guard pulls off her Cyberhelmet, revealing her as human. The guard makes a sound of disgust."
+		g_say("$fooblitsky! I should have known not to hope for a happy ending. Human fool, you have doomed the whole planet Mars to destruction. I hope you are proud of yourself.")
+		ending_override = "Galaxy Jones has been terminated by a Siriusian guard."
+		story = lost
+
+# First arrival in the control room. Disguised, Galaxy is greeted as a fellow cyborg; undisguised,
+# the guard shrieks and opens fire (the suit deflects it if powered up, else death). Reaching the
+# control room normally needs the disguise (the purple door's visual-identity gate), so the
+# undisguised arrival is reachable mainly via the powered suit-smash bypass. Standing undisguised
+# *after* arrival (e.g. uncovering here) is handled by the every-turn detection below.
+after go:
+	if holder(player) == Control_Room and holder(guard) == Control_Room and not met_guard:
+		if wears player cyberhelmet and wears player cybercarapace:
+			met_guard = true
+			print "[par]The guard looks up as Galaxy enters, and makes a gesture of greeting."
+			g_say("Hey, !NB563FFAA, didn't expect to see you here. I thought you were back on the mothership. Anyway, you're just in time. Pretty soon we'll launch this thing and get off this $godforsaken rock. I can't wait to get back to the $effin'n mothership and have some real food. Anything but rations... Say, sorry about the goofy PA messages -- don't tell the commander!")
+		else:
+			met_guard = true
+			print "[par]The guard looks up as Galaxy enters, makes a shriek of alarm, and screams,"
+			g_say("Oh $shit, a human!")
+			if powered_up:
+				guard_suit_deflect()
+			else:
+				print "Before Galaxy can react, a gun barrel extends from the guard's armor, and they proceed to blow her to pieces with a hail of disruptor fire.[par]As the life ebbs from Galaxy's body, the guard looks into her eyes and says,"
+				g_say("I am sorry, human. I did not want to kill you, but I could not know if you were friend or foe. And now I shall never know.")
+				ending_override = "Galaxy Jones has been terminated by a Siriusian guard."
+				story = lost
+
+# The loyalty yes/no is answerable only on the turn right after the log is given (Guard.i7x's
+# loyalty question rule): shift `asked` into `..._last_turn`, then clear it. Runs every turn after
+# the action, so the answer rules (which read `..._last_turn`) get exactly a one-turn window.
+rule every_turn_rules:
+	asked_about_loyalty_last_turn = asked_about_loyalty
+	asked_about_loyalty = false
+
+# Detection: in the control room with the guard, not yet pleased, and not wearing the full
+# disguise -> the guard realizes Galaxy is human and shoots her. (Once pleased/allied, or once she
+# has openly claimed humanity and been challenged to prove it, she is safe.)
+rule every_turn_rules:
+	if holder(player) == Control_Room and holder(guard) == Control_Room and not guard_pleased and not guard_allied and not player_assert_humanity:
+		if not (wears player cyberhelmet) or not (wears player cybercarapace):
+			print "The guard looks up at Galaxy Jones and realizes she is not a Siriusian after all. Before Galaxy can react, a gun barrel extends from the guard's armor, and they proceed to blow her to pieces with a hail of disruptor fire.[par]As the life ebbs from Galaxy's body, the guard looks into her eyes and says,"
+			g_say("I am sorry, human. I did not want to kill you, but I could not know if you were friend or foe. And now I shall never know.")
+			ending_override = "Galaxy Jones has been terminated by a profoundly startled Siriusian guard."
+			story = lost
+
+# --- Pleasing actions (GIVE / DROP) ------------------------------------------
+instead give when self.recipient == guard and self.gift == disruptor_pistol:
+	print "The guard reluctantly takes the disruptor and looks at Galaxy in confusion."
+	g_say("I don't understand. Why are you giving me this?")
+	guard_pleased = true
+	pleased_by = "pistol"
+	move disruptor_pistol to guard
+	stop succeeded
+
+instead give when self.recipient == guard and self.gift == commanders_log:
+	print "The guard looks at the commander's log and says,"
+	g_say("The commander's log? And about me, apparently... and !Cleopatra? Is this true? It must be, as this is the commander's seal. And yet, if the Syndicate has betrayed me so completely, how can I remain loyal to them? But !NB563FFAA, why would you give me this? Are you not loyal to the Syndicate?")
+	guard_pleased = true
+	pleased_by = "log"
+	move commanders_log to guard
+	asked_about_loyalty = true
+	stop succeeded
+
+instead give when self.recipient == guard and self.gift == chocolate_bar:
+	print "The Siriusian guard sniffs at the chocolate bar. They sniff again, and their eyes widen. They grab the chocolate bar and shove it into their mouth with great enthusiasm."
+	g_say("What is this? It's delicious! I've never had anything like it before! Thank you, !NB563FFAA!")
+	guard_pleased = true
+	pleased_by = "chocolate"
+	move chocolate_bar to guard
+	stop succeeded
+
+# The guard angrily reclaims its own diary (no persuasion).
+instead give when self.recipient == guard and self.gift == diary:
+	print "The guard looks angry."
+	g_say("Why do you have my diary? This is private!")
+	print "The guard snatches the diary from Galaxy's hands."
+	move diary to guard
+	stop succeeded
+
+# Handing over a document the guard can discuss just prompts its topic response.
+instead give when self.recipient == guard and self.gift == form:
+	try ask:
+		interlocutor guard
+		topic form_subject
+	stop succeeded
+instead give when self.recipient == guard and self.gift == science_notebook:
+	try ask:
+		interlocutor guard
+		topic notebook_subject
+	stop succeeded
+instead give when self.recipient == guard and self.gift == reactor_manual:
+	try ask:
+		interlocutor guard
+		topic manual_subject
+	stop succeeded
+
+# Dropping the gun in front of the guard reads as a gesture of trust.
+after drop when self.dropped == disruptor_pistol:
+	if holder(guard) == holder(player) and not guard_pleased:
+		print "The guard looks at the disruptor pistol and says,"
+		g_say("You dropped your gun, !NB563FFAA.")
+		guard_pleased = true
+		pleased_by = "pistol_dropped"
+
+# --- SHOW ---------------------------------------------------------------------
+# Showing the pistol is mere curiosity; showing anything else to the guard behaves like giving it.
+instead show when self.recipient == guard and self.shown == disruptor_pistol:
+	print "The guard peers at the pistol and says,"
+	g_say("Interesting gun, !NB563FFAA, is that a new model? I don't recognize it.")
+	stop succeeded
+instead show when self.recipient == guard:
+	try give:
+		gift self.shown
+		recipient guard
+	stop succeeded
+
+# --- SAY / ANSWER free text (Guard.i7x) --------------------------------------
+# Assert humanity: SAY/ANSWER "I am human" / "I am from earth" (and the natural variants). The
+# guard takes it for a joke and dares Galaxy to prove it by removing her helmet -- which opens the
+# alliance with no gift (the detection above now spares her, and doffing fires the reveal's
+# player_assert_humanity branch). These run only while the guard is present and listening; an
+# unmatched utterance falls through to the conversation lib's default "There is no reply."
+instead say when holder(guard) == holder(player) and is_human_claim(self.topic):
+	print "The guard looks at Galaxy strangely and says,"
+	g_say("You try to play a joke on me. Go on, remove your Cyberhelmet and let me see for myself if you are human or not.")
+	player_assert_humanity = true
+	stop succeeded
+
+# The loyalty question, answerable only the turn after the commander's log is given.
+instead say when holder(guard) == holder(player) and asked_about_loyalty_last_turn and is_no(self.topic):
+	g_say("You are not loyal to the Syndicate? Then why are you here?")
+	stop succeeded
+instead say when holder(guard) == holder(player) and asked_about_loyalty_last_turn and is_yes(self.topic):
+	g_say("You are loyal to the Syndicate? But why would you give me the commander's log?")
+	stop succeeded
+
+# --- The reveal: uncovering while pleased makes the guard an ally -------------
+function void guard_ally():
+	# When Galaxy reached the alliance by openly claiming humanity (no gift), the guard is
+	# astonished rather than merely confused; otherwise the line reflects the pleasing gift.
+	if player_assert_humanity and not guard_pleased:
+		print "The guard looks at Galaxy in wonder."
+		g_say("You are not !NB563FFAA at all! You are a human! Why did you not kill me when you had the chance?")
+	else:
+		print "The guard looks at Galaxy in confusion."
+		if pleased_by == "pistol":
+			g_say("A human? I don't understand. You could have killed me with that gun, but instead you gave it to me. Why?")
+		if pleased_by == "pistol_dropped":
+			g_say("A human? I don't understand. You could have killed me with that gun, but instead you dropped it. Why?")
+		if pleased_by == "log":
+			g_say("A human? I don't understand. You could have killed me, but instead you gave me truth. Why?")
+		if pleased_by == "chocolate":
+			g_say("A human? I don't understand. You could have killed me, but instead you gave me this miraculous food. Why?")
+	print "[par]Galaxy Jones answers, in as good a Siriusian accent as she can manage,"
+	g_say("I don't want to kill Siriusians. I just want to save Mars.")
+	print "[par]The guard says,"
+	g_say("Human, you are the sign I have been waiting for. We must stop this madness and save Mars. Come, we must destroy the base so that Phobos can never be launched into Mars.")
+	print "[par]The guard slams their carapaced fist down onto the [siriusian(\"Self-Destruct\")] button, and the control panel lights up. A voice says,"
+	g_say("Self-Destruct sequence initiated. We would like to take a moment here to say just how sorry we are that the mission to destroy Mars seems to have ended in abject failure. Your names shall live in ignominy forevermore.")
+	print "[par]A red light begins to flash on the control panel, and the voice continues,"
+	g_say("To continue the self-destruct sequence, the arming levers on the base reactor must be engaged.")
+	print "The message is repeated on the screen."
+	print "[par]The guard turns back to Galaxy."
+	g_say("Now we must engage the arming levers on the base reactor. It requires two people to do it, so I will need your help. Come with me, human.")
+	self_destruct_pushed = true
+	guard_allied = true
+	galaxy_score(1)
+
+# Uncovering reveals Galaxy as human. This allies the guard when it is already pleased OR when she
+# has openly claimed humanity (the no-gift path) -- mirroring Guard.i7x's "(pleased or
+# player-assert-humanity)" trigger.
+after doff when self.clothing == cyberhelmet:
+	if (guard_pleased or player_assert_humanity) and not guard_allied and holder(guard) == holder(player):
+		guard_ally()
+		stop succeeded
+after doff when self.clothing == cybercarapace:
+	if (guard_pleased or player_assert_humanity) and not guard_allied and holder(guard) == holder(player):
+		guard_ally()
+		stop succeeded

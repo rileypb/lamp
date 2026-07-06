@@ -1,0 +1,122 @@
+lib advent
+
+# The Galaxy Suit and its power-up (ported from GJ Basics.i7x / Powerup.i7x /
+# Galaxy Smash.i7x). POWER UP the suit to supercharge Galaxy's next ATTACK, which
+# smashes a locked door open — a fast way to bypass the hacking puzzles while testing.
+#
+# The POWER banner (ASCII figlet, Galaxy Banner.i7x) flashes whenever the suit spends a charge —
+# printed by the `use_charge` callers (the smash below and the guard suit-deflect) just before the
+# outcome message, as in Powerup.i7x's `use a charge`. The figlet lives in scoring.lamp with the
+# other banners.
+
+global bool powered_up = false
+global int charges_left = 3000
+global bool first_power_use = true
+# Set the turn POWER UP runs, so the every-turn auto-power-down skips that turn (the
+# suit must stay charged for the *next* action). Cleared by every_turn_rules.
+global bool powered_this_turn = false
+
+item galaxy_suit:
+	printed_name "Galaxy Suit"
+	wearable
+	feels "The suit is made of a lightweight, flexible material that feels like a second skin."
+	description "It's an advanced Smart Suit, a flexible black jumpsuit able to communicate sound, vision, and radar back to Beck at Galaxy Base. POWER ON the suit to supercharge Galaxy's next ATTACK, SMASH, or PUNCH. The suit will power down if unused.[par]Also it has a neat light.[par][italic]Obligatory fine print: Obstacles that Galaxy would normally get a point for getting past earn no points if she uses the suit instead.[/italic]"
+
+contains yourself galaxy_suit
+wears yourself galaxy_suit
+
+# The suit can't be removed — Galaxy needs it for the mission (GJ Basics.i7x "Instead of taking off
+# the Galaxy Suit"). Catches both REMOVE and TAKE OFF (the doff action).
+instead doff when self.clothing == galaxy_suit:
+	print "Galaxy needs the Galaxy Suit to complete her mission."
+	stop failed
+
+# Spend a charge: power down, decrement, and on the first use note the no-points rule.
+function void use_charge():
+	powered_up = false
+	charges_left = charges_left - 1
+	if first_power_use:
+		first_power_use = false
+		print "[par]\[Galaxy doesn't earn any points when she uses the Galaxy Suit.\]"
+
+# --- POWER UP / POWER DOWN ----------------------------------------------------
+action power_up:
+	syntax:
+		"power up suit"
+		"power up"
+		"power on suit"
+		"power on"
+		"powerup suit"
+		"powerup"
+
+check power_up:
+	if powered_up:
+		print "The Galaxy Suit is already powered up."
+		stop failed
+
+check power_up:
+	if charges_left == 0:
+		print "An indicator on the Galaxy Suit blinks red. The suit is out of charges."
+		stop failed
+
+do power_up:
+	powered_up = true
+	powered_this_turn = true
+
+report power_up:
+	print "Galaxy powers up the Galaxy Suit."
+
+# Auto-power-down: a powered suit that isn't used powers down at the end of the turn
+# (ported from Powerup.i7x's every-turn rule). The power-up turn itself is skipped via
+# the flag, so the charge survives for the next action; ATTACK's use_charge() powers
+# down on use, so this only fires when the suit goes unused.
+rule every_turn_rules:
+	if powered_this_turn:
+		powered_this_turn = false
+	else:
+		if powered_up:
+			powered_up = false
+			print "Unused, the Galaxy Suit powers down."
+
+action power_down:
+	syntax:
+		"power down suit"
+		"power down"
+		"power off suit"
+		"power off"
+		"powerdown suit"
+		"powerdown"
+
+check power_down:
+	if not powered_up:
+		print "The Galaxy Suit is not powered up."
+		stop failed
+
+do power_down:
+	powered_up = false
+
+report power_down:
+	print "Galaxy powers down the Galaxy Suit."
+
+# --- Powered ATTACK: smash a locked door open ---------------------------------
+# The ATTACK/SMASH/PUNCH/HIT verb itself lives in advent (any item; default declines).
+# These rules add the suit's powered smash; anything they don't handle (unpowered, a
+# non-door, an already-open door) falls through to advent's default reaction.
+
+# The purple door resists even a powered strike.
+instead attack when self.target == purple_door:
+	if powered_up:
+		print "The purple door has a force field that repels Galaxy's attempt to destroy it."
+		stop failed
+
+# A powered strike destroys a locked door. A non-door target has no `locked` (reads
+# falsy), so it falls through to advent's default attack reaction. The POWER banner flashes
+# first (Powerup.i7x's `use a charge` prints it ahead of the message).
+instead attack:
+	if powered_up and self.target.locked:
+		power_banner()
+		print "Galaxy uses the Galaxy Suit to attack [the act.target]. The door is destroyed, just hanging from its hinges."
+		self.target.locked = false
+		self.target.closed = false
+		use_charge()
+		stop succeeded

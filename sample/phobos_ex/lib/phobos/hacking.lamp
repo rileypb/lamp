@@ -1,0 +1,709 @@
+# Hacking (the KIM). The KIM ("Kovert Infiltration Matrix") is Galaxy's hacking
+# tool. HACK <thing> attaches it; the green door is a simple instant bypass, while
+# the others open a button mini-game with hidden, per-door rules the player must
+# reverse-engineer. Ported from KIM.i7x. (`kim_adhered_to` tracks the door being hacked; the
+# handprint-scanner parts exist as scenery but the puzzle is keyed on the door itself.)
+
+item KIM:
+	printed_name "KIM"
+	feels "The KIM feels like smooth, featureless plastic."
+	description "The Kovert Infiltration Matrix, or KIM, is the state-of-the-art in breaching high-security facilities. Just HACK your target, and a few steps later, you'll be in![par]The KIM is a featureless black slab, roughly 4x5 inches in dimension, and an eighth of an inch thick."
+
+contains yourself KIM
+
+# What the KIM is currently adhered to (none = not mid-hack). While adhered, PRESS
+# drives that target's puzzle.
+global physical kim_adhered_to = none
+
+# The room the hack is happening in. While adhered the KIM is physically left on its target (out of
+# inventory), so PRESS / the state display / the keypad only work while Galaxy is still here — leaving
+# retrieves it (see `before go` below). Mirrors I7's "the KIM is enclosed by the location" gate.
+global physical kim_hack_room = none
+
+# Stick the KIM onto `surface` (the handprint scanner, or the walls for the locker — as in I7) and
+# record the hack target + room. Moving it out of inventory is what makes "leaving it behind"
+# impossible (and keeps it off the inventory list) the way the original does.
+function void adhere_kim(physical target, physical surface):
+	kim_adhered_to = target
+	kim_hack_room = holder(player)
+	move KIM to surface
+
+# Pull the KIM back into Galaxy's hand and clear the hack (shared by retrieval and puzzle success).
+function void detach_kim():
+	move KIM to player
+	kim_adhered_to = none
+	kim_hack_room = none
+
+# The display name of whatever the KIM is stuck to, for the retrieval message (the scanners are all
+# printed "handprint scanner", so the colour is keyed off the target here — as I7 spells it out).
+function string kim_surface_name():
+	if kim_adhered_to == yellow_door:
+		return "the yellow handprint scanner"
+	if kim_adhered_to == red_door:
+		return "the red handprint scanner"
+	if kim_adhered_to == blue_door:
+		return "the blue handprint scanner"
+	if kim_adhered_to == purple_door:
+		return "the purple handprint scanner"
+	if kim_adhered_to == locker:
+		return "the locker"
+	return "the KIM's surface"
+
+# Retrieve the adhered KIM (TAKE, or the implicit take when leaving). I7: "Galaxy Jones retrieves the
+# KIM from [the surface]"; the port narrates by first name like its sibling hack messages.
+function void retrieve_kim():
+	print "Galaxy retrieves the KIM from [kim_surface_name()]."
+	detach_kim()
+
+# The single shared hacking hint (I7's `push clue`), offered after the keypad on the yellow, red,
+# purple, and locker hacks — but not the blue one. It's a one-shot: like an I7 `clip`, it prints only
+# the first time (the first hack of the game), never again.
+global bool clue_given = false
+function void push_clue():
+	if not clue_given:
+		print "Galaxy mutters to herself. 'Never seen a hacking interface like this before. What do I press? 1? 2?'"
+		clue_given = true
+
+# Examining the KIM shows its base description, plus — while it's adhered mid-hack — the live puzzle
+# state, so the player can re-read the board (I7 KIM.i7x: the description ends "[if KIM adheres to
+# something][paragraph break][KIM state]"). advent prints the description in its library `report
+# examine`, and author rules run before library ones, so we preempt with `instead` and re-emit.
+instead examine when self.target == KIM:
+	if kim_adhered_to == none or not (holder(player) == kim_hack_room):
+		print "[self.target.description][line break]"
+	else:
+		print "[self.target.description][par]"
+		kim_state()
+	stop succeeded
+
+# Taking the adhered KIM peels it off its target (I7: "After taking the KIM when the KIM adheres to
+# something"). Only reachable when the KIM is in scope, i.e. Galaxy is at the target.
+instead take when self.taken == KIM and not (kim_adhered_to == none):
+	retrieve_kim()
+	stop succeeded
+
+# Leaving the room mid-hack can't strand the KIM: Galaxy implicitly takes it first (I7's "leaving the
+# KIM behind is impossible" / "Before going ... carry out the implicitly taking activity"). Runs in
+# the `before` band so the retrieval prints ahead of the new room, then the move proceeds normally.
+before go:
+	if not (kim_adhered_to == none) and holder(player) == kim_hack_room:
+		print "(first taking the KIM)[line break]"
+		retrieve_kim()
+		# Separate the implicit-take report from the room description that `go` is about to print.
+		print "[par]"
+
+# The adhered-state block (I7 `To say KIM state`): which target the KIM is stuck to, the button-array
+# blurb, then the keypad itself (reusing the same renderers the hack/press flow shows).
+function void kim_state():
+	if kim_adhered_to == yellow_door:
+		print "The KIM is currently adhered to the yellow handprint scanner. The KIM displays an array of nine colored buttons, labeled 1 through 9, adjacent to a RESET button:[par]"
+		show_keypad_9()
+	if kim_adhered_to == red_door:
+		print "The KIM is currently adhered to the red handprint scanner. The KIM displays an array of nine colored buttons, labeled 1 through 9, adjacent to a RESET button:[par]"
+		show_keypad_9()
+	if kim_adhered_to == blue_door:
+		print "The KIM is currently adhered to the blue handprint scanner. The KIM displays an array of nine colored buttons, labeled 1 through 9:[par]"
+		show_keypad_blue()
+	if kim_adhered_to == purple_door:
+		print "The KIM is currently adhered to the purple handprint scanner. The KIM displays an array of 16 colored buttons, labeled 1 through 16:[par]"
+		show_keypad_16()
+	if kim_adhered_to == locker:
+		print "The KIM is currently adhered to the locker. The KIM displays an array of four colored buttons, labeled 1 through 4, adjacent to a RESET button:[par]"
+		show_keypad_4()
+
+action hack:
+	item target
+	syntax:
+		"hack [target]"
+		"infiltrate [target]"
+		"breach [target]"
+		"break into [target]"
+
+before hack:
+	if not (holder(KIM) == self.actor):
+		print "Galaxy needs to be carrying the KIM to hack something."
+		stop failed
+
+before hack:
+	if not (kim_adhered_to == none):
+		print "The KIM is already attached to [the kim_adhered_to]."
+		stop failed
+
+# The green door: a trivial lock the KIM bypasses on its own. (`self.target` for the
+# field writes dodges the bare-object-name-assignment emitter bug — see TODO.)
+instead hack when self.target == green_door:
+	if self.target.locked:
+		print "Galaxy attaches the KIM to the green door. The door's lock is a simple one, and the KIM quickly bypasses it without manual intervention. The door opens, revealing a corridor north.[par]Galaxy retrieves the KIM."
+		self.target.locked = false
+		self.target.closed = false
+		galaxy_score(1)
+	else:
+		print "Galaxy has already opened the door."
+	stop succeeded
+
+# The yellow door: a Lights-Out keypad (see below).
+instead hack when self.target == yellow_door:
+	if not self.target.locked:
+		print "The door is already unlocked."
+		stop succeeded
+	adhere_kim(yellow_door, yellow_scanner)
+	nine_buttons = [false, false, false, false, false, false, false, false, false]
+	print "Galaxy attaches the KIM to the yellow door.[par]"
+	show_keypad_9()
+	push_clue()
+	stop succeeded
+
+# The red door: another nine-button Lights-Out, but it starts with button 6 already
+# blue and uses a different (harder) set of hidden flip rules.
+instead hack when self.target == red_door:
+	if not self.target.locked:
+		print "The door is already unlocked."
+		stop succeeded
+	adhere_kim(red_door, red_scanner)
+	nine_buttons = [false, false, false, false, false, true, false, false, false]
+	print "Galaxy attaches the KIM to the red door.[par]"
+	show_keypad_9()
+	push_clue()
+	stop succeeded
+
+# The blue door: a different mechanic entirely — a sort-by-swap (see below). The
+# nine buttons carry shuffled glyph labels; pressing two swaps their labels, and the
+# goal is to sort them. The starting shuffle is random (dogfoods the new `random`).
+instead hack when self.target == blue_door:
+	if not self.target.locked:
+		print "The door is already unlocked."
+		stop succeeded
+	adhere_kim(blue_door, blue_scanner)
+	nine_buttons = [false, false, false, false, false, false, false, false, false]
+	shuffle_labels()
+	print "Galaxy attaches the KIM to the blue door.[par]"
+	show_keypad_blue()
+	stop succeeded
+
+# The locker: a four-button toggle (see below). Unlike the doors, success opens a
+# container and reveals its contents (the diary), rather than clearing a path.
+instead hack when self.target == locker:
+	if not self.target.closed:
+		print "Galaxy has already opened the locker."
+		stop succeeded
+	adhere_kim(locker, walls)
+	four_buttons = [false, true, true, false]
+	print "Galaxy attaches the KIM to the locker.[par]"
+	show_keypad_4()
+	push_clue()
+	stop succeeded
+
+# The purple door: gated on the cyborg disguise (the scanner reads a "visual identity"),
+# then a 16-button select-five keypad (see below). The KIM only adheres while Galaxy wears
+# both the Cyberhelmet and the Cybercarapace. The control code is random; the player learns
+# it by fully scanning the commander's log (which reveals the five code glyphs).
+instead hack when self.target == purple_door:
+	if not self.target.locked:
+		print "The door is already unlocked."
+		stop succeeded
+	if not (wears player cyberhelmet) or not (wears player cybercarapace):
+		print "The purple door beeps, and a voice says, '[siriusian(\"Visual identity not confirmed\")].' The KIM will not adhere to the door."
+		stop failed
+	adhere_kim(purple_door, purple_scanner)
+	sixteen_buttons = [false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false]
+	ensure_control_parts()
+	print "The purple door beeps, and a voice says, '[siriusian(\"Visual identity confirmed\")].'[par]Galaxy attaches the KIM to the purple handprint scanner.[par]"
+	show_keypad_16()
+	push_clue()
+	stop succeeded
+
+# Reading the commander's log: the textual content renders through the Linguistic filter
+# (linguistics.lamp's generic `instead examine when self.target.textual`), but once every
+# tier is scanned the log also yields the purple-door control code. This rule is more
+# specific and registers first (hacking.lamp loads before linguistics.lamp), so it handles
+# the log: it renders the prose, then — when fully scanned — prints the five code glyphs the
+# player matches against the keypad.
+instead examine when self.target == commanders_log:
+	print_translated(self.target, scan_levels)
+	if fully_scanned():
+		ensure_control_parts()
+		print "[par]The decoded security key reads: [fixed(control_code)]"
+	stop succeeded
+
+# Every other hackable target opens a puzzle that isn't ported yet.
+instead hack:
+	print "Galaxy attempts to attach the KIM to [the act.target], but it fails to activate. Perhaps [the act.target] is not hackable?"
+	stop failed
+
+
+# --- Yellow door: a "Lights Out" keypad --------------------------------------
+# 9 buttons (shared across the nine-button doors), each red or blue; start all red,
+# goal all blue. Pressing a button flips a fixed, hidden set of the nine (the rule
+# the player must work out). Re-pressing a button undoes it; a RESET button (below) also clears it.
+global list<bool> nine_buttons = none
+
+# Shared goal for every nine-button door: all nine lit blue (true).
+function bool nine_solved():
+	for i = 0 to 8:
+		if not nine_buttons[i]:
+			return false
+	return true
+
+# The keypad display: a red button shows as [N], a blue one as <N>.
+function void show_keypad_9():
+	for i = 1 to 9:
+		if nine_buttons[i - 1]:
+			print "<[i]>"
+		else:
+			print "\[[i]\]"
+	print "\[RESET\]"
+	print "[line break]\[\] = red, <> = blue[par]"
+
+action press_key:
+	int n
+	syntax:
+		"press [n]"
+
+before press_key:
+	if kim_adhered_to == none or not (holder(player) == kim_hack_room):
+		print "Galaxy isn't hacking anything right now."
+		stop failed
+
+# --- RESET button (KIM.i7x) --------------------------------------------------
+# Every keypad except the blue door's carries an on-screen RESET button that returns the puzzle to
+# its starting layout. The `reset_button` object (a part of the KIM, scenery.lamp) makes PUSH RESET /
+# X RESET work; RESET / PRESS RESET are convenience verbs for the same. A redundant reset (already at
+# the start) "does nothing", matching I7's `initial keypad state` test.
+function bool nine_all_red():
+	for i = 0 to 8:
+		if nine_buttons[i]:
+			return false
+	return true
+
+# The red door starts with button 6 already lit.
+function bool nine_at_red_start():
+	for i = 0 to 8:
+		if i == 5:
+			if not nine_buttons[i]:
+				return false
+		else:
+			if nine_buttons[i]:
+				return false
+	return true
+
+# The locker starts {red, blue, blue, red}.
+function bool four_at_start():
+	return (not four_buttons[0]) and four_buttons[1] and four_buttons[2] and (not four_buttons[3])
+
+function void reset_keypad():
+	if kim_adhered_to == none or not (holder(player) == kim_hack_room):
+		print "There's no RESET button around."
+	else:
+		if kim_adhered_to == yellow_door:
+			if nine_all_red():
+				print "Galaxy presses the RESET button. Nothing seems to happen."
+			else:
+				nine_buttons = [false, false, false, false, false, false, false, false, false]
+				print "Galaxy presses the RESET button. The buttons all turn red.[par]"
+				show_keypad_9()
+		if kim_adhered_to == red_door:
+			if nine_at_red_start():
+				print "Galaxy presses the RESET button. Nothing seems to happen."
+			else:
+				nine_buttons = [false, false, false, false, false, true, false, false, false]
+				print "Galaxy presses the RESET button. The buttons reset to their initial states.[par]"
+				show_keypad_9()
+		if kim_adhered_to == locker:
+			if four_at_start():
+				print "Galaxy presses the RESET button. Nothing seems to happen."
+			else:
+				four_buttons = [false, true, true, false]
+				print "Galaxy presses the RESET button. The buttons change to their initial states.[par]"
+				show_keypad_4()
+		if kim_adhered_to == purple_door:
+			sixteen_buttons = [false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false]
+			print "Galaxy presses the RESET button. The buttons all turn red.[par]"
+			show_keypad_16()
+		# The blue door's sort-by-swap puzzle has no RESET (no reset button on its keypad).
+		if kim_adhered_to == blue_door:
+			print "There's no RESET button around."
+
+instead push when self.target == reset_button:
+	reset_keypad()
+	stop succeeded
+
+# RESET — the same as pushing the on-screen RESET button. (PRESS RESET is handled by press_word below,
+# alongside the other non-numeric keypresses.)
+action reset_pad:
+	syntax:
+		"reset"
+
+do reset_pad:
+	reset_keypad()
+
+# The valid-range reminder plus a keypad reprint, shared by an out-of-range number and a non-numeric
+# keypress so either lands the player back at a readable board.
+function void press_bad_digit():
+	if kim_adhered_to == locker:
+		print "Use the digits 1-4.[par]"
+		show_keypad_4()
+	else:
+		if kim_adhered_to == purple_door:
+			print "Use the numbers 1-16.[par]"
+			show_keypad_16()
+		else:
+			if kim_adhered_to == blue_door:
+				print "Use the digits 1-9.[par]"
+				show_keypad_blue()
+			else:
+				print "Use the digits 1-9.[par]"
+				show_keypad_9()
+
+# A keypress that isn't a digit ("press f"): the numeric `press [n]` only matches digits, so anything
+# else falls here rather than a parser "no such thing". PRESS RESET routes here too.
+action press_word:
+	string keytext
+	syntax:
+		"press [keytext]"
+
+before press_word:
+	if kim_adhered_to == none or not (holder(player) == kim_hack_room):
+		print "Galaxy isn't hacking anything right now."
+		stop failed
+	if to_lower(self.keytext) == "reset":
+		reset_keypad()
+		stop succeeded
+	press_bad_digit()
+	stop succeeded
+
+do press_key when kim_adhered_to == yellow_door:
+	if self.n < 1 or self.n > 9:
+		press_bad_digit()
+		stop failed
+	# Per-key flip-sets (the hidden rule). Pressing flips each listed button.
+	let flip = [0]
+	if self.n == 1:
+		flip = [1]
+	if self.n == 2:
+		flip = [2, 3]
+	if self.n == 3:
+		flip = [3, 4]
+	if self.n == 4:
+		flip = [1, 2, 4]
+	if self.n == 5:
+		flip = [5, 6]
+	if self.n == 6:
+		flip = [1, 2, 3, 6]
+	if self.n == 7:
+		flip = [7, 8]
+	if self.n == 8:
+		flip = [1, 2, 4, 8]
+	if self.n == 9:
+		flip = [1, 3, 9]
+	for x in flip:
+		nine_buttons[x - 1] = not nine_buttons[x - 1]
+	if nine_solved():
+		let yd = yellow_door
+		yd.locked = false
+		yd.closed = false
+
+report press_key when kim_adhered_to == yellow_door:
+	print "Galaxy presses button [self.n].[par]"
+	show_keypad_9()
+	if nine_solved():
+		print "As the final button lights up blue, the yellow door to the west swings open! Galaxy retrieves the KIM."
+		detach_kim()
+		galaxy_score(1)
+
+
+# --- Red door: a second nine-button keypad with its own hidden flip-sets ------
+do press_key when kim_adhered_to == red_door:
+	if self.n < 1 or self.n > 9:
+		press_bad_digit()
+		stop failed
+	# Per-key flip-sets (the hidden rule, distinct from the yellow door's).
+	let flip = [0]
+	if self.n == 1:
+		flip = [1]
+	if self.n == 2:
+		flip = [1, 3, 5, 7, 9]
+	if self.n == 3:
+		flip = [1, 2, 4, 5, 7, 8]
+	if self.n == 4:
+		flip = [1, 3, 5, 7, 9]
+	if self.n == 5:
+		flip = [1, 2, 3, 4, 6, 7, 8, 9]
+	if self.n == 6:
+		flip = [1, 5, 7, 9]
+	if self.n == 7:
+		flip = [1, 2, 3, 4, 5, 6, 8, 9]
+	if self.n == 8:
+		flip = [1, 3, 5, 7, 9]
+	if self.n == 9:
+		flip = [1, 2, 4, 5, 7, 8]
+	for x in flip:
+		nine_buttons[x - 1] = not nine_buttons[x - 1]
+	if nine_solved():
+		let rd = red_door
+		rd.locked = false
+		rd.closed = false
+
+report press_key when kim_adhered_to == red_door:
+	print "Galaxy presses button [self.n].[par]"
+	show_keypad_9()
+	if nine_solved():
+		print "As the final button lights up blue, the red door to the south swings open! Galaxy retrieves the KIM."
+		detach_kim()
+		galaxy_score(1)
+
+
+# --- Blue door: a "sort by swapping" puzzle ----------------------------------
+# Not Lights-Out. The nine buttons sit at fixed positions 1-9; each position shows a
+# shuffled Siriusian digit-glyph label (`number_order` holds which digit each slot
+# currently shows). Pressing a position lights it blue; once two are blue, their
+# labels swap and both revert to red. Goal: sort the labels so position N shows digit
+# N (`number_order` == 1..9). The player must first deduce the Siriusian numeral order.
+global list<int> number_order = none
+
+# The Siriusian glyph for a single digit 1-9 (reuses the display cipher, so it stays
+# consistent with the rest of the game's alien script).
+# The blue keypad's digit labels stay alien regardless of scan progress (decoding them IS the
+# puzzle), so use the raw `siriusian_word` cipher rather than the now scan-aware `siriusian`.
+function string glyph_for(int d):
+	let glyphs = [siriusian_word("1"), siriusian_word("2"), siriusian_word("3"), siriusian_word("4"), siriusian_word("5"), siriusian_word("6"), siriusian_word("7"), siriusian_word("8"), siriusian_word("9")]
+	return glyphs[d - 1]
+
+# Shuffle the nine digit labels into a random order (lib/sys `shuffle`). Reshuffle if it
+# happens to land already sorted (which would present the puzzle pre-solved). In debug
+# (non-release) builds the arrangement is fixed to a single swap — positions 1 and 2 — so the
+# walkthrough solves it with `press 1/press 2` (mirrors I7's DEBUG `number order is {2,1,3..}`).
+function void shuffle_labels():
+	number_order = [1, 2, 3, 4, 5, 6, 7, 8, 9]
+	if debug_mode:
+		number_order = [2, 1, 3, 4, 5, 6, 7, 8, 9]
+	else:
+		shuffle(number_order)
+		if blue_solved():
+			shuffle_labels()
+
+function bool blue_solved():
+	for i = 0 to 8:
+		if not (number_order[i] == i + 1):
+			return false
+	return true
+
+# Each position shows its current glyph label, bracketed [ x ] (red) or < x > (blue),
+# with the fixed position numbers underneath so the player can name a button to press.
+function void show_keypad_blue():
+	for n = 1 to 9:
+		# bind first: a [...] index inside a text substitution isn't supported (the
+		# scanner matches the first ']'). See TODO / listmut1 notes.
+		let g = glyph_for(number_order[n - 1])
+		if nine_buttons[n - 1]:
+			print "< [g] >"
+		else:
+			print "\[ [g] \]"
+	print "[line break]"
+	for n = 1 to 9:
+		print "  [n]  "
+	print "[line break]\[\] = red, <> = blue[par]"
+
+do press_key when kim_adhered_to == blue_door:
+	if self.n < 1 or self.n > 9:
+		press_bad_digit()
+		stop failed
+	nine_buttons[self.n - 1] = not nine_buttons[self.n - 1]
+	print "Galaxy presses button [self.n]. [run on]"
+	if nine_buttons[self.n - 1]:
+		print "Button [self.n] turns blue. [run on]"
+	else:
+		print "Button [self.n] turns red. [run on]"
+	# Find the first two lit (blue) positions; if both exist, swap their labels and
+	# clear the board back to all-red.
+	let first = 0
+	let second = 0
+	for i = 1 to 9:
+		if nine_buttons[i - 1]:
+			if first == 0:
+				first = i
+			else:
+				if second == 0:
+					second = i
+	if first >= 1 and second >= 1:
+		let t = number_order[first - 1]
+		number_order[first - 1] = number_order[second - 1]
+		number_order[second - 1] = t
+		for i = 0 to 8:
+			nine_buttons[i] = false
+		print "The labels on the two blue buttons swap places, and the buttons revert to red."
+	if blue_solved():
+		let bd = blue_door
+		bd.locked = false
+		bd.closed = false
+
+report press_key when kim_adhered_to == blue_door:
+	if blue_solved():
+		print "[par]As the final symbols switch places, the blue door to the east swings open! Galaxy retrieves the KIM."
+		detach_kim()
+		galaxy_score(1)
+	else:
+		print "[par]"
+		show_keypad_blue()
+
+
+# --- Locker: a four-button toggle --------------------------------------------
+# The simplest mechanic: four buttons, each press toggles only itself. Start
+# {red, blue, blue, red}, goal all blue (so: press 1 and 4). Solving opens the
+# locker, which reveals the diary that was sealed inside.
+global list<bool> four_buttons = none
+
+function bool four_solved():
+	for i = 0 to 3:
+		if not four_buttons[i]:
+			return false
+	return true
+
+# A red button shows as [N], a blue one as <N>, followed by the [RESET] button.
+function void show_keypad_4():
+	for i = 1 to 4:
+		if four_buttons[i - 1]:
+			print "<[i]>"
+		else:
+			print "\[[i]\]"
+	print "\[RESET\]"
+	print "[line break]\[\] = red, <> = blue[par]"
+
+do press_key when kim_adhered_to == locker:
+	if self.n < 1 or self.n > 4:
+		press_bad_digit()
+		stop failed
+	four_buttons[self.n - 1] = not four_buttons[self.n - 1]
+	if four_solved():
+		let lk = locker
+		lk.closed = false
+		lk.locked = false
+
+report press_key when kim_adhered_to == locker:
+	print "Galaxy presses button [self.n]. [run on]"
+	if four_buttons[self.n - 1]:
+		print "Button [self.n] turns blue."
+	else:
+		print "Button [self.n] turns red."
+	if four_solved():
+		print "[par]As the final button lights up blue, the locker swings open, revealing a diary. Galaxy retrieves the KIM."
+		detach_kim()
+		galaxy_score(1)
+	else:
+		print "[par]"
+		show_keypad_4()
+
+
+# --- Purple door: a 16-button "select five" keypad ---------------------------
+# Sixteen buttons, each dark (red) or lit (blue). Light exactly the five buttons whose
+# numbers are the control code (`control_parts`) to open the door. A fifth lit button that
+# doesn't complete the code beeps and resets every button to red; pressing a lit button
+# before then turns it back off.
+#
+# The code is five distinct random buttons (1-16). Each button carries a distinct Siriusian
+# glyph (`button_glyphs`); the fully-scanned commander's log reveals the five code glyphs,
+# and the keypad shows every button's glyph, so the player decodes glyph → button number by
+# matching. Generated once (lazily, at the first hack or the first fully-scanned log read).
+global list<bool> sixteen_buttons = none
+global list<int> control_parts = none
+global string control_code = ""
+global bool code_generated = false
+# Whether the most recent press triggered a wrong-five reset (do → report signal).
+global bool purple_reset = false
+
+# Sixteen distinct glyphs, one per button (the keypad's "Siriusian numerals"). Drawn from
+# the cipher alphabet's non-aliasing glyphs (a-j + u-z; k-t alias a-j in siriusian_glyphs).
+global string button_glyphs = "ĹĺĻļĽľĿŀŁłЃΐſŧīı"
+
+function string button_glyph(int n):
+	return char_at(button_glyphs, n - 1)
+
+# All five tiers scanned? (the gate for revealing the code in the commander's log.)
+function bool fully_scanned():
+	for b in scan_levels:
+		if not b:
+			return false
+	return true
+
+# In debug (non-release) builds the control code is forced to buttons 1-5 so walkthroughs are
+# deterministic — mirroring I7 (KIM.i7x: "if DEBUG is true, now control code is 12345"). A release
+# build excludes the debug file that sets this, so the code shuffles randomly. See debug.lamp.
+global bool debug_mode = false
+
+# Pick the five-button control code once: shuffle 1-16 (or, in debug_mode, take 1-5 unshuffled),
+# take the first five, and render their glyphs as the code string the log will show.
+function void ensure_control_parts():
+	if not code_generated:
+		let all16 = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16]
+		if not debug_mode:
+			shuffle(all16)
+		control_parts = [all16[0], all16[1], all16[2], all16[3], all16[4]]
+		control_code = ""
+		for i = 0 to 4:
+			control_code = control_code + button_glyph(control_parts[i])
+		code_generated = true
+
+function bool in_control_parts(int n):
+	for p in control_parts:
+		if p == n:
+			return true
+	return false
+
+# Solved = exactly five buttons lit and every lit button is a control part.
+function bool purple_solved():
+	let count = 0
+	for i = 0 to 15:
+		if sixteen_buttons[i]:
+			count = count + 1
+			if not in_control_parts(i + 1):
+				return false
+	return count == 5
+
+function int lit_count():
+	let count = 0
+	for i = 0 to 15:
+		if sixteen_buttons[i]:
+			count = count + 1
+	return count
+
+# The keypad display: each button shows its number and Siriusian glyph (so the code glyphs
+# from the log can be matched to numbers). A dark button is [N glyph], a lit one <N glyph>.
+function void show_keypad_16():
+	for i = 1 to 16:
+		let g = button_glyph(i)
+		if sixteen_buttons[i - 1]:
+			print "<[i] [g]>"
+		else:
+			print "\[[i] [g]\]"
+	print "\[RESET\]"
+	print "[line break]\[\] = red, <> = blue[par]"
+
+do press_key when kim_adhered_to == purple_door:
+	if self.n < 1 or self.n > 16:
+		press_bad_digit()
+		stop failed
+	purple_reset = false
+	sixteen_buttons[self.n - 1] = not sixteen_buttons[self.n - 1]
+	if purple_solved():
+		let pd = purple_door
+		pd.locked = false
+		pd.closed = false
+	else:
+		if lit_count() == 5:
+			sixteen_buttons = [false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false]
+			purple_reset = true
+
+report press_key when kim_adhered_to == purple_door:
+	if purple_solved():
+		print "Galaxy presses button [self.n].[par]As the fifth button lights up blue, the purple door to the north swings open! Galaxy retrieves the KIM."
+		detach_kim()
+		galaxy_score(1)
+	else:
+		print "Galaxy presses button [self.n]. [run on]"
+		if purple_reset:
+			print "Five lit, but not the code — the KIM beeps and all sixteen buttons reset to red.[par]"
+		else:
+			if sixteen_buttons[self.n - 1]:
+				print "Button [self.n] turns blue.[par]"
+			else:
+				print "Button [self.n] turns red.[par]"
+		show_keypad_16()

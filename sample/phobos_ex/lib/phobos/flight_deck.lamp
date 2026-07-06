@@ -1,0 +1,108 @@
+lib advent
+
+# Flight Deck + ship behaviour (Base.i7x "Book - Flight Deck"). The ship is the escape: ENTER
+# it to climb inside, then FLY to leave. Flying decides the ending — a loss if the self-destruct
+# isn't armed (Galaxy just flees while Phobos still hits Mars), the heroic win once it is. The
+# ship objects + interior room live in base.lamp; the win-enabling `self_destruct_in_progress`
+# lives in countdown.lamp (set by the guard-driven lever arming, guard_endgame.lamp).
+#
+# FLY comes in three grammatical shapes, mirroring Base.i7x's three actions, all routed through
+# `fly_the_ship()` here: the bare verb (I7 *simply-flying* — "fly"/"launch"/"blast off"), the ship
+# noun form (I7 *ship-flying* — "fly/operate/pilot the ship", "operate the panel"), and the generic
+# "fly [anything else]" (I7 *flying* — the Moon Sled is out of fuel; everything else "can't fly
+# that"). One Lamp action with an optional `[target]` slot covers all three: bare syntaxes leave
+# `target` unset (none), the noun syntaxes fill it, and `do fly` branches.
+
+# Entering the ship moves Galaxy into the interior (which auto-describes on arrival).
+instead enter when self.target == siriusian_ship:
+	move player to Inside_The_Ship
+	stop succeeded
+
+# The ship is fixed (I7 "edificial").
+instead take when self.target == siriusian_ship:
+	print "The ship is far too large to carry."
+	stop failed
+
+# The escape itself: only from the pilot's seat inside the ship. Off the seat (e.g. standing on the
+# flight deck) it just reminds Galaxy to get inside. Win once the self-destruct is armed, else the
+# loss (she flees but Phobos still hits Mars).
+function void fly_the_ship():
+	if not (holder(player) == Inside_The_Ship):
+		print "Galaxy Jones needs to be inside the ship to fly it."
+	else:
+		if self_destruct_in_progress:
+			# Count the unconscious commandos Galaxy got into the ship (carried in, or laid in a
+			# seat). Each is worth a point at lift-off, on top of the launch itself.
+			let saved = 0
+			if (holder(tall_commando) == player) or (holder(tall_commando) == Inside_The_Ship):
+				saved = saved + 1
+			if (holder(short_commando) == player) or (holder(short_commando) == Inside_The_Ship):
+				saved = saved + 1
+			if saved == 1:
+				print "Galaxy takes a moment to strap the unconscious commando into the seat behind her."
+				galaxy_score(1)
+			if saved == 2:
+				print "Galaxy takes a moment to strap the two unconscious commandos into the seats behind her."
+				galaxy_score(2)
+			print "[par]She straps herself into the pilot's seat and begins to prepare for launch. She can almost feel the ticking of the self-destruct countdown as she races to get the ship ready. Finally, she is ready to go. She presses the launch button, and the ship's engines roar to life. The ship lifts off the ground and begins to accelerate towards Mars."
+			galaxy_score(1)
+			if saved == 0:
+				print "[par]But Galaxy's thoughts are on the poor guard she couldn't save. She hopes that the guard's sacrifice will not be in vain, and that a new era of peace will dawn between Mars and Sirius."
+			if saved == 1:
+				print "[par]But Galaxy's thoughts are on the poor guard she couldn't save. She hopes that the guard's sacrifice will not be in vain, and that a new era of peace will dawn between Mars and Sirius. Perhaps even the commando unconscious behind her will be instrumental in that peace."
+			if saved == 2:
+				print "[par]But Galaxy's thoughts are on the poor guard she couldn't save. She hopes that the guard's sacrifice will not be in vain, and that a new era of peace will dawn between Mars and Sirius. Perhaps even the commandos unconscious behind her will be instrumental in that peace."
+			print "[par]As the ship speeds away from Phobos, Galaxy glances back to see the self-destruct sequence complete. The base explodes in a brilliant flash of light, sending debris flying in all directions. Stickney Crater has been enlarged by several acres, but the Siriusian threat has been eliminated. Galaxy Jones has saved Mars once again."
+			ending_override = "Galaxy Jones has saved Mars from the Sirius Syndicate."
+			story = won
+		else:
+			print "All Galaxy can do at this point is to try to get away from the base before Phobos flies into Mars. She jumps into the pilot's seat and begins lift-off procedures. Within moments, the ship blasts out of the base and into space.[par]Not much later, Phobos begins to move towards Mars..."
+			ending_override = "Mars has been destroyed by the Sirius Syndicate."
+			story = lost
+
+# Bare FLY (I7 simply-flying): inside the ship or on the flight deck it tries the ship; anywhere
+# else there's nothing to fly. (A separate `fly_thing` action below takes a noun — an unfilled
+# object slot doesn't read as none, so the two grammatical shapes are two actions, distinguished by
+# arity: "fly" -> here, "fly <thing>" -> fly_thing.)
+action fly:
+	syntax:
+		"fly"
+		"launch"
+		"blast off"
+		"blastoff"
+		"lift off"
+		"liftoff"
+		"take off"
+		"takeoff"
+		"engage"
+		"pilot"
+		"start"
+		"ride"
+
+do fly:
+	if holder(player) == Inside_The_Ship or holder(player) == Flight_Deck:
+		fly_the_ship()
+	else:
+		print "What should Galaxy fly?"
+
+# FLY/DRIVE/OPERATE <thing> (I7 ship-flying + flying merged): the ship or its control panel flies
+# it; the Moon Sled is out of fuel; nothing else is flyable.
+action fly_thing:
+	direct physical target
+	syntax:
+		"fly [target]"
+		"drive [target]"
+		"pilot [target]"
+		"operate [target]"
+		"start [target]"
+		"ride [target]"
+		"launch [target]"
+
+do fly_thing:
+	if self.target == siriusian_ship or self.target == ship_control_panel:
+		fly_the_ship()
+	else:
+		if self.target == moon_sled:
+			print "The Moon Sled is out of fuel. Galaxy can't fly it anywhere."
+		else:
+			print "Galaxy can't fly that."

@@ -1,0 +1,191 @@
+lib advent
+
+# Walls / floor / ceiling backdrops (ported from Walls.i7x / Floors.i7x / Ceilings.i7x +
+# PBR Common.i7x, with the per-room text from Phobos Polish.i7x). Each is an advent `backdrop`
+# — present in scope in every room — made examinable/touchable here with room-aware wording.
+#
+# The I7 extensions key the per-room descriptions off a `Table of Walls/Floors/Ceilings` (one row
+# per room: a description + a touch description, plus a low-ceiling flag), looked up by a single
+# generic `Instead of examining/touching walls` rule. The faithful Lamp port mirrors that table as
+# **fields on the room** (read off `holder(actor)` by the generic instead rules below). Phobos
+# Polish.i7x fills every room: rough stone in the entry passages, utilitarian gray tile through
+# the interior (the room-type default here), white tile in the labs, dense rubber in the ship.
+#
+# Indoors/outdoors (PBR Common): Phobos is all indoors except the flight deck (`outdoors`, set in
+# base.lamp); no floating rooms. Indoors rooms have walls and a (usually too-high) ceiling; the
+# flight deck — exposed to space — has neither, only open sky, but still a floor ("ground"). The
+# ship is the one low-ceilinged room, so its ceiling can be touched. The custom-text strings are
+# verbatim from the original (third person: "Galaxy Jones runs her hand …").
+
+# The Table of Walls/Floors/Ceilings, as room fields. Defaults are the gray-tile majority; the
+# distinct rooms override below. An empty field falls back to the PBR default message.
+type room:
+	string wall_description = "The walls here are made of utilitarian gray tile."
+	string wall_touch = "Galaxy Jones runs her hand along the cool tile walls."
+	string floor_description = "The floor here is made of utilitarian gray tile."
+	string floor_touch = "Galaxy Jones runs her hand along the cool tile floor."
+	string ceiling_description = "The ceiling here is made of utilitarian gray tile."
+	string ceiling_touch = "Galaxy Jones runs her hand along the cool tile ceiling."
+	bool low_ceiling = false
+
+# --- Per-room overrides (Phobos Polish.i7x rows that differ from the gray-tile default) -------
+# Rough stone — the entry passages near the surface.
+room Passage_End:
+	wall_description "The walls here are made of rough stone."
+	wall_touch "Galaxy Jones runs her hand along the rough stone walls."
+	floor_description "The floor here is made of rough stone."
+	floor_touch "Galaxy Jones runs her hand along the rough stone floor."
+	ceiling_description "The ceiling here is made of rough stone."
+	ceiling_touch "Galaxy Jones runs her hand along the rough stone ceiling."
+room Southern_Spoke:
+	wall_description "The walls here are made of rough stone."
+	wall_touch "Galaxy Jones runs her hand along the rough stone walls."
+	floor_description "The floor here is made of rough stone."
+	floor_touch "Galaxy Jones runs her hand along the rough stone floor."
+	ceiling_description "The ceiling here is made of rough stone."
+	ceiling_touch "Galaxy Jones runs her hand along the rough stone ceiling."
+room Storeroom:
+	wall_description "The walls of the storeroom are made of rough stone."
+	wall_touch "Galaxy Jones runs her hand along the rough stone walls."
+	floor_description "The floor of the storeroom is made of rough stone."
+	floor_touch "Galaxy Jones runs her hand along the rough stone floor."
+	ceiling_description "The ceiling of the storeroom is made of rough stone."
+	ceiling_touch "Galaxy Jones runs her hand along the rough stone ceiling."
+
+# White tile — the labs.
+room Science_Lab:
+	wall_description "The walls of the science lab are made of white tile."
+	wall_touch "Galaxy Jones runs her hand along the smooth, polished tile walls."
+	floor_description "The floor of the science lab is made of white tile."
+	floor_touch "Galaxy Jones runs her hand along the smooth, polished tile floor."
+	ceiling_description "The ceiling of the science lab is made of white tile."
+	ceiling_touch "Galaxy Jones runs her hand along the smooth, polished tile ceiling."
+room armory:
+	wall_description "The walls of the armory are made of white tile."
+	wall_touch "Galaxy Jones runs her hand along the smooth, polished tile walls."
+	floor_description "The floor of the armory is made of white tile."
+	floor_touch "Galaxy Jones runs her hand along the smooth, polished tile floor."
+	ceiling_description "The ceiling of the armory is made of white tile."
+	ceiling_touch "Galaxy Jones runs her hand along the smooth, polished tile ceiling."
+
+# Dense rubber — the flight deck (floor only; outdoors, so no walls/ceiling) and the ship.
+room Flight_Deck:
+	floor_description "The floor of the flight deck is made of a dense, rubbery material."
+	floor_touch "Galaxy Jones runs her hand along the dense, rubbery floor."
+room Inside_The_Ship:
+	wall_description "The walls of the ship are made of a dense, rubbery material."
+	wall_touch "Galaxy Jones runs her hand along the dense, rubbery walls."
+	floor_description "The floor of the ship is made of a dense, rubbery material."
+	floor_touch "Galaxy Jones runs her hand along the dense, rubbery floor."
+	ceiling_description "The ceiling of the ship is made of a dense, rubbery material."
+	ceiling_touch "Galaxy Jones runs her hand along the dense, rubbery ceiling."
+	low_ceiling true
+
+# Presence predicates (PBR's walled/floored/ceilinged, simplified: with no floating rooms,
+# "indoors" is just "not outdoors", and the floor is present everywhere).
+function bool walled(room r):
+	return not r.outdoors
+function bool floored(room r):
+	return true
+function bool ceilinged(room r):
+	return not r.outdoors
+
+# --- Walls (Walls.i7x) -------------------------------------------------------
+backdrop walls:
+	printed_name "wall"
+	plural
+	scenery
+	understand "wall/walls"
+
+instead examine when self.target == walls:
+	let r = holder(self.actor)
+	if walled(r):
+		if r.wall_description == "":
+			print "[We] [see] nothing special about the walls."
+		else:
+			print "[r.wall_description]"
+	else:
+		print "There are no walls to see."
+	stop succeeded
+
+instead touch when self.target == walls:
+	let r = holder(self.actor)
+	if walled(r):
+		if r.wall_touch == "":
+			print "[We] [feel] nothing special about the walls."
+		else:
+			print "[r.wall_touch]"
+	else:
+		print "There are no walls to feel."
+	stop succeeded
+
+# Outdoors there are no walls to take; indoors the scenery flag refuses normally.
+instead take when self.taken == walls and not walled(holder(self.actor)):
+	print "There are no walls."
+	stop failed
+
+# --- Floor (Floors.i7x) ------------------------------------------------------
+# Present in every Phobos room; named "floor" indoors, "ground" outdoors.
+backdrop floor:
+	printed_name "floor"
+	scenery
+	understand "floor/ground"
+
+instead examine when self.target == floor:
+	let r = holder(self.actor)
+	if r.floor_description == "":
+		if r.outdoors:
+			print "[We] [see] nothing special about the ground."
+		else:
+			print "[We] [see] nothing special about the floor."
+	else:
+		print "[r.floor_description]"
+	stop succeeded
+
+instead touch when self.target == floor:
+	let r = holder(self.actor)
+	if r.floor_touch == "":
+		if r.outdoors:
+			print "[We] [feel] nothing special about the ground."
+		else:
+			print "[We] [feel] nothing special about the floor."
+	else:
+		print "[r.floor_touch]"
+	stop succeeded
+
+# --- Ceiling (Ceilings.i7x) --------------------------------------------------
+# Indoors: a ceiling — touchable only where low (the ship). Outdoors: open sky.
+backdrop ceiling:
+	printed_name "ceiling"
+	scenery
+	understand "ceiling/sky"
+
+instead examine when self.target == ceiling:
+	let r = holder(self.actor)
+	if ceilinged(r):
+		if r.ceiling_description == "":
+			print "[We] [see] nothing special about the ceiling."
+		else:
+			print "[r.ceiling_description]"
+	else:
+		print "There's nothing up there but sky."
+	stop succeeded
+
+instead touch when self.target == ceiling:
+	let r = holder(self.actor)
+	if ceilinged(r):
+		if r.low_ceiling:
+			if r.ceiling_touch == "":
+				print "[We] [feel] nothing special about the ceiling."
+			else:
+				print "[r.ceiling_touch]"
+		else:
+			print "[We] can't reach the ceiling."
+	else:
+		print "[We] can't touch the sky."
+	stop succeeded
+
+# Outdoors, "take ceiling/sky" → can't take the sky; indoors the scenery flag refuses normally.
+instead take when self.taken == ceiling and holder(self.actor).outdoors:
+	print "[We] can't take the sky."
+	stop failed

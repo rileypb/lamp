@@ -1,0 +1,94 @@
+lib advent
+
+not_for_release
+
+# Phobos debug shortcuts (NOT FOR RELEASE — a `--release` build excludes this whole file).
+# They jump game state forward so late-game content can be exercised without a full
+# playthrough; the globals they set live in countdown.lamp / linguistics.lamp.
+
+# Mark this a debug build (mirrors I7's "DEBUG is true" in the NOT FOR RELEASE block). Today it
+# forces the purple-door control code to buttons 1-5 (hacking.lamp's `ensure_control_parts`), so
+# the walkthrough test scripts below are deterministic. A release build excludes this file, so the
+# code shuffles randomly for players.
+rule startup_rules:
+	debug_mode = true
+
+# late (I7's "lowcounting"): jump the self-destruct clock near zero, to reach the ending
+# without burning hundreds of turns.
+action late:
+	syntax:
+		"late"
+
+do late:
+	countdown = 5
+
+report late:
+	print "The countdown is now [countdown]."
+
+# scanall: complete the Linguistic Module's model (all five tiers at once), so the
+# commander's log reveals the purple-door control code without collecting every document.
+action scanall:
+	syntax:
+		"scanall"
+
+do scanall:
+	scan_levels = [true, true, true, true, true]
+
+report scanall:
+	print "The Linguistic Module's model is now complete."
+
+# arm: a debug shortcut to arm the reactor self-destruct directly (normally done in-game via the
+# guard-led lever pull, guard_endgame.lamp), so the heroic FLY-the-ship win can be reached quickly
+# in `test win`/`test talk`. Switches the doom-clock's zero ending too.
+action arm:
+	syntax:
+		"arm"
+
+do arm:
+	self_destruct_in_progress = true
+
+report arm:
+	print "The reactor self-destruct is now armed."
+
+# disguise: put on both cyborg pieces at once, to reach the guard (behind the purple door) without
+# the helmet/carapace fetch + hack. Asserts the `wears` relation directly (no wear messages).
+action disguise:
+	syntax:
+		"disguise"
+
+do disguise:
+	move cyberhelmet to player
+	move cybercarapace to player
+	wears player cyberhelmet
+	wears player cybercarapace
+
+report disguise:
+	print "Galaxy is now disguised as a Siriusian cyborg."
+
+# --- TEST scripts (run with `test <name>`; see the TEST runner in lib/advent/debug.lamp) -------
+# `test most` is the faithful puzzle walkthrough (ported from story.ni's "test most"): it collects
+# and scans all five documents and solves every keypad, ending disguised in the control room. The
+# keypad solutions are the Lamp port's own (the flip-sets/arrangements differ from I7); they are
+# deterministic because debug_mode (set above) fixes the blue and purple codes. `test endgame`
+# adds the guard win. `test talk`/`test win` are quick all-debug shortcuts (gonear/disguise/arm).
+test_script test_most:
+	printed_name "most"
+	understand "most"
+	commands "hack door/n/w/take form/scan form/read form/e/n/e/n/open cabinet/take helmet/wear helmet/s/s/hack locker/press 1/press 4/take diary/scan diary/n/hack blue door/press 1/press 2/e/take log/scan log/read log/w/w/w/n/take notebook/scan notebook/read notebook/s/hack yellow door/press 2/press 3/press 5/press 7/press 9/w/take manual/scan manual/read manual/e/hack red door/press 1/press 2/press 3/press 5/press 7/s/take carapace/wear carapace/n/e/hack purple door/press 1/press 2/press 3/press 4/press 5/n"
+
+# The full guard-led endgame, no debug shortcuts: persuade -> reveal -> follow the guard to the
+# reactor and arm the self-destruct -> follow back -> fight off the commandos -> flee in the ship.
+test_script test_endgame:
+	printed_name "endgame"
+	understand "endgame"
+	commands "test most/give chocolate to guard/remove helmet/s/w/w/pull right lever/e/e/n/attack tall commando/attack short commando/take tall commando/n/enter ship/drop tall commando/out/s/take short commando/n/enter ship/fly"
+
+test_script test_talk:
+	printed_name "talk"
+	understand "talk"
+	commands "scanall/disguise/gonear chair/x guard/ask guard about mars/ask guard about peace/ask guard about syndicate"
+
+test_script test_win:
+	printed_name "win"
+	understand "win"
+	commands "disguise/gonear chair/give chocolate to guard/remove helmet/arm/gonear seat/fly"

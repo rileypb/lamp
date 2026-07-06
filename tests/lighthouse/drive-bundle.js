@@ -33,7 +33,11 @@ require(workerData.bundlePath);
 
 const CTRL_BYTES = 8;
 
-function driveBundle(bundleDir, commands, { timeoutMs = 30000, saveSlotName = "e2e" } = {}) {
+function driveBundle(bundleDir, commands, {
+    timeoutMs = 30000,
+    saveSlotName = "e2e",
+    capabilities = { windows: { docks: ["top", "bottom", "left", "right"] } },
+} = {}) {
     return new Promise((resolve, reject) => {
         const inputBuffer = new SharedArrayBuffer(CTRL_BYTES + 4096);
         const saveBuffer = new SharedArrayBuffer(CTRL_BYTES + 1024 * 1024);
@@ -155,14 +159,10 @@ function driveBundle(bundleDir, commands, { timeoutMs = 30000, saveSlotName = "e
 
         worker.on("error", fail);
 
-        // Capabilities ride init exactly as the real shell sends them, so
-        // window_available in the game sees a four-dock host.
-        worker.postMessage({
-            type: "init",
-            inputBuffer,
-            saveBuffer,
-            capabilities: { windows: { docks: ["top", "bottom", "left", "right"] } },
-        });
+        // Capabilities ride init exactly as the real shell sends them; the default
+        // is the web shell's four-dock set, overridable to simulate other hosts
+        // (e.g. the TUI's top/bottom-only set).
+        worker.postMessage({ type: "init", inputBuffer, saveBuffer, capabilities });
     });
 }
 
