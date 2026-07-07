@@ -62,6 +62,7 @@ examine_in_container: "[par]In [the act.target] is [render_contents(act.target)]
 examine_in_container_plural: "[par]In [the act.target] are [render_contents(act.target)]."
 examine_too_dark: "It's too dark to see [regarding act.target][those]."
 touch_nothing: "[We] [feel] nothing unexpected."
+taste_nothing: "[We] [taste] nothing unexpected."
 touch_feels: "[act.target.feels]"
 touch_cant: "[We] can't touch [regarding act.target][those]."
 touch_cant_reach: "[We] can't reach [regarding act.target][those]."
@@ -203,6 +204,9 @@ understand "read [target]" as examine
 
 understand "touch [target]" as touch
 understand "feel [target]" as touch
+
+understand "taste [target]" as taste
+understand "lick [target]" as taste
 
 understand "attack [target]" as attack
 understand "hit [target]" as attack

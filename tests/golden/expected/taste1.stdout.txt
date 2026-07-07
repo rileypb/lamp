@@ -1,0 +1,15 @@
+pantry
+A pantry.
+
+You see a spoon, a biscuit and a rafter here.
+
+> taste spoon
+You taste nothing unexpected.
+
+> lick biscuit
+Buttery.
+
+> taste rafter
+You can't reach that.
+
+> quit

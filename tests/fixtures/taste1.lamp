@@ -1,0 +1,29 @@
+lib advent
+
+# TASTE (Inform's "tasting"): senses without changing the world, succeeding
+# with the universal default reply — retheme-able wholesale (message) or per
+# object (instead) — and reach-gated like TOUCH.
+
+game Taste_Demo:
+	start pantry
+
+room pantry:
+	description "A pantry."
+
+item spoon:
+	understand "spoon"
+
+item biscuit:
+	understand "biscuit"
+
+item rafter:
+	far_away true
+	understand "rafter"
+
+contains pantry spoon
+contains pantry biscuit
+contains pantry rafter
+
+instead taste when self.target == biscuit:
+	print "Buttery."
+	stop failed

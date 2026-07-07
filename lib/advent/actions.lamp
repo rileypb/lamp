@@ -517,6 +517,30 @@ check kiss:
 report failed kiss when self.reason == kiss_pointless:
 	print message kiss_refused  # "[We] [do] not think [the act.target] would appreciate that."
 
+# TASTE (Inform's "tasting"). Like TOUCH it senses without changing the world —
+# no `do` band — and succeeds with a universal default reply a game rethemes
+# (per object with `instead taste`, or wholesale by overriding the message).
+# Reach-gated like TOUCH, reusing its refusal messages: tasting is contact.
+action taste:
+	direct physical target
+
+check taste:
+	if not self.target.feelable:
+		stop failed cant_touch
+	if self.target.far_away or self.target.obstructed:
+		stop failed cant_reach
+
+report taste:
+	print message taste_nothing  # "[We] [taste] nothing unexpected."
+
+report failed taste:
+	if self.reason == cant_touch:
+		print message touch_cant  # "[We] can't touch [regarding act.target][those]."
+		stop
+	if self.reason == cant_reach:
+		print message touch_cant_reach  # "[We] can't reach [regarding act.target][those]."
+		stop
+
 # PUSH for buttons, switches and the like (Inform's "pushing a thing"). Like ATTACK, the
 # action *fails* by default — most things don't respond — so the default is a `report failed`
 # message and a game contributes `instead push` rules for the controls that do (e.g. a button

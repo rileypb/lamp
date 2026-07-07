@@ -119,6 +119,7 @@ examine_in_container_plural: "[par]Dans [le act.target] se trouvent [render_cont
 
 # --- touch ---
 touch_nothing: "Vous ne sentez rien d'inattendu."
+taste_nothing: "Cela n'a rien d'inattendu au goût."
 touch_feels: "[act.target.feels]"
 touch_cant: "Vous ne pouvez pas toucher [le act.target]."
 touch_cant_reach: "Vous ne pouvez pas atteindre [le act.target]."
