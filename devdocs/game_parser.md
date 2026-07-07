@@ -511,19 +511,33 @@ thing  (printed name, understand)
 articled ("go north", not "go a north"). `game` and `action` are outside `thing`
 — the game singleton and action instances are not player-nameable.
 
-**Pronoun `it` (implemented).** A noun phrase that is exactly `it` (after
-articles are dropped) resolves to the **antecedent**: the last single object the
-player referred to. The antecedent is updated whenever a noun phrase binds to
-exactly one physical object (including via a disambiguation answer), so after
-`take lamp` a following `take it` / `drop it` / `examine it` all refer to the
-lamp. Resolution is scope-gated and type-checked like any other noun: `it`
-fails with `You can't see any such thing.` if the antecedent has left the
-actor's scope or does not fit the slot's type. The *never bound* case is
-distinguished: `it` typed before any object has been referred to has no
-antecedent and reports `I don't know what "it" refers to.` instead, so the
-player learns the pronoun is empty rather than that the (nonexistent) thing is
-out of view. Directions and other non-physical referents never become the
-antecedent.
+**Pronouns (implemented, per-word antecedents — 2026-07-07).** A noun phrase
+that is exactly one pronoun word (after articles are dropped) resolves to the
+**antecedent filed under that word**. Binding a noun phrase files the object
+under the words the locale chooses (`setParserLanguage`'s `antecedentWords(obj)`
+hook); en-US files the **object form of the thing's own pronoun set**
+(`object_pronouns`), so:
+
+- `it` is reserved for singular things without their own pronouns (the
+  non-sentient default);
+- any plural — sentient or not — binds `them`;
+- a she-person binds `her`, a he-person `him`, a singular-they person `them`;
+- a **neopronoun** bearer binds its own object word (`pronouns
+  "xe/xem/xyr/xyrs/xemself"` → `xem`), recognized dynamically once its bearer
+  has been referred to (the static list `it/them/him/her` only drives the
+  unbound-word message).
+
+Bindings **coexist** — `x alice` then `x rock` leaves `her` → Alice and `it` →
+the rock — with the last referent winning per word. Updated whenever a noun
+phrase binds to exactly one physical object (including a disambiguation
+answer). Resolution is scope-gated and type-checked like any other noun: a
+bound word whose referent has left scope fails with `You can't see any such
+thing.`; a *never bound* word reports `I don't know what "her" refers to.`
+Directions and other non-physical referents never become antecedents. A locale
+without the hook files every referent under all of its static pronoun words —
+the previous single-antecedent behavior (fr-FR's le/la/les/ça; gender-aware
+filing there is a future refinement). Antecedents ride save/undo state (the
+`pronoun` state provider serializes the word→name map). Golden `pronounref1`.
 
 **Direct-object slot (`direct` keyword).** Only the `direct`-marked slot of an
 action updates the antecedent. This is an explicit annotation on the field

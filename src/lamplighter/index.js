@@ -822,17 +822,23 @@ let vocabIndex = new Map();
 // A locale-less program (no locale pack) simply doesn't strip articles.
 let parserArticles = new Set();
 
-// Pronouns the player may use in place of a noun. v1 supports only a single
-// antecedent ("it" in English; him/her/them are deferred — see
-// devdocs/game_parser.md). A pronoun span resolves to the antecedent tracked in
-// `pronounIt`, not via the vocab index.
+// Pronouns the player may use in place of a noun. Antecedents are tracked PER
+// PRONOUN WORD: binding a noun phrase files the object under the words the
+// locale chooses (setParserLanguage's `antecedentWords` hook — en-US files the
+// object form of the thing's own pronoun set, so "it" stays a singular
+// non-sentient reference while a plural binds "them", a she-person "her", and
+// a neopronoun person its own object word, e.g. "xem"). A locale without the
+// hook files every referent under all of its static pronoun words — the old
+// single-antecedent behavior (fr-FR's le/la/les/ça).
 let parserPronouns = new Set();
 
-// The antecedent for "it": the last single object the player referred to.
-// Updated whenever a noun phrase binds to exactly one physical object.
-let pronounIt = null;
+// word -> the last object filed under that pronoun word. Dynamic words (a
+// neopronoun's object form) are recognized once bound, without appearing in
+// the static parserPronouns list.
+let pronounAntecedents = new Map();
+let antecedentWordsImpl = null;
 
-// "it" refers to things in the world, not to non-physical referents such as
+// Pronouns refer to things in the world, not to non-physical referents such as
 // directions, so only physical objects become antecedents. A game without a
 // `physical` type treats every object as eligible (matching resolvePool).
 // World-model contract: antecedent eligibility is gated on the `physical` type.
@@ -842,7 +848,11 @@ function canBeAntecedent(obj) {
 }
 
 function noteAntecedent(obj) {
-    if (canBeAntecedent(obj)) pronounIt = obj;
+    if (!canBeAntecedent(obj)) return;
+    const words = antecedentWordsImpl ? antecedentWordsImpl(obj) : [...parserPronouns];
+    for (const word of words || []) {
+        pronounAntecedents.set(String(word).toLowerCase(), obj);
+    }
 }
 
 // The player's phrase tokens for a noun span: the span with leading/internal
@@ -853,9 +863,14 @@ function strippedPhraseTokens(span) {
 }
 
 // The pronoun word if `span` is exactly one pronoun (e.g. "it"), else null.
+// A word counts if it is in the locale's static list OR currently bound (the
+// dynamic path that admits a neopronoun's object word once its bearer has
+// been referred to).
 function pronounOf(span) {
     const tokens = strippedPhraseTokens(span);
-    return tokens.length === 1 && parserPronouns.has(tokens[0]) ? tokens[0] : null;
+    if (tokens.length !== 1) return null;
+    const word = tokens[0];
+    return parserPronouns.has(word) || pronounAntecedents.has(word) ? word : null;
 }
 
 // Self words — "me"/"myself" — resolve to the commanding actor (the agent running
@@ -925,14 +940,14 @@ function parseAllPhrase(span) {
     return exceptPieces.length > 0 ? { exceptPieces } : null;
 }
 
-// A pronoun used among `spans` that has no antecedent yet, else null. This is
-// the "never bound" case — distinct from a bound pronoun whose referent has
-// left scope (pronounIt is set) — so it gets its own message.
+// A pronoun used among `spans` whose WORD has no antecedent yet, else null.
+// Per-word: "x her" with only a rock referred to is unbound even though "it"
+// is. This is the "never bound" case — distinct from a bound pronoun whose
+// referent has left scope — so it gets its own message.
 function unboundPronounIn(spans) {
-    if (pronounIt) return null;
     for (const span of spans) {
         const word = pronounOf(span);
-        if (word) return word;
+        if (word && !pronounAntecedents.has(word)) return word;
     }
     return null;
 }
@@ -987,9 +1002,11 @@ function objectsForTokens(tokens) {
 function resolveCandidates(span, scope, slotType, actor) {
     const phraseTokens = strippedPhraseTokens(span);
     const scopeSet = new Set(scope);
-    if (pronounOf(span)) {
-        if (pronounIt && scopeSet.has(pronounIt) && (!slotType || isTypeOrSubtype(pronounIt.type, slotType))) {
-            return [pronounIt];
+    const pronounWord = pronounOf(span);
+    if (pronounWord) {
+        const bound = pronounAntecedents.get(pronounWord);
+        if (bound && scopeSet.has(bound) && (!slotType || isTypeOrSubtype(bound.type, slotType))) {
+            return [bound];
         }
         return [];
     }
@@ -1040,6 +1057,10 @@ let unknownReferenceRenderer = (word) => `I don't know what "${word}" refers to.
 function setParserLanguage(spec) {
     if (spec.articles) parserArticles = new Set(spec.articles);
     if (spec.pronouns) parserPronouns = new Set(spec.pronouns);
+    // antecedentWords(obj) -> the pronoun words to file obj under when it binds
+    // (en-US: the object form of obj's own pronoun set). Absent, every referent
+    // files under all static pronoun words (single-antecedent behavior).
+    if (spec.antecedentWords) antecedentWordsImpl = spec.antecedentWords;
     if (spec.selfWords) parserSelfWords = new Set(spec.selfWords);
     // The comma stays a connector under every locale (it is structural, not vocabulary).
     if (spec.connectors) parserConnectors = new Set([",", ...spec.connectors]);
@@ -1442,7 +1463,7 @@ function requestRestart() {
 // world and drive the command loop. On RESTART the library unwinds that loop with the restart
 // flag armed; here we restore the pre-startup baseline and re-fire startup for a fresh game.
 function run() {
-    pronounIt = null;
+    pronounAntecedents = new Map();
     buildVocabIndex();
     try {
         initialBaseline = captureState();
@@ -1452,7 +1473,7 @@ function run() {
     fireEvent("startup");
     while (restartRequested) {
         restartRequested = false;
-        pronounIt = null;
+        pronounAntecedents = new Map();
         restoreState(initialBaseline);
         clearUndoHistory();
         fireEvent("startup");
@@ -2457,10 +2478,18 @@ registerStateProvider({
 registerStateProvider({
     key: "pronoun",
     capture() {
-        return pronounIt ? pronounIt.name : null;
+        const out = {};
+        for (const [word, obj] of pronounAntecedents) out[word] = obj.name;
+        return out;
     },
     restore(data) {
-        pronounIt = data ? (nameRegistry.get(data) ?? null) : null;
+        pronounAntecedents = new Map();
+        if (data && typeof data === "object") {
+            for (const [word, name] of Object.entries(data)) {
+                const obj = nameRegistry.get(name);
+                if (obj) pronounAntecedents.set(word, obj);
+            }
+        }
     },
 });
 

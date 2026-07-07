@@ -1,0 +1,51 @@
+salon
+A salon.
+
+You see a rock and some coins here.
+
+> x her
+I don't know what "her" refers to.
+
+> x rock
+Just a rock.
+
+> x it
+Just a rock.
+
+> x alice
+You see nothing unusual about Alice.
+
+> x her
+You see nothing unusual about Alice.
+
+> x it
+Just a rock.
+
+> take coins
+Taken.
+
+> drop them
+Dropped.
+
+> x bob
+You see nothing unusual about Bob.
+
+> kiss him
+You do not think Bob would appreciate that.
+
+> x xandra
+You see nothing unusual about Xandra.
+
+> x xem
+You see nothing unusual about Xandra.
+
+> x robin
+You see nothing unusual about Robin.
+
+> x them
+You see nothing unusual about Robin.
+
+> take it
+Taken.
+
+> quit

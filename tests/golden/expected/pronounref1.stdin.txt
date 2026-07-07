@@ -1,0 +1,16 @@
+x her
+x rock
+x it
+x alice
+x her
+x it
+take coins
+drop them
+x bob
+kiss him
+x xandra
+x xem
+x robin
+x them
+take it
+quit

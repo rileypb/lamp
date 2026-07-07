@@ -1,0 +1,54 @@
+lib advent
+
+# Per-word pronoun antecedents: "it" is reserved for singular non-sentient
+# things; plurals (sentient or not) bind "them"; a she-person binds "her", a
+# he-person "him", a singular-they person "them"; a neopronoun bearer binds its
+# own object word ("xem"), recognized dynamically once referred to. Bindings
+# coexist — examining Alice does not disturb what "it" refers to — and an
+# unbound word gets the unknown-reference message.
+
+game PronounRef_Demo:
+	start salon
+
+room salon:
+	description "A salon."
+
+person alice:
+	proper true
+	pronouns "she"
+	printed_name "Alice"
+	understand "alice"
+
+person bob:
+	proper true
+	pronouns "he"
+	printed_name "Bob"
+	understand "bob"
+
+person robin:
+	proper true
+	pronouns "they"
+	printed_name "Robin"
+	understand "robin"
+
+person xandra:
+	proper true
+	pronouns "xe/xem/xyr/xyrs/xemself"
+	printed_name "Xandra"
+	understand "xandra"
+
+item rock:
+	understand "rock"
+	description "Just a rock."
+
+item coins:
+	plural true
+	understand "coins/coin"
+	description "A scatter of coins."
+
+contains salon alice
+contains salon bob
+contains salon robin
+contains salon xandra
+contains salon rock
+contains salon coins

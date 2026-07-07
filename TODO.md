@@ -773,6 +773,17 @@ other non-items (rooms, doors, backdrops) refuse generically, and
 Both locales; golden `takeperson1`; 239 pre-existing byte-invariant.
 **Prologue review leftovers:** kiss retheme ("[The noun]
 [might not] [like] that."), eat "Not bad." tail, room-listing state notes.
+**Per-word pronoun antecedents DONE (2026-07-07, engine + en-US):** the
+parser tracks antecedents per pronoun word via a locale `antecedentWords`
+hook — en-US files each referent under the object form of its own pronoun
+set: "it" reserved for singular non-pronouned things, plurals bind "them",
+she/he-persons "her"/"him", singular-they "them", neopronoun bearers their
+own object word ("xem", recognized dynamically once bound). Bindings
+coexist; per-word unbound messages; save/undo serializes the map; fr-FR
+unchanged via the no-hook fallback (files under all static words —
+gender-aware filing is a noted refinement). Golden `pronounref1`; suites
+green (takeperson1 re-baselined to the user's [don't] message edit);
+game_parser.md updated.
 **Chapter 1 review leftovers:** the movie's room paragraph (I7 appearance
 line — make lawrence non-scenery + initial_appearance "[lawrence_desc()]");
 stale switch-on report after the weather swap (render live lawrence_desc);
