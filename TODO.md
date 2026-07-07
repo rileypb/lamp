@@ -438,6 +438,36 @@ defined). Low priority. **Where:** `src/lamplighter/index.js` (`run`).
 
 ## Design (not scheduled)
 
+### Multi-actions (`take all`, `drop X and Y`, `put all but Z in box`) — slice 1 DONE (2026-07-06)
+**Direction (approved):** Inform-style **parser-level expansion** — the parser resolves
+a multi noun phrase to an object list, then dispatches the action **once per object**
+with an `objectname: ` output prefix (per lurkinghorror.txt:568, "chair: Taken. / pc:
+Your load is too heavy."), so single-object rulebooks, refusals, and messages work
+unchanged. Supersedes game_parser.md's `list<T>`-slot sketch (doc updated). Flag is
+named `multi`, default false, direct slot only.
+**Slice 1 DONE (2026-07-06, on branch `windows`):** the bare `multi` action-body flag
+(parser_rd/ast/emitter → `setMultiAction`; checker errors when there's no `direct`
+slot — golden `multi_nodirect`); comma-isolating tokenization + locale-owned connector
+words (`setParserLanguage({connectors})`: en-US "and", fr-FR "et"; comma always);
+whole-span-first resolution so "salt and pepper shaker" stays one object; list
+resolution with dedupe; **ambiguity inside a list prompts and resumes** (the punt
+wasn't needed — pendingDisambiguation carries `multiPieces`/`multiOut`); one
+checkpoint + one turn per command (dispatchResolvedAction, shared by fresh +
+disambiguation paths); per-object prefix via objectDisplayName (printed_name
+templates render — French "clé:" verified); `it` → last list object; non-multi
+action (or non-direct slot) + connector → `parser_no_multi` refusal (fr override
+added); free-text slots re-attach commas ("say hello, sailor" round-trips). advent
+marks take/drop/put_on. Golden `multi1` (12-command transcript); all 229 goldens +
+every other suite green; French smoke-tested manually. Docs: specs.md "Multiple
+objects (`multi` actions)", game_parser.md, messages.md.
+**Slice 2 (next):** `all` / `all but/except X` — with the per-action **"all includes"
+hook** (approved: hook from day one, an overridable Lamp function à la Inform's
+"deciding whether all includes"; at minimum exclude-carried for `take all`, scenery/
+people by default); empty-`all` "nothing available" message; loop order stays scope
+order. **Later:** `them` pronoun bound to the last list; consider marking wear/doff
+multi. **Where:** `src/lamplighter/index.js` (resolveMultiPieces/splitMultiSpan),
+`lib/advent`, locales.
+
 ### 7. Core-vs-plugin: actions as core and/or an extensible compiler
 Proposal recorded in `devdocs/compiler-extensibility.md`: resolve the
 "IF baked into the compiler" coupling (arch doc → "Layer boundaries and IF

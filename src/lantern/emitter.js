@@ -401,6 +401,9 @@ function emitProgram(programAst, options = {}) {
         if (actionNode.worldScope) {
             lines.push(`lamplighter.setWorldScope(${emitName(actionNode.name)});`);
         }
+        if (actionNode.multi) {
+            lines.push(`lamplighter.setMultiAction(${emitName(actionNode.name)});`);
+        }
     }
 
     // `understand "TEMPLATE" as ACTION` — an extra grammar phrasing for an action

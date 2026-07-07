@@ -1,0 +1,35 @@
+lib advent
+
+# Exercises `multi` actions (multiple direct objects): "take X and Y" and
+# "drop X, Y" dispatch once per object under an "objectname: " prefix; per-object
+# failures report inline (the scenery idol); a non-multi action given a list
+# refuses; a list piece that is ambiguous prompts and resumes; an object whose
+# vocabulary contains a connector ("salt and pepper shaker") still resolves as
+# one thing; and a connector in an indirect slot refuses.
+
+game Multi_Demo:
+    start hall
+
+room hall:
+    description "A plain hall."
+
+item red_ball
+item blue_ball
+item coin
+item umbrella
+item salt_and_pepper_shaker
+
+item idol:
+    scenery true
+
+item table:
+    scenery true
+    supporter true
+
+contains hall red_ball
+contains hall blue_ball
+contains hall coin
+contains hall umbrella
+contains hall salt_and_pepper_shaker
+contains hall idol
+contains hall table

@@ -1,0 +1,50 @@
+hall
+A plain hall.
+
+You see a red ball, a blue ball, a coin, an umbrella and a salt and pepper shaker here.
+
+> take coin and umbrella
+coin: Taken.
+umbrella: Taken.
+
+> i
+You are carrying:
+  a coin
+  an umbrella
+
+> drop coin, umbrella
+coin: Dropped.
+umbrella: Dropped.
+
+> take umbrella
+Taken.
+
+> take coin and idol
+coin: Taken.
+idol: That's not something you can take.
+
+> x coin and umbrella
+You can't use multiple objects with that verb.
+
+> take red ball and blue ball
+red ball: Taken.
+blue ball: Taken.
+
+> drop ball and umbrella
+Which do you mean: the red ball or the blue ball?
+
+> blue
+blue ball: Dropped.
+umbrella: Dropped.
+
+> take salt and pepper shaker
+Taken.
+
+> put coin and shaker on table
+coin: You put the coin on the table.
+salt and pepper shaker: You put the salt and pepper shaker on the table.
+
+> put red ball on table and idol
+You can't use multiple objects with that verb.
+
+> quit

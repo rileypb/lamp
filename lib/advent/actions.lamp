@@ -24,6 +24,7 @@ report wait:
 
 action take:
 	direct item taken
+	multi
 
 check take:
 	if holder(self.taken) == self.actor:
@@ -113,6 +114,7 @@ report inventory:
 
 action drop:
 	direct item dropped
+	multi
 
 check drop:
 	if not (holder(self.dropped) == self.actor):
@@ -466,6 +468,7 @@ on contains remove:
 
 action put_on:
 	direct item put_item
+	multi
 	item destination
 
 check put_on:

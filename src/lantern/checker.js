@@ -172,6 +172,11 @@ function checkUnderstandDecl(node) {
 // Each `[slot]` in an action's syntax templates must name a declared slot, and no two slots
 // may be adjacent (the runtime grammar matcher can't split them).
 function checkActionDecl(node) {
+    // `multi` marks the direct slot as accepting multiple objects, so an action
+    // without a direct slot has nothing for the flag to apply to.
+    if (node.multi && !node.slots.some((s) => s.direct)) {
+        throw typeError(node.filePath, node.lineNumber, `action "${node.name}" is marked multi but has no direct slot`);
+    }
     const slotNames = new Set(node.slots.map((s) => s.fieldName));
     for (const template of (node.templates || [])) {
         for (const match of template.matchAll(/\[([A-Za-z_][A-Za-z0-9_]*)\]/g)) {

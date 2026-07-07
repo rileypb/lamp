@@ -248,7 +248,7 @@ Local variables (introduced by `let`) and loop variables (introduced by `for`) a
 
 Free text that contains spaces or punctuation is written as a double-quoted string literal, not a bare identifier (for example, `author "Phil Riley"`).
 
-The following words are **reserved** and may not be used as a name (object, type, kind, global, field, event, or local): `type`, `kind`, `global`, `on`, `for`, `in`, `while`, `if`, `else`, `let`, `print`, `error`, `dispatch`, `break`, `lib`, `locale`, `not_for_release`, `from`, `to`, `step`, `change`, `function`, `native`, `freeze`, `return`, `when`, `and`, `or`, `not`, `is`, `relation`, `bidi`, `remove`, `disconnect`, `rulebook`, `stop`, `follow`, `action`, `try`, `verb`, `sugar`, `move`, `mod`, `div`. (`mod` and `div` are the integer remainder / floored-division operators. `is` is the type-membership operator (`x is TYPE`). `freeze EXPR` forces a `text` value to a `string`; see the `text` primitive type. `verb WORD, …` registers conjugation-sugar words for text substitution; see the `text` type. `sugar bare|operand …` registers a locale's template-sugar tokens (`[the X]`/`[we]` → native calls; see the `verb` declaration section and devdocs/i18n.md). `syntax`, `inverted`, and `unique` are contextual keywords recognized only inside a `relation` body; `tags`, `out_of_world`, and `world_scope` are contextual only inside an `action` body; `default` is a contextual keyword recognized only inside a `rulebook` body; the band words `before`, `instead`, `check`, `do`, `after`, and `report` are contextual keywords recognized only as the leading token of a phase rule; `any` and `except` are contextual only in a phase-rule action selector; `rule` is contextual only when followed by a declared rulebook name; `silently` is contextual only immediately before `try`; `understand` and `as` are contextual only in a top-level `understand "TEMPLATE" as ACTION` grammar contribution; none of these are globally reserved.) A reservation applies only to a whole identifier: a reserved word appearing *inside* a longer identifier is unrestricted, so `move_to_room` (which denotes the name `move to room`) is a valid identifier even though `to` is reserved.
+The following words are **reserved** and may not be used as a name (object, type, kind, global, field, event, or local): `type`, `kind`, `global`, `on`, `for`, `in`, `while`, `if`, `else`, `let`, `print`, `error`, `dispatch`, `break`, `lib`, `locale`, `not_for_release`, `from`, `to`, `step`, `change`, `function`, `native`, `freeze`, `return`, `when`, `and`, `or`, `not`, `is`, `relation`, `bidi`, `remove`, `disconnect`, `rulebook`, `stop`, `follow`, `action`, `try`, `verb`, `sugar`, `move`, `mod`, `div`. (`mod` and `div` are the integer remainder / floored-division operators. `is` is the type-membership operator (`x is TYPE`). `freeze EXPR` forces a `text` value to a `string`; see the `text` primitive type. `verb WORD, …` registers conjugation-sugar words for text substitution; see the `text` type. `sugar bare|operand …` registers a locale's template-sugar tokens (`[the X]`/`[we]` → native calls; see the `verb` declaration section and devdocs/i18n.md). `syntax`, `inverted`, and `unique` are contextual keywords recognized only inside a `relation` body; `tags`, `out_of_world`, `world_scope`, and `multi` are contextual only inside an `action` body (`multi` only when alone on its line, so a slot may still have a type or name `multi`); `default` is a contextual keyword recognized only inside a `rulebook` body; the band words `before`, `instead`, `check`, `do`, `after`, and `report` are contextual keywords recognized only as the leading token of a phase rule; `any` and `except` are contextual only in a phase-rule action selector; `rule` is contextual only when followed by a declared rulebook name; `silently` is contextual only immediately before `try`; `understand` and `as` are contextual only in a top-level `understand "TEMPLATE" as ACTION` grammar contribution; none of these are globally reserved.) A reservation applies only to a whole identifier: a reserved word appearing *inside* a longer identifier is unrestricted, so `move_to_room` (which denotes the name `move to room`) is a valid identifier even though `to` is reserved.
 
 ### Objects and types
 
@@ -1173,8 +1173,9 @@ against the registered action templates, resolves each slot to an in-scope objec
 of the slot's type, and runs the matched action. The typical game loop reads a
 line and passes it to `run_command`. Scope is the actor's location contents and
 inventory (via the `holder` field); the actor is the `player` global. This is the
-Game Parser v0 (`devdocs/game_parser.md`); adjectives, pronouns, disambiguation,
-and multiple objects are not yet handled.
+Game Parser v0 (`devdocs/game_parser.md`); adjectives are not yet handled, and of
+the multiple-object forms only connector lists on `multi` actions exist (see
+Multiple objects below); `all`/`except` are not yet handled.
 
 ```lamp
 on startup:
@@ -1297,6 +1298,54 @@ scope right now). advent ships these in `lib/advent/debug.lamp` as `out_of_world
 they name a thing, `world_scope`) actions, in `lib/advent/debug.lamp` (marked
 `not_for_release`, so a `--release` build excludes them). The two modifiers
 are independent — an action may carry either, both, or neither.
+
+#### Multiple objects (`multi` actions)
+
+An action body may carry a **`multi`** line (a contextual keyword, like `out_of_world`):
+its **`direct` slot** then accepts a multiple-object noun phrase — a list of nouns
+separated by connector words (`drop the ball and the umbrella`, `take coin, key`). Only
+the direct slot may be multiple, so `multi` on an action with no `direct` slot is a
+compile error. The flag defaults to off: a non-multi action (or any non-direct slot)
+given a noun list refuses with the `parser_no_multi` message ("You can't use multiple
+objects with that verb.").
+
+```lamp
+action take:
+    direct item taken
+    multi
+```
+
+The parser resolves the list and **dispatches the action once per object**, each run on
+its own instance with the direct slot bound to that single object (indirect slots are
+shared) — so phase rules, refusal messages, and templates are written exactly as for a
+single object and compose into the IF-transcript convention, per-object failures
+included:
+
+```
+> take chair and pc
+chair: Taken.
+pc: Your load is too heavy.
+```
+
+Semantics and edges:
+
+- **One turn.** The whole command takes one checkpoint and one turn: undo reverts all
+  of it, and every-turn rules fire once.
+- **Whole-span first.** A span is tried as a single noun before splitting, so an object
+  whose vocabulary contains a connector ("salt and pepper shaker") resolves as one
+  thing. A list that names the same object twice is deduplicated; a list that collapses
+  to one object runs the plain single-object path, prefix-free.
+- **Connectors are locale vocabulary** (`and` in en-US, `et` in fr-FR), installed via
+  `setParserLanguage({ connectors })` beside articles/pronouns; the comma is always a
+  connector (split into its own token at tokenization).
+- **Ambiguity resumes.** An ambiguous list piece prompts ("Which do you mean…?") and the
+  answer resumes the rest of the list.
+- **`it`** binds to the last object of the list; `them` is not yet handled.
+- **`all` / `except` are not yet implemented** (planned as a follow-up slice, with a
+  per-action "all includes" hook).
+
+advent marks `take`, `drop`, and `put_on` as `multi`. Goldens: `multi1` (behavior),
+`multi_nodirect` (compile error).
 
 #### Action tags
 

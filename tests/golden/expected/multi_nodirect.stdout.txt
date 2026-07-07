@@ -1,0 +1,3 @@
+Compile error: tests/fixtures/multi_nodirect.lamp:10: type error: action "greet" is marked multi but has no direct slot
+  10 | action greet:
+    | ^

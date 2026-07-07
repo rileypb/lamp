@@ -1104,14 +1104,15 @@ function createParser(tokens, filePath, globalNames, functionNames = new Set(), 
         let tags = [];
         let outOfWorld = false;
         let worldScope = false;
+        let multi = false;
         if (at("COLON")) {
             next();
             expectNewline();
-            ({ slots, templates, tags, outOfWorld, worldScope } = parseActionBody());
+            ({ slots, templates, tags, outOfWorld, worldScope, multi } = parseActionBody());
         } else {
             expectNewline();
         }
-        return ast.createActionDecl(name, slots, templates, filePath, keyword.line, tags, outOfWorld, worldScope);
+        return ast.createActionDecl(name, slots, templates, filePath, keyword.line, tags, outOfWorld, worldScope, multi);
     }
 
     // An action body holds slot field declarations, an optional `syntax:` block of
@@ -1124,6 +1125,7 @@ function createParser(tokens, filePath, globalNames, functionNames = new Set(), 
         const tags = [];
         let outOfWorld = false;
         let worldScope = false;
+        let multi = false;
         while (!at("DEDENT")) {
             if (peek().type === "IDENT" && peek().value === "syntax" && peek(1).type === "COLON") {
                 next();
@@ -1150,6 +1152,16 @@ function createParser(tokens, filePath, globalNames, functionNames = new Set(), 
                 worldScope = true;
                 continue;
             }
+            // `multi` (a contextual keyword) marks the action's `direct` slot as accepting
+            // multiple objects ("take all", "drop ball and umbrella"); the parser then
+            // dispatches the action once per resolved object. The newline lookahead keeps
+            // `multi` usable as a slot type name (`multi thing x` stays a slot line).
+            if (peek().type === "IDENT" && peek().value === "multi" && peek(1).type === "NEWLINE") {
+                next();
+                expectNewline();
+                multi = true;
+                continue;
+            }
             if (peek().type === "IDENT" && peek().value === "tags") {
                 next();
                 tags.push(plainName("tag name"));
@@ -1174,7 +1186,7 @@ function createParser(tokens, filePath, globalNames, functionNames = new Set(), 
             slots.push(ast.createFieldDecl(fieldType, fieldName, null, direct));
         }
         next();
-        return { slots, templates, tags, outOfWorld, worldScope };
+        return { slots, templates, tags, outOfWorld, worldScope, multi };
     }
 
     function parseSyntaxBlock() {

@@ -640,6 +640,19 @@ function isWorldScope(actionName) {
     return !!(typeRegistry.get(actionName) || {}).worldScope;
 }
 
+// Mark an action `multi`: its direct slot accepts a multiple-object noun phrase
+// ("drop ball and umbrella"); the parser resolves the list and dispatches the action
+// once per object, so rules always see a single object in the slot. Off by default —
+// a non-multi action given a list refuses with parser_no_multi. See devdocs/game_parser.md.
+function setMultiAction(actionName) {
+    const type = typeRegistry.get(actionName);
+    if (!type) throw new Error(`setMultiAction: unknown action type "${actionName}"`);
+    type.multi = true;
+}
+function isMultiAction(actionName) {
+    return !!(typeRegistry.get(actionName) || {}).multi;
+}
+
 // Matches a token list against one template's parts. Literals must match
 // verbatim; a slot captures the run of tokens up to the next literal (or the
 // end). Returns a field -> token-span map, or null if the template does not
@@ -844,6 +857,35 @@ function isSelfWord(span) {
     return tokens.length === 1 && parserSelfWords.has(tokens[0]);
 }
 
+// Connector words that separate the items of a multiple-object noun phrase
+// ("ball and umbrella", "ball, umbrella"). The comma is language-neutral (it is
+// split into its own token at tokenization); a locale adds its conjunction
+// ("and", "et") via setParserLanguage. Only consulted for the direct slot of a
+// `multi` action — elsewhere a connector in a span is a refusal signal.
+let parserConnectors = new Set([","]);
+
+// Splits a noun span into list pieces at connector tokens, dropping empties (so
+// "ball, and umbrella" yields two pieces). A span with no connector — or one that
+// yields fewer than two pieces — is not a list; callers get null.
+function splitMultiSpan(span) {
+    const pieces = [];
+    let current = [];
+    for (const token of span) {
+        if (parserConnectors.has(token)) {
+            if (current.length > 0) pieces.push(current);
+            current = [];
+        } else {
+            current.push(token);
+        }
+    }
+    if (current.length > 0) pieces.push(current);
+    return pieces.length >= 2 ? pieces : null;
+}
+
+function spanHasConnector(span) {
+    return span.some((t) => parserConnectors.has(t));
+}
+
 // A pronoun used among `spans` that has no antecedent yet, else null. This is
 // the "never bound" case — distinct from a bound pronoun whose referent has
 // left scope (pronounIt is set) — so it gets its own message.
@@ -960,6 +1002,8 @@ function setParserLanguage(spec) {
     if (spec.articles) parserArticles = new Set(spec.articles);
     if (spec.pronouns) parserPronouns = new Set(spec.pronouns);
     if (spec.selfWords) parserSelfWords = new Set(spec.selfWords);
+    // The comma stays a connector under every locale (it is structural, not vocabulary).
+    if (spec.connectors) parserConnectors = new Set([",", ...spec.connectors]);
     if (spec.disambiguation) disambiguationRenderer = spec.disambiguation;
     if (spec.unknownReference) unknownReferenceRenderer = spec.unknownReference;
 }
@@ -991,7 +1035,9 @@ const PRIMITIVE_SLOT_TYPES = new Set(["int", "real", "string", "text"]);
 
 function literalSlotValue(span, slotType) {
     if (slotType === "string" || slotType === "text") {
-        return span.join(" ");
+        // Tokenization isolates commas (for multiple-object lists); free text
+        // re-attaches them so `say hello, sailor` reads back naturally.
+        return span.join(" ").replace(/\s+,/g, ",");
     }
     const toks = strippedPhraseTokens(span);
     if (toks.length !== 1) return undefined;
@@ -1001,7 +1047,7 @@ function literalSlotValue(span, slotType) {
     return /^-?\d+(\.\d+)?$/.test(toks[0]) ? parseFloat(toks[0]) : undefined;
 }
 
-function resolveSlots(slots, instance, scope, slotTypes) {
+function resolveSlots(slots, instance, scope, slotTypes, multiOut = { field: null, objects: null }) {
     const directSlot = (typeRegistry.get(instance.type) || {}).directSlot || null;
     for (let i = 0; i < slots.length; i++) {
         const [field, span] = slots[i];
@@ -1015,6 +1061,18 @@ function resolveSlots(slots, instance, scope, slotTypes) {
         }
         const candidates = resolveCandidates(span, resolvePool(slotTypes[field], scope), slotTypes[field], instance.actor);
         if (candidates.length === 0) {
+            // A multi action's direct slot accepts a connector-separated list
+            // ("ball and umbrella") — tried only after the whole span fails as a
+            // single noun, so an object whose vocabulary contains a connector
+            // ("salt and pepper shaker") keeps resolving as one thing.
+            if (field === directSlot && isMultiAction(instance.type)) {
+                const pieces = splitMultiSpan(span);
+                if (pieces) {
+                    const status = resolveMultiPieces(pieces, 0, [], instance, field, slots.slice(i + 1), scope, slotTypes, multiOut);
+                    if (status === "ok") continue;
+                    return status;
+                }
+            }
             return "unresolved";
         }
         if (candidates.length === 1) {
@@ -1030,11 +1088,74 @@ function resolveSlots(slots, instance, scope, slotTypes) {
                 remainingSlots: slots.slice(i + 1),
                 scope,
                 slotTypes,
+                multiOut,
             };
             return "ambiguous";
         }
     }
     return "ok";
+}
+
+// Resolves the pieces of a multiple-object noun phrase from `startIdx`,
+// accumulating objects (deduplicated) into `resolved`. On success fills
+// `multiOut` and returns "ok"; a piece nothing matches fails the whole grammar
+// candidate ("unresolved", so overlapping syntaxes can still backtrack); an
+// ambiguous piece prompts and parks the walk position in pendingDisambiguation
+// so the player's answer resumes it.
+function resolveMultiPieces(pieces, startIdx, resolved, instance, field, remainingSlots, scope, slotTypes, multiOut) {
+    for (let i = startIdx; i < pieces.length; i++) {
+        const candidates = resolveCandidates(pieces[i], resolvePool(slotTypes[field], scope), slotTypes[field], instance.actor);
+        if (candidates.length === 0) {
+            return "unresolved";
+        }
+        if (candidates.length > 1) {
+            printDisambiguationPrompt(candidates);
+            pendingDisambiguation = {
+                actionName: instance.type,
+                instance,
+                field,
+                candidates,
+                remainingSlots,
+                scope,
+                slotTypes,
+                multiOut,
+                multiPieces: { pieces, nextIndex: i + 1, resolved },
+            };
+            return "ambiguous";
+        }
+        if (!resolved.includes(candidates[0])) resolved.push(candidates[0]);
+    }
+    multiOut.field = field;
+    multiOut.objects = resolved;
+    noteAntecedent(resolved[resolved.length - 1]);
+    return "ok";
+}
+
+// Runs a fully resolved action: one checkpoint + one turn advance for the whole
+// command — a multiple-object command is a single turn, so undo reverts all of it
+// and every-turn rules fire once. A multi resolution runs the action once per
+// object on a fresh instance (indirect slots shared), each under an
+// "objectname: " prefix so the single-object report rules compose into the
+// IF-transcript convention ("chair: Taken." / "pc: Your load is too heavy.").
+function dispatchResolvedAction(actionName, instance, multiOut) {
+    const oow = isOutOfWorld(actionName);
+    if (!oow) { checkpoint(); advanceTurn(); }
+    const objects = (multiOut && multiOut.objects) || null;
+    if (objects && objects.length > 1) {
+        for (const obj of objects) {
+            const inst = { ...instance };
+            inst[multiOut.field] = obj;
+            streamRequestBreak(1);
+            print(objectDisplayName(obj) + ": ");
+            runAction(actionName, inst);
+        }
+    } else {
+        // A list that collapsed to one object ("take ball and ball") runs the
+        // plain single-object path, prefix-free.
+        if (objects && objects.length === 1) instance[multiOut.field] = objects[0];
+        runAction(actionName, instance);
+    }
+    return !oow;
 }
 
 // Parses one line of player input and runs the matched action. If a pending
@@ -1054,28 +1175,45 @@ function playerCommand() {
 // so LOOK/TAKE must not run, and unrecognized input just re-prompts.
 function runCommand(line, actor, metaOnly = false) {
     lastCommand = String(line).trim();
-    const tokens = String(line).toLowerCase().trim().split(/\s+/).filter(Boolean);
+    // Commas become their own tokens: they separate the items of a multiple-object
+    // noun phrase ("drop ball, umbrella") and never carry object vocabulary.
+    const tokens = String(line).toLowerCase().replace(/,/g, " , ").trim().split(/\s+/).filter(Boolean);
     if (tokens.length === 0) return;
 
     if (pendingDisambiguation) {
-        const { actionName, instance, field, candidates, remainingSlots, scope, slotTypes } = pendingDisambiguation;
+        const pending = pendingDisambiguation;
+        const { actionName, instance, field, candidates, remainingSlots, scope, slotTypes } = pending;
+        const multiOut = pending.multiOut || { field: null, objects: null };
         const stripped = tokens.filter((t) => !parserArticles.has(t));
         const phraseTokens = stripped.length > 0 ? stripped : tokens;
         const narrowed = candidates.filter((obj) => phraseTokens.every((t) => objectVocab(obj).has(t)));
         if (narrowed.length === 1) {
             pendingDisambiguation = null;
-            instance[field] = narrowed[0];
-            const directSlotForDisambig = (typeRegistry.get(actionName) || {}).directSlot || null;
-            if (field === directSlotForDisambig) noteAntecedent(narrowed[0]);
-            const status = resolveSlots(remainingSlots, instance, scope, slotTypes);
+            if (pending.multiPieces) {
+                // The ambiguous phrase was one piece of a multiple-object list:
+                // accept the answer into the list and resume walking the pieces
+                // (which may prompt again and re-park itself).
+                const { pieces, nextIndex, resolved } = pending.multiPieces;
+                if (!resolved.includes(narrowed[0])) resolved.push(narrowed[0]);
+                const pieceStatus = resolveMultiPieces(pieces, nextIndex, resolved, instance, field, remainingSlots, scope, slotTypes, multiOut);
+                if (pieceStatus === "ambiguous") {
+                    return false;
+                }
+                if (pieceStatus === "unresolved") {
+                    print(message("parser_cant_see", "You can't see any such thing."));
+                    return false;
+                }
+            } else {
+                instance[field] = narrowed[0];
+                const directSlotForDisambig = (typeRegistry.get(actionName) || {}).directSlot || null;
+                if (field === directSlotForDisambig) noteAntecedent(narrowed[0]);
+            }
+            const status = resolveSlots(remainingSlots, instance, scope, slotTypes, multiOut);
             if (status === "ok") {
-                // Checkpoint/advance here (not on the original ambiguous command, which
-                // only prompted) so undo reverts the resolved action; an out-of-world
-                // action skips the clock and spends no turn.
-                const oow = isOutOfWorld(actionName);
-                if (!oow) { checkpoint(); advanceTurn(); }
-                runAction(actionName, instance);
-                return !oow;
+                // Checkpoint/advance happen in the dispatch (not on the original
+                // ambiguous command, which only prompted) so undo reverts the
+                // resolved action.
+                return dispatchResolvedAction(actionName, instance, multiOut);
             }
             if (status === "unresolved") {
                 // Already committed to this action — no backtracking here.
@@ -1113,6 +1251,9 @@ function runCommand(line, actor, metaOnly = false) {
     // understand that." (no recognized command). So `take xyzzy` differs from a
     // lone `xyzzy`.
     let sawVerbMatch = false;
+    // A noun list offered where none is allowed (a non-multi action, or any slot
+    // but the direct one) gets its own refusal ahead of "can't see any such thing".
+    let sawMultiAttempt = false;
     const unresolvedSpans = [];
     // The actor's scope is invariant across grammar candidates (no action runs, so
     // the world can't change, until a candidate resolves and we return), so compute
@@ -1131,17 +1272,13 @@ function runCommand(line, actor, metaOnly = false) {
             : actorScope();
         const slotTypes = (typeRegistry.get(entry.actionName) || {}).fields || {};
         const instance = { type: entry.actionName, action: entry.actionName, actor };
-        const status = resolveSlots(Object.entries(matched), instance, scope, slotTypes);
+        const multiOut = { field: null, objects: null };
+        const status = resolveSlots(Object.entries(matched), instance, scope, slotTypes, multiOut);
         if (status === "ok") {
-            // An out-of-world action runs without the turn clock and reports no turn
-            // spent; an in-world action checkpoints (for undo) and advances the turn.
-            const oow = isOutOfWorld(entry.actionName);
             // A meta-only prompt skips in-world actions (treats them as unrecognized) so
             // the ended game stays ended.
-            if (metaOnly && !oow) continue;
-            if (!oow) { checkpoint(); advanceTurn(); }
-            runAction(entry.actionName, instance);
-            return !oow;
+            if (metaOnly && !isOutOfWorld(entry.actionName)) continue;
+            return dispatchResolvedAction(entry.actionName, instance, multiOut);
         }
         if (status === "ambiguous") {
             return false;
@@ -1149,6 +1286,16 @@ function runCommand(line, actor, metaOnly = false) {
         unresolvedSpans.push(...Object.values(matched));
         if (entry.parts.some((part) => part.kind === "literal")) {
             sawVerbMatch = true;
+            // A connector in an object-slot span this grammar couldn't resolve marks a
+            // multiple-object attempt — but only where a list is disallowed (the check is
+            // syntactic, like Inform's). Primitive slots are exempt: free text may
+            // legitimately contain commas ("say hello, sailor").
+            const directSlot = (typeRegistry.get(entry.actionName) || {}).directSlot || null;
+            for (const [field, span] of Object.entries(matched)) {
+                if (PRIMITIVE_SLOT_TYPES.has(slotTypes[field])) continue;
+                const listAllowed = field === directSlot && isMultiAction(entry.actionName);
+                if (!listAllowed && spanHasConnector(span)) sawMultiAttempt = true;
+            }
         }
     }
     // An unbound pronoun (the player said "it" before referring to anything) gets
@@ -1162,6 +1309,10 @@ function runCommand(line, actor, metaOnly = false) {
     // A meta-only prompt swallows parser failures: unrecognized input silently re-prompts,
     // matching the traditional restricted end-of-story screen.
     if (metaOnly) return false;
+    if (sawMultiAttempt) {
+        print(message("parser_no_multi", "You can't use multiple objects with that verb."));
+        return false;
+    }
     print(sawVerbMatch
         ? message("parser_cant_see", "You can't see any such thing.")
         : message("parser_no_understand", "I don't understand that."));
@@ -2723,6 +2874,7 @@ module.exports = {
     setDirectSlot,
     setOutOfWorld,
     setWorldScope,
+    setMultiAction,
     runCommand,
     runMetaCommand,
     playerCommand,

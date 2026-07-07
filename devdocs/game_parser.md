@@ -143,7 +143,11 @@ The design targets these Inform 7/10 parser capabilities, grouped by stage:
   adjective concept — all synonyms are tokens in the same bag.
 - `printed name` and `article` fields (see Vocabulary model below).
 - Noun phrases with articles and multi-object lists
-  (`all`, `take all but the sword`) — multi-object forms are v3.
+  (`all`, `take all but the sword`). **Connector lists are implemented** (v3 slice 1):
+  a `multi`-flagged action's direct slot accepts `X and Y` / `X, Y` lists and the
+  action dispatches once per object under an `objectname: ` prefix (see "Multiple
+  objects" in devdocs/specs.md; golden `multi1`). `all`/`except` are the next slice
+  (with a per-action "all includes" hook).
 - Pronouns (`it`, `them`, `him`, `her`) bound to the last-referenced object(s).
   **`it` is implemented** (v1): a bare `it` noun resolves to the last single
   object the player referred to, gated by scope. `them`/`him`/`her` are deferred.
@@ -225,9 +229,16 @@ do take:
           "insert [taken] into [destination]"
   ```
 
-- A `list<T>` slot expresses a **multiple-object** slot (Inform's `[things]`):
-  `list<item> taken` lets `take all` bind many objects to one slot. (How a
-  multiple slot interacts with the turn clock is an Open question.)
+- ~~A `list<T>` slot expresses a **multiple-object** slot~~ — **superseded
+  (2026-07-06)**. Multiple objects are not bound as a list into one slot; instead a
+  `multi` line in the action body marks the `direct` slot as accepting a
+  multiple-object noun phrase, and the parser dispatches the action **once per
+  resolved object** (Inform's model), so every rule still sees a single object and
+  per-object failures report inline ("chair: Taken. / pc: Your load is too heavy.",
+  per the lurkinghorror.txt convention). The whole command is one turn — one
+  checkpoint, one turn advance, every-turn rules once — which settles the former
+  turn-clock open question. See "Multiple objects (`multi` actions)" in
+  devdocs/specs.md.
 
 ### Syntax templates
 

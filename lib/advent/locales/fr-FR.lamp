@@ -68,6 +68,7 @@ quit_prompt: "Tapez RECOMMENCER pour rejouer, CHARGER pour reprendre une partie 
 # --- parser feedback (engine messages, routed through the message registry) ---
 parser_cant_see: "Vous ne voyez rien de tel ici."
 parser_no_understand: "Je ne comprends pas cela."
+parser_no_multi: "Vous ne pouvez pas utiliser plusieurs objets avec ce verbe."
 
 # --- room description: darkness and the contents frame ---
 darkness_name: "Obscurité[line break]"

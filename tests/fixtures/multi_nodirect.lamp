@@ -1,0 +1,17 @@
+# Compile error: `multi` marks the direct slot as accepting multiple objects,
+# so an action without a direct slot cannot carry the flag.
+
+game G:
+	author "x"
+	version 1
+
+type person
+
+action greet:
+	person greeted
+	multi
+	syntax:
+		"greet [greeted]"
+
+on startup:
+	print "unreachable"

@@ -1,0 +1,13 @@
+take coin and umbrella
+i
+drop coin, umbrella
+take umbrella
+take coin and idol
+x coin and umbrella
+take red ball and blue ball
+drop ball and umbrella
+blue
+take salt and pepper shaker
+put coin and shaker on table
+put red ball on table and idol
+quit
