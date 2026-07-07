@@ -1,0 +1,36 @@
+lib advent
+
+# PUT X IN Y (inserting): needs a carried item and an open real container;
+# refuses a non-container, a closed box, and self-insertion anywhere up the
+# holder chain. "put all in" means only what's carried, like put_on.
+
+game PutIn_Demo:
+	start shed
+
+room shed:
+	description "A shed."
+
+box crate:
+	closable true
+	closed false
+	understand "crate"
+
+box tin:
+	closable true
+	closed true
+	understand "tin"
+
+item rock:
+	understand "rock"
+
+item cone:
+	understand "cone"
+
+item anvil:
+	understand "anvil"
+
+contains shed crate
+contains shed tin
+contains shed rock
+contains shed cone
+contains shed anvil

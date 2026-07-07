@@ -754,9 +754,16 @@ changing the world, universal default "[We] [taste] nothing unexpected."
 (retheme-able; Crosslexia overrides it with the I7 "I'd rather not."),
 reach-gated like TOUCH (reuses its refusal messages), taste/lick grammar,
 both locales, `taste` in the verb vocab. Golden `taste1`; 237 pre-existing
-byte-invariant. **Prologue review leftovers:** kiss retheme ("[The noun]
-[might not] [like] that."), eat "Not bad." tail, PUT X IN Y (advent gap —
-players will try it on the wallet), room-listing state notes,
+byte-invariant. **PUT X IN Y DONE (2026-07-07, advent):** `put_in` — open real-container
+destination, closed/non-container/self-insertion (whole holder chain)
+refusals, put-all-in policy, put_on's implicit-doff and shared
+not-carrying message; put/insert × in/into/inside grammar; both locales;
+golden `putin1`; 238 pre-existing byte-invariant. specs.md updated. Noticed
+adjacent gap: inventory doesn't nest a carried container's contents
+("a leather wallet (open)" — Inform appends "containing a black diary");
+candidate `render_contents` reuse in the inventory row.
+**Prologue review leftovers:** kiss retheme ("[The noun]
+[might not] [like] that."), eat "Not bad." tail, room-listing state notes,
 you-can-also-see phrasing decision.
 **Next:** flashback content + the return path (no exit exists in the I7;
 needs restoring viewpoint/tense/inventory and probably Flashback-scene-2);

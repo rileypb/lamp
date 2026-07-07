@@ -82,6 +82,11 @@ put_on_report: "[We] [put] [the act.put_item] on [the act.destination]."
 put_on_report_other: "[The act.actor] [put] [the act.put_item] on [the act.destination]."
 put_on_not_carrying: "You aren't carrying [regarding act.put_item][those]."
 put_on_cant: "[We] can't put things on [regarding act.destination][those]."
+put_in_report: "[We] [put] [the act.put_item] in [the act.destination]."
+put_in_report_other: "[The act.actor] [put] [the act.put_item] in [the act.destination]."
+put_in_cant: "[We] can't put things in [regarding act.destination][those]."
+put_in_closed: "[The act.destination] [is] closed."
+put_in_self_msg: "[We] can't put something inside itself."
 drink_report: "[We] [drink] [the act.liquid]."
 drink_report_other: "[The act.actor] [drink] [the act.liquid]."
 drink_not_drinkable: "[We] can't drink [regarding act.liquid][those]."
@@ -230,6 +235,12 @@ understand "go [way]" as go
 understand "[way]" as go
 
 understand "put [put_item] on [destination]" as put_on
+
+understand "put [put_item] in [destination]" as put_in
+understand "put [put_item] into [destination]" as put_in
+understand "put [put_item] inside [destination]" as put_in
+understand "insert [put_item] in [destination]" as put_in
+understand "insert [put_item] into [destination]" as put_in
 
 understand "drink [liquid]" as drink
 understand "sip [liquid]" as drink

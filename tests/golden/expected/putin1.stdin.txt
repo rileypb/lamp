@@ -1,0 +1,16 @@
+put rock in crate
+take rock
+put rock in anvil
+put rock in tin
+put rock in crate
+look
+take cone
+put all in crate
+x crate
+open tin
+take tin
+put tin in crate
+take crate
+put crate in crate
+put crate in tin
+quit

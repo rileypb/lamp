@@ -2020,6 +2020,15 @@ for a door only the game's own mechanism may open); their `closed`/`locked` defa
 from a box's. Already-open/closed are reported. Refusal reasons:
 `not_openable`/`not_closable`/`already_open`/`already_closed`/`locked_shut`.
 
+**PUT X IN Y** (2026-07-07, Inform's "inserting it into"): `put_in` takes a carried
+item and an **open, real `container`** destination — a non-container refuses ("[We]
+can't put things in [those]."), a closed box refuses ("[The act.destination] [is]
+closed.", no implicit opening), and self-insertion is refused up the whole holder
+chain ("[We] can't put something inside itself." — putting the crate into a tin that
+sits in the crate included). `put all in X` means only what's carried (the
+`all_includes` policy, like put_on); the implicit-doff and not-carrying handling
+mirror put_on. Grammar: put/insert × in/into/inside. Golden `putin1`.
+
 **LOCK / UNLOCK** (2026-07-07): both `box` and `door` carry an **`item matching_key =
 none`** — the key their lock accepts (`none`, the default, means no key fits and the lock
 yields only to the game's own mechanism, e.g. a hack or Crosslexia's word swap). Four

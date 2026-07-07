@@ -55,6 +55,11 @@ put_on_report: "Vous posez [le act.put_item] sur [le act.destination]."
 put_on_report_other: "[Le act.actor] [poser] [le act.put_item] sur [le act.destination]."
 put_on_not_carrying: "Vous n'avez pas cela."
 put_on_cant: "Vous ne pouvez rien poser là-dessus."
+put_in_report: "Vous mettez [le act.put_item] dans [le act.destination]."
+put_in_report_other: "[Le act.actor] [mettre] [le act.put_item] dans [le act.destination]."
+put_in_cant: "Vous ne pouvez rien mettre là-dedans."
+put_in_closed: "C'est fermé."
+put_in_self_msg: "Vous ne pouvez pas mettre quelque chose à l'intérieur de lui-même."
 
 # --- title banner, end-of-story banner, and quit prompt (startup prose) ---
 # The banner shows the game's `title` field when set (lib/sys/types.lamp) — the

@@ -1,0 +1,56 @@
+shed
+A shed.
+
+You see a rock, a cone, an anvil, a crate and a tin here.
+
+> put rock in crate
+You aren't carrying that.
+
+> take rock
+Taken.
+
+> put rock in anvil
+You can't put things in that.
+
+> put rock in tin
+The tin is closed.
+
+> put rock in crate
+You put the rock in the crate.
+
+> look
+shed
+A shed.
+
+You see a cone, an anvil, a crate (in which is a rock) and a tin here.
+
+> take cone
+Taken.
+
+> put all in crate
+cone: You put the cone in the crate.
+
+> x crate
+You see nothing unusual about the crate.
+
+In the crate are a rock and a cone.
+
+> open tin
+You open the tin.
+
+> take tin
+Taken.
+
+> put tin in crate
+You put the tin in the crate.
+
+> take crate
+Taken.
+
+> put crate in crate
+You can't put something inside itself.
+
+> put crate in tin
+You can't put something inside itself.
+
+> quit

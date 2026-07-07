@@ -37,7 +37,7 @@ function bool all_includes(object a, item x):
 		return not (holder(x) == a.actor)
 	# `a.action` holds the action's raw identifier; a multi-word name must be written
 	# as a string literal ("put_on") — bare `put_on` would coerce to an object lookup.
-	if a.action == drop or a.action == "put_on":
+	if a.action == drop or a.action == "put_on" or a.action == "put_in":
 		return holder(x) == a.actor
 	return true
 
@@ -690,6 +690,68 @@ report failed put_on:
 		stop
 	if self.reason == cant_put_on_that:
 		print message put_on_cant  # "[We] can't put things on [regarding act.destination][those]."
+		stop
+
+# PUT X IN Y (Inform's "inserting it into"). The container must be a real
+# `container` kind and open; a closed box refuses rather than implicitly
+# opening. Self-insertion is refused up the whole holder chain (putting the
+# crate in a tin that sits in the crate is the same impossibility). Mirrors
+# put_on otherwise, sharing its not-carrying message and implicit-doff.
+action put_in:
+	direct item put_item
+	multi
+	item destination
+
+check put_in:
+	if not (holder(self.put_item) == self.actor):
+		stop failed not_carrying
+
+check put_in:
+	if not (self.destination is container):
+		stop failed cant_put_in_that
+
+check put_in:
+	if self.destination.closed:
+		stop failed dest_closed
+
+check put_in:
+	if self.destination == self.put_item:
+		stop failed put_in_self
+	let cur = holder(self.destination)
+	while not (cur == none):
+		if cur == self.put_item:
+			stop failed put_in_self
+		cur = holder(cur)
+
+do put_in:
+	if wears self.actor self.put_item:
+		if (self.actor == player):
+			print message put_on_first_doff  # "(first taking off [the act.put_item])[line break]"
+		silently try doff:
+			clothing self.put_item
+			actor self.actor
+		if wears self.actor self.put_item:
+			stop failed
+	move self.put_item to self.destination
+
+report put_in:
+	if self.actor == player:
+		print message put_in_report  # "[We] [put] [the act.put_item] in [the act.destination]."
+	else:
+		print message put_in_report_other  # "[The act.actor] [put] [the act.put_item] in [the act.destination]."
+
+report failed put_in:
+	if self.reason == not_carrying:
+		print message put_on_not_carrying  # "You aren't carrying [regarding act.put_item][those]."
+		stop
+	if self.reason == cant_put_in_that:
+		print message put_in_cant  # "[We] can't put things in [regarding act.destination][those]."
+		stop
+	if self.reason == dest_closed:
+		print message put_in_closed  # "[The act.destination] [is] closed."
+		stop
+	if self.reason == put_in_self:
+		print message put_in_self_msg  # "[We] can't put something inside itself."
 		stop
 
 action drink:
