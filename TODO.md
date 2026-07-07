@@ -765,8 +765,10 @@ contents list as indented rows beneath it, recursively
 parts; the note rulebook runs per nested row — "a leather wallet (open) /
 a black diary"). putin1 covers two levels.
 **Prologue review leftovers:** kiss retheme ("[The noun]
-[might not] [like] that."), eat "Not bad." tail, room-listing state notes,
-you-can-also-see phrasing decision.
+[might not] [like] that."), eat "Not bad." tail, room-listing state notes.
+(you-can-also-see resolved 2026-07-07: the story.ni "[here]" substitution
+was deixis groundwork — Crosslexia's room_contents_outro override renders
+" there." under narrate_past: "You saw a black diary there.")
 **Next:** flashback content + the return path (no exit exists in the I7;
 needs restoring viewpoint/tense/inventory and probably Flashback-scene-2);
 the police arrival (only a design note in the I7). Engine nits, low
