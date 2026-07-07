@@ -1,0 +1,4 @@
+push pebble
+take pebble
+i
+quit

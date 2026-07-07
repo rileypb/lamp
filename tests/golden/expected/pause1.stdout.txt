@@ -1,0 +1,16 @@
+[a pause would go here]cell
+A bare cell.
+
+You see a pebble here.
+
+> push pebble
+The pebble wobbles.
+
+> take pebble
+Taken.
+
+> i
+You are carrying:
+  a pebble
+
+> quit

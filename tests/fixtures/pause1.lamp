@@ -1,0 +1,26 @@
+lib advent
+
+# The `pause` primitive (lib/sys): waits for ENTER when a real player is at the
+# input, and no-ops when input is scripted — this golden runs piped
+# (non-interactive), so neither pause below may block or consume a command
+# line. If a pause ever ate a line, the take below would desynchronize.
+
+game Pause_Demo:
+	start cell
+
+rule startup_rules:
+	print "\[a pause would go here\]"
+	pause("\[Press ENTER\]")
+
+room cell:
+	description "A bare cell."
+
+item pebble:
+	understand "pebble"
+
+contains cell pebble
+
+instead push when self.target == pebble:
+	pause("\[Press ENTER\]")
+	print "The pebble wobbles."
+	stop failed

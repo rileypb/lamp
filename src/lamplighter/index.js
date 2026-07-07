@@ -1839,6 +1839,25 @@ function setPromptChannel(requestPromptLine) {
     promptLineImpl = requestPromptLine;
 }
 
+// Host interactivity: whether a real player is at the input — a TTY, or the
+// browser shell — as opposed to piped/redirected input (goldens, `printf |`).
+// Set per session by the worker from workerData; defaults interactive so hosts
+// that never set it (the browser) behave as live sessions.
+let hostInteractive = true;
+
+function setHostInteractive(flag) {
+    hostInteractive = Boolean(flag);
+}
+
+// Pause for the player (lib/sys `pause`): print `promptText` and wait for ENTER.
+// Skipped outright when input is scripted — queued `test` commands pending, or a
+// non-interactive host — so a pause never eats a queued command or a piped line,
+// and non-interactive runs stay deterministic.
+function pauseForInput(promptText) {
+    if (!hostInteractive || commandQueue.length > 0) return;
+    promptLine(promptText);
+}
+
 function readLine() {
     if (!requestLineImpl) {
         throw new Error("no input channel installed; run the game through the sandbox launcher");
@@ -2985,6 +3004,8 @@ module.exports = {
     flushOutput,
     setPromptChannel,
     promptLine,
+    setHostInteractive,
+    pauseForInput,
     queueCommands,
     setInputChannel,
     readLine,

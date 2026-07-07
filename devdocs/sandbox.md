@@ -97,6 +97,20 @@ channels:
 Output and lifecycle are asynchronous messages; input uses the shared buffer so
 Lamp's synchronous semantics are preserved without any language change.
 
+### Host interactivity (the `pause` primitive)
+
+Whether a real player is at the input rides `workerData.interactive` (fixed per
+session, like window capabilities): the CLI host reports `process.stdin.isTTY`,
+so piped/redirected runs — goldens, `printf |` — report false; the browser
+worker never sets it and the runtime defaults to interactive. The lib/sys
+`pause(text)` primitive (Inform's "wait for any key" beat: chapter cards) shows
+its prompt and blocks for ENTER via the normal prompt channel **only when the
+host is interactive and no `test`-runner commands are queued** — a pause never
+consumes a queued or piped line, so scripted runs are deterministic and
+byte-identical with or without pauses (golden `pause1`). Note the browser
+counts as interactive: a headless driver of a web bundle must answer a pause's
+prompt like any other prompt (no shipped game currently pauses under the e2e).
+
 ### Save/restore broker protocol
 
 The persistent-save capability (channel 3) is the first fully-built broker beyond

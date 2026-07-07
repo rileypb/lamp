@@ -135,6 +135,9 @@ function playFile(generatedPath, { out = process.stdout, err = process.stderr } 
                 // The backend's window capabilities (TUI: top/bottom docks; plain:
                 // none), fixed before the game starts. See devdocs/text-windows.md.
                 capabilities: backend.capabilities || null,
+                // Whether a real player is at the input (TTY stdin) — piped runs
+                // report false so `pause` never blocks on a redirected line.
+                interactive: Boolean(process.stdin.isTTY),
             },
         });
 

@@ -137,6 +137,7 @@ function main() {
         parentPort.postMessage(msg);
     });
     if (workerData.capabilities) lamplighter.setHostCapabilities(workerData.capabilities);
+    lamplighter.setHostInteractive(workerData.interactive === true);
 
     installInputChannel(workerData.inputBuffer);
     installSaveChannel(workerData.saveBuffer);

@@ -693,11 +693,24 @@ before advent's own rule; worth a docs note or a priority mechanism
 someday); M/K/X they/them NPCs + the two sofas; "talk to m" renders "They
 didn't have anything to say to you." The scene's *events* are unwritten in
 the I7 too — authoring them is game work, not porting.
+**Mechanical leftovers DONE (2026-07-07).** (1) **Nonsense-swap fallback:**
+lib/swap declares `swap_nonsense` (`swap/switch [gibberish]`, a string slot)
+AFTER the real swap action — grammar candidates match in declaration order
+and a string slot always resolves, so the object grammars get first shot and
+only unresolvable input falls through to the I7 "misspelled or forgot the
+word 'and'" reply. (2) **`pause` primitive (lib/sys, engine):** the Inform
+"wait for any key" beat — prints its prompt and waits for ENTER via the
+normal prompt channel, but no-ops when input is scripted (queued `test`
+commands, or a non-interactive host: `workerData.interactive` = CLI stdin
+TTY; browser defaults interactive). Golden `pause1` proves the piped no-op;
+interactive path verified under a pty (`script`). Crosslexia's chapter cards
+pause; `test all` byte-identical. sandbox.md documents the seam. All 235
+goldens + sandbox/lighthouse/tui green.
 **Next:** flashback content + the return path (no exit exists in the I7;
 needs restoring viewpoint/tense/inventory and probably Flashback-scene-2);
-nonsense-swap fallback (`swap [text]` catch-all — needs grammar-overlap
-check); keypress-wait for chapter title cards; the police arrival (only a
-design note in the I7).
+the police arrival (only a design note in the I7). Engine nits, low
+priority: a true single-keypress wait (TUI raw mode / browser keydown —
+`pause` is ENTER-based today); adaptive [can't]/could for past tense.
 
 ## Smaller / opportunistic
 - ~~**Mobile: virtual keyboard covers new output after Enter.**~~ **DONE (2026-07-06,

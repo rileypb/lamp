@@ -1,5 +1,10 @@
 native function string readline()
 native function string prompt(string s)
+# Pause for the player: print the prompt text and wait for ENTER (the Inform
+# "wait for any key" beat — chapter cards, dramatic beats). Skipped entirely when
+# input is scripted (queued `test` commands, or a piped/non-interactive host), so
+# a pause never desynchronizes scripted input. See devdocs/sandbox.md.
+native function void pause(string prompt_text)
 native function void write(string s)
 native function list<string> split(string input)
 # Split on a literal separator string (each piece trimmed; empty pieces dropped). `split`
