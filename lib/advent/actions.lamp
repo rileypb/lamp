@@ -299,6 +299,133 @@ report failed close:
 		print message close_already_closed  # "[The act.target] [is] already closed."
 		stop
 
+# UNLOCK / LOCK. Two forms each: "unlock [target] with [key]" names the key;
+# bare "unlock [target]" uses the target's `matching_key` when the actor holds
+# it (announcing "(with the brass key)", the IF convention). A `matching_key`
+# of `none` (the default) means no key fits — the lock yields only to the
+# game's own mechanism. Unlocking does NOT open (OPEN is its own action, as in
+# Inform); locking requires the thing closed first.
+
+action unlock:
+	direct item target
+	item key
+
+check unlock:
+	if not self.target.locked:
+		stop failed not_locked
+	if not (holder(self.key) == self.actor):
+		stop failed key_not_held
+	if not (self.target.matching_key == self.key):
+		stop failed key_wrong
+
+do unlock:
+	self.target.locked = false
+
+report unlock:
+	print message unlock_report  # "[We] [unlock] [the act.target]."
+
+report failed unlock:
+	if self.reason == not_locked:
+		print message unlock_not_locked  # "[The act.target] [is] not locked."
+		stop
+	if self.reason == key_not_held:
+		print message key_not_held_msg  # "[We] [are] not holding [the act.key]."
+		stop
+	if self.reason == key_wrong:
+		print message key_wrong_msg  # "[The act.key] [do] not fit the lock."
+		stop
+
+action unlock_keyless:
+	direct item target
+
+check unlock_keyless:
+	if not self.target.locked:
+		stop failed not_locked
+	if self.target.matching_key == none:
+		stop failed no_fitting_key
+	if not (holder(self.target.matching_key) == self.actor):
+		stop failed no_fitting_key
+
+do unlock_keyless:
+	self.target.locked = false
+
+report unlock_keyless:
+	print message with_key_aside  # "(with [the act.target.matching_key])[line break]"
+	print message unlock_report
+
+report failed unlock_keyless:
+	if self.reason == not_locked:
+		print message unlock_not_locked
+		stop
+	if self.reason == no_fitting_key:
+		print message unlock_no_key  # "[We] [have] no key that fits [the act.target]."
+		stop
+
+action lock:
+	direct item target
+	item key
+
+check lock:
+	if self.target.locked:
+		stop failed already_locked
+	if not self.target.closed:
+		stop failed lock_open
+	if not (holder(self.key) == self.actor):
+		stop failed key_not_held
+	if not (self.target.matching_key == self.key):
+		stop failed key_wrong
+
+do lock:
+	self.target.locked = true
+
+report lock:
+	print message lock_report  # "[We] [lock] [the act.target]."
+
+report failed lock:
+	if self.reason == already_locked:
+		print message lock_already_locked  # "[The act.target] [is] already locked."
+		stop
+	if self.reason == lock_open:
+		print message lock_open_first  # "First [we] would have to close [the act.target]."
+		stop
+	if self.reason == key_not_held:
+		print message key_not_held_msg
+		stop
+	if self.reason == key_wrong:
+		print message key_wrong_msg
+		stop
+
+action lock_keyless:
+	direct item target
+
+check lock_keyless:
+	if self.target.locked:
+		stop failed already_locked
+	if not self.target.closed:
+		stop failed lock_open
+	if self.target.matching_key == none:
+		stop failed no_fitting_key
+	if not (holder(self.target.matching_key) == self.actor):
+		stop failed no_fitting_key
+
+do lock_keyless:
+	self.target.locked = true
+
+report lock_keyless:
+	print message with_key_aside
+	print message lock_report
+
+report failed lock_keyless:
+	if self.reason == already_locked:
+		print message lock_already_locked
+		stop
+	if self.reason == lock_open:
+		print message lock_open_first
+		stop
+	if self.reason == no_fitting_key:
+		print message lock_no_key  # "[We] [have] no key that fits [the act.target]."
+		stop
+
 # Targets any `physical` (not just `item`) so people and other non-item scenery can be examined.
 action examine:
 	direct physical target

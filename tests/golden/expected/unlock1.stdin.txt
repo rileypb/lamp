@@ -1,0 +1,20 @@
+unlock strongbox
+take tiny key
+take spoon
+unlock strongbox with spoon
+unlock strongbox with iron key
+unlock strongbox with tiny key
+unlock strongbox
+open strongbox
+lock strongbox
+close strongbox
+lock strongbox
+lock strongbox with spoon
+north
+open door
+unlock door
+take iron key
+unlock door
+open door
+north
+quit

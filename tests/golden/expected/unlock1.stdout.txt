@@ -1,0 +1,66 @@
+hall
+A bare hall. An iron door leads north.
+
+You see an iron key, a tiny key, a spoon and a strongbox here.
+
+> unlock strongbox
+You have no key that fits the strongbox.
+
+> take tiny key
+Taken.
+
+> take spoon
+Taken.
+
+> unlock strongbox with spoon
+The spoon does not fit the lock.
+
+> unlock strongbox with iron key
+You are not holding the iron key.
+
+> unlock strongbox with tiny key
+You unlock the strongbox.
+
+> unlock strongbox
+The strongbox is not locked.
+
+> open strongbox
+You open the strongbox, revealing a pearl.
+
+> lock strongbox
+First you would have to close the strongbox.
+
+> close strongbox
+You close the strongbox.
+
+> lock strongbox
+(with the tiny key)
+You lock the strongbox.
+
+> lock strongbox with spoon
+The strongbox is already locked.
+
+> north
+The iron door is closed.
+
+> open door
+It seems to be locked.
+
+> unlock door
+You have no key that fits the iron door.
+
+> take iron key
+Taken.
+
+> unlock door
+(with the iron key)
+You unlock the iron door.
+
+> open door
+You open the iron door.
+
+> north
+vault
+The vault.
+
+> quit

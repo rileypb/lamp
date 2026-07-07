@@ -2014,14 +2014,23 @@ The actions take any `item` and refuse a non-`closable` target ("That's not some
 can open."). Opening **reveals** the newly-visible contents — "[We] [open] [the chest],
 revealing a coin." (an empty box just confirms; the success reports use the `[We] [open]`
 / `[We] [close]` sugar, so they follow the story viewpoint). A **`locked`** thing refuses to
-open ("It seems to be locked.") — there are **no LOCK/UNLOCK verbs**; a game clears
-`locked` through its own mechanism (e.g. a hacking puzzle that unlocks a container without
-letting OPEN bypass it). The `locked` test runs **first**, so a `locked` **door** — which is
-not `closable` (it opens via its own hack/`go` passage) — still reports "locked" on OPEN
-rather than "not openable". Already-open/closed are reported. Otherwise **doors are out of
-scope** here — they keep their own passage/`go` and game-specific (hack) mechanism, and their
-`closed`/`locked` defaults differ from a box's. Refusal reasons:
+open ("It seems to be locked."); the `locked` test runs **first**, so a locked door reports
+"locked" rather than "not openable". **Doors are `closable true` by default** (set it false
+for a door only the game's own mechanism may open); their `closed`/`locked` defaults differ
+from a box's. Already-open/closed are reported. Refusal reasons:
 `not_openable`/`not_closable`/`already_open`/`already_closed`/`locked_shut`.
+
+**LOCK / UNLOCK** (2026-07-07): both `box` and `door` carry an **`item matching_key =
+none`** — the key their lock accepts (`none`, the default, means no key fits and the lock
+yields only to the game's own mechanism, e.g. a hack or Crosslexia's word swap). Four
+actions: `unlock [target] with [key]` / bare `unlock [target]` (uses the target's
+`matching_key` when the actor holds it, announcing "(with the tiny key)" — the IF
+convention) and the `lock` pair. Unlocking does **not** open (OPEN is separate, as in
+Inform); locking requires the target closed ("First [we] would have to close …").
+Refusals (all named messages, en-US + fr-FR): `not_locked`, `key_not_held`, `key_wrong`
+("[The act.key] [do] not fit the lock."), `no_fitting_key` ("[We] [have] no key that fits
+…"), `already_locked`, `lock_open`. Golden `unlock1`; `sample/study_advent.lamp` shows
+replacing the standard behaviour with a game relation via `instead unlock` rules.
 
 ### Ending the story
 

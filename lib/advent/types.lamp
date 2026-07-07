@@ -90,6 +90,12 @@ type door < item:
 	bool closed = true
 	bool locked = false
 	bool lockable = true
+	# Doors respond to OPEN/CLOSE like a closable box (a game that wants a door
+	# only its own mechanism can open sets `closable false`, or leaves it locked).
+	bool closable = true
+	# The key that LOCK/UNLOCK accept (see actions.lamp). `none` (the default)
+	# means no key fits — the lock yields only to the game's own mechanism.
+	item matching_key = none
 	room north = none
 	room northeast = none
 	room east = none
@@ -104,12 +110,14 @@ type door < item:
 type box < item, container:
 	# `closable` marks a container that responds to OPEN/CLOSE (a fixed-open or fixed-shut
 	# box leaves it false). `closed` is the live state; a closed box seals its contents out
-	# of scope. `locked` refuses OPEN ("seems to be locked") — there are no LOCK/UNLOCK verbs
-	# yet, so a game clears it through its own mechanism (e.g. a hack). See OPEN/CLOSE in
-	# actions.lamp.
+	# of scope. `locked` refuses OPEN ("seems to be locked"); UNLOCK clears it when the
+	# player has the `matching_key` (none, the default, means no key fits — the game
+	# clears the lock through its own mechanism, e.g. a hack). See OPEN/CLOSE and
+	# LOCK/UNLOCK in actions.lamp.
 	bool closable
 	bool closed
 	bool locked = false
+	item matching_key = none
 
 # A backdrop is present in scope in *every* room (walls, floor, ceiling, sky, the distant
 # horizon) rather than contained in one. The scope provider in index.js surfaces all backdrop

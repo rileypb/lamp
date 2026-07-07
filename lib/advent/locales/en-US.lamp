@@ -46,6 +46,16 @@ open_locked: "It seems to be locked."
 close_report: "[We] [close] [the act.target]."
 close_not_closable: "That's not something [we] can close."
 close_already_closed: "[The act.target] [is] already closed."
+unlock_report: "[We] [unlock] [the act.target]."
+unlock_not_locked: "[The act.target] [is] not locked."
+unlock_no_key: "[We] [have] no key that fits [the act.target]."
+lock_report: "[We] [lock] [the act.target]."
+lock_already_locked: "[The act.target] [is] already locked."
+lock_open_first: "First [we] would have to close [the act.target]."
+lock_no_key: "[We] [have] no key that fits [the act.target]."
+key_not_held_msg: "[We] [are] not holding [the act.key]."
+key_wrong_msg: "[The act.key] [do] not fit the lock."
+with_key_aside: "(with [the act.target.matching_key])[line break]"
 examine_nothing: "[We] [see] nothing unusual about [the act.target]."
 examine_report: "[act.target.description][line break]"
 examine_in_container: "[par]In [the act.target] is [render_contents(act.target)]."
@@ -178,6 +188,14 @@ understand "open [target]" as open
 
 understand "close [target]" as close
 understand "shut [target]" as close
+
+# The with-key forms first (registration order): bare "unlock door with key"
+# would otherwise let the keyless [target] slot swallow the whole phrase before
+# backtracking.
+understand "unlock [target] with [key]" as unlock
+understand "unlock [target]" as unlock_keyless
+understand "lock [target] with [key]" as lock
+understand "lock [target]" as lock_keyless
 
 understand "examine [target]" as examine
 understand "x [target]" as examine

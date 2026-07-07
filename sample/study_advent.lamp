@@ -16,7 +16,7 @@
 #   - game-defined reasons (`too_sacred`) + a `report failed take` rule  -> reasons are extensible
 #   - a `before` and an `after` rule on `take`                            -> bands beyond check/do/report
 #   - an `instead` rule                                                   -> replacing behaviour
-#   - a custom `unlocks` relation + `unlock` action gating `go`           -> a relation driving logic
+#   - a custom `unlocks` relation replacing advent's UNLOCK via `instead`  -> a relation driving logic
 #   - a general `rulebook` read with `follow` in a report message         -> typed result via follow
 #
 # Override suppression. The section at the bottom overrides advent's own success
@@ -102,27 +102,26 @@ report failed take:
         print "The idol is too sacred to disturb.[line break]"
         stop
 
-# --- a custom action driven by the `unlocks` relation -----------------------
+# --- hooking advent's UNLOCK with a custom relation --------------------------
+# advent's own unlock reads a per-object `matching_key`; this game instead
+# drives the lock from its `unlocks` relation. The `instead` rules replace the
+# standard behaviour wholesale (author rules preempt the library's checks —
+# the portal declares no matching_key, so advent's own check would refuse the
+# brass key). Guarded rules first, the unguarded success rule last: instead
+# rules run in declaration order.
 
-action unlock:
-    portal target
-    item with
-    syntax:
-        "unlock [target] with [with]"
+instead unlock when not self.target.locked:
+    print "It's already unlocked.[line break]"
+    stop failed
 
-check unlock:
-    if not self.target.locked:
-        print "It's already unlocked.[line break]"
-        stop failed
-check unlock when not unlocks self.with self.target:
+instead unlock when not unlocks self.key self.target:
     print "That doesn't fit the lock.[line break]"
     stop failed
 
-do unlock:
+instead unlock:
     self.target.locked = false
-
-report unlock:
     print "The lock turns; the door swings open.[line break]"
+    stop failed
 
 # --- gate `go` north on the door, with a reason rendered via `follow` --------
 

@@ -735,6 +735,20 @@ consumes it. Follow-ups: room-listing parity (I7's Swappable Details also
 decorates "printing room description details" — a dropped wallet shows no
 state in the room list); consider default open/closed notes for closable
 boxes (I7-standard, but a behavior change needing re-baselines).
+**LOCK/UNLOCK DONE (2026-07-07, advent):** `matching_key` (item, default
+none = no key fits) on `box` and `door`; four actions — with-key and bare
+forms of each (bare uses the held matching_key, announcing "(with the tiny
+key)"); unlock does NOT open; lock requires closed. Doors gained `closable
+true` (OPEN/CLOSE now work on an unlocked door — the old "doors aren't
+openable" gap was untenable once UNLOCK existed; doors1/phobos
+byte-invariant since their doors open via game mechanisms). Messages in
+both locales; `unlock`/`lock` in the en-US verb vocab; grammar en-US-only
+(the known locale-grammar gap). Golden `unlock1`; `showme1` re-baselined
+(+matching_key); `sample/study_advent.lamp` reworked — its custom `unlock`
+action collided with advent's, so it now demos replacing standard UNLOCK
+with its `unlocks`-relation via `instead` rules (transcript byte-identical).
+Crosslexia: "unlock door" → "I have no key that fits the bedroom door.";
+the wooden chest keeps its pat-pockets flavor via `instead unlock_keyless`.
 **Next:** flashback content + the return path (no exit exists in the I7;
 needs restoring viewpoint/tense/inventory and probably Flashback-scene-2);
 the police arrival (only a design note in the I7). Engine nits, low

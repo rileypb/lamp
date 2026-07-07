@@ -100,6 +100,18 @@ close_report: "Vous fermez [le act.target]."
 close_not_closable: "Ce n'est pas quelque chose que vous pouvez fermer."
 close_already_closed: "C'est déjà fermé."
 
+# --- lock / unlock ---
+unlock_report: "Vous déverrouillez [le act.target]."
+unlock_not_locked: "Ce n'est pas verrouillé."
+unlock_no_key: "Vous n'avez pas de clé qui ouvre [le act.target]."
+lock_report: "Vous verrouillez [le act.target]."
+lock_already_locked: "C'est déjà verrouillé."
+lock_open_first: "Il faudrait d'abord fermer [le act.target]."
+lock_no_key: "Vous n'avez pas de clé qui ferme [le act.target]."
+key_not_held_msg: "Vous ne tenez pas [le act.key]."
+key_wrong_msg: "[Le act.key] n'entre pas dans la serrure."
+with_key_aside: "(avec [le act.target.matching_key])[line break]"
+
 # --- examine: description body and container contents ---
 examine_report: "[act.target.description][line break]"
 examine_in_container: "[par]Dans [le act.target] se trouve [render_contents(act.target)]."

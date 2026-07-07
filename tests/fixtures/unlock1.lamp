@@ -1,0 +1,49 @@
+lib advent
+
+# LOCK/UNLOCK: the with-key forms and the bare forms (bare uses the target's
+# matching_key when held, announcing "(with the tiny key)"). Wrong key, unheld
+# key, no fitting key, already locked/unlocked, and lock-requires-closed are
+# all exercised, on both a box and a door.
+
+game Unlock_Demo:
+	start hall
+
+room hall:
+	description "A bare hall. An iron door leads north."
+
+room vault:
+	description "The vault."
+
+door iron_door:
+	north vault
+	south hall
+	closed true
+	locked true
+	matching_key iron_key
+	understand "iron/door"
+	description "An iron door."
+
+box strongbox:
+	closable true
+	closed true
+	locked true
+	matching_key tiny_key
+	understand "strongbox/box"
+
+item iron_key:
+	understand "key/iron"
+
+item tiny_key:
+	understand "key/tiny"
+
+item spoon:
+	understand "spoon"
+
+item pearl:
+	understand "pearl"
+
+contains hall strongbox
+contains hall iron_key
+contains hall tiny_key
+contains hall spoon
+contains strongbox pearl

@@ -53,6 +53,7 @@ safe (box)
   initial_appearance: ""
   handled: false
   locked: false
+  matching_key: none
   printed_name: ""
   understand: ""
   description: ""
