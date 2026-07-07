@@ -1,0 +1,15 @@
+booth
+A phone booth. The handset is red, the cord bright blue, and the dial bold yellow.
+
+You see a handset here.
+
+> x handset
+Painted battered metal. It has seen better days.
+
+> push handset
+The paint flakes to something indescribable: no longer standard.
+
+> x handset
+Painted battered metal. It has seen better days.
+
+> quit

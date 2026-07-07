@@ -235,6 +235,47 @@ html, body {
     white-space: pre-wrap;
 }
 
+/* Color styles: the ANSI/Z-machine 16 (foreground). Shades are theme variables
+   chosen for legibility on the dark default background — a reskinned shell
+   overrides the variables, not the classes. "black" renders as a visible dark
+   grey (true black would vanish on this background), mirroring how terminal
+   themes treat ANSI black. */
+:root {
+    --c-black: #6b6b6b;
+    --c-red: #e06c75;
+    --c-green: #98c379;
+    --c-yellow: #e5c07b;
+    --c-blue: #61afef;
+    --c-magenta: #c678dd;
+    --c-cyan: #56b6c2;
+    --c-white: #dcdfe4;
+    --c-bright-black: #8a8a8a;
+    --c-bright-red: #ff8b94;
+    --c-bright-green: #b5e890;
+    --c-bright-yellow: #f4d18c;
+    --c-bright-blue: #84c8ff;
+    --c-bright-magenta: #de9bee;
+    --c-bright-cyan: #6fd6e2;
+    --c-bright-white: #ffffff;
+}
+
+.style-black { color: var(--c-black); }
+.style-red { color: var(--c-red); }
+.style-green { color: var(--c-green); }
+.style-yellow { color: var(--c-yellow); }
+.style-blue { color: var(--c-blue); }
+.style-magenta { color: var(--c-magenta); }
+.style-cyan { color: var(--c-cyan); }
+.style-white { color: var(--c-white); }
+.style-bright_black { color: var(--c-bright-black); }
+.style-bright_red { color: var(--c-bright-red); }
+.style-bright_green { color: var(--c-bright-green); }
+.style-bright_yellow { color: var(--c-bright-yellow); }
+.style-bright_blue { color: var(--c-bright-blue); }
+.style-bright_magenta { color: var(--c-bright-magenta); }
+.style-bright_cyan { color: var(--c-bright-cyan); }
+.style-bright_white { color: var(--c-bright-white); }
+
 /* Save / restore modals (host-rendered save UX; see devdocs/sandbox.md). The
    dialog is built by shell.js, not present in index.html. */
 .modal-overlay {

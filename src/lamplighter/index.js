@@ -1483,18 +1483,37 @@ const STREAM_PAR_IF_PRINTED = "\uE003";
 // in a matched push/pop pair; the manager keeps a depth per style and tags each
 // emitted run with the set of styles active over it (the structured-segment
 // transport). Styles compose/nest via the depth counters (order-independent), and
-// are orthogonal to the break sentinels above. PUA block \uE010-\uE015.
-const STYLE_ORDER = ["bold", "italic", "fixed"];
-const STYLE_PUSH_CHAR = { bold: "\uE010", italic: "\uE012", fixed: "\uE014" };
-const STYLE_POP_CHAR = { bold: "\uE011", italic: "\uE013", fixed: "\uE015" };
-const STYLE_PUSH_BY_CHAR = { "\uE010": "bold", "\uE012": "italic", "\uE014": "fixed" };
-const STYLE_POP_BY_CHAR = { "\uE011": "bold", "\uE013": "italic", "\uE015": "fixed" };
+// are orthogonal to the break sentinels above. PUA block \uE010-\uE035.
+// The three type styles plus the ANSI/Z-machine color names (16, foreground
+// only) \u2014 the closed style vocabulary. Push/pop sentinel pairs are assigned in
+// order from \uE010 (bold \uE010/\uE011, italic \uE012/\uE013, fixed
+// \uE014/\uE015 \u2014 unchanged \u2014 then the colors through \uE035). When two colors
+// are active the one later in STYLE_ORDER wins on hosts that render a single
+// color per run (nesting different colors is not a supported idiom).
+const STYLE_ORDER = [
+    "bold", "italic", "fixed",
+    "black", "red", "green", "yellow", "blue", "magenta", "cyan", "white",
+    "bright_black", "bright_red", "bright_green", "bright_yellow",
+    "bright_blue", "bright_magenta", "bright_cyan", "bright_white",
+];
+const STYLE_PUSH_CHAR = {};
+const STYLE_POP_CHAR = {};
+const STYLE_PUSH_BY_CHAR = {};
+const STYLE_POP_BY_CHAR = {};
+const styleDepth = {};
+STYLE_ORDER.forEach((name, i) => {
+    const push = String.fromCharCode(0xe010 + 2 * i);
+    const pop = String.fromCharCode(0xe011 + 2 * i);
+    STYLE_PUSH_CHAR[name] = push;
+    STYLE_POP_CHAR[name] = pop;
+    STYLE_PUSH_BY_CHAR[push] = name;
+    STYLE_POP_BY_CHAR[pop] = name;
+    styleDepth[name] = 0;
+});
 
 // Any in-band control char (breaks or style push/pop) \u2014 the fast-path test that
 // lets a plain run skip the char-by-char scan.
-const STREAM_CONTROL = /[\uE000-\uE003\uE010-\uE015]/;
-
-const styleDepth = { bold: 0, italic: 0, fixed: 0 };
+const STREAM_CONTROL = /[\uE000-\uE003\uE010-\uE035]/;
 
 // The styles currently in force, in a stable order so a run's style set is the
 // same regardless of nesting order (bold(italic) and italic(bold) both \u2192 that

@@ -711,11 +711,26 @@ prints the room name bold (the IF-interpreter convention) — styles strip on
 a plain host, so all 235 goldens are byte-invariant; TUI/web render it.
 Phobos's own heading override was already bold; Crosslexia's flashback
 heading updated to match ("[bold][r][/bold] (flashback)").
+**Color styles DONE (2026-07-07, engine I3-colors):** the ANSI/Z-machine 16
+foreground colors as first-class styles — lib/sys functions + `[red]…[/red]`
+markers + `colored(name, x)` escape hatch; PUA sentinel pairs extended
+(runtime STYLE_ORDER ↔ parser STYLE_MARKER_NAMES must stay mirrored);
+SGR 30–37/90–97 in both terminal backends (TUI spans gained a `color`
+field); `.style-<name>` → `--c-*` CSS variables in the web shell
+(dark-legible defaults). Golden `color1`; 235 pre-existing byte-invariant;
+text.md I3 records the details + two caveats (style words shadow
+same-spelling bare-name prints; the pre-existing Rule-A nit where a styled
+run ending in "." breaks the line — style words, not sentences). Driven by
+Crosslexia: lib/swap now marks swappable words **bold + `swap_word_color`**
+(default cyan, game-overridable; bold survives on no-color hosts), with a
+`swapword(replacement)` helper for prose naming a swap word outside a blank.
 **Next:** flashback content + the return path (no exit exists in the I7;
 needs restoring viewpoint/tense/inventory and probably Flashback-scene-2);
 the police arrival (only a design note in the I7). Engine nits, low
 priority: a true single-keypress wait (TUI raw mode / browser keydown —
-`pause` is ENTER-based today); adaptive [can't]/could for past tense.
+`pause` is ENTER-based today); adaptive [can't]/could for past tense;
+consider a manual browser pass on the color CSS (headless checks can't see
+the shades).
 
 ## Smaller / opportunistic
 - ~~**Mobile: virtual keyboard covers new output after Enter.**~~ **DONE (2026-07-06,

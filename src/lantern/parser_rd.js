@@ -100,6 +100,16 @@ const MARKER_CALLS = {
     "par if printed": "par_if_printed()",
 };
 
+// The closed style vocabulary (must mirror the runtime's STYLE_ORDER): the three
+// type styles + the 16 ANSI/Z-machine foreground colors. Each marker desugars to
+// the same-named lib/sys wrapping function.
+const STYLE_MARKER_NAMES = new Set([
+    "bold", "italic", "fixed",
+    "black", "red", "green", "yellow", "blue", "magenta", "cyan", "white",
+    "bright_black", "bright_red", "bright_green", "bright_yellow",
+    "bright_blue", "bright_magenta", "bright_cyan", "bright_white",
+]);
+
 // Classifies a substitution source as an inline-conditional control marker (E1-E4)
 // or null for an ordinary value/sugar substitution. Markers are the leading words
 // `if` / `else if` / `else` / `end` (with `otherwise` as an `else` alias and an
@@ -127,19 +137,20 @@ function classifyControl(src) {
     if (/^cycling$/.test(src)) return { type: "mode", mode: "cycling" };
     if (/^stopping$/.test(src)) return { type: "mode", mode: "stopping" };
     if (/^as\s+decreasingly\s+likely\s+outcomes$/.test(src)) return { type: "mode", mode: "decreasing" };
-    // Type-style spans (I3, Slice 7): [bold]…[/bold] / [italic]…[/italic] /
-    // [fixed]…[/fixed] desugar to the bold/italic/fixed wrapping functions. Unlike the
-    // conditional/variation blocks, these nest — their named close tags keep the
-    // pairing readable. Long-form spellings only: single-letter [b]/[i] would collide
-    // with bare variable prints ([i] is the obvious loop index), so they are not sugar.
-    // The explicit call form `[fixed(x)]` is unaffected (it carries parens, so it never
-    // reaches here). See devdocs/text.md I3.
-    if (/^bold$/.test(src)) return { type: "styleOpen", name: "bold" };
-    if (/^italic$/.test(src)) return { type: "styleOpen", name: "italic" };
-    if (/^fixed$/.test(src)) return { type: "styleOpen", name: "fixed" };
-    if (/^\/bold$/.test(src)) return { type: "styleClose", name: "bold" };
-    if (/^\/italic$/.test(src)) return { type: "styleClose", name: "italic" };
-    if (/^\/fixed$/.test(src)) return { type: "styleClose", name: "fixed" };
+    // Style spans (I3, Slice 7): [bold]…[/bold] etc. desugar to the same-named
+    // lib/sys wrapping functions — the three type styles plus the ANSI/Z-machine
+    // color names (see STYLE_MARKER_NAMES below). Unlike the conditional/variation
+    // blocks, these nest — their named close tags keep the pairing readable.
+    // Long-form spellings only: single-letter [b]/[i] would collide with bare
+    // variable prints ([i] is the obvious loop index), so they are not sugar. The
+    // explicit call form `[fixed(x)]` is unaffected (it carries parens, so it
+    // never reaches here). Note the style words shadow bare-name substitutions of
+    // the same spelling — an object named `red` can't be printed as `[red]` (use
+    // `[the red]` or a different name). See devdocs/text.md I3.
+    if (STYLE_MARKER_NAMES.has(src)) return { type: "styleOpen", name: src };
+    if (src.startsWith("/") && STYLE_MARKER_NAMES.has(src.slice(1))) {
+        return { type: "styleClose", name: src.slice(1) };
+    }
     // [s] plural suffix (G7): pluralizes the preceding word by the governing count.
     if (/^s$/.test(src)) return { type: "plural" };
     return null;

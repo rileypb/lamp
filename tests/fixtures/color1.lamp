@@ -1,0 +1,26 @@
+lib advent
+
+# Color styles (the ANSI/Z-machine 16, foreground): paired markers
+# ([red]...[/red]), the same-named wrapping functions, the colored(name, x)
+# computed escape hatch (unknown names degrade to plain), and nesting with the
+# type styles. This golden runs piped, so every style strips — the text must
+# read as if unstyled (fail-silently, byte-invariant on a plain host).
+
+game Color_Demo:
+	start booth
+
+room booth:
+	description "A phone booth. The handset is [red]red[/red], the cord [bright_blue]bright blue[/bright_blue], and the dial [bold][yellow]bold yellow[/yellow][/bold]."
+
+item handset:
+	understand "handset"
+	description "Painted [colored(handset_color, \"battered\")] metal. It has seen better days."
+
+global string handset_color = "red"
+
+instead push when self.target == handset:
+	handset_color = "chartreuse"
+	print "The paint flakes to something indescribable: [green]no[/green] [cyan]longer[/cyan] [magenta]standard[/magenta]."
+	stop failed
+
+contains booth handset

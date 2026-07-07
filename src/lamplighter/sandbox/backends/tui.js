@@ -86,22 +86,41 @@ function truncateToWidth(str, max) {
     return out;
 }
 
-// A transcript line is an array of spans: { text, bold, italic }. "fixed" needs no
-// SGR (a terminal is already monospace), so only bold/italic affect rendering.
+// Foreground SGR codes for the ANSI/Z-machine color names (text.md I3); the
+// terminal's own theme picks the shades. "fixed" needs no SGR (a terminal is
+// already monospace).
+const COLOR_SGR = {
+    black: "30", red: "31", green: "32", yellow: "33",
+    blue: "34", magenta: "35", cyan: "36", white: "37",
+    bright_black: "90", bright_red: "91", bright_green: "92", bright_yellow: "93",
+    bright_blue: "94", bright_magenta: "95", bright_cyan: "96", bright_white: "97",
+};
+
+// The single rendered color of a run: the last color name in its styles set
+// (the set arrives in the runtime's stable style order, so when two colors nest
+// the one later in that order wins — nesting different colors is unsupported).
+function colorOf(styles) {
+    let color = null;
+    for (const s of styles || []) if (COLOR_SGR[s]) color = s;
+    return color;
+}
+
+// A transcript line is an array of spans: { text, bold, italic, color }.
 function spanSgr(span) {
     const codes = [];
     if (span.bold) codes.push("1");
     if (span.italic) codes.push("3");
+    if (span.color) codes.push(COLOR_SGR[span.color]);
     return codes.length ? `\x1b[${codes.join(";")}m` : "";
 }
 
-// Regroup a run of styled chars ({ ch, bold, italic }) back into spans.
+// Regroup a run of styled chars ({ ch, bold, italic, color }) back into spans.
 function charsToRow(chars) {
     const row = [];
     for (const c of chars) {
         const last = row[row.length - 1];
-        if (last && last.bold === c.bold && last.italic === c.italic) last.text += c.ch;
-        else row.push({ text: c.ch, bold: c.bold, italic: c.italic });
+        if (last && last.bold === c.bold && last.italic === c.italic && last.color === c.color) last.text += c.ch;
+        else row.push({ text: c.ch, bold: c.bold, italic: c.italic, color: c.color });
     }
     return row;
 }
@@ -109,7 +128,7 @@ function charsToRow(chars) {
 // Explode spans into styled code points, each carrying its display width.
 function spansToChars(spans) {
     const chars = [];
-    for (const sp of spans) for (const ch of sp.text) chars.push({ ch, w: charWidth(ch.codePointAt(0)), bold: sp.bold, italic: sp.italic });
+    for (const sp of spans) for (const ch of sp.text) chars.push({ ch, w: charWidth(ch.codePointAt(0)), bold: sp.bold, italic: sp.italic, color: sp.color || null });
     return chars;
 }
 
@@ -257,7 +276,8 @@ function createTuiBackend({ out, err, input, exit } = {}) {
     function appendOutput(value, styles) {
         const bold = !!(styles && styles.includes("bold"));
         const italic = !!(styles && styles.includes("italic"));
-        const push = (text) => { if (text.length > 0) pending.push({ text, bold, italic }); };
+        const color = colorOf(styles);
+        const push = (text) => { if (text.length > 0) pending.push({ text, bold, italic, color }); };
         const parts = String(value).split("\n");
         push(parts[0]);
         for (let k = 1; k < parts.length; k += 1) {
@@ -317,6 +337,8 @@ function createTuiBackend({ out, err, input, exit } = {}) {
         const codes = [];
         if (styles && styles.includes("bold")) codes.push("1");
         if (styles && styles.includes("italic")) codes.push("3");
+        const color = colorOf(styles);
+        if (color) codes.push(COLOR_SGR[color]);
         return codes.length ? `\x1b[${codes.join(";")}m` : "";
     }
 

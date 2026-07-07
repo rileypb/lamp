@@ -18,11 +18,18 @@
 //                            the line is ready — synchronously here; an event-driven
 //                            backend may call it later.
 
-// Type-style → ANSI SGR mapping (text.md I3). Only applied to a TTY; piped output
+// Style → ANSI SGR mapping (text.md I3). Only applied to a TTY; piped output
 // (tests, redirection) stays plain so styling is never baked into captured text.
 // Fixed-width has no SGR code — a terminal is already monospace, so it is a no-op
-// (fail-silently). An unknown style maps to nothing and is dropped.
-const ANSI_SGR = { bold: 1, italic: 3 };
+// (fail-silently). An unknown style maps to nothing and is dropped. Colors are
+// the ANSI/Z-machine 16 (foreground); the terminal's own theme picks the shades.
+const ANSI_SGR = {
+    bold: 1, italic: 3,
+    black: 30, red: 31, green: 32, yellow: 33,
+    blue: 34, magenta: 35, cyan: 36, white: 37,
+    bright_black: 90, bright_red: 91, bright_green: 92, bright_yellow: 93,
+    bright_blue: 94, bright_magenta: 95, bright_cyan: 96, bright_white: 97,
+};
 function renderStyledSegment(value, styles, isTty) {
     if (!isTty || !styles || styles.length === 0) return value;
     const codes = styles.map((s) => ANSI_SGR[s]).filter((c) => c != null);

@@ -554,6 +554,24 @@ either the trailing sugar word or the function's mode argument.
   rule (`devdocs/lighthouse.md`).
   - Author wants styling to a much greater degree than Inform's Z-machine-constrained
     set; Lamp is not so constrained.
+  - **Colors DONE (2026-07-07): the ANSI/Z-machine 16, foreground only** — the 8
+    classic names (`red`, `green`, `yellow`, `blue`, `magenta`, `cyan`, `black`,
+    `white`) + `bright_*` variants, as same-named lib/sys wrapping functions,
+    paired markers (`[red]…[/red]`), and the computed escape hatch
+    `colored(name, value)` (unknown name → plain text). Same sentinel transport
+    (PUA pairs extended through ; the parser's marker set and the runtime's
+    STYLE_ORDER must stay mirrored). Rendering: terminal backends map names to
+    SGR 30–37/90–97 (the user's terminal theme picks shades; TUI spans carry a
+    `color` field, last-in-STYLE_ORDER wins if two colors nest — unsupported
+    idiom); web shell maps `.style-<name>` classes to `--c-*` CSS variables
+    (dark-legible defaults; themes override the variables). Fail-silently: piped
+    output strips everything (golden `color1`, suite byte-invariant). Chosen for
+    Crosslexia's swappable words (bold alone too subtle; lib/swap pairs bold +
+    `swap_word_color`, default cyan, so no-color hosts keep the bold channel).
+    Note the style words shadow same-spelling bare-name substitutions ([red] is
+    always a marker). Known nit (pre-existing, applies to bold too): a styled run
+    ending in `.` triggers the stream's Rule-A auto line break at the run
+    boundary — style words, not whole sentences, is the idiom.
 - **I4. Fixed vs. variable letter spacing** (Inform's `[fixed letter spacing]`),
   for ASCII art/tables — depends on shell capability. First cut folds fixed-width in
   as a style (monospace); true letter-spacing/table layout deferred.

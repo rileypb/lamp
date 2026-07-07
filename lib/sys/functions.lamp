@@ -171,6 +171,31 @@ native function string bold(string value)
 native function string italic(string value)
 native function string fixed(string value)
 
+# Color styles: the ANSI/Z-machine 16 (8 classic names + bright variants),
+# foreground only. Same contract as the type styles — the active style rides
+# each output segment, terminal hosts map the name to SGR (the user's terminal
+# theme picks the shade), the web shell to a CSS class, and a host without
+# color drops it (the usual pairing is bold + a color, so the bold survives).
+# `colored(name, value)` is the computed-name escape hatch; an unknown name
+# degrades to plain text. Paired markers ([red]…[/red]) desugar to these.
+native function string colored(string color_name, string value)
+native function string black(string value)
+native function string red(string value)
+native function string green(string value)
+native function string yellow(string value)
+native function string blue(string value)
+native function string magenta(string value)
+native function string cyan(string value)
+native function string white(string value)
+native function string bright_black(string value)
+native function string bright_red(string value)
+native function string bright_green(string value)
+native function string bright_yellow(string value)
+native function string bright_blue(string value)
+native function string bright_magenta(string value)
+native function string bright_cyan(string value)
+native function string bright_white(string value)
+
 # RNG control for randomized text variation (text.md F8). The seed defaults to a
 # fixed value (so golden tests are deterministic). A game wanting cross-playthrough
 # variety calls `randomize()` at startup to seed from entropy, or `seed_random(n)`
