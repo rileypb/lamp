@@ -706,6 +706,11 @@ TTY; browser defaults interactive). Golden `pause1` proves the piped no-op;
 interactive path verified under a pty (`script`). Crosslexia's chapter cards
 pause; `test all` byte-identical. sandbox.md documents the seam. All 235
 goldens + sandbox/lighthouse/tui green.
+**Bold room headings (2026-07-07):** advent's default `room_heading_rules`
+prints the room name bold (the IF-interpreter convention) — styles strip on
+a plain host, so all 235 goldens are byte-invariant; TUI/web render it.
+Phobos's own heading override was already bold; Crosslexia's flashback
+heading updated to match ("[bold][r][/bold] (flashback)").
 **Next:** flashback content + the return path (no exit exists in the I7;
 needs restoring viewpoint/tense/inventory and probably Flashback-scene-2);
 the police arrival (only a design note in the I7). Engine nits, low

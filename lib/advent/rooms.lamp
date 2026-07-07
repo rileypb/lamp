@@ -56,12 +56,13 @@ function void describe_supporters(room r):
 # Room-description heading. Factored into a rulebook so a game can replace it (a
 # game contributes a `rule room_heading_rules:` from its author file, which runs
 # before this default and stops it) — e.g. a third-person, name-embedded intro that
-# runs on into the description. The default reproduces the bare room name on its own
-# line, so default output is byte-identical.
+# runs on into the description. The default is the room name, bold, on its own
+# line (the IF-interpreter convention); styles strip on a plain host, so plain
+# output stays byte-identical to the unstyled heading.
 rulebook bool room_heading_rules(room r):
 	default true
 	when true:
-		print "[r][line break]"
+		print "[bold][r][/bold][line break]"
 		stop true
 
 # All of the printing for room description is in here, including
