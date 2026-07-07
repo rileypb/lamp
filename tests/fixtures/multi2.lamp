@@ -1,0 +1,37 @@
+lib advent
+
+# Exercises ALL phrases on `multi` actions: "take all" (scenery, people, and
+# `all_exempt` things silently skipped; carried things skipped for take), the
+# nothing-available message, "all but X and Y" exclusion lists, an ambiguous
+# exclusion piece excluding everything it matches ("except ball" excludes both
+# balls), "put all on X" meaning only what's carried, and the announce prefix on
+# a single-object ALL ("drop all" with one item still prints "umbrella: ").
+
+game Multi_All:
+    start hall
+
+room hall:
+    description "A plain hall."
+
+item red_ball
+item blue_ball
+item coin
+item umbrella
+
+item skull:
+    all_exempt true
+
+item idol:
+    scenery true
+
+item table:
+    scenery true
+    supporter true
+
+contains hall red_ball
+contains hall blue_ball
+contains hall coin
+contains hall umbrella
+contains hall skull
+contains hall idol
+contains hall table

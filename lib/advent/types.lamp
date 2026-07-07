@@ -63,6 +63,10 @@ type physical < thing:
 	# is room-level (`room.lighted`), so a lit thing has no illumination effect yet; it only annotates
 	# the inventory row as "(providing light)". A game sets it (e.g. Phobos's FROTZ).
 	bool lit = false
+	# Excluded from `all` ("take all" skips it) while staying available by name — the
+	# declarative knob read by all_includes (actions.lamp). Being a field, a game can
+	# also flip it from rules as the world changes.
+	bool all_exempt = false
 
 type container < physical
 

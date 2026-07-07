@@ -1,0 +1,18 @@
+hall
+A plain hall.
+
+You see a coin, a bell and a fish here.
+
+> take all
+coin: Taken.
+bell: Taken.
+
+> take fish
+Taken.
+
+> drop all
+coin: Dropped.
+bell: Dropped.
+fish: Dropped.
+
+> quit

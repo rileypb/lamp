@@ -1,0 +1,4 @@
+take all
+take fish
+drop all
+quit

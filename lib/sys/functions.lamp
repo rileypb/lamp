@@ -45,6 +45,12 @@ native function bool run_command(string line, object actor)
 # the restricted end-of-story RESTART/RESTORE/QUIT prompt, where the game is already over.
 native function bool run_meta_command(string line, object actor)
 
+# Installs the "all includes" hook: fn(action_instance, object) -> bool decides whether
+# `all` includes the object for a multi action ("take all"). The world library installs
+# its default policy at startup; a game may install its own function (delegating back to
+# the library's for the defaults). Uninstalled, `all` includes every eligible object.
+native function void set_all_filter(function fn)
+
 # The player's most recent command line, as typed (original casing, trimmed). Use
 # it in narration as `[player_command()]` — e.g. "I don't understand
 # \"[player_command()]\"." Empty before the first command. See devdocs/text.md J1.

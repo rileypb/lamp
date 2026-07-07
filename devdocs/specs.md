@@ -819,7 +819,7 @@ function int damage(int base) when hero_buffed == true and boss_fight == true:
 **Constraints** (enforced at compile time):
 - All overloads of a function must share the same parameter count, parameter names, parameter types, and return type.
 - At most one overload may be unconditional. Multiple unconditional definitions are an error.
-- `when` conditions may reference globals, object properties, and relation queries — not parameters, local variables, or function calls.
+- `when` conditions may reference globals, object properties, and relation queries — not parameters, local variables, or function calls. A parameter reference is a compile error (golden `guard_param`): guards select an overload by *world state*, not by argument — for argument-inspecting dispatch use a parameterized rulebook, whose rule guards do see the parameters (devdocs/rulebooks.md).
 
 ### Relations
 
@@ -1173,9 +1173,9 @@ against the registered action templates, resolves each slot to an in-scope objec
 of the slot's type, and runs the matched action. The typical game loop reads a
 line and passes it to `run_command`. Scope is the actor's location contents and
 inventory (via the `holder` field); the actor is the `player` global. This is the
-Game Parser v0 (`devdocs/game_parser.md`); adjectives are not yet handled, and of
-the multiple-object forms only connector lists on `multi` actions exist (see
-Multiple objects below); `all`/`except` are not yet handled.
+Game Parser v0 (`devdocs/game_parser.md`); adjectives are not yet handled.
+Multiple-object forms — connector lists and `all`/`except` — work on `multi`
+actions (see Multiple objects below).
 
 ```lamp
 on startup:
@@ -1303,11 +1303,12 @@ are independent — an action may carry either, both, or neither.
 
 An action body may carry a **`multi`** line (a contextual keyword, like `out_of_world`):
 its **`direct` slot** then accepts a multiple-object noun phrase — a list of nouns
-separated by connector words (`drop the ball and the umbrella`, `take coin, key`). Only
-the direct slot may be multiple, so `multi` on an action with no `direct` slot is a
-compile error. The flag defaults to off: a non-multi action (or any non-direct slot)
-given a noun list refuses with the `parser_no_multi` message ("You can't use multiple
-objects with that verb.").
+separated by connector words (`drop the ball and the umbrella`, `take coin, key`) or an
+**ALL phrase** (`take all`, `drop everything`, `take all but the sword`, `put all
+except ball and skull on the table`). Only the direct slot may be multiple, so `multi`
+on an action with no `direct` slot is a compile error. The flag defaults to off: a
+non-multi action (or any non-direct slot) given a noun list refuses with the
+`parser_no_multi` message ("You can't use multiple objects with that verb.").
 
 ```lamp
 action take:
@@ -1335,17 +1336,36 @@ Semantics and edges:
   whose vocabulary contains a connector ("salt and pepper shaker") resolves as one
   thing. A list that names the same object twice is deduplicated; a list that collapses
   to one object runs the plain single-object path, prefix-free.
-- **Connectors are locale vocabulary** (`and` in en-US, `et` in fr-FR), installed via
-  `setParserLanguage({ connectors })` beside articles/pronouns; the comma is always a
-  connector (split into its own token at tokenization).
+- **Connectors and quantifiers are locale vocabulary** (`and` / `all`, `everything` /
+  `but`, `except` in en-US; `et` / `tout` / `sauf` in fr-FR), installed via
+  `setParserLanguage({ connectors, allWords, exceptWords })` beside articles/pronouns;
+  the comma is always a connector (split into its own token at tokenization).
 - **Ambiguity resumes.** An ambiguous list piece prompts ("Which do you mean…?") and the
-  answer resumes the rest of the list.
+  answer resumes the rest of the list. An ambiguous *exclusion* piece never prompts —
+  it excludes everything it matches (`take all but ball` excludes both balls); an
+  exclusion matching nothing is silently inert.
 - **`it`** binds to the last object of the list; `them` is not yet handled.
-- **`all` / `except` are not yet implemented** (planned as a follow-up slice, with a
-  per-action "all includes" hook).
 
-advent marks `take`, `drop`, and `put_on` as `multi`. Goldens: `multi1` (behavior),
-`multi_nodirect` (compile error).
+**ALL phrases and the "all includes" hook.** `all` (or `everything`) stands for every
+in-scope object of the slot's type, visited in scope order, filtered through an
+installed policy function — Inform's "deciding whether all includes" activity. The
+`set_all_filter(fn)` native (lib/sys) installs `fn(action_instance, object) -> bool`;
+lib/advent installs its `all_includes` (actions.lamp) at startup: `all` never includes
+scenery, people, or anything flagged **`all_exempt`** (a `physical` field — the
+declarative per-object knob, flippable from rules as the world changes); `take all`
+skips what's already carried; `drop all` / `put all on X` mean only what's carried. A
+game refines per object with `all_exempt`, or swaps the whole policy from a `rule
+startup_rules:` (which runs after advent's install) with its own function that
+delegates back to `all_includes` for the defaults. An `all` that resolves to nothing
+prints the `parser_nothing_all` message ("There's nothing available.") and spends no
+turn. An ALL phrase always announces — even a single resolved object gets its
+`objectname: ` prefix, since the player didn't name it. Note: `a.action` comparisons
+against a multi-word action name must be written as a string literal (`"put_on"`);
+a bare multi-word identifier compiles to an object lookup.
+
+advent marks `take`, `drop`, and `put_on` as `multi`. Goldens: `multi1` (lists),
+`multi2` (ALL phrases, exclusions, `all_exempt`, announce), `multi3` (game-installed
+filter via `startup_rules`), `multi_nodirect` (compile error).
 
 #### Action tags
 

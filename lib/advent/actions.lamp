@@ -22,6 +22,25 @@ action wait
 report wait:
 	print message wait_report  # "Time passes."
 
+# The "all includes" policy (Inform's "deciding whether all includes" activity): the
+# engine calls this for every eligible in-scope object when a multi action's direct
+# slot is `all` (installed at startup via set_all_filter — see startup.lamp). Defaults:
+# `all` never includes scenery, people, or anything marked `all_exempt`; `take all`
+# skips what's already carried; `drop all` / `put all on X` mean only what's carried.
+# A game refines per object with `all_exempt` (a field, so rules can flip it as the
+# world changes), or swaps the whole policy by installing its own function from a
+# `rule startup_rules:` (delegating back to all_includes for these defaults).
+function bool all_includes(object a, item x):
+	if x.all_exempt or x.scenery or x is person:
+		return false
+	if a.action == take:
+		return not (holder(x) == a.actor)
+	# `a.action` holds the action's raw identifier; a multi-word name must be written
+	# as a string literal ("put_on") — bare `put_on` would coerce to an object lookup.
+	if a.action == drop or a.action == "put_on":
+		return holder(x) == a.actor
+	return true
+
 action take:
 	direct item taken
 	multi

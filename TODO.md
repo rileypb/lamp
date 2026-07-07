@@ -438,7 +438,7 @@ defined). Low priority. **Where:** `src/lamplighter/index.js` (`run`).
 
 ## Design (not scheduled)
 
-### Multi-actions (`take all`, `drop X and Y`, `put all but Z in box`) — slice 1 DONE (2026-07-06)
+### Multi-actions (`take all`, `drop X and Y`, `put all but Z in box`) — slices 1+2 DONE (2026-07-06)
 **Direction (approved):** Inform-style **parser-level expansion** — the parser resolves
 a multi noun phrase to an object list, then dispatches the action **once per object**
 with an `objectname: ` output prefix (per lurkinghorror.txt:568, "chair: Taken. / pc:
@@ -460,13 +460,47 @@ added); free-text slots re-attach commas ("say hello, sailor" round-trips). adve
 marks take/drop/put_on. Golden `multi1` (12-command transcript); all 229 goldens +
 every other suite green; French smoke-tested manually. Docs: specs.md "Multiple
 objects (`multi` actions)", game_parser.md, messages.md.
-**Slice 2 (next):** `all` / `all but/except X` — with the per-action **"all includes"
-hook** (approved: hook from day one, an overridable Lamp function à la Inform's
-"deciding whether all includes"; at minimum exclude-carried for `take all`, scenery/
-people by default); empty-`all` "nothing available" message; loop order stays scope
-order. **Later:** `them` pronoun bound to the last list; consider marking wear/doff
-multi. **Where:** `src/lamplighter/index.js` (resolveMultiPieces/splitMultiSpan),
-`lib/advent`, locales.
+**Slice 2 DONE (2026-07-06):** ALL phrases (`all`/`everything`, `all but/except X[, Y]`)
+resolve as every in-scope slot-type object in scope order, filtered through the
+**"all includes" hook**: `set_all_filter(fn)` (lib/sys native → engine `setAllFilter`);
+advent's `all_includes(object a, item x)` installed in its `on startup` *before*
+`follow startup_rules()` so a game's `rule startup_rules: set_all_filter(mine)` wins
+(delegating back for defaults — golden `multi3`'s no_fish). Defaults: scenery/people/
+`all_exempt` excluded (new `physical` field, the declarative knob; games can also flip
+it from rules); take-all skips carried; drop-all/put-all mean only carried. Ambiguous
+exclusion pieces exclude everything they match (no prompt); empty `all` →
+`parser_nothing_all` ("There's nothing available."), terminal, no turn; ALL always
+prefixes, even a single object. Locale words via setParserLanguage `allWords`/
+`exceptWords` (en "all"/"everything"/"but"/"except"; fr "tout"/"sauf" + message
+override, smoke-tested). Design notes: guarded-overload refinement was ruled out
+(`when` can't reference parameters — hence the install-a-delegating-function pattern);
+`action` is reserved so the hook types its action param `object`; multi-word action
+names compare as string literals (`a.action == "put_on"` — bare `put_on` compiles to
+an object lookup). Goldens `multi2`/`multi3`; showme1 re-baselined (+all_exempt row);
+all 231 goldens + every suite green.
+**Later:** `them` pronoun bound to the last list; consider marking wear/doff multi;
+`all <kind>` ("take all coins") unsupported (parses as neither ALL nor list → can't-see).
+**Guard-constraint review (2026-07-06):** assessed whether the "when guards may not
+reference parameters" constraint (specs.md, which forced the delegation-style hook)
+should be lifted. Verdict: keep it — parameterized rulebooks already provide additive,
+param-guarded, author-preempts-library dispatch ("parameters are in scope in the guard
+and body", rulebooks.md; cf. room_heading_rules(room r)), so lifting it would duplicate
+that niche. Two follow-ups instead: (1) ~~**[checker gap, real bug]** a param reference in
+a function guard is NOT rejected — it silently compiles to a string literal~~ **DONE
+(2026-07-06):** parseFunctionDecl now threads the param names into the guard's scope
+(so a reference parses as a VariableExpr instead of string-falling-back) and
+checkWhenExprRestrictions rejects VariableExpr with a named error ("may not reference
+parameters (\"x\")"). Golden `guard_param`; all 232 goldens + every suite green — no
+existing code relied on the silent behavior. specs.md constraint bullet updated to
+point at parameterized rulebooks for argument dispatch. (2) *(optional, if extension composition
+ever matters)* re-base the all-includes hook as `rulebook bool all_includes_rules(object
+a, item x)` — advent's defaults become rules, games contribute `rule all_includes_rules
+when …: stop false` additively; engine unchanged (still calls one installed function —
+the dispatcher). Also noted: `checkWhenExprRestrictions` forbids calls/function-refs in
+function guards but rulebook-rule guards skip it (permissive by design or by accident?).
+**Where:** `src/lamplighter/index.js` (parseAllPhrase/resolveAllPhrase/setAllFilter),
+`lib/sys` (set_all_filter), `lib/advent` (all_includes, all_exempt, startup install),
+locales.
 
 ### 7. Core-vs-plugin: actions as core and/or an extensible compiler
 Proposal recorded in `devdocs/compiler-extensibility.md`: resolve the

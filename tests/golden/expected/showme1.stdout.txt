@@ -21,6 +21,7 @@ gem (item)
   take_refusal: ""
   attack_refusal: ""
   lit: false
+  all_exempt: false
   initial_appearance: ""
   handled: false
   printed_name: ""
@@ -48,6 +49,7 @@ safe (box)
   take_refusal: ""
   attack_refusal: ""
   lit: false
+  all_exempt: false
   initial_appearance: ""
   handled: false
   locked: false

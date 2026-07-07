@@ -1,0 +1,12 @@
+take all
+take all
+take skull
+drop all but the coin and the umbrella
+put all on table
+take all except ball
+drop all
+take umbrella
+drop all
+drop all
+x all
+quit

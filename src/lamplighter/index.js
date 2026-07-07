@@ -653,6 +653,19 @@ function isMultiAction(actionName) {
     return !!(typeRegistry.get(actionName) || {}).multi;
 }
 
+// The "all includes" hook: a world-library-installed function (action instance,
+// object) -> bool deciding whether `all` includes the object for this action
+// (Inform's "deciding whether all includes" activity). lib/advent installs its
+// policy at startup via the `set_all_filter` native (excluding scenery/people,
+// take-all excluding what's carried, drop-all only what's carried); a game may
+// install its own, delegating back for the defaults. Null means include every
+// type-eligible object in scope. Program structure, not world state: not
+// snapshotted, and RESTART re-fires startup which reinstalls it.
+let allFilter = null;
+function setAllFilter(fn) {
+    allFilter = fn;
+}
+
 // Matches a token list against one template's parts. Literals must match
 // verbatim; a slot captures the run of tokens up to the next literal (or the
 // end). Returns a field -> token-span map, or null if the template does not
@@ -864,13 +877,20 @@ function isSelfWord(span) {
 // `multi` action — elsewhere a connector in a span is a refusal signal.
 let parserConnectors = new Set([","]);
 
-// Splits a noun span into list pieces at connector tokens, dropping empties (so
-// "ball, and umbrella" yields two pieces). A span with no connector — or one that
-// yields fewer than two pieces — is not a list; callers get null.
-function splitMultiSpan(span) {
+// Quantifier words for a multiple-object slot: `allWords` ("all"/"everything",
+// "tout") stand for every eligible in-scope object; `exceptWords` ("but"/"except",
+// "sauf") introduce exclusions ("take all but the sword"). Locale vocabulary,
+// installed via setParserLanguage; empty by default so the engine holds no
+// language policy.
+let parserAllWords = new Set();
+let parserExceptWords = new Set();
+
+// Splits tokens into pieces at connector tokens, dropping empties (so "ball, and
+// umbrella" yields two pieces).
+function splitOnConnectors(tokens) {
     const pieces = [];
     let current = [];
-    for (const token of span) {
+    for (const token of tokens) {
         if (parserConnectors.has(token)) {
             if (current.length > 0) pieces.push(current);
             current = [];
@@ -879,11 +899,30 @@ function splitMultiSpan(span) {
         }
     }
     if (current.length > 0) pieces.push(current);
+    return pieces;
+}
+
+// A noun span as a multiple-object list: two or more connector-separated pieces,
+// else null (a single piece is just a noun, not a list).
+function splitMultiSpan(span) {
+    const pieces = splitOnConnectors(span);
     return pieces.length >= 2 ? pieces : null;
 }
 
 function spanHasConnector(span) {
     return span.some((t) => parserConnectors.has(t));
+}
+
+// A noun span as an ALL phrase: a leading quantifier word, optionally followed by
+// an except word and connector-separated exclusion pieces ("all", "all but the
+// sword", "everything except ball and skull"). Returns { exceptPieces } or null
+// (anything else after the quantifier — e.g. "all coins" — is not an ALL phrase).
+function parseAllPhrase(span) {
+    if (span.length === 0 || !parserAllWords.has(span[0])) return null;
+    if (span.length === 1) return { exceptPieces: [] };
+    if (!parserExceptWords.has(span[1])) return null;
+    const exceptPieces = splitOnConnectors(span.slice(2));
+    return exceptPieces.length > 0 ? { exceptPieces } : null;
 }
 
 // A pronoun used among `spans` that has no antecedent yet, else null. This is
@@ -1004,6 +1043,8 @@ function setParserLanguage(spec) {
     if (spec.selfWords) parserSelfWords = new Set(spec.selfWords);
     // The comma stays a connector under every locale (it is structural, not vocabulary).
     if (spec.connectors) parserConnectors = new Set([",", ...spec.connectors]);
+    if (spec.allWords) parserAllWords = new Set(spec.allWords);
+    if (spec.exceptWords) parserExceptWords = new Set(spec.exceptWords);
     if (spec.disambiguation) disambiguationRenderer = spec.disambiguation;
     if (spec.unknownReference) unknownReferenceRenderer = spec.unknownReference;
 }
@@ -1061,11 +1102,18 @@ function resolveSlots(slots, instance, scope, slotTypes, multiOut = { field: nul
         }
         const candidates = resolveCandidates(span, resolvePool(slotTypes[field], scope), slotTypes[field], instance.actor);
         if (candidates.length === 0) {
-            // A multi action's direct slot accepts a connector-separated list
-            // ("ball and umbrella") — tried only after the whole span fails as a
-            // single noun, so an object whose vocabulary contains a connector
-            // ("salt and pepper shaker") keeps resolving as one thing.
+            // A multi action's direct slot accepts an ALL phrase ("all", "all but
+            // the sword") or a connector-separated list ("ball and umbrella") —
+            // tried only after the whole span fails as a single noun, so an object
+            // whose vocabulary contains a connector or quantifier word ("salt and
+            // pepper shaker") keeps resolving as one thing.
             if (field === directSlot && isMultiAction(instance.type)) {
+                const all = parseAllPhrase(span);
+                if (all) {
+                    const status = resolveAllPhrase(all, instance, field, scope, slotTypes, multiOut);
+                    if (status === "ok") continue;
+                    return status;
+                }
                 const pieces = splitMultiSpan(span);
                 if (pieces) {
                     const status = resolveMultiPieces(pieces, 0, [], instance, field, slots.slice(i + 1), scope, slotTypes, multiOut);
@@ -1093,6 +1141,40 @@ function resolveSlots(slots, instance, scope, slotTypes, multiOut = { field: nul
             return "ambiguous";
         }
     }
+    return "ok";
+}
+
+// Resolves an ALL phrase for a multi action's direct slot: every in-scope object
+// of the slot's type, filtered through the installed "all includes" hook, minus
+// the exclusion pieces ("all but X"). An exclusion piece excludes *every* object
+// it matches ("all but ball" excludes both balls — no disambiguation), and one
+// that matches nothing is silently inert. Objects are visited in scope order. An
+// empty result prints the nothing-available message and returns "nothing"
+// (terminal: the command was understood, so no grammar backtracking and no
+// "can't see any such thing"). ALL always announces — the player didn't name the
+// objects, so even a single one gets its "objectname: " prefix.
+function resolveAllPhrase(all, instance, field, scope, slotTypes, multiOut) {
+    const slotType = slotTypes[field];
+    const pool = resolvePool(slotType, scope).filter(
+        (obj) => !slotType || isTypeOrSubtype(obj.type, slotType),
+    );
+    const excluded = new Set();
+    for (const piece of all.exceptPieces) {
+        for (const obj of resolveCandidates(piece, pool, slotType, instance.actor)) {
+            excluded.add(obj);
+        }
+    }
+    const objects = pool.filter(
+        (obj) => !excluded.has(obj) && (!allFilter || Boolean(allFilter(instance, obj))),
+    );
+    if (objects.length === 0) {
+        print(message("parser_nothing_all", "There's nothing available."));
+        return "nothing";
+    }
+    multiOut.field = field;
+    multiOut.objects = objects;
+    multiOut.announce = true;
+    noteAntecedent(objects[objects.length - 1]);
     return "ok";
 }
 
@@ -1141,7 +1223,7 @@ function dispatchResolvedAction(actionName, instance, multiOut) {
     const oow = isOutOfWorld(actionName);
     if (!oow) { checkpoint(); advanceTurn(); }
     const objects = (multiOut && multiOut.objects) || null;
-    if (objects && objects.length > 1) {
+    if (objects && (objects.length > 1 || multiOut.announce)) {
         for (const obj of objects) {
             const inst = { ...instance };
             inst[multiOut.field] = obj;
@@ -1151,7 +1233,8 @@ function dispatchResolvedAction(actionName, instance, multiOut) {
         }
     } else {
         // A list that collapsed to one object ("take ball and ball") runs the
-        // plain single-object path, prefix-free.
+        // plain single-object path, prefix-free. (An ALL phrase announces even a
+        // single object — the player didn't name it.)
         if (objects && objects.length === 1) instance[multiOut.field] = objects[0];
         runAction(actionName, instance);
     }
@@ -1280,21 +1363,26 @@ function runCommand(line, actor, metaOnly = false) {
             if (metaOnly && !isOutOfWorld(entry.actionName)) continue;
             return dispatchResolvedAction(entry.actionName, instance, multiOut);
         }
-        if (status === "ambiguous") {
+        // Both terminal: a prompt or the nothing-available message already printed,
+        // and no turn is spent.
+        if (status === "ambiguous" || status === "nothing") {
             return false;
         }
         unresolvedSpans.push(...Object.values(matched));
         if (entry.parts.some((part) => part.kind === "literal")) {
             sawVerbMatch = true;
-            // A connector in an object-slot span this grammar couldn't resolve marks a
-            // multiple-object attempt — but only where a list is disallowed (the check is
+            // A connector or leading quantifier in an object-slot span this grammar
+            // couldn't resolve marks a multiple-object attempt ("x ball and lamp",
+            // "examine all") — but only where a list is disallowed (the check is
             // syntactic, like Inform's). Primitive slots are exempt: free text may
             // legitimately contain commas ("say hello, sailor").
             const directSlot = (typeRegistry.get(entry.actionName) || {}).directSlot || null;
             for (const [field, span] of Object.entries(matched)) {
                 if (PRIMITIVE_SLOT_TYPES.has(slotTypes[field])) continue;
                 const listAllowed = field === directSlot && isMultiAction(entry.actionName);
-                if (!listAllowed && spanHasConnector(span)) sawMultiAttempt = true;
+                if (!listAllowed && (spanHasConnector(span) || parserAllWords.has(span[0]))) {
+                    sawMultiAttempt = true;
+                }
             }
         }
     }
@@ -2875,6 +2963,7 @@ module.exports = {
     setOutOfWorld,
     setWorldScope,
     setMultiAction,
+    setAllFilter,
     runCommand,
     runMetaCommand,
     playerCommand,

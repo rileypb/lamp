@@ -1,0 +1,46 @@
+hall
+A plain hall.
+
+You see a red ball, a blue ball, a coin, an umbrella and a skull here.
+
+> take all
+red ball: Taken.
+blue ball: Taken.
+coin: Taken.
+umbrella: Taken.
+
+> take all
+There's nothing available.
+
+> take skull
+Taken.
+
+> drop all but the coin and the umbrella
+red ball: Dropped.
+blue ball: Dropped.
+
+> put all on table
+coin: You put the coin on the table.
+umbrella: You put the umbrella on the table.
+
+> take all except ball
+coin: Taken.
+umbrella: Taken.
+
+> drop all
+coin: Dropped.
+umbrella: Dropped.
+
+> take umbrella
+Taken.
+
+> drop all
+umbrella: Dropped.
+
+> drop all
+There's nothing available.
+
+> x all
+You can't use multiple objects with that verb.
+
+> quit

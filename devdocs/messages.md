@@ -13,8 +13,8 @@ is still a named message. Two former local-reference gaps were closed by routing
 value through a global the message can read: the closed-door refusal
 (`blocking_door`, doors.lamp) and the score notification (`points_awarded`,
 scoring.lamp). The engine's parser feedback also routes through the registry
-(`parser_cant_see`/`parser_no_understand`/`parser_no_multi`, with engine-side
-defaults).
+(`parser_cant_see`/`parser_no_understand`/`parser_no_multi`/`parser_nothing_all`,
+with engine-side defaults).
 
 Earlier stages, all done: Part 1 (the `act` global), Part 2 (the named-message
 mechanism), Part 3 (advent's action + non-action strings named).

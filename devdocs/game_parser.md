@@ -143,11 +143,12 @@ The design targets these Inform 7/10 parser capabilities, grouped by stage:
   adjective concept — all synonyms are tokens in the same bag.
 - `printed name` and `article` fields (see Vocabulary model below).
 - Noun phrases with articles and multi-object lists
-  (`all`, `take all but the sword`). **Connector lists are implemented** (v3 slice 1):
-  a `multi`-flagged action's direct slot accepts `X and Y` / `X, Y` lists and the
-  action dispatches once per object under an `objectname: ` prefix (see "Multiple
-  objects" in devdocs/specs.md; golden `multi1`). `all`/`except` are the next slice
-  (with a per-action "all includes" hook).
+  (`all`, `take all but the sword`). **Implemented** (v3): a `multi`-flagged action's
+  direct slot accepts `X and Y` / `X, Y` lists and ALL phrases (`all`, `everything`,
+  `all but/except …`), and the action dispatches once per object under an
+  `objectname: ` prefix. `all` is filtered through the per-action "all includes"
+  hook (`set_all_filter`; advent's `all_includes` + the `all_exempt` field). See
+  "Multiple objects" in devdocs/specs.md; goldens `multi1`/`multi2`/`multi3`.
 - Pronouns (`it`, `them`, `him`, `her`) bound to the last-referenced object(s).
   **`it` is implemented** (v1): a bare `it` noun resolves to the last single
   object the player referred to, gated by scope. `them`/`him`/`her` are deferred.

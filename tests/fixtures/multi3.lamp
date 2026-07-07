@@ -1,0 +1,29 @@
+lib advent
+
+# Exercises the "all includes" hook: the game swaps in its own policy from a
+# startup_rules rule (running after advent's default install, so the game wins),
+# delegating back to the library all_includes for the defaults. The fish never
+# joins `take all`, stays takeable by name, and rejoins `drop all` (the delegated
+# default includes carried things for drop).
+
+game Multi_Hook:
+    start hall
+
+room hall:
+    description "A plain hall."
+
+item coin
+item bell
+item fish
+
+contains hall coin
+contains hall bell
+contains hall fish
+
+function bool no_fish(object a, item x):
+    if x == fish and a.action == take:
+        return false
+    return all_includes(a, x)
+
+rule startup_rules:
+    set_all_filter(no_fish)
