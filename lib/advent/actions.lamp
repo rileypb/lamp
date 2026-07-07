@@ -109,6 +109,24 @@ report failed take:
 
 action inventory
 
+# Per-item inventory annotations — the " (worn)" / " (providing light)" tags
+# after a row's name. A rulebook, so a game decorates its own items (a
+# "(closed)" wallet, a "(loaded)" pistol) by contributing side-effect rules
+# that print their own " (note)" — don't `stop`, so every applicable note
+# prints. The actor is `act.actor` (rules see the running action through the
+# `act` global). advent's own tags are the two default rules below; a game's
+# rules run before them (author before library).
+rulebook bool inventory_note_rules(item x):
+	default false
+
+rule inventory_note_rules:
+	if wears act.actor x:
+		print message inventory_worn  # " (worn)"
+
+rule inventory_note_rules:
+	if x.lit:
+		print message inventory_providing_light  # " (providing light)"
+
 report inventory:
 	let found = false
 	for x in item.all:
@@ -120,16 +138,12 @@ report inventory:
 				print message inventory_header  # "[We] [are] carrying:[line break]"
 				found = true
 			# The item name references the loop variable `x` (not the action), so it
-			# stays a plain print (a message may only reference `act`/globals); the
-			# "(worn)" marker carries no local reference, so it is a named message. The
-			# name runs on (no sentence punctuation), so the parts join on one line.
+			# stays a plain print (a message may only reference `act`/globals). The
+			# name runs on (no sentence punctuation), so the note tags join the line.
 			# Render the article through the locale's `indefinite` (not advent's
 			# English-only `with_article`) so the row localizes — "une clé" under fr-FR.
 			print "  [indefinite(x)]"
-			if wears self.actor x:
-				print message inventory_worn  # " (worn)"
-			if x.lit:
-				print message inventory_providing_light  # " (providing light)"
+			follow inventory_note_rules(x)
 			print "[line break]"
 	if not found:
 		print message inventory_empty  # "[We] [are] carrying nothing."

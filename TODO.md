@@ -724,6 +724,17 @@ run ending in "." breaks the line — style words, not sentences). Driven by
 Crosslexia: lib/swap now marks swappable words **bold + `swap_word_color`**
 (default cyan, game-overridable; bold survives on no-color hosts), with a
 `swapword(replacement)` helper for prose naming a swap word outside a blank.
+**Inventory note rulebook (2026-07-07):** advent's hardcoded " (worn)" /
+" (providing light)" inventory tags are now `inventory_note_rules(item x)` —
+a rulebook (the Swappable Details.i7x architecture) with advent's two tags
+as default rules, so a game decorates its own items with side-effect rules
+that print " (note)" (no `stop`; `act.actor` for the actor). Byte-invariant
+(236 goldens). Crosslexia's wallet contributes "(open)/(closed)" with the
+word swap-highlighted while its blank is live, plain after the door swap
+consumes it. Follow-ups: room-listing parity (I7's Swappable Details also
+decorates "printing room description details" — a dropped wallet shows no
+state in the room list); consider default open/closed notes for closable
+boxes (I7-standard, but a behavior change needing re-baselines).
 **Next:** flashback content + the return path (no exit exists in the I7;
 needs restoring viewpoint/tense/inventory and probably Flashback-scene-2);
 the police arrival (only a design note in the I7). Engine nits, low
