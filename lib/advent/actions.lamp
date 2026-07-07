@@ -30,8 +30,12 @@ report wait:
 # A game refines per object with `all_exempt` (a field, so rules can flip it as the
 # world changes), or swaps the whole policy by installing its own function from a
 # `rule startup_rules:` (delegating back to all_includes for these defaults).
-function bool all_includes(object a, item x):
+function bool all_includes(object a, physical x):
 	if x.all_exempt or x.scenery or x is person:
+		return false
+	# TAKE's slot is `physical` (so a person resolves to a proper refusal), but
+	# `all` never sweeps up non-items — rooms, doors-in-scope, backdrops.
+	if not (x is item):
 		return false
 	if a.action == take:
 		return not (holder(x) == a.actor)
@@ -41,9 +45,21 @@ function bool all_includes(object a, item x):
 		return holder(x) == a.actor
 	return true
 
+# The slot is `physical`, not `item`, so a person (or any physical) RESOLVES and
+# gets a proper refusal — "take ainsley" used to fail noun resolution and read
+# as "You can't see any such thing." even with her in the room. The kind checks
+# below sort out what is actually takeable.
 action take:
-	direct item taken
+	direct physical taken
 	multi
+
+check take:
+	if self.taken == self.actor:
+		stop failed take_self
+	if self.taken is person:
+		stop failed take_person
+	if not (self.taken is item):
+		stop failed cant_take_that
 
 check take:
 	if holder(self.taken) == self.actor:
@@ -93,6 +109,12 @@ report failed take:
 		stop
 	if self.reason == already_carrying:
 		print message take_already_carrying  # "You're already carrying [regarding act.taken][those]."
+		stop
+	if self.reason == take_self:
+		print message take_self_msg  # "[We] [are] always self-possessed."
+		stop
+	if self.reason == take_person:
+		print message take_person_msg  # "[We] [do] not suppose [the act.taken] would care for that."
 		stop
 	if self.reason == cant_take_that:
 		print message take_cant_take  # "That's not something [we] can take."

@@ -1,0 +1,5 @@
+take alice
+take me
+take all
+i
+quit

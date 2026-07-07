@@ -1,0 +1,24 @@
+lib advent
+
+# TAKE's slot is `physical`: a person resolves and gets a proper refusal
+# (instead of the parser's "can't see any such thing"), the actor is "always
+# self-possessed", other non-items refuse generically, and `take all` still
+# sweeps only items.
+
+game TakePerson_Demo:
+	start parlor
+
+room parlor:
+	description "A parlor."
+
+person alice:
+	proper true
+	pronouns "she"
+	printed_name "Alice"
+	understand "alice"
+
+item coin:
+	understand "coin"
+
+contains parlor alice
+contains parlor coin

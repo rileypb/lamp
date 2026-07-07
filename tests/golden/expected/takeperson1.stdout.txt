@@ -1,0 +1,19 @@
+parlor
+A parlor.
+
+You see a coin here.
+
+> take alice
+You do not suppose Alice would care for that.
+
+> take me
+You are always self-possessed.
+
+> take all
+coin: Taken.
+
+> i
+You are carrying:
+  a coin
+
+> quit

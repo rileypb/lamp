@@ -764,8 +764,22 @@ contents list as indented rows beneath it, recursively
 (`inventory_contents_rows`; contents_of hides closed boxes and scenery/
 parts; the note rulebook runs per nested row — "a leather wallet (open) /
 a black diary"). putin1 covers two levels.
+**Person-aware TAKE DONE (2026-07-07, advent):** TAKE's slot is `physical`,
+so a person resolves to a proper refusal — "[We] [do] not suppose [the
+act.taken] would care for that." (Inform's line) instead of the parser's
+"can't see any such thing"; "take me" → "[We] [are] always self-possessed.";
+other non-items (rooms, doors, backdrops) refuse generically, and
+`all_includes` excludes non-items so `take all` still sweeps only items.
+Both locales; golden `takeperson1`; 239 pre-existing byte-invariant.
 **Prologue review leftovers:** kiss retheme ("[The noun]
 [might not] [like] that."), eat "Not bad." tail, room-listing state notes.
+**Chapter 1 review leftovers:** the movie's room paragraph (I7 appearance
+line — make lawrence non-scenery + initial_appearance "[lawrence_desc()]");
+stale switch-on report after the weather swap (render live lawrence_desc);
+re-talk guard on the storytelling (needs `not ainsley_storytelling` + an
+already-told reply, CHECK-marked — or land it with the flashback return
+path); the room's advertised scenery nouns (bar/fireplace/sofa/window/…,
+undeclared in the I7 too); north front-door exit (police, unwritten).
 (you-can-also-see resolved 2026-07-07: the story.ni "[here]" substitution
 was deixis groundwork — Crosslexia's room_contents_outro override renders
 " there." under narrate_past: "You saw a black diary there.")
