@@ -39,6 +39,15 @@ global bool viewpoint_named = false
 # "Galaxy". Mirrors the I7 `[Player]` short-name substitution. Read by the locale's we().
 global string viewpoint_name = ""
 
+# Narration tense: false (the default) narrates in the present; true narrates in
+# the past — "[We] [see]" renders "You saw", the D9 contractions spell out
+# ("[We're]" → "you were"), and the is/are copulas become was/were. Mirrors
+# Inform's "the story tense is the past tense" (only present/past are modeled —
+# flashback scenes are the driving use). Read by the locale's conjugation
+# (lib/en-US; fr-FR does not yet model tense and ignores it). Saved, like the
+# viewpoint globals, so a scene's tense survives restore.
+global bool narrate_past = false
+
 global real PI = 3.141592653
 
 # The action currently running (set by the action pipeline for the duration of an

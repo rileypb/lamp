@@ -1,0 +1,28 @@
+You were sure that was how it went: you didn't forget a thing.
+parlor
+The parlor was dusty and still.
+
+You saw a candle here.
+
+On the divan was a cushion (on which was a locket).
+
+> x candle
+You saw nothing unusual about the candle.
+
+> take candle
+Taken.
+
+> i
+You were carrying:
+  a candle
+
+> touch divan
+You felt nothing unexpected.
+
+> look
+parlor
+The parlor was dusty and still.
+
+On the divan was a cushion (on which was a locket).
+
+> quit

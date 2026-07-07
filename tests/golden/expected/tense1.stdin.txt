@@ -1,0 +1,6 @@
+x candle
+take candle
+i
+touch divan
+look
+quit

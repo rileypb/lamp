@@ -209,7 +209,19 @@ use an ordinary reference (`[the self.actor]`), not a pronoun word.
   `"[We] can't eat [regarding self.food][those]."` so the message reads "…eat that." or
   "…eat those." by the food's number. A zero-arg locale call (`those()`), like the pronouns.
 - **D6. Story tense.** Render adaptive text in past/present/future (Inform's "story
-  tense"): `[We] [had jumped]`. DEFER until we add story tense
+  tense"): `[We] [had jumped]`. **Past DONE (2026-07-06, en-US)** — the `narrate_past`
+  narration global (`lib/sys/globals.lamp`, default false, saved like the viewpoint
+  globals; driven by Crosslexia's flashback scenes). When set, `conjugate()` renders
+  the simple past — be → was/were by agreement, a `PAST_IRREGULAR` table for the
+  auxiliaries + common IF verbs, regular `-ed` with e/-y/one-syllable-doubling
+  spelling rules (drop → dropped, open → opened) — the D9 contractions spell out
+  (`[We're]` → "you were", `[don't]` → "didn't", `[that's]` → "that was", `'ll` →
+  "would"), and the `is`/`are` copulas (`are(n)`, list copulas, supporter/contained
+  phrases) become was/were. So "[We] [see]" → "You saw", room listings read "On the
+  divan was a cushion (on which was a locket)." Golden `tense1`; default-false games
+  byte-invariant. Perfect/future and fr-FR tense are NOT modeled (fr-FR ignores the
+  global — French past needs the imparfait/passé-composé split); the hardcoded
+  "can't" refusals also stay present (no adaptive can/could form yet).
 - **D7. Person setting.** Choose 1st/2nd/3rd person narration globally (Inform lets
   a story be told in any person); the player verbs adapt accordingly. **DONE.** Person and
   number are narration choices — the globals `viewpoint_person` (1/2/3, default 2 → "you")

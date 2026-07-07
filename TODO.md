@@ -676,11 +676,28 @@ loose-item path nests via `render_thing`). `supporter_phrase` now takes the
 advent passes `render_list(on_it)` — so it prints "…is a china plate (on
 which is a chicken heart)." en-US + fr-FR both updated; golden
 `nestsupport1`; 232 pre-existing goldens byte-invariant; i18n.md updated.
-**Next:** the flashback (Chapter1-Flashback.i7x — **past-tense narration is
-the real engine feature**, plus M/K/X they/them NPCs, the viewpoint switch,
-inventory storage, the "(flashback)" room suffix); nonsense-swap fallback
-(`swap [text]` catch-all — needs grammar-overlap check); keypress-wait for
-chapter title cards; the police arrival (only a design note in the I7).
+**Past-tense narration DONE (2026-07-06, engine D6-past):** `narrate_past`
+global (lib/sys) + en-US conjugation — simple past for adaptive verbs
+(irregular table + -ed spelling rules), spelled-out D9 contractions
+("[We're]" → "you were", "[don't]" → "didn't"), was/were copulas across
+listings/supporter/contained phrases. Golden `tense1`; 233 pre-existing
+byte-invariant; text.md D6 records scope (no perfect/future, fr-FR ignores
+the global, hardcoded "can't" stays present — an adaptive [can't]/could form
+is the known follow-up). **Flashback scaffolding ported**
+(`lib/crosslexia/flashback.lamp`): storytelling → `begin_flashback()` stores
+the inventory (parts stay attached), shifts to 2nd-person past, moves the
+player to the remembered Common Room — heading "Common Room (flashback)"
+via a game-file `room_heading_rules` rule (**gotcha: only game-file rules
+run ahead of a library's default** — a lib-contributed override never fires
+before advent's own rule; worth a docs note or a priority mechanism
+someday); M/K/X they/them NPCs + the two sofas; "talk to m" renders "They
+didn't have anything to say to you." The scene's *events* are unwritten in
+the I7 too — authoring them is game work, not porting.
+**Next:** flashback content + the return path (no exit exists in the I7;
+needs restoring viewpoint/tense/inventory and probably Flashback-scene-2);
+nonsense-swap fallback (`swap [text]` catch-all — needs grammar-overlap
+check); keypress-wait for chapter title cards; the police arrival (only a
+design note in the I7).
 
 ## Smaller / opportunistic
 - ~~**Mobile: virtual keyboard covers new output after Enter.**~~ **DONE (2026-07-06,

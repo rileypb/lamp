@@ -1,0 +1,37 @@
+lib advent
+
+# Past-tense narration (the narrate_past global): adaptive verbs render the
+# simple past ("[We] [see]" -> "You saw"), the D9 contractions spell out
+# ("[We're]" -> "You were", "[don't]" -> "didn't", "[that's]" -> "that was"),
+# and the is/are copulas become was/were (room listings, supporter phrases,
+# inventory). Default-false games are byte-invariant.
+
+game Tense_Demo:
+	start parlor
+
+rule startup_rules:
+	narrate_past = true
+	print "[We're] sure [that's] how it [go]: [we] [don't] forget a thing."
+
+room parlor:
+	description "The parlor was dusty and still."
+
+item divan:
+	scenery true
+	supporter true
+	understand "divan/sofa"
+
+item cushion:
+	supporter true
+	understand "cushion"
+
+item locket:
+	understand "locket"
+
+item candle:
+	understand "candle"
+
+contains parlor divan
+contains divan cushion
+contains cushion locket
+contains parlor candle
