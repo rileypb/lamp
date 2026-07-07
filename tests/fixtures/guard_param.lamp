@@ -1,0 +1,22 @@
+# Compile error: a function overload's `when` guard may not reference the
+# function's parameters — guards select an overload by world state, not by
+# argument (use a parameterized rulebook for argument dispatch). Previously the
+# parameter name silently fell through to the string-literal fallback and the
+# overload never fired.
+
+game G:
+	author "x"
+	version 1
+
+type item
+item fish
+item coin
+
+function string classify(item x):
+	return "ordinary"
+
+function string classify(item x) when x == fish:
+	return "fishy"
+
+on startup:
+	print classify(fish)

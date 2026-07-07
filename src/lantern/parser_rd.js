@@ -1027,14 +1027,19 @@ function createParser(tokens, filePath, globalNames, functionNames = new Set(), 
             }
         }
         expect("RPAREN", "Expected ')' to close parameter list");
+        const paramLocals = new Set(params.map((p) => p.name));
         let whenExpr = null;
         if (atKeyword("when")) {
             next();
-            whenExpr = parseExpression(0, new Set());
+            // Parse the guard with the parameter names in scope so a guard that
+            // references one parses as a variable reference — which the checker then
+            // rejects with a clear error (guards may not reference parameters) —
+            // instead of the name silently falling through to the string-literal
+            // fallback and the overload never firing.
+            whenExpr = parseExpression(0, paramLocals);
         }
         expect("COLON", "Expected ':' after function header");
         expectNewline();
-        const paramLocals = new Set(params.map((p) => p.name));
         const body = parseBlock(paramLocals);
         return ast.createFunctionDecl(name, returnType, params, whenExpr, body, filePath, keyword.line);
     }

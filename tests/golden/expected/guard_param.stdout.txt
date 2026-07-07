@@ -1,0 +1,3 @@
+Compile error: tests/fixtures/guard_param.lamp:18: type error: when condition of "classify" may not reference parameters ("x")
+  18 | function string classify(item x) when x == fish:
+    | ^

@@ -409,6 +409,14 @@ function checkWhenExprRestrictions(expr, funcName, filePath, lineNumber) {
     if (expr.kind === "FunctionRefExpr") {
         throw new Error(`${filePath}:${lineNumber}: type error: when condition of "${funcName}" may not reference functions`);
     }
+    // The parser threads the parameter names into the guard's scope, so a reference
+    // to one parses as a variable — the only way a VariableExpr can appear here.
+    // Rejecting it enforces the documented constraint (guards select an overload by
+    // world state, not by argument — use a parameterized rulebook for argument
+    // dispatch) instead of the name silently becoming a string literal.
+    if (expr.kind === "VariableExpr") {
+        throw new Error(`${filePath}:${lineNumber}: type error: when condition of "${funcName}" may not reference parameters ("${expr.name}")`);
+    }
     for (const key of ["left", "right", "expr"]) {
         if (expr[key]) checkWhenExprRestrictions(expr[key], funcName, filePath, lineNumber);
     }
