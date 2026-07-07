@@ -106,9 +106,11 @@ native function string contained_phrase(object container, string inner, int coun
 
 # The locale sentence for a scenery supporter's visible contents — "On the hook is a
 # cloak." / "On the shelf are a ball and a trumpet." advent's describe_supporters (now
-# Lamp) calls it with the supporter and the items resting on it; the phrasing
-# (preposition, copula agreement, articles) is language-specific, so it lives here.
-native function string supporter_phrase(object supporter, list<object> contents)
+# Lamp) calls it with the supporter, the pre-rendered contents prose (render_list —
+# articles applied, nested contents in parentheticals), and the item count for the
+# copula: the same contract as contained_phrase. The phrasing is language-specific,
+# so it lives here.
+native function string supporter_phrase(object supporter, string contents, int count)
 
 # Count-driven copula agreement (G3). are(n) is the bare primitive: "is" when the
 # count is exactly 1, else "are" (so are(0) -> "are 0 bullets"). The [is LIST] sugar

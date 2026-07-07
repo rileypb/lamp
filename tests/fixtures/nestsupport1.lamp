@@ -1,0 +1,29 @@
+lib advent
+
+# Regression: a thing resting on a scenery supporter shows its own contents in
+# the supporter paragraph — "On the shelf is a tray (on which is a coin)." —
+# via the render_list/count supporter_phrase contract (same as containers).
+# Previously the supporter listing flattened: the coin was takeable but never
+# shown.
+
+game NestSupport:
+	start pantry
+
+room pantry:
+	description "A narrow pantry."
+
+item shelf:
+	scenery true
+	supporter true
+	understand "shelf"
+
+item tray:
+	supporter true
+	understand "tray"
+
+item coin:
+	understand "coin"
+
+contains pantry shelf
+contains shelf tray
+contains tray coin

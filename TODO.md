@@ -645,13 +645,42 @@ works after moving the `test_script` into `lib/crosslexia/debug.lamp`
 (`not_for_release` — release builds drop advent's debug.lamp and with it the
 `test_script` type, so test scripts must live in a debug-marked file; the
 Phobos pattern). `lib/crosslexia/` is now the home for game content files.
-**Next:** nonsense-swap fallback (`swap [text]` catch-all — needs
-grammar-overlap check); keypress-wait for chapter title cards (engine gap;
-`prompt()` is the stopgap); Chapter 1 (common room, Mrs. Ainsley, TV/Lawrence
-of Arabia swaps, TALK TO); scene machinery (Prologue→Chapter1 trigger on
-entering the common room); past-tense narration for flashbacks (new engine
-feature, deferred). Consider committing the engine change separately from the
-windows work it sits on top of.
+**Chapter 1 port DONE (2026-07-06):** `lib/crosslexia/chapter1.lamp` — the
+common room (all seven room blanks), Mrs. Ainsley (angry until the
+thundercloud/sun swap; TALK TO with glare/storytelling branches), the
+television (game-local `switch_on`/`switch_off` actions — advent has no
+device/switchable type, candidate general gap), Lawrence of Arabia (scenery,
+unfeelable, in play only while the TV is on; four description states across
+rainy/duneless), all eight transformations including the reversible red
+herrings (bar/fireplace, chat/relax, beer/whiskey-chokes-once) and
+street/dunes → Singing in the Rain, and the Chapter-1 title card on first
+entering the common room (every-turn rule; keypress-wait still an engine
+gap). lib/swap gained `detach(blank)` (I7's "now the blanks of X is {}" —
+availability off, fill retained). `lib/crosslexia/messages.lamp` re-themes
+the non-adaptive second-person defaults with the D9 contraction tokens
+("[We're] already carrying…" → "I'm…"), which will also track the flashback
+viewpoint shifts. `test all` = Prologue walkthrough + Chapter 1 to the
+storytelling beat. **advent fix this drove: inventory skips parts of the
+actor** (`part_of x ?first` guard in `report inventory` — wire_parts
+materializes parts as containment, so player body parts, Crosslexia's eyes,
+listed as "carried"; Phobos never had actor-parts, so unexercised). All 232
+goldens byte-invariant + state/save/sandbox green. advent follow-up worth
+considering: TAKE/DROP on a part of the actor still behave as if carried
+(Crosslexia guards its eyes/leg with instead rules; a general "that's part
+of [us]" refusal wants the layer-3 message treatment in both locales).
+**advent fix (2026-07-06): supporter listing now nests.** "On the bedside
+table is a china plate." hid the chicken heart resting on the plate (takeable
+but invisible — `supporter_phrase` flattened its item list while the
+loose-item path nests via `render_thing`). `supporter_phrase` now takes the
+`contained_phrase` contract — `(supporter, pre-rendered contents, count)`,
+advent passes `render_list(on_it)` — so it prints "…is a china plate (on
+which is a chicken heart)." en-US + fr-FR both updated; golden
+`nestsupport1`; 232 pre-existing goldens byte-invariant; i18n.md updated.
+**Next:** the flashback (Chapter1-Flashback.i7x — **past-tense narration is
+the real engine feature**, plus M/K/X they/them NPCs, the viewpoint switch,
+inventory storage, the "(flashback)" room suffix); nonsense-swap fallback
+(`swap [text]` catch-all — needs grammar-overlap check); keypress-wait for
+chapter title cards; the police arrival (only a design note in the I7).
 
 ## Smaller / opportunistic
 - ~~**Mobile: virtual keyboard covers new output after Enter.**~~ **DONE (2026-07-06,

@@ -112,7 +112,10 @@ action inventory
 report inventory:
 	let found = false
 	for x in item.all:
-		if holder(x) == self.actor:
+		# A part of the actor (wire_parts materializes part_of as containment) is
+		# attached, not carried — skip it, as Inform does.
+		let whole = part_of x ?first
+		if holder(x) == self.actor and not (whole == self.actor):
 			if not found:
 				print message inventory_header  # "[We] [are] carrying:[line break]"
 				found = true

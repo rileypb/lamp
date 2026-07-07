@@ -49,7 +49,9 @@ function void describe_supporters(room r):
 					append(on_it, x)
 			if not (on_it.first == none):
 				print "[par]"
-				print supporter_phrase(s, on_it)
+				# render_list nests each thing's own contents, so what rests on the
+				# supporter shows what it holds (same path as loose room items).
+				print supporter_phrase(s, render_list(on_it), on_it.size)
 
 # Room-description heading. Factored into a rulebook so a game can replace it (a
 # game contributes a `rule room_heading_rules:` from its author file, which runs

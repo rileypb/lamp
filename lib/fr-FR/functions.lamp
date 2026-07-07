@@ -85,9 +85,9 @@ native function string format_list(list<string> xs)
 native function string contained_phrase(object container, string inner, int count)
 
 # The locale sentence for a scenery supporter's visible contents, phrased in French.
-# advent's describe_supporters (now Lamp) calls it with the supporter and the items
-# resting on it. Same signature as lib/en-US.
-native function string supporter_phrase(object supporter, list<object> contents)
+# advent's describe_supporters (now Lamp) calls it with the supporter, the
+# pre-rendered contents prose, and the item count. Same signature as lib/en-US.
+native function string supporter_phrase(object supporter, string contents, int count)
 
 # Count-driven copula agreement: are(n) is "est" when the count is exactly 1,
 # else "sont". The [is LIST] sugar forms render the verb agreeing with the list

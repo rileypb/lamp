@@ -1,0 +1,15 @@
+pantry
+A narrow pantry.
+
+On the shelf is a tray (on which is a coin).
+
+> take coin
+Taken.
+
+> look
+pantry
+A narrow pantry.
+
+On the shelf is a tray.
+
+> quit
