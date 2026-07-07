@@ -9,8 +9,11 @@ put all in crate
 x crate
 open tin
 take tin
+take rock
+put rock in tin
 put tin in crate
 take crate
 put crate in crate
 put crate in tin
+i
 quit

@@ -41,6 +41,12 @@ You open the tin.
 > take tin
 Taken.
 
+> take rock
+Taken.
+
+> put rock in tin
+You put the rock in the tin.
+
 > put tin in crate
 You put the tin in the crate.
 
@@ -52,5 +58,12 @@ You can't put something inside itself.
 
 > put crate in tin
 You can't put something inside itself.
+
+> i
+You are carrying:
+  a crate
+    a cone
+    a tin
+      a rock
 
 > quit

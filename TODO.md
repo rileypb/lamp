@@ -758,10 +758,12 @@ byte-invariant. **PUT X IN Y DONE (2026-07-07, advent):** `put_in` — open real
 destination, closed/non-container/self-insertion (whole holder chain)
 refusals, put-all-in policy, put_on's implicit-doff and shared
 not-carrying message; put/insert × in/into/inside grammar; both locales;
-golden `putin1`; 238 pre-existing byte-invariant. specs.md updated. Noticed
-adjacent gap: inventory doesn't nest a carried container's contents
-("a leather wallet (open)" — Inform appends "containing a black diary");
-candidate `render_contents` reuse in the inventory row.
+golden `putin1`; 238 pre-existing byte-invariant. specs.md updated.
+**Nested inventory DONE (2026-07-07):** each carried thing's visible
+contents list as indented rows beneath it, recursively
+(`inventory_contents_rows`; contents_of hides closed boxes and scenery/
+parts; the note rulebook runs per nested row — "a leather wallet (open) /
+a black diary"). putin1 covers two levels.
 **Prologue review leftovers:** kiss retheme ("[The noun]
 [might not] [like] that."), eat "Not bad." tail, room-listing state notes,
 you-can-also-see phrasing decision.

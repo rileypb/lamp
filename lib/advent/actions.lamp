@@ -127,6 +127,17 @@ rule inventory_note_rules:
 	if x.lit:
 		print message inventory_providing_light  # " (providing light)"
 
+# The visible contents of a carried thing, as indented rows under its own —
+# recursively, one indent step per nesting level ("a wallet (open)" / "  a
+# dollar bill"). contents_of already hides a closed box's contents and skips
+# scenery (so a whole's parts never list).
+function void inventory_contents_rows(item x, string indent):
+	for y in contents_of(x):
+		print "[indent][indefinite(y)]"
+		follow inventory_note_rules(y)
+		print "[line break]"
+		inventory_contents_rows(y, indent + "  ")
+
 report inventory:
 	let found = false
 	for x in item.all:
@@ -145,6 +156,7 @@ report inventory:
 			print "  [indefinite(x)]"
 			follow inventory_note_rules(x)
 			print "[line break]"
+			inventory_contents_rows(x, "    ")
 	if not found:
 		print message inventory_empty  # "[We] [are] carrying nothing."
 
