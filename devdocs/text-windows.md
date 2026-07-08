@@ -497,12 +497,26 @@ snapshotted). Primitives (lib/sys natives):
   `window_set` (from its fields) and `window_update` (its buffered lines),
   then clear buffers. Callable mid-turn for dramatic effect; no-op when the
   host declared no window support.
+- `window_sync_one(window w)` — flush just one window (its arrangement +
+  buffered content), draining only that window's buffer. advent uses it at
+  startup to put the status bar on screen before `startup_rules` runs, without
+  sending game panes whose arrangement `startup_rules` may not have set yet.
 - `window_available(string dock) -> bool` — the capability query.
 
-Cadence (lib/advent): a `window_refresh_rules` rulebook followed once at
-startup and once at the top of every turn (same site as
-`update_status_line`), then `window_sync()`. Rules append lines; a window
-whose refresh emits nothing renders empty (still reserved if `visible`).
+Cadence (lib/advent): a `window_refresh_rules` rulebook followed once at the
+top of every turn (same site as `update_status_line`), then `window_sync()`.
+**At startup** the status bar is composed and pushed once before
+`startup_rules` (`follow status_line_rules()` + `window_sync_one(status_bar)`),
+so a game whose `startup_rules` blocks on a `pause` (a "press a key" title
+screen) shows the bar during the wait. The player isn't placed yet at that
+point, so `status_line_rules` has a pre-placement rule (`when holder(player) ==
+none`) that composes a *blank* bar — the row is reserved and empty, and fills
+in with the real room at the first command-loop sync. A game overrides that
+rule for a title-screen caption (`rule status_line_rules when holder(player) ==
+none: … stop`). Game panes are *not* pushed then — they compose normally once
+the loop starts, so a pane's startup re-dock (e.g. right → top on a TUI host)
+is not preceded by a stale arrangement. Rules append lines; a window whose
+refresh emits nothing renders empty (still reserved if `visible`).
 Content is thus a pure function of world state — nothing to snapshot; after
 undo/restore/RESTART the next sync repaints correctly for free. The three
 convenience primitives cover the catalogued examples; the wire encoding below

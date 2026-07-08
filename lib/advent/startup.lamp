@@ -86,6 +86,14 @@ on startup:
 	# (auto_banner false) to place it itself — e.g. between its intro narration and a reveal.
 	if this_game.auto_banner:
 		print_banner()
+	# Put the status bar on screen before startup_rules can block on a `pause` (a
+	# "press a key" title screen). The player isn't placed yet, so status_line_rules
+	# composes a blank bar (its pre-placement rule; a game can override it with a
+	# title-screen caption). Only the bar is pushed — window_sync_one, not a full
+	# window_sync — because a game's own panes may be re-arranged by startup_rules
+	# (e.g. a dock fallback) and must not be sent with a stale arrangement.
+	follow status_line_rules()
+	window_sync_one(status_bar)
 	follow startup_rules()
 	if this_game.start == none:
 		error "This game has no starting room. Declare one in the game block with `start <Room>` (for example, `start Foyer`)."

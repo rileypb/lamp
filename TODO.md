@@ -531,6 +531,21 @@ i18n.md status-fragments note, text-windows.md records the agreed **future styli
 direction** (general `reverse`/background-color window fields instead of a growing
 look enum — "bar" becomes sugar then). Known trade-off: a non-advent bare-sys game
 no longer has any status primitive — it declares its own bar window.
+**Status bar during a startup pause DONE (2026-07-08):** the bar is composed +
+pushed once before `startup_rules` (`follow status_line_rules()` + a new
+`window_sync_one(status_bar)` native — a single-window flush), so a game whose
+`startup_rules` blocks on a `pause` (Crosslexia's "*** Prologue ***" title) shows
+the bar during the wait. The player isn't placed yet then, so `status_line_rules`
+gained a pre-placement rule (`when holder(player) == none` → blank bar, also
+shielding the default rule's `holder(player).lighted` read); a game overrides it
+for a title-screen caption. Startup ordering is otherwise untouched (an earlier
+place-player-before-startup_rules approach was reverted as too invasive — it
+changed what game rules see during startup and de-eventized the arrival
+describe). Only the bar is pushed pre-startup; game panes compose in the loop as
+before, so phobos_ex's right→top re-dock isn't preceded by a stale arrangement
+(lighthouse green). All 244 goldens byte-invariant; tests/windows covers
+`window_sync_one`; verified on a window host: blank `status bar` update precedes
+the title text, then fills to "Bedroom | 0 turns" at the first loop sync.
 **CLI TUI (render backend, alt-screen + raw mode; plain stdio for pipes/tests;
 `LAMP_NO_TUI` forces plain).** Design in `devdocs/windows.md`; backend seam in
 `devdocs/sandbox.md`.

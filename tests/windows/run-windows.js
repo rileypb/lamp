@@ -158,6 +158,23 @@ test("look rides window_set: a bar-look window declares its visual identity", ()
     lamp.setField(bar, "visible", false);
 });
 
+test("windowSyncOne flushes only the named window, leaving others buffered", () => {
+    installChannel();
+    lamp.setField(panel, "dock", "right");
+    lamp.windowLine(panel, "Quests");
+    lamp.windowLine(ticker, "tick");
+    lamp.windowSyncOne(panel);
+    // Only the panel is emitted; the ticker's set/update never arrive.
+    assert.deepStrictEqual(sets().map((m) => m.id), ["panel"]);
+    assert.ok(updateFor("panel"), "panel content flushed");
+    assert.ok(!updateFor("ticker"), "ticker not touched by a single-window sync");
+    // The ticker's buffered line survives to the next full sync, undrained.
+    installChannel();
+    lamp.windowSync();
+    assert.deepStrictEqual(updateFor("ticker").lines, [[{ text: "tick" }]]);
+    assert.deepStrictEqual(updateFor("panel").lines, [], "panel already drained by windowSyncOne");
+});
+
 test("windowAvailable reflects host capabilities; absent capabilities mean none", () => {
     lamp.setHostCapabilities(null);
     assert.strictEqual(lamp.windowAvailable("top"), false);
