@@ -1,6 +1,8 @@
 Room
 A bare room.
 
+You see a robot here.
+
 > x me
 You are an ordinary adventurer.
 

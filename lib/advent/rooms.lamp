@@ -13,26 +13,30 @@ function bool is_container(physical x):
 function physical holder(physical x):
 	return contains ?only x
 
-# The non-scenery item objects held by `r` (a room, or an open container — a closed
-# one has no visible contents). Returns the objects, not rendered strings, so the
-# caller picks the article at render time. Pure Lamp (was a native) via item.all +
-# holder + append.
-function list<item> contents_of(physical r):
+# The non-scenery physical objects held by `r` (a room, or an open container — a closed
+# one has no visible contents), excluding the current player character. Returns the
+# objects, not rendered strings, so the caller picks the article at render time. Widened
+# from item to physical so a person present in a room joins the "[We] [see] … here." list
+# (a scenery person — one staged in the description prose — still opts out). Pure Lamp
+# (was a native) via physical.all + holder + append.
+function list<physical> contents_of(physical r):
 	let result = []
 	if r.closed:
 		return result
-	for x in item.all:
-		if holder(x) == r and not x.scenery:
+	for x in physical.all:
+		if holder(x) == r and not x.scenery and not (x == player):
 			append(result, x)
 	return result
 
 # The room contents for the standard "[We] [see] … here." list: contents_of minus any
-# item still showing its initial appearance (a non-empty initial_appearance, not yet
-# handled) — those describe themselves in their own paragraph. Pure Lamp (was a native).
-function list<item> listable_contents(room r):
+# thing still showing its initial appearance (a non-empty initial_appearance, not yet
+# handled — those describe themselves in their own paragraph) and minus anything already
+# `mentioned` by the description prose (Inform's model: an adaptive "[the guard]" in the
+# room text renders the name and flags it, so it is not listed twice). Pure Lamp.
+function list<physical> listable_contents(room r):
 	let result = []
 	for x in contents_of(r):
-		if x.handled or x.initial_appearance == "":
+		if not x.mentioned and (x.handled or x.initial_appearance == ""):
 			append(result, x)
 	return result
 
@@ -68,6 +72,11 @@ rulebook bool room_heading_rules(room r):
 # All of the printing for room description is in here, including
 # listing contents, and whatever else we may want to add.
 function void describe_room(room r):
+	# Clear every mentioned-mark before rendering: a mark only counts if the *current*
+	# room description prints the name (Inform's per-description reset). listable_contents
+	# reads the marks after the heading/description prose have rendered.
+	for x in physical.all:
+		x.mentioned = false
 	if r.lighted:
 		follow room_heading_rules(r)
 		# A room with no description shows just its name (an unset string reads as "").
@@ -85,13 +94,18 @@ function void describe_room(room r):
 # containment is assumed acyclic (a tree), as it structurally is. The article
 # (`indefinite`) and the parenthetical (`contained_phrase`) are both locale
 # natives, so the whole listing localizes — the world model assembles no prose.
+# A listed person shows just their name — their inventory does not nest in the room
+# line ("Bob", never "Bob (carrying a sword)"). Only containers/supporters spill their
+# contents in the parenthetical.
 function string render_thing(physical x):
+	if x is person:
+		return indefinite(x)
 	let inner = contents_of(x)
 	if inner.first == none:
 		return indefinite(x)
 	return indefinite(x) + contained_phrase(x, render_contents(x), inner.size)
 
-function string render_list(list<item> xs):
+function string render_list(list<physical> xs):
 	return format_list(map_strings(xs, render_thing))
 
 function string render_contents(physical holder):

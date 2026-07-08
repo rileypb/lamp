@@ -1,7 +1,7 @@
 hall
 A quiet hall.
 
-You see a rock here.
+You see a rock and a guard here.
 
 > kiss rock
 You do not think the rock would appreciate that.

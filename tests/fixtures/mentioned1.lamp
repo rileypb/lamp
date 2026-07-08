@@ -1,0 +1,35 @@
+lib advent
+game Mentioned_Demo:
+	start hall
+room hall:
+	description "A drafty hall. [The bob] leans by the door, watching you."
+person bob:
+	proper true
+	printed_name "Bob"
+	understand "bob"
+	description "Just Bob."
+person alice:
+	proper true
+	printed_name "Alice"
+	understand "alice"
+	description "Just Alice."
+person carol:
+	scenery true
+	proper true
+	printed_name "Carol"
+	understand "carol"
+	description "Carol blends into the wall."
+person dan:
+	proper true
+	printed_name "Dan"
+	understand "dan"
+	initial_appearance "A stranger named Dan lurks in the corner."
+	description "Just Dan."
+item lamp:
+	understand "lamp"
+	description "A brass lamp."
+contains hall bob
+contains hall alice
+contains hall carol
+contains hall dan
+contains hall lamp

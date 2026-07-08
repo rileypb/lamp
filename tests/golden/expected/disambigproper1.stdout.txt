@@ -1,7 +1,7 @@
 Lab
 A bare lab.
 
-You see an alice band here.
+You see an alice band and Alice here.
 
 > x alice
 Which do you mean: the alice band or Alice?

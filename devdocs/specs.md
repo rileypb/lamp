@@ -1913,9 +1913,9 @@ described below.
 | Type | Parent | Key fields |
 |---|---|---|
 | `thing` | — | `string printed_name`, `string understand`, `bool private_name` |
-| `physical` | `thing` | `article article`, `string description`, `string pronouns` (default `""`, free-text pronoun set), `string grammatical_gender` (default `"masculine"`, for gendered-locale articles), `string feels` (default `""`), `bool feelable` (default `true`), `bool far_away`, `bool obstructed`, `bool edificial`, `string take_refusal`, `string attack_refusal`, `bool lit` (Inform's `lit`; darkness is room-level so this only annotates the inventory row `(providing light)`) |
+| `physical` | `thing` | `article article`, `string description`, `string pronouns` (default `""`, free-text pronoun set), `string grammatical_gender` (default `"masculine"`, for gendered-locale articles), `string feels` (default `""`), `bool feelable` (default `true`), `bool far_away`, `bool obstructed`, `bool edificial`, `string take_refusal`, `string attack_refusal`, `bool lit` (Inform's `lit`; darkness is room-level so this only annotates the inventory row `(providing light)`), `bool scenery`, `string initial_appearance` (default `""`), `bool handled`, `bool mentioned` (Inform's `mentioned`; see Room contents listing) |
 | `room` | `container` | `string description`, `bool lighted` (default `true`) |
-| `item` | `physical` | `bool scenery`, `bool wearable`, `string initial_appearance` (default `""`), `bool handled` |
+| `item` | `physical` | `bool wearable` |
 | `box` | `item, container` | `bool closable`, `bool closed`, `bool locked` |
 | `person` | `physical` | — |
 | `direction` | `thing` | `direction inverse`, `string understand` |
@@ -1994,16 +1994,35 @@ them. Phobos adds `preposition` ("in"/"on") and `always_indefinite` (render the 
 with "a"/"an" rather than "the"); see `sample/phobos/` (and the `room_heading1`
 fixture).
 
-**Initial appearance.** An `item` with a non-empty **`initial_appearance`** string
+**Room contents listing.** The standard "[We] [see] … here." line lists every non-`scenery`
+`physical` held by the room *except the player* — so **people present in a room are listed
+alongside items** ("[We] [see] a lamp and Alice here."), a listed person showing only their
+name (their inventory does not nest). `scenery`, `initial_appearance`, `handled`, and
+`mentioned` all live on `physical` (not just `item`), so any of these knobs applies to a
+person as well as a thing. The pipeline: `contents_of(room)` gathers the candidates;
+`listable_contents(room)` drops the ones that describe themselves elsewhere (below).
+
+**Initial appearance.** A thing with a non-empty **`initial_appearance`** string
 describes itself in its own paragraph in the room description — e.g. "A form hangs on
-the wall beneath the sign." — *instead of* appearing in the standard "[We] [see] … here."
-list, until it is first picked up. Taking an item sets its **`handled`** flag (in `do
-take`); once handled it drops back into the normal list (so after take-then-drop the room
-reads "[We] [see] a form here."). The split is `listable_contents(room)` — `contents_of`
-minus any not-yet-handled item that carries an `initial_appearance`; those items stay
-fully in **scope** (scope doesn't read `contents_of`), so they're examinable and takeable
-the whole time. The default empty `initial_appearance` leaves an item always listed
-normally, so existing games are unaffected.
+the wall beneath the sign." — *instead of* appearing in the standard list, until it is
+first picked up. Taking an item sets its **`handled`** flag (in `do take`); once handled it
+drops back into the normal list (so after take-then-drop the room reads "[We] [see] a form
+here."). Those things stay fully in **scope** (scope doesn't read `contents_of`), so they're
+examinable and takeable the whole time. The default empty `initial_appearance` leaves a
+thing always listed normally, so existing games are unaffected.
+
+**Mentioned (double-listing suppression).** Following Inform, a thing whose name is rendered
+through an adaptive text substitution during the room description — a `[the guard]` in the
+prose, or a `[some_object]` bare interpolation — is flagged **`mentioned`** and dropped from
+the contents line, so the description never names it twice. `describe_room` clears every
+mark before it renders, so only names printed *by the current description* count; the runtime
+sets the flag from the two name-rendering chokepoints (the locale's article functions and the
+template value formatter). A game may also set `mentioned` by hand in a rule to suppress a
+listing. This only fires when the description actually *substitutes* the name: a thing named
+in flat prose ("A guard slouches here.", no `[…]`) is not auto-suppressed and still needs
+`scenery` to stay out of the list — which is how prose-staged NPCs (a landlady woven into the
+room text, a guard the room greets you through) opt out while remaining examinable and
+conversational.
 
 ### Opening and closing containers
 

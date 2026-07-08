@@ -1,0 +1,5 @@
+look
+x carol
+x dan
+look
+quit

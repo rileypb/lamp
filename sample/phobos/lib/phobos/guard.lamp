@@ -8,6 +8,9 @@ lib advent
 # nouns that stay alien (the serial `!NB563FFAA`, the commander `!x34agclw`) carry the `!` marker.
 
 person guard:
+	# Staged in the room's prose ("The guard looks up as Galaxy enters…"), so it opts out
+	# of the "[We] [see] … here." auto-listing the way any prose-described fixture does.
+	scenery
 	printed_name "Siriusian guard"
 	understand "guard/cyborg"
 	feels "The guard would prefer not to be touched."

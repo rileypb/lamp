@@ -855,6 +855,19 @@ function noteAntecedent(obj) {
     }
 }
 
+// Inform's "mentioned": flag an object the instant its name renders through a text
+// substitution, so the room-contents listing can skip what the description already
+// named. Called from the two name-rendering chokepoints — formatValue's bare-object
+// branch (`[obj]`) and each locale's display_name (the article'd forms). Gated on the
+// field existing so non-advent worlds (their own types, no `mentioned`) stay untouched;
+// describe_room clears the marks before each room description, so a mark only counts
+// within the description that set it.
+function noteMentioned(obj) {
+    if (obj && typeof obj === "object" && "mentioned" in obj) {
+        obj.mentioned = true;
+    }
+}
+
 // The player's phrase tokens for a noun span: the span with leading/internal
 // articles dropped (but never reduced to nothing — a bare article stays).
 function strippedPhraseTokens(span) {
@@ -2131,6 +2144,7 @@ function formatValue(value) {
         // A `printed_name` field, when set, overrides the canonical `name` for
         // display only (the registry key stays `name`). It may hold a text
         // template (a name with substitutions). See devdocs/text.md B2.
+        noteMentioned(value);
         const printed = value.printed_name;
         if (isTextValue(printed)) return renderTextValue(printed);
         return typeof printed === "string" && printed.length > 0 ? printed : value.name;
@@ -3062,6 +3076,7 @@ module.exports = {
     listItems,
     setListFormatter,
     setParserLanguage,
+    noteMentioned,
     isType,
     decode,
     captureState,

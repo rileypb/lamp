@@ -1,7 +1,7 @@
 salon
 A salon.
 
-You see a rock and some coins here.
+You see a rock, some coins, Alice, Bob, Robin and Xandra here.
 
 > x her
 I don't know what "her" refers to.

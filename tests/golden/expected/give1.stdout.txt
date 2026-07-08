@@ -1,6 +1,8 @@
 Room
 A bare room.
 
+You see Bob here.
+
 > give coin to bob
 Bob pockets the coin with a nod of thanks.
 

@@ -67,6 +67,24 @@ type physical < thing:
 	# declarative knob read by all_includes (actions.lamp). Being a field, a game can
 	# also flip it from rules as the world changes.
 	bool all_exempt = false
+	# `scenery` fixtures are part of the room's prose (walls, a bolted counter, a
+	# fuming landlady) — examinable/referable but never auto-listed in "[We] [see] …
+	# here." and never taken by "take all". On `physical` (not just `item`) so a person
+	# staged in frozen prose opts out of the contents line the same way. See rooms.lamp.
+	bool scenery
+	# Initial-appearance text: shown as its own paragraph in the room description while the
+	# thing has not yet been handled (picked up). Empty (the default) means it is just
+	# listed in the standard "[We] [see] … here." line. Once taken, `handled` flips true
+	# and it joins that list instead. See `list_room_contents` (rooms.lamp).
+	string initial_appearance = ""
+	bool handled = false
+	# Inform's "mentioned": set the instant this thing's name renders through an adaptive
+	# text substitution ("[Mrs Ainsley] glowers…"), so the room-contents listing can skip
+	# what the description already named. `describe_room` clears every mark up front, so
+	# only names printed *during this room description* count. The runtime marks it (see
+	# noteMentioned in the runtime + each locale's display_name); a game may also set it in
+	# a rule to suppress a listing by hand. See list_room_contents (rooms.lamp).
+	bool mentioned = false
 
 type container < physical
 
@@ -74,14 +92,7 @@ type room < container:
 	bool lighted = true
 
 type item < physical:
-	bool scenery
 	bool wearable
-	# Initial-appearance text: shown as its own paragraph in the room description while the
-	# item has not yet been handled (picked up). Empty (the default) means the item is just
-	# listed in the standard "[We] [see] … here." line. Once taken, `handled` flips true and
-	# the item joins that list instead. See `list_room_contents` (rooms.lamp).
-	string initial_appearance = ""
-	bool handled = false
 
 # A door between two rooms; see lib/advent/doors.lamp for the full subsystem. Lives
 # here (not doors.lamp) so it is emitted after its parent `item` — Lantern emits

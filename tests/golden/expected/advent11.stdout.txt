@@ -1,7 +1,7 @@
 hall
 A hall.
 
-You see a hat here.
+You see a hat and a npc here.
 
 > npc act
 The npc takes the hat.

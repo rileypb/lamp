@@ -1,6 +1,8 @@
 Room
 A small office.
 
+You see Bob here.
+
 > examine bob
 An ordinary man at a desk.
 

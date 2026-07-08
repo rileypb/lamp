@@ -1,0 +1,30 @@
+hall
+A drafty hall. Bob leans by the door, watching you.
+
+A stranger named Dan lurks in the corner.
+
+You see a lamp and Alice here.
+
+> look
+hall
+A drafty hall. Bob leans by the door, watching you.
+
+A stranger named Dan lurks in the corner.
+
+You see a lamp and Alice here.
+
+> x carol
+Carol blends into the wall.
+
+> x dan
+Just Dan.
+
+> look
+hall
+A drafty hall. Bob leans by the door, watching you.
+
+A stranger named Dan lurks in the corner.
+
+You see a lamp and Alice here.
+
+> quit

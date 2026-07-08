@@ -794,6 +794,22 @@ undeclared in the I7 too); north front-door exit (police, unwritten).
 (you-can-also-see resolved 2026-07-07: the story.ni "[here]" substitution
 was deixis groundwork — Crosslexia's room_contents_outro override renders
 " there." under narrate_past: "You saw a black diary there.")
+**Person room-listing DONE (2026-07-07, engine + both locales):** persons now
+appear in "[We] [see] … here." A listed person shows only their name (no
+inventory nesting). Hoisted `scenery`/`initial_appearance`/`handled` from
+`item` to `physical` and added `bool mentioned` (Inform's model): the runtime
+flags a thing the instant its name renders through a substitution — the locale
+`note_subject` (article forms) + the runtime `formatValue` object branch (bare
+`[obj]`) — and `describe_room` clears every mark before rendering, so only names
+the current description prints count. `listable_contents` widened to `physical`
+(minus the player), excluding scenery, unshown-initial-appearance, and
+mentioned. Prose-staged NPCs whose presence is *flat* text (no substitution)
+still need `scenery` — marked it on the phobos guard (base + _ex) and, in
+CrosslexiaLamp, on Mrs Ainsley/boarders/residents + the flashback M/K/Ainsley.
+Golden `mentioned1` (suppression + scenery person + person initial_appearance);
+11 fixtures re-baselined for the new person rows (+ showme1 field reorder);
+phobos golden held byte-invariant via the guard scenery mark; all sub-suites
+green; specs.md updated.
 **Next:** flashback content + the return path (no exit exists in the I7;
 needs restoring viewpoint/tense/inventory and probably Flashback-scene-2);
 the police arrival (only a design note in the I7). Engine nits, low

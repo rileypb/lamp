@@ -24,6 +24,7 @@ gem (item)
   all_exempt: false
   initial_appearance: ""
   handled: false
+  mentioned: false
   printed_name: ""
   understand: ""
   description: "A shiny gem, still locked away."
@@ -52,6 +53,7 @@ safe (box)
   all_exempt: false
   initial_appearance: ""
   handled: false
+  mentioned: true
   locked: false
   matching_key: none
   printed_name: ""

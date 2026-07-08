@@ -1,7 +1,7 @@
 Vault
 A bare vault.
 
-You see a pouch (in which is a coin), a chest (in which are a key and a map) and a safe here.
+You see a pouch (in which is a coin), a chest (in which are a key and a map), a safe and a bob here.
 
 > x pouch
 A small pouch.
