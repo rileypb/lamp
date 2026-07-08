@@ -4,7 +4,7 @@ A shed.
 You see a rock, a cone, an anvil, a crate and a tin here.
 
 > put rock in crate
-You aren't carrying that.
+You're not carrying that.
 
 > take rock
 Taken.

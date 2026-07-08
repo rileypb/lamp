@@ -4,7 +4,7 @@ A parlor.
 You see a coin and Alice here.
 
 > take alice
-You don't suppose Alice would care for that.
+I don't suppose Alice would care for that.
 
 > take me
 You are always self-possessed.

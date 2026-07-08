@@ -1,0 +1,35 @@
+locale "fr-FR"
+lib advent
+
+# fr-FR player messages are viewpoint-adaptive: a first-person game (viewpoint_person
+# = 1) renders "J'ai", "J'ouvre", "J'enlève" and "Je ne peux pas…" where the default
+# second person renders "Vous…". This exercises the elision paths (je -> j', ne -> n').
+
+game JePersonne_FR:
+	author "Lamp"
+	start salon
+
+rule startup_rules:
+	viewpoint_person = 1
+
+room salon:
+	description "Un petit salon."
+
+item cle:
+	printed_name "clé"
+	description "Une petite clé en laiton."
+	grammatical_gender "feminine"
+
+item manteau:
+	description "Un manteau de velours noir."
+	wearable
+
+box coffre:
+	printed_name "coffre"
+	description "Un coffre en bois."
+	closable true
+	closed true
+
+contains salon cle
+contains salon manteau
+contains salon coffre

@@ -1,0 +1,39 @@
+salon
+Un petit salon.
+
+Je vois une clé, un manteau et un coffre ici.
+
+> prendre cle
+Pris.
+
+> i
+Je porte :
+  une clé
+
+> prendre cle
+J'ai déjà cela.
+
+> ouvrir coffre
+J'ouvre le coffre.
+
+> porter manteau
+(je prends d'abord le manteau)
+Pris.
+Je mets le manteau.
+
+> enlever manteau
+J'enlève le manteau.
+
+> enlever manteau
+Je ne porte pas cela.
+
+> poser cle
+Laissé.
+
+> poser cle
+Je n'ai pas cela.
+
+> est
+Je ne peux pas aller par là.
+
+> quitter

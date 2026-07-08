@@ -869,8 +869,15 @@ the shades).
      this also fixed the latent `[We]` → "Tu" inconsistency (no golden depended on it). Two compiler
      generalizations (both ASCII-ident assumptions leaking into locale vocabulary): `verb` accepts
      quoted words, and the bare-sugar word test admits accented letters (`[être]`). Golden `frconj1`;
-     spec in i18n.md "French verb conjugation". Known limitation: 1sg elision ("je ai") awaits the
-     elision-sugar item.
+     spec in i18n.md "French verb conjugation". ~~Known limitation: 1sg elision ("je ai").~~
+     **Elision + adaptive player messages DONE (2026-07-07):** fr-FR's player-directed messages are
+     now viewpoint-adaptive (a `je` game reads "J'ouvre le coffre." / "Je n'ai pas cela."), not frozen
+     `vous`. Two locale helpers fuse subject+verb where both are in view (`sujet_verbe` / `sujet_ne_verbe`
+     in lib/fr-FR), handling je→j' and ne→n' elision — the same tactic as en-US's `[We're]` and the
+     `l'` article elision, so no general lookahead pass was needed. Added conjugations pouvoir/savoir/
+     vouloir/penser/verrouiller/déverrouiller. Golden `frviewpoint1`; existing French goldens byte-
+     invariant under the vous default; i18n.md "French viewpoint-adaptive player messages". (A general
+     `[l' X]` elision sugar for arbitrary author text remains a separate, still-open item.)
   3. ~~**Architectural direction (bigger):** move default message *text* out of advent into the locale
      packs.~~ **DONE (2026-07-05) — the layer-3 split.** New default-less message reference
      `message NAME` (contextual keyword; emits `lamplighter.message(name)` with no fallback) plus a
@@ -909,7 +916,9 @@ the shades).
      not a word list) — a per-locale channel for accepted replies wants a design (word-list
      messages split on "/", or a locale native).
   **Follow-through:** demonstrate layer 1 by adding contraction overrides to Phobos's messages;
-  layer 2's remaining item is elision sugar (`[l' X]`, and "je"+vowel → "j'").
+  layer 2's "je"+vowel → "j'" elision is handled for advent's fr-FR messages via the
+  `sujet_verbe`/`sujet_ne_verbe` helpers (2026-07-07); a general `[l' X]` elision sugar for
+  arbitrary author text is still open.
 - ~~**English tokens inside `lib/fr-FR` (observed 2026-07-05).**~~ **RESOLVED (2026-07-05), in two
   steps.** **(a)** fr-FR declares French aliases (`sugar operand le as the, la as the, les as the` +
   `un/une/des as indefinite`) and `lib/advent/locales/fr-FR.lamp` is swept to them, so the French

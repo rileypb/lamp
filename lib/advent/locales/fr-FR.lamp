@@ -7,39 +7,45 @@
 #
 # Top-level overrides compile in top-level scope, so substitutions reference the
 # running action through the `act` global (never a lexical `self`). Player-directed
-# messages spell "vous" out; the "_other" variants (rendered only for a non-player
-# actor) use the conjugating verb sugar ([Le act.actor] [prendre] …, see lib/fr-FR).
+# messages are viewpoint-adaptive (mirroring lib/en-US): the subject and its verb
+# come from `[we]`/`[sujet_verbe …]`/`[sujet_ne_verbe …]` so a first-person game
+# renders "J'ouvre le coffre." where the default second person renders "Vous ouvrez
+# le coffre." The helpers handle French elision (je → j', ne → n'); see lib/fr-FR.
+# A few messages stay fixed by design, matching en-US: the parser's own voice ("Je
+# ne comprends pas…"), the score line, and the end banners. The "_other" variants
+# (rendered only for a non-player actor) use the conjugating verb sugar with the
+# actor as subject ([Le act.actor] [prendre] …).
 
 # --- take ---
 take_report: "Pris."
 take_report_other: "[Le act.actor] [prendre] [le act.taken]."
-take_already_carrying: "Vous avez déjà cela."
-take_cant_take: "Ce n'est pas quelque chose que vous pouvez prendre."
-take_self_msg: "Vous êtes toujours maître de vous-même."
+take_already_carrying: "[cap(sujet_verbe(\"avoir\"))] déjà cela."
+take_cant_take: "Ce n'est pas quelque chose que [sujet_verbe(\"pouvoir\")] prendre."
+take_self_msg: "[cap(sujet_verbe(\"être\"))] toujours maître de soi."
 take_person_msg: "Je ne pense pas que cela plairait [au act.taken]."
 
 # --- inventory ---
-inventory_header: "Vous portez :[line break]"
+inventory_header: "[cap(sujet_verbe(\"porter\"))] :[line break]"
 inventory_worn: " (porté)"
-inventory_empty: "Vous ne portez rien."
+inventory_empty: "[cap(sujet_ne_verbe(\"porter\"))] rien."
 
 # --- drop ---
-drop_first_doff: "(vous enlevez d'abord [le act.dropped])[line break]"
+drop_first_doff: "([sujet_verbe(\"enlever\")] d'abord [le act.dropped])[line break]"
 drop_report: "Laissé."
 drop_report_other: "[Le act.actor] [laisser] [le act.dropped]."
-drop_not_carrying: "Vous n'avez pas cela."
+drop_not_carrying: "[cap(sujet_ne_verbe(\"avoir\"))] pas cela."
 
 # --- wear ---
-wear_first_take: "(vous prenez d'abord [le act.clothing])[line break]"
-wear_report: "Vous mettez [le act.clothing]."
+wear_first_take: "([sujet_verbe(\"prendre\")] d'abord [le act.clothing])[line break]"
+wear_report: "[cap(sujet_verbe(\"mettre\"))] [le act.clothing]."
 wear_report_other: "[Le act.actor] [mettre] [le act.clothing]."
-wear_not_wearable: "Ce n'est pas quelque chose que vous pouvez porter."
-wear_already_worn: "Vous portez déjà cela."
+wear_not_wearable: "Ce n'est pas quelque chose que [sujet_verbe(\"pouvoir\")] porter."
+wear_already_worn: "[cap(sujet_verbe(\"porter\"))] déjà cela."
 
 # --- doff (remove) ---
-doff_report: "Vous enlevez [le act.clothing]."
+doff_report: "[cap(sujet_verbe(\"enlever\"))] [le act.clothing]."
 doff_report_other: "[Le act.actor] [enlever] [le act.clothing]."
-doff_not_worn: "Vous ne portez pas cela."
+doff_not_worn: "[cap(sujet_ne_verbe(\"porter\"))] pas cela."
 
 # --- examine ---
 # Phrased to avoid a "de/à + le/les" contraction (du/des), which the() can't
@@ -49,39 +55,43 @@ examine_nothing: "[Le act.target] n'a rien d'inhabituel."
 examine_too_dark: "Il fait trop sombre pour voir cela."
 
 # --- go ---
-go_cant: "Vous ne pouvez pas aller par là."
+go_cant: "[cap(sujet_ne_verbe(\"pouvoir\"))] pas aller par là."
 
 # --- put on ---
-put_on_first_doff: "(vous enlevez d'abord [le act.put_item])[line break]"
-put_on_report: "Vous posez [le act.put_item] sur [le act.destination]."
+put_on_first_doff: "([sujet_verbe(\"enlever\")] d'abord [le act.put_item])[line break]"
+put_on_report: "[cap(sujet_verbe(\"poser\"))] [le act.put_item] sur [le act.destination]."
 put_on_report_other: "[Le act.actor] [poser] [le act.put_item] sur [le act.destination]."
-put_on_not_carrying: "Vous n'avez pas cela."
-put_on_cant: "Vous ne pouvez rien poser là-dessus."
-put_in_report: "Vous mettez [le act.put_item] dans [le act.destination]."
+put_on_not_carrying: "[cap(sujet_ne_verbe(\"avoir\"))] pas cela."
+put_on_cant: "[cap(sujet_ne_verbe(\"pouvoir\"))] rien poser là-dessus."
+put_in_report: "[cap(sujet_verbe(\"mettre\"))] [le act.put_item] dans [le act.destination]."
 put_in_report_other: "[Le act.actor] [mettre] [le act.put_item] dans [le act.destination]."
-put_in_cant: "Vous ne pouvez rien mettre là-dedans."
+put_in_cant: "[cap(sujet_ne_verbe(\"pouvoir\"))] rien mettre là-dedans."
 put_in_closed: "C'est fermé."
-put_in_self_msg: "Vous ne pouvez pas mettre quelque chose à l'intérieur de lui-même."
+put_in_self_msg: "[cap(sujet_ne_verbe(\"pouvoir\"))] pas mettre quelque chose à l'intérieur de lui-même."
 
 # --- title banner, end-of-story banner, and quit prompt (startup prose) ---
 # The banner shows the game's `title` field when set (lib/sys/types.lamp) — the
 # accented/apostrophed display title ("Manteau de l'obscurité") — else the ASCII
 # identifier. "Version" is the same word in French, so it is left at its default.
+# The end banners address the player as "vous" by convention (as en-US fixes "You").
 banner_by: " par "
 story_won: "*** Vous avez gagné ***[line break]"
 story_lost: "*** Vous avez perdu ***[line break]"
 quit_prompt: "Tapez RECOMMENCER pour rejouer, CHARGER pour reprendre une partie sauvegardée, ou QUITTER pour quitter le jeu."
 
 # --- parser feedback (engine messages, routed through the message registry) ---
-parser_cant_see: "Vous ne voyez rien de tel ici."
+# parser_no_understand is the parser's own voice ("Je …"), fixed like en-US.
+parser_cant_see: "[cap(sujet_ne_verbe(\"voir\"))] rien de tel ici."
 parser_no_understand: "Je ne comprends pas cela."
-parser_no_multi: "Vous ne pouvez pas utiliser plusieurs objets avec ce verbe."
+parser_no_multi: "[cap(sujet_ne_verbe(\"pouvoir\"))] pas utiliser plusieurs objets avec ce verbe."
 parser_nothing_all: "Il n'y a rien de disponible."
 
 # --- room description: darkness and the contents frame ---
+# Darkness keeps the "n'y" clitic ("je n'y vois rien" / "vous n'y voyez rien"), so it
+# is built from a bare [we] + literal "n'y" rather than the sujet_ne_verbe helper.
 darkness_name: "Obscurité[line break]"
-darkness_description: "Il fait nuit noire, et vous n'y voyez rien."
-room_contents_intro: "[par]Vous voyez "
+darkness_description: "Il fait nuit noire, et [we] n'y [voir] rien."
+room_contents_intro: "[par][cap(sujet_verbe(\"voir\"))] "
 room_contents_outro: " ici."
 
 # --- wait ---
@@ -90,32 +100,32 @@ wait_report: "Le temps passe."
 # --- take: reach/feel/mass refusals (Can't Touch This traits) ---
 # Adjective agreement (massif/massive) is not modeled, so refusals lean on the
 # neutral "c'est … " / infinitive phrasings that stay invariable.
-take_cant_unfeelable: "Vous ne pouvez pas prendre [le act.taken]."
-take_cant_reach: "Vous ne pouvez pas atteindre [le act.taken]."
+take_cant_unfeelable: "[cap(sujet_ne_verbe(\"pouvoir\"))] pas prendre [le act.taken]."
+take_cant_reach: "[cap(sujet_ne_verbe(\"pouvoir\"))] pas atteindre [le act.taken]."
 take_too_massive: "C'est beaucoup trop massif à emporter."
 
 # --- inventory: light marker ---
 inventory_providing_light: " (donne de la lumière)"
 
 # --- open / close ---
-open_report: "Vous ouvrez [le act.target]."
-open_report_revealing: "Vous ouvrez [le act.target], révélant [render_contents(act.target)]."
-open_not_openable: "Ce n'est pas quelque chose que vous pouvez ouvrir."
+open_report: "[cap(sujet_verbe(\"ouvrir\"))] [le act.target]."
+open_report_revealing: "[cap(sujet_verbe(\"ouvrir\"))] [le act.target], révélant [render_contents(act.target)]."
+open_not_openable: "Ce n'est pas quelque chose que [sujet_verbe(\"pouvoir\")] ouvrir."
 open_already_open: "C'est déjà ouvert."
 open_locked: "Cela semble verrouillé."
-close_report: "Vous fermez [le act.target]."
-close_not_closable: "Ce n'est pas quelque chose que vous pouvez fermer."
+close_report: "[cap(sujet_verbe(\"fermer\"))] [le act.target]."
+close_not_closable: "Ce n'est pas quelque chose que [sujet_verbe(\"pouvoir\")] fermer."
 close_already_closed: "C'est déjà fermé."
 
 # --- lock / unlock ---
-unlock_report: "Vous déverrouillez [le act.target]."
+unlock_report: "[cap(sujet_verbe(\"déverrouiller\"))] [le act.target]."
 unlock_not_locked: "Ce n'est pas verrouillé."
-unlock_no_key: "Vous n'avez pas de clé qui ouvre [le act.target]."
-lock_report: "Vous verrouillez [le act.target]."
+unlock_no_key: "[cap(sujet_ne_verbe(\"avoir\"))] pas de clé qui ouvre [le act.target]."
+lock_report: "[cap(sujet_verbe(\"verrouiller\"))] [le act.target]."
 lock_already_locked: "C'est déjà verrouillé."
 lock_open_first: "Il faudrait d'abord fermer [le act.target]."
-lock_no_key: "Vous n'avez pas de clé qui ferme [le act.target]."
-key_not_held_msg: "Vous ne tenez pas [le act.key]."
+lock_no_key: "[cap(sujet_ne_verbe(\"avoir\"))] pas de clé qui ferme [le act.target]."
+key_not_held_msg: "[cap(sujet_ne_verbe(\"tenir\"))] pas [le act.key]."
 key_wrong_msg: "[Le act.key] n'entre pas dans la serrure."
 with_key_aside: "(avec [le act.target.matching_key])[line break]"
 
@@ -125,40 +135,41 @@ examine_in_container: "[par]Dans [le act.target] se trouve [render_contents(act.
 examine_in_container_plural: "[par]Dans [le act.target] se trouvent [render_contents(act.target)]."
 
 # --- touch ---
-touch_nothing: "Vous ne sentez rien d'inattendu."
+touch_nothing: "[cap(sujet_ne_verbe(\"sentir\"))] rien d'inattendu."
 taste_nothing: "Cela n'a rien d'inattendu au goût."
 touch_feels: "[act.target.feels]"
-touch_cant: "Vous ne pouvez pas toucher [le act.target]."
-touch_cant_reach: "Vous ne pouvez pas atteindre [le act.target]."
+touch_cant: "[cap(sujet_ne_verbe(\"pouvoir\"))] pas toucher [le act.target]."
+touch_cant_reach: "[cap(sujet_ne_verbe(\"pouvoir\"))] pas atteindre [le act.target]."
 
 # --- attack / kiss / push / pull ---
 attack_violence: "La violence n'est pas la solution."
-kiss_refused: "Vous ne pensez pas que [le act.target] apprécierait."
+kiss_refused: "[cap(sujet_ne_verbe(\"penser\"))] pas que [le act.target] apprécierait."
 push_inert: "Rien d'évident ne se produit."
 pull_inert: "Rien d'évident ne se produit."
 
 # --- give / show / enter ---
 give_declined_msg: "[Le act.recipient] ne [sembler] pas s'y intéresser."
 show_declined_msg: "Cela ne fait guère d'effet [au act.recipient]."
-cant_enter_msg: "Ce n'est pas quelque chose où vous pouvez entrer."
+cant_enter_msg: "Ce n'est pas quelque chose où [sujet_verbe(\"pouvoir\")] entrer."
 
 # --- go: directional refusals ---
-go_cant_up: "Vous ne savez ni escalader les murs ni voler."
-go_cant_down: "Vous ne pouvez pas simplement creuser vers le bas."
-go_cant_in: "Où voulez-vous entrer ?"
+go_cant_up: "[cap(sujet_ne_verbe(\"savoir\"))] ni escalader les murs ni voler."
+go_cant_down: "[cap(sujet_ne_verbe(\"pouvoir\"))] pas simplement creuser vers le bas."
+go_cant_in: "Où est-ce que [sujet_verbe(\"vouloir\")] entrer ?"
 
 # --- drink / eat ---
-drink_report: "Vous buvez [le act.liquid]."
+drink_report: "[cap(sujet_verbe(\"boire\"))] [le act.liquid]."
 drink_report_other: "[Le act.actor] [boire] [le act.liquid]."
-drink_not_drinkable: "Vous ne pouvez pas boire cela."
-eat_report: "Vous mangez [le act.food]."
+drink_not_drinkable: "[cap(sujet_ne_verbe(\"pouvoir\"))] pas boire cela."
+eat_report: "[cap(sujet_verbe(\"manger\"))] [le act.food]."
 eat_report_other: "[Le act.actor] [manger] [le act.food]."
-eat_not_edible: "Vous ne pouvez pas manger cela."
+eat_not_edible: "[cap(sujet_ne_verbe(\"pouvoir\"))] pas manger cela."
 
 # --- doors ---
 # Phrased around the participle ("fermée") — gender agreement of predicative
-# adjectives is not modeled, and "barre le passage" stays invariable.
-door_closed_msg: "[Le blocking_door] vous barre le passage."
+# adjectives is not modeled, and "barre le passage" stays invariable. The object
+# pronoun adapts ([us] → vous/nous/me), so a first-person game reads "me barre".
+door_closed_msg: "[Le blocking_door] [us] barre le passage."
 
 # --- debug ---
 purloin_report: "[Le act.target] : subtilisé."
@@ -182,6 +193,7 @@ restore_corrupt: "Cette sauvegarde est corrompue."
 restore_bad_format: "Cette sauvegarde est dans un format inconnu."
 
 # --- scoring ---
+# Fixed second person, as en-US fixes "You have scored".
 score_up_one: "\[Votre score vient d'augmenter d'un point.\]"
 score_up_many: "\[Votre score vient d'augmenter de [points_awarded] points.\]"
 score_report: "Votre score est de [score] sur un maximum de [max_score]."

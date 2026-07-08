@@ -1,0 +1,11 @@
+prendre cle
+i
+prendre cle
+ouvrir coffre
+porter manteau
+enlever manteau
+enlever manteau
+poser cle
+poser cle
+est
+quitter

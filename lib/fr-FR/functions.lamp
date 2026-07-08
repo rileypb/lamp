@@ -53,6 +53,13 @@ native function string their()
 native function string theirs()
 native function string themself()
 
+# Adaptive player clause: viewpoint subject + a conjugated infinitive, with French
+# elision handled (je -> j' before a vowel verb; ne -> n' in the negative). `[sujet_verbe
+# "ouvrir"]` -> "vous ouvrez" / "j'ouvre"; `[sujet_ne_verbe "porter"]` -> "vous ne portez"
+# / "je ne porte", the message adding the second negator ("pas"/"rien"). See lib/fr-FR.
+native function string sujet_verbe(string infinitif)
+native function string sujet_ne_verbe(string infinitif)
+
 # `[regarding EXPR]` sets the subject following pronouns/verbs adapt to; renders
 # to the empty string.
 native function string regarding(object x)
