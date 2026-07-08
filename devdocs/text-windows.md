@@ -381,9 +381,9 @@ recommended, except the last, which adds the Phobos-EX twist):
 > Two implementation notes: the primitives declare their pane parameter as
 > `object` (not `window`) — no lib native yet takes a lib-declared type and
 > step 1 doesn't gamble on it; and mutating arrangement from game code
-> currently needs the `let w = pane` workaround for the known
-> bare-object-name assignment-target emitter bug (see TODO), which windows
-> now make worth fixing.
+> originally needed a `let w = pane` workaround for the bare-object-name
+> assignment-target emitter bug — **fixed 2026-07-08** (golden `objassign1`),
+> so `pane.size = 3` now works directly.
 >
 > **Step 2 is built (2026-07-06):** the browser worker forwards window
 > messages verbatim (`setWindowChannel`) and applies `capabilities` off the

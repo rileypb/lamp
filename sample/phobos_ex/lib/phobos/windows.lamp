@@ -20,12 +20,10 @@ window mission_panel:
 rule startup_rules:
 	if not window_available("right"):
 		if window_available("top"):
-			# `let` binding sidesteps the bare-object-name assignment-target
-			# emitter bug (TODO). Three rows fit the compact top-dock layout
-			# the refresh rule composes for this dock.
-			let w = mission_panel
-			w.dock = "top"
-			w.size = 3
+			# Three rows fit the compact top-dock layout the refresh rule
+			# composes for this dock.
+			mission_panel.dock = "top"
+			mission_panel.size = 3
 
 # How many of the five linguistic tiers Galaxy has scanned (scan_levels is the
 # fixed five-slot list linguistics.lamp maintains).

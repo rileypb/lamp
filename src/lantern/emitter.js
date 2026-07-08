@@ -855,19 +855,28 @@ function emitStatementLines(statement, indentLevel, globalNames = new Set(), bar
         // a local never collides with a global's coerced name.)
         const chead = coerceName(head);
         const isGlobal = globalNames.has(chead);
+        // A head that names neither a local nor a global is a bare object
+        // reference (`SomeObject.field = v`) — resolve it via getObject exactly
+        // as expression position does (the parser resolves expression heads
+        // itself; an assignment target reaches the emitter raw). The localScope
+        // check comes first because a local may legitimately shadow an object
+        // name (no-shadow was deliberately not enforced against objects).
+        const isObjectHead = !isGlobal && !localScope.has(head) && knownObjectNames.has(chead);
+        const headExpr = isGlobal ? `lamplighter.getGlobal(${emitName(chead)})`
+            : isObjectHead ? `lamplighter.getObject(${emitName(chead)})`
+                : head;
         const valueExpr = emitExpression(statement.expr, globalNames);
         // Indexed assignment `xs[i] = v`: the chain resolves to a list value;
         // mutate its element in place (mirrors the IndexExpr read `xs.items[i]`),
         // so a list held in a global/field is mutated durably.
         if (statement.index != null) {
-            let listExpr = isGlobal ? `lamplighter.getGlobal(${emitName(chead)})` : head;
+            let listExpr = headExpr;
             if (tail.length > 0) listExpr += `.${tail.join(".")}`;
             return [`${indent}${listExpr}.items[${emitExpression(statement.index, globalNames)}] = ${valueExpr};`];
         }
         if (tail.length === 0 && isGlobal) {
             return [`${indent}lamplighter.setGlobal(${emitName(chead)}, ${valueExpr});`];
         }
-        const headExpr = isGlobal ? `lamplighter.getGlobal(${emitName(chead)})` : head;
         if (tail.length === 0) {
             return [`${indent}${head} = ${valueExpr};`];
         }

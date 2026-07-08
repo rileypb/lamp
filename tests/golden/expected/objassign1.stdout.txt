@@ -1,0 +1,15 @@
+Lab
+A bare lab.
+
+You see a gizmo and a spare cell here.
+
+> calibrate
+gizmo: 9, cell: 5, dial: 42.
+
+> shadow
+shadow applied.
+
+> check
+gizmo: 9, cell: 77.
+
+> quit

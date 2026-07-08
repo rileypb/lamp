@@ -535,9 +535,9 @@ runtime buffer + primitives (`window_line`/`window_line_split`/`window_rule`/
 (2026-07-06, branch `windows`):** `window` type + six primitives in lib/sys, runtime
 buffer/channel/capabilities + `window_set`/`window_update`, advent `window_refresh_rules`
 cadence, `npm run test:windows` (10 unit tests) + plain-path golden `windows1`; all 225
-goldens byte-invariant. Note: the fixture needed the `let w = pane` workaround for the
-bare-object-name assignment-target emitter bug — windows raise that bug's priority
-(arrangement mutation is now a mainline pattern); ~~(2) web shell panes + `capabilities`
+goldens byte-invariant. (The `let w = pane` workaround the fixture originally needed is
+retired — the bare-object-name assignment emitter bug is FIXED, 2026-07-08, golden
+`objassign1`; see the struck BUG entry below.) ~~(2) web shell panes + `capabilities`
 message~~ **(2) DONE (2026-07-06):** the shell docks panes on all four edges (flex
 containers around a new `#main-row`; priority via flex `order`; runs as textContent
 spans reusing `style-*`; fill = clipped repeated char; side panes clamped to 45%),
@@ -622,7 +622,8 @@ Verified in-game: the Prologue's open/closed swap re-renders the bedroom live,
 either word order, first-person viewpoint (`viewpoint_person = 1`) renders all
 advent messages correctly ("That's not something I can take."). One workaround:
 `let b = Bedroom` before field assignment (the bare-object-assignment emitter
-bug tracked under text windows — third consumer to hit it; priority ↑).
+bug — **fixed 2026-07-08**, so Crosslexia's `let b =` workarounds can be
+simplified away on its next merge from main).
 **Prologue port DONE (2026-07-06):** all four swaps (open/closed, leg/heart,
 plate/chest with the toppling-table crash + spill, wallet-open/door-closed),
 eyes-closed gating, stand/bed state (an `on_bed` global — advent can't put the
@@ -1307,15 +1308,14 @@ the shades).
   Type`** operator still deferred (not needed). **Test gap:** the filter is phobos-lib-
   specific, so no golden (the Phobos sample isn't golden-discoverable — would need extending
   golden discovery to `sample/<dir>/`). See `sample/phobos/PORTING.md`.
-- **BUG: assignment to a bare object-name field target emits undefined JS.**
-  `SomeObject.field = value` (where `SomeObject` is a bare object reference, not a
-  local/global/`self`) emits `lamplighter.setField(SomeObject, …)` with
-  `SomeObject` as an undefined JS identifier → runtime `ReferenceError`. *Reads*
-  resolve correctly (`getObject(...)`); only the **assignment-target head**
-  doesn't. Fix: in `emitStatement`'s `AssignStatement` branch
-  (`src/lantern/emitter.js:822`), resolve an object-name head via `getObject` like
-  expression position does (thread the object-name set in). Workaround: bind to a
-  `let` or use `self.<slot>`. Found porting Phobos hacking.
+- ~~**BUG: assignment to a bare object-name field target emits undefined JS.**~~ **FIXED
+  (2026-07-08):** `SomeObject.field = value` (and indexed `SomeObject.field[i] = v`) now
+  resolves an object-name head via `getObject`, exactly like expression position — the
+  emitter's `AssignStatement` branch checks localScope first (a `let` may legitimately
+  shadow an object name and still wins), then globals, then `knownObjectNames` (coerced,
+  so multi-word names work). The `let w = X` workaround is retired from the windows
+  fixtures/samples. Regression golden `objassign1` (single-word + multi-word heads,
+  indexed list assignment, and shadow-protection); all 244 goldens byte-invariant.
 - **Hacking subsystem (Phobos port) — in progress.** The KIM tool + `hack` verb +
   green-door instant bypass are done (`sample/phobos/lib/phobos/hacking.lamp`):
   `hack green door` opens it and `go north` then works. **`press <n>` input

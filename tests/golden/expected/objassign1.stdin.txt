@@ -1,0 +1,4 @@
+calibrate
+shadow
+check
+quit

@@ -44,8 +44,6 @@ action hide_panel:
 		"hide panel"
 
 do hide_panel:
-	# `let` binding sidesteps the bare-object-name assignment-target emitter bug (TODO).
-	let w = side_panel
-	w.visible = false
-	window_clear(w)
+	side_panel.visible = false
+	window_clear(side_panel)
 	print "Panel hidden."

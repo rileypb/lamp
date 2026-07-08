@@ -1,0 +1,67 @@
+# Regression: assignment to a bare object-name field target (`SomeObject.field = v`)
+# used to emit the head as an undefined JS identifier (ReferenceError at runtime);
+# only reads resolved. The head must resolve via getObject like expression position —
+# including a multi-word (coerced) name and an indexed list-field assignment — while
+# a `let` local that shadows an object name still binds to the local.
+
+lib advent
+
+game ObjAssign:
+	start Lab
+
+room Lab:
+	description "A bare lab."
+
+type gadget < item:
+	int charge = 0
+
+gadget gizmo:
+	description "A gizmo."
+	charge 1
+
+gadget spare_cell:
+	description "A spare power cell."
+
+contains Lab gizmo
+contains Lab spare_cell
+
+global list<int> dial_settings = none
+
+rule startup_rules:
+	dial_settings = [1, 2, 3]
+
+action calibrate:
+	out_of_world
+	syntax:
+		"calibrate"
+
+do calibrate:
+	# Bare single-word object head.
+	gizmo.charge = 9
+	# Bare multi-word object head (coerced name).
+	spare_cell.charge = 5
+	# Indexed assignment through a global list still works.
+	dial_settings[1] = 42
+	let dial = dial_settings[1]
+	print "gizmo: [gizmo.charge], cell: [spare_cell.charge], dial: [dial]."
+
+action shadow_test:
+	out_of_world
+	syntax:
+		"shadow"
+
+do shadow_test:
+	# A let local shadowing an object name: the assignment binds the LOCAL
+	# (which here refers to spare_cell), not the object the name would resolve
+	# to. The follow-up CHECK command proves the real gizmo kept its value.
+	let gizmo = spare_cell
+	gizmo.charge = 77
+	print "shadow applied."
+
+action check_values:
+	out_of_world
+	syntax:
+		"check"
+
+do check_values:
+	print "gizmo: [gizmo.charge], cell: [spare_cell.charge]."
