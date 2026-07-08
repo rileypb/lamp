@@ -120,12 +120,9 @@ native function bool undo_turn()
 native function bool restart_available()
 native function bool request_restart()
 
-# Set the host status line's two segments. The library composes the content (it
-# knows the world model); this is only the transport. A host with a status bar (the
-# web shell) renders `left` flush-left and `right` flush-right in a fixed-width,
-# reverse-video bar; a host without one (the CLI) ignores it. A forerunner of
-# general content windows. See devdocs/windows.md.
-native function void status_line(string left, string right)
+# (The status_line(left, right) primitive is retired: the status line is an
+# ordinary text window with `look "bar"` — see lib/advent/status.lamp and
+# devdocs/text-windows.md.)
 
 # Text-window primitives (devdocs/text-windows.md). A `window`-typed object declares a
 # pane (its dock/size/visible are ordinary fields — assign them to rearrange; they

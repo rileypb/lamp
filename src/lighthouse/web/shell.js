@@ -24,9 +24,6 @@
 
     const transcript = document.getElementById("transcript");
     const inputLine = document.getElementById("input-line");
-    const statusBar = document.getElementById("status-bar");
-    const statusLeft = document.getElementById("status-left");
-    const statusRight = document.getElementById("status-right");
     const moreBar = document.getElementById("more-bar");
     const winContainers = {
         top: document.getElementById("win-top"),
@@ -324,6 +321,10 @@
         pane.el.hidden = !msg.visible;
         const sideways = msg.dock === "left" || msg.dock === "right";
         pane.el.classList.toggle("pane-side", sideways);
+        // `look "bar"` = the traditional status-line identity: full-width reverse
+        // video, no border/title (shell.css .pane-bar). Unknown looks render as a
+        // plain pane (fail-silently).
+        pane.el.classList.toggle("pane-bar", msg.look === "bar");
         if (sideways) {
             // size = columns of the pane's own (monospace) text, plus its padding.
             pane.el.style.width = `calc(${msg.size}ch + 1rem)`;
@@ -334,9 +335,11 @@
             pane.el.style.width = "";
         }
         // The title renders as a header on side panes only — top/bottom rows are
-        // reserved by `size`, and a header there would eat declared content rows.
-        pane.titleEl.textContent = sideways ? msg.title || "" : "";
-        pane.titleEl.hidden = !(sideways && msg.title);
+        // reserved by `size`, and a header there would eat declared content rows —
+        // and never on a bar (title-less by identity).
+        const showTitle = sideways && msg.look !== "bar";
+        pane.titleEl.textContent = showTitle ? msg.title || "" : "";
+        pane.titleEl.hidden = !(showTitle && msg.title);
         pane.el.setAttribute("aria-label", msg.title || msg.id);
         // Widen the play area while any side pane is visible, so the pane extends
         // the layout instead of eating the transcript's width (see shell.css).
@@ -376,13 +379,6 @@
         switch (msg.type) {
             case "write":
                 appendStyled(msg.value, msg.styles);
-                break;
-            case "status":
-                // Runtime-composed content; the shell only lays it out (left/right
-                // in a fixed-width reverse bar). textContent only, never innerHTML.
-                statusLeft.textContent = msg.left || "";
-                statusRight.textContent = msg.right || "";
-                statusBar.hidden = !(msg.left || msg.right);
                 break;
             case "window_set":
                 applyWindowSet(msg);

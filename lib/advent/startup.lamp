@@ -49,19 +49,8 @@ function bool confirm_restart():
 		return true
 	return false
 
-# Traditional status line: the current room (left) and the turn count (right). The
-# host lays the two segments out in a fixed-width, reverse-video bar; a host without
-# a status bar ignores it. Redrawn at the top of each turn. See devdocs/windows.md.
-function void update_status_line():
-	# Right segment: a scored game (max_score set) shows "[score] of [max] points" — the usual IF
-	# convention; otherwise the turn count. Games that never set max_score are unchanged.
-	let right = freeze "[turns_taken()] turns"
-	if max_score > 0:
-		right = freeze "[score] of [max_score] points"
-	if in_darkness(player):
-		status_line(freeze "Darkness", right)
-	else:
-		status_line(freeze "[holder(player)]", right)
+# (The traditional status line is now the `status_bar` text window, composed by
+# status_line_rules in lib/advent/status.lamp at the window_refresh cadence below.)
 
 # The title banner. Gated on `tagline`: a game opts in by setting it; games that leave it blank
 # (the `""` default) get no banner. The banner interpolates game fields (locals), which a named
@@ -111,9 +100,8 @@ on startup:
 		# Command loop. Exits when a session-control verb sets `session_over` (QUIT/RESTART)
 		# or a command ends the story (sets `story` away from `ongoing`).
 		while story == ongoing:
-			update_status_line()
-			# Recompose + push declared text windows at the status-line cadence
-			# (devdocs/text-windows.md); no-ops for games without windows.
+			# Recompose + push text windows — including the status_bar window
+			# (status.lamp) — once per prompt (devdocs/text-windows.md).
 			follow window_refresh_rules()
 			window_sync()
 			print "[par if printed]"

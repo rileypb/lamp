@@ -119,6 +119,19 @@ html, body {
    clamp lives on the dock containers above, where percentages resolve against
    the definite #main-row width. */
 
+/* `look "bar"` — the traditional status-line identity: reverse-video colors
+   (foreground/background swapped), full width, no border/rounding/title. The
+   traditional-white bar overrides the pane box look; sizing/margins stay the
+   pane's. Future direction (devdocs/text-windows.md): general styling fields
+   (reverse, background color) instead of enumerated looks. */
+.pane-bar {
+    background: var(--fg);
+    color: var(--bg);
+    border: none;
+    border-radius: 0;
+    padding: 0.1rem 0.5rem;
+}
+
 .pane-title {
     color: var(--dim);
     font-size: 0.8rem;
@@ -153,35 +166,8 @@ html, body {
     margin-right: auto;
 }
 
-/* Traditional status line: a fixed-width (monospace) bar with reverse-video colors
-   (foreground/background swapped from the main area). Content is two segments the
-   runtime supplies; flexbox pins the left segment flush-left and the right segment
-   flush-right, so the shell handles justification without knowing column counts. */
-#status-bar {
-    flex: 0 0 auto;
-    display: flex;
-    justify-content: space-between;
-    gap: 1ch;
-    margin-bottom: 0.5rem;
-    padding: 0.1rem 0.5rem;
-    background: var(--fg);
-    color: var(--bg);
-    font-family: "SFMono-Regular", "Consolas", "Liberation Mono", Menlo, monospace;
-    white-space: pre;
-    overflow: hidden;
-}
-#status-bar[hidden] {
-    display: none;
-}
-#status-left {
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-}
-#status-right {
-    flex: 0 0 auto;
-    white-space: nowrap;
-}
+/* (The former #status-bar is retired: the traditional status line is now a
+   `look "bar"` text window — see .pane-bar below and lib/advent/status.lamp.) */
 
 /* "[more]" pager bar: a reverse-video, full-width row below the transcript, shown
    only while paused. Being a flex row (not an overlay) it shrinks the scroll area, so

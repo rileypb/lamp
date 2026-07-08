@@ -26,8 +26,8 @@ lamp.bootstrapBuiltins();
 lamp.defineType("game", ["object"], { author: "string" }, {});
 // Mirrors lib/sys/types.lamp `type window`.
 lamp.defineType("window", ["object"],
-    { dock: "string", size: "int", priority: "int", visible: "bool", title: "string" },
-    { dock: "top", size: 1, priority: 0, visible: true, title: "" });
+    { dock: "string", size: "int", priority: "int", visible: "bool", title: "string", look: "string" },
+    { dock: "top", size: 1, priority: 0, visible: true, title: "", look: "pane" });
 lamp.createObject("game", "WinGame", { author: "Me" });
 
 const panel = lamp.createObject("window", "panel", { dock: "right", size: 20, title: "Mission" });
@@ -48,10 +48,10 @@ test("sync sends window_set from fields then window_update per declared window",
     lamp.windowSync();
     assert.deepStrictEqual(sets().map((m) => m.id).sort(), ["panel", "ticker"]);
     assert.deepStrictEqual(sets().find((m) => m.id === "panel"), {
-        type: "window_set", id: "panel", dock: "right", size: 20, priority: 0, visible: true, title: "Mission",
+        type: "window_set", id: "panel", dock: "right", size: 20, priority: 0, visible: true, title: "Mission", look: "pane",
     });
     assert.deepStrictEqual(sets().find((m) => m.id === "ticker"), {
-        type: "window_set", id: "ticker", dock: "bottom", size: 1, priority: 2, visible: true, title: "",
+        type: "window_set", id: "ticker", dock: "bottom", size: 1, priority: 2, visible: true, title: "", look: "pane",
     });
     assert.deepStrictEqual(updateFor("panel").lines, [[{ text: "Quests" }]]);
     assert.deepStrictEqual(updateFor("ticker").lines, [], "unwritten pane updates to empty content");
@@ -145,6 +145,17 @@ test("invalid dock errors at sync, naming the window", () => {
     lamp.setField(panel, "dock", "sideways");
     assert.throws(() => lamp.windowSync(), /window "panel" has invalid dock "sideways"/);
     lamp.setField(panel, "dock", "right");
+});
+
+test("look rides window_set: a bar-look window declares its visual identity", () => {
+    installChannel();
+    const bar = lamp.createObject("window", "the_bar", { look: "bar", priority: -100 });
+    lamp.windowSync();
+    const set = sets().find((m) => m.id === "the_bar");
+    assert.strictEqual(set.look, "bar");
+    assert.strictEqual(set.priority, -100, "a strongly negative priority passes through");
+    // Cleanup for the earlier tests' exact-id expectations isn't needed — they ran first.
+    lamp.setField(bar, "visible", false);
 });
 
 test("windowAvailable reflects host capabilities; absent capabilities mean none", () => {

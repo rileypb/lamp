@@ -1,12 +1,13 @@
 # Content Windows & the Status Line
 
-> Status: **status line implemented (web + CLI TUI)**; general content windows are a
-> deferred design direction. The status line is built as its own special-purpose
-> mechanism now, to be re-expressed as a window once that model lands.
-> **Candidate spec for the general model: `devdocs/text-windows.md`** (axes
-> decided 2026-07-06; text windows first, freestyle windows boundary-sketched
-> there and spec'd later; the status line stays on this channel until
-> re-expressed as a 1-row window).
+> Status: **the status line IS a text window (2026-07-08).** The general window
+> model is built (devdocs/text-windows.md) and the status line is re-expressed on
+> it: a `look "bar"` top window (`status_bar`, priority -100) declared and
+> composed by `lib/advent/status.lamp`. The dedicated status machinery —
+> `status_line(left, right)`, `setStatusLine`/`setStatusChannel`, the `status`
+> wire message, the web `#status-bar`, and the TUI's hardcoded row 1 — is
+> **retired outright**. Multi-row status is now just `status_bar.size = N` plus
+> a game's own `status_line_rules` content (see below).
 
 ## Purpose
 
@@ -27,42 +28,41 @@ consistent with the output (`print`) and save channels (see `devdocs/sandbox.md`
 
 ## Inputs and Outputs
 
-- **Input:** library-composed content. The status line is two strings, `left` and
-  `right`, recomputed each turn (`update_status_line` in `lib/advent/startup.lamp`).
-- **Output:** a `status` worker→host message `{ left, right }`. Both the browser
-  worker and the CLI worker emit it; the host's render backend decides what to do
-  with it. The runtime primitive (`setStatusLine`) is a silent no-op when no status
-  channel is installed (e.g. a future headless host).
+- **Input:** library-composed content, via the text-window primitives. The default
+  status content is composed by the `status_line_rules` rulebook
+  (`lib/advent/status.lamp`), followed from `window_refresh_rules` once per prompt.
+- **Output:** the ordinary window wire — `window_set` (carrying `look: "bar"`) +
+  `window_update` (one line: left segment, fill run, right segment). No dedicated
+  status message exists; hosts without window support see nothing.
 
-## The status line (first cut)
+## The status line (as a window)
 
-- **Content (library):** `lib/advent` composes `left` (the current room's rendered
-  name, or `"Darkness"` when `in_darkness(player)`, matching `describe_room`) and
-  `right = "[turns_taken()] turns"`, both `freeze`-d to plain strings, and calls the
-  `status_line(left, right)` primitive once at the top of every turn. This lives in the world library because it knows the world model (player,
-  room); `lib/sys` provides only the general primitives `status_line` and
-  `turns_taken`.
-- **Transport (runtime):** `setStatusLine(left, right)` ships the pair through an
-  installed status channel (`setStatusChannel`); no channel ⇒ no-op. Both the browser
-  worker and the CLI worker (`src/lamplighter/sandbox/worker.js`) install the channel
-  and post `{ type: "status", left, right }`.
-- **Rendering (web host):** the shell renders a `#status-bar` with **reverse-video**
-  colors (foreground/background swapped from the main area), a **fixed-width
-  (monospace)** font, the `left` segment flush-left and `right` flush-right via flexbox
-  `space-between` — so the host owns justification without needing a column count.
-  Hidden until the first update and whenever both segments are empty.
-- **Rendering (CLI host):** the dev/CLI host has two interchangeable **render backends**
-  behind one interface (`src/lamplighter/sandbox/backends/`): a **plain** stdio backend
-  (the default for pipes/redirection/tests — it *ignores* the status message so captured
-  output is unchanged) and an **interactive TUI** backend selected when stdout/stdin are
-  a TTY (`LAMP_NO_TUI` forces plain). The TUI renders the status as a pinned top row in
-  reverse video, justified left/right to the terminal width — the same two-segment
-  content, laid out by the host. See `devdocs/sandbox.md` ("render backends").
+- **Declaration (lib/advent/status.lamp):** `window status_bar: dock top; size 1;
+  priority -100; look "bar"`. The negative priority pins it nearest the top edge,
+  above any game pane; `look "bar"` is the visual identity (full-width reverse
+  video, no border/title, monospace) each host interprets.
+- **Content:** the `status_line_rules` rulebook's default rule composes the
+  IF-convention line — current room (or "Darkness") left; turn count, or
+  "[score] of [max_score] points" for a scored game, right — via
+  `window_line_split(status_bar, left, right)`.
+- **Customizing (a game):**
+  - *Content:* contribute `rule status_line_rules: … stop` from the game file — it
+    runs before the library default and replaces it (the `room_heading_rules`
+    pattern). Being its own rulebook, the `stop` cannot affect other panes.
+  - *Height:* `status_bar.size = 3` (usually in `startup_rules`) + compose that
+    many lines — the multi-row status some games want.
+  - *Remove:* `status_bar.visible = false`.
+- **Rendering:** the web shell styles a `.pane-bar` (reverse video, borderless,
+  full width); the TUI draws each bar row as a full-width reverse block, with
+  styled runs re-asserting the reverse after their own SGR reset. Both fall out
+  of the general pane renderers — the bar is one `classList` toggle / one branch.
+- **The old two-string channel** (`status_line` primitive → `setStatusLine` →
+  `{type:"status"}` → `#status-bar` / TUI row 1) is deleted end to end.
 
-Why structured fields rather than a pre-padded string: the runtime can't know the
-host's width (responsive browser, terminal columns), so it sends content and lets each
-host justify. This is also the shape a general window API wants (content in, layout at
-the host).
+Why structured runs rather than a pre-padded string: the runtime can't know the
+host's width (responsive browser, terminal columns), so it sends content — with the
+left/right split expressed as a fill run — and each host lays it out. This is the
+same encoding every text window uses.
 
 ## Assumptions
 
@@ -72,8 +72,8 @@ the host).
 
 ## Non-goals (now)
 
-- Multiple/arbitrary windows, a window lifecycle API, or graphics. The status line is
-  deliberately a special creature until the window model is designed.
+- Graphics / freestyle (non-text) windows — boundary-sketched in
+  devdocs/text-windows.md, to be spec'd separately.
 
 ## CLI TUI — polish
 
@@ -98,9 +98,11 @@ prompt) — the full per-host design is in `devdocs/sandbox.md` ("Output paginat
 
 ## Open questions
 
-- **Generalization.** What is the minimal window model that the status line collapses
-  into — named windows with a content push and a host-side layout role? How does a host
-  declare which windows it can render (capability handshake), and what is the CLI
-  fallback?
-- **Author control.** Should a game be able to override the status-line content (e.g. a
-  score game wanting "Score: N")? Today the content is fixed in `lib/advent`.
+Both of this doc's original open questions are resolved by the window model
+(devdocs/text-windows.md): **generalization** — the status line collapsed into a
+`look "bar"` window over the capability handshake, with hosts that render nothing
+simply seeing nothing; **author control** — games replace the content via
+`status_line_rules` (and the built-in default already shows "[score] of
+[max_score] points" when `max_score` is set). Remaining direction: general
+window *styling* fields (reverse video, background color) instead of enumerated
+looks — tracked in devdocs/text-windows.md.

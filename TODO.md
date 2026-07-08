@@ -512,14 +512,28 @@ plugin* owning the action/IF constructs (no third-party grammar yet), which also
 lets the base `action` type move out of the runtime bootstrap. No code until the
 direction is chosen. **Where:** `src/lantern/*` (pipeline), `src/lamplighter/index.js`.
 
-### 8. Content windows (status line is the first cut)
-The traditional **status line is built on both hosts**: `lib/advent` composes room +
-turn count and pushes it via the `status_line`/`turns_taken` primitives; the runtime
-ships `{ left, right }` over a `status` message; the **web shell** renders a fixed-width
-reverse-video bar, and the **CLI** renders it via an interactive **TUI render backend**
-(alt-screen + raw mode; plain stdio for pipes/tests; `LAMP_NO_TUI` forces plain).
-Design in `devdocs/windows.md`; backend seam in `devdocs/sandbox.md`. Branch
-`CLI-status-bar`.
+### 8. Content windows (status line is now a window)
+**Status-as-window DONE (2026-07-08, branch `status-window`):** the status line is
+re-expressed as an ordinary text window — `window status_bar` (dock top, size 1,
+priority -100, new `look "bar"` field = full-width reverse-video borderless identity)
+declared + composed in `lib/advent/status.lamp` via a dedicated, replaceable
+`status_line_rules` rulebook (game overrides with `rule status_line_rules: … stop`;
+**multi-row status** = `status_bar.size = N` + composing N lines; hide with
+`visible false`). The old machinery — `status_line` primitive,
+`setStatusLine`/`setStatusChannel`, the `status` wire message, web `#status-bar`,
+TUI hardcoded row 1 — is **retired outright**; the TUI's top block now starts at
+row 1 (bar rows render full-width reverse, styled runs re-assert reverse after
+their SGR resets; spacer row only when a top block exists), the web bar is a
+`.pane-bar` class. All 244 goldens byte-invariant (plain host saw neither system);
+lighthouse e2e asserts the bar over the real cloak bundle; tests/windows carries
+`look`; TUI tests rewritten to the new geometry. Docs: windows.md rewritten,
+i18n.md status-fragments note, text-windows.md records the agreed **future styling
+direction** (general `reverse`/background-color window fields instead of a growing
+look enum — "bar" becomes sugar then). Known trade-off: a non-advent bare-sys game
+no longer has any status primitive — it declares its own bar window.
+**CLI TUI (render backend, alt-screen + raw mode; plain stdio for pipes/tests;
+`LAMP_NO_TUI` forces plain).** Design in `devdocs/windows.md`; backend seam in
+`devdocs/sandbox.md`.
 **CLI TUI:** styled transcript text, in-line editing (←/→, Home/End, Delete), ↑/↓
 command history, mouse-wheel scroll (SGR reporting; Shift for native selection),
 wrapping an over-long typed command (hard-wrapped by column), and multi-byte/emoji
@@ -560,13 +574,15 @@ startup when only top/bottom exist (the TUI set), absent on windowless hosts whe
 stays authoritative. Golden `phobos_ex` runs the full `test endgame` walkthrough
 (byte-identical to phobos's transcript except the banner title — the pane adds zero
 plain-host output); lighthouse e2e drives the built EX bundle under both capability sets.
-The original `sample/phobos/` is untouched. **Text windows v1 is COMPLETE (steps 1–4).**
-Follow-ups: re-express the status line as a 1-row window (then retire the `status`
-message); a manual browser + terminal pass on the actual painting (web: run a build with
-phobos_ex; TUI: `npm run play` on the EX build); freestyle windows (boundary-sketched in
-the doc, spec'd separately). **Where:** `src/lighthouse/web/`,
+The original `sample/phobos/` is untouched. **Text windows v1 is COMPLETE (steps 1–4),
+and the status line is re-expressed on it (see the top of this item).**
+Remaining follow-ups: a manual browser + terminal pass on the actual painting (web: run
+a build with phobos_ex; TUI: `npm run play` on the EX build — now also covers the bar
+window); general window styling fields (reverse/bg-color — direction recorded in
+text-windows.md); freestyle windows (boundary-sketched in the doc, spec'd separately).
+**Where:** `src/lighthouse/web/`,
 `src/lamplighter/sandbox/{worker,worker-browser}.js` + `backends/`, `lib/sys`,
-`lib/advent`, `sample/phobos_ex/`.
+`lib/advent/status.lamp`, `sample/phobos_ex/`.
 
 ## Active (design decided 2026-06-25)
 

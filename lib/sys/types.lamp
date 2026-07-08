@@ -28,3 +28,9 @@ type window:
 	bool visible = true
 	# Optional pane heading; a host may render it (the web shell) or ignore it (the TUI).
 	string title = ""
+	# Visual identity: "pane" (default — web: bordered box; TUI: plain rows) or
+	# "bar" (the traditional status-line look: full-width reverse video, no
+	# border/title, monospace). An unknown look renders as "pane" (fail-silently,
+	# like unknown styles). Future direction (recorded in devdocs/text-windows.md):
+	# general styling fields — reverse video, background color — once wanted.
+	string look = "pane"

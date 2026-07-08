@@ -2,7 +2,8 @@
 //
 // The interactive-terminal alternative to backends/plain.js, selected by the host
 // when stdout/stdin are a TTY (and LAMP_NO_TUI is unset). Implements the same
-// render-backend interface (see plain.js): a pinned top status row, a scrollable
+// render-backend interface (see plain.js): pinned text-window panes (the status
+// bar is a `look "bar"` top window — lib/advent/status.lamp), a scrollable
 // transcript, and a bottom input line, on the alternate screen in raw mode.
 //
 // Input: printable + Backspace/Delete + Enter, in-line cursor editing (←/→, Home/
@@ -237,8 +238,6 @@ function createTuiBackend({ out, err, input, exit } = {}) {
 
     const lines = []; // committed transcript lines, each an array of spans
     let pending = []; // spans of the partial line not yet terminated by "\n"
-    let statusLeft = "";
-    let statusRight = "";
     let scrollOffset = 0; // lines scrolled up from the bottom (0 = at bottom)
 
     // Pagination ("[more]"): when a turn's output exceeds the game area, pause and
@@ -287,24 +286,16 @@ function createTuiBackend({ out, err, input, exit } = {}) {
         }
     }
 
-    function statusBar(cols) {
-        let l = statusLeft || "";
-        const r = statusRight || "";
-        if (textWidth(l) + textWidth(r) + 1 > cols) l = truncateToWidth(l, Math.max(0, cols - textWidth(r) - 1));
-        const gap = Math.max(1, cols - textWidth(l) - textWidth(r));
-        let bar = l + " ".repeat(gap) + r;
-        if (textWidth(bar) > cols) bar = truncateToWidth(bar, cols);
-        return bar + " ".repeat(Math.max(0, cols - textWidth(bar)));
-    }
-
     // --- Text-window panes (top/bottom docks; devdocs/text-windows.md) ------
     // A visible pane reserves `size` rows outside the scroll region: top panes
-    // right under the status row + spacer, bottom panes on the last rows. Content
-    // is a repaint block of run-encoded lines (styles/align/fill); lines beyond
-    // the reserved rows are clipped (the declared size is a reservation, not a
-    // scroll area). Left/right docks are unsupported on a terminal — the
-    // capability handshake says so — and are ignored if a game sends them anyway.
-    const panes = new Map(); // id → { dock, size, priority, visible, lines }
+    // on the first rows (the status bar is a `look "bar"` window with a strongly
+    // negative priority, so it lands on row 1 — the traditional spot), bottom
+    // panes on the last rows. Content is a repaint block of run-encoded lines
+    // (styles/align/fill); lines beyond the reserved rows are clipped (the
+    // declared size is a reservation, not a scroll area). Left/right docks are
+    // unsupported on a terminal — the capability handshake says so — and are
+    // ignored if a game sends them anyway.
+    const panes = new Map(); // id → { dock, size, priority, visible, look, lines }
 
     function panesFor(dock) {
         const list = [];
@@ -321,16 +312,19 @@ function createTuiBackend({ out, err, input, exit } = {}) {
         return n;
     }
 
-    // Screen geometry with panes reserved: row 1 status, row 2 spacer, top panes,
-    // the game area (viewH rows), then bottom panes on the last rows.
+    // Screen geometry with panes reserved: top panes from row 1 (plus one blank
+    // spacer row under them, when any exist), the game area (viewH rows), then
+    // bottom panes on the last rows. With no windows at all the game area is the
+    // whole screen.
     function geometry() {
         const cols = out.columns || 80;
         const rows = out.rows || 24;
         const topRows = paneRowCount("top");
         const bottomRows = paneRowCount("bottom");
-        const gameTop = 3 + topRows;
-        const viewH = Math.max(1, rows - 2 - topRows - bottomRows);
-        return { cols, rows, gameTop, viewH };
+        const spacer = topRows > 0 ? 1 : 0;
+        const gameTop = topRows + spacer + 1;
+        const viewH = Math.max(1, rows - topRows - spacer - bottomRows);
+        return { cols, rows, topRows, spacer, gameTop, viewH };
     }
 
     function runSgr(styles) {
@@ -346,7 +340,10 @@ function createTuiBackend({ out, err, input, exit } = {}) {
     // implicit space fills, then the slack is split across the fill runs (each
     // fill's char repeated to its share) — the terminal mirror of the web shell's
     // flex layout, so rules and the left/right split render the same way.
-    function paneLineString(line, cols) {
+    // `pad` right-pads with spaces to exactly `cols` (a bar row is a full-width
+    // block); `base` is an SGR prefix re-asserted after each styled run's RESET,
+    // so a run inside a reverse-video bar doesn't cancel the bar.
+    function paneLineString(line, cols, { pad = false, base = "" } = {}) {
         const runs = [];
         for (const run of line) {
             if (!run.fill && (run.align === "right" || run.align === "center")) runs.push({ text: " ", fill: true });
@@ -360,7 +357,7 @@ function createTuiBackend({ out, err, input, exit } = {}) {
             else fixed += textWidth(String(r.text));
         }
         const slack = Math.max(0, cols - fixed);
-        const base = fills > 0 ? Math.floor(slack / fills) : 0;
+        const share0 = fills > 0 ? Math.floor(slack / fills) : 0;
         let extra = fills > 0 ? slack % fills : 0;
         let s = "";
         let vis = 0;
@@ -368,7 +365,7 @@ function createTuiBackend({ out, err, input, exit } = {}) {
             let text = String(r.text);
             if (r.fill) {
                 const ch = text || " ";
-                let share = base;
+                let share = share0;
                 if (extra > 0) { share += 1; extra -= 1; }
                 const w = Math.max(1, textWidth(ch));
                 text = ch.repeat(Math.floor(share / w)) + " ".repeat(share % w);
@@ -377,23 +374,32 @@ function createTuiBackend({ out, err, input, exit } = {}) {
             if (text.length === 0) continue;
             vis += textWidth(text);
             const open = runSgr(r.styles);
-            s += open ? open + text + RESET : text;
+            s += open ? open + text + RESET + base : text;
             if (vis >= cols) break;
         }
+        if (pad && vis < cols) s += " ".repeat(cols - vis);
         return s;
     }
 
     // Draw a dock's panes starting at `startRow`. Bottom panes draw in reverse
-    // priority order so a lower priority lands nearer the bottom edge.
+    // priority order so a lower priority lands nearer the bottom edge. A
+    // `look "bar"` pane draws every reserved row as a full-width reverse-video
+    // block (the traditional status-line identity); a plain pane draws its
+    // content bare.
     function paneBlock(dock, startRow, cols) {
         let list = panesFor(dock);
         if (dock === "bottom") list = list.slice().reverse();
         let buf = "";
         let row = startRow;
         for (const p of list) {
+            const isBar = p.look === "bar";
             for (let i = 0; i < p.size; i += 1) {
                 buf += moveTo(row, 1) + CLEAR_LINE;
-                if (p.lines[i]) buf += paneLineString(p.lines[i], cols);
+                if (isBar) {
+                    buf += REVERSE + paneLineString(p.lines[i] || [], cols, { pad: true, base: REVERSE }) + RESET;
+                } else if (p.lines[i]) {
+                    buf += paneLineString(p.lines[i], cols);
+                }
                 row += 1;
             }
         }
@@ -473,16 +479,16 @@ function createTuiBackend({ out, err, input, exit } = {}) {
 
     function render() {
         if (stopped) return;
-        const { cols, gameTop, viewH } = geometry();
+        const { cols, topRows, spacer, gameTop, viewH } = geometry();
 
         const displayRows = contentRows(cols);
 
-        // Screen chrome shared by both views: status row, spacer, and the reserved
-        // pane rows (top under the spacer, bottom under the game area).
+        // Screen chrome shared by both views: the reserved pane rows (top panes —
+        // including the status bar window — from row 1, a blank spacer under them,
+        // bottom panes under the game area).
         let chrome = CURSOR_HIDE;
-        chrome += moveTo(1, 1) + CLEAR_LINE + REVERSE + statusBar(cols) + RESET;
-        chrome += moveTo(2, 1) + CLEAR_LINE; // blank spacer between status and transcript
-        chrome += paneBlock("top", 3, cols);
+        chrome += paneBlock("top", 1, cols);
+        if (spacer) chrome += moveTo(topRows + 1, 1) + CLEAR_LINE;
         chrome += paneBlock("bottom", gameTop + viewH, cols);
 
         if (more) {
@@ -730,17 +736,13 @@ function createTuiBackend({ out, err, input, exit } = {}) {
             appendOutput(`${value}\n`);
             maybePage();
         },
-        setStatus(left, right) {
-            statusLeft = String(left == null ? "" : left);
-            statusRight = String(right == null ? "" : right);
-            render();
-        },
         windowSet(msg) {
             const p = panes.get(msg.id) || { lines: [] };
             p.dock = String(msg.dock);
             p.size = Math.max(0, msg.size | 0);
             p.priority = msg.priority | 0;
             p.visible = !!msg.visible;
+            p.look = String(msg.look || "pane");
             panes.set(msg.id, p);
             render();
         },

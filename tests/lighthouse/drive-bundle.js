@@ -96,7 +96,6 @@ function driveBundle(bundleDir, commands, {
                 case "write":
                     output += msg.value;
                     break;
-                case "status":
                 case "log":
                     break;
                 case "window_set":

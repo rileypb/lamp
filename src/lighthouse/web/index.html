@@ -35,16 +35,12 @@
          input at a time, and brokers it to the game worker. Contains no game
          logic. See devdocs/sandbox.md and devdocs/lighthouse.md. -->
     <main id="screen">
-        <!-- Traditional status line: room name (left) and turn count (right) in a
-             fixed-width reverse-video bar. Content comes from the runtime via the
-             `status` message; hidden until the first update. See devdocs/windows.md. -->
-        <div id="status-bar" role="status" aria-live="off" hidden><span
-            id="status-left"></span><span id="status-right"></span></div>
         <!-- Text-window pane containers (devdocs/text-windows.md): panes are built
-             by shell.js on window_set and docked here. Empty containers collapse
-             to nothing, so a game without windows renders exactly as before. The
-             right/bottom containers run in reverse flex order so a lower priority
-             is always nearer its screen edge. -->
+             by shell.js on window_set and docked here; the traditional status
+             line is a `look "bar"` top window (lib/advent/status.lamp). Empty
+             containers collapse to nothing, so a game without windows renders
+             exactly as before. The right/bottom containers run in reverse flex
+             order so a lower priority is always nearer its screen edge. -->
         <div id="win-top"></div>
         <div id="main-row">
             <div id="win-left"></div>

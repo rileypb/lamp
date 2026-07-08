@@ -1726,19 +1726,10 @@ function setWrite(nextWriteImpl) {
     writeImpl = nextWriteImpl;
 }
 
-// Status-line channel. A host with a status bar (the web shell) installs a sink
-// and renders the two structured segments ({left, right}); a host without one (the
-// CLI) installs nothing, so setStatusLine is a silent no-op. This is only the
-// transport — the *content* is composed by the library, which knows the world
-// model (see lib/advent update_status_line). A forerunner of general content
-// windows; see devdocs/windows.md.
-let statusImpl = null;
-function setStatusChannel(nextStatusImpl) {
-    statusImpl = nextStatusImpl;
-}
-function setStatusLine(left, right) {
-    if (statusImpl) statusImpl(String(left), String(right));
-}
+// (The former status-line channel — setStatusChannel/setStatusLine and the
+// `status` wire message — is retired: the status line is now an ordinary text
+// window with `look "bar"`, composed by lib/advent/status.lamp. See
+// devdocs/windows.md and devdocs/text-windows.md.)
 
 // Text windows (devdocs/text-windows.md). The runtime owns the transient per-window
 // line buffer (render state — deliberately not a state provider; content re-derives
@@ -1861,6 +1852,9 @@ function windowSync() {
             priority: Number(inst.priority) || 0,
             visible: !!inst.visible,
             title: String(inst.title == null ? "" : inst.title),
+            // Visual identity: "pane" or "bar" (the status-line look). Hosts
+            // treat an unknown look as "pane" (fail-silently).
+            look: String(inst.look || "pane"),
         });
         windowImpl({ type: "window_update", id: inst.name, lines: buffered.get(inst.name) || [] });
     }
@@ -3108,8 +3102,6 @@ module.exports = {
     transcriptStop,
     transcriptRunning,
     transcriptAvailable,
-    setStatusChannel,
-    setStatusLine,
     setWindowChannel,
     setHostCapabilities,
     windowAvailable,

@@ -146,8 +146,6 @@ function playFile(generatedPath, { out = process.stdout, err = process.stderr } 
                 backend.write(msg.value, msg.styles);
             } else if (msg.type === "log") {
                 backend.log(msg.value);
-            } else if (msg.type === "status") {
-                backend.setStatus(msg.left, msg.right);
             } else if (msg.type === "window_set") {
                 backend.windowSet(msg);
             } else if (msg.type === "window_update") {

@@ -1,11 +1,22 @@
 # Text Windows — design brainstorm & candidate spec
 
-> Status: **axes decided 2026-07-06; all four build steps done.** Runtime +
-> Lamp surface, the web shell renders panes on all four docks, the CLI TUI
-> renders top/bottom panes, and the first real consumers exist (the `windows1`
-> golden + **Phobos EX**'s mission-status pane). Remaining follow-ups: the
-> status-line re-expression, and a manual browser/terminal pass on the actual
-> painting.
+> Status: **axes decided 2026-07-06; all four build steps done — and the
+> status line is re-expressed as a window (2026-07-08).** Runtime + Lamp
+> surface, the web shell renders panes on all four docks, the CLI TUI renders
+> top/bottom panes, the first real consumers exist (the `windows1` golden +
+> **Phobos EX**'s mission-status pane), and the traditional status line is now
+> a `look "bar"` window (`lib/advent/status.lamp`; the old status channel is
+> retired end to end — see devdocs/windows.md). Multi-row status =
+> `status_bar.size = N` + a game's own `status_line_rules`. Remaining
+> follow-ups: a manual browser/terminal pass on the actual painting, and the
+> **general styling direction** below.
+>
+> **Recorded direction — window styling (2026-07-08):** `look` is a `string`
+> field with two values ("pane", "bar") because that covered the status line;
+> the agreed longer-term shape is general styling flexibility on the window —
+> e.g. `reverse` and a background color (the color-style names now exist in
+> lib/sys) as fields the hosts interpret — rather than a growing enum of looks.
+> When that lands, "bar" becomes sugar for reverse+borderless.
 > The brainstorm sections that follow record the options considered; the
 > "Candidate spec" section at the end states the chosen shape. This
 > generalizes the status line (devdocs/windows.md) into real *text windows* on

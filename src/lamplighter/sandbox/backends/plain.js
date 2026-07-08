@@ -135,9 +135,6 @@ function createPlainBackend({ out, err, fs }) {
         log(value) {
             err.write(`${value}\n`);
         },
-        setStatus() {
-            // Plain stdio has no status region; the status update is ignored.
-        },
         windowSet() {
             // No pane support (and no `capabilities`, so window_available reports
             // false); window messages are ignored and captured output is unchanged.

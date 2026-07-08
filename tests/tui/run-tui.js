@@ -81,12 +81,19 @@ test("start enters alt screen + raw mode; stop restores both", () => {
     assert.strictEqual(input.rawMode, false);
 });
 
-test("status bar is reverse-video, left/right justified to width", () => {
+test("a look-bar window renders full-width reverse video with the split justified", () => {
+    // The traditional status line: a `look "bar"` top window (lib/advent/status.lamp)
+    // whose split line justifies left/right across the whole 40-column row.
     const out = mockOut(40, 10);
     const input = mockIn();
     const b = createTuiBackend({ out, input, exit() {} });
     b.start();
-    b.setStatus("Foyer", "3 turns");
+    b.windowSet({ type: "window_set", id: "status bar", dock: "top", size: 1, priority: -100, visible: true, title: "", look: "bar" });
+    b.windowUpdate({
+        type: "window_update",
+        id: "status bar",
+        lines: [[{ text: "Foyer" }, { text: " ", fill: true }, { text: "3 turns" }]],
+    });
     assert.ok(out.buf.includes("\x1b[7m"), "reverse video used");
     const segs = [...out.buf.matchAll(/\x1b\[7m(.*?)\x1b\[0m/g)].map((m) => m[1]);
     const bar = segs[segs.length - 1];
@@ -275,12 +282,12 @@ test("mouse wheel scrolls the transcript back and snaps forward", () => {
 });
 
 test("output longer than the screen pauses with [more] and pages on a keypress", () => {
-    const out = mockOut(20, 5); // viewH = rows - 2 = 3
+    const out = mockOut(20, 5); // no windows → viewH = the whole 5 rows
     const input = mockIn();
     let delivered = null;
     const b = createTuiBackend({ out, input, exit() {} });
     b.start();
-    for (let n = 0; n < 6; n += 1) b.write(`line ${n}\n`); // 6 rows > 3 → pauses
+    for (let n = 0; n < 10; n += 1) b.write(`line ${n}\n`); // 10 rows > 5 → pauses (twice)
     assert.ok(out.buf.includes("[more]"), "[more] shown when output overflows the screen");
     b.requestLine("> ", (line) => { delivered = line; });
     input.emit("data", Buffer.from(" ")); // page 2 — still paging, prompt held back
@@ -311,7 +318,7 @@ test("backend advertises top/bottom dock capabilities", () => {
     assert.deepStrictEqual(b.capabilities, { windows: { docks: ["top", "bottom"] } });
 });
 
-test("a top pane reserves rows under the spacer and shifts the game area down", () => {
+test("a top pane reserves the first rows; the game area starts below it + a spacer", () => {
     const out = mockOut(40, 12);
     const b = createTuiBackend({ out, input: mockIn(), exit() {} });
     b.start();
@@ -319,9 +326,10 @@ test("a top pane reserves rows under the spacer and shifts the game area down", 
     b.windowUpdate({ type: "window_update", id: "hud", lines: [[{ text: "Quests" }], [{ text: "- find lamp" }]] });
     out.buf = "";
     b.write("You are in a foyer.\n");
-    assert.strictEqual(rowContent(out.buf, 3), "Quests", "pane line 1 at row 3");
-    assert.strictEqual(rowContent(out.buf, 4), "- find lamp", "pane line 2 at row 4");
-    assert.strictEqual(rowContent(out.buf, 5), "You are in a foyer.", "game area starts below the pane");
+    assert.strictEqual(rowContent(out.buf, 1), "Quests", "pane line 1 at row 1");
+    assert.strictEqual(rowContent(out.buf, 2), "- find lamp", "pane line 2 at row 2");
+    assert.strictEqual(rowContent(out.buf, 3), "", "blank spacer row under the top block");
+    assert.strictEqual(rowContent(out.buf, 4), "You are in a foyer.", "game area starts below the spacer");
     b.stop();
 });
 
@@ -334,7 +342,8 @@ test("a bottom pane occupies the last rows; lower priority is nearer the bottom 
     b.windowSet({ type: "window_set", id: "info", dock: "bottom", size: 1, priority: 5, visible: true, title: "" });
     out.buf = "";
     b.windowUpdate({ type: "window_update", id: "info", lines: [[{ text: "above it" }]] });
-    // rows=12, two 1-row bottom panes: game area 3..10, panes at 11 (info) and 12 (bar).
+    // rows=12, two 1-row bottom panes, no top block: game area 1..10, panes at
+    // 11 (info) and 12 (bar).
     assert.strictEqual(rowContent(out.buf, 11), "above it");
     assert.strictEqual(rowContent(out.buf, 12), "nearest edge");
     b.stop();
@@ -370,9 +379,9 @@ test("a hidden pane reserves nothing; re-showing restores it", () => {
     b.windowSet({ type: "window_set", id: "hud", dock: "top", size: 1, priority: 0, visible: false, title: "" });
     out.buf = "";
     b.write("You are in a foyer.\n");
-    assert.strictEqual(rowContent(out.buf, 3), "You are in a foyer.", "game area back at row 3 when the pane hides");
+    assert.strictEqual(rowContent(out.buf, 1), "You are in a foyer.", "game area reclaims row 1 when the pane hides");
     b.windowSet({ type: "window_set", id: "hud", dock: "top", size: 1, priority: 0, visible: true, title: "" });
-    assert.strictEqual(rowContent(out.buf, 3), "HUD", "pane content kept and re-shown");
+    assert.strictEqual(rowContent(out.buf, 1), "HUD", "pane content kept and re-shown");
     b.stop();
 });
 
@@ -384,7 +393,7 @@ test("left/right docks are ignored on the terminal (no rows reserved)", () => {
     b.windowUpdate({ type: "window_update", id: "side", lines: [[{ text: "sideways" }]] });
     out.buf = "";
     b.write("You are in a foyer.\n");
-    assert.strictEqual(rowContent(out.buf, 3), "You are in a foyer.", "game area unmoved by an unsupported dock");
+    assert.strictEqual(rowContent(out.buf, 1), "You are in a foyer.", "game area unmoved by an unsupported dock");
     assert.ok(!out.buf.includes("sideways"), "side-pane content is not drawn");
     b.stop();
 });
@@ -394,9 +403,9 @@ test("pagination accounts for reserved pane rows", () => {
     const input = mockIn();
     const b = createTuiBackend({ out, input, exit() {} });
     b.start();
-    // rows=8: without panes viewH=6; a 3-row pane shrinks it to 3.
+    // rows=8: without panes viewH=8; a 3-row top pane + its spacer shrink it to 4.
     b.windowSet({ type: "window_set", id: "hud", dock: "top", size: 3, priority: 0, visible: true, title: "" });
-    for (let n = 0; n < 5; n += 1) b.write(`line ${n}\n`); // 5 rows > 3 → must page
+    for (let n = 0; n < 5; n += 1) b.write(`line ${n}\n`); // 5 rows > 4 → must page
     assert.ok(out.buf.includes("[more]"), "[more] triggers at the pane-reduced viewport");
     b.stop();
 });

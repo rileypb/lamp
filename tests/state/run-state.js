@@ -128,16 +128,9 @@ test("seeded RNG state reverts on restore (reproducible draws)", () => {
     assert.strictEqual(again, first);
 });
 
-test("status-line channel forwards content, and no-ops without a channel", () => {
-    // The transport seam behind the host status bar: a host installs a sink; a host
-    // without a status bar (the CLI) installs none, so setStatusLine is a silent no-op.
-    let received = null;
-    lamp.setStatusChannel((left, right) => { received = { left, right }; });
-    lamp.setStatusLine("Foyer", "3 turns");
-    assert.deepStrictEqual(received, { left: "Foyer", right: "3 turns" });
-    lamp.setStatusChannel(null);
-    lamp.setStatusLine("ignored", "ignored"); // must not throw with no channel
-});
+// (The dedicated status-line channel is retired: the status line is a text window
+// with `look "bar"` — its transport is covered by tests/windows and the lighthouse
+// e2e's status-bar assertions. See lib/advent/status.lamp.)
 
 if (failures > 0) {
     console.error(`\n${failures} test(s) failed`);

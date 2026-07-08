@@ -97,17 +97,17 @@ try {
         assert.ok(shell.includes("downloadTranscript"), "shell transcript download missing");
     });
 
-    await test("status line: worker forwards it and the shell renders it", () => {
+    await test("status line: a look-bar window end to end (old status channel retired)", () => {
+        // The traditional status line is a `look "bar"` text window
+        // (lib/advent/status.lamp); the dedicated status channel is gone.
         const worker = fs.readFileSync(path.join(outDir, "game.worker.js"), "utf8");
-        assert.ok(worker.includes("setStatusChannel") && worker.includes('"status"'),
-            "worker status channel missing");
+        assert.ok(!worker.includes("setStatusChannel"), "retired status channel still wired in worker");
+        assert.ok(worker.includes('"status bar"'), "advent status_bar window missing from the bundle");
         const shell = fs.readFileSync(path.join(outDir, "shell.js"), "utf8");
-        assert.ok(shell.includes('case "status"') && shell.includes("status-left"),
-            "shell status handler missing");
-        const html = fs.readFileSync(path.join(outDir, "index.html"), "utf8");
-        assert.ok(html.includes('id="status-bar"'), "status bar element missing");
+        assert.ok(!shell.includes('case "status"'), "retired status handler still in shell");
+        assert.ok(shell.includes("pane-bar"), "shell bar-look pane class missing");
         const css = fs.readFileSync(path.join(outDir, "shell.css"), "utf8");
-        assert.ok(css.includes("#status-bar"), "status bar styling missing");
+        assert.ok(css.includes(".pane-bar"), "bar-look styling missing");
     });
 
     await test("text windows: worker forwards messages + capabilities; shell docks panes", () => {
@@ -175,7 +175,7 @@ try {
     // messages, transcript capture, RESTART, and a clean `done`. One session, several
     // contract assertions.
     await test("bundle end-to-end: play, save/restore, transcript, restart, quit", async () => {
-        const { output, transcripts } = await driveBundle(minOutDir, [
+        const { output, transcripts, windowMessages } = await driveBundle(minOutDir, [
             "west",         // Foyer -> Cloakroom
             "save",         //   -> save_prompt modal (harness answers "e2e") -> "Game saved."
             "hang cloak on hook",
@@ -197,6 +197,19 @@ try {
             "mid-game RESTART should ask for confirmation");
         const introCount = output.split("Hurrying through the rainswept November night").length - 1;
         assert.strictEqual(introCount, 2, "RESTART should re-run startup (intro printed twice)");
+        // The status line rides the window wire now: cloak (a plain advent game)
+        // must ship a bar-look top window whose split carries the room + turns.
+        const statusSet = windowMessages.find((m) => m.type === "window_set" && m.id === "status bar");
+        assert.ok(statusSet, "status bar window_set missing");
+        assert.strictEqual(statusSet.look, "bar");
+        assert.strictEqual(statusSet.dock, "top");
+        assert.ok(statusSet.priority < 0, "status bar priority should sit nearest the top edge");
+        const statusUpd = windowMessages.find((m) => m.type === "window_update" && m.id === "status bar" && m.lines.length);
+        assert.ok(statusUpd, "status bar content missing");
+        const statusLine = statusUpd.lines[0];
+        assert.ok(statusLine.some((r) => r.fill), "status line should carry the left/right split fill");
+        assert.ok(statusLine[statusLine.length - 1].text.includes("turns"),
+            "status right segment should show the turn count");
         const log = transcripts.get("log");
         assert.ok(log != null, "transcript 'log' was never started");
         assert.ok(log.includes("> east") && log.includes("Foyer"),

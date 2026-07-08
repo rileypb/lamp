@@ -1,0 +1,40 @@
+lib advent
+
+# The traditional status line, expressed as a text window (devdocs/text-windows.md;
+# formerly a dedicated `status` channel — see devdocs/windows.md). `look "bar"` gives
+# it the classic identity: full-width reverse video, no border/title, monospace. The
+# strongly negative priority keeps it nearest the top edge, above any game pane.
+#
+# A game customizes it like any window: resize (`status_bar.size = 3`) for a
+# multi-row status, `visible false` to remove it, and replace the *content* by
+# contributing its own `rule status_line_rules:` ending in `stop` (a game-file rule
+# runs before this library default and suppresses it — the room_heading_rules
+# pattern). Because status_line_rules is its own rulebook, that `stop` cannot
+# affect other panes' window_refresh_rules.
+
+window status_bar:
+	dock top
+	size 1
+	priority -100
+	look "bar"
+
+# Composes the bar each prompt. The default is the IF-interpreter convention: the
+# current room (or "Darkness") on the left; the turn count — or, for a scored game
+# (max_score set), "[score] of [max] points" — on the right.
+# (These fragments are English-in-advent for now: the same pre-existing i18n gap the
+# old status line had; they interpolate runtime values, so they await interpolable
+# messages. Noted in devdocs/i18n.md.)
+rulebook bool status_line_rules():
+	default true
+	when true:
+		let right = freeze "[turns_taken()] turns"
+		if max_score > 0:
+			right = freeze "[score] of [max_score] points"
+		if in_darkness(player):
+			window_line_split(status_bar, "Darkness", right)
+		else:
+			window_line_split(status_bar, freeze "[holder(player)]", right)
+		stop true
+
+rule window_refresh_rules:
+	follow status_line_rules()
