@@ -57,7 +57,31 @@
 > painting remains the standing manual browser pass (with modals and the
 > pager), now folded into step 4.
 >
-> Status: **design decided 2026-07-09; steps 1–3 built, step 4 remains.** This doc specs the
+> **Step 4 is built (2026-07-09):** **Phobos EX** gains the deck-plan canvas
+> pane (`sample/phobos_ex/lib/phobos/map.lamp`) — right dock, 170×150 virtual
+> space, the base's rooms as grid rects with corridor lines, a `seen` fill
+> (a room field marked as Galaxy moves, snapshot-covered so UNDO forgets),
+> a current-room marker, and labels through the Siriusian cipher (plain with
+> the Cyberhelmet, the mission pane's convention). Visibility is the fallback
+> path made real: `visible false` in the declaration, flipped at startup by
+> `window_kind_available("canvas")` — shown on the web shell, hidden on the
+> TUI/plain hosts where the text mission pane + SCORE stay the experience.
+> The TUI backend also gained the missing degradation guard: a canvas
+> `window_set` is dropped outright so it can never reserve rows for content
+> it cannot draw. The `phobos_ex` golden is **byte-invariant** (the map adds
+> zero plain-host output) and the lighthouse e2e drives both capability sets:
+> web sees kind/canvas/visible + all 14 room rects, exactly one `seen` fill at
+> the first prompt, the you-marker, and ciphered labels; the TUI set sees
+> `visible false`. One id gotcha worth remembering: the *pane object's* wire
+> id is the coerced object name (`deck_map` → `"deck map"`), unlike image
+> names, which stay verbatim.
+>
+> **Manual browser pass (the one remaining check):** `dist/phobos_ex_preview/`
+> and `dist/image1_preview/` (canvas_image + placeholder path) are built for
+> it — serve either statically and eyeball the painting, plus the standing
+> modal/pager checks.
+>
+> Status: **design decided 2026-07-09; steps 1–4 built.** This doc specs the
 > *constrained-ops* variant of freestyle windows — point (2) on the
 > presentation spectrum recorded in TODO.md item 9: a docked pane whose content
 > is a closed vocabulary of drawing ops (images, rects, lines, text-at-position)

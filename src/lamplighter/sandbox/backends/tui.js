@@ -737,6 +737,13 @@ function createTuiBackend({ out, err, input, exit } = {}) {
             maybePage();
         },
         windowSet(msg) {
+            // A canvas (freestyle) pane is never rendered here — the handshake
+            // advertises text only (devdocs/freestyle-windows.md) — and it must
+            // not reserve rows either, so it is dropped outright.
+            if (msg.kind === "canvas") {
+                if (panes.delete(msg.id)) render();
+                return;
+            }
             const p = panes.get(msg.id) || { lines: [] };
             p.dock = String(msg.dock);
             p.size = Math.max(0, msg.size | 0);

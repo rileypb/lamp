@@ -1,0 +1,139 @@
+lib advent
+
+# Phobos EX only — the deck-plan canvas pane (devdocs/freestyle-windows.md, step 4:
+# the first real freestyle consumer). Not in the original sample/phobos, which stays
+# a 1:1 I7-port fidelity artifact.
+#
+# A right-docked canvas pane drawing the base's deck plan: rooms as rects on a grid,
+# corridors as lines, rooms Galaxy has seen filled brighter, a marker on her current
+# room, and room labels rendered through the Siriusian glyph cipher — plain English
+# while the Cyberhelmet's translation circuitry is worn (the mission pane's
+# countdown convention). Shown only where the host draws canvas panes
+# (window_kind_available); everywhere else it stays hidden and costs nothing — the
+# text mission pane (windows.lamp) and the SCORE verb remain the authoritative
+# fallback.
+
+# Grid cell + `seen` tracking, added to advent's `room` by reopening the type (the
+# same pattern as base.lamp's presentation hooks). A room with no cell (map_col -1,
+# e.g. Inside_The_Ship — the ship is not part of the deck plan) is not drawn, and
+# carries no marker even when Galaxy is in it.
+type room:
+	int map_col = -1
+	int map_row = -1
+	string map_label = ""
+	bool seen = false
+
+window deck_map:
+	dock right
+	size 240
+	priority 10
+	title "Deck Plan"
+	content_kind "canvas"
+	canvas_w 170
+	canvas_h 150
+	visible false
+
+rule startup_rules:
+	if window_kind_available("canvas"):
+		deck_map.visible = true
+
+# The deck plan: a 5-column x 6-row grid. Cell rects are 30x20 at a 33/24 pitch
+# from a 5-unit margin, so cell (c, r) sits at (5 + 33c, 5 + 24r) with its center
+# at (20 + 33c, 15 + 24r).
+room Passage_End:
+	map_col 2
+	map_row 5
+	map_label "entry"
+room Southern_Spoke:
+	map_col 2
+	map_row 4
+	map_label "hall"
+room Storeroom:
+	map_col 1
+	map_row 4
+	map_label "store"
+room Hub_Junction:
+	map_col 2
+	map_row 2
+	map_label "hub"
+room Western_Spoke:
+	map_col 1
+	map_row 2
+	map_label "hall"
+room Science_Lab:
+	map_col 1
+	map_row 1
+	map_label "lab"
+room Reactor_Room:
+	map_col 0
+	map_row 2
+	map_label "react"
+room armory:
+	map_col 1
+	map_row 3
+	map_label "arms"
+room Eastern_Spoke:
+	map_col 3
+	map_row 2
+	map_label "hall"
+room North_Barracks:
+	map_col 3
+	map_row 1
+	map_label "barr"
+room South_Barracks:
+	map_col 3
+	map_row 3
+	map_label "barr"
+room Commanders_Quarters:
+	map_col 4
+	map_row 2
+	map_label "cmdr"
+room Control_Room:
+	map_col 2
+	map_row 1
+	map_label "ctrl"
+room Flight_Deck:
+	map_col 2
+	map_row 0
+	map_label "deck"
+
+# Compose the plan each turn. Marking the current room `seen` here is world-state
+# bookkeeping riding the per-turn cadence (it is snapshot-covered, so UNDO forgets
+# a room again); the drawing below is a pure function of that state, per the
+# declarative-recompute model.
+rule window_refresh_rules:
+	let here = holder(player)
+	if here is room:
+		here.seen = true
+	if deck_map.visible:
+		canvas_rect(deck_map, "black", 0, 0, 170, 150)
+		# Corridors, center to center; rects paint over the ends, leaving stubs
+		# in the gaps. The Hub-to-Southern run crosses the vacant (2,3) cell — a
+		# long hallway.
+		canvas_line(deck_map, "bright_black", 86, 135, 86, 111)
+		canvas_line(deck_map, "bright_black", 86, 111, 53, 111)
+		canvas_line(deck_map, "bright_black", 86, 111, 86, 63)
+		canvas_line(deck_map, "bright_black", 86, 63, 53, 63)
+		canvas_line(deck_map, "bright_black", 86, 63, 119, 63)
+		canvas_line(deck_map, "bright_black", 86, 63, 86, 39)
+		canvas_line(deck_map, "bright_black", 53, 63, 53, 39)
+		canvas_line(deck_map, "bright_black", 53, 63, 20, 63)
+		canvas_line(deck_map, "bright_black", 53, 63, 53, 87)
+		canvas_line(deck_map, "bright_black", 119, 63, 119, 39)
+		canvas_line(deck_map, "bright_black", 119, 63, 119, 87)
+		canvas_line(deck_map, "bright_black", 119, 63, 152, 63)
+		canvas_line(deck_map, "bright_black", 86, 39, 86, 15)
+		for r in room.all:
+			if r.map_col >= 0:
+				let x = 5 + r.map_col * 33
+				let y = 5 + r.map_row * 24
+				let fill = "bright_black"
+				if r.seen:
+					fill = "blue"
+				canvas_rect(deck_map, fill, x, y, 30, 20)
+				let label = r.map_label
+				if not wears player cyberhelmet:
+					label = siriusian_word(label)
+				canvas_text(deck_map, "white", x + 2, y + 2, 7, label)
+				if here == r:
+					canvas_rect(deck_map, "bright_yellow", x + 12, y + 13, 6, 4)

@@ -21,5 +21,16 @@ never collide with the original). Enhancements so far:
   windowless host it never renders and the SCORE verb remains the
   authoritative fallback.
 
+- **`lib/phobos/map.lamp`** — the deck-plan canvas pane
+  (devdocs/freestyle-windows.md step 4): a right-docked freestyle window
+  drawing the base's rooms as a grid of rects with corridor lines, rooms
+  Galaxy has seen filled brighter (a `seen` field marked as she moves;
+  snapshot-covered, so UNDO forgets a room again), a marker on her current
+  room, and labels rendered through the Siriusian glyph cipher — plain
+  English while the Cyberhelmet is worn, the mission pane's countdown
+  convention. Shown only where `window_kind_available("canvas")` is true
+  (the web shell); on the TUI and plain hosts it stays hidden and the text
+  panes above remain the experience.
+
 The full `test endgame` walkthrough is a golden (`phobos_ex` in
 tests/golden/expected/), so EX must stay winnable as enhancements land.

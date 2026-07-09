@@ -353,6 +353,33 @@ try {
                 "compact first row carries the score");
             assert.ok(tuiUpd.lines[1].some((r) => r.text && r.text.startsWith("Scans")),
                 "compact second row carries the scans (previously clipped on the TUI)");
+
+            // Deck-plan canvas pane (devdocs/freestyle-windows.md step 4): visible
+            // and streaming ops on the canvas-capable web set; hidden (its startup
+            // rule saw window_kind_available false) on the TUI set.
+            const webMap = web.windowMessages.find((m) => m.type === "window_set" && m.id === "deck map");
+            assert.ok(webMap, "deck_map window_set missing on the web set");
+            assert.strictEqual(webMap.kind, "canvas");
+            assert.strictEqual(webMap.visible, true, "canvas host shows the deck plan");
+            assert.deepStrictEqual(webMap.canvas, { w: 170, h: 150 });
+            const mapUpd = web.windowMessages.find((m) => m.type === "window_update" && m.id === "deck map" && (m.ops || []).length);
+            assert.ok(mapUpd, "deck plan ops missing on the web set");
+            assert.deepStrictEqual(mapUpd.ops[0], { op: "rect", color: "black", x: 0, y: 0, w: 170, h: 150 });
+            const roomRects = mapUpd.ops.filter((o) => o.op === "rect" && o.w === 30 && o.h === 20);
+            assert.strictEqual(roomRects.length, 14, "all 14 mapped rooms drawn");
+            assert.strictEqual(roomRects.filter((o) => o.color === "blue").length, 1,
+                "only the starting room is seen at the first prompt");
+            assert.ok(mapUpd.ops.some((o) => o.op === "rect" && o.color === "bright_yellow"),
+                "the you-marker is drawn");
+            const labels = mapUpd.ops.filter((o) => o.op === "text");
+            assert.strictEqual(labels.length, 14, "every mapped room is labeled");
+            assert.ok(!labels.some((o) => o.text === "entry"),
+                "labels render through the Siriusian cipher without the Cyberhelmet");
+
+            const tuiMap = tui.windowMessages.find((m) => m.type === "window_set" && m.id === "deck map");
+            assert.ok(tuiMap, "deck_map window_set missing on the TUI set");
+            assert.strictEqual(tuiMap.visible, false,
+                "no canvas kind advertised: the startup rule leaves the deck plan hidden");
         } finally {
             fs.rmSync(exOut, { recursive: true, force: true });
         }

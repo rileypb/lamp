@@ -645,9 +645,20 @@ the web shell advertises `kinds: ["text","canvas"]` and renders canvas panes
 time, lazy image loads off the manifest with placeholder boxes, rAF-coalesced
 repaints on update/resize/manifest/load); `drive-bundle.js` defaults mirror
 the shell. e2e asserts bundle assets + manifest + shipped wiring; all suites
-pass. **Next: step 4 — Phobos EX deck-map canvas pane with text fallback, and
-the manual browser pass over the actual painting (canvas panes + the standing
-modal/pager checks).**
+pass.
+**Step 4 BUILT (2026-07-09) — freestyle windows v1 COMPLETE (steps 1–4):**
+Phobos EX deck-plan canvas pane (`lib/phobos/map.lamp`): rooms as grid rects +
+corridor lines, `seen`-state fill (snapshot-covered), current-room marker,
+Siriusian-ciphered labels (plain with the Cyberhelmet); hidden unless
+`window_kind_available("canvas")` — the fallback path made real. TUI backend
+gained the degradation guard (canvas window_set dropped, never reserves rows).
+`phobos_ex` golden byte-invariant; lighthouse e2e drives web + TUI capability
+sets. **Remaining: the manual browser pass** — `dist/phobos_ex_preview/` and
+`dist/image1_preview/` are built for it (serve statically; check the map
+painting, the image + placeholder path, and the standing modal/pager items).
+Then: the spec's open questions (px-vs-percent canvas `size`, fold-back
+helper) as real use dictates; hotspots and the custom-shell tier (4) are the
+next design passes.
 The custom-shell half (4) still needs its own devdoc when scheduled (extends
 `lighthouse.md`, `sandbox.md`).
 **Where:** `src/lighthouse/`, `src/lamplighter/sandbox/`, `lib/sys`.
