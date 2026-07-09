@@ -1757,6 +1757,16 @@ function windowAvailable(dock) {
     return Array.isArray(docks) && docks.includes(String(dock));
 }
 
+// Content kinds (devdocs/freestyle-windows.md). An absent `kinds` on a host that
+// declared window support means text-only — the shipped text-window hosts predate
+// the field; a host with no window support at all has no kinds.
+function windowKindAvailable(kind) {
+    const windows = hostCapabilities && hostCapabilities.windows;
+    if (!windows) return false;
+    const kinds = Array.isArray(windows.kinds) ? windows.kinds : ["text"];
+    return kinds.includes(String(kind));
+}
+
 // Split a rendered string into wire runs [{ text, styles? }], honoring the style
 // push/pop sentinels with a local depth (independent of the main output stream's
 // style state) and dropping break sentinels — a window line is exactly one line.
@@ -1792,6 +1802,23 @@ function parseStyledRuns(s) {
 }
 
 const windowBuffers = new Map();
+const canvasBuffers = new Map();
+
+// A pane holds one content kind: text lines or canvas ops, never both
+// (devdocs/freestyle-windows.md). Each primitive checks the window's `content_kind`
+// field (Lamp-side name; the wire carries it as `kind`) so a mismatch errors at the
+// call, naming the window, instead of composing content the sync would have to drop.
+function windowKindOf(w) {
+    return String((w && w.content_kind) || "text");
+}
+
+function requireWindowKind(w, kind, prim) {
+    if (!(w && w.name)) throw new Error("window primitive called with no window object");
+    const actual = windowKindOf(w);
+    if (actual !== kind) {
+        throw new Error(`${prim} called on window "${w.name}" of kind "${actual}" (expected a "${kind}" window)`);
+    }
+}
 
 function windowBufferFor(w) {
     const key = w && w.name;
@@ -1805,12 +1832,14 @@ function windowBufferFor(w) {
 }
 
 function windowLine(w, text) {
+    requireWindowKind(w, "text", "window_line");
     windowBufferFor(w).push(parseStyledRuns(renderText(text)));
 }
 
 // One line: left segment, a space fill run consuming the slack, right segment —
 // the status-line shape.
 function windowLineSplit(w, left, right) {
+    requireWindowKind(w, "text", "window_line_split");
     const line = parseStyledRuns(renderText(left));
     line.push({ text: " ", fill: true });
     for (const run of parseStyledRuns(renderText(right))) line.push(run);
@@ -1819,32 +1848,103 @@ function windowLineSplit(w, left, right) {
 
 // A full-width rule: one char the host repeats to fill the line.
 function windowRule(w, ch) {
+    requireWindowKind(w, "text", "window_rule");
     const c = Array.from(String(renderText(ch)))[0] || "-";
     windowBufferFor(w).push([{ text: c, fill: true }]);
 }
 
 function windowClear(w) {
     windowBuffers.delete(w && w.name);
+    canvasBuffers.delete(w && w.name);
+}
+
+// Canvas ops (devdocs/freestyle-windows.md): a transient draw list per pane,
+// flushed by windowSync as a whole-pane repaint, exactly like text lines.
+// Coordinates are the pane's declared virtual units; the host scales. Colors are
+// the closed color-style vocabulary or #rrggbb — validated here so a typo fails
+// loudly at the call site rather than rendering nothing on a distant host.
+const CANVAS_COLOR_NAMES = new Set(STYLE_ORDER.filter((s) => s !== "bold" && s !== "italic" && s !== "fixed"));
+
+function canvasColor(color, prim) {
+    const c = String(color);
+    if (CANVAS_COLOR_NAMES.has(c) || /^#[0-9a-fA-F]{6}$/.test(c)) return c;
+    throw new Error(`${prim}: unknown color "${c}" (expected a color style name or "#rrggbb")`);
+}
+
+function canvasBufferFor(w) {
+    const key = w.name;
+    let ops = canvasBuffers.get(key);
+    if (!ops) {
+        ops = [];
+        canvasBuffers.set(key, ops);
+    }
+    return ops;
+}
+
+function canvasRect(w, color, x, y, wd, ht) {
+    requireWindowKind(w, "canvas", "canvas_rect");
+    canvasBufferFor(w).push({
+        op: "rect", color: canvasColor(color, "canvas_rect"),
+        x: Number(x) || 0, y: Number(y) || 0, w: Number(wd) || 0, h: Number(ht) || 0,
+    });
+}
+
+function canvasLine(w, color, x1, y1, x2, y2) {
+    requireWindowKind(w, "canvas", "canvas_line");
+    canvasBufferFor(w).push({
+        op: "line", color: canvasColor(color, "canvas_line"),
+        x1: Number(x1) || 0, y1: Number(y1) || 0, x2: Number(x2) || 0, y2: Number(y2) || 0,
+    });
+}
+
+// Text drawn into the canvas space is plain: substitutions render, but style
+// wrappers are stripped (a canvas op has one color; there is no run model here).
+function canvasText(w, color, x, y, size, text) {
+    requireWindowKind(w, "canvas", "canvas_text");
+    const plain = parseStyledRuns(renderText(text)).map((r) => r.text).join("");
+    canvasBufferFor(w).push({
+        op: "text", color: canvasColor(color, "canvas_text"),
+        x: Number(x) || 0, y: Number(y) || 0, size: Number(size) || 0, text: plain,
+    });
+}
+
+// `img` is the declared image's name (the `image` declaration is the compiler
+// step; the wire carries the name and the host resolves it via the bundle's
+// asset manifest). Width/height are mandatory: the game can't query intrinsic
+// image size, so composition stays deterministic.
+function canvasImage(w, img, x, y, wd, ht) {
+    requireWindowKind(w, "canvas", "canvas_image");
+    canvasBufferFor(w).push({
+        op: "image", image: String(img),
+        x: Number(x) || 0, y: Number(y) || 0, w: Number(wd) || 0, h: Number(ht) || 0,
+    });
 }
 
 const WINDOW_DOCKS = new Set(["top", "bottom", "left", "right"]);
+const WINDOW_KINDS = new Set(["text", "canvas"]);
 
 // Flush: for every declared `window`-typed instance send the idempotent arrangement
 // (window_set, read fresh from its fields — the host diffs) then its buffered
 // content (window_update), and drain the buffers. Buffers drain even with no channel
 // installed, so a pane recomposed every turn on a windowless host can't accumulate.
-// Dock validation happens here rather than in the checker because dock is data a
-// game may reassign at play time.
+// Dock/kind validation happens here rather than in the checker because both are data
+// a game may reassign at play time.
 function windowSync() {
     const buffered = new Map(windowBuffers);
+    const bufferedOps = new Map(canvasBuffers);
     windowBuffers.clear();
+    canvasBuffers.clear();
     if (!windowImpl || !typeRegistry.has("window")) return;
     for (const inst of getInstancesForTypeAndSubtypes("window")) {
         const dock = String(inst.dock);
         if (!WINDOW_DOCKS.has(dock)) {
             throw new Error(`window "${inst.name}" has invalid dock "${dock}" (expected top, bottom, left, or right)`);
         }
-        windowImpl({
+        const kind = windowKindOf(inst);
+        if (!WINDOW_KINDS.has(kind)) {
+            throw new Error(`window "${inst.name}" has invalid content_kind "${kind}" (expected text or canvas)`);
+        }
+        const set = {
             type: "window_set",
             id: inst.name,
             dock,
@@ -1855,8 +1955,20 @@ function windowSync() {
             // Visual identity: "pane" or "bar" (the status-line look). Hosts
             // treat an unknown look as "pane" (fail-silently).
             look: String(inst.look || "pane"),
-        });
-        windowImpl({ type: "window_update", id: inst.name, lines: buffered.get(inst.name) || [] });
+            kind,
+        };
+        if (kind === "canvas") {
+            const cw = Number(inst.canvas_w) || 0;
+            const ch = Number(inst.canvas_h) || 0;
+            if (cw <= 0 || ch <= 0) {
+                throw new Error(`canvas window "${inst.name}" needs positive canvas_w and canvas_h (got ${cw}x${ch})`);
+            }
+            set.canvas = { w: cw, h: ch };
+        }
+        windowImpl(set);
+        windowImpl(kind === "canvas"
+            ? { type: "window_update", id: inst.name, kind, ops: bufferedOps.get(inst.name) || [] }
+            : { type: "window_update", id: inst.name, kind, lines: buffered.get(inst.name) || [] });
     }
 }
 
@@ -3105,9 +3217,14 @@ module.exports = {
     setWindowChannel,
     setHostCapabilities,
     windowAvailable,
+    windowKindAvailable,
     windowLine,
     windowLineSplit,
     windowRule,
     windowClear,
     windowSync,
+    canvasRect,
+    canvasLine,
+    canvasText,
+    canvasImage,
 };

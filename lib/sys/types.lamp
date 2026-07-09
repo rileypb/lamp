@@ -34,3 +34,14 @@ type window:
 	# like unknown styles). Future direction (recorded in devdocs/text-windows.md):
 	# general styling fields — reverse video, background color — once wanted.
 	string look = "pane"
+	# Content kind: "text" (lines of styled runs, composed via window_line(...)) or
+	# "canvas" (a freestyle graphics pane composed via canvas_rect/line/text/image —
+	# devdocs/freestyle-windows.md). The two vocabularies never mix in one pane.
+	# (Named content_kind because bare `kind` is the kind-declaration keyword; the
+	# wire message carries it as `kind`.)
+	string content_kind = "text"
+	# A canvas pane's virtual coordinate space: every op draws in these units and
+	# the host scales the space to fit the pane, preserving aspect ratio — the game
+	# never knows the pane's real size. Required (positive) when kind is "canvas".
+	int canvas_w = 0
+	int canvas_h = 0

@@ -72,8 +72,8 @@ same encoding every text window uses.
 
 ## Non-goals (now)
 
-- Graphics / freestyle (non-text) windows — boundary-sketched in
-  devdocs/text-windows.md, to be spec'd separately.
+- Graphics / freestyle (non-text) windows — spec'd in
+  devdocs/freestyle-windows.md (runtime surface built 2026-07-09; hosts pending).
 
 ## CLI TUI — polish
 

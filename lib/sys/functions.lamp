@@ -144,6 +144,26 @@ native function void window_clear(object w)
 native function void window_sync()
 native function bool window_available(string dock)
 
+# Freestyle canvas panes (devdocs/freestyle-windows.md). A window with kind "canvas"
+# composes a draw list instead of text lines: every op draws in the pane's declared
+# virtual units (canvas_w x canvas_h; the host scales to fit, aspect preserved — the
+# game never knows the pane's real size) and window_sync flushes the list as a
+# whole-pane repaint, exactly like text lines. `color` is a color-style name
+# (red … bright_white) or "#rrggbb". canvas_text draws plain text (substitutions
+# render; style wrappers are stripped — one color per op). canvas_image draws a
+# declared image by name, scaled into the given box (width/height are mandatory: the
+# game can't query intrinsic image size). Content kinds never mix: a text primitive
+# on a canvas pane (or vice versa) is a runtime error naming the window.
+# window_kind_available reports whether the host renders a content kind ("text"/
+# "canvas") so a game can fall back to a text pane or keep a verb authoritative.
+native function void canvas_rect(object w, string color, int x, int y, int wd, int ht)
+native function void canvas_line(object w, string color, int x1, int y1, int x2, int y2)
+native function void canvas_text(object w, string color, int x, int y, int size, string text)
+native function void canvas_image(object w, string img, int x, int y, int wd, int ht)
+# (`kind` itself is a Lamp keyword — the kind declaration — so the parameter
+# can't bear that name.)
+native function bool window_kind_available(string content_kind)
+
 # Paragraph-control markers (text.md H). Each returns an output-stream control token
 # meant to be printed in place; the bare-word sugar [line break] / [par] / [no break]
 # / [run on] / [par if printed] desugars to these calls. line_break/paragraph request

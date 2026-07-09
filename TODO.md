@@ -613,8 +613,28 @@ full-page art direction — things with no region or that need host-side ticks).
 designing (4)'s sandboxing story. Recommended order: (2) first (covers maps/
 illustrations/click input with no trust-model change), then (4) with the shared
 message family, asset bundling, and capability handshake.
-Needs its own devdoc when scheduled (extends `lighthouse.md`, `sandbox.md`,
-`text-windows.md` "Freestyle windows" boundary).
+**(2) design DECIDED (2026-07-09) — spec'd in `devdocs/freestyle-windows.md`:**
+ops = images + rect/line/text; coordinates = declared virtual canvas
+(`canvas_w`/`canvas_h`, host scales aspect-preserved, game never knows real
+size); assets = explicit `image <name>: file "<path>"` declaration
+(compile-time existence check; meta sidecar → Lighthouse copies +
+`assets.json`); hotspots deferred (v1 output-only). `kind` field on the
+existing `window` type; `window_update` carries an `ops` payload; handshake
+gains `kinds`; new `window_kind_available()`. Four build steps in the doc:
+(1) runtime + Lamp surface + unit tests, (2) compiler `image` declaration end
+to end, (3) web shell canvas renderer + Lighthouse assets + e2e, (4) Phobos EX
+deck-map pane with text fallback + manual browser pass.
+**Step 1 BUILT (2026-07-09, branch `freestyle`):** fields + four ops +
+`window_kind_available` + draw-list buffering + kind-aware wire + 8 unit tests;
+all 244 goldens byte-invariant, all suites pass. Renames forced by the build:
+the field/param is **`content_kind`** (`kind` is the kind-declaration keyword);
+the wire still says `kind`. `canvas_image` takes the image name as a string
+until step 2. **Merge hazard:** branch is based just before `4e8c829`
+(`window_sync_one`) — on merge, `windowSyncOne` needs the same kind-aware
+payloads (factor the per-window send out of `windowSync`). **Next: build
+step 2 (the `image` declaration).**
+The custom-shell half (4) still needs its own devdoc when scheduled (extends
+`lighthouse.md`, `sandbox.md`).
 **Where:** `src/lighthouse/`, `src/lamplighter/sandbox/`, `lib/sys`.
 **Blocked by:** nothing hard; freestyle-windows design pass is the natural sibling.
 

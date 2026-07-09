@@ -325,7 +325,15 @@ that most recommends it:
 - **Electron**: nothing extra — it runs the web shell; windows are one more
   reason Electron stays "the web host in a frame".
 
-## Freestyle windows (boundary only — future doc)
+## Freestyle windows (boundary only — now spec'd in devdocs/freestyle-windows.md)
+
+> The design pass happened (2026-07-09): the **constrained-ops** variant —
+> canvas panes with a closed image/rect/line/text vocabulary drawn on a
+> declared virtual coordinate space, stock-shell-rendered, author writes zero
+> host JS — is spec'd in **devdocs/freestyle-windows.md**. The boundary drawn
+> below held: shared layout model, separate content kind, no escape hatches.
+> The sandboxed-iframe idea mentioned below was explicitly deferred to the
+> author-custom-shell design pass (TODO item 9).
 
 The second window type the roadmap wants: a host-rendered region whose content
 is *not* lines of styled text — an SVG/canvas map, images, arbitrary HTML.
