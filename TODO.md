@@ -584,6 +584,40 @@ text-windows.md); freestyle windows (boundary-sketched in the doc, spec'd separa
 `src/lamplighter/sandbox/{worker,worker-browser}.js` + `backends/`, `lib/sys`,
 `lib/advent/status.lamp`, `sample/phobos_ex/`.
 
+### 9. Author-custom web shells (design pass — raised 2026-07-09)
+Let authors ship their own HTML/CSS/JS shell (graphics, motion UI, sound) talking
+to the game over a per-game freeform protocol. Assessment (2026-07-09): viable and
+well-precedented (Vorple, GlkOte skins, Ink/Twine web exports), but layer it rather
+than letting authors replace `shell.js` wholesale. Candidate shape:
+(a) a generic `shell_send(name, payload)` fire-and-forget worker→host message
+(one new wire type; the bespoke protocol is the *payload* vocabulary, author-owned);
+(b) host→game events ride the existing input path as synthesized commands filled
+into the readLine SAB (no second input mechanism; respects the blocked-worker
+constraint); (c) Lighthouse takes author shell assets (`--shell <dir>` or a game
+manifest) layered as hooks/skin on the stock shell, which keeps owning SAB broker,
+service worker, save picker, [more]; (d) the capability handshake advertises the
+custom layer so games degrade on plain/TUI hosts; (e) carry over the
+declarative-recompute principle — custom UI state re-derived and re-sent each turn
+so UNDO/RESTORE repaint for free. Open questions: sandboxing story (author JS on
+the main thread steps outside the worker capability boundary — trusted-tier bundles
+vs. sandboxed-iframe layer), echo suppression for synthesized commands.
+**Distinction vs. freestyle windows (clarified 2026-07-09):** a spectrum of where
+presentation code lives — (1) text windows: styled runs (built); (2) freestyle,
+constrained ops: a richer closed vocabulary (images/draw ops/hotspots) the *stock*
+shell renders in a docked pane, author writes zero host JS, sandbox intact,
+declarative recompute keeps UNDO/RESTORE free; (3) freestyle, iframe kind: author
+JS sandboxed in a pane-scoped `srcdoc` iframe — the bridge where the two features
+converge; (4) custom shell: author JS, trusted, page-scoped (sound, motion,
+full-page art direction — things with no region or that need host-side ticks).
+(2) and (4) are distinct features; decide deliberately whether (3) exists when
+designing (4)'s sandboxing story. Recommended order: (2) first (covers maps/
+illustrations/click input with no trust-model change), then (4) with the shared
+message family, asset bundling, and capability handshake.
+Needs its own devdoc when scheduled (extends `lighthouse.md`, `sandbox.md`,
+`text-windows.md` "Freestyle windows" boundary).
+**Where:** `src/lighthouse/`, `src/lamplighter/sandbox/`, `lib/sys`.
+**Blocked by:** nothing hard; freestyle-windows design pass is the natural sibling.
+
 ## Active (design decided 2026-06-25)
 
 ### Containment as a `contains` relation (replaces the `holder` field)
