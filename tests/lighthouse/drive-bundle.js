@@ -36,7 +36,7 @@ const CTRL_BYTES = 8;
 function driveBundle(bundleDir, commands, {
     timeoutMs = 30000,
     saveSlotName = "e2e",
-    capabilities = { windows: { docks: ["top", "bottom", "left", "right"] } },
+    capabilities = { windows: { docks: ["top", "bottom", "left", "right"], kinds: ["text", "canvas"] } },
 } = {}) {
     return new Promise((resolve, reject) => {
         const inputBuffer = new SharedArrayBuffer(CTRL_BYTES + 4096);

@@ -37,7 +37,27 @@
 > registry unit tests in tests/windows. All 246 goldens + every suite pass.
 > Language surface recorded in specs.md → "Image assets".
 >
-> Status: **design decided 2026-07-09; steps 1–2 built, steps 3–4 remain.** This doc specs the
+> **Step 3 is built (2026-07-09):** Lighthouse copies the sidecar's declared
+> assets into `assets/<name>.<ext>` and writes `assets.json` (name →
+> bundle-relative path; always written, `{}` for an imageless game, so the
+> shell's fetch never 404s); the web shell advertises `kinds: ["text",
+> "canvas"]`, gives a canvas pane a `<canvas>` in the ordinary dock/priority
+> layout (`size` = CSS px in the docked dimension; container clamps still
+> apply), and repaints from its cached draw list — scale-to-fit with aspect
+> preserved and centered, clipped to the virtual space, DPR-aware backing
+> store, `fillText` only. Colors resolve named styles through the shell's
+> `--c-*` theme variables at paint time (canvas art follows the theme like
+> styled text); `#rrggbb` passes through. Images load lazily off the manifest
+> with an outlined-box placeholder for missing/failed/still-loading; loads and
+> the manifest fetch trigger repaints, as do `window_set` re-arrangements and
+> browser resizes (coalesced to one rAF so layout settles before measuring).
+> `drive-bundle.js`'s default capabilities now mirror the shell (kinds
+> included). e2e asserts the bundled asset byte-copy, the manifest, the empty
+> manifest on an imageless game, and the shipped shell wiring; the actual
+> painting remains the standing manual browser pass (with modals and the
+> pager), now folded into step 4.
+>
+> Status: **design decided 2026-07-09; steps 1–3 built, step 4 remains.** This doc specs the
 > *constrained-ops* variant of freestyle windows — point (2) on the
 > presentation spectrum recorded in TODO.md item 9: a docked pane whose content
 > is a closed vocabulary of drawing ops (images, rects, lines, text-at-position)

@@ -325,15 +325,32 @@
         // video, no border/title (shell.css .pane-bar). Unknown looks render as a
         // plain pane (fail-silently).
         pane.el.classList.toggle("pane-bar", msg.look === "bar");
+        // Content kind (devdocs/freestyle-windows.md): a canvas pane swaps the text
+        // content for a <canvas> and remembers its declared virtual space. Unknown
+        // kinds render as text (fail-silently, like unknown looks).
+        const isCanvas = msg.kind === "canvas";
+        pane.el.classList.toggle("pane-canvas", isCanvas);
+        if (isCanvas && !pane.canvasEl) {
+            pane.canvasEl = document.createElement("canvas");
+            pane.canvasEl.className = "pane-canvas-surface";
+            pane.el.appendChild(pane.canvasEl);
+        }
+        if (pane.canvasEl) pane.canvasEl.hidden = !isCanvas;
+        pane.content.hidden = isCanvas;
+        pane.canvasSpace = isCanvas && msg.canvas ? msg.canvas : null;
         if (sideways) {
-            // size = columns of the pane's own (monospace) text, plus its padding.
-            pane.el.style.width = `calc(${msg.size}ch + 1rem)`;
+            // Text pane: size = columns of the pane's own (monospace) text, plus its
+            // padding. Canvas pane: size = CSS pixels for the docked dimension (the
+            // container's 45% clamp still applies); the virtual space scales to fit.
+            pane.el.style.width = isCanvas ? `${msg.size}px` : `calc(${msg.size}ch + 1rem)`;
             pane.el.style.height = "";
         } else {
-            // size = rows at the pane line-height (1.4), plus vertical padding.
-            pane.el.style.height = `calc(${msg.size * 1.4}em + 0.5rem)`;
+            // Text pane: size = rows at the pane line-height (1.4), plus vertical
+            // padding. Canvas pane: size = CSS pixels of height.
+            pane.el.style.height = isCanvas ? `${msg.size}px` : `calc(${msg.size * 1.4}em + 0.5rem)`;
             pane.el.style.width = "";
         }
+        if (isCanvas) schedulePaint(pane);
         // The title renders as a header on side panes only — top/bottom rows are
         // reserved by `size`, and a header there would eat declared content rows —
         // and never on a bar (title-less by identity).
@@ -352,6 +369,11 @@
 
     function applyWindowUpdate(msg) {
         const pane = paneFor(msg.id);
+        if (msg.kind === "canvas") {
+            pane.ops = msg.ops || [];
+            schedulePaint(pane);
+            return;
+        }
         pane.content.textContent = "";
         for (const line of msg.lines || []) {
             const lineEl = document.createElement("div");
@@ -370,6 +392,147 @@
             pane.content.appendChild(lineEl);
         }
     }
+
+    // --- Canvas (freestyle) panes (devdocs/freestyle-windows.md) ------------
+    // The game sends a whole-pane draw list in virtual units; the shell scales the
+    // declared space to fit the pane box (aspect preserved, centered) and replays
+    // the ops. Repaint sources: a new update, a window_set (resize/re-dock), a
+    // browser resize, the asset manifest arriving, an image finishing its load.
+    // Strings hit the canvas via fillText only — nothing from the wire ever
+    // touches markup.
+
+    // assets.json maps image name → bundle-relative path (written by Lighthouse
+    // from the game's declared assets). Until the fetch resolves, image ops paint
+    // placeholders; the resolve repaints.
+    let assetManifest = null;
+    fetch("assets.json").then((r) => (r.ok ? r.json() : {})).catch(() => ({})).then((manifest) => {
+        assetManifest = manifest || {};
+        repaintCanvasPanes();
+    });
+
+    // name → { el, ok: null (loading) | true | false }. A missing manifest entry
+    // or a failed load renders a placeholder box rather than throwing.
+    const imageCache = new Map();
+
+    function resolveImage(name) {
+        let entry = imageCache.get(name);
+        if (entry) return entry;
+        if (assetManifest === null) return null; // manifest still loading — repaint comes
+        const src = assetManifest[name];
+        if (!src) {
+            entry = { el: null, ok: false };
+        } else {
+            const el = new Image();
+            entry = { el, ok: null };
+            el.onload = () => { entry.ok = true; repaintCanvasPanes(); };
+            el.onerror = () => { entry.ok = false; repaintCanvasPanes(); };
+            el.src = src;
+        }
+        imageCache.set(name, entry);
+        return entry;
+    }
+
+    // A color is a lib/sys color-style name (resolved through the shell's --c-*
+    // theme variables, so canvas art follows the theme like styled text) or a
+    // #rrggbb literal (worker-validated) passed through.
+    function canvasColor(color) {
+        if (color && color[0] === "#") return color;
+        const v = getComputedStyle(document.documentElement)
+            .getPropertyValue(`--c-${String(color).replace(/_/g, "-")}`).trim();
+        return v || getComputedStyle(document.documentElement).getPropertyValue("--fg").trim() || "#e6e6e6";
+    }
+
+    function placeholderBox(ctx, x, y, w, h) {
+        ctx.strokeStyle = canvasColor("bright_black");
+        ctx.lineWidth = 1;
+        ctx.strokeRect(x, y, w, h);
+        ctx.beginPath();
+        ctx.moveTo(x, y); ctx.lineTo(x + w, y + h);
+        ctx.moveTo(x + w, y); ctx.lineTo(x, y + h);
+        ctx.stroke();
+    }
+
+    function drawOp(ctx, op, scale) {
+        switch (op.op) {
+            case "rect":
+                ctx.fillStyle = canvasColor(op.color);
+                ctx.fillRect(op.x, op.y, op.w, op.h);
+                break;
+            case "line":
+                ctx.strokeStyle = canvasColor(op.color);
+                ctx.lineWidth = Math.max(1, 1 / scale);
+                ctx.beginPath();
+                ctx.moveTo(op.x1, op.y1);
+                ctx.lineTo(op.x2, op.y2);
+                ctx.stroke();
+                break;
+            case "text":
+                ctx.fillStyle = canvasColor(op.color);
+                ctx.font = `${op.size}px ui-monospace, Menlo, Consolas, monospace`;
+                ctx.textBaseline = "top";
+                ctx.fillText(op.text, op.x, op.y);
+                break;
+            case "image": {
+                const entry = resolveImage(op.image);
+                if (entry && entry.ok) ctx.drawImage(entry.el, op.x, op.y, op.w, op.h);
+                else placeholderBox(ctx, op.x, op.y, op.w, op.h);
+                break;
+            }
+            // Unknown ops are skipped (fail-silently, like unknown styles).
+        }
+    }
+
+    function paintCanvasPane(pane) {
+        if (!pane.canvasEl || pane.canvasEl.hidden || pane.el.hidden || !pane.canvasSpace) return;
+        const cssW = pane.canvasEl.clientWidth;
+        const cssH = pane.canvasEl.clientHeight;
+        if (cssW <= 0 || cssH <= 0) return;
+        // Device-pixel-ratio-aware backing store so art isn't blurry on HiDPI.
+        const dpr = window.devicePixelRatio || 1;
+        const bw = Math.round(cssW * dpr);
+        const bh = Math.round(cssH * dpr);
+        if (pane.canvasEl.width !== bw) pane.canvasEl.width = bw;
+        if (pane.canvasEl.height !== bh) pane.canvasEl.height = bh;
+        const ctx = pane.canvasEl.getContext("2d");
+        ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+        ctx.clearRect(0, 0, cssW, cssH);
+        const vw = Number(pane.canvasSpace.w) || 1;
+        const vh = Number(pane.canvasSpace.h) || 1;
+        const scale = Math.min(cssW / vw, cssH / vh);
+        ctx.translate((cssW - vw * scale) / 2, (cssH - vh * scale) / 2);
+        ctx.scale(scale, scale);
+        // Clip to the virtual space so letterbox margins stay clean.
+        ctx.beginPath();
+        ctx.rect(0, 0, vw, vh);
+        ctx.clip();
+        for (const op of pane.ops || []) drawOp(ctx, op, scale);
+        ctx.setTransform(1, 0, 0, 1, 0, 0);
+    }
+
+    // Paints coalesce to one rAF: layout must settle after window_set sizing
+    // before clientWidth/Height are meaningful.
+    const pendingPaints = new Set();
+    let paintScheduled = false;
+
+    function schedulePaint(pane) {
+        pendingPaints.add(pane);
+        if (paintScheduled) return;
+        paintScheduled = true;
+        requestAnimationFrame(() => {
+            paintScheduled = false;
+            const batch = [...pendingPaints];
+            pendingPaints.clear();
+            for (const p of batch) paintCanvasPane(p);
+        });
+    }
+
+    function repaintCanvasPanes() {
+        for (const pane of panes.values()) {
+            if (pane.canvasEl && !pane.canvasEl.hidden) schedulePaint(pane);
+        }
+    }
+
+    window.addEventListener("resize", repaintCanvasPanes);
 
     const worker = new Worker(WORKER_URL);
 
@@ -746,11 +909,12 @@
     // Hand the worker the shared buffers; the bootstrap starts the game on receipt.
     // Capabilities ride the init message (the pre-loop delivery, so it never races
     // the worker blocking on input): this shell docks text-window panes on all four
-    // edges. See devdocs/text-windows.md.
+    // edges and renders canvas (freestyle) panes. See devdocs/text-windows.md and
+    // devdocs/freestyle-windows.md.
     worker.postMessage({
         type: "init",
         inputBuffer,
         saveBuffer,
-        capabilities: { windows: { docks: ["top", "bottom", "left", "right"] } },
+        capabilities: { windows: { docks: ["top", "bottom", "left", "right"], kinds: ["text", "canvas"] } },
     });
 })();

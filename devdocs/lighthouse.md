@@ -89,7 +89,12 @@ thin CLI). Steps:
    Safe with the sandbox `require` shadow (esbuild renames consistently) and
    leaves property names like `lamplighter.decode` intact; composes with
    `--encode-strings`.
-4. Copy the shell assets (`index.html`, `shell.css`, `shell.js`, `sw.js`) into
+4. Copy the game's declared image assets (devdocs/freestyle-windows.md) from the
+   meta sidecar's `assets` list into `assets/<name>.<ext>` and write
+   `assets.json` (image name → bundle-relative path). The manifest is always
+   written — `{}` for an imageless game — so the shell's boot fetch never
+   depends on what the game declares.
+5. Copy the shell assets (`index.html`, `shell.css`, `shell.js`, `sw.js`) into
    the output directory. `index.html` is the one templated asset: its `<title>`
    is set to `Title by Author` (or just the title, or `Lamp Game` as fallbacks).
    The title/name/author come from a **game-identity sidecar** Lantern writes when
@@ -188,6 +193,11 @@ Built in `src/lighthouse/web/` as the bundle's template assets:
   `#transcript`; output is inserted *before* it, so the caret always sits inline
   right after the last output. The game's own prompt (e.g. `prompt("> ")`) is the
   single prompt — there is no separate bottom-pinned prompt.
+- **Canvas (freestyle) panes** (devdocs/freestyle-windows.md): the shell
+  advertises `kinds: ["text", "canvas"]`, renders a canvas pane's draw list onto
+  a `<canvas>` in the ordinary dock layout (scale-to-fit the declared virtual
+  space, DPR-aware, `fillText` only), resolves image ops through the bundle's
+  `assets.json`, and paints named colors via the `--c-*` theme variables.
 - The shell contains no game logic — render, capture input, broker, nothing more.
 
 ## Assumptions

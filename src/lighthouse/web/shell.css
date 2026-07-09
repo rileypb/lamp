@@ -119,6 +119,30 @@ html, body {
    clamp lives on the dock containers above, where percentages resolve against
    the definite #main-row width. */
 
+/* A canvas (freestyle) pane (devdocs/freestyle-windows.md): the <canvas> fills
+   the pane box minus padding; shell.js scales the declared virtual space into
+   it (aspect preserved, centered) and repaints from its cached draw list on
+   resize. The pane box itself keeps the ordinary pane chrome. */
+.pane-canvas {
+    padding: 0.25rem;
+    display: flex;
+    flex-direction: column;
+}
+.pane-canvas-surface {
+    display: block;
+    flex: 1 1 auto;
+    min-height: 0;
+    width: 100%;
+}
+.pane-canvas-surface[hidden] {
+    display: none;
+}
+/* A side canvas pane must not stretch taller than its dock row by content —
+   the canvas has no intrinsic height; let the flex row set it. */
+#win-left .pane-canvas, #win-right .pane-canvas {
+    align-self: stretch;
+}
+
 /* `look "bar"` — the traditional status-line identity: reverse-video colors
    (foreground/background swapped), full width, no border/rounding/title. The
    traditional-white bar overrides the pane box look; sizing/margins stay the

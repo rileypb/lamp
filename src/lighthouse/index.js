@@ -53,8 +53,28 @@ function readGameMeta(metaPath) {
     try {
         return JSON.parse(fs.readFileSync(metaPath, "utf8"));
     } catch {
-        return { name: null, title: null, author: null };
+        return { name: null, title: null, author: null, assets: [] };
     }
+}
+
+// Declared image assets (devdocs/freestyle-windows.md): copy the sidecar's exact
+// declared set into `assets/` — name-keyed with the source extension, so the file
+// name is stable and collision-free (the checker already enforces unique image
+// names) — and write `assets.json` mapping name → bundle-relative path. The shell
+// fetches the manifest at boot and resolves canvas_image ops through it. Always
+// written (even empty), so the shell's fetch never depends on what the game
+// declares.
+function copyImageAssets(assets, absOut) {
+    const manifest = {};
+    const assetsDir = path.join(absOut, "assets");
+    if (assets.length > 0) fs.mkdirSync(assetsDir, { recursive: true });
+    for (const { name, sourcePath } of assets) {
+        const fileName = `${name}${path.extname(sourcePath)}`;
+        fs.copyFileSync(sourcePath, path.join(assetsDir, fileName));
+        manifest[name] = `assets/${fileName}`;
+    }
+    fs.writeFileSync(path.join(absOut, "assets.json"), JSON.stringify(manifest), "utf8");
+    return Object.keys(manifest).length;
 }
 
 // The page title: the display `title` when the game set one (it may hold spaces and
@@ -98,7 +118,10 @@ function buildWeb(inputFile, outDir, { encodeStrings = false, minify = true, rel
         legalComments: "none",
     });
 
-    const title = escapeHtml(pageTitle(readGameMeta(metaPath)));
+    const meta = readGameMeta(metaPath);
+    copyImageAssets(meta.assets || [], absOut);
+
+    const title = escapeHtml(pageTitle(meta));
     for (const asset of SHELL_ASSETS) {
         const src = path.join(SHELL_DIR, asset);
         const dest = path.join(absOut, asset);
@@ -110,7 +133,7 @@ function buildWeb(inputFile, outDir, { encodeStrings = false, minify = true, rel
         }
     }
 
-    return { outDir: absOut, files: ["game.worker.js", ...SHELL_ASSETS] };
+    return { outDir: absOut, files: ["game.worker.js", "assets.json", ...SHELL_ASSETS] };
 }
 
 module.exports = { buildWeb };

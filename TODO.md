@@ -638,8 +638,16 @@ errors, `defineImage` emission (encode-strings composes), runtime registry +
 (`{name, sourcePath}` absolute); goldens `image1`/`image_missing`, lighthouse
 e2e (sidecar + canvas ops through a real bundle under a kinds-aware capability
 set), specs.md "Image assets" section. All 246 goldens + every suite pass.
-**Next: build step 3 (web shell canvas renderer + Lighthouse asset copying +
-`assets.json`).**
+**Step 3 BUILT (2026-07-09):** Lighthouse copies declared assets to
+`assets/<name>.<ext>` + writes `assets.json` (always, `{}` when imageless);
+the web shell advertises `kinds: ["text","canvas"]` and renders canvas panes
+(scale-to-fit virtual space, DPR-aware, theme colors via `--c-*` at paint
+time, lazy image loads off the manifest with placeholder boxes, rAF-coalesced
+repaints on update/resize/manifest/load); `drive-bundle.js` defaults mirror
+the shell. e2e asserts bundle assets + manifest + shipped wiring; all suites
+pass. **Next: step 4 — Phobos EX deck-map canvas pane with text fallback, and
+the manual browser pass over the actual painting (canvas panes + the standing
+modal/pager checks).**
 The custom-shell half (4) still needs its own devdoc when scheduled (extends
 `lighthouse.md`, `sandbox.md`).
 **Where:** `src/lighthouse/`, `src/lamplighter/sandbox/`, `lib/sys`.

@@ -128,6 +128,22 @@ try {
         assert.ok(css.includes(".pane") && css.includes(".pane-fill"), "pane styling missing");
     });
 
+    await test("canvas panes: shell advertises kinds, renders ops, resolves the asset manifest", () => {
+        // The renderer itself is DOM/canvas (manual browser pass, like modals and
+        // the pager); this asserts the wiring shipped: the kinds advertisement,
+        // the canvas handlers, the assets.json fetch, and the pane styling. A
+        // no-image game still ships an (empty) manifest so the fetch never 404s.
+        const shell = fs.readFileSync(path.join(outDir, "shell.js"), "utf8");
+        assert.ok(shell.includes('kinds: ["text", "canvas"]'), "shell kinds advertisement missing");
+        assert.ok(shell.includes("assets.json"), "shell asset manifest fetch missing");
+        assert.ok(shell.includes("paintCanvasPane") && shell.includes("drawImage"), "shell canvas renderer missing");
+        assert.ok(shell.includes("devicePixelRatio"), "DPR-aware backing store missing");
+        const css = fs.readFileSync(path.join(outDir, "shell.css"), "utf8");
+        assert.ok(css.includes(".pane-canvas"), "canvas pane styling missing");
+        const manifest = JSON.parse(fs.readFileSync(path.join(outDir, "assets.json"), "utf8"));
+        assert.deepStrictEqual(manifest, {}, "an imageless game ships an empty manifest");
+    });
+
     await test("service worker parses and sets isolation headers", () => {
         const code = fs.readFileSync(path.join(outDir, "sw.js"), "utf8");
         assertParses(code, "sw.js");
@@ -263,6 +279,15 @@ try {
             assert.strictEqual(meta.assets[0].name, "floor_map");
             assert.ok(meta.assets[0].sourcePath.endsWith(path.join("tests", "fixtures", "art", "map.svg")),
                 `asset sourcePath should resolve to the declared file, got: ${meta.assets[0].sourcePath}`);
+
+            // Step 3: the bundle carries the declared asset (name-keyed, extension
+            // preserved) and a manifest the shell resolves image ops through.
+            const manifest = JSON.parse(fs.readFileSync(path.join(imgOut, "assets.json"), "utf8"));
+            assert.deepStrictEqual(manifest, { floor_map: "assets/floor_map.svg" });
+            assert.strictEqual(
+                fs.readFileSync(path.join(imgOut, "assets", "floor_map.svg"), "utf8"),
+                fs.readFileSync(path.join(__dirname, "..", "fixtures", "art", "map.svg"), "utf8"),
+                "bundled asset should be a byte copy of the declared file");
 
             const { output, windowMessages } = await driveBundle(imgOut, ["canvases", "quit"], {
                 capabilities: { windows: { docks: ["top", "bottom", "left", "right"], kinds: ["text", "canvas"] } },
