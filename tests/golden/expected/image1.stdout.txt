@@ -1,0 +1,11 @@
+Gallery
+A small gallery.
+
+> look
+Gallery
+A small gallery.
+
+> canvases
+No canvas panes here.
+
+> quit

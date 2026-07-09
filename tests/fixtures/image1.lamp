@@ -1,0 +1,40 @@
+# Freestyle windows, step 2 (devdocs/freestyle-windows.md): the `image` declaration
+# + a canvas pane compile and run end-to-end on the plain host — which renders no
+# panes, so nothing here may change stdout; the wire-level behavior is covered by
+# tests/windows. Exercises the declaration (emitted as defineImage), a canvas
+# window's refresh composing all four ops, and window_kind_available (false on the
+# plain host).
+
+lib advent
+
+game Image1:
+	start Gallery
+
+room Gallery:
+	description "A small gallery."
+
+image floor_map: file "art/map.svg"
+
+window map_pane:
+	dock right
+	size 200
+	content_kind "canvas"
+	canvas_w 160
+	canvas_h 120
+
+rule window_refresh_rules:
+	canvas_rect(map_pane, "black", 0, 0, 160, 120)
+	canvas_image(map_pane, "floor_map", 8, 8, 32, 32)
+	canvas_line(map_pane, "#00FF88", 8, 48, 152, 48)
+	canvas_text(map_pane, "white", 8, 56, 12, "GALLERY")
+
+action canvases:
+	out_of_world
+	syntax:
+		"canvases"
+
+do canvases:
+	if window_kind_available("canvas"):
+		print "The host draws canvas panes."
+	else:
+		print "No canvas panes here."

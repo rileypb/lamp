@@ -361,7 +361,13 @@ function extractGameMeta(nodes) {
             else if (field.fieldName === "author") author = field.value.value;
         }
     }
-    return { name, title, author };
+    // Declared image assets (devdocs/freestyle-windows.md): name + the source file
+    // resolved absolute, so Lighthouse can copy the exact declared set into the
+    // bundle without re-parsing. The checker already verified each file exists.
+    const assets = nodes
+        .filter((node) => node.kind === "ImageDecl")
+        .map((node) => ({ name: node.name, sourcePath: path.resolve(path.dirname(node.filePath), node.path) }));
+    return { name, title, author, assets };
 }
 
 function parseTemplateParts(template) {

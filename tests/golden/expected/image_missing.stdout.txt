@@ -1,0 +1,3 @@
+Compile error: tests/fixtures/image_missing.lamp:12: type error: image "ghost_art": file not found: art/nope.png
+  12 | image ghost_art: file "art/nope.png"
+    | ^

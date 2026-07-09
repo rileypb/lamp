@@ -60,6 +60,12 @@ function createGlobalDecl(name, typeName, value, filePath, lineNumber) {
     return { kind: "GlobalDecl", name, typeName, value, filePath, lineNumber };
 }
 
+// An `image NAME: file "PATH"` asset declaration (devdocs/freestyle-windows.md).
+// `path` is the declared file path, relative to the declaring source file.
+function createImageDecl(name, path, filePath, lineNumber) {
+    return { kind: "ImageDecl", name, path, filePath, lineNumber };
+}
+
 function createGlobalAssign(name, value, filePath, lineNumber) {
     return { kind: "GlobalAssign", name, value, filePath, lineNumber };
 }
@@ -414,6 +420,7 @@ module.exports = {
     createOutputSlot,
     createGlobalDecl,
     createGlobalAssign,
+    createImageDecl,
     createKindDecl,
     createEnumExpr,
     createEventHandler,

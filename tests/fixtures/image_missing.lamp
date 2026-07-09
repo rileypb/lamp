@@ -1,0 +1,12 @@
+# A declared image whose file does not exist is a compile error naming the
+# declaration and path (devdocs/freestyle-windows.md).
+
+lib advent
+
+game ImageMissing:
+	start Void
+
+room Void:
+	description "Nothing here."
+
+image ghost_art: file "art/nope.png"

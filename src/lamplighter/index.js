@@ -1908,14 +1908,32 @@ function canvasText(w, color, x, y, size, text) {
     });
 }
 
-// `img` is the declared image's name (the `image` declaration is the compiler
-// step; the wire carries the name and the host resolves it via the bundle's
-// asset manifest). Width/height are mandatory: the game can't query intrinsic
-// image size, so composition stays deterministic.
+// Declared image assets (`image NAME: file "PATH"` emits defineImage at load;
+// devdocs/freestyle-windows.md). The registry maps name → declared source-relative
+// path. Definition-time state, like types and globals — never snapshotted.
+const imageRegistry = new Map();
+
+function defineImage(name, declaredPath) {
+    imageRegistry.set(String(name), String(declaredPath));
+}
+
+function getImagePath(name) {
+    return imageRegistry.get(String(name));
+}
+
+// `img` is a declared image's name (the wire carries the name; a host resolves it
+// via the bundle's asset manifest). Validated against the registry so a typo'd
+// name errors loudly at the call, even on a host that renders nothing.
+// Width/height are mandatory: the game can't query intrinsic image size, so
+// composition stays deterministic.
 function canvasImage(w, img, x, y, wd, ht) {
     requireWindowKind(w, "canvas", "canvas_image");
+    const name = String(img);
+    if (!imageRegistry.has(name)) {
+        throw new Error(`canvas_image: unknown image "${name}" (no such image declaration)`);
+    }
     canvasBufferFor(w).push({
-        op: "image", image: String(img),
+        op: "image", image: name,
         x: Number(x) || 0, y: Number(y) || 0, w: Number(wd) || 0, h: Number(ht) || 0,
     });
 }
@@ -3227,4 +3245,6 @@ module.exports = {
     canvasLine,
     canvasText,
     canvasImage,
+    defineImage,
+    getImagePath,
 };

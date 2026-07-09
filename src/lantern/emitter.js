@@ -227,6 +227,19 @@ function emitProgram(programAst, options = {}) {
         lines.push("");
     }
 
+    // Image asset declarations (devdocs/freestyle-windows.md). The name is a
+    // registry key (encoded like other names under --encode-strings); the declared
+    // relative path stays plaintext — it is build metadata, not player prose, and
+    // hosts resolve names through the bundle's asset manifest, not this path.
+    const imageNodes = programAst.nodes.filter((node) => node.kind === "ImageDecl");
+    for (const imageNode of imageNodes) {
+        lines.push(`lamplighter.defineImage(${emitName(imageNode.name)}, ${JSON.stringify(imageNode.path)});`);
+    }
+
+    if (imageNodes.length > 0) {
+        lines.push("");
+    }
+
     // Merge reopened type declarations: multiple TypeDecl nodes with the same name → one defineType call
     const mergedTypes = new Map();
     for (const typeNode of typeNodes) {

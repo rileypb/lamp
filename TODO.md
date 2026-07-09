@@ -628,11 +628,18 @@ deck-map pane with text fallback + manual browser pass.
 `window_kind_available` + draw-list buffering + kind-aware wire + 8 unit tests;
 all 244 goldens byte-invariant, all suites pass. Renames forced by the build:
 the field/param is **`content_kind`** (`kind` is the kind-declaration keyword);
-the wire still says `kind`. `canvas_image` takes the image name as a string
-until step 2. **Merge hazard:** branch is based just before `4e8c829`
-(`window_sync_one`) — on merge, `windowSyncOne` needs the same kind-aware
-payloads (factor the per-window send out of `windowSync`). **Next: build
-step 2 (the `image` declaration).**
+the wire still says `kind`. **Merge hazard:** branch is based just before
+`4e8c829` (`window_sync_one`) — on merge, `windowSyncOne` needs the same
+kind-aware payloads (factor the per-window send out of `windowSync`).
+**Step 2 BUILT (2026-07-09):** `image NAME: file "PATH"` end to end — contextual
+parse (`image` is not a keyword; name uncoerced), checker missing-file/duplicate
+errors, `defineImage` emission (encode-strings composes), runtime registry +
+`canvas_image` name validation + `getImagePath`, meta sidecar `assets`
+(`{name, sourcePath}` absolute); goldens `image1`/`image_missing`, lighthouse
+e2e (sidecar + canvas ops through a real bundle under a kinds-aware capability
+set), specs.md "Image assets" section. All 246 goldens + every suite pass.
+**Next: build step 3 (web shell canvas renderer + Lighthouse asset copying +
+`assets.json`).**
 The custom-shell half (4) still needs its own devdoc when scheduled (extends
 `lighthouse.md`, `sandbox.md`).
 **Where:** `src/lighthouse/`, `src/lamplighter/sandbox/`, `lib/sys`.

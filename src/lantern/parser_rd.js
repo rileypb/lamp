@@ -388,6 +388,13 @@ function createParser(tokens, filePath, globalNames, functionNames = new Set(), 
             if (relationNames.has(token.value) && peek(1).type === "COLON") return parseRelationAssert();
             if (relationTemplates.has(token.value)) return parseCustomSyntaxAssert(relationTemplates.get(token.value), null);
             if (peek(1).type === "IDENT" && relationTemplates.has(peek(1).value)) return parseNamedCustomSyntaxAssert();
+            // `image NAME: file "PATH"` — an asset declaration (devdocs/freestyle-windows.md).
+            // Dispatched on the exact shape (contextual — `image` is not a keyword), so a
+            // game that declares its own `type image` keeps its object declarations.
+            if (token.value === "image" && peek(1).type === "IDENT" && peek(2).type === "COLON"
+                && peek(3).type === "IDENT" && peek(3).value === "file" && peek(4).type === "STRING") {
+                return parseImageDecl();
+            }
             return peek(1).type === "EQUALS" ? parseGlobalAssign() : parseObjectDecl();
         }
         throw err(`Unexpected token at top level: ${token.type}`);
@@ -918,6 +925,20 @@ function createParser(tokens, filePath, globalNames, functionNames = new Set(), 
         const value = parseSimpleValue();
         expectNewline();
         return ast.createGlobalAssign(name, value, filePath, nameToken.line);
+    }
+
+    // `image NAME: file "PATH"` (inline only). The name is a plain identifier,
+    // uncoerced — it is a registry key referenced by string from canvas_image, so
+    // what the author declares is exactly what they write in the reference (the
+    // kind-name precedent, not the object-name coercion).
+    function parseImageDecl() {
+        const first = next();
+        const name = plainName("image name");
+        expect("COLON");
+        next();
+        const pathToken = expect("STRING", "Expected image file path string");
+        expectNewline();
+        return ast.createImageDecl(name, pathToken.value, filePath, first.line);
     }
 
     function parseKindDecl() {

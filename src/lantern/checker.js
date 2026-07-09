@@ -1,3 +1,5 @@
+const fs = require("fs");
+const path = require("path");
 const { coerceName } = require("./tokenizer");
 const { resolveSelector } = require("./selector");
 
@@ -101,6 +103,7 @@ function checkProgram(programAst, options = {}) {
     checkFunctionOverloads(programAst.nodes, typeSchema, kindSchema, functionSchema);
     checkRelationDecls(programAst.nodes, typeSchema);
     checkMessageCompleteness(programAst.nodes);
+    checkImageDecls(programAst.nodes);
 
     for (const node of programAst.nodes) {
         if (node.kind === "ObjectDecl") {
@@ -1217,6 +1220,26 @@ function describeValue(valueNode) {
         return `number (${valueNode.value})`;
     }
     return `(${valueNode.kind})`;
+}
+
+// Image asset declarations (devdocs/freestyle-windows.md): the declared file must
+// exist at compile time — resolved relative to the declaring source file — and
+// names must be unique (they are runtime registry keys referenced by string from
+// canvas_image, so a silent last-wins would hide a real collision).
+function checkImageDecls(nodes) {
+    const seen = new Map();
+    for (const node of nodes) {
+        if (node.kind !== "ImageDecl") continue;
+        const prior = seen.get(node.name);
+        if (prior) {
+            throw typeError(node.filePath, node.lineNumber, `duplicate image "${node.name}" (first declared at ${prior.filePath}:${prior.lineNumber})`);
+        }
+        seen.set(node.name, node);
+        const resolved = path.resolve(path.dirname(node.filePath), node.path);
+        if (!fs.existsSync(resolved) || !fs.statSync(resolved).isFile()) {
+            throw typeError(node.filePath, node.lineNumber, `image "${node.name}": file not found: ${node.path}`);
+        }
+    }
 }
 
 function typeError(filePath, lineNumber, message) {

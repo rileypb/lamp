@@ -248,6 +248,42 @@ try {
         }
     });
 
+    // Freestyle windows step 2 (devdocs/freestyle-windows.md): the `image`
+    // declaration + a canvas pane through a real built bundle. The meta sidecar
+    // must carry the declared asset (Lighthouse's step-3 copy source), and the
+    // canvas ops must stream over the wire with the spec'd encoding. Under a
+    // kinds-aware capability set window_kind_available answers true; the ops
+    // stream regardless (hosts without support drop them at the transport).
+    await test("image declaration + canvas pane: meta sidecar carries assets; ops stream over the wire", async () => {
+        const imgOut = fs.mkdtempSync(path.join(os.tmpdir(), "lamp-lighthouse-img-"));
+        try {
+            buildWeb(path.join(__dirname, "..", "fixtures", "image1.lamp"), imgOut, { minify: false });
+            const meta = JSON.parse(fs.readFileSync(path.join(__dirname, "..", "..", "build", "image1.meta.json"), "utf8"));
+            assert.strictEqual(meta.assets.length, 1, "one declared asset expected");
+            assert.strictEqual(meta.assets[0].name, "floor_map");
+            assert.ok(meta.assets[0].sourcePath.endsWith(path.join("tests", "fixtures", "art", "map.svg")),
+                `asset sourcePath should resolve to the declared file, got: ${meta.assets[0].sourcePath}`);
+
+            const { output, windowMessages } = await driveBundle(imgOut, ["canvases", "quit"], {
+                capabilities: { windows: { docks: ["top", "bottom", "left", "right"], kinds: ["text", "canvas"] } },
+            });
+            assert.ok(output.includes("The host draws canvas panes."),
+                "window_kind_available should see the host's canvas kind");
+            const set = windowMessages.find((m) => m.type === "window_set" && m.id === "map pane");
+            assert.ok(set, "canvas window_set missing");
+            assert.strictEqual(set.kind, "canvas");
+            assert.deepStrictEqual(set.canvas, { w: 160, h: 120 });
+            const upd = windowMessages.find((m) => m.type === "window_update" && m.id === "map pane" && (m.ops || []).length);
+            assert.ok(upd, "no canvas window_update with ops arrived");
+            assert.deepStrictEqual(upd.ops[0], { op: "rect", color: "black", x: 0, y: 0, w: 160, h: 120 });
+            assert.deepStrictEqual(upd.ops[1], { op: "image", image: "floor_map", x: 8, y: 8, w: 32, h: 32 });
+            assert.strictEqual(upd.ops[2].op, "line");
+            assert.deepStrictEqual(upd.ops[3], { op: "text", color: "white", x: 8, y: 56, size: 12, text: "GALLERY" });
+        } finally {
+            fs.rmSync(imgOut, { recursive: true, force: true });
+        }
+    });
+
     // Phobos EX (the first real windows consumer, devdocs/text-windows.md step 4):
     // the mission-status pane docks right on a four-dock host, and its startup rule
     // re-docks it to a 4-row top pane when only top/bottom are available (the TUI's

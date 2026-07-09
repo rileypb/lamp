@@ -574,6 +574,25 @@ kind color = enum(red, green, blue)
 
 The runtime currently represents enum values as strings and prints them via standard string output (for example, `dev`, `beta`, `final`).
 
+### Image assets
+
+```lamp
+image IMAGE_NAME: file "PATH"
+```
+
+Declares an image asset for freestyle canvas panes (devdocs/freestyle-windows.md).
+Inline one-liner only. `image` is **not** a keyword — the declaration is
+recognized contextually by its exact shape (`image IDENT: file "STRING"`), so
+`image` remains usable as a type/field/object name. The name is a plain,
+uncoerced identifier (a registry key referenced by string from
+`canvas_image(pane, "NAME", …)` — what you declare is exactly what you write in
+the reference). `PATH` is resolved relative to the declaring source file; a
+missing file or a duplicate name is a compile error. The emitter registers the
+name at load (`lamplighter.defineImage`; the name encodes under
+`--encode-strings` like every registry key), and a `--meta` sidecar carries the
+declared assets (`{ name, sourcePath }`) so Lighthouse can copy them into a web
+bundle.
+
 ### Globals
 
 A **global** declares a named value that persists for the lifetime of the game. Globals are accessible to the Lamplighter runtime and may be overridden by user files.

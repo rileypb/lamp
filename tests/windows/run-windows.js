@@ -166,6 +166,7 @@ let deckMap;
 test("canvas pane: window_set carries kind + virtual space; ops stream in window_update", () => {
     installChannel();
     deckMap = lamp.createObject("window", "deck_map", { dock: "right", size: 200, content_kind: "canvas", canvas_w: 160, canvas_h: 240 });
+    lamp.defineImage("cover art", "art/cover.png");
     lamp.canvasRect(deckMap, "black", 0, 0, 160, 240);
     lamp.canvasLine(deckMap, "#00FF88", 10, 20, 150, 20);
     lamp.canvasText(deckMap, "white", 8, 30, 12, lamp.styled("bold", "DECK") + " 5");
@@ -212,6 +213,13 @@ test("an unknown color errors at the call site", () => {
         /canvas_rect: unknown color "chartreuse"/);
     assert.throws(() => lamp.canvasLine(deckMap, "#12345", 0, 0, 1, 1),
         /canvas_line: unknown color "#12345"/);
+});
+
+test("an undeclared image errors at the call site; getImagePath reads the registry", () => {
+    assert.throws(() => lamp.canvasImage(deckMap, "no such art", 0, 0, 1, 1),
+        /canvas_image: unknown image "no such art"/);
+    assert.strictEqual(lamp.getImagePath("cover art"), "art/cover.png");
+    assert.strictEqual(lamp.getImagePath("no such art"), undefined);
 });
 
 test("invalid kind and missing canvas space error at sync, naming the window", () => {

@@ -18,7 +18,26 @@
 > must send the same kind-aware `window_set`/`window_update` payloads —
 > factoring the per-window send out of `windowSync` for both callers.
 >
-> Status: **design decided 2026-07-09; step 1 built, steps 2–4 remain.** This doc specs the
+> **Step 2 is built (2026-07-09):** the `image NAME: file "PATH"` declaration end
+> to end — parsed **contextually** on its exact shape (`image` is *not* a
+> keyword, so it stays usable as an ordinary identifier; a game's own
+> `type image` objects still parse), name as a plain **uncoerced** identifier
+> (registry key = what the author writes in the `canvas_image` reference — the
+> kind-name precedent, not object-name coercion); checker errors on a missing
+> file (resolved relative to the declaring source) and on duplicate names;
+> emitter registers `lamplighter.defineImage(name, path)` (name encodes under
+> `--encode-strings`; verified decoding to the same registry key); runtime keeps
+> the registry and `canvas_image` now validates names against it (a typo errors
+> loudly on any host) with `getImagePath(name)` as the host-side accessor; the
+> `--meta` sidecar gains `assets: [{ name, sourcePath }]` (absolute, so
+> Lighthouse copies without re-parsing). Tests: goldens `image1` (canvas pane +
+> declaration end-to-end on the plain host, byte-invariant stdout) and
+> `image_missing` (compile error), a lighthouse e2e (sidecar assets + canvas
+> ops through a real built bundle under a kinds-aware capability set), and
+> registry unit tests in tests/windows. All 246 goldens + every suite pass.
+> Language surface recorded in specs.md → "Image assets".
+>
+> Status: **design decided 2026-07-09; steps 1–2 built, steps 3–4 remain.** This doc specs the
 > *constrained-ops* variant of freestyle windows — point (2) on the
 > presentation spectrum recorded in TODO.md item 9: a docked pane whose content
 > is a closed vocabulary of drawing ops (images, rects, lines, text-at-position)
@@ -122,16 +141,24 @@ window deck_map:
 image cover_art: file "art/cover.png"
 ```
 
-- New top-level declaration; `<name>` is an ordinary identifier, the `file`
-  path is resolved **relative to the declaring source file**.
-- **Checker:** missing file → compile error naming the declaration and path.
+- Inline one-liner, recognized **contextually** by its exact shape (`image
+  IDENT: file "STRING"`) — `image` is not a keyword. `<name>` is a plain,
+  **uncoerced** identifier (the string in a `canvas_image` reference matches
+  the declaration verbatim); the `file` path is resolved **relative to the
+  declaring source file**.
+- **Checker:** missing file → compile error naming the declaration and path;
+  duplicate names → compile error naming both declarations.
 - **Emitter:** `defineImage(name, path)` runtime registration. Names are
-  registry keys like object names; `--encode-strings` may encode them (decode
+  registry keys like object names; `--encode-strings` encodes them (decode
   runs at load, same argument as every other name) — but note art is
-  inherently visible in the bundle; assets are never "spoiler-hidden".
+  inherently visible in the bundle; assets are never "spoiler-hidden". The
+  path stays plaintext (build metadata, not player prose).
+- **Runtime:** the registry backs `canvas_image`'s name validation (a typo'd
+  or undeclared name errors at the call on any host) and exposes
+  `getImagePath(name)` for hosts.
 - **Meta sidecar:** the `--meta` sidecar (which already carries game identity)
-  gains the declared asset list `{ name, sourcePath }`, so Lighthouse learns
-  what to copy without re-parsing.
+  gains the declared asset list `assets: [{ name, sourcePath }]` (`sourcePath`
+  absolute), so Lighthouse learns what to copy without re-parsing.
 
 ### Ops (lib/sys primitives)
 
