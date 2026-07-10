@@ -200,7 +200,10 @@ button.map-cell:active { transform: scale(0.95); }
     color: #e2edff;
 }
 .map-frontier {
-    background: transparent;
+    /* Opaque, matching the panel: cells paint over the corridor bars, so a
+       corridor visually stops at the frontier's border instead of running
+       through the unseen room (a transparent fill let it show through). */
+    background: #0d0f14;
     border-style: dashed;
     border-color: #37415a;
     color: #5d6880;
