@@ -12,9 +12,14 @@ lib advent
 #
 # Payload protocol (name "kim", one string; fields |-separated):
 #   off                                    no hack in progress
-#   solved                                 the hack just succeeded (transient —
+#   solved|<board fields>                  the hack just succeeded (transient —
 #                                          inferred: the KIM detached and its old
-#                                          target is now unlocked/open)
+#                                          target is now unlocked/open). Carries
+#                                          the FINAL board so the last lights
+#                                          visibly complete before the device
+#                                          retracts (the button lists survive
+#                                          detachment; the solving press's state
+#                                          never reaches a normal refresh).
 #   9|yellow|RBRBRBRBR                     nine-button Lights-Out (has RESET)
 #   9|red|...                              the red variant (has RESET)
 #   blue|blue|RRRRRRRRR|g,g,g,g,g,g,g,g,g  sort-by-swap: states + glyph labels
@@ -52,12 +57,15 @@ function bool kim_solved_target(physical t):
 		return not locker.closed
 	return false
 
-function string kim_payload():
-	if kim_adhered_to == yellow_door:
+# The board fields for a hack on `t`, read from the (still-live) button lists.
+# Parameterized on the target rather than reading kim_adhered_to, so the solved
+# transition can compose the final board after the KIM has already detached.
+function string kim_payload_for(physical t):
+	if t == yellow_door:
 		return "9|yellow|" + kim_rb(nine_buttons, 9)
-	if kim_adhered_to == red_door:
+	if t == red_door:
 		return "9|red|" + kim_rb(nine_buttons, 9)
-	if kim_adhered_to == blue_door:
+	if t == blue_door:
 		let labels = ""
 		for i = 1 to 9:
 			let g = glyph_for(number_order[i - 1])
@@ -65,9 +73,9 @@ function string kim_payload():
 				labels = labels + ","
 			labels = labels + g
 		return "blue|blue|" + kim_rb(nine_buttons, 9) + "|" + labels
-	if kim_adhered_to == locker:
+	if t == locker:
 		return "4|locker|" + kim_rb(four_buttons, 4)
-	if kim_adhered_to == purple_door:
+	if t == purple_door:
 		let glyphs = ""
 		for i = 1 to 16:
 			if i > 1:
@@ -83,7 +91,7 @@ rule window_refresh_rules:
 	if shell_available():
 		let cur = kim_adhered_to
 		if cur == none and not (kim_shell_prev == none) and kim_solved_target(kim_shell_prev):
-			shell_send("kim", "solved")
+			shell_send("kim", "solved|" + kim_payload_for(kim_shell_prev))
 		else:
-			shell_send("kim", kim_payload())
+			shell_send("kim", kim_payload_for(cur))
 		kim_shell_prev = cur

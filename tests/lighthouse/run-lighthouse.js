@@ -412,8 +412,8 @@ try {
             });
             const kim = withShell.shellMessages.filter((m) => m.name === "kim").map((m) => m.payload);
             const boards = kim.filter((p) => p !== "off");
-            assert.deepStrictEqual(boards, ["4|locker|RBBR", "4|locker|BBBR", "solved"],
-                "whole-board states per turn, then the solved transient");
+            assert.deepStrictEqual(boards, ["4|locker|RBBR", "4|locker|BBBR", "solved|4|locker|BBBB"],
+                "whole-board states per turn, then the solved transient carrying the FINAL board");
             assert.ok(kim.includes("off"), "idle turns report off");
             assert.ok(withShell.output.includes("Galaxy presses button 1."), "prose still prints");
             assert.ok(!withShell.output.includes("= red"), "ASCII keypad art suppressed under the custom layer");

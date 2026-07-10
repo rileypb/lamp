@@ -134,16 +134,20 @@
         lastFlash = false;
     }
 
-    function solvePulse() {
+    // Solve: the payload carries the FINAL board (the solving press's state never
+    // reaches a normal refresh — the KIM detaches the same turn), so the last
+    // lights visibly complete, then the slab pulses and retracts.
+    function solvePulse(boardFields) {
+        if (boardFields) render(boardFields);
         panel.classList.add("kim-solved");
-        retractTimer = setTimeout(hide, 900);
+        retractTimer = setTimeout(hide, 1400);
     }
 
     window.LampShell.on("kim", (payload) => {
         if (payload === lastPayload) return;
         lastPayload = payload;
         if (payload === "off") hide();
-        else if (payload === "solved") solvePulse();
+        else if (payload.startsWith("solved")) solvePulse(payload.slice("solved|".length));
         else render(payload);
     });
 })();
