@@ -1,7 +1,11 @@
 # Custom Shells — author-owned web presentation
 
-> Status: **design decided 2026-07-09; built in the same pass.** This is point
-> (4) of the presentation spectrum (TODO item 9): the game talks to an
+> Status: **COMPLETE — designed, built, and verified live 2026-07-09.** The
+> manual browser pass passed (after catching one real bug: the
+> `capabilities.shell` DOM query ran before the parser reached the injected
+> custom.js tag; the init post now waits for DOMContentLoaded — see "The stock
+> shell's hook surface"). This is point (4) of the presentation spectrum (TODO
+> item 9), and its completion closes the spectrum: the game talks to an
 > author-customized web shell over a game-specific protocol. Points (1)–(2)
 > and hotspots are built (devdocs/text-windows.md, devdocs/freestyle-windows.md);
 > the sandboxed-iframe tier (3) is **rejected**, not deferred — see Trust model.

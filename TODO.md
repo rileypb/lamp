@@ -703,9 +703,15 @@ Host→game stays synthesized commands (the hotspot machinery). Built end to
 end: runtime channel + natives + browser-worker forwarding + LampShell +
 Lighthouse packaging + `--eject-shell`; tests/shell unit suite, shellgame
 fixture + golden (byte-invariant), lighthouse e2e (packaging, tag injection,
-wire events under shell:true, text fallback without). Remaining: a manual
-browser pass on a custom.js handler (DOM, per house rule); a real consumer
-game when one wants sound/motion.
+wire events under shell:true, text fallback without). **Manual browser pass
+PASSED (2026-07-09)** — after catching a real capability-timing bug (the
+custom.js tag query ran before the parser reached it; init now waits for
+DOMContentLoaded, which also guarantees handler registration precedes the
+first turn). **The presentation spectrum (TODO item 9's original goal) is
+COMPLETE end to end: text windows, canvas panes, hotspots, custom shells.**
+Remaining, opportunistic: a real consumer game when one wants sound/motion
+(e.g. a Phobos EX klaxon on the doom-clock); the standing open questions
+(px-vs-percent canvas size, fold-back helper) as use dictates.
 The custom-shell half (4) still needs its own devdoc when scheduled (extends
 `lighthouse.md`, `sandbox.md`).
 **Where:** `src/lighthouse/`, `src/lamplighter/sandbox/`, `lib/sys`.
