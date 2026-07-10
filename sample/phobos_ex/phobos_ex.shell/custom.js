@@ -10,7 +10,6 @@
     "use strict";
 
     const screen = document.getElementById("screen");
-    const moreBar = document.getElementById("more-bar");
     if (!screen || !window.LampShell) return;
 
     // --- DECK PLAN (fog-of-war map) -----------------------------------------
@@ -22,7 +21,7 @@
     const mapPanel = document.createElement("div");
     mapPanel.id = "map-panel";
     mapPanel.hidden = true;
-    screen.insertBefore(mapPanel, moreBar);
+    screen.appendChild(mapPanel);
 
     const mapHeader = document.createElement("div");
     mapHeader.className = "map-header";
@@ -103,7 +102,7 @@
     panel.id = "kim-panel";
     panel.setAttribute("role", "group");
     panel.setAttribute("aria-label", "KIM hacking interface");
-    screen.insertBefore(panel, moreBar);
+    screen.appendChild(panel);
 
     const TARGET_LABELS = {
         yellow: "YELLOW SCANNER",
