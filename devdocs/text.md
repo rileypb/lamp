@@ -572,6 +572,25 @@ either the trailing sugar word or the function's mode argument.
     always a marker). Known nit (pre-existing, applies to bold too): a styled run
     ending in `.` triggers the stream's Rule-A auto line break at the run
     boundary — style words, not whole sentences, is the idiom.
+  - **`[fit]` DONE (2026-07-10): shrink-to-fit blocks** — for column-true
+    compositions wider than a phone (figlet art, wide diagrams). `fit(…)` /
+    `[fit]…[/fit]` marks a block the **web shell scales as one unit**: one span,
+    one font-size ratio chosen so the widest line fits the transcript
+    (inline-block + `pre` make `scrollWidth` the widest line), never scaling
+    up, with a readability floor below which the block scrolls horizontally
+    instead; re-fitted on resize. TTY/plain/window hosts ignore it (today's
+    wrapping — no regression, no false promise). **The single-print contract:**
+    a fit block is ONE print carrying **literal newlines** (use the multi-line
+    string literal) with constant styling inside — break markers or style
+    changes flush write segments at stream level, which would shear the block
+    into independently scaled pieces. First consumer: Phobos EX's Galaxy/POWER
+    figlets (one print each; plain output byte-identical — golden-verified).
+    **Stream-atom admission bar (recorded here on purpose):** `[fit]` is the
+    first layout-ish style admitted to the transcript vocabulary, and the bar
+    it cleared is *degradation-safe declared intent* — ignoring it must yield
+    exactly today's behavior. Any future stream atom ([center], …) must clear
+    the same bar; reactive/measuring designs stay rejected (the game never
+    knows the width — that is what [fit] exists to avoid).
 - **I4. Fixed vs. variable letter spacing** (Inform's `[fixed letter spacing]`),
   for ASCII art/tables — depends on shell capability. First cut folds fixed-width in
   as a style (monospace); true letter-spacing/table layout deferred.

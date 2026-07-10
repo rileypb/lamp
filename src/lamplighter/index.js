@@ -1663,6 +1663,14 @@ const STYLE_ORDER = [
     "black", "red", "green", "yellow", "blue", "magenta", "cyan", "white",
     "bright_black", "bright_red", "bright_green", "bright_yellow",
     "bright_blue", "bright_magenta", "bright_cyan", "bright_white",
+    // "fit" (devdocs/text.md I3): a column-true composition the web shell
+    // shrinks to fit its width (one block, one scale ratio). TTY/plain/window
+    // hosts ignore it — degradation-safe intent, the admission bar for any
+    // stream-level layout style. Contract: one fit block = ONE print carrying
+    // literal newlines with constant styling inside, so it reaches the host as
+    // a single write segment (break sentinels and style changes split segments,
+    // which would shear the block into independently-scaled pieces).
+    "fit",
 ];
 const STYLE_PUSH_CHAR = {};
 const STYLE_POP_CHAR = {};
@@ -2019,7 +2027,7 @@ function windowClear(w) {
 // Coordinates are the pane's declared virtual units; the host scales. Colors are
 // the closed color-style vocabulary or #rrggbb — validated here so a typo fails
 // loudly at the call site rather than rendering nothing on a distant host.
-const CANVAS_COLOR_NAMES = new Set(STYLE_ORDER.filter((s) => s !== "bold" && s !== "italic" && s !== "fixed"));
+const CANVAS_COLOR_NAMES = new Set(STYLE_ORDER.filter((s) => s !== "bold" && s !== "italic" && s !== "fixed" && s !== "fit"));
 
 function canvasColor(color, prim) {
     const c = String(color);

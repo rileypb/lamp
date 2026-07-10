@@ -719,9 +719,21 @@ via world-state inference (KIM detached + target now unlocked), ASCII keypads
 gated on `not shell_available()` (CLI unchanged; goldens byte-invariant). e2e
 drives the locker hack through a real bundle under shell:true and asserts
 boards, the solved transient, art suppression, and the no-shell fallback.
-Remaining: the manual browser pass on the device (dist/phobos_ex_preview
-rebuilt); a sound layer later if wanted; the standing open questions
-(px-vs-percent canvas size, fold-back helper) as use dictates.
+**EX responsive UI rework (2026-07-10):** the mission pane is REMOVED
+(spoilers; SCORE stays authoritative) and the deck map MIGRATED from the
+freestyle canvas pane to the custom shell — a fog-of-war HTML map strip at
+the bottom (seen rooms with ciphered labels; label-less clickable "?"
+frontier cells on Galaxy's neighbors; corridor edges; the whole visible plan
+re-sent per turn on the "map" channel — protocol documented in map.lamp).
+The KIM slab stacks under it; while the KIM is open the map collapses to a
+slim header bar (tap to peek). Freestyle windows thus loses its real-game
+consumer (noted in freestyle-windows.md; the windows1/image1 fixtures keep
+it covered). e2e: fog/frontier/edge/growth assertions through a real bundle;
+goldens byte-invariant. Remaining: the manual browser pass on the reworked
+layout (dist/phobos_ex_preview rebuilt — check map growth, frontier clicks,
+the KIM/map collapse interplay, and phone-width reflow); a sound layer later
+if wanted; the standing open questions (px-vs-percent canvas size, fold-back
+helper) as use dictates.
 **Where:** `src/lighthouse/`, `src/lamplighter/sandbox/`, `lib/sys`.
 **Blocked by:** nothing hard; freestyle-windows design pass is the natural sibling.
 
@@ -977,6 +989,28 @@ consider a manual browser pass on the color CSS (headless checks can't see
 the shades).
 
 ## Smaller / opportunistic
+- ~~**The `[fit]` style**~~ **BUILT (2026-07-10; design record in devdocs/text.md I3).**
+  A paired style `[fit]…[/fit]` declaring "column-true composition; must not
+  wrap" — the web shell scales the whole block by one ratio (its widest line;
+  never upscaling; readability floor → horizontal scroll below it);
+  TTY/plain/windows ignore it (today's behavior — degradation-safe intent,
+  the bar any future stream layout atom must clear; record in text.md).
+  **Single-print contract (the simplification):** a fit block is ONE print
+  whose text carries LITERAL newlines (Lamp's multi-line string literal keeps
+  the source readable) with constant styling inside — that yields exactly one
+  `write` segment (verified: literal \n rides inside a styled run, whereas
+  `[line break]` sentinels flush segments at stream level and would shear the
+  block into per-line spans). Shell side therefore needs NO stateful
+  container: one span, `.style-fit { inline-block; pre }`, measure + font-size
+  ratio, re-fit on resize. Runtime: style #20 + sugar, zero stream changes.
+  Conversion care: rewriting the Galaxy figlet (EX scoring.lamp ONLY — frozen
+  phobos untouched) from seven prints to one multi-line string must keep the
+  plain-host golden byte-identical (trailing-newline/[par] bookkeeping — the
+  suite checks it). Chosen over: `screen_columns()` (defensible as an
+  advisory init+per-input-sampled hint, held in reserve — the narrow-TUI case
+  is the one thing host-side fixes can't touch), a CSS clamp on all
+  `.style-fixed` (no per-block intent), and auto-fitting fixed blocks
+  (changes existing games' rendering; `[fit]` is opt-in).
 - ~~**Multiple commands on one line (`then` / full stop).**~~ **DONE (2026-07-10):** the
   Inform convention — `then` and `.` separate commands (no space needed after the stop,
   `n.e`), `and` does not (it joins one command's objects), a comma adjoining a separator

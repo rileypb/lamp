@@ -44,21 +44,27 @@
         <div id="win-top"></div>
         <div id="main-row">
             <div id="win-left"></div>
-            <!-- The input lives at the tail of the transcript; output is inserted
-                 before it, so the input always sits inline right after the last
-                 output (no separate bottom-pinned prompt). -->
-            <div id="transcript" aria-live="polite"><input id="input-line" type="text"
-                aria-label="Enter a command" autocomplete="off" autocapitalize="off"
-                autocorrect="off" spellcheck="false" disabled></div>
+            <!-- The transcript column: the scrolling transcript with the "[more]"
+                 pager pinned to its immediate bottom edge (inside the column, so
+                 it sits against the transcript, not the screen bottom, even when
+                 bottom panes or a custom shell's strips stack below). -->
+            <div id="transcript-col">
+                <!-- The input lives at the tail of the transcript; output is inserted
+                     before it, so the input always sits inline right after the last
+                     output (no separate bottom-pinned prompt). -->
+                <div id="transcript" aria-live="polite"><input id="input-line" type="text"
+                    aria-label="Enter a command" autocomplete="off" autocapitalize="off"
+                    autocorrect="off" spellcheck="false" disabled></div>
+                <!-- "[more]" pager: shown when a turn's output overflows the transcript
+                     viewport. A flex row below the transcript (so it shrinks the scroll
+                     area rather than covering text); any key or a click reveals the next
+                     page. See devdocs/windows.md. -->
+                <div id="more-bar" role="button" tabindex="0" aria-label="Show more output"
+                    hidden>[more]</div>
+            </div>
             <div id="win-right"></div>
         </div>
         <div id="win-bottom"></div>
-        <!-- "[more]" pager: shown when a turn's output overflows the transcript
-             viewport. A flex row below the transcript (so it shrinks the scroll area
-             rather than covering text); any key or a click reveals the next page. See
-             devdocs/windows.md. -->
-        <div id="more-bar" role="button" tabindex="0" aria-label="Show more output"
-            hidden>[more]</div>
     </main>
     <!-- The service worker that synthesizes COOP/COEP is added in step (d). Until
          then the page is not cross-origin isolated and the shell shows a notice

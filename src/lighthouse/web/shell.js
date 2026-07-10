@@ -65,7 +65,40 @@
         span.className = styles.map((s) => `style-${s}`).join(" ");
         span.textContent = value;
         insertOutput(span);
+        // A [fit] block (one write segment carrying its whole multi-line
+        // composition — the runtime's single-print contract) is scaled to the
+        // transcript's width once inserted, and re-fitted on resize.
+        if (styles.includes("fit")) {
+            fitSpans.push(span);
+            fitToWidth(span);
+        }
     }
+
+    // --- [fit] blocks (devdocs/text.md I3) ----------------------------------
+    // Scale a column-true block (figlet art, wide diagrams) so its widest line
+    // fits the transcript: one block, one font-size ratio (inline-block +
+    // white-space: pre makes scrollWidth the widest line). Never scales up; a
+    // readability floor stops the shrink and lets the block scroll instead
+    // (.style-fit has max-width + overflow-x for exactly that case).
+    const fitSpans = [];
+    const FIT_FLOOR = 0.3;
+
+    function fitToWidth(el) {
+        el.style.fontSize = "";
+        const cs = getComputedStyle(transcript);
+        const avail = transcript.clientWidth
+            - (parseFloat(cs.paddingLeft) || 0) - (parseFloat(cs.paddingRight) || 0);
+        const width = el.scrollWidth;
+        if (width > avail && width > 0 && avail > 0) {
+            const base = parseFloat(getComputedStyle(el).fontSize) || 16;
+            const ratio = Math.max(avail / width, FIT_FLOOR);
+            el.style.fontSize = `${base * ratio}px`;
+        }
+    }
+
+    window.addEventListener("resize", () => {
+        for (const el of fitSpans) fitToWidth(el);
+    });
 
     // Insert one run of game output, then decide whether to keep scrolling to the
     // bottom or pause: if more than a viewport of output is unseen (and we are not

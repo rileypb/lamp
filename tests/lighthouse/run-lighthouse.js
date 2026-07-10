@@ -427,83 +427,64 @@ try {
         }
     });
 
-    // Phobos EX (the first real windows consumer, devdocs/text-windows.md step 4):
-    // the mission-status pane docks right on a four-dock host, and its startup rule
-    // re-docks it to a 4-row top pane when only top/bottom are available (the TUI's
-    // capability set) — the capability-handshake + mutable-arrangement path, driven
-    // end-to-end through a real built bundle.
-    await test("phobos_ex mission panel: right dock on the web set, top-dock fallback on the TUI set", async () => {
+    // Phobos EX responsive UI (devdocs/custom-shells.md): the mission pane is
+    // gone (spoilers) and the deck plan moved from a freestyle canvas pane to the
+    // custom shell — a fog-of-war "map" feed each turn: seen rooms with ciphered
+    // labels, label-less clickable frontier cells on Galaxy's neighbors, corridor
+    // edges between visible cells, and the whole visible plan re-sent per turn.
+    await test("phobos_ex map feed: fog of war, frontier cells, growth on movement", async () => {
         const exOut = fs.mkdtempSync(path.join(os.tmpdir(), "lamp-lighthouse-ex-"));
         try {
             buildWeb(path.join(__dirname, "..", "..", "sample", "phobos_ex", "phobos_ex.lamp"), exOut, { minify: false });
 
-            const web = await driveBundle(exOut, ["quit"], { timeoutMs: 60000 });
-            const webSet = web.windowMessages.find((m) => m.type === "window_set" && m.id === "mission panel");
-            assert.ok(webSet, "mission panel window_set missing");
-            assert.strictEqual(webSet.dock, "right", "four-dock host keeps the right dock");
-            assert.strictEqual(webSet.size, 26);
-            assert.strictEqual(webSet.title, "Mission");
-            const upd = web.windowMessages.find((m) => m.type === "window_update" && m.id === "mission panel" && m.lines.length);
-            assert.ok(upd, "mission panel content missing");
-            assert.deepStrictEqual(upd.lines[0], [{ text: "Galaxy Jones", styles: ["bold"] }]);
-            assert.deepStrictEqual(upd.lines[1], [{ text: "-", fill: true }]);
-            assert.strictEqual(upd.lines[2][0].text, "Score", "score split line present");
-            assert.ok(upd.lines.some((l) => l[0] && l[0].text === "Rank"), "rank line present");
-            assert.ok(!upd.lines.some((l) => l[0] && l[0].text === "Countdown"),
-                "no countdown line at Passage End (Galaxy hasn't heard the PA yet)");
-
-            const tui = await driveBundle(exOut, ["quit"], {
+            const web = await driveBundle(exOut, ["hack green door", "north", "quit"], {
                 timeoutMs: 60000,
-                capabilities: { windows: { docks: ["top", "bottom"] } },
+                capabilities: { windows: { docks: ["top", "bottom", "left", "right"], kinds: ["text", "canvas"] }, shell: true },
             });
-            const tuiSet = tui.windowMessages.find((m) => m.type === "window_set" && m.id === "mission panel");
-            assert.ok(tuiSet, "mission panel window_set missing on the TUI set");
-            assert.strictEqual(tuiSet.dock, "top", "startup rule re-docks to top when right is unavailable");
-            assert.strictEqual(tuiSet.size, 3, "top-dock fallback shrinks to 3 rows");
-            // The refresh composes a compact layout for the row-precious top dock:
-            // two fields per row, no rule, everything within the reserved rows.
-            const tuiUpd = tui.windowMessages.find((m) => m.type === "window_update" && m.id === "mission panel" && m.lines.length);
-            assert.ok(tuiUpd, "mission panel content missing on the TUI set");
-            assert.ok(tuiUpd.lines.length <= tuiSet.size, "compact layout fits the reserved rows");
-            assert.deepStrictEqual(tuiUpd.lines[0][0], { text: "Galaxy Jones", styles: ["bold"] },
-                "compact first row leads with the bold header");
-            assert.ok(tuiUpd.lines[0].some((r) => r.text && r.text.startsWith("Score")),
-                "compact first row carries the score");
-            assert.ok(tuiUpd.lines[1].some((r) => r.text && r.text.startsWith("Scans")),
-                "compact second row carries the scans (previously clipped on the TUI)");
+            assert.ok(!web.windowMessages.some((m) => m.id === "mission panel"),
+                "the mission pane is removed");
+            assert.ok(!web.windowMessages.some((m) => m.id === "deck map"),
+                "the canvas deck map is removed");
+            const maps = web.shellMessages.filter((m) => m.name === "map").map((m) => m.payload);
+            assert.ok(maps.length >= 2, "a map state per prompt");
+            // First prompt: Galaxy at Passage End (2,5) — one seen cell (hers) and
+            // one frontier "?" on the Southern Spoke (2,4), clickable north; the
+            // label is ciphered (not "entry"), the frontier label empty.
+            const first = maps[0];
+            const [herePos, roomsField, edgesField] = first.split("|");
+            assert.strictEqual(herePos, "2,5");
+            const rooms = roomsField.split(";");
+            assert.strictEqual(rooms.length, 2, "fog of war: only here + one frontier at the start");
+            const hereCell = rooms.find((r) => r.startsWith("2,5,"));
+            assert.ok(hereCell.startsWith("2,5,h,,"), "here-cell flagged h with no command");
+            assert.ok(!hereCell.includes("entry"), "seen labels render through the cipher");
+            assert.ok(rooms.includes("2,4,f,north,"), "frontier cell: label-less, clickable north");
+            assert.strictEqual(edgesField, "2,4,2,5", "one corridor between here and the frontier");
+            // After walking north the Southern Spoke is seen and new frontiers
+            // appear (Storeroom west, Hub north; Passage End stays seen).
+            const after = maps[maps.length - 1];
+            const afterRooms = after.split("|")[1].split(";");
+            assert.ok(afterRooms.some((r) => r.startsWith("2,4,h,")), "Southern Spoke is now here");
+            assert.ok(afterRooms.some((r) => r.startsWith("2,5,s,south,")), "Passage End seen and clickable back");
+            assert.ok(afterRooms.some((r) => r.startsWith("1,4,f,west,")), "Storeroom frontier");
+            assert.ok(afterRooms.some((r) => r.startsWith("2,2,f,north,")), "Hub frontier");
 
-            // Deck-plan canvas pane (devdocs/freestyle-windows.md step 4): visible
-            // and streaming ops on the canvas-capable web set; hidden (its startup
-            // rule saw window_kind_available false) on the TUI set.
-            const webMap = web.windowMessages.find((m) => m.type === "window_set" && m.id === "deck map");
-            assert.ok(webMap, "deck_map window_set missing on the web set");
-            assert.strictEqual(webMap.kind, "canvas");
-            assert.strictEqual(webMap.visible, true, "canvas host shows the deck plan");
-            assert.deepStrictEqual(webMap.canvas, { w: 170, h: 150 });
-            const mapUpd = web.windowMessages.find((m) => m.type === "window_update" && m.id === "deck map" && (m.ops || []).length);
-            assert.ok(mapUpd, "deck plan ops missing on the web set");
-            assert.deepStrictEqual(mapUpd.ops[0], { op: "rect", color: "black", x: 0, y: 0, w: 170, h: 150 });
-            const roomRects = mapUpd.ops.filter((o) => o.op === "rect" && o.w === 30 && o.h === 20);
-            assert.strictEqual(roomRects.length, 14, "all 14 mapped rooms drawn");
-            assert.strictEqual(roomRects.filter((o) => o.color === "blue").length, 1,
-                "only the starting room is seen at the first prompt");
-            assert.ok(mapUpd.ops.some((o) => o.op === "rect" && o.color === "bright_yellow"),
-                "the you-marker is drawn");
-            const labels = mapUpd.ops.filter((o) => o.op === "text");
-            assert.strictEqual(labels.length, 14, "every mapped room is labeled");
-            assert.ok(!labels.some((o) => o.text === "entry"),
-                "labels render through the Siriusian cipher without the Cyberhelmet");
-            // Hotspots (v1.1): at Passage End the sole exit is north to the
-            // Southern Spoke (through the closed green door — connects edges
-            // exist regardless; clicking refuses exactly like typing "north").
-            assert.deepStrictEqual(mapUpd.hotspots, [
-                { x: 71, y: 101, w: 30, h: 20, command: "north" },
-            ], "one click-to-walk hotspot on the adjacent room's cell");
+            // The [fit] Galaxy banner (text.md I3): hacking the green door scores
+            // a point, flashing the figlet — which must arrive as ONE write
+            // segment (the single-print contract: literal newlines, constant
+            // styling), carrying all six art lines under fixed+fit.
+            const fitWrites = web.writes.filter((w) => (w.styles || []).includes("fit"));
+            assert.strictEqual(fitWrites.length, 1, "one banner flash = one fit segment");
+            assert.ok(fitWrites[0].styles.includes("fixed"), "the figlet keeps its fixed styling");
+            assert.strictEqual(fitWrites[0].value.split("\n").length, 6,
+                "the whole six-line figlet rides in the single segment");
+            const shellSrc = fs.readFileSync(path.join(exOut, "shell.js"), "utf8");
+            assert.ok(shellSrc.includes("fitToWidth"), "shell fit machinery missing");
+            assert.ok(fs.readFileSync(path.join(exOut, "shell.css"), "utf8").includes(".style-fit"),
+                "shell fit styling missing");
 
-            const tuiMap = tui.windowMessages.find((m) => m.type === "window_set" && m.id === "deck map");
-            assert.ok(tuiMap, "deck_map window_set missing on the TUI set");
-            assert.strictEqual(tuiMap.visible, false,
-                "no canvas kind advertised: the startup rule leaves the deck plan hidden");
+            const noShell = await driveBundle(exOut, ["quit"], { timeoutMs: 60000 });
+            assert.deepStrictEqual(noShell.shellMessages, [], "no map feed without the custom layer");
         } finally {
             fs.rmSync(exOut, { recursive: true, force: true });
         }

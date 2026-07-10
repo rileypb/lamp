@@ -76,9 +76,20 @@ html, body {
     overflow: hidden;
 }
 
-#transcript {
+/* The transcript column: transcript + its [more] pager, so the pager sits at
+   the transcript's immediate bottom edge rather than the screen bottom (bottom
+   panes and custom-shell strips stack below the column). */
+#transcript-col {
     flex: 1 1 auto;
     min-width: 0;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+}
+
+#transcript {
+    flex: 1 1 auto;
+    min-height: 0;
     overflow-y: auto;
     white-space: pre-wrap;
     word-break: break-word;
@@ -243,6 +254,19 @@ html, body {
 .style-fixed {
     font-family: "SFMono-Regular", "Consolas", "Liberation Mono", Menlo, monospace;
     white-space: pre-wrap;
+}
+
+/* A [fit] block (text.md I3): a column-true composition scaled by shell.js so
+   its widest line fits the transcript (inline-block + pre make scrollWidth the
+   widest line; one block, one font-size ratio). Below the readability floor the
+   shrink stops and the block scrolls horizontally instead. TTY hosts ignore the
+   style entirely. */
+.style-fit {
+    display: inline-block;
+    white-space: pre;
+    max-width: 100%;
+    overflow-x: auto;
+    vertical-align: bottom;
 }
 
 /* Color styles: the ANSI/Z-machine 16 (foreground). Shades are theme variables

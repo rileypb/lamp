@@ -51,6 +51,7 @@ function driveBundle(bundleDir, commands, {
         const transcripts = new Map();
         const windowMessages = [];
         const shellMessages = [];
+        const writes = []; // every write segment, with styles — [fit] asserts ride these
         let openTranscript = null;
         let output = "";
         const queue = [...commands];
@@ -96,6 +97,7 @@ function driveBundle(bundleDir, commands, {
             switch (msg.type) {
                 case "write":
                     output += msg.value;
+                    writes.push({ value: msg.value, styles: msg.styles });
                     break;
                 case "log":
                     break;
@@ -150,7 +152,7 @@ function driveBundle(bundleDir, commands, {
                     openTranscript = null;
                     break;
                 case "done":
-                    finish(resolve, { output, saves, transcripts, windowMessages, shellMessages });
+                    finish(resolve, { output, saves, transcripts, windowMessages, shellMessages, writes });
                     break;
                 case "error":
                     fail(new Error(`worker error: ${msg.message}; output so far:\n${output}`));

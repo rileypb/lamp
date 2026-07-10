@@ -3,13 +3,16 @@ name: Deploy Lamp games to GitHub Pages
 # Publishes the sample games to GitHub Pages. GitHub serves one Pages site per
 # repo, so all games ship in one deployment as subdirectories of a single artifact:
 #   <pages>/phobos/     — Phobos (pre-built bundle, committed at sample/phobos/web)
+#   <pages>/phobos_ex/  — Phobos EX (sample/phobos_ex/, rebuilt from source each push)
 #   <pages>/cloak/      — English (sample/cloak.lamp, rebuilt from source each push)
 #   <pages>/cloak_fr/   — French  (sample/cloak_fr.lamp, rebuilt from source each push)
 #   <pages>/            — a small landing page linking to all
-# The Cloak samples are rebuilt from source on every push, doubling as a live check
-# that Lighthouse still builds. Phobos is deliberately NOT rebuilt here: it deploys
-# the committed bundle so ongoing Lamp changes can't break the published game — to
-# update it, run `npm run build:phobos` and commit sample/phobos/web.
+# The Cloak samples and Phobos EX are rebuilt from source on every push, doubling as
+# a live check that Lighthouse still builds (EX also exercises the custom-shell
+# packaging: its phobos_ex.shell/ map + KIM layer rides the bundle). Phobos is
+# deliberately NOT rebuilt here: it is the frozen 1:1 fidelity artifact, so it
+# deploys the committed bundle and ongoing Lamp changes can't break the published
+# game — to update it, run `npm run build:phobos` and commit sample/phobos/web.
 # The bundles use only relative URLs and each registers its own service worker
 # (scoped to its subdirectory) to synthesize the COOP/COEP isolation headers, so
 # they run on plain Pages with no server config. See devdocs/lighthouse.md.
@@ -52,6 +55,9 @@ jobs:
       - name: Copy the pre-built Phobos bundle
         run: cp -R sample/phobos/web dist/phobos
 
+      - name: Build the Phobos EX bundle (custom shell)
+        run: node src/lighthouse/build.js sample/phobos_ex/phobos_ex.lamp dist/phobos_ex --encode-strings
+
       - name: Write the landing page
         run: |
           cat > dist/index.html <<'HTML'
@@ -74,6 +80,7 @@ jobs:
             <h1>Games built with Lamp</h1>
             <ul>
               <li><a href="./phobos/">Phobos - A Galaxy Jones Story</a></li>
+              <li><a href="./phobos_ex/">Phobos EX - with map &amp; hacking UI</a></li>
               <li><a href="./cloak/">Cloak of Darkness</a></li>
               <li><a href="./cloak_fr/">Manteau de l'obscurité (en français)</a></li>
             </ul>

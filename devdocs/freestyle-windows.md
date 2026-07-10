@@ -84,6 +84,14 @@
 > contact (the open question below stays recorded until more consumers weigh
 > in).
 >
+> **Consumer note (2026-07-10):** the Phobos EX deck map — step 4's real
+> consumer — has since **migrated to the custom shell** (an HTML map,
+> devdocs/custom-shells.md) for a responsive bottom-strip layout; EX no longer
+> uses canvas panes or hotspots. The machinery stays fully covered by the
+> `windows1`/`image1` fixtures, their goldens, and the lighthouse e2e; a future
+> game wanting an in-transcript-column graphics pane (rather than author-shell
+> DOM) remains the intended freestyle consumer.
+>
 > Status: **v1 COMPLETE — design decided, steps 1–4 built and verified live,
 > 2026-07-09.** This doc specs the
 > *constrained-ops* variant of freestyle windows — point (2) on the
