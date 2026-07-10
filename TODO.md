@@ -709,11 +709,19 @@ custom.js tag query ran before the parser reached it; init now waits for
 DOMContentLoaded, which also guarantees handler registration precedes the
 first turn). **The presentation spectrum (TODO item 9's original goal) is
 COMPLETE end to end: text windows, canvas panes, hotspots, custom shells.**
-Remaining, opportunistic: a real consumer game when one wants sound/motion
-(e.g. a Phobos EX klaxon on the doom-clock); the standing open questions
+**First real consumer BUILT (2026-07-10): the Phobos EX KIM hacking simulator**
+(`phobos_ex.shell/` + `lib/phobos/kim_shell.lamp`) — a bottom-strip alien-slab
+device rendering all five KIM puzzles (9-button Lights-Out ×2, blue
+sort-by-swap with glyph labels, 4-button locker, 16-button select-five with a
+shake on the wrong-five beep), whole-board state streamed per turn on the
+"kim" channel, clicks synthesizing PRESS through the submit path, solve pulse
+via world-state inference (KIM detached + target now unlocked), ASCII keypads
+gated on `not shell_available()` (CLI unchanged; goldens byte-invariant). e2e
+drives the locker hack through a real bundle under shell:true and asserts
+boards, the solved transient, art suppression, and the no-shell fallback.
+Remaining: the manual browser pass on the device (dist/phobos_ex_preview
+rebuilt); a sound layer later if wanted; the standing open questions
 (px-vs-percent canvas size, fold-back helper) as use dictates.
-The custom-shell half (4) still needs its own devdoc when scheduled (extends
-`lighthouse.md`, `sandbox.md`).
 **Where:** `src/lighthouse/`, `src/lamplighter/sandbox/`, `lib/sys`.
 **Blocked by:** nothing hard; freestyle-windows design pass is the natural sibling.
 

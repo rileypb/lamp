@@ -246,6 +246,10 @@ function bool nine_solved():
 
 # The keypad display: a red button shows as [N], a blue one as <N>.
 function void show_keypad_9():
+	# The web hacking simulator replaces the ASCII board (kim_shell.lamp +
+	# phobos_ex.shell/); the prose around it still prints. CLI/plain keep the art.
+	if shell_available():
+		return
 	for i = 1 to 9:
 		if nine_buttons[i - 1]:
 			print "<[i]>"
@@ -490,6 +494,10 @@ function bool blue_solved():
 # Each position shows its current glyph label, bracketed [ x ] (red) or < x > (blue),
 # with the fixed position numbers underneath so the player can name a button to press.
 function void show_keypad_blue():
+	# The web hacking simulator replaces the ASCII board (kim_shell.lamp +
+	# phobos_ex.shell/); the prose around it still prints. CLI/plain keep the art.
+	if shell_available():
+		return
 	for n = 1 to 9:
 		# bind first: a [...] index inside a text substitution isn't supported (the
 		# scanner matches the first ']'). See TODO / listmut1 notes.
@@ -560,6 +568,10 @@ function bool four_solved():
 
 # A red button shows as [N], a blue one as <N>, followed by the [RESET] button.
 function void show_keypad_4():
+	# The web hacking simulator replaces the ASCII board (kim_shell.lamp +
+	# phobos_ex.shell/); the prose around it still prints. CLI/plain keep the art.
+	if shell_available():
+		return
 	for i = 1 to 4:
 		if four_buttons[i - 1]:
 			print "<[i]>"
@@ -668,6 +680,10 @@ function int lit_count():
 # The keypad display: each button shows its number and Siriusian glyph (so the code glyphs
 # from the log can be matched to numbers). A dark button is [N glyph], a lit one <N glyph>.
 function void show_keypad_16():
+	# The web hacking simulator replaces the ASCII board (kim_shell.lamp +
+	# phobos_ex.shell/); the prose around it still prints. CLI/plain keep the art.
+	if shell_available():
+		return
 	for i = 1 to 16:
 		let g = button_glyph(i)
 		if sixteen_buttons[i - 1]:
