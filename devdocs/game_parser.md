@@ -380,6 +380,22 @@ The runtime records this per command and `command_ran()` reports it to the loop;
 an out-of-world verb runs, spends no turn, and the line continues. Golden:
 `tests/fixtures/thenline1.lamp`.
 
+**AGAIN / G.** A command that is a bare AGAIN word (English `again` / `g`;
+`againWords`, locale data) replays the last command the parser actually ran.
+`runCommand` intercepts it here, above the grammar, because AGAIN must return the
+**replayed** command's turn result — the loop then fires every-turn rules and takes
+an undo checkpoint exactly as if the player had retyped the command. Only an
+**in-world** command is the replay target: AGAIN never records itself (so `again`
+`again` repeats the original), and repeating an out-of-world verb (`undo`/`score`)
+is meaningless, so those are skipped. A disambiguated command is recorded **fully
+resolved** — the answer folded back into the command (`take ball` + `red` →
+`take red ball`, via `spliceDisambiguation`) — so AGAIN replays a command that
+resolves straight through without asking again; a chained disambiguation splices
+each answer onto the accumulated command. Because each line is already split into
+single commands, AGAIN never replays a whole `then` sequence — matching Inform.
+With no command yet to repeat it prints the `parser_again_none` message. Golden:
+`tests/fixtures/again1.lamp`.
+
 ### Stage 1 — Lexer (native)
 
 Lowercases, strips punctuation that is not significant, expands a few
@@ -749,7 +765,8 @@ populating it.
   token; string/text take the matched phrase verbatim). Implemented in `resolveSlots`
   (`literalSlotValue` + the `PRIMITIVE_SLOT_TYPES` branch); golden `numslot1`.
   Also done: **command sequences** — `then` / full stop split one typed line into
-  several commands (Stage 0 above); golden `thenline1`.
+  several commands (Stage 0 above); golden `thenline1`. **AGAIN / G** replays the
+  last command (Stage 0); golden `again1`.
   `[a direction]`, multi-object, and topic tokens remain.
 
 ## Worked example (target behavior)

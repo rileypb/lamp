@@ -1253,6 +1253,17 @@ for command in split_commands(input):
         break
 ```
 
+**AGAIN / G.** A command that is a bare AGAIN word (English `again`/`g`, locale
+data) replays the last command the parser actually ran, returning that command's
+turn result so the loop fires every-turn rules and checkpoints undo as if it were
+retyped. Only an **in-world** command is the target — AGAIN never records itself,
+and an out-of-world verb (`undo`/`save`/`score`) is not repeated. A disambiguated
+command is recorded **fully resolved** — the answer folded in (`take ball` + `red`
+→ `take red ball`) — so replaying it resolves straight through without prompting
+again. Because the line is already split, AGAIN never replays a whole `then`
+sequence. It is handled by `run_command` itself, so no game or loop code is
+required. See `devdocs/game_parser.md` (Stage 0 → AGAIN / G).
+
 #### Phase rules
 
 Behavior is attached with **phase rules** — a leading band keyword, the action

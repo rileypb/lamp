@@ -991,8 +991,18 @@ the shades).
   **By design (decided 2026-07-10):** meta verbs split during *ordinary* play because they
   run through the same `split_commands` → `run_command` loop as any verb (`score then look`
   runs both — verified). The end-of-story RESTART/RESTORE/QUIT prompt uses `run_meta_command`
-  on the whole line as one command and is deliberately left un-split. **Follow-up:** `again`/`g`
-  (Inform repeats the last *command*, and never a `then` sequence) is still unimplemented.
+  on the whole line as one command and is deliberately left un-split.
+- ~~**AGAIN / G (replay the last command).**~~ **DONE (2026-07-10):** a bare AGAIN word replays
+  the last command the parser actually ran. Handled in `runCommand` above the grammar (not a
+  Lamp action) so it returns the *replayed* command's turn result — the loop then fires
+  every-turn rules and checkpoints undo as if retyped. Only an **in-world** command is the
+  target: AGAIN never records itself (`again` `again` repeats the original), and out-of-world
+  verbs (`undo`/`save`/`score`) are skipped. A disambiguated command records **fully resolved**
+  (`take ball` + `red` → `take red ball`, via `spliceDisambiguation`), so replaying it resolves
+  straight through with no second prompt. The line is already split, so AGAIN never replays a
+  `then` sequence (matches Inform). Vocabulary is locale data
+  (`againWords`; en-US `again`/`g`, fr-FR `encore`); empty-history message `parser_again_none`.
+  Golden `again1`; existing 248 goldens byte-invariant.
 - ~~**Mobile: virtual keyboard covers new output after Enter.**~~ **DONE (2026-07-06,
   verified on device).** On real mobile (not desktop emulation) the keyboard
   overlays the page without shrinking the layout viewport, so `#screen { height: 100% }`

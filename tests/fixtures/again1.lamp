@@ -1,0 +1,36 @@
+lib advent
+
+# Exercises AGAIN / G (devdocs/game_parser.md, "AGAIN"): replays the last in-world
+# command. Covered here: AGAIN before any command (refusal message); AGAIN and its
+# abbreviation G replay the last command; the replay is a full turn (the every-turn
+# counter ticks, so undo/daemons behave as if retyped); an out-of-world verb (SCORE) is
+# NOT recorded, so AGAIN after it still replays the last in-world command; a disambiguated
+# command records the ORIGINAL ("take ball"), so AGAIN re-disambiguates rather than
+# replaying the bare answer ("red"); and AGAIN works as one command of a `then` line.
+
+game Again_Demo:
+    start hall
+
+room hall:
+    description "A plain hall."
+
+item coin
+item red_ball
+item blue_ball
+
+contains hall coin
+contains hall red_ball
+contains hall blue_ball
+
+global int ticks = 0
+
+rule every_turn_rules:
+    ticks = ticks + 1
+
+action request_ticks:
+    out_of_world
+
+report request_ticks:
+    print "ticks: [ticks]"
+
+understand "ticks" as request_ticks
