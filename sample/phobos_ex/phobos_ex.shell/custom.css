@@ -123,3 +123,121 @@
     60% { transform: translateX(-4px); }
     80% { transform: translateX(4px); }
 }
+
+/* --- DECK PLAN: the fog-of-war map strip -------------------------------------
+   A bottom strip above the KIM in #screen's flex column. Cells sit in a fixed
+   5x6 CSS grid; corridors are thin connector divs spanning the cells they join.
+   While the KIM is open the map collapses to its header bar (.map-collapsed);
+   tapping the header peeks it (.map-peek). */
+
+#map-panel {
+    flex: 0 0 auto;
+    overflow: hidden;
+    margin-top: 0.5rem;
+    padding: 0.4rem 0.6rem 0.55rem;
+    background: linear-gradient(180deg, #101318 0%, #0a0c10 100%);
+    border: 1px solid #232a36;
+    border-radius: 10px;
+    max-height: 34vh;
+    transition: max-height 0.35s ease, padding 0.35s ease;
+}
+#map-panel[hidden] { display: none; }
+
+.map-header {
+    font-family: "SFMono-Regular", Consolas, Menlo, monospace;
+    font-size: 0.7rem;
+    letter-spacing: 0.25em;
+    color: #6f8296;
+    margin-bottom: 0.4rem;
+    cursor: default;
+}
+#map-panel.map-collapsed {
+    max-height: 1.6rem;
+    padding-top: 0.25rem;
+    padding-bottom: 0.25rem;
+}
+#map-panel.map-collapsed .map-header { cursor: pointer; }
+#map-panel.map-collapsed .map-header::after { content: "  \25B8"; }
+#map-panel.map-collapsed.map-peek { max-height: 34vh; }
+
+.map-grid {
+    display: grid;
+    grid-template-columns: repeat(5, minmax(44px, 76px));
+    grid-template-rows: repeat(6, minmax(26px, 34px));
+    gap: 6px;
+    justify-content: center;
+    position: relative;
+}
+
+.map-cell {
+    appearance: none;
+    position: relative;
+    z-index: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 6px;
+    border: 1px solid #2b3547;
+    background: #131824;
+    color: #aebedc;
+    font-family: "SFMono-Regular", Consolas, Menlo, monospace;
+    font-size: 0.68rem;
+    padding: 0;
+    overflow: hidden;
+    white-space: nowrap;
+}
+button.map-cell { cursor: pointer; }
+button.map-cell:active { transform: scale(0.95); }
+
+.map-seen {
+    background: #16233a;
+    box-shadow: inset 0 0 6px rgba(80, 140, 255, 0.25);
+}
+.map-here {
+    background: #1c2f4e;
+    border-color: #3f6db3;
+    box-shadow: inset 0 0 8px rgba(90, 160, 255, 0.5), 0 0 10px rgba(90, 160, 255, 0.35);
+    color: #e2edff;
+}
+.map-frontier {
+    background: transparent;
+    border-style: dashed;
+    border-color: #37415a;
+    color: #5d6880;
+}
+
+.map-you {
+    position: absolute;
+    right: 4px;
+    bottom: 4px;
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: #ffd54a;
+    box-shadow: 0 0 6px rgba(255, 213, 74, 0.9);
+    animation: map-you-pulse 1.6s ease infinite;
+}
+@keyframes map-you-pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.35; }
+}
+
+/* Corridors: centered thin bars spanning the joined cells (under the cells). */
+.map-edge {
+    z-index: 0;
+    align-self: center;
+    justify-self: center;
+    background: #2a3348;
+    border-radius: 2px;
+}
+.map-edge-h { height: 3px; width: 100%; }
+.map-edge-v { width: 3px; height: 100%; }
+
+@media (max-width: 640px) {
+    .map-grid {
+        grid-template-columns: repeat(5, minmax(0, 1fr));
+        grid-template-rows: repeat(6, 30px);
+    }
+    #map-panel { max-height: 42vh; }
+    #map-panel.map-collapsed.map-peek { max-height: 42vh; }
+}

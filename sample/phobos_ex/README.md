@@ -11,33 +11,27 @@ Header comment aside, `phobos_ex.lamp` and `lib/phobos/` start as a verbatim
 copy (game object renamed `Phobos_EX`, title "Phobos EX", so builds and saves
 never collide with the original). Enhancements so far:
 
-- **`lib/phobos/windows.lamp`** — the mission-status text window
-  (devdocs/text-windows.md step 4): score/rank/scan progress, plus the
-  doom-clock once Galaxy is inside the base (Siriusian digits, plain numerals
-  with the Cyberhelmet — mirroring the PA announcements). Docks right on the
-  web shell; re-docks to a compact 3-row top pane on the CLI TUI via the
-  capability handshake (the refresh rule composes dock-aware: one field per
-  row on the right dock, two per row on the row-precious top dock); on a
-  windowless host it never renders and the SCORE verb remains the
-  authoritative fallback.
-
-- **`lib/phobos/map.lamp`** — the deck-plan canvas pane
-  (devdocs/freestyle-windows.md step 4): a right-docked freestyle window
-  drawing the base's rooms as a grid of rects with corridor lines, rooms
-  Galaxy has seen filled brighter (a `seen` field marked as she moves;
-  snapshot-covered, so UNDO forgets a room again), a marker on her current
-  room, and labels rendered through the Siriusian glyph cipher — plain
-  English while the Cyberhelmet is worn, the mission pane's countdown
-  convention. Shown only where `window_kind_available("canvas")` is true
-  (the web shell); on the TUI and plain hosts it stays hidden and the text
-  panes above remain the experience.
+- **`lib/phobos/map.lamp`** — the DECK PLAN feed (devdocs/custom-shells.md): a
+  fog-of-war deck map rendered by the custom shell as a bottom strip. Only
+  rooms Galaxy has seen are sent with labels (Siriusian cipher; plain English
+  with the Cyberhelmet); rooms adjacent to her ride along as label-less "?"
+  frontier cells. Every cell adjacent to her is clickable — the click
+  synthesizes that direction's command, so a closed door refuses exactly as
+  if typed. The whole visible plan re-sends each turn (declarative recompute:
+  UNDO makes the map forget rooms again). The `seen`/grid fields live on a
+  `type room` reopen. (History: this began as a freestyle canvas pane —
+  devdocs/freestyle-windows.md step 4 — and moved to the custom shell for a
+  responsive layout; a mission-status text pane also lived here once and was
+  removed as spoiler-y — score stays on the SCORE verb.)
 
 - **`lib/phobos/kim_shell.lamp` + `phobos_ex.shell/`** — the KIM hacking
   simulator (devdocs/custom-shells.md; the first real custom-shell consumer):
   on the web, the KIM renders as a bottom-strip alien slab — glowing red/blue
   buttons, Siriusian glyph faces, a solve pulse, a shake on the purple door's
-  wrong-five beep — that appears when the KIM adheres and retracts when it
-  detaches. The transcript contracts/expands to make room (mobile-friendly).
+  wrong-five beep — that appears under the map when the KIM adheres and
+  retracts when it detaches. While it is open the map collapses to a slim
+  header bar (tap to peek); the transcript contracts/expands to make room
+  (mobile-friendly).
   Clicking a button synthesizes the same PRESS command the player could type,
   so the real puzzle rules adjudicate every click and the transcript stays a
   complete record; the game streams the whole board state each turn

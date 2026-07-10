@@ -719,9 +719,21 @@ via world-state inference (KIM detached + target now unlocked), ASCII keypads
 gated on `not shell_available()` (CLI unchanged; goldens byte-invariant). e2e
 drives the locker hack through a real bundle under shell:true and asserts
 boards, the solved transient, art suppression, and the no-shell fallback.
-Remaining: the manual browser pass on the device (dist/phobos_ex_preview
-rebuilt); a sound layer later if wanted; the standing open questions
-(px-vs-percent canvas size, fold-back helper) as use dictates.
+**EX responsive UI rework (2026-07-10):** the mission pane is REMOVED
+(spoilers; SCORE stays authoritative) and the deck map MIGRATED from the
+freestyle canvas pane to the custom shell — a fog-of-war HTML map strip at
+the bottom (seen rooms with ciphered labels; label-less clickable "?"
+frontier cells on Galaxy's neighbors; corridor edges; the whole visible plan
+re-sent per turn on the "map" channel — protocol documented in map.lamp).
+The KIM slab stacks under it; while the KIM is open the map collapses to a
+slim header bar (tap to peek). Freestyle windows thus loses its real-game
+consumer (noted in freestyle-windows.md; the windows1/image1 fixtures keep
+it covered). e2e: fog/frontier/edge/growth assertions through a real bundle;
+goldens byte-invariant. Remaining: the manual browser pass on the reworked
+layout (dist/phobos_ex_preview rebuilt — check map growth, frontier clicks,
+the KIM/map collapse interplay, and phone-width reflow); a sound layer later
+if wanted; the standing open questions (px-vs-percent canvas size, fold-back
+helper) as use dictates.
 **Where:** `src/lighthouse/`, `src/lamplighter/sandbox/`, `lib/sys`.
 **Blocked by:** nothing hard; freestyle-windows design pass is the natural sibling.
 

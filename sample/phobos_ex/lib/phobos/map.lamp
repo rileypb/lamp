@@ -1,17 +1,29 @@
 lib advent
 
-# Phobos EX only — the deck-plan canvas pane (devdocs/freestyle-windows.md, step 4:
-# the first real freestyle consumer). Not in the original sample/phobos, which stays
-# a 1:1 I7-port fidelity artifact.
+# Phobos EX only — the deck-plan feed for the custom web shell
+# (devdocs/custom-shells.md; phobos_ex.shell/custom.js renders it as a
+# bottom-strip HTML map). Not in the original sample/phobos, which stays a 1:1
+# I7-port fidelity artifact. (History: this began as a freestyle canvas pane —
+# devdocs/freestyle-windows.md step 4 — and moved to the custom shell for a
+# responsive layout; the canvas machinery remains covered by the windows1/image1
+# fixtures.)
 #
-# A right-docked canvas pane drawing the base's deck plan: rooms as rects on a grid,
-# corridors as lines, rooms Galaxy has seen filled brighter, a marker on her current
-# room, and room labels rendered through the Siriusian glyph cipher — plain English
-# while the Cyberhelmet's translation circuitry is worn (the mission pane's
-# countdown convention). Shown only where the host draws canvas panes
-# (window_kind_available); everywhere else it stays hidden and costs nothing — the
-# text mission pane (windows.lamp) and the SCORE verb remain the authoritative
-# fallback.
+# Fog of war: only rooms Galaxy has seen are sent with their labels (Siriusian
+# glyph cipher; plain English while the Cyberhelmet is worn). Rooms *adjacent* to
+# her current room ride along as label-less "frontier" cells so click-to-walk can
+# reach somewhere new — clicking any cell synthesizes that direction's command
+# through the ordinary submit path, so a closed door refuses exactly as if typed.
+# The whole visible map is re-sent each turn (declarative recompute): UNDO makes
+# it forget rooms again for free. On hosts without the custom layer nothing is
+# sent; the SCORE verb and prose remain the experience.
+#
+# Payload protocol (name "map", |-separated fields):
+#   <hc>,<hr> | room;room;... | edge;edge;...        (either list may be empty)
+#   room: c,r,flags,cmd,label   flags h=here s=seen f=frontier; cmd = the
+#         direction command when adjacent to Galaxy (else empty); label empty on
+#         frontier cells
+#   edge: c1,r1,c2,r2           corridor between two visible cells (at least one
+#         end seen), deduped by grid order
 
 # Grid cell + `seen` tracking, added to advent's `room` by reopening the type (the
 # same pattern as base.lamp's presentation hooks). A room with no cell (map_col -1,
@@ -23,23 +35,7 @@ type room:
 	string map_label = ""
 	bool seen = false
 
-window deck_map:
-	dock right
-	size 240
-	priority 10
-	title "Deck Plan"
-	content_kind "canvas"
-	canvas_w 170
-	canvas_h 150
-	visible false
-
-rule startup_rules:
-	if window_kind_available("canvas"):
-		deck_map.visible = true
-
-# The deck plan: a 5-column x 6-row grid. Cell rects are 30x20 at a 33/24 pitch
-# from a 5-unit margin, so cell (c, r) sits at (5 + 33c, 5 + 24r) with its center
-# at (20 + 33c, 15 + 24r).
+# The deck plan: a 5-column x 6-row grid.
 room Passage_End:
 	map_col 2
 	map_row 5
@@ -97,55 +93,71 @@ room Flight_Deck:
 	map_row 0
 	map_label "deck"
 
-# Compose the plan each turn. Marking the current room `seen` here is world-state
-# bookkeeping riding the per-turn cadence (it is snapshot-covered, so UNDO forgets
-# a room again); the drawing below is a pure function of that state, per the
-# declarative-recompute model.
+# The direction command from `origin` to `r` ("" when not adjacent). Compass
+# exits only, matching the plan (the ship's inward/outward legs stay type-to-go).
+function string map_dir_to(physical origin, physical r):
+	if origin is room:
+		for d in direction.all:
+			if connects origin d _:
+				let dest = connects origin d ?first
+				if dest == r:
+					return "[d]"
+	return ""
+
+# A cell is visible when seen, or when adjacent to Galaxy (a "frontier" cell —
+# clickable, but label-less: fog of war).
+function bool map_shows(physical here, physical r):
+	if r.map_col < 0:
+		return false
+	if r.seen:
+		return true
+	return not (map_dir_to(here, r) == "")
+
+function string map_payload():
+	let here = holder(player)
+	let herepos = ""
+	if here is room:
+		if here.map_col >= 0:
+			herepos = "[here.map_col],[here.map_row]"
+	let rooms = ""
+	for r in room.all:
+		if map_shows(here, r):
+			let flags = "f"
+			let label = ""
+			if r.seen:
+				flags = "s"
+				label = r.map_label
+				if not wears player cyberhelmet:
+					label = siriusian_word(label)
+			if here == r:
+				flags = "h"
+			let cmd = map_dir_to(here, r)
+			if not (rooms == ""):
+				rooms = rooms + ";"
+			rooms = rooms + "[r.map_col],[r.map_row],[flags],[cmd],[label]"
+	# Corridors between visible cells with at least one seen end, deduped by grid
+	# order so each segment is sent once.
+	let edges = ""
+	for r in room.all:
+		if map_shows(here, r):
+			for d in direction.all:
+				if connects r d _:
+					let dest = connects r d ?first
+					if dest is room:
+						if map_shows(here, dest) and (r.seen or dest.seen):
+							if r.map_row * 5 + r.map_col < dest.map_row * 5 + dest.map_col:
+								if not (edges == ""):
+									edges = edges + ";"
+								edges = edges + "[r.map_col],[r.map_row],[dest.map_col],[dest.map_row]"
+	return herepos + "|" + rooms + "|" + edges
+
+# Mark the current room `seen` (world-state bookkeeping riding the per-turn
+# cadence; snapshot-covered, so UNDO forgets a room again), then send the whole
+# visible plan — a pure function of that state, per the declarative-recompute
+# model.
 rule window_refresh_rules:
 	let here = holder(player)
 	if here is room:
 		here.seen = true
-	if deck_map.visible:
-		canvas_rect(deck_map, "black", 0, 0, 170, 150)
-		# Corridors, center to center; rects paint over the ends, leaving stubs
-		# in the gaps. The Hub-to-Southern run crosses the vacant (2,3) cell — a
-		# long hallway.
-		canvas_line(deck_map, "bright_black", 86, 135, 86, 111)
-		canvas_line(deck_map, "bright_black", 86, 111, 53, 111)
-		canvas_line(deck_map, "bright_black", 86, 111, 86, 63)
-		canvas_line(deck_map, "bright_black", 86, 63, 53, 63)
-		canvas_line(deck_map, "bright_black", 86, 63, 119, 63)
-		canvas_line(deck_map, "bright_black", 86, 63, 86, 39)
-		canvas_line(deck_map, "bright_black", 53, 63, 53, 39)
-		canvas_line(deck_map, "bright_black", 53, 63, 20, 63)
-		canvas_line(deck_map, "bright_black", 53, 63, 53, 87)
-		canvas_line(deck_map, "bright_black", 119, 63, 119, 39)
-		canvas_line(deck_map, "bright_black", 119, 63, 119, 87)
-		canvas_line(deck_map, "bright_black", 119, 63, 152, 63)
-		canvas_line(deck_map, "bright_black", 86, 39, 86, 15)
-		for r in room.all:
-			if r.map_col >= 0:
-				let x = 5 + r.map_col * 33
-				let y = 5 + r.map_row * 24
-				let fill = "bright_black"
-				if r.seen:
-					fill = "blue"
-				canvas_rect(deck_map, fill, x, y, 30, 20)
-				let label = r.map_label
-				if not wears player cyberhelmet:
-					label = siriusian_word(label)
-				canvas_text(deck_map, "white", x + 2, y + 2, 7, label)
-				if here == r:
-					canvas_rect(deck_map, "bright_yellow", x + 12, y + 13, 6, 4)
-		# Click-to-walk (devdocs/freestyle-windows.md, hotspots v1.1): each room
-		# adjacent to Galaxy gets a hotspot over its cell carrying that direction's
-		# command — clicking synthesizes it exactly as if typed, so a closed door
-		# refuses the same either way. Composed only while she is on a mapped cell
-		# (compass exits only; the ship's inward/outward legs stay type-to-go).
-		if here is room:
-			if here.map_col >= 0:
-				for d in direction.all:
-					if connects here d _:
-						let dest = connects here d ?first
-						if dest.map_col >= 0:
-							canvas_hotspot(deck_map, 5 + dest.map_col * 33, 5 + dest.map_row * 24, 30, 20, "[d]")
+	if shell_available():
+		shell_send("map", map_payload())
