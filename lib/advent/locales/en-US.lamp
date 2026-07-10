@@ -143,6 +143,7 @@ restart_confirm: "Do you wish to restart? (Y is affirmative): "
 banner_by: " by "
 banner_version: "Version "
 quit_prompt: "Please type RESTART, RESTORE, or QUIT."
+beg_pardon: "I beg your pardon?"
 
 # --- transcript.lamp ---
 transcript_already: "A transcript is already running."

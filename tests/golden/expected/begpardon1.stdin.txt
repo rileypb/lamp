@@ -1,0 +1,9 @@
+take coin
+
+ticks
+.
+
+ticks
+take coin then
+
+quit

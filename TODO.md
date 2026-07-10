@@ -1003,6 +1003,18 @@ the shades).
   `then` sequence (matches Inform). Vocabulary is locale data
   (`againWords`; en-US `again`/`g`, fr-FR `encore`); empty-history message `parser_again_none`.
   Golden `again1`; existing 248 goldens byte-invariant.
+- ~~**Empty input responds "I beg your pardon?".**~~ **DONE (2026-07-10):** a blank line, a
+  whitespace-only line, or a line of only separators (".") yields no commands, so advent's
+  command loop (`startup.lamp`) re-prompts with the `beg_pardon` message (en-US "I beg your
+  pardon?", fr-FR "Pardon ?"), spending no turn. Handled in the loop, not the engine, because
+  that is where the empty `split_commands` list is observed. Golden `begpardon1`; existing 249
+  goldens byte-invariant.
+  **Follow-up (pre-existing, now more visible): no EOF sentinel.** `readStdinLine`
+  (`sandbox/backends/plain.js`) returns `""` for both a blank line and end-of-input, so piped
+  input that never issues `quit` now re-prompts "I beg your pardon?" until the host closes the
+  stream (before this it was a *silent* infinite loop). Fixing it means threading an EOF/null
+  sentinel through the sandbox line-read protocol (host.js / worker*.js / index.js) and having
+  the loop treat it as an implicit QUIT — a transport change, out of scope for the parser work.
 - ~~**Mobile: virtual keyboard covers new output after Enter.**~~ **DONE (2026-07-06,
   verified on device).** On real mobile (not desktop emulation) the keyboard
   overlays the page without shrinking the layout viewport, so `#screen { height: 100% }`

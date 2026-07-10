@@ -380,6 +380,16 @@ The runtime records this per command and `command_ran()` reports it to the loop;
 an out-of-world verb runs, spends no turn, and the line continues. Golden:
 `tests/fixtures/thenline1.lamp`.
 
+**Empty input.** A blank line, a whitespace-only line, or a line of only
+separators (`.`) yields no commands (`split_commands` returns an empty list). The
+command loop detects this — no command ran — and re-prompts with the IF-standard
+`I beg your pardon?` (the `beg_pardon` message; French `Pardon ?`), spending no
+turn. This lives in the loop, not the engine, because that is where the empty list
+is observed. Golden: `tests/fixtures/begpardon1.lamp`. (Caveat: the sandbox line
+reader cannot distinguish a blank line from end-of-input, so piped input that
+never issues `quit` re-prompts until the stream is closed by the host — a
+pre-existing gap, tracked in TODO.)
+
 **AGAIN / G.** A command that is a bare AGAIN word (English `again` / `g`;
 `againWords`, locale data) replays the last command the parser actually ran.
 `runCommand` intercepts it here, above the grammar, because AGAIN must return the

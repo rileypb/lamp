@@ -1,0 +1,30 @@
+hall
+A plain hall.
+
+You see a coin here.
+
+> take coin
+Taken.
+
+> 
+I beg your pardon?
+
+> ticks
+ticks: 1
+
+> .
+I beg your pardon?
+
+> 
+I beg your pardon?
+
+> ticks
+ticks: 1
+
+> take coin then
+You're already carrying that.
+
+> 
+I beg your pardon?
+
+> quit

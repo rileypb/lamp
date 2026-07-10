@@ -1253,6 +1253,11 @@ for command in split_commands(input):
         break
 ```
 
+**Empty input.** A blank line (or one of only separators, e.g. `.`) yields no
+commands, so the loop above runs no `run_command` at all. The loop detects this and
+re-prompts with the IF-standard `I beg your pardon?` (the `beg_pardon` message),
+spending no turn.
+
 **AGAIN / G.** A command that is a bare AGAIN word (English `again`/`g`, locale
 data) replays the last command the parser actually ran, returning that command's
 turn result so the loop fires every-turn rules and checkpoints undo as if it were
