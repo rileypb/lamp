@@ -160,7 +160,7 @@ instead examine when self.target.textual:
 # SCAN adds a text's tier to the model, so every text with that tier reads more clearly
 # afterward. The target is an `item`, so a non-textual thing gets a useful message.
 action scan:
-	item target
+	direct item target
 	syntax:
 		"scan [target]"
 

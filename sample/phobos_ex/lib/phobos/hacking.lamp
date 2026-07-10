@@ -112,7 +112,7 @@ function void kim_state():
 		show_keypad_4()
 
 action hack:
-	item target
+	direct item target
 	syntax:
 		"hack [target]"
 		"infiltrate [target]"
