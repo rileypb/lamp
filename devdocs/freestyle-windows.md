@@ -77,12 +77,15 @@
 > id is the coerced object name (`deck_map` → `"deck map"`), unlike image
 > names, which stay verbatim.
 >
-> **Manual browser pass (the one remaining check):** `dist/phobos_ex_preview/`
-> and `dist/image1_preview/` (canvas_image + placeholder path) are built for
-> it — serve either statically and eyeball the painting, plus the standing
-> modal/pager checks.
+> **Manual browser pass PASSED (2026-07-09):** `dist/phobos_ex_preview/` and
+> `dist/image1_preview/` verified live — the deck-plan painting, seen-state
+> fill, you-marker, ciphered labels, and the canvas_image path all render
+> correctly. The px-in-the-docked-dimension `size` choice survived first
+> contact (the open question below stays recorded until more consumers weigh
+> in).
 >
-> Status: **design decided 2026-07-09; steps 1–4 built.** This doc specs the
+> Status: **v1 COMPLETE — design decided, steps 1–4 built and verified live,
+> 2026-07-09.** This doc specs the
 > *constrained-ops* variant of freestyle windows — point (2) on the
 > presentation spectrum recorded in TODO.md item 9: a docked pane whose content
 > is a closed vocabulary of drawing ops (images, rects, lines, text-at-position)

@@ -669,12 +669,16 @@ Siriusian-ciphered labels (plain with the Cyberhelmet); hidden unless
 `window_kind_available("canvas")` — the fallback path made real. TUI backend
 gained the degradation guard (canvas window_set dropped, never reserves rows).
 `phobos_ex` golden byte-invariant; lighthouse e2e drives web + TUI capability
-sets. **Remaining: the manual browser pass** — `dist/phobos_ex_preview/` and
-`dist/image1_preview/` are built for it (serve statically; check the map
-painting, the image + placeholder path, and the standing modal/pager items).
-Then: the spec's open questions (px-vs-percent canvas `size`, fold-back
-helper) as real use dictates; hotspots and the custom-shell tier (4) are the
-next design passes.
+sets. **Manual browser pass PASSED (2026-07-09)** — deck-plan painting,
+seen-fill, you-marker, ciphered labels, and the canvas_image + placeholder
+path all verified live; **freestyle windows v1 is COMPLETE and merged to
+main** (the `windowSyncOne` merge hazard resolved via shared `emitWindow`).
+Still open, as real use dictates: px-vs-percent canvas `size` (px survived
+first contact), the fold-back helper question. **Next design passes: hotspots
+(click region → synthesized parser command) and the custom-shell tier (4) —
+one pass, since they share the command-synthesis + echo-suppression
+machinery; that pass also decides whether the sandboxed-iframe tier (3)
+exists.**
 The custom-shell half (4) still needs its own devdoc when scheduled (extends
 `lighthouse.md`, `sandbox.md`).
 **Where:** `src/lighthouse/`, `src/lamplighter/sandbox/`, `lib/sys`.
