@@ -1,0 +1,28 @@
+# Custom shells (devdocs/custom-shells.md): shell_send + shell_available compile
+# and run end-to-end on the plain host — which has no shell channel, so nothing
+# here may change stdout; the wire-level behavior is covered by tests/shell and
+# the lighthouse e2e (which builds this fixture with its shellgame.shell/ dir).
+
+lib advent
+
+game ShellGame:
+	start Stage
+
+room Stage:
+	description "A bare stage."
+
+rule startup_rules:
+	if shell_available():
+		shell_send("theme", "noir")
+
+action cue:
+	out_of_world
+	syntax:
+		"cue"
+
+do cue:
+	if shell_available():
+		shell_send("sound", "sting")
+		print "The shell hears the cue."
+	else:
+		print "No shell to cue."

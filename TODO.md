@@ -687,9 +687,25 @@ composes a hotspot per *adjacent* mapped room from the `connects` relation —
 click a neighbor to walk there; closed doors refuse exactly as if typed (no
 GO TO needed). Goldens byte-invariant; unit + e2e cover the wire ("north" at
 Passage End); `dist/phobos_ex_preview` rebuilt for the manual click check.
-**Next: the custom-shell tier (4) design pass** — shell_send, Lighthouse
-author-asset layering, the trust-model decision, and whether the
-sandboxed-iframe tier (3) exists. Command synthesis is now built and shared.
+**Custom shells (tier 4) BUILT (2026-07-09, devdocs/custom-shells.md) — the
+presentation spectrum is COMPLETE.** Decisions: trusted tier (author shell JS
+runs on the main thread; a custom-shell game is trusted like any website; the
+iframe tier (3) is REJECTED, not deferred); eject + hook author shape
+(`<game>.shell/` overrides stock assets by name — `--eject-shell` seeds it —
+while `custom.js`/`custom.css` get tags injected and the stock shell exposes
+`LampShell.on(name, fn)` / `LampShell.command(cmd)`, so the common case never
+forks shell.js; the wire protocol, additive by design, is the engine↔shell
+contract, so ejected shells survive engine evolution — fork drift is the
+author's honest cost); payload = name + one string (`shell_send`; structure is
+the author's own encoding); `shell_available()` over a `shell: true`
+capability the stock shell computes from the build-time presence of custom.js.
+Host→game stays synthesized commands (the hotspot machinery). Built end to
+end: runtime channel + natives + browser-worker forwarding + LampShell +
+Lighthouse packaging + `--eject-shell`; tests/shell unit suite, shellgame
+fixture + golden (byte-invariant), lighthouse e2e (packaging, tag injection,
+wire events under shell:true, text fallback without). Remaining: a manual
+browser pass on a custom.js handler (DOM, per house rule); a real consumer
+game when one wants sound/motion.
 The custom-shell half (4) still needs its own devdoc when scheduled (extends
 `lighthouse.md`, `sandbox.md`).
 **Where:** `src/lighthouse/`, `src/lamplighter/sandbox/`, `lib/sys`.

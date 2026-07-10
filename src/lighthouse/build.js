@@ -12,17 +12,20 @@ const minify = !args.includes("--no-minify");
 // Web bundles are distribution builds, so they are release builds by default (debug verbs
 // excluded). `--debug` keeps them, for testing the web shell against the debug tooling.
 const release = !args.includes("--debug");
+// Seed <game>.shell/ with the stock shell files (never overwriting) before
+// building, to start customizing from. See devdocs/custom-shells.md.
+const ejectShell = args.includes("--eject-shell");
 const [inputArg, outArg] = args.filter((arg) => !arg.startsWith("--"));
 
 if (!inputArg) {
-    console.error("Usage: node src/lighthouse/build.js <input.lamp> [outDir] [--encode-strings] [--no-minify] [--debug]");
+    console.error("Usage: node src/lighthouse/build.js <input.lamp> [outDir] [--encode-strings] [--no-minify] [--debug] [--eject-shell]");
     process.exit(1);
 }
 
 const outDir = outArg || path.join("dist", path.basename(inputArg, ".lamp"));
 
 try {
-    const result = buildWeb(inputArg, outDir, { encodeStrings, minify, release });
+    const result = buildWeb(inputArg, outDir, { encodeStrings, minify, release, ejectShell });
     console.log(`Lighthouse built web bundle: ${result.outDir}`);
     console.log(`  ${result.files.join(", ")}`);
 } catch (err) {

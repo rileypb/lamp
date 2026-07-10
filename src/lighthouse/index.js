@@ -90,12 +90,46 @@ function escapeHtml(text) {
     return String(text).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 }
 
-function buildWeb(inputFile, outDir, { encodeStrings = false, minify = true, release = true } = {}) {
+// Custom shell directory (devdocs/custom-shells.md): `<game>.shell/` beside the
+// game file — per-game, so multi-game directories don't collide. Root files whose
+// names match stock assets override them; everything else copies verbatim into
+// the bundle (subdirectories included).
+function shellDirFor(absInput) {
+    return path.join(path.dirname(absInput), `${path.basename(absInput, ".lamp")}.shell`);
+}
+
+// `--eject-shell`: seed the shell directory with the stock shell files to start
+// customizing from. Never overwrites — re-running after edits is safe.
+function ejectShellInto(shellDir) {
+    fs.mkdirSync(shellDir, { recursive: true });
+    for (const asset of SHELL_ASSETS) {
+        const dest = path.join(shellDir, asset);
+        if (!fs.existsSync(dest)) fs.copyFileSync(path.join(SHELL_DIR, asset), dest);
+    }
+}
+
+// Copy the shell directory's non-override entries (custom.js/custom.css, sounds,
+// art, subdirectories) into the bundle verbatim.
+function copyShellExtras(shellDir, absOut) {
+    const copied = [];
+    for (const entry of fs.readdirSync(shellDir, { withFileTypes: true })) {
+        if (!entry.isDirectory() && SHELL_ASSETS.includes(entry.name)) continue;
+        fs.cpSync(path.join(shellDir, entry.name), path.join(absOut, entry.name), { recursive: true });
+        copied.push(entry.name);
+    }
+    return copied.sort();
+}
+
+function buildWeb(inputFile, outDir, { encodeStrings = false, minify = true, release = true, ejectShell = false } = {}) {
     const absInput = path.resolve(inputFile);
     const absOut = path.resolve(outDir);
     const buildDir = path.join(PROJECT_ROOT, "build");
     fs.mkdirSync(buildDir, { recursive: true });
     fs.mkdirSync(absOut, { recursive: true });
+
+    const shellDir = shellDirFor(absInput);
+    if (ejectShell) ejectShellInto(shellDir);
+    const hasShellDir = fs.existsSync(shellDir) && fs.statSync(shellDir).isDirectory();
 
     const { generatedPath, metaPath } = compileGame(absInput, buildDir, { encodeStrings, release });
     const generatedCode = fs.readFileSync(generatedPath, "utf8");
@@ -121,19 +155,40 @@ function buildWeb(inputFile, outDir, { encodeStrings = false, minify = true, rel
     const meta = readGameMeta(metaPath);
     copyImageAssets(meta.assets || [], absOut);
 
+    const hasCustomJs = hasShellDir && fs.existsSync(path.join(shellDir, "custom.js"));
+    const hasCustomCss = hasShellDir && fs.existsSync(path.join(shellDir, "custom.css"));
+
     const title = escapeHtml(pageTitle(meta));
     for (const asset of SHELL_ASSETS) {
-        const src = path.join(SHELL_DIR, asset);
+        // A shell-directory file matching a stock asset name overrides it
+        // (devdocs/custom-shells.md — the "eject" path); index.html templating
+        // runs either way.
+        const override = hasShellDir ? path.join(shellDir, asset) : null;
+        const src = override && fs.existsSync(override) ? override : path.join(SHELL_DIR, asset);
         const dest = path.join(absOut, asset);
         if (asset === "index.html") {
-            const html = fs.readFileSync(src, "utf8").replace(/<title>[\s\S]*?<\/title>/, `<title>${title}</title>`);
+            let html = fs.readFileSync(src, "utf8").replace(/<title>[\s\S]*?<\/title>/, `<title>${title}</title>`);
+            // Inject the custom-layer tags only when the shell dir supplied the
+            // files (no dangling references in a stock bundle). Anchored on the
+            // stock tags — a fully ejected index.html manages its own tags, so a
+            // missing anchor is fine.
+            if (hasCustomCss) {
+                html = html.replace('<link rel="stylesheet" href="./shell.css">',
+                    '<link rel="stylesheet" href="./shell.css">\n    <link rel="stylesheet" href="custom.css">');
+            }
+            if (hasCustomJs) {
+                html = html.replace('<script src="./shell.js"></script>',
+                    '<script src="./shell.js"></script>\n    <script src="custom.js"></script>');
+            }
             fs.writeFileSync(dest, html, "utf8");
         } else {
             fs.copyFileSync(src, dest);
         }
     }
 
-    return { outDir: absOut, files: ["game.worker.js", "assets.json", ...SHELL_ASSETS] };
+    const extras = hasShellDir ? copyShellExtras(shellDir, absOut) : [];
+
+    return { outDir: absOut, files: ["game.worker.js", "assets.json", ...SHELL_ASSETS, ...extras] };
 }
 
 module.exports = { buildWeb };

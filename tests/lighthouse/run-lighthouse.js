@@ -311,6 +311,78 @@ try {
         }
     });
 
+    // Custom shells (devdocs/custom-shells.md): the shellgame fixture ships a
+    // shellgame.shell/ directory — custom.js + custom.css (the hook path) and a
+    // shell.css override (the eject path). The bundle must carry the extras,
+    // apply the override, inject the tags, and the game must see shell: true
+    // and stream shell_event messages. A shell-less capability set gets the
+    // text fallback and no events.
+    await test("custom shell: shell dir packaging + shell_send over the wire", async () => {
+        const shOut = fs.mkdtempSync(path.join(os.tmpdir(), "lamp-lighthouse-shell-"));
+        try {
+            buildWeb(path.join(__dirname, "..", "fixtures", "shellgame.lamp"), shOut, { minify: false });
+
+            const fixtures = path.join(__dirname, "..", "fixtures", "shellgame.shell");
+            assert.strictEqual(
+                fs.readFileSync(path.join(shOut, "shell.css"), "utf8"),
+                fs.readFileSync(path.join(fixtures, "shell.css"), "utf8"),
+                "shell.css override should replace the stock file");
+            for (const extra of ["custom.js", "custom.css"]) {
+                assert.strictEqual(
+                    fs.readFileSync(path.join(shOut, extra), "utf8"),
+                    fs.readFileSync(path.join(fixtures, extra), "utf8"),
+                    `${extra} should copy verbatim`);
+            }
+            const html = fs.readFileSync(path.join(shOut, "index.html"), "utf8");
+            assert.ok(html.includes('<script src="custom.js"></script>'), "custom.js tag missing");
+            assert.ok(html.includes('<link rel="stylesheet" href="custom.css">'), "custom.css tag missing");
+            const stockHtml = fs.readFileSync(path.join(outDir, "index.html"), "utf8");
+            assert.ok(!stockHtml.includes("custom.js"), "a stock bundle must carry no custom tags");
+
+            const withShell = await driveBundle(shOut, ["cue", "quit"], {
+                capabilities: { windows: { docks: ["top"] }, shell: true },
+            });
+            assert.ok(withShell.output.includes("The shell hears the cue."), "shell_available should be true");
+            assert.deepStrictEqual(withShell.shellMessages, [
+                { type: "shell_event", name: "theme", payload: "noir" },
+                { type: "shell_event", name: "sound", payload: "sting" },
+            ], "startup + cue events in order");
+
+            const withoutShell = await driveBundle(shOut, ["cue", "quit"], {
+                capabilities: { windows: { docks: ["top"] } },
+            });
+            assert.ok(withoutShell.output.includes("No shell to cue."), "text fallback without a custom layer");
+            assert.deepStrictEqual(withoutShell.shellMessages, [], "no events without shell_available");
+        } finally {
+            fs.rmSync(shOut, { recursive: true, force: true });
+        }
+    });
+
+    // --eject-shell seeds <game>.shell/ with the stock shell files, never
+    // overwriting existing customizations.
+    await test("--eject-shell seeds the shell dir without overwriting", async () => {
+        const tmpGameDir = fs.mkdtempSync(path.join(os.tmpdir(), "lamp-lighthouse-eject-"));
+        const ejOut = fs.mkdtempSync(path.join(os.tmpdir(), "lamp-lighthouse-ejout-"));
+        try {
+            fs.copyFileSync(path.join(__dirname, "..", "fixtures", "shellgame.lamp"),
+                path.join(tmpGameDir, "shellgame.lamp"));
+            const shellDir = path.join(tmpGameDir, "shellgame.shell");
+            fs.mkdirSync(shellDir);
+            fs.writeFileSync(path.join(shellDir, "shell.css"), "/* mine */\n", "utf8");
+            buildWeb(path.join(tmpGameDir, "shellgame.lamp"), ejOut, { minify: false, ejectShell: true });
+            for (const f of ["index.html", "shell.css", "shell.js", "sw.js"]) {
+                assert.ok(fs.existsSync(path.join(shellDir, f)), `eject should seed ${f}`);
+            }
+            assert.strictEqual(fs.readFileSync(path.join(shellDir, "shell.css"), "utf8"), "/* mine */\n",
+                "eject must not overwrite an existing customization");
+            assert.strictEqual(fs.readFileSync(path.join(ejOut, "shell.css"), "utf8"), "/* mine */\n",
+                "the build uses the preserved override");
+        } finally {
+            fs.rmSync(tmpGameDir, { recursive: true, force: true });
+            fs.rmSync(ejOut, { recursive: true, force: true });
+        }
+    });
+
     // Phobos EX (the first real windows consumer, devdocs/text-windows.md step 4):
     // the mission-status pane docks right on a four-dock host, and its startup rule
     // re-docks it to a 4-row top pane when only top/bottom are available (the TUI's

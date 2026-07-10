@@ -198,6 +198,14 @@ Built in `src/lighthouse/web/` as the bundle's template assets:
   a `<canvas>` in the ordinary dock layout (scale-to-fit the declared virtual
   space, DPR-aware, `fillText` only), resolves image ops through the bundle's
   `assets.json`, and paints named colors via the `--c-*` theme variables.
+- **Custom shells** (devdocs/custom-shells.md): a `<game>.shell/` directory
+  beside the game file customizes the bundle — root files matching stock asset
+  names override them (the "eject" path; `--eject-shell` seeds the directory),
+  everything else copies verbatim, and `custom.js`/`custom.css` get tags
+  injected into `index.html` when present. The stock shell exposes the
+  `LampShell` hook global (`on(name, fn)` for the game's `shell_send` events,
+  `command(cmd)` to synthesize input) and declares `shell: true` in
+  capabilities exactly when the bundle carries a `custom.js`.
 - The shell contains no game logic — render, capture input, broker, nothing more.
 
 ## Assumptions

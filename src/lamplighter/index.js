@@ -1767,6 +1767,27 @@ function windowKindAvailable(kind) {
     return kinds.includes(String(kind));
 }
 
+// Custom-shell events (devdocs/custom-shells.md): the game's semantic events to an
+// author-customized web shell. One generic fire-and-forget message — the protocol
+// vocabulary is the author's own. No channel (plain, TUI, stock web shell without
+// a custom layer) ⇒ drops silently, so golden output is byte-invariant by
+// construction. Name and payload render through the text pipeline (substitutions
+// work) and strip to plain strings, like canvas_text.
+let shellImpl = null;
+function setShellChannel(nextShellImpl) {
+    shellImpl = nextShellImpl;
+}
+
+function shellSend(name, payload) {
+    if (!shellImpl) return;
+    const plain = (v) => parseStyledRuns(renderText(v)).map((r) => r.text).join("");
+    shellImpl({ type: "shell_event", name: plain(name), payload: plain(payload) });
+}
+
+function shellAvailable() {
+    return !!(hostCapabilities && hostCapabilities.shell);
+}
+
 // Split a rendered string into wire runs [{ text, styles? }], honoring the style
 // push/pop sentinels with a local depth (independent of the main output stream's
 // style state) and dropping break sentinels — a window line is exactly one line.
@@ -3296,4 +3317,7 @@ module.exports = {
     canvasHotspot,
     defineImage,
     getImagePath,
+    setShellChannel,
+    shellSend,
+    shellAvailable,
 };

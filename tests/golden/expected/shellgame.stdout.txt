@@ -1,0 +1,7 @@
+Stage
+A bare stage.
+
+> cue
+No shell to cue.
+
+> quit

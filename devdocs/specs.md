@@ -593,6 +593,22 @@ name at load (`lamplighter.defineImage`; the name encodes under
 declared assets (`{ name, sourcePath }`) so Lighthouse can copy them into a web
 bundle.
 
+### Custom-shell events
+
+```lamp
+shell_send(NAME, PAYLOAD)      # both strings; fire-and-forget
+shell_available() -> bool
+```
+
+`shell_send` fires one semantic event — a name plus one string payload, the
+vocabulary the game's own — at an author-customized web shell
+(devdocs/custom-shells.md). Fire-and-forget like `print`: no reply, never
+transcript-captured; on a host without a custom layer (plain, TUI, the stock
+web shell) it drops silently, so golden output is unaffected by construction.
+`shell_available()` reports whether a custom layer is present, so a game can
+fall back to text — shell effects should be enhancement-only; anything
+information-bearing must also exist in text.
+
 ### Globals
 
 A **global** declares a named value that persists for the lifetime of the game. Globals are accessible to the Lamplighter runtime and may be overridden by user files.

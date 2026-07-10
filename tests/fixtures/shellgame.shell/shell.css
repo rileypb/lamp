@@ -1,0 +1,4 @@
+/* SHELLGAME OVERRIDE MARKER — this file replaces the stock shell.css in the
+   bundle (the "eject" override path, devdocs/custom-shells.md). A real ejected
+   shell would carry the full styles; the e2e only asserts the replacement. */
+body { font-family: monospace; }

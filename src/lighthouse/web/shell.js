@@ -558,6 +558,39 @@
         });
     }
 
+    // --- Custom-shell hook surface (devdocs/custom-shells.md) ---------------
+    // A game's shell_send(name, payload) arrives as a shell_event message and
+    // dispatches here. The author's custom.js (loaded right after this script
+    // when the bundle carries one) registers handlers:
+    //     LampShell.on("sound", (payload) => { ... });
+    // and may send input as if typed:
+    //     LampShell.command("look");
+    // Unhandled events drop (fail-silently); a handler exception is logged, never
+    // fatal. `capabilities.shell` is build-time truth: Lighthouse injects the
+    // custom.js tag only when the shell directory supplied one, so its presence —
+    // not registration timing — is what the game's shell_available() sees.
+    const shellEventHandlers = Object.create(null);
+    const customLayerPresent = !!document.querySelector('script[src="custom.js"]');
+
+    window.LampShell = {
+        on(name, handler) {
+            shellEventHandlers[String(name)] = handler;
+        },
+        command(cmd) {
+            synthesizeCommand(String(cmd));
+        },
+    };
+
+    function dispatchShellEvent(msg) {
+        const handler = shellEventHandlers[msg.name];
+        if (!handler) return;
+        try {
+            handler(msg.payload, msg.name);
+        } catch (e) {
+            console.error("LampShell handler error:", e);
+        }
+    }
+
     // Paints coalesce to one rAF: layout must settle after window_set sizing
     // before clientWidth/Height are meaningful.
     const pendingPaints = new Set();
@@ -597,6 +630,9 @@
                 break;
             case "window_update":
                 applyWindowUpdate(msg);
+                break;
+            case "shell_event":
+                dispatchShellEvent(msg);
                 break;
             case "log":
                 console.log(msg.value);
@@ -964,6 +1000,11 @@
         type: "init",
         inputBuffer,
         saveBuffer,
-        capabilities: { windows: { docks: ["top", "bottom", "left", "right"], kinds: ["text", "canvas"] } },
+        capabilities: {
+            windows: { docks: ["top", "bottom", "left", "right"], kinds: ["text", "canvas"] },
+            // True exactly when the bundle carries an author custom.js
+            // (devdocs/custom-shells.md) — what shell_available() reports.
+            shell: customLayerPresent,
+        },
     });
 })();

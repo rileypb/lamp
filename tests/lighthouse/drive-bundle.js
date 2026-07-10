@@ -50,6 +50,7 @@ function driveBundle(bundleDir, commands, {
         const saves = new Map();
         const transcripts = new Map();
         const windowMessages = [];
+        const shellMessages = [];
         let openTranscript = null;
         let output = "";
         const queue = [...commands];
@@ -102,6 +103,9 @@ function driveBundle(bundleDir, commands, {
                 case "window_update":
                     windowMessages.push(msg);
                     break;
+                case "shell_event":
+                    shellMessages.push(msg);
+                    break;
                 case "readline":
                 case "prompt_readline": {
                     if (msg.type === "prompt_readline") output += msg.prompt;
@@ -146,7 +150,7 @@ function driveBundle(bundleDir, commands, {
                     openTranscript = null;
                     break;
                 case "done":
-                    finish(resolve, { output, saves, transcripts, windowMessages });
+                    finish(resolve, { output, saves, transcripts, windowMessages, shellMessages });
                     break;
                 case "error":
                     fail(new Error(`worker error: ${msg.message}; output so far:\n${output}`));

@@ -190,6 +190,11 @@ function startIfReady() {
     lamplighter.setWindowChannel((msg) => {
         self.postMessage(msg);
     });
+    // Custom-shell events (devdocs/custom-shells.md): same verbatim forwarding;
+    // the message carries { type: "shell_event", name, payload }.
+    lamplighter.setShellChannel((msg) => {
+        self.postMessage(msg);
+    });
     installInputChannel(pendingInputBuffer);
     installSaveChannel(pendingSaveBuffer);
 
