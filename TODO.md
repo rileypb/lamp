@@ -674,11 +674,22 @@ seen-fill, you-marker, ciphered labels, and the canvas_image + placeholder
 path all verified live; **freestyle windows v1 is COMPLETE and merged to
 main** (the `windowSyncOne` merge hazard resolved via shared `emitWindow`).
 Still open, as real use dictates: px-vs-percent canvas `size` (px survived
-first contact), the fold-back helper question. **Next design passes: hotspots
-(click region → synthesized parser command) and the custom-shell tier (4) —
-one pass, since they share the command-synthesis + echo-suppression
-machinery; that pass also decides whether the sandboxed-iframe tier (3)
-exists.**
+first contact), the fold-back helper question.
+**Hotspots v1.1 BUILT (2026-07-09):** `canvas_hotspot(w, x, y, wd, ht,
+command)` — a virtual-space rect carrying a parser command, buffered per turn
+beside the draw list, flushed as the `hotspots` field on the canvas
+window_update (the reserved additive field). The shell inverse-transforms
+clicks through the shared paint/hit-test mapping and synthesizes the command
+through the ordinary submit path, **echoed like typed** (no echo-suppression
+machinery; SCRIPT transcripts stay coherent); clicks mid-turn/modal/[more]
+drop; pointer cursor is the affordance. First consumer: the EX deck map
+composes a hotspot per *adjacent* mapped room from the `connects` relation —
+click a neighbor to walk there; closed doors refuse exactly as if typed (no
+GO TO needed). Goldens byte-invariant; unit + e2e cover the wire ("north" at
+Passage End); `dist/phobos_ex_preview` rebuilt for the manual click check.
+**Next: the custom-shell tier (4) design pass** — shell_send, Lighthouse
+author-asset layering, the trust-model decision, and whether the
+sandboxed-iframe tier (3) exists. Command synthesis is now built and shared.
 The custom-shell half (4) still needs its own devdoc when scheduled (extends
 `lighthouse.md`, `sandbox.md`).
 **Where:** `src/lighthouse/`, `src/lamplighter/sandbox/`, `lib/sys`.

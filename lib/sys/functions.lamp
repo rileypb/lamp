@@ -163,6 +163,13 @@ native function void canvas_rect(object w, string color, int x, int y, int wd, i
 native function void canvas_line(object w, string color, int x1, int y1, int x2, int y2)
 native function void canvas_text(object w, string color, int x, int y, int size, string text)
 native function void canvas_image(object w, string img, int x, int y, int wd, int ht)
+# canvas_hotspot marks a rectangle of the virtual space as clickable: a click there
+# synthesizes `command` exactly as if the player typed it (echoed like a typed
+# command; a closed door refuses the same either way). Composed per turn like the
+# draw ops, so hotspots are always as current as the drawing they overlay. Hosts
+# without clicking simply never fire them — a hotspot can never be the only path,
+# because it synthesizes a command the player could type.
+native function void canvas_hotspot(object w, int x, int y, int wd, int ht, string command)
 # (`kind` itself is a Lamp keyword — the kind declaration — so the parameter
 # can't bear that name.)
 native function bool window_kind_available(string content_kind)

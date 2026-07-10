@@ -334,6 +334,7 @@
             pane.canvasEl = document.createElement("canvas");
             pane.canvasEl.className = "pane-canvas-surface";
             pane.el.appendChild(pane.canvasEl);
+            attachHotspotHandlers(pane);
         }
         if (pane.canvasEl) pane.canvasEl.hidden = !isCanvas;
         pane.content.hidden = isCanvas;
@@ -371,6 +372,7 @@
         const pane = paneFor(msg.id);
         if (msg.kind === "canvas") {
             pane.ops = msg.ops || [];
+            pane.hotspots = msg.hotspots || [];
             schedulePaint(pane);
             return;
         }
@@ -482,10 +484,21 @@
         }
     }
 
-    function paintCanvasPane(pane) {
-        if (!pane.canvasEl || pane.canvasEl.hidden || pane.el.hidden || !pane.canvasSpace) return;
+    // The scale-to-fit mapping from a pane's virtual space to its canvas box.
+    // Shared by the painter and the hotspot hit-test, so a click always lands on
+    // exactly what was painted.
+    function paneTransform(pane) {
         const cssW = pane.canvasEl.clientWidth;
         const cssH = pane.canvasEl.clientHeight;
+        const vw = Number(pane.canvasSpace.w) || 1;
+        const vh = Number(pane.canvasSpace.h) || 1;
+        const scale = Math.min(cssW / vw, cssH / vh);
+        return { cssW, cssH, vw, vh, scale, ox: (cssW - vw * scale) / 2, oy: (cssH - vh * scale) / 2 };
+    }
+
+    function paintCanvasPane(pane) {
+        if (!pane.canvasEl || pane.canvasEl.hidden || pane.el.hidden || !pane.canvasSpace) return;
+        const { cssW, cssH, vw, vh, scale, ox, oy } = paneTransform(pane);
         if (cssW <= 0 || cssH <= 0) return;
         // Device-pixel-ratio-aware backing store so art isn't blurry on HiDPI.
         const dpr = window.devicePixelRatio || 1;
@@ -496,10 +509,7 @@
         const ctx = pane.canvasEl.getContext("2d");
         ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
         ctx.clearRect(0, 0, cssW, cssH);
-        const vw = Number(pane.canvasSpace.w) || 1;
-        const vh = Number(pane.canvasSpace.h) || 1;
-        const scale = Math.min(cssW / vw, cssH / vh);
-        ctx.translate((cssW - vw * scale) / 2, (cssH - vh * scale) / 2);
+        ctx.translate(ox, oy);
         ctx.scale(scale, scale);
         // Clip to the virtual space so letterbox margins stay clean.
         ctx.beginPath();
@@ -507,6 +517,45 @@
         ctx.clip();
         for (const op of pane.ops || []) drawOp(ctx, op, scale);
         ctx.setTransform(1, 0, 0, 1, 0, 0);
+    }
+
+    // --- Hotspots (devdocs/freestyle-windows.md, v1.1) ----------------------
+    // A hotspot is a rect in the pane's virtual space carrying a parser command;
+    // clicking it synthesizes the command through the ordinary submit path,
+    // echoed exactly like a typed command. Clicks land only when the game is at
+    // its prompt — mid-turn, mid-modal, and mid-[more] clicks are dropped.
+
+    function hotspotAt(pane, event) {
+        if (!pane.canvasSpace || !pane.hotspots || pane.hotspots.length === 0) return null;
+        const { scale, ox, oy } = paneTransform(pane);
+        if (!(scale > 0)) return null;
+        const vx = (event.offsetX - ox) / scale;
+        const vy = (event.offsetY - oy) / scale;
+        // Last match wins, mirroring paint order (later ops draw on top).
+        for (let i = pane.hotspots.length - 1; i >= 0; i -= 1) {
+            const h = pane.hotspots[i];
+            if (vx >= h.x && vx < h.x + h.w && vy >= h.y && vy < h.y + h.h) return h;
+        }
+        return null;
+    }
+
+    function synthesizeCommand(command) {
+        if (!awaitingInput || activeModal || paged) return;
+        awaitingInput = false;
+        inputLine.value = "";
+        inputLine.disabled = true;
+        appendClassed(`${String(command)}\n`, "player-echo");
+        deliverLine(String(command));
+    }
+
+    function attachHotspotHandlers(pane) {
+        pane.canvasEl.addEventListener("click", (event) => {
+            const h = hotspotAt(pane, event);
+            if (h) synthesizeCommand(h.command);
+        });
+        pane.canvasEl.addEventListener("mousemove", (event) => {
+            pane.canvasEl.style.cursor = hotspotAt(pane, event) ? "pointer" : "";
+        });
     }
 
     // Paints coalesce to one rAF: layout must settle after window_set sizing

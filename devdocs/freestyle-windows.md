@@ -325,6 +325,48 @@ wire ever touches markup.
 4. **First consumer:** the Phobos EX deck map + fallback path; manual browser
    pass.
 
+## Hotspots (v1.1 — decided 2026-07-09)
+
+The deferred input half, kept to the one shape that costs no new adjudication:
+**a hotspot is a rectangle in the pane's virtual space carrying a parser
+command; clicking it synthesizes that command exactly as if the player typed
+it.** By construction a hotspot can never do anything typing couldn't, so
+degradation on non-clicking hosts is free — the map is an affordance, never
+the only path.
+
+Decisions:
+
+1. **Echo like typed.** The synthesized command echoes onto the prompt line
+   (`player-echo`) exactly like a typed command: transparent, SCRIPT
+   transcripts stay coherent (input is captured), matches the debug
+   test-runner's echo behavior, and needs zero echo-suppression machinery.
+2. **Per-turn recompute, riding the existing wire.** `canvas_hotspot(w, x, y,
+   wd, ht, command)` buffers alongside the draw list; `emitWindow` flushes it
+   as the `hotspots` field on the canvas `window_update` (the additive field
+   the wire reserved). Hotspots are therefore always exactly as current as
+   the drawing they overlay, and UNDO/RESTORE re-derive them for free. The
+   command renders through the text pipeline (substitutions work) and is
+   stripped to plain text like `canvas_text`.
+3. **Click delivery = the ordinary submit path.** The shell inverse-transforms
+   the click into virtual coordinates, hit-tests the pane's hotspot list
+   (last match wins, matching paint order), and delivers through the same
+   `awaitingInput` gate as Enter. Clicks while the game is mid-turn, mid-modal,
+   or mid-[more] are dropped — no click queue. Pointer cursor over hotspots is
+   the affordance.
+4. **First consumer: the EX deck map walks.** Movement is the `connects`
+   relation, so the refresh rule composes a hotspot on each *adjacent* mapped
+   room carrying that direction's command — click a neighbor, Galaxy walks
+   there; a closed door refuses exactly as if the direction were typed. No
+   GO TO/pathfinding needed.
+5. **No capability bit.** Hotspots are enhancement-only by principle (they
+   synthesize typeable commands), so the game never needs to ask whether
+   clicks work. Composing hotspots on a non-clicking host wastes a few bytes
+   on the wire and nothing else.
+
+Build steps: (1) runtime + `canvas_hotspot` native + unit tests; (2) shell
+click machinery + e2e; (3) EX deck-map hotspots + golden invariance + manual
+click check.
+
 ## Assumptions
 
 - Whole-pane draw lists re-sent each turn are cheap (panes are small; ops are
@@ -333,11 +375,13 @@ wire ever touches markup.
   v1 (no stretch/tile modes until something real asks).
 - Monospace is an acceptable v1 font story for `canvas_text`.
 
-## Non-goals (v1)
+## Non-goals (v1; hotspots graduated to v1.1 above)
 
-Hotspots/input, sound, video, iframe/HTML content, animation or host-side
-transitions, rotation/transform ops, gradients/paths, per-window font choice,
-TUI graphics, image intrinsic-size queries.
+Sound, video, iframe/HTML content, animation or host-side transitions,
+rotation/transform ops, gradients/paths, per-window font choice, TUI
+graphics, image intrinsic-size queries, hotspots on *text* panes (clickable
+lines — a separate idea if ever), hover/drag/right-click semantics (click
+only).
 
 ## Open questions
 

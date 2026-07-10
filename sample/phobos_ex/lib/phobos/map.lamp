@@ -137,3 +137,15 @@ rule window_refresh_rules:
 				canvas_text(deck_map, "white", x + 2, y + 2, 7, label)
 				if here == r:
 					canvas_rect(deck_map, "bright_yellow", x + 12, y + 13, 6, 4)
+		# Click-to-walk (devdocs/freestyle-windows.md, hotspots v1.1): each room
+		# adjacent to Galaxy gets a hotspot over its cell carrying that direction's
+		# command — clicking synthesizes it exactly as if typed, so a closed door
+		# refuses the same either way. Composed only while she is on a mapped cell
+		# (compass exits only; the ship's inward/outward legs stay type-to-go).
+		if here is room:
+			if here.map_col >= 0:
+				for d in direction.all:
+					if connects here d _:
+						let dest = connects here d ?first
+						if dest.map_col >= 0:
+							canvas_hotspot(deck_map, 5 + dest.map_col * 33, 5 + dest.map_row * 24, 30, 20, "[d]")

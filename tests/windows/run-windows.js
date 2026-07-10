@@ -273,6 +273,23 @@ test("windowSyncOne flushes only the named window, leaving others buffered", () 
     assert.deepStrictEqual(updateFor("panel").lines, [], "panel already drained by windowSyncOne");
 });
 
+test("hotspots ride the canvas update: composed per turn, drained per sync, plain-text commands", () => {
+    installChannel();
+    lamp.canvasHotspot(deckMap, 5, 5, 30, 20, lamp.styled("bold", "north"));
+    lamp.canvasHotspot(deckMap, 38, 5, 30, 20, "open hatch");
+    lamp.windowSync();
+    assert.deepStrictEqual(updateFor("deck_map").hotspots, [
+        { x: 5, y: 5, w: 30, h: 20, command: "north" },
+        { x: 38, y: 5, w: 30, h: 20, command: "open hatch" },
+    ], "hotspots carry plain-text commands (style wrappers stripped)");
+    messages = [];
+    lamp.windowSync();
+    assert.deepStrictEqual(updateFor("deck_map").hotspots, [], "drained by the previous sync");
+    assert.strictEqual(updateFor("panel").hotspots, undefined, "text updates carry no hotspots field");
+    assert.throws(() => lamp.canvasHotspot(panel, 0, 0, 1, 1, "look"),
+        /canvas_hotspot called on window "panel" of kind "text"/);
+});
+
 test("windowSyncOne is kind-aware: a canvas pane flushes ops through the shared emit", () => {
     // The freestyle/window_sync_one merge point (devdocs/freestyle-windows.md):
     // both sync paths share emitWindow, so a single-window flush of a canvas pane

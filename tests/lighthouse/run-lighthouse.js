@@ -138,6 +138,8 @@ try {
         assert.ok(shell.includes("assets.json"), "shell asset manifest fetch missing");
         assert.ok(shell.includes("paintCanvasPane") && shell.includes("drawImage"), "shell canvas renderer missing");
         assert.ok(shell.includes("devicePixelRatio"), "DPR-aware backing store missing");
+        assert.ok(shell.includes("hotspotAt") && shell.includes("synthesizeCommand"),
+            "shell hotspot click machinery missing");
         const css = fs.readFileSync(path.join(outDir, "shell.css"), "utf8");
         assert.ok(css.includes(".pane-canvas"), "canvas pane styling missing");
         const manifest = JSON.parse(fs.readFileSync(path.join(outDir, "assets.json"), "utf8"));
@@ -375,6 +377,12 @@ try {
             assert.strictEqual(labels.length, 14, "every mapped room is labeled");
             assert.ok(!labels.some((o) => o.text === "entry"),
                 "labels render through the Siriusian cipher without the Cyberhelmet");
+            // Hotspots (v1.1): at Passage End the sole exit is north to the
+            // Southern Spoke (through the closed green door — connects edges
+            // exist regardless; clicking refuses exactly like typing "north").
+            assert.deepStrictEqual(mapUpd.hotspots, [
+                { x: 71, y: 101, w: 30, h: 20, command: "north" },
+            ], "one click-to-walk hotspot on the adjacent room's cell");
 
             const tuiMap = tui.windowMessages.find((m) => m.type === "window_set" && m.id === "deck map");
             assert.ok(tuiMap, "deck_map window_set missing on the TUI set");

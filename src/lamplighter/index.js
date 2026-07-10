@@ -1856,6 +1856,7 @@ function windowRule(w, ch) {
 function windowClear(w) {
     windowBuffers.delete(w && w.name);
     canvasBuffers.delete(w && w.name);
+    hotspotBuffers.delete(w && w.name);
 }
 
 // Canvas ops (devdocs/freestyle-windows.md): a transient draw list per pane,
@@ -1938,6 +1939,33 @@ function canvasImage(w, img, x, y, wd, ht) {
     });
 }
 
+// Hotspots (devdocs/freestyle-windows.md, v1.1): a rectangle in the pane's
+// virtual space carrying a parser command the host synthesizes on click, exactly
+// as if typed. Buffered per turn beside the draw list — always as current as the
+// drawing it overlays — and flushed on the canvas window_update. The command
+// renders through the text pipeline (substitutions work), stripped to plain text
+// like canvas_text.
+const hotspotBuffers = new Map();
+
+function hotspotBufferFor(w) {
+    const key = w.name;
+    let spots = hotspotBuffers.get(key);
+    if (!spots) {
+        spots = [];
+        hotspotBuffers.set(key, spots);
+    }
+    return spots;
+}
+
+function canvasHotspot(w, x, y, wd, ht, command) {
+    requireWindowKind(w, "canvas", "canvas_hotspot");
+    const plain = parseStyledRuns(renderText(command)).map((r) => r.text).join("");
+    hotspotBufferFor(w).push({
+        x: Number(x) || 0, y: Number(y) || 0, w: Number(wd) || 0, h: Number(ht) || 0,
+        command: plain,
+    });
+}
+
 const WINDOW_DOCKS = new Set(["top", "bottom", "left", "right"]);
 const WINDOW_KINDS = new Set(["text", "canvas"]);
 
@@ -1948,8 +1976,10 @@ const WINDOW_KINDS = new Set(["text", "canvas"]);
 function emitWindow(inst) {
     const lines = windowBuffers.get(inst.name) || [];
     const ops = canvasBuffers.get(inst.name) || [];
+    const hotspots = hotspotBuffers.get(inst.name) || [];
     windowBuffers.delete(inst.name);
     canvasBuffers.delete(inst.name);
+    hotspotBuffers.delete(inst.name);
     if (!windowImpl || !typeRegistry.has("window")) return;
     const dock = String(inst.dock);
     if (!WINDOW_DOCKS.has(dock)) {
@@ -1982,7 +2012,7 @@ function emitWindow(inst) {
     }
     windowImpl(set);
     windowImpl(kind === "canvas"
-        ? { type: "window_update", id: inst.name, kind, ops }
+        ? { type: "window_update", id: inst.name, kind, ops, hotspots }
         : { type: "window_update", id: inst.name, kind, lines });
 }
 
@@ -1992,6 +2022,7 @@ function windowSync() {
     if (!typeRegistry.has("window")) {
         windowBuffers.clear();
         canvasBuffers.clear();
+        hotspotBuffers.clear();
         return;
     }
     for (const inst of getInstancesForTypeAndSubtypes("window")) {
@@ -3262,6 +3293,7 @@ module.exports = {
     canvasLine,
     canvasText,
     canvasImage,
+    canvasHotspot,
     defineImage,
     getImagePath,
 };
