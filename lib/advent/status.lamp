@@ -26,6 +26,14 @@ window status_bar:
 # messages. Noted in devdocs/i18n.md.)
 rulebook bool status_line_rules():
 	default true
+	# Before the player is placed in a room (the pre-placement startup window — the
+	# bar is composed+pushed once before startup_rules so it shows during a `pause`
+	# there), the bar is blank: there is no room to name, and the default rule below
+	# would read holder(player).lighted off none. Emitting no lines renders an empty,
+	# still-reserved bar. A game overrides with its own `rule status_line_rules when
+	# holder(player) == none:` (e.g. a title-screen caption).
+	when holder(player) == none:
+		stop true
 	when true:
 		let right = freeze "[turns_taken()] turns"
 		if max_score > 0:

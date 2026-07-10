@@ -256,6 +256,36 @@ test("windowKindAvailable: absent kinds on a window-capable host mean text-only"
     assert.strictEqual(lamp.windowKindAvailable("text"), false);
 });
 
+test("windowSyncOne flushes only the named window, leaving others buffered", () => {
+    installChannel();
+    lamp.setField(panel, "dock", "right");
+    lamp.windowLine(panel, "Quests");
+    lamp.windowLine(ticker, "tick");
+    lamp.windowSyncOne(panel);
+    // Only the panel is emitted; the ticker's set/update never arrive.
+    assert.deepStrictEqual(sets().map((m) => m.id), ["panel"]);
+    assert.ok(updateFor("panel"), "panel content flushed");
+    assert.ok(!updateFor("ticker"), "ticker not touched by a single-window sync");
+    // The ticker's buffered line survives to the next full sync, undrained.
+    installChannel();
+    lamp.windowSync();
+    assert.deepStrictEqual(updateFor("ticker").lines, [[{ text: "tick" }]]);
+    assert.deepStrictEqual(updateFor("panel").lines, [], "panel already drained by windowSyncOne");
+});
+
+test("windowSyncOne is kind-aware: a canvas pane flushes ops through the shared emit", () => {
+    // The freestyle/window_sync_one merge point (devdocs/freestyle-windows.md):
+    // both sync paths share emitWindow, so a single-window flush of a canvas pane
+    // carries kind + canvas space + ops, exactly like the full sync.
+    installChannel();
+    lamp.canvasRect(deckMap, "red", 1, 1, 2, 2);
+    lamp.windowSyncOne(deckMap);
+    const set = sets().find((m) => m.id === "deck_map");
+    assert.strictEqual(set.kind, "canvas");
+    assert.deepStrictEqual(set.canvas, { w: 160, h: 240 });
+    assert.deepStrictEqual(updateFor("deck_map").ops, [{ op: "rect", color: "red", x: 1, y: 1, w: 2, h: 2 }]);
+});
+
 test("windowAvailable reflects host capabilities; absent capabilities mean none", () => {
     lamp.setHostCapabilities(null);
     assert.strictEqual(lamp.windowAvailable("top"), false);

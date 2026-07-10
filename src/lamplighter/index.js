@@ -1941,53 +1941,69 @@ function canvasImage(w, img, x, y, wd, ht) {
 const WINDOW_DOCKS = new Set(["top", "bottom", "left", "right"]);
 const WINDOW_KINDS = new Set(["text", "canvas"]);
 
-// Flush: for every declared `window`-typed instance send the idempotent arrangement
-// (window_set, read fresh from its fields — the host diffs) then its buffered
-// content (window_update), and drain the buffers. Buffers drain even with no channel
-// installed, so a pane recomposed every turn on a windowless host can't accumulate.
-// Dock/kind validation happens here rather than in the checker because both are data
-// a game may reassign at play time.
-function windowSync() {
-    const buffered = new Map(windowBuffers);
-    const bufferedOps = new Map(canvasBuffers);
-    windowBuffers.clear();
-    canvasBuffers.clear();
+// Emit one window's idempotent arrangement (window_set, read fresh from its fields —
+// the host diffs) then its buffered content (window_update), draining that window's
+// buffers. Shared by windowSync and windowSyncOne. Dock/kind validation happens here
+// rather than in the checker because both are data a game may reassign at play time.
+function emitWindow(inst) {
+    const lines = windowBuffers.get(inst.name) || [];
+    const ops = canvasBuffers.get(inst.name) || [];
+    windowBuffers.delete(inst.name);
+    canvasBuffers.delete(inst.name);
     if (!windowImpl || !typeRegistry.has("window")) return;
-    for (const inst of getInstancesForTypeAndSubtypes("window")) {
-        const dock = String(inst.dock);
-        if (!WINDOW_DOCKS.has(dock)) {
-            throw new Error(`window "${inst.name}" has invalid dock "${dock}" (expected top, bottom, left, or right)`);
-        }
-        const kind = windowKindOf(inst);
-        if (!WINDOW_KINDS.has(kind)) {
-            throw new Error(`window "${inst.name}" has invalid content_kind "${kind}" (expected text or canvas)`);
-        }
-        const set = {
-            type: "window_set",
-            id: inst.name,
-            dock,
-            size: Number(inst.size) || 0,
-            priority: Number(inst.priority) || 0,
-            visible: !!inst.visible,
-            title: String(inst.title == null ? "" : inst.title),
-            // Visual identity: "pane" or "bar" (the status-line look). Hosts
-            // treat an unknown look as "pane" (fail-silently).
-            look: String(inst.look || "pane"),
-            kind,
-        };
-        if (kind === "canvas") {
-            const cw = Number(inst.canvas_w) || 0;
-            const ch = Number(inst.canvas_h) || 0;
-            if (cw <= 0 || ch <= 0) {
-                throw new Error(`canvas window "${inst.name}" needs positive canvas_w and canvas_h (got ${cw}x${ch})`);
-            }
-            set.canvas = { w: cw, h: ch };
-        }
-        windowImpl(set);
-        windowImpl(kind === "canvas"
-            ? { type: "window_update", id: inst.name, kind, ops: bufferedOps.get(inst.name) || [] }
-            : { type: "window_update", id: inst.name, kind, lines: buffered.get(inst.name) || [] });
+    const dock = String(inst.dock);
+    if (!WINDOW_DOCKS.has(dock)) {
+        throw new Error(`window "${inst.name}" has invalid dock "${dock}" (expected top, bottom, left, or right)`);
     }
+    const kind = windowKindOf(inst);
+    if (!WINDOW_KINDS.has(kind)) {
+        throw new Error(`window "${inst.name}" has invalid content_kind "${kind}" (expected text or canvas)`);
+    }
+    const set = {
+        type: "window_set",
+        id: inst.name,
+        dock,
+        size: Number(inst.size) || 0,
+        priority: Number(inst.priority) || 0,
+        visible: !!inst.visible,
+        title: String(inst.title == null ? "" : inst.title),
+        // Visual identity: "pane" or "bar" (the status-line look). Hosts
+        // treat an unknown look as "pane" (fail-silently).
+        look: String(inst.look || "pane"),
+        kind,
+    };
+    if (kind === "canvas") {
+        const cw = Number(inst.canvas_w) || 0;
+        const ch = Number(inst.canvas_h) || 0;
+        if (cw <= 0 || ch <= 0) {
+            throw new Error(`canvas window "${inst.name}" needs positive canvas_w and canvas_h (got ${cw}x${ch})`);
+        }
+        set.canvas = { w: cw, h: ch };
+    }
+    windowImpl(set);
+    windowImpl(kind === "canvas"
+        ? { type: "window_update", id: inst.name, kind, ops }
+        : { type: "window_update", id: inst.name, kind, lines });
+}
+
+// Flush every declared `window`-typed instance. Buffers drain even with no channel
+// installed, so a pane recomposed every turn on a windowless host can't accumulate.
+function windowSync() {
+    if (!typeRegistry.has("window")) {
+        windowBuffers.clear();
+        canvasBuffers.clear();
+        return;
+    }
+    for (const inst of getInstancesForTypeAndSubtypes("window")) {
+        emitWindow(inst);
+    }
+}
+
+// Flush a single window (its arrangement + buffered content). Used at startup to put
+// the status bar on screen before startup_rules can block on a pause, without sending
+// game panels whose arrangement startup_rules hasn't finalized yet (see startup.lamp).
+function windowSyncOne(w) {
+    if (w) emitWindow(w);
 }
 
 // Player input is a brokered host capability. The host owns stdin and the worker
@@ -3241,6 +3257,7 @@ module.exports = {
     windowRule,
     windowClear,
     windowSync,
+    windowSyncOne,
     canvasRect,
     canvasLine,
     canvasText,

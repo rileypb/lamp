@@ -133,15 +133,18 @@ native function bool request_restart()
 # rule of `ch`; window_clear discards the pane's buffered lines. window_sync flushes
 # every declared window's arrangement + content to the host and drains the buffers —
 # the library calls it once per prompt (after following window_refresh_rules); a game
-# may also call it mid-turn for a dramatic update. window_available reports whether
-# the host renders panes on `dock` ("top"/"bottom"/"left"/"right"), so a game can fall
-# back (e.g. keep pane content reachable by a verb) rather than silently hiding
+# may also call it mid-turn for a dramatic update. window_sync_one flushes just the
+# given window (used at startup to show the status bar before startup_rules runs,
+# without prematurely sending panes it hasn't arranged yet). window_available reports
+# whether the host renders panes on `dock` ("top"/"bottom"/"left"/"right"), so a game
+# can fall back (e.g. keep pane content reachable by a verb) rather than silently hiding
 # information from players on a windowless host.
 native function void window_line(object w, string text)
 native function void window_line_split(object w, string left, string right)
 native function void window_rule(object w, string ch)
 native function void window_clear(object w)
 native function void window_sync()
+native function void window_sync_one(object w)
 native function bool window_available(string dock)
 
 # Freestyle canvas panes (devdocs/freestyle-windows.md). A window with kind "canvas"

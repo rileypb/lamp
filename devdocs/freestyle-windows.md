@@ -13,10 +13,11 @@
 > `content_kind` and the native's parameter `content_kind` — the wire still says
 > `kind`; and `canvas_image` takes the image name as a **string** until the
 > `image` declaration lands in step 2 (the text-window precedent: natives don't
-> take lib-declared types). **Merge hazard:** this branch is based just before
-> commit `4e8c829` (`window_sync_one`); when that merges in, `windowSyncOne`
-> must send the same kind-aware `window_set`/`window_update` payloads —
-> factoring the per-window send out of `windowSync` for both callers.
+> take lib-declared types). **Merge hazard — RESOLVED at the main merge
+> (2026-07-09):** the branch was based just before `4e8c829`
+> (`window_sync_one`); the merge resolution factored the kind-aware per-window
+> send into a shared `emitWindow` used by both `windowSync` and
+> `windowSyncOne`, with a unit test pinning the single-window canvas flush.
 >
 > **Step 2 is built (2026-07-09):** the `image NAME: file "PATH"` declaration end
 > to end — parsed **contextually** on its exact shape (`image` is *not* a
