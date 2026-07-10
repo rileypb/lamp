@@ -114,6 +114,12 @@ on startup:
 			window_sync()
 			print "[par if printed]"
 			input = prompt("> ")
+			# Input stream closed — piped input ran out, or the player sent EOF. No further
+			# commands can arrive, so end the session like QUIT instead of spinning on empty
+			# re-prompts. (A blank line is distinct: it returns "" and begs pardon below.)
+			if input_ended():
+				playing = false
+				break
 			# One typed line may carry several commands ("n. take lamp then s"), each a full
 			# turn of its own. A command the parser could not run — a parse failure, an unknown
 			# noun, a disambiguation question — abandons the rest of the line, as Inform's
@@ -157,6 +163,10 @@ on startup:
 			print message quit_prompt  # "Please type RESTART, RESTORE, or QUIT."
 			while true:
 				input = prompt("> ")
+				# EOF at the endgame prompt ends the session, like QUIT.
+				if input_ended():
+					playing = false
+					break
 				run_meta_command(input, player)
 				if session_over:
 					playing = false

@@ -385,10 +385,15 @@ separators (`.`) yields no commands (`split_commands` returns an empty list). Th
 command loop detects this — no command ran — and re-prompts with the IF-standard
 `I beg your pardon?` (the `beg_pardon` message; French `Pardon ?`), spending no
 turn. This lives in the loop, not the engine, because that is where the empty list
-is observed. Golden: `tests/fixtures/begpardon1.lamp`. (Caveat: the sandbox line
-reader cannot distinguish a blank line from end-of-input, so piped input that
-never issues `quit` re-prompts until the stream is closed by the host — a
-pre-existing gap, tracked in TODO.)
+is observed. Golden: `tests/fixtures/begpardon1.lamp`.
+
+**End of input.** A blank line is distinct from a closed input stream. The sandbox
+line reader returns `""` for a blank line but `null` at end-of-input (piped input
+exhausted, or EOF on the plain backend) — carried back over the input channel as the
+length `-1` sentinel, the same convention the save channel uses. `readLine` /
+`promptLine` record it, and the `input_ended()` native reports it to the loop, which
+ends the session like `quit` rather than spinning on empty re-prompts once no more
+input can arrive. Golden: `tests/fixtures/eofquit1.lamp`.
 
 **AGAIN / G.** A command that is a bare AGAIN word (English `again` / `g`;
 `againWords`, locale data) replays the last command the parser actually ran.

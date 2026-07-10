@@ -1,0 +1,16 @@
+lib advent
+
+# Exercises end-of-input handling (devdocs/game_parser.md, "Empty input"): when the input
+# stream closes without a QUIT — this fixture's stdin has no `quit` line — the command loop
+# ends the session cleanly rather than spinning on empty re-prompts. A blank line is
+# distinct (it still begs pardon); EOF is only a read that yields nothing at all.
+
+game EofQuit_Demo:
+    start hall
+
+room hall:
+    description "A plain hall."
+
+item coin
+
+contains hall coin

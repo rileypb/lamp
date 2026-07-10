@@ -44,6 +44,11 @@ function renderStyledSegment(value, styles, isTty) {
 // multi-byte character (e.g. "é"). A newline (0x0A) never occurs inside a UTF-8
 // multi-byte sequence (continuation bytes are 0x80-0xBF), so scanning for it
 // byte-wise is safe.
+// Reads one line from stdin, or returns null at end-of-input. A blank line (bare
+// newline) returns "" — distinct from EOF's null, so the caller can tell "the player
+// pressed Enter" from "the stream is closed" (the latter ends the session instead of
+// re-prompting forever). A final line with no trailing newline still returns its bytes;
+// only a read that yields nothing at all is EOF.
 function readStdinLine(fs) {
     const byte = Buffer.alloc(1);
     const bytes = [];
@@ -55,7 +60,10 @@ function readStdinLine(fs) {
             if (err.code === "EAGAIN") continue;
             throw err;
         }
-        if (n === 0) break;
+        if (n === 0) {
+            if (bytes.length === 0) return null;
+            break;
+        }
         if (byte[0] === 0x0a) break;
         bytes.push(byte[0]);
     }
@@ -146,6 +154,9 @@ function createPlainBackend({ out, err, fs }) {
             if (prompt != null) {
                 out.write(prompt);
                 const line = readStdinLine(fs);
+                // At EOF deliver the null through unchanged (no echo) so the runtime
+                // can end the session rather than treat it as a blank line.
+                if (line === null) { deliver(null); return; }
                 // Echo the typed line only when input is not a TTY (piped/test): a
                 // real terminal already echoes it, but a captured run must record it.
                 if (!process.stdin.isTTY) out.write(`${line}\n`);
