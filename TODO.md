@@ -989,7 +989,7 @@ consider a manual browser pass on the color CSS (headless checks can't see
 the shades).
 
 ## Smaller / opportunistic
-- **The `[fit]` style (design agreed 2026-07-10, simplified; ready to build).**
+- ~~**The `[fit]` style**~~ **BUILT (2026-07-10; design record in devdocs/text.md I3).**
   A paired style `[fit]…[/fit]` declaring "column-true composition; must not
   wrap" — the web shell scales the whole block by one ratio (its widest line;
   never upscaling; readability floor → horizontal scroll below it);

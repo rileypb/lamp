@@ -469,6 +469,20 @@ try {
             assert.ok(afterRooms.some((r) => r.startsWith("1,4,f,west,")), "Storeroom frontier");
             assert.ok(afterRooms.some((r) => r.startsWith("2,2,f,north,")), "Hub frontier");
 
+            // The [fit] Galaxy banner (text.md I3): hacking the green door scores
+            // a point, flashing the figlet — which must arrive as ONE write
+            // segment (the single-print contract: literal newlines, constant
+            // styling), carrying all six art lines under fixed+fit.
+            const fitWrites = web.writes.filter((w) => (w.styles || []).includes("fit"));
+            assert.strictEqual(fitWrites.length, 1, "one banner flash = one fit segment");
+            assert.ok(fitWrites[0].styles.includes("fixed"), "the figlet keeps its fixed styling");
+            assert.strictEqual(fitWrites[0].value.split("\n").length, 6,
+                "the whole six-line figlet rides in the single segment");
+            const shellSrc = fs.readFileSync(path.join(exOut, "shell.js"), "utf8");
+            assert.ok(shellSrc.includes("fitToWidth"), "shell fit machinery missing");
+            assert.ok(fs.readFileSync(path.join(exOut, "shell.css"), "utf8").includes(".style-fit"),
+                "shell fit styling missing");
+
             const noShell = await driveBundle(exOut, ["quit"], { timeoutMs: 60000 });
             assert.deepStrictEqual(noShell.shellMessages, [], "no map feed without the custom layer");
         } finally {

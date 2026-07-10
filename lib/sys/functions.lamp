@@ -226,6 +226,13 @@ native function string par_if_printed()
 native function string bold(string value)
 native function string italic(string value)
 native function string fixed(string value)
+# [fit] (devdocs/text.md I3): a column-true composition (figlet art, a wide
+# diagram) the web shell shrinks to fit its width as ONE block with one scale
+# ratio; TTY/plain hosts ignore it (today's wrapping — degradation-safe intent).
+# Contract: a fit block is a single print carrying literal newlines (use the
+# multi-line string literal) with constant styling inside — break markers or
+# style changes inside the block split it into independently-scaled pieces.
+native function string fit(string value)
 
 # Color styles: the ANSI/Z-machine 16 (8 classic names + bright variants),
 # foreground only. Same contract as the type styles — the active style rides

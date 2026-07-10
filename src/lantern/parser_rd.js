@@ -108,6 +108,7 @@ const STYLE_MARKER_NAMES = new Set([
     "black", "red", "green", "yellow", "blue", "magenta", "cyan", "white",
     "bright_black", "bright_red", "bright_green", "bright_yellow",
     "bright_blue", "bright_magenta", "bright_cyan", "bright_white",
+    "fit",
 ]);
 
 // Classifies a substitution source as an inline-conditional control marker (E1-E4)

@@ -1,0 +1,19 @@
+# The [fit] style (devdocs/text.md I3): a fit block — one print, literal newlines
+# via the multi-line string literal, constant styling inside — prints on the plain
+# host with the style stripped and its lines intact, byte-identical to unstyled
+# output. The web shell's scaling is covered by the lighthouse e2e (single write
+# segment) and the manual browser pass.
+
+lib advent
+
+game Fit1:
+	start Void
+
+room Void:
+	description "Nothing here."
+
+rule startup_rules:
+	print "[fit][fixed]##### #
+		#   # #
+		##### #####[/fixed][/fit]"
+	print "[par]"

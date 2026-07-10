@@ -1,0 +1,8 @@
+##### #
+#   # #
+##### #####
+
+Void
+Nothing here.
+
+> quit

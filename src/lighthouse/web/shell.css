@@ -245,6 +245,19 @@ html, body {
     white-space: pre-wrap;
 }
 
+/* A [fit] block (text.md I3): a column-true composition scaled by shell.js so
+   its widest line fits the transcript (inline-block + pre make scrollWidth the
+   widest line; one block, one font-size ratio). Below the readability floor the
+   shrink stops and the block scrolls horizontally instead. TTY hosts ignore the
+   style entirely. */
+.style-fit {
+    display: inline-block;
+    white-space: pre;
+    max-width: 100%;
+    overflow-x: auto;
+    vertical-align: bottom;
+}
+
 /* Color styles: the ANSI/Z-machine 16 (foreground). Shades are theme variables
    chosen for legibility on the dark default background — a reskinned shell
    overrides the variables, not the classes. "black" renders as a visible dark
