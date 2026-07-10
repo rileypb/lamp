@@ -114,10 +114,14 @@ Pages site per repo, so **multiple games ship in a single deployment as
 subdirectories of one artifact** rather than as separate deployments. Two
 publication policies coexist:
 
-- **Rebuilt from source each push** (the Cloak samples): `sample/cloak.lamp` →
-  `dist/cloak` (served at `<pages>/cloak/`) and `sample/cloak_fr.lamp` →
-  `dist/cloak_fr` (`<pages>/cloak_fr/`), both with `--encode-strings`. This also
-  doubles as a live check that Lighthouse still builds on `main`.
+- **Rebuilt from source each push** (the Cloak samples + Phobos EX):
+  `sample/cloak.lamp` → `dist/cloak` (served at `<pages>/cloak/`),
+  `sample/cloak_fr.lamp` → `dist/cloak_fr` (`<pages>/cloak_fr/`), and
+  `sample/phobos_ex/phobos_ex.lamp` → `dist/phobos_ex` (`<pages>/phobos_ex/`),
+  all with `--encode-strings`. This also doubles as a live check that
+  Lighthouse still builds on `main` — EX additionally exercises the
+  custom-shell packaging (its `phobos_ex.shell/` map + KIM layer rides the
+  bundle; devdocs/custom-shells.md).
 - **Pre-built, committed bundle** (Phobos): the workflow **copies**
   `sample/phobos/web/` → `dist/phobos` without rebuilding, so ongoing Lamp
   changes on `main` can never break the published game — Phobos intentionally
