@@ -17,7 +17,9 @@
     - `length(string) → int`, `char_at(string, int) → string`, `code_at(string, int) → int`, `substring(string, int start, int end) → string` — the string-character primitives. All **codepoint-based** (an astral character counts as one) and **0-indexed** (matching list indexing). `char_at` returns `""` and `code_at` returns `-1` when the index is out of range; `substring` is the half-open range `[start, end)`, tolerant of out-of-range bounds. With `to_lower` and `+` these are enough to express text algorithms (ciphers, hashing, tokenisation) in Lamp rather than a native.
     - `map_strings(list<object>, function) → list<string>` — applies an object→string function (passed by name) to each element, returning the list of results. The general list-transform primitive (a native because Lamp has no generics — the element/return types are open); pairs with the locale's `format_list` to render a list of objects to prose (`format_list(map_strings(things, describe))`).
     - `append(list<object>, object)` — appends an item to a list **in place** (mutating the list, like `shuffle`), so a list held in a global/field grows durably and the append is captured by undo/save. It is the general list-builder: with `map_strings` and a `for` loop it expresses filter/collect, which Lamp has no literal syntax for (e.g. `let evens = []` then `append(evens, n)` inside a loop). A native because it is generic over the element type.
-    - `run_command(string, object) → bool` — parses one line of player input against registered action templates, resolves slot objects in scope, and runs the matched action for the given actor. Returns **true iff a turn was spent** (an action actually ran), so the caller can fire every-turn rules; false for a parse failure, a disambiguation prompt, or an out-of-world verb.
+    - `run_command(string, object) → bool` — parses one command against registered action templates, resolves slot objects in scope, and runs the matched action for the given actor. Returns **true iff a turn was spent** (an action actually ran), so the caller can fire every-turn rules; false for a parse failure, a disambiguation prompt, or an out-of-world verb.
+    - `split_commands(string) → list<string>` — splits one typed line into the commands it holds (see *Command sequences* below). A full stop or the locale's sequence word (`then`) ends a command; the conjunction (`and`) does not.
+    - `command_ran() → bool` — whether the last `run_command` reached an action at all. Unlike `run_command`'s own result it stays **true for an out-of-world verb** (which runs but spends no turn) and is false for a parse failure, an unresolved noun, or a disambiguation question. The command loop reads it to decide whether the rest of a multi-command line still stands.
 - `lib/en-US/` is the **default locale pack** — English *language data* for the text-substitution layer (article functions `the`/`a`/`an`, case functions `cap`/`upper`/`lower`/`title`, and the list-to-prose formatter `format_list` with its "and"/Oxford comma). Like `lib/sys`, it auto-loads on every invocation, inserted **immediately after `lib/sys/` and before any imported library**. It is the swappable language layer (a future `lib/en-GB`/`lib/fr-FR` replaces it) — `lib/sys` holds only language-agnostic mechanism. See `devdocs/text.md` (three-layer split).
 - Other subdirectories of `lib/` (e.g. `lib/test/`, `lib/advent/`) are optional libraries that must be imported explicitly with `lib LIBNAME`.
 - `.lamp` files placed directly in `lib/` (not inside a named subdirectory) are not parsed and are not available for import.
@@ -1203,7 +1205,7 @@ own `syntax:` line emits — so the two are equivalent at runtime.
 
 #### Running commands
 
-`run_command(line)` (a built-in native function) parses one line of player input
+`run_command(line)` (a built-in native function) parses one command
 against the registered action templates, resolves each slot to an in-scope object
 of the slot's type, and runs the matched action. The typical game loop reads a
 line and passes it to `run_command`. Scope is the actor's location contents and
@@ -1219,6 +1221,36 @@ on startup:
         if line == "quit":
             break
         run_command(line)
+```
+
+#### Command sequences
+
+One typed line may hold several commands, following the IF convention: a **full
+stop** or a **sequence word** (English `then`) ends a command, and no space is
+required after the stop, so `n.e` is two commands. The conjunction `and` is *not*
+a separator — it joins the objects of one command (`take lamp and rope`). A comma
+adjoining a separator (`take lamp, then go north`) is punctuation of the split,
+not a noun-list connector. A period between two digits stays a decimal point, so
+a `real`-typed slot survives (`set dial to 3.5`).
+
+`split_commands(line)` performs the split; the sequence words are locale data
+(`sequenceWords` in the locale pack's `setParserLanguage` install), while the
+full stop is structural and language-neutral. Each command is a **full turn of
+its own**: `run_command` is called once per command, so every-turn rules fire per
+command and undo steps back one command at a time.
+
+A command the parser could not run **abandons the rest of the line**, as Inform's
+parser does — a parse failure, an unresolved noun, or a disambiguation question
+discards the pending commands (the disambiguation answer is read from the next
+line). `command_ran()` reports this to the loop. An out-of-world verb runs without
+spending a turn and the line continues.
+
+```lamp
+for command in split_commands(input):
+    if run_command(command, player):
+        follow every_turn_rules()
+    if not command_ran():
+        break
 ```
 
 #### Phase rules

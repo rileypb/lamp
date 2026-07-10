@@ -913,6 +913,51 @@ let parserConnectors = new Set([","]);
 let parserAllWords = new Set();
 let parserExceptWords = new Set();
 
+// Words that separate whole commands typed on one line ("take lamp then go north").
+// English "then"; a locale installs its own via setParserLanguage. The full stop is
+// language-neutral (handled structurally in splitCommands) and the conjunction is
+// NOT a command separator — "take lamp and rope" is one command with two objects.
+let parserSequenceWords = new Set();
+
+// Split one line of player input into the commands it holds, following the IF
+// convention: a full stop or a sequence word ("then") ends a command, and no space
+// is required after the stop ("n.e" is two commands). A period between two digits is
+// a decimal point, not a separator, so a real-typed slot ("set dial to 3.5") survives.
+// Empty commands are dropped, so "n. . e" is just "n" and "e".
+function splitCommands(line) {
+    const text = String(line);
+    const sentences = [];
+    let current = "";
+    for (let i = 0; i < text.length; i++) {
+        const ch = text[i];
+        if (ch === "." && !(/[0-9]/.test(text[i - 1] || "") && /[0-9]/.test(text[i + 1] || ""))) {
+            sentences.push(current);
+            current = "";
+            continue;
+        }
+        current += ch;
+    }
+    sentences.push(current);
+
+    const commands = [];
+    for (const sentence of sentences) {
+        let words = [];
+        const flush = () => {
+            // A comma bordering a separator is punctuation of the split, not a noun-list
+            // connector: "take lamp, then go north" leaves "take lamp".
+            const command = words.join(" ").replace(/^[\s,]+|[\s,]+$/g, "");
+            if (command) commands.push(command);
+            words = [];
+        };
+        for (const word of sentence.split(/\s+/).filter(Boolean)) {
+            if (parserSequenceWords.has(word.replace(/^,+|,+$/g, "").toLowerCase())) flush();
+            else words.push(word);
+        }
+        flush();
+    }
+    return makeList(commands);
+}
+
 // Splits tokens into pieces at connector tokens, dropping empties (so "ball, and
 // umbrella" yields two pieces).
 function splitOnConnectors(tokens) {
@@ -1079,6 +1124,8 @@ function setParserLanguage(spec) {
     if (spec.connectors) parserConnectors = new Set([",", ...spec.connectors]);
     if (spec.allWords) parserAllWords = new Set(spec.allWords);
     if (spec.exceptWords) parserExceptWords = new Set(spec.exceptWords);
+    // The full stop separates commands under every locale; only the word form is data.
+    if (spec.sequenceWords) parserSequenceWords = new Set(spec.sequenceWords);
     if (spec.disambiguation) disambiguationRenderer = spec.disambiguation;
     if (spec.unknownReference) unknownReferenceRenderer = spec.unknownReference;
 }
@@ -1254,6 +1301,7 @@ function resolveMultiPieces(pieces, startIdx, resolved, instance, field, remaini
 // "objectname: " prefix so the single-object report rules compose into the
 // IF-transcript convention ("chair: Taken." / "pc: Your load is too heavy.").
 function dispatchResolvedAction(actionName, instance, multiOut) {
+    lastCommandRan = true;
     const oow = isOutOfWorld(actionName);
     if (!oow) { checkpoint(); advanceTurn(); }
     const objects = (multiOut && multiOut.objects) || null;
@@ -1286,12 +1334,25 @@ function playerCommand() {
     return lastCommand;
 }
 
+// Whether the last runCommand reached an action at all — false for a parse failure, an
+// unresolved noun, or a disambiguation question. Distinct from runCommand's own return
+// value, which reports only whether a TURN was spent (an out-of-world verb runs but
+// spends none). The command loop reads it to decide whether the remaining commands on a
+// multi-command line still stand: as in Inform, a command the parser could not run
+// abandons the rest of the line.
+let lastCommandRan = false;
+
+function commandRan() {
+    return lastCommandRan;
+}
+
 // metaOnly restricts execution to out-of-world session verbs (QUIT/RESTART/RESTORE/…):
 // an in-world or unrecognized command is silently ignored (returns false, prints nothing),
 // which backs the restricted end-of-story RESTART/RESTORE/QUIT screen — the game is over,
 // so LOOK/TAKE must not run, and unrecognized input just re-prompts.
 function runCommand(line, actor, metaOnly = false) {
     lastCommand = String(line).trim();
+    lastCommandRan = false;
     // Commas become their own tokens: they separate the items of a multiple-object
     // noun phrase ("drop ball, umbrella") and never carry object vocabulary.
     const tokens = String(line).toLowerCase().replace(/,/g, " , ").trim().split(/\s+/).filter(Boolean);
@@ -3239,6 +3300,8 @@ module.exports = {
     setAllFilter,
     runCommand,
     runMetaCommand,
+    splitCommands,
+    commandRan,
     playerCommand,
     registerChangeHandler,
     registerRelationAddHandler,

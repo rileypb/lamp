@@ -977,6 +977,22 @@ consider a manual browser pass on the color CSS (headless checks can't see
 the shades).
 
 ## Smaller / opportunistic
+- ~~**Multiple commands on one line (`then` / full stop).**~~ **DONE (2026-07-10):** the
+  Inform convention — `then` and `.` separate commands (no space needed after the stop,
+  `n.e`), `and` does not (it joins one command's objects), a comma adjoining a separator
+  is dropped with it, and a digit-flanked `.` stays a decimal point. New Stage 0 ahead of
+  the lexer: native `splitCommands` + `lib/sys` `split_commands`; sequence words are locale
+  data (`sequenceWords` in `setParserLanguage`; en-US `then`, fr-FR `puis`/`ensuite`). Each
+  command is a full turn (advent's loop calls `run_command` per command, so every-turn rules
+  fire per command and undo steps back one command). A command the parser can't run — parse
+  failure, unresolved noun, disambiguation question — abandons the rest of the line, as
+  Inform does; the new `command_ran()` native reports it (an out-of-world verb runs, spends
+  no turn, and the line continues). Golden `thenline1`; existing 247 goldens byte-invariant.
+  **By design (decided 2026-07-10):** meta verbs split during *ordinary* play because they
+  run through the same `split_commands` → `run_command` loop as any verb (`score then look`
+  runs both — verified). The end-of-story RESTART/RESTORE/QUIT prompt uses `run_meta_command`
+  on the whole line as one command and is deliberately left un-split. **Follow-up:** `again`/`g`
+  (Inform repeats the last *command*, and never a `then` sequence) is still unimplemented.
 - ~~**Mobile: virtual keyboard covers new output after Enter.**~~ **DONE (2026-07-06,
   verified on device).** On real mobile (not desktop emulation) the keyboard
   overlays the page without shrinking the layout viewport, so `#screen { height: 100% }`

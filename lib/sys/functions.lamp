@@ -50,6 +50,19 @@ native function bool run_command(string line, object actor)
 # the restricted end-of-story RESTART/RESTORE/QUIT prompt, where the game is already over.
 native function bool run_meta_command(string line, object actor)
 
+# Split one typed line into the commands it holds, per the IF convention: a full stop or
+# the locale's sequence word ("then") ends a command, and no space is needed after the
+# stop ("n.e"). The conjunction ("and") is not a separator — it joins the objects of a
+# single command. A period between digits stays a decimal point. Empty commands are
+# dropped, so an empty line yields an empty list.
+native function list<string> split_commands(string line)
+
+# Whether the last run_command reached an action at all — false for a parse failure, an
+# unresolved noun, or a disambiguation question. Unlike run_command's own result (which
+# reports only whether a turn was spent), this stays true for an out-of-world verb. The
+# command loop uses it to abandon the rest of a multi-command line, as Inform does.
+native function bool command_ran()
+
 # Installs the "all includes" hook: fn(action_instance, object) -> bool decides whether
 # `all` includes the object for a multi action ("take all"). The world library installs
 # its default policy at startup; a game may install its own function (delegating back to
