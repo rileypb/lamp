@@ -566,11 +566,11 @@
     // and may send input as if typed:
     //     LampShell.command("look");
     // Unhandled events drop (fail-silently); a handler exception is logged, never
-    // fatal. `capabilities.shell` is build-time truth: Lighthouse injects the
-    // custom.js tag only when the shell directory supplied one, so its presence —
-    // not registration timing — is what the game's shell_available() sees.
+    // fatal. `capabilities.shell` reflects the custom.js tag Lighthouse injects
+    // when the shell directory supplied one — queried at DOMContentLoaded (see the
+    // init post below), because a classic script blocks the parser: during THIS
+    // script's evaluation the custom.js tag after it does not exist in the DOM yet.
     const shellEventHandlers = Object.create(null);
-    const customLayerPresent = !!document.querySelector('script[src="custom.js"]');
 
     window.LampShell = {
         on(name, handler) {
@@ -994,17 +994,28 @@
     // Hand the worker the shared buffers; the bootstrap starts the game on receipt.
     // Capabilities ride the init message (the pre-loop delivery, so it never races
     // the worker blocking on input): this shell docks text-window panes on all four
-    // edges and renders canvas (freestyle) panes. See devdocs/text-windows.md and
-    // devdocs/freestyle-windows.md.
-    worker.postMessage({
-        type: "init",
-        inputBuffer,
-        saveBuffer,
-        capabilities: {
-            windows: { docks: ["top", "bottom", "left", "right"], kinds: ["text", "canvas"] },
-            // True exactly when the bundle carries an author custom.js
-            // (devdocs/custom-shells.md) — what shell_available() reports.
-            shell: customLayerPresent,
-        },
-    });
+    // edges and renders canvas (freestyle) panes. The post waits for
+    // DOMContentLoaded: only then has the injected custom.js tag been parsed AND
+    // executed (classic scripts run in document order before the event), so
+    // capabilities.shell is accurate and every LampShell.on registration precedes
+    // the game's first turn. See devdocs/text-windows.md,
+    // devdocs/freestyle-windows.md, and devdocs/custom-shells.md.
+    function start() {
+        worker.postMessage({
+            type: "init",
+            inputBuffer,
+            saveBuffer,
+            capabilities: {
+                windows: { docks: ["top", "bottom", "left", "right"], kinds: ["text", "canvas"] },
+                // True exactly when the bundle carries an author custom.js
+                // (devdocs/custom-shells.md) — what shell_available() reports.
+                shell: !!document.querySelector('script[src="custom.js"]'),
+            },
+        });
+    }
+    if (document.readyState === "loading") {
+        document.addEventListener("DOMContentLoaded", start);
+    } else {
+        start();
+    }
 })();

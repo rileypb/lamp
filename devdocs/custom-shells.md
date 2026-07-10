@@ -108,11 +108,14 @@ exceptions are caught and logged — an author bug must not kill the broker.
 `index.html` gains `custom.css` / `custom.js` tags **only when Lighthouse saw
 those files in the shell directory** (build-time templating, like the title),
 so a stock bundle carries no dangling references. `capabilities.shell` is
-declared true exactly when the page carries a `custom.js` tag — build-time
-truth, immune to script-order races. A fully ejected shell.js owns its own
-capabilities line. Load order note: `custom.js` evaluates in document order
-right after `shell.js`, before the worker can deliver its first message in
-practice; a paranoid author registers handlers at top level, nothing deferred.
+declared true exactly when the page carries a `custom.js` tag. **The init post
+waits for `DOMContentLoaded`** — a classic script blocks the parser, so during
+shell.js's own evaluation the injected tag after it does not exist in the DOM
+yet (a real bug caught in the first manual pass); at `DOMContentLoaded` the
+custom layer has both parsed and *executed*, so the capability is accurate and
+every `LampShell.on` registration precedes the game's first turn — handler
+registration cannot race the first event. A fully ejected shell.js owns its
+own capabilities line.
 
 ## Lighthouse packaging
 

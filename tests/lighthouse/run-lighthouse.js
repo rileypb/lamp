@@ -338,6 +338,14 @@ try {
             assert.ok(html.includes('<link rel="stylesheet" href="custom.css">'), "custom.css tag missing");
             const stockHtml = fs.readFileSync(path.join(outDir, "index.html"), "utf8");
             assert.ok(!stockHtml.includes("custom.js"), "a stock bundle must carry no custom tags");
+            // The capability must be computed at DOMContentLoaded — during
+            // shell.js's own evaluation the injected custom.js tag after it is
+            // not yet in the DOM (parser-blocking; the first manual pass bug).
+            const shellSrc = fs.readFileSync(path.join(shOut, "shell.js"), "utf8");
+            assert.ok(shellSrc.includes("DOMContentLoaded"),
+                "init post must wait for DOMContentLoaded");
+            assert.ok(shellSrc.indexOf("shell: !!document.querySelector") > shellSrc.indexOf("function start"),
+                "capabilities.shell must be queried inside the deferred start");
 
             const withShell = await driveBundle(shOut, ["cue", "quit"], {
                 capabilities: { windows: { docks: ["top"] }, shell: true },
