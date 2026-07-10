@@ -1,0 +1,57 @@
+hall
+A plain hall.
+
+You see a coin, an umbrella, a red ball and a blue ball here.
+
+> take coin then take umbrella
+Taken.
+
+Taken.
+
+> ticks
+ticks: 2
+
+> i. drop coin, then ticks
+You are carrying:
+  a coin
+  an umbrella
+
+Dropped.
+
+ticks: 4
+
+> n.s
+study
+A cramped study.
+
+hall
+A plain hall.
+
+You see a coin, a red ball and a blue ball here.
+
+> take red ball and blue ball. ticks
+red ball: Taken.
+blue ball: Taken.
+
+ticks: 7
+
+> xyzzy. i
+I don't understand that.
+
+> drop all. take frobozz. i
+umbrella: Dropped.
+red ball: Dropped.
+blue ball: Dropped.
+
+You can't see any such thing.
+
+> take ball. ticks
+Which do you mean: the red ball or the blue ball?
+
+> red
+Taken.
+
+> ticks
+ticks: 9
+
+> quit

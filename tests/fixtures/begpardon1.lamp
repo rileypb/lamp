@@ -1,0 +1,30 @@
+lib advent
+
+# Exercises the empty-command response (devdocs/game_parser.md, "Empty input"): a blank
+# line, a whitespace-only line, or a line of only separators (".") yields no commands, so
+# the loop re-prompts with "I beg your pardon?" and spends no turn (the every-turn counter
+# holds). A dangling separator ("take coin then") is not empty — it still runs its one
+# command.
+
+game BegPardon_Demo:
+    start hall
+
+room hall:
+    description "A plain hall."
+
+item coin
+
+contains hall coin
+
+global int ticks = 0
+
+rule every_turn_rules:
+    ticks = ticks + 1
+
+action request_ticks:
+    out_of_world
+
+report request_ticks:
+    print "ticks: [ticks]"
+
+understand "ticks" as request_ticks

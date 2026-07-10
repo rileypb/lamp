@@ -977,6 +977,44 @@ consider a manual browser pass on the color CSS (headless checks can't see
 the shades).
 
 ## Smaller / opportunistic
+- ~~**Multiple commands on one line (`then` / full stop).**~~ **DONE (2026-07-10):** the
+  Inform convention — `then` and `.` separate commands (no space needed after the stop,
+  `n.e`), `and` does not (it joins one command's objects), a comma adjoining a separator
+  is dropped with it, and a digit-flanked `.` stays a decimal point. New Stage 0 ahead of
+  the lexer: native `splitCommands` + `lib/sys` `split_commands`; sequence words are locale
+  data (`sequenceWords` in `setParserLanguage`; en-US `then`, fr-FR `puis`/`ensuite`). Each
+  command is a full turn (advent's loop calls `run_command` per command, so every-turn rules
+  fire per command and undo steps back one command). A command the parser can't run — parse
+  failure, unresolved noun, disambiguation question — abandons the rest of the line, as
+  Inform does; the new `command_ran()` native reports it (an out-of-world verb runs, spends
+  no turn, and the line continues). Golden `thenline1`; existing 247 goldens byte-invariant.
+  **By design (decided 2026-07-10):** meta verbs split during *ordinary* play because they
+  run through the same `split_commands` → `run_command` loop as any verb (`score then look`
+  runs both — verified). The end-of-story RESTART/RESTORE/QUIT prompt uses `run_meta_command`
+  on the whole line as one command and is deliberately left un-split.
+- ~~**AGAIN / G (replay the last command).**~~ **DONE (2026-07-10):** a bare AGAIN word replays
+  the last command the parser actually ran. Handled in `runCommand` above the grammar (not a
+  Lamp action) so it returns the *replayed* command's turn result — the loop then fires
+  every-turn rules and checkpoints undo as if retyped. Only an **in-world** command is the
+  target: AGAIN never records itself (`again` `again` repeats the original), and out-of-world
+  verbs (`undo`/`save`/`score`) are skipped. A disambiguated command records **fully resolved**
+  (`take ball` + `red` → `take red ball`, via `spliceDisambiguation`), so replaying it resolves
+  straight through with no second prompt. The line is already split, so AGAIN never replays a
+  `then` sequence (matches Inform). Vocabulary is locale data
+  (`againWords`; en-US `again`/`g`, fr-FR `encore`); empty-history message `parser_again_none`.
+  Golden `again1`; existing 248 goldens byte-invariant.
+- ~~**Empty input responds "I beg your pardon?".**~~ **DONE (2026-07-10):** a blank line, a
+  whitespace-only line, or a line of only separators (".") yields no commands, so advent's
+  command loop (`startup.lamp`) re-prompts with the `beg_pardon` message (en-US "I beg your
+  pardon?", fr-FR "Pardon ?"), spending no turn. Handled in the loop, not the engine, because
+  that is where the empty `split_commands` list is observed. Golden `begpardon1`; existing 249
+  goldens byte-invariant.
+  **Follow-up (pre-existing, now more visible): no EOF sentinel.** `readStdinLine`
+  (`sandbox/backends/plain.js`) returns `""` for both a blank line and end-of-input, so piped
+  input that never issues `quit` now re-prompts "I beg your pardon?" until the host closes the
+  stream (before this it was a *silent* infinite loop). Fixing it means threading an EOF/null
+  sentinel through the sandbox line-read protocol (host.js / worker*.js / index.js) and having
+  the loop treat it as an implicit QUIT — a transport change, out of scope for the parser work.
 - ~~**Mobile: virtual keyboard covers new output after Enter.**~~ **DONE (2026-07-06,
   verified on device).** On real mobile (not desktop emulation) the keyboard
   overlays the page without shrinking the layout viewport, so `#screen { height: 100% }`

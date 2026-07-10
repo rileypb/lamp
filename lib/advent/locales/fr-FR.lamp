@@ -78,6 +78,7 @@ banner_by: " par "
 story_won: "*** Vous avez gagné ***[line break]"
 story_lost: "*** Vous avez perdu ***[line break]"
 quit_prompt: "Tapez RECOMMENCER pour rejouer, CHARGER pour reprendre une partie sauvegardée, ou QUITTER pour quitter le jeu."
+beg_pardon: "Pardon ?"
 
 # --- parser feedback (engine messages, routed through the message registry) ---
 # parser_no_understand is the parser's own voice ("Je …"), fixed like en-US.

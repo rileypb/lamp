@@ -1,0 +1,70 @@
+hall
+A plain hall.
+
+You see a coin, a red ball and a blue ball here.
+
+> again
+You can't repeat a command you haven't yet given.
+
+> drop coin
+You're not carrying that.
+
+> take coin
+Taken.
+
+> again
+You're already carrying that.
+
+> ticks
+ticks: 3
+
+> g
+You're already carrying that.
+
+> ticks
+ticks: 4
+
+> score
+You have scored 0.
+
+> again
+You're already carrying that.
+
+> i
+You are carrying:
+  a coin
+
+> take ball
+Which do you mean: the red ball or the blue ball?
+
+> red
+Taken.
+
+> again
+You're already carrying that.
+
+> i
+You are carrying:
+  a coin
+  a red ball
+
+> drop red ball
+Dropped.
+
+> again
+You're not carrying that.
+
+> i
+You are carrying:
+  a coin
+
+> take coin then g
+You're already carrying that.
+
+You're already carrying that.
+
+> i
+You are carrying:
+  a coin
+
+> quit

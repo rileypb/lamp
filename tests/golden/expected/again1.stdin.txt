@@ -1,0 +1,20 @@
+again
+drop coin
+take coin
+again
+ticks
+g
+ticks
+score
+again
+i
+take ball
+red
+again
+i
+drop red ball
+again
+i
+take coin then g
+i
+quit

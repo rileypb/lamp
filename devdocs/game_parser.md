@@ -325,11 +325,14 @@ fall on the author: the **native engine** constructs the instance and binds
 
 ## Architecture: the pipeline
 
-The parser is six stages. Each stage names its input and output so it can be
-replaced independently.
+The parser is six stages, preceded by the command split. Each stage names its
+input and output so it can be replaced independently.
 
 ```
 line of text
+   │  Stage 0: Command split  one line → one or more commands
+   ▼
+one command
    │  Stage 1: Lexer        normalize + tokenize
    ▼
 token list
@@ -349,6 +352,59 @@ world mutated + output printed
    ▼
 next line
 ```
+
+### Stage 0 — Command sequences (native)
+
+A typed line may hold several commands. `split_commands(line)` (native,
+`splitCommands` in the runtime) splits it before the lexer sees anything, on the
+IF convention:
+
+- A **full stop** ends a command, with no space required after it — `n.e` is two
+  commands. A period between two digits is a decimal point, not a separator, so a
+  `real`-typed slot (`set dial to 3.5`) survives.
+- A **sequence word** ends a command — English `then`. The words are locale data
+  (`sequenceWords`, installed through `setParserLanguage`); the full stop is
+  structural and needs no locale.
+- The **conjunction** (`and`) does *not* end a command. It joins the objects of one
+  command (`take lamp and rope`); see Stage 3's connector handling.
+- A comma adjoining a separator (`take lamp, then go north`) is punctuation of the
+  split, not a noun-list connector, and is dropped with it. Empty commands are
+  dropped, so an empty line yields no commands.
+
+Each command is then a full turn of its own: the command loop calls `run_command`
+once per command, so every-turn rules fire per command and undo steps back one
+command at a time. Following Inform, a command the parser could not run **abandons
+the rest of the line** — a parse failure, an unresolved noun, or a disambiguation
+question (whose answer is read from the next typed line) discards what follows.
+The runtime records this per command and `command_ran()` reports it to the loop;
+an out-of-world verb runs, spends no turn, and the line continues. Golden:
+`tests/fixtures/thenline1.lamp`.
+
+**Empty input.** A blank line, a whitespace-only line, or a line of only
+separators (`.`) yields no commands (`split_commands` returns an empty list). The
+command loop detects this — no command ran — and re-prompts with the IF-standard
+`I beg your pardon?` (the `beg_pardon` message; French `Pardon ?`), spending no
+turn. This lives in the loop, not the engine, because that is where the empty list
+is observed. Golden: `tests/fixtures/begpardon1.lamp`. (Caveat: the sandbox line
+reader cannot distinguish a blank line from end-of-input, so piped input that
+never issues `quit` re-prompts until the stream is closed by the host — a
+pre-existing gap, tracked in TODO.)
+
+**AGAIN / G.** A command that is a bare AGAIN word (English `again` / `g`;
+`againWords`, locale data) replays the last command the parser actually ran.
+`runCommand` intercepts it here, above the grammar, because AGAIN must return the
+**replayed** command's turn result — the loop then fires every-turn rules and takes
+an undo checkpoint exactly as if the player had retyped the command. Only an
+**in-world** command is the replay target: AGAIN never records itself (so `again`
+`again` repeats the original), and repeating an out-of-world verb (`undo`/`score`)
+is meaningless, so those are skipped. A disambiguated command is recorded **fully
+resolved** — the answer folded back into the command (`take ball` + `red` →
+`take red ball`, via `spliceDisambiguation`) — so AGAIN replays a command that
+resolves straight through without asking again; a chained disambiguation splices
+each answer onto the accumulated command. Because each line is already split into
+single commands, AGAIN never replays a whole `then` sequence — matching Inform.
+With no command yet to repeat it prints the `parser_again_none` message. Golden:
+`tests/fixtures/again1.lamp`.
 
 ### Stage 1 — Lexer (native)
 
@@ -718,6 +774,9 @@ populating it.
   input tokens rather than resolved to an object (`int`/`real` need a single numeric
   token; string/text take the matched phrase verbatim). Implemented in `resolveSlots`
   (`literalSlotValue` + the `PRIMITIVE_SLOT_TYPES` branch); golden `numslot1`.
+  Also done: **command sequences** — `then` / full stop split one typed line into
+  several commands (Stage 0 above); golden `thenline1`. **AGAIN / G** replays the
+  last command (Stage 0); golden `again1`.
   `[a direction]`, multi-object, and topic tokens remain.
 
 ## Worked example (target behavior)

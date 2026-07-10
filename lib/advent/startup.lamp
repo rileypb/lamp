@@ -114,14 +114,35 @@ on startup:
 			window_sync()
 			print "[par if printed]"
 			input = prompt("> ")
-			# Fire every-turn rules only when the command actually spent a turn (not on a
-			# parse failure, a disambiguation prompt, or an out-of-world verb) and the story
-			# is still going. `[par if printed]` separates any every-turn output into its own
-			# paragraph after the action's report (a no-op when the action printed nothing).
-			if run_command(input, player):
-				if story == ongoing:
-					print "[par if printed]"
-					follow every_turn_rules()
+			# One typed line may carry several commands ("n. take lamp then s"), each a full
+			# turn of its own. A command the parser could not run — a parse failure, an unknown
+			# noun, a disambiguation question — abandons the rest of the line, as Inform's
+			# parser does; so does the end of the story or a session verb.
+			let saw_command = false
+			for command in split_commands(input):
+				saw_command = true
+				# Separate one command's output from the next (a no-op ahead of the first,
+				# where nothing has printed since the input line).
+				print "[par if printed]"
+				# Fire every-turn rules only when the command actually spent a turn (not on a
+				# parse failure, a disambiguation prompt, or an out-of-world verb) and the story
+				# is still going. `[par if printed]` separates any every-turn output into its own
+				# paragraph after the action's report (a no-op when the action printed nothing).
+				if run_command(command, player):
+					if story == ongoing:
+						print "[par if printed]"
+						follow every_turn_rules()
+				if session_over:
+					break
+				if not (story == ongoing):
+					break
+				if not command_ran():
+					break
+			# An empty line (blank, or only separators like ".") yields no commands — the IF
+			# convention is to re-prompt with "I beg your pardon?".
+			if not saw_command:
+				print "[par if printed]"
+				print message beg_pardon  # "I beg your pardon?"
 			if session_over:
 				playing = false
 				break

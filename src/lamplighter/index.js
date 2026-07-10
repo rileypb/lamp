@@ -898,6 +898,31 @@ function isSelfWord(span) {
     return tokens.length === 1 && parserSelfWords.has(tokens[0]);
 }
 
+// The whole command is a bare AGAIN word ("again" / "g"), articles aside.
+function isAgainCommand(tokens) {
+    const stripped = tokens.filter((t) => !parserArticles.has(t));
+    return stripped.length === 1 && parserAgainWords.has(stripped[0]);
+}
+
+// Fold a disambiguation answer back into the command that prompted it, so AGAIN can
+// replay the FULLY RESOLVED command and it resolves straight through without asking
+// again: "take ball" + answer "red" -> "take red ball". The answer words the noun
+// already carries are dropped (a full-name answer "red ball" doesn't duplicate "ball"),
+// and the rest are inserted just before the noun's head word. Falls back to the
+// unchanged command when the head word can't be located.
+function spliceDisambiguation(commandText, spanTokens, answerTokens) {
+    if (!commandText || !spanTokens || spanTokens.length === 0) return commandText;
+    const spanSet = new Set(spanTokens.map((t) => t.toLowerCase()));
+    const added = answerTokens.filter((t) => !spanSet.has(t.toLowerCase()));
+    if (added.length === 0) return commandText;
+    const head = spanTokens[spanTokens.length - 1].toLowerCase();
+    const words = commandText.split(/\s+/);
+    const idx = words.findIndex((w) => w.replace(/^[^\p{L}\p{N}]+|[^\p{L}\p{N}]+$/gu, "").toLowerCase() === head);
+    if (idx < 0) return commandText;
+    words.splice(idx, 0, ...added);
+    return words.join(" ");
+}
+
 // Connector words that separate the items of a multiple-object noun phrase
 // ("ball and umbrella", "ball, umbrella"). The comma is language-neutral (it is
 // split into its own token at tokenization); a locale adds its conjunction
@@ -912,6 +937,57 @@ let parserConnectors = new Set([","]);
 // language policy.
 let parserAllWords = new Set();
 let parserExceptWords = new Set();
+
+// Words that separate whole commands typed on one line ("take lamp then go north").
+// English "then"; a locale installs its own via setParserLanguage. The full stop is
+// language-neutral (handled structurally in splitCommands) and the conjunction is
+// NOT a command separator — "take lamp and rope" is one command with two objects.
+let parserSequenceWords = new Set();
+
+// Words that replay the last command (Inform's AGAIN/G). English "again"/"g"; a locale
+// installs its own via setParserLanguage. Recognized by runCommand ahead of the grammar,
+// because AGAIN must return the REPLAYED command's turn result (so the loop's every-turn
+// rules and undo behave as if the player retyped it) — a plain out-of-world action can't.
+let parserAgainWords = new Set();
+
+// Split one line of player input into the commands it holds, following the IF
+// convention: a full stop or a sequence word ("then") ends a command, and no space
+// is required after the stop ("n.e" is two commands). A period between two digits is
+// a decimal point, not a separator, so a real-typed slot ("set dial to 3.5") survives.
+// Empty commands are dropped, so "n. . e" is just "n" and "e".
+function splitCommands(line) {
+    const text = String(line);
+    const sentences = [];
+    let current = "";
+    for (let i = 0; i < text.length; i++) {
+        const ch = text[i];
+        if (ch === "." && !(/[0-9]/.test(text[i - 1] || "") && /[0-9]/.test(text[i + 1] || ""))) {
+            sentences.push(current);
+            current = "";
+            continue;
+        }
+        current += ch;
+    }
+    sentences.push(current);
+
+    const commands = [];
+    for (const sentence of sentences) {
+        let words = [];
+        const flush = () => {
+            // A comma bordering a separator is punctuation of the split, not a noun-list
+            // connector: "take lamp, then go north" leaves "take lamp".
+            const command = words.join(" ").replace(/^[\s,]+|[\s,]+$/g, "");
+            if (command) commands.push(command);
+            words = [];
+        };
+        for (const word of sentence.split(/\s+/).filter(Boolean)) {
+            if (parserSequenceWords.has(word.replace(/^,+|,+$/g, "").toLowerCase())) flush();
+            else words.push(word);
+        }
+        flush();
+    }
+    return makeList(commands);
+}
 
 // Splits tokens into pieces at connector tokens, dropping empties (so "ball, and
 // umbrella" yields two pieces).
@@ -1079,6 +1155,9 @@ function setParserLanguage(spec) {
     if (spec.connectors) parserConnectors = new Set([",", ...spec.connectors]);
     if (spec.allWords) parserAllWords = new Set(spec.allWords);
     if (spec.exceptWords) parserExceptWords = new Set(spec.exceptWords);
+    // The full stop separates commands under every locale; only the word form is data.
+    if (spec.sequenceWords) parserSequenceWords = new Set(spec.sequenceWords);
+    if (spec.againWords) parserAgainWords = new Set(spec.againWords);
     if (spec.disambiguation) disambiguationRenderer = spec.disambiguation;
     if (spec.unknownReference) unknownReferenceRenderer = spec.unknownReference;
 }
@@ -1171,6 +1250,8 @@ function resolveSlots(slots, instance, scope, slotTypes, multiOut = { field: nul
                 scope,
                 slotTypes,
                 multiOut,
+                sourceCommand: repeatableSource,
+                span,
             };
             return "ambiguous";
         }
@@ -1235,6 +1316,8 @@ function resolveMultiPieces(pieces, startIdx, resolved, instance, field, remaini
                 scope,
                 slotTypes,
                 multiOut,
+                sourceCommand: repeatableSource,
+                span: pieces[i],
                 multiPieces: { pieces, nextIndex: i + 1, resolved },
             };
             return "ambiguous";
@@ -1254,7 +1337,11 @@ function resolveMultiPieces(pieces, startIdx, resolved, instance, field, remaini
 // "objectname: " prefix so the single-object report rules compose into the
 // IF-transcript convention ("chair: Taken." / "pc: Your load is too heavy.").
 function dispatchResolvedAction(actionName, instance, multiOut) {
+    lastCommandRan = true;
     const oow = isOutOfWorld(actionName);
+    // Only an in-world command becomes the AGAIN target — repeating UNDO/SAVE/SCORE is
+    // meaningless, and AGAIN never reaches here (it is intercepted in runCommand).
+    if (!oow && repeatableSource) lastRepeatableCommand = repeatableSource;
     if (!oow) { checkpoint(); advanceTurn(); }
     const objects = (multiOut && multiOut.objects) || null;
     if (objects && (objects.length > 1 || multiOut.announce)) {
@@ -1286,12 +1373,40 @@ function playerCommand() {
     return lastCommand;
 }
 
+// Whether the last runCommand reached an action at all — false for a parse failure, an
+// unresolved noun, or a disambiguation question. Distinct from runCommand's own return
+// value, which reports only whether a TURN was spent (an out-of-world verb runs but
+// spends none). The command loop reads it to decide whether the remaining commands on a
+// multi-command line still stand: as in Inform, a command the parser could not run
+// abandons the rest of the line.
+let lastCommandRan = false;
+
+function commandRan() {
+    return lastCommandRan;
+}
+
+// The last in-world command the parser actually ran, replayed by AGAIN/G. It excludes
+// AGAIN itself (intercepted before dispatch, never recorded) and out-of-world verbs
+// (UNDO/SAVE/…); a disambiguated command is recorded FULLY RESOLVED ("take red ball",
+// the answer folded in), so replaying it resolves straight through. Empty until the
+// first in-world action runs.
+let lastRepeatableCommand = "";
+
+// The text dispatchResolvedAction records as the repeatable command for the action it is
+// about to run: normally the command being parsed, but the answer-folded command while a
+// disambiguation is being resolved (see spliceDisambiguation / pendingDisambiguation).
+let repeatableSource = "";
+
 // metaOnly restricts execution to out-of-world session verbs (QUIT/RESTART/RESTORE/…):
 // an in-world or unrecognized command is silently ignored (returns false, prints nothing),
 // which backs the restricted end-of-story RESTART/RESTORE/QUIT screen — the game is over,
 // so LOOK/TAKE must not run, and unrecognized input just re-prompts.
 function runCommand(line, actor, metaOnly = false) {
     lastCommand = String(line).trim();
+    lastCommandRan = false;
+    // The command AGAIN would record if it resolves to an in-world action; the
+    // disambiguation branch below folds the answer into the command it is resolving.
+    repeatableSource = lastCommand;
     // Commas become their own tokens: they separate the items of a multiple-object
     // noun phrase ("drop ball, umbrella") and never carry object vocabulary.
     const tokens = String(line).toLowerCase().replace(/,/g, " , ").trim().split(/\s+/).filter(Boolean);
@@ -1303,6 +1418,10 @@ function runCommand(line, actor, metaOnly = false) {
         const multiOut = pending.multiOut || { field: null, objects: null };
         const stripped = tokens.filter((t) => !parserArticles.has(t));
         const phraseTokens = stripped.length > 0 ? stripped : tokens;
+        // The AGAIN target is the fully resolved command: fold this answer back into the
+        // command that prompted ("take ball" + "red" -> "take red ball"), so replaying it
+        // resolves straight through. A chained disambiguation splices onto this result.
+        repeatableSource = spliceDisambiguation(pending.sourceCommand || repeatableSource, pending.span, phraseTokens);
         const narrowed = candidates.filter((obj) => phraseTokens.every((t) => objectVocab(obj).has(t)));
         if (narrowed.length === 1) {
             pendingDisambiguation = null;
@@ -1341,13 +1460,28 @@ function runCommand(line, actor, metaOnly = false) {
             return false;
         }
         if (narrowed.length > 1) {
-            // Still ambiguous — re-prompt with the narrowed set.
+            // Still ambiguous — re-prompt with the narrowed set, carrying this partial
+            // answer forward (sourceCommand) so a second answer accumulates onto it.
             printDisambiguationPrompt(narrowed);
-            pendingDisambiguation = { ...pendingDisambiguation, candidates: narrowed };
+            pendingDisambiguation = { ...pendingDisambiguation, candidates: narrowed, sourceCommand: repeatableSource };
             return false;
         }
         // 0 matches — treat input as a fresh command.
         pendingDisambiguation = null;
+    }
+
+    // AGAIN / G — replay the last in-world command. Handled above the grammar because it
+    // must return the REPLAYED command's turn result, so the loop fires every-turn rules and
+    // takes an undo checkpoint exactly as if the player had retyped it. Each line is already
+    // split into single commands (splitCommands), so AGAIN never replays a `then` sequence,
+    // and it never records itself (the recursive call runs the stored command, not "again").
+    // Not offered at the meta-only end-of-story prompt.
+    if (!metaOnly && isAgainCommand(tokens)) {
+        if (!lastRepeatableCommand) {
+            print(message("parser_again_none", "You can't repeat a command you haven't yet given."));
+            return false;
+        }
+        return runCommand(lastRepeatableCommand, actor, metaOnly);
     }
 
     // Every player command — including the meta-verbs UNDO/SAVE/RESTORE — resolves through
@@ -3239,6 +3373,8 @@ module.exports = {
     setAllFilter,
     runCommand,
     runMetaCommand,
+    splitCommands,
+    commandRan,
     playerCommand,
     registerChangeHandler,
     registerRelationAddHandler,

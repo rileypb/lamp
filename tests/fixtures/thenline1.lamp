@@ -1,0 +1,43 @@
+lib advent
+
+# Exercises several commands on one typed line (devdocs/game_parser.md, "Command
+# sequences"): `then` and a full stop separate commands, no space is needed after the
+# stop ("n.s"), a comma before `then` is punctuation of the split, `and` still joins the
+# objects of ONE command rather than starting a new one, each command is a full turn of
+# its own (the every-turn counter ticks once per command), an out-of-world verb spends no
+# turn but lets the line continue, and a command the parser cannot run — an unknown verb,
+# an unknown noun, or a disambiguation question — abandons the rest of the line.
+
+game Then_Demo:
+    start hall
+
+room hall:
+    description "A plain hall."
+
+room study:
+    description "A cramped study."
+
+bidi connects hall north study
+
+item coin
+item umbrella
+item red_ball
+item blue_ball
+
+contains hall coin
+contains hall umbrella
+contains hall red_ball
+contains hall blue_ball
+
+global int ticks = 0
+
+rule every_turn_rules:
+    ticks = ticks + 1
+
+action request_ticks:
+    out_of_world
+
+report request_ticks:
+    print "ticks: [ticks]"
+
+understand "ticks" as request_ticks
