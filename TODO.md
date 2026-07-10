@@ -1009,12 +1009,16 @@ the shades).
   pardon?", fr-FR "Pardon ?"), spending no turn. Handled in the loop, not the engine, because
   that is where the empty `split_commands` list is observed. Golden `begpardon1`; existing 249
   goldens byte-invariant.
-  **Follow-up (pre-existing, now more visible): no EOF sentinel.** `readStdinLine`
-  (`sandbox/backends/plain.js`) returns `""` for both a blank line and end-of-input, so piped
-  input that never issues `quit` now re-prompts "I beg your pardon?" until the host closes the
-  stream (before this it was a *silent* infinite loop). Fixing it means threading an EOF/null
-  sentinel through the sandbox line-read protocol (host.js / worker*.js / index.js) and having
-  the loop treat it as an implicit QUIT — a transport change, out of scope for the parser work.
+- ~~**EOF sentinel: end-of-input ends the session.**~~ **DONE (2026-07-10):** `readStdinLine`
+  (`sandbox/backends/plain.js`) now returns `null` at end-of-input (a read that yields nothing)
+  versus `""` for a blank line. It rides the input channel as the length `-1` sentinel (same
+  convention as the save channel): `deliverLine(null)` → `blockForLine` returns `null` →
+  `readLine`/`promptLine` set an EOF flag surfaced by the new `input_ended()` native. advent's
+  command loop and endgame prompt check it and end the session like QUIT, so piped input that
+  never issues `quit` (or a Ctrl-D on the plain backend) exits cleanly instead of spinning — the
+  pre-existing silent infinite loop, now fixed, not just quieted. Golden `eofquit1`; existing
+  250 goldens byte-invariant. (The TUI backend is unaffected — it never delivers the sentinel,
+  so interactive terminals keep their own Ctrl-D handling.)
 - ~~**Mobile: virtual keyboard covers new output after Enter.**~~ **DONE (2026-07-06,
   verified on device).** On real mobile (not desktop emulation) the keyboard
   overlays the page without shrinking the layout viewport, so `#screen { height: 100% }`

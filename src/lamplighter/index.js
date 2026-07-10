@@ -2199,6 +2199,16 @@ function windowSyncOne(w) {
 let requestLineImpl = null;
 let promptLineImpl = null;
 
+// Whether the most recent readLine/promptLine hit end-of-input (the input channel
+// returned null: piped input exhausted, or the player sent EOF on the plain backend).
+// The game reads it via the `input_ended` native to end the session instead of spinning
+// on empty re-prompts. Refreshed on every read; a queued command clears it.
+let inputEofFlag = false;
+
+function inputEnded() {
+    return inputEofFlag;
+}
+
 // A queue of pending input lines (used by the debug `test` runner — see lib/advent/debug.lamp).
 // promptLine drains this before reading from the host, echoing each line like a typed command, so
 // queued commands flow through the *real* command loop (every-turn rules, story checks, and all).
@@ -2242,7 +2252,9 @@ function readLine() {
         throw new Error("no input channel installed; run the game through the sandbox launcher");
     }
     streamFlushPending();
-    const line = requestLineImpl();
+    const raw = requestLineImpl();
+    inputEofFlag = raw === null;
+    const line = inputEofFlag ? "" : raw;
     streamNoteInputLine();
     // The host (or terminal) echoes the typed line to the screen, bypassing the
     // output stream, so a transcript would miss it — record it here instead.
@@ -2258,6 +2270,7 @@ function promptLine(promptText) {
     // transcript reads naturally and the real command loop drives them.
     if (commandQueue.length > 0) {
         const queued = commandQueue.shift();
+        inputEofFlag = false;
         streamFlushPending();
         hostWrite(promptText + queued + "\n");
         streamNoteInputLine();
@@ -2267,7 +2280,9 @@ function promptLine(promptText) {
         throw new Error("no prompt channel installed; run the game through the sandbox launcher");
     }
     streamFlushPending();
-    const line = promptLineImpl(promptText);
+    const raw = promptLineImpl(promptText);
+    inputEofFlag = raw === null;
+    const line = inputEofFlag ? "" : raw;
     streamNoteInputLine();
     // The prompt and the typed line are written to the screen by the host, not
     // through the output stream, so mirror both into an open transcript.
@@ -3375,6 +3390,7 @@ module.exports = {
     runMetaCommand,
     splitCommands,
     commandRan,
+    inputEnded,
     playerCommand,
     registerChangeHandler,
     registerRelationAddHandler,

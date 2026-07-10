@@ -26,6 +26,9 @@ function installInputChannel(inputBuffer) {
     function blockForLine() {
         Atomics.wait(ctrl, 0, 0);
         const len = Atomics.load(ctrl, 1);
+        // Length -1 is the end-of-input sentinel (see host deliverLine): return null so
+        // readLine/promptLine can distinguish EOF from a blank line.
+        if (len < 0) return null;
         const copy = new Uint8Array(len);
         copy.set(data.subarray(0, len));
         return decoder.decode(copy);

@@ -20,6 +20,7 @@
     - `run_command(string, object) → bool` — parses one command against registered action templates, resolves slot objects in scope, and runs the matched action for the given actor. Returns **true iff a turn was spent** (an action actually ran), so the caller can fire every-turn rules; false for a parse failure, a disambiguation prompt, or an out-of-world verb.
     - `split_commands(string) → list<string>` — splits one typed line into the commands it holds (see *Command sequences* below). A full stop or the locale's sequence word (`then`) ends a command; the conjunction (`and`) does not.
     - `command_ran() → bool` — whether the last `run_command` reached an action at all. Unlike `run_command`'s own result it stays **true for an out-of-world verb** (which runs but spends no turn) and is false for a parse failure, an unresolved noun, or a disambiguation question. The command loop reads it to decide whether the rest of a multi-command line still stands.
+    - `input_ended() → bool` — whether the most recent `prompt`/`readline` hit **end-of-input** (the stream closed: piped input exhausted, or EOF on the plain backend). Distinct from a blank line, which returns `""`. The command loop checks it after each prompt to end the session (an implicit QUIT) instead of re-prompting once no more input can arrive.
 - `lib/en-US/` is the **default locale pack** — English *language data* for the text-substitution layer (article functions `the`/`a`/`an`, case functions `cap`/`upper`/`lower`/`title`, and the list-to-prose formatter `format_list` with its "and"/Oxford comma). Like `lib/sys`, it auto-loads on every invocation, inserted **immediately after `lib/sys/` and before any imported library**. It is the swappable language layer (a future `lib/en-GB`/`lib/fr-FR` replaces it) — `lib/sys` holds only language-agnostic mechanism. See `devdocs/text.md` (three-layer split).
 - Other subdirectories of `lib/` (e.g. `lib/test/`, `lib/advent/`) are optional libraries that must be imported explicitly with `lib LIBNAME`.
 - `.lamp` files placed directly in `lib/` (not inside a named subdirectory) are not parsed and are not available for import.
@@ -1256,7 +1257,9 @@ for command in split_commands(input):
 **Empty input.** A blank line (or one of only separators, e.g. `.`) yields no
 commands, so the loop above runs no `run_command` at all. The loop detects this and
 re-prompts with the IF-standard `I beg your pardon?` (the `beg_pardon` message),
-spending no turn.
+spending no turn. A **closed input stream** is different from a blank line: after
+each prompt the loop checks `input_ended()` and ends the session like `quit`, rather
+than re-prompting forever once no more input can arrive.
 
 **AGAIN / G.** A command that is a bare AGAIN word (English `again`/`g`, locale
 data) replays the last command the parser actually ran, returning that command's

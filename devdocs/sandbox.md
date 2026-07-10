@@ -345,7 +345,11 @@ Built (in `src/lamplighter/sandbox/` and `src/lamplighter/play.js`, run via
 - Synchronous player input as a brokered capability: the host owns stdin, the
   worker blocks on `SharedArrayBuffer` + `Atomics.wait`. `readline` in
   `lib/sys/index.js` now delegates to `lamplighter.readLine()` rather than calling
-  `fs.readSync` directly.
+  `fs.readSync` directly. The line reply is length-prefixed like the save channel;
+  **length `-1` is the end-of-input sentinel** (the host's `deliverLine(null)`,
+  emitted when the plain backend's `readStdinLine` hits EOF as opposed to reading a
+  blank line). `blockForLine` returns `null` for it, and `readLine`/`promptLine`
+  surface it through the `input_ended()` native so the game can end the session.
 - The sandbox launcher is the only supported run path. `npm run exe` and the
   golden runner both compile and then launch through the stdio host;
   `lamplighter.readLine()` throws if no input channel is installed, so running a

@@ -63,6 +63,12 @@ native function list<string> split_commands(string line)
 # command loop uses it to abandon the rest of a multi-command line, as Inform does.
 native function bool command_ran()
 
+# Whether the most recent prompt/readline hit end-of-input — the input stream closed
+# (piped input ran out, or the player sent EOF). Distinct from a blank line, which returns
+# "". The command loop checks it after each prompt to end the session (an implicit QUIT)
+# instead of spinning on empty re-prompts once no more input can arrive.
+native function bool input_ended()
+
 # Installs the "all includes" hook: fn(action_instance, object) -> bool decides whether
 # `all` includes the object for a multi action ("take all"). The world library installs
 # its default policy at startup; a game may install its own function (delegating back to

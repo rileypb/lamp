@@ -100,7 +100,15 @@ function playFile(generatedPath, { out = process.stdout, err = process.stderr } 
 
     // Deliver one line of player input into the shared buffer, releasing the worker
     // (blocked on Atomics.wait). A render backend calls this when a line is ready.
+    // A null line is end-of-input: signal it with the length -1 sentinel (mirroring
+    // the save channel), so the worker returns null and the game can end the session.
     function deliverLine(line) {
+        if (line === null) {
+            Atomics.store(ctrl, 1, -1);
+            Atomics.store(ctrl, 0, 1);
+            Atomics.notify(ctrl, 0);
+            return;
+        }
         const bytes = encoder.encode(line);
         const len = Math.min(bytes.length, dataCapacity);
         data.set(bytes.subarray(0, len), 0);

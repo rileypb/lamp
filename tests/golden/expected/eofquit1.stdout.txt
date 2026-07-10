@@ -1,0 +1,13 @@
+hall
+A plain hall.
+
+You see a coin here.
+
+> take coin
+Taken.
+
+> look
+hall
+A plain hall.
+
+> 
