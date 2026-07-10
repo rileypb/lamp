@@ -989,6 +989,22 @@ consider a manual browser pass on the color CSS (headless checks can't see
 the shades).
 
 ## Smaller / opportunistic
+- **The `[fit]` style (design agreed 2026-07-10; ready to build).** A paired
+  style `[fit]…[/fit]` declaring "column-true composition; must not wrap" —
+  the web shell scales the WHOLE block by one ratio (its widest line; never
+  upscaling; readability floor → horizontal scroll below it); TTY/plain/
+  windows ignore it (today's behavior — degradation-safe intent, the bar any
+  future stream layout atom must clear; record in text.md). Runtime: style
+  #20 in the closed set + sugar (cheap; goldens invariant by construction).
+  Shell: the real work — a stateful fit-container in the append path (a fit
+  block spans multiple `write` messages, e.g. the Galaxy figlet's seven
+  prints), measured on close and on resize. Motivation: the Galaxy banner is
+  65 columns wide on phones; with `[fit]`, the fix is wrapping the figlet in
+  scoring.lamp. Chosen over: exposing `screen_columns()` (defensible as an
+  advisory init+per-input-sampled hint, held in reserve — the TUI narrow-
+  terminal case is the one thing host-side fixes can't touch), a CSS clamp
+  on all `.style-fixed` (no per-block intent), and auto-fitting fixed blocks
+  (changes existing games' rendering; `[fit]` is opt-in).
 - ~~**Multiple commands on one line (`then` / full stop).**~~ **DONE (2026-07-10):** the
   Inform convention — `then` and `.` separate commands (no space needed after the stop,
   `n.e`), `and` does not (it joins one command's objects), a comma adjoining a separator
