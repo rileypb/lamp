@@ -157,6 +157,29 @@ For `<dir>/<name>.lamp`, the shell directory is `<dir>/<name>.shell/`:
   byte-invariant (`shell_send` adds nothing).
 - The hook surface's DOM behavior is a manual browser pass, per house rule.
 
+## First real consumer — the Phobos EX KIM simulator (2026-07-10)
+
+`sample/phobos_ex/phobos_ex.shell/` (custom.js + custom.css) renders the KIM's
+five hacking puzzles as a bottom-strip device — the fiction's black slab with
+glowing red/blue buttons and Siriusian glyph faces — fed by
+`lib/phobos/kim_shell.lamp`, which `shell_send`s the **whole board state** each
+turn on the "kim" channel (payload protocol documented in that file). The
+consumer proved the prescribed patterns for real:
+
+- **Declarative recompute**: whole-truth state per turn means UNDO/RESTORE
+  repaint the device with zero extra machinery, and `X KIM` needs nothing.
+- **Clicks are typed commands**: every button fires
+  `LampShell.command("press N")`, so the game's real puzzle rules adjudicate,
+  the click echoes into the transcript, and CLI players lose nothing.
+- **Inference over new events**: "the hack just solved" and the purple door's
+  wrong-five flash are *derived from world state* (the KIM detached and its old
+  target is now unlocked; the `purple_reset` global), not from extra report-site
+  events — the game code barely knows the simulator exists (the only
+  hacking.lamp change is gating the ASCII keypad art on
+  `not shell_available()`).
+- **Enhancement-only**: plain/TUI keep the ASCII keypads exactly as ported;
+  the `phobos_ex` golden is byte-invariant.
+
 ## Non-goals
 
 The iframe tier (rejected); a hosted-platform permission policy (a platform

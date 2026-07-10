@@ -391,6 +391,42 @@ try {
         }
     });
 
+    // The KIM hacking simulator (devdocs/custom-shells.md; the first real
+    // custom-shell consumer): under a shell-capable host the game streams whole
+    // "kim" board states each turn, suppresses the ASCII keypad art, and reports
+    // a transient "solved" when the hack succeeds; without the custom layer the
+    // ASCII keypads render as always and no events flow.
+    await test("phobos_ex KIM simulator: board states + solved over the wire; ASCII art suppressed", async () => {
+        const exOut = fs.mkdtempSync(path.join(os.tmpdir(), "lamp-lighthouse-kim-"));
+        try {
+            buildWeb(path.join(__dirname, "..", "..", "sample", "phobos_ex", "phobos_ex.lamp"), exOut, { minify: false });
+            const html = fs.readFileSync(path.join(exOut, "index.html"), "utf8");
+            assert.ok(html.includes('<script src="custom.js"></script>'), "EX bundle should carry the KIM custom layer");
+
+            // Route to the locker: bypass the green door, walk to South Barracks,
+            // hack, then solve (start {R,B,B,R}; press 1 and 4 → all blue).
+            const walk = ["hack green door", "north", "north", "east", "south", "hack locker", "press 1", "press 4", "quit"];
+            const withShell = await driveBundle(exOut, walk, {
+                timeoutMs: 60000,
+                capabilities: { windows: { docks: ["top", "bottom", "left", "right"], kinds: ["text", "canvas"] }, shell: true },
+            });
+            const kim = withShell.shellMessages.filter((m) => m.name === "kim").map((m) => m.payload);
+            const boards = kim.filter((p) => p !== "off");
+            assert.deepStrictEqual(boards, ["4|locker|RBBR", "4|locker|BBBR", "solved"],
+                "whole-board states per turn, then the solved transient");
+            assert.ok(kim.includes("off"), "idle turns report off");
+            assert.ok(withShell.output.includes("Galaxy presses button 1."), "prose still prints");
+            assert.ok(!withShell.output.includes("= red"), "ASCII keypad art suppressed under the custom layer");
+            assert.ok(withShell.output.includes("the locker swings open"), "the real puzzle rules adjudicated the presses");
+
+            const withoutShell = await driveBundle(exOut, walk, { timeoutMs: 60000 });
+            assert.ok(withoutShell.output.includes("= red"), "ASCII keypad art renders without the custom layer");
+            assert.deepStrictEqual(withoutShell.shellMessages, [], "no events without shell_available");
+        } finally {
+            fs.rmSync(exOut, { recursive: true, force: true });
+        }
+    });
+
     // Phobos EX (the first real windows consumer, devdocs/text-windows.md step 4):
     // the mission-status pane docks right on a four-dock host, and its startup rule
     // re-docks it to a 4-row top pane when only top/bottom are available (the TUI's

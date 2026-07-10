@@ -32,5 +32,19 @@ never collide with the original). Enhancements so far:
   (the web shell); on the TUI and plain hosts it stays hidden and the text
   panes above remain the experience.
 
+- **`lib/phobos/kim_shell.lamp` + `phobos_ex.shell/`** — the KIM hacking
+  simulator (devdocs/custom-shells.md; the first real custom-shell consumer):
+  on the web, the KIM renders as a bottom-strip alien slab — glowing red/blue
+  buttons, Siriusian glyph faces, a solve pulse, a shake on the purple door's
+  wrong-five beep — that appears when the KIM adheres and retracts when it
+  detaches. The transcript contracts/expands to make room (mobile-friendly).
+  Clicking a button synthesizes the same PRESS command the player could type,
+  so the real puzzle rules adjudicate every click and the transcript stays a
+  complete record; the game streams the whole board state each turn
+  (declarative recompute — UNDO/RESTORE repaint the device), and the ASCII
+  keypad art is suppressed while the simulator is live
+  (`shell_available()` gates in hacking.lamp). CLI/plain hosts keep the ASCII
+  keypads exactly as ported.
+
 The full `test endgame` walkthrough is a golden (`phobos_ex` in
 tests/golden/expected/), so EX must stay winnable as enhancements land.
