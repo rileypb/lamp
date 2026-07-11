@@ -10,10 +10,12 @@ Sourced from the staged roadmaps and prerequisite lists in
 > record. The only optional remnant is item 6 below.
 
 > Feature backlog **triaged (2026-07-11)**: `lurking_todo.md` (candidates mined from
-> `lurkinghorror.txt`) is now fully labeled — **48 Done** (mostly already-built; the
-> "we don't have" framing was stale), **18 Won't do**, **22 Will do**. The Will-do work
+> `lurkinghorror.txt`) is now fully labeled — **49 Done** (mostly already-built; the
+> "we don't have" framing was stale), **18 Won't do**, **21 Will do**. `lit`-illuminates-room
+> is **DONE (2026-07-11)**: `light_in_scope` native drives `in_darkness`/`describe_room`, golden
+> `providinglight2`. Remaining Will-do work
 > clusters into: enter/exit + vehicles (incl. non-vehicle enterables); `take X from Y`
-> scope-narrowing; turn on/off + `lit`-illuminates-room; `listen`/`smell` + prepositional
+> scope-narrowing; turn on/off (switchable devices); `listen`/`smell` + prepositional
 > LOOK; NPC talk/greet/order + `ask for`/`feed` (own design doc); verbose/brief/superbrief
 > modes; group/plural objects (needs a design pass); a general implicit-action facility;
 > base `SLEEP`; and the "noun missing" parse-error refinement. Text substitution (Slices 1–7)

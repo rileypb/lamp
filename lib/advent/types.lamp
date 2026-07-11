@@ -59,9 +59,11 @@ type physical < thing:
 	# nothing."). A game keys per-object flavour off these instead of writing many `instead` rules.
 	string take_refusal = ""
 	string attack_refusal = ""
-	# Whether this thing is itself glowing/luminous (Inform's `lit` property). advent's darkness model
-	# is room-level (`room.lighted`), so a lit thing has no illumination effect yet; it only annotates
-	# the inventory row as "(providing light)". A game sets it (e.g. Phobos's FROTZ).
+	# Whether this thing is itself glowing/luminous (Inform's `lit` property). A `lit` thing in the
+	# actor's scope illuminates an otherwise-dark room (`room.lighted` false) — a carried flashlight,
+	# a glowing object on the floor; sealed in a closed box it gives no light (see in_darkness /
+	# light_in_scope in rooms.lamp). Also annotates the inventory row as "(providing light)". A game
+	# sets it (e.g. Phobos's FROTZ).
 	bool lit = false
 	# Excluded from `all` ("take all" skips it) while staying available by name — the
 	# declarative knob read by all_includes (actions.lamp). Being a field, a game can

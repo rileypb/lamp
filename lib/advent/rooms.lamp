@@ -5,6 +5,11 @@
 function bool is_container(physical x):
 	return x is container
 
+# True when any object in the actor's scope is `lit` (a carried flashlight, a glowing thing
+# present in the room). Reuses the runtime's scope, so a lit thing sealed in a closed box gives
+# no light. Drives in_darkness / describe_room — a carried or present light lifts a dark room.
+native function bool light_in_scope(person p)
+
 # An object's container: the one place that contains x (the `unique` contained
 # endpoint means at most one, so `?only` is safe — none when uncontained). Author code
 # reads containment through this rather than any field. Pure Lamp (was a native
@@ -77,7 +82,7 @@ function void describe_room(room r):
 	# reads the marks after the heading/description prose have rendered.
 	for x in physical.all:
 		x.mentioned = false
-	if r.lighted:
+	if r.lighted or light_in_scope(player):
 		follow room_heading_rules(r)
 		# A room with no description shows just its name (an unset string reads as "").
 		if not (r.description == ""):
@@ -139,5 +144,7 @@ on contains add:
 	if self.contained == player:
 		describe_room(self.place)
 
+# A person is in darkness when neither their room's own light (`room.lighted`) nor any lit thing
+# in their scope illuminates it. A carried or present light source thus lifts a dark room.
 function bool in_darkness(person p):
-	return not holder(p).lighted
+	return not (holder(p).lighted or light_in_scope(p))

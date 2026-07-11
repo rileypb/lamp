@@ -224,13 +224,12 @@ disambiguation, the `it` pronoun, `"You can't go that way."`, and
   state; a key object that fits a lock; "open" refused when locked. World-model twin of the
   OPEN and LOCK/UNLOCK verb items (both Done): `box`/`door` carry `closable`/`closed`/`locked`/
   `matching_key` (types.lamp); OPEN refuses locked; UNLOCK/LOCK check key-fit.
-- [Will do] **NEW — a portable light source.** A `flashlight` you carry that provides light
-  in dark rooms (we have `lighted` rooms but no carryable light that flips it).
-  Inventory even annotates it: "a flashlight (providing light)" (L930). Scope: **no special
-  item type** — just make `lit == true` on any in-scope object actually illuminate the room
-  (the darkness/visibility check consults lit things in scope, not only `room.lighted`). The
-  "(providing light)" inventory annotation already exists; this gives `lit` its real effect.
-  Pairs with turn on/off (a switchable's on-state sets `lit`).
+- [Done] **NEW — a portable light source.** A `flashlight` you carry that provides light
+  in dark rooms. **Implemented (2026-07-11):** `lit == true` on any object in the actor's scope
+  now illuminates an otherwise-dark room — `light_in_scope` native (index.js, reuses `scopeOf`
+  so a closed box seals the light) drives `in_darkness`/`describe_room` (rooms.lamp). No special
+  item type. Golden `providinglight2` (carried light → visible; sealed in a closed box → dark;
+  reopened → lit). Pairs with turn on/off (a switchable's on-state sets `lit`) — still Will do.
 - [Done] **NEW — doors as shared, stateful connectors between two rooms.** A door/glass
   wall/plate that is itself an object and blocks the exit until opened/unlocked.
   "There is a glass wall in the way." (L679); "The Alchemy Department door is

@@ -1,0 +1,31 @@
+cellar
+A damp cellar.
+
+You see a rock here.
+
+> look
+cellar
+A damp cellar.
+
+You see a rock here.
+
+> put lantern in crate
+You put the lantern in the crate.
+
+> close crate
+You close the crate.
+
+> look
+Darkness
+It is pitch dark, and you can't see a thing.
+
+> open crate
+You open the crate, revealing a lantern.
+
+> look
+cellar
+A damp cellar.
+
+You see a rock here.
+
+> quit

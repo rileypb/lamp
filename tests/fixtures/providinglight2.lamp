@@ -1,0 +1,28 @@
+# Illumination (lib/advent): a carried/present `lit` thing lifts an otherwise-dark room
+# (`room.lighted` false). Companion to providinglight1 (the inventory annotation). Exercises:
+# carried light makes a dark room visible; sealing the light in a CLOSED box restores darkness
+# (the scope barrier hides it); reopening the box re-illuminates. See in_darkness / light_in_scope
+# / describe_room in lib/advent/rooms.lamp.
+
+lib advent
+
+game LitRoom:
+	start cellar
+
+room cellar:
+	lighted false
+	description "A damp cellar."
+
+box crate:
+	closable
+
+item lantern:
+	lit
+	description "A glowing lantern."
+
+item rock:
+	description "An ordinary rock."
+
+contains yourself lantern
+contains yourself crate
+contains cellar rock

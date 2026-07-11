@@ -1,0 +1,7 @@
+look
+put lantern in crate
+close crate
+look
+open crate
+look
+quit
