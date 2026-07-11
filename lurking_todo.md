@@ -271,9 +271,12 @@ disambiguation, the `it` pronoun, `"You can't go that way."`, and
   `initial_appearance` + `handled` (rooms.lamp) — `list_room_contents` prints the bespoke
   line while un-handled and excludes it from the generic list; `take` sets `handled` so it
   reverts to generic. (Same facility answers §6 "varied object-presence sentences".)
-- [Will do] **PARTIAL — group/plural objects.** "There are urchins here." / "rats" treated
-  as a swarm (L1471). We pluralize lists but have no collective-object concept.
-  **Needs its own design pass** — open questions before building:
+- [Done] **PARTIAL — group/plural objects.** "There are urchins here." / "rats" treated
+  as a swarm (L1471). **Implemented (2026-07-11)** as a single collective object: the `plural`
+  field already gave "some rats" / plural agreement / "them"; the one new piece — unifying the
+  `them` pronoun so a plural object and a multi-object result share one antecedent — is now
+  built (golden `themgroup1`). Counting/duplicates/member-reference are non-goals. Full design +
+  the original open questions in `devdocs/plural_objects.md`. Historical open questions:
   - What is the object model? One collective entity that *reads/agrees* as plural (verb
     agreement "are"/"them"/"they", plural pronoun antecedent), vs. N identical instances the
     lister already collapses. Probably the former.

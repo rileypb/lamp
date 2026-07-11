@@ -10,10 +10,11 @@ Sourced from the staged roadmaps and prerequisite lists in
 > record. The only optional remnant is item 6 below.
 
 > Feature backlog **triaged (2026-07-11)**: `lurking_todo.md` (candidates mined from
-> `lurkinghorror.txt`) is now fully labeled — **49 Done** (mostly already-built; the
-> "we don't have" framing was stale), **18 Won't do**, **21 Will do**. `lit`-illuminates-room
-> is **DONE (2026-07-11)**: `light_in_scope` native drives `in_darkness`/`describe_room`, golden
-> `providinglight2`. Remaining Will-do work
+> `lurkinghorror.txt`) is now fully labeled — **50 Done** (mostly already-built; the
+> "we don't have" framing was stale), **18 Won't do**, **20 Will do**. Shipped 2026-07-11:
+> `lit`-illuminates-room (`light_in_scope`, golden `providinglight2`) and collective
+> plural objects via the unified `them` pronoun (`noteGroupAntecedent`/`pronounGroupOf`,
+> golden `themgroup1`). Remaining Will-do work
 > clusters into: enter/exit + vehicles (incl. non-vehicle enterables); `take X from Y`
 > scope-narrowing; turn on/off (switchable devices); `listen`/`smell` + prepositional
 > LOOK; NPC talk/greet/order + `ask for`/`feed` (own design doc); verbose/brief/superbrief
@@ -23,9 +24,9 @@ Sourced from the staged roadmaps and prerequisite lists in
 >
 > Design docs from triage: **`devdocs/missing_noun.md`** (missing-noun re-prompts — designed,
 > not implemented; needs a `matchGrammar` partial-match change + a `pendingNoun` flow mirroring
-> disambiguation) and **`devdocs/plural_objects.md`** (collective plural objects — the `plural`
-> presentation field already works; the only new work is unifying the `them` pronoun; counting
-> is a non-goal). Still owed: an NPC conversation (talk/greet/order) design doc before it is built.
+> disambiguation) and **`devdocs/plural_objects.md`** (collective plural objects — **implemented
+> 2026-07-11**; the `them`-pronoun unification is the built mechanism; counting is a non-goal).
+> Still owed: an NPC conversation (talk/greet/order) design doc before it is built.
 
 ## Active
 

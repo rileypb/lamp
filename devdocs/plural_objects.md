@@ -1,7 +1,9 @@
 # Group / Plural Objects
 
-> Status: **design; not implemented** (but the *presentation* half already exists
-> — see "What already works"). Defines the intended design for **collective plural
+> Status: **implemented (2026-07-11).** The presentation half already existed (the
+> `plural` field); the one new mechanism — the unified **"them"** pronoun — is now
+> built (`src/lamplighter/index.js`: `noteGroupAntecedent` / `pronounGroupOf`; en-US
+> `groupAntecedentWords`). Golden `themgroup1`. Defines the design for **collective plural
 > objects** in lib/advent — a single entity that reads and agrees as plural ("the
 > rats are here", "attack them"), as opposed to a modeled set of individuals.
 > Companion to the "group/plural objects" line in `lurking_todo.md` and to
@@ -111,6 +113,16 @@ Two wiring points:
 Last-writer-wins across the two sources (naming the rats, then `take lamp and
 rope`, then "them" = the group) — ordinary pronoun semantics. No second "them"
 notion; the collective and the multi-result share one slot.
+
+**Implemented (2026-07-11).** `pronounAntecedents` values may now be an array (a
+group) as well as a single object. `noteGroupAntecedent(objects)` files a 2+-object
+result under the locale's `groupAntecedentWords` (en-US: `["them"]`), called after
+the existing per-object `noteAntecedent` in `resolveAllPhrase` / `resolveMultiPieces`.
+`pronounGroupOf(span)` returns the bound array; `resolveSlots` feeds it through
+`multiOut` for a multi verb's direct slot (scoped/typed, empty→unresolved), and the
+grammar-match classifier flags a group-"them" against a non-multi verb as a
+multiple-object attempt → `parser_no_multi`. The `pronoun` state provider serializes
+array values as name-lists (save/undo). Golden `themgroup1`.
 
 ## Non-goals
 

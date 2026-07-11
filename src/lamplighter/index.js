@@ -835,8 +835,14 @@ let parserPronouns = new Set();
 // word -> the last object filed under that pronoun word. Dynamic words (a
 // neopronoun's object form) are recognized once bound, without appearing in
 // the static parserPronouns list.
+// word -> antecedent referent. Value is a single object for an ordinary/plural noun, OR an
+// ARRAY of objects for a group pronoun ("them" after a multiple-object command) — see
+// noteGroupAntecedent / pronounGroupOf.
 let pronounAntecedents = new Map();
 let antecedentWordsImpl = null;
+// The pronoun word(s) a multiple-object *group* files under ("them" in en-US). Locale data,
+// distinct from antecedentWords (which files a single object under its own pronoun).
+let groupAntecedentWordsImpl = null;
 
 // Pronouns refer to things in the world, not to non-physical referents such as
 // directions, so only physical objects become antecedents. A game without a
@@ -852,6 +858,19 @@ function noteAntecedent(obj) {
     const words = antecedentWordsImpl ? antecedentWordsImpl(obj) : [...parserPronouns];
     for (const word of words || []) {
         pronounAntecedents.set(String(word).toLowerCase(), obj);
+    }
+}
+
+// File a multiple-object result (2+ objects) under the locale's GROUP pronoun word(s) — "them"
+// in en-US — so a later "them" refers to the whole set, unified with a plural collective object
+// (which files the same word via noteAntecedent). A single object is not a group and is left to
+// noteAntecedent. The set is snapshotted, so it doesn't track later world changes.
+function noteGroupAntecedent(objects) {
+    if (!objects || !groupAntecedentWordsImpl) return;
+    const eligible = objects.filter(canBeAntecedent);
+    if (eligible.length < 2) return;
+    for (const word of groupAntecedentWordsImpl() || []) {
+        pronounAntecedents.set(String(word).toLowerCase(), eligible.slice());
     }
 }
 
@@ -884,6 +903,17 @@ function pronounOf(span) {
     if (tokens.length !== 1) return null;
     const word = tokens[0];
     return parserPronouns.has(word) || pronounAntecedents.has(word) ? word : null;
+}
+
+// The object group a pronoun span refers to, if it is a pronoun currently bound to a
+// multiple-object result ("them" after "take lamp and rope"); else null. A pronoun bound to a
+// single object — including a plural collective — is not a group and returns null (it resolves
+// as an ordinary single noun).
+function pronounGroupOf(span) {
+    const word = pronounOf(span);
+    if (!word) return null;
+    const bound = pronounAntecedents.get(word);
+    return Array.isArray(bound) ? bound : null;
 }
 
 // Self words — "me"/"myself" — resolve to the commanding actor (the agent running
@@ -1150,6 +1180,7 @@ function setParserLanguage(spec) {
     // (en-US: the object form of obj's own pronoun set). Absent, every referent
     // files under all static pronoun words (single-antecedent behavior).
     if (spec.antecedentWords) antecedentWordsImpl = spec.antecedentWords;
+    if (spec.groupAntecedentWords) groupAntecedentWordsImpl = spec.groupAntecedentWords;
     if (spec.selfWords) parserSelfWords = new Set(spec.selfWords);
     // The comma stays a connector under every locale (it is structural, not vocabulary).
     if (spec.connectors) parserConnectors = new Set([",", ...spec.connectors]);
@@ -1221,6 +1252,20 @@ function resolveSlots(slots, instance, scope, slotTypes, multiOut = { field: nul
             // whose vocabulary contains a connector or quantifier word ("salt and
             // pepper shaker") keeps resolving as one thing.
             if (field === directSlot && isMultiAction(instance.type)) {
+                // "them" bound to a group ("take lamp and rope" → "drop them"): dispatch the
+                // whole set through the multi path, scoped/typed to the slot. Empty after
+                // filtering (all members gone) fails like an unresolvable noun.
+                const group = pronounGroupOf(span);
+                if (group) {
+                    const st = slotTypes[field];
+                    const pool = new Set(resolvePool(st, scope));
+                    const usable = group.filter((o) => pool.has(o) && (!st || isTypeOrSubtype(o.type, st)));
+                    if (usable.length === 0) return "unresolved";
+                    multiOut.field = field;
+                    multiOut.objects = usable;
+                    instance[field] = usable[0];
+                    continue;
+                }
                 const all = parseAllPhrase(span);
                 if (all) {
                     const status = resolveAllPhrase(all, instance, field, scope, slotTypes, multiOut);
@@ -1290,6 +1335,7 @@ function resolveAllPhrase(all, instance, field, scope, slotTypes, multiOut) {
     multiOut.objects = objects;
     multiOut.announce = true;
     noteAntecedent(objects[objects.length - 1]);
+    noteGroupAntecedent(objects);
     return "ok";
 }
 
@@ -1327,6 +1373,7 @@ function resolveMultiPieces(pieces, startIdx, resolved, instance, field, remaini
     multiOut.field = field;
     multiOut.objects = resolved;
     noteAntecedent(resolved[resolved.length - 1]);
+    noteGroupAntecedent(resolved);
     return "ok";
 }
 
@@ -1548,7 +1595,7 @@ function runCommand(line, actor, metaOnly = false) {
             for (const [field, span] of Object.entries(matched)) {
                 if (PRIMITIVE_SLOT_TYPES.has(slotTypes[field])) continue;
                 const listAllowed = field === directSlot && isMultiAction(entry.actionName);
-                if (!listAllowed && (spanHasConnector(span) || parserAllWords.has(span[0]))) {
+                if (!listAllowed && (spanHasConnector(span) || parserAllWords.has(span[0]) || pronounGroupOf(span))) {
                     sawMultiAttempt = true;
                 }
             }
@@ -2842,15 +2889,22 @@ registerStateProvider({
     key: "pronoun",
     capture() {
         const out = {};
-        for (const [word, obj] of pronounAntecedents) out[word] = obj.name;
+        for (const [word, ref] of pronounAntecedents) {
+            out[word] = Array.isArray(ref) ? ref.map((o) => o.name) : ref.name;
+        }
         return out;
     },
     restore(data) {
         pronounAntecedents = new Map();
         if (data && typeof data === "object") {
-            for (const [word, name] of Object.entries(data)) {
-                const obj = nameRegistry.get(name);
-                if (obj) pronounAntecedents.set(word, obj);
+            for (const [word, val] of Object.entries(data)) {
+                if (Array.isArray(val)) {
+                    const objs = val.map((n) => nameRegistry.get(n)).filter(Boolean);
+                    if (objs.length) pronounAntecedents.set(word, objs);
+                } else {
+                    const obj = nameRegistry.get(val);
+                    if (obj) pronounAntecedents.set(word, obj);
+                }
             }
         }
     },

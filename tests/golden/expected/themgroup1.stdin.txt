@@ -1,0 +1,6 @@
+take lamp and rope
+drop them
+examine them
+x rats
+attack them
+quit
