@@ -106,11 +106,18 @@ disambiguation, the `it` pronoun, `"You can't go that way."`, and
   "You hear/smell nothing unexpected." No reach gating; works in the dark; spends the turn (so
   the "changes over turns" case is a game `instead listen` + §4 daemon). en-US + fr-FR
   (écouter/sentir; added `entendre` to the French conjugator). Goldens `sense1`, `sensefr1`.
-- [Will do] **NEW — `look through X` / `look in X` / `look under X` / `look down X`.**
-  "look through trapdoor" → "…you can see part of a workroom or lab." (L924). Fail-by-default
-  prepositional LOOK verbs; games override per object. Needs the `through`/`under`/`in`/`down`
-  grammar tokens wired to LOOK. `look in X` overlaps with `search X` (Will do) — decide whether
-  it succeeds for containers/supporters the same way or redirects to search.
+- [Done] **NEW — `look <direction>` (incl. `look down`).** **Implemented (2026-07-11):**
+  `look_direction` with a `direction way` slot glances a compass/vertical direction; succeeds
+  with a generic default ("You see nothing unexpected that way.") a game overrides per
+  room/direction (`instead look_direction when self.way == down`). en-US + fr-FR (`regarder
+  [way]`). Golden `look1`/`lookfr1`.
+- [Done] **NEW — `look in X` / `look through X` / `look under X` / `look behind X`.**
+  "look through trapdoor" → "…you can see part of a workroom or lab." (L924). **Implemented
+  (2026-07-11):** `look in`/`inside`/`through` list an open container's contents (closed →
+  closed, empty → empty, non-container → refused), reusing EXAMINE's container machinery; `look
+  under`/`look behind` fail-by-default (games add `instead look_under`/`look_behind` to reveal a
+  hidden object). en-US + fr-FR (`regarder dans`/`à travers`/`sous`/`derrière`). Golden
+  `look1`/`lookfr1`.
 - [Will do] **NEW — `examine me` / self-description.** "x me" → "You are wide awake, and are
   in good health." (L663). Needs `me`/`myself`/`self` to resolve to the player and EXAMINE to
   print a player `description` (default e.g. "As good-looking as ever."). The fatigue/health

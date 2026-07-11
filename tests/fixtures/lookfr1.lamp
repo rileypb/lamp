@@ -1,0 +1,43 @@
+# LOOK prépositionnel en français (lib/advent fr-FR): verrouille les défauts localisés et la
+# conjugaison ajoutée (trouver → "ne trouvez rien"). regarder <direction> / dans / à travers / sous
+# / derrière.
+
+locale "fr-FR"
+lib advent
+
+game RegarderFR:
+	start salle
+
+room salle:
+	description "Une salle nue."
+
+box caisse:
+	printed_name "caisse"
+	grammatical_gender "feminine"
+	description "Une caisse en bois."
+
+box coffre:
+	closable
+	closed
+	printed_name "coffre"
+	description "Un coffre en fer."
+
+box panier:
+	printed_name "panier"
+	description "Un panier en osier."
+
+item piece:
+	printed_name "pièce"
+	grammatical_gender "feminine"
+	description "Une pièce d'or."
+
+item table:
+	printed_name "table"
+	grammatical_gender "feminine"
+	description "Une table solide."
+
+contains salle caisse
+contains salle coffre
+contains salle panier
+contains salle table
+contains caisse piece

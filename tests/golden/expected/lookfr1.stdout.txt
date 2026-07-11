@@ -1,0 +1,30 @@
+salle
+Une salle nue.
+
+Vous voyez une table, une caisse (dans laquelle se trouve une pièce), un coffre et un panier ici.
+
+> regarder bas
+Vous ne voyez rien d'inattendu par là.
+
+> regarder dans caisse
+Dans la caisse se trouve une pièce.
+
+> regarder à travers caisse
+Dans la caisse se trouve une pièce.
+
+> regarder dans coffre
+C'est fermé.
+
+> regarder dans panier
+C'est vide.
+
+> regarder sous table
+Vous ne trouvez rien d'intéressant là-dessous.
+
+> regarder derrière table
+Il n'y a rien derrière la table.
+
+> regarder dans table
+Vous ne pouvez pas regarder là-dedans.
+
+> quitter

@@ -140,6 +140,14 @@ with_key_aside: "(avec [le act.target.matching_key])[line break]"
 examine_report: "[act.target.description][line break]"
 examine_in_container: "[par]Dans [le act.target] se trouve [render_contents(act.target)]."
 examine_in_container_plural: "[par]Dans [le act.target] se trouvent [render_contents(act.target)]."
+look_direction_nothing: "[cap(sujet_ne_verbe(\"voir\"))] rien d'inattendu par là."
+look_under_nothing: "[cap(sujet_ne_verbe(\"trouver\"))] rien d'intéressant là-dessous."
+look_behind_nothing: "Il n'y a rien derrière [le act.target]."
+look_in_closed: "C'est fermé."
+look_in_empty: "C'est vide."
+look_in_contents: "Dans [le act.target] se trouve [render_contents(act.target)]."
+look_in_contents_plural: "Dans [le act.target] se trouvent [render_contents(act.target)]."
+look_in_not_container: "[cap(sujet_ne_verbe(\"pouvoir\"))] pas regarder là-dedans."
 
 # --- touch ---
 touch_nothing: "[cap(sujet_ne_verbe(\"sentir\"))] rien d'inattendu."
@@ -263,6 +271,12 @@ understand "examiner [target]" as examine
 understand "observer [target]" as examine
 understand "regarder [target]" as examine
 understand "x [target]" as examine
+
+understand "regarder [way]" as look_direction
+understand "regarder sous [target]" as look_under
+understand "regarder derrière [target]" as look_behind
+understand "regarder dans [target]" as look_in
+understand "regarder à travers [target]" as look_in
 
 understand "aller [way]" as go
 # The bare-direction grammar ("nord" alone moves north) — each locale declares it

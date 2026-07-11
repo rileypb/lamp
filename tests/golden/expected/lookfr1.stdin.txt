@@ -1,0 +1,9 @@
+regarder bas
+regarder dans caisse
+regarder à travers caisse
+regarder dans coffre
+regarder dans panier
+regarder sous table
+regarder derrière table
+regarder dans table
+quitter

@@ -68,6 +68,14 @@ examine_nothing: "[We] [see] nothing unusual about [the act.target]."
 examine_report: "[act.target.description][line break]"
 examine_in_container: "[par]In [the act.target] is [render_contents(act.target)]."
 examine_in_container_plural: "[par]In [the act.target] are [render_contents(act.target)]."
+look_direction_nothing: "[We] [see] nothing unexpected that way."
+look_under_nothing: "[We] [find] nothing of interest there."
+look_behind_nothing: "There is nothing behind [the act.target]."
+look_in_closed: "[The act.target] [is] closed."
+look_in_empty: "[The act.target] [is] empty."
+look_in_contents: "In [the act.target] is [render_contents(act.target)]."
+look_in_contents_plural: "In [the act.target] are [render_contents(act.target)]."
+look_in_not_container: "[We] can't look inside [regarding act.target][those]."
 examine_too_dark: "It's too dark to see [regarding act.target][those]."
 touch_nothing: "[We] [feel] nothing unexpected."
 taste_nothing: "[We] [taste] nothing unexpected."
@@ -174,6 +182,12 @@ transcript_ended: "Transcript ended."
 understand "look" as look
 understand "l" as look
 understand "look around" as look
+understand "look [way]" as look_direction
+understand "look under [target]" as look_under
+understand "look behind [target]" as look_behind
+understand "look in [target]" as look_in
+understand "look inside [target]" as look_in
+understand "look through [target]" as look_in
 
 understand "wait" as wait
 understand "z" as wait

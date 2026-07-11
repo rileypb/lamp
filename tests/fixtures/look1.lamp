@@ -1,0 +1,35 @@
+# Prepositional LOOK (lib/advent): LOOK <direction> (incl. down) is a generic glance a game
+# overrides per direction; LOOK IN / INSIDE / THROUGH list an open container's contents (closed →
+# closed, empty → empty, non-container → refused); LOOK UNDER / BEHIND fail by default (games add
+# `instead look_under`/`look_behind`). See actions.lamp / specs.md.
+
+lib advent
+
+game Look:
+	start hall
+
+room hall:
+	description "A bare hall."
+
+box crate:
+	description "A wooden crate."
+
+box chest:
+	closable
+	closed
+	description "An iron chest."
+
+box basket:
+	description "A wicker basket."
+
+item coin:
+	description "A gold coin."
+
+item table:
+	description "A sturdy table."
+
+contains hall crate
+contains hall chest
+contains hall basket
+contains hall table
+contains crate coin

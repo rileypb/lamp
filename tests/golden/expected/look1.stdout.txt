@@ -1,0 +1,30 @@
+hall
+A bare hall.
+
+You see a table, a crate (in which is a coin), a chest and a basket here.
+
+> look down
+You see nothing unexpected that way.
+
+> look in crate
+In the crate is a coin.
+
+> look through crate
+In the crate is a coin.
+
+> look in chest
+The chest is closed.
+
+> look in basket
+The basket is empty.
+
+> look under table
+You find nothing of interest there.
+
+> look behind table
+There is nothing behind the table.
+
+> look in table
+You can't look inside that.
+
+> quit
