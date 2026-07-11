@@ -9,10 +9,20 @@ Sourced from the staged roadmaps and prerequisite lists in
 > `devdocs/architecture.md` → "Known Architectural Issues" for the per-issue
 > record. The only optional remnant is item 6 below.
 
-> Feature backlog awaiting triage: `lurking_todo.md` catalogs candidate verbs,
-> grammar, world-model traits, turn-cycle/daemon, and message ideas mined from
-> `lurkinghorror.txt`. Text substitution (Slices 1–7) is **all DONE**; the full
-> per-slice record lives in `devdocs/text.md`.
+> Feature backlog **triaged (2026-07-11)**: `lurking_todo.md` (candidates mined from
+> `lurkinghorror.txt`) is now fully labeled — **48 Done** (mostly already-built; the
+> "we don't have" framing was stale), **18 Won't do**, **22 Will do**. The Will-do work
+> clusters into: enter/exit + vehicles (incl. non-vehicle enterables); `take X from Y`
+> scope-narrowing; turn on/off + `lit`-illuminates-room; `listen`/`smell` + prepositional
+> LOOK; NPC talk/greet/order + `ask for`/`feed` (own design doc); verbose/brief/superbrief
+> modes; group/plural objects (needs a design pass); a general implicit-action facility;
+> base `SLEEP`; and the "noun missing" parse-error refinement. Text substitution (Slices 1–7)
+> is **all DONE**; per-slice record in `devdocs/text.md`.
+>
+> Design docs from triage: **`devdocs/missing_noun.md`** (missing-noun re-prompts — designed,
+> not implemented; needs a `matchGrammar` partial-match change + a `pendingNoun` flow mirroring
+> disambiguation). Still owed: an NPC conversation (talk/greet/order) design doc, and a
+> group/plural-objects design pass, before either is built.
 
 ## Active
 
