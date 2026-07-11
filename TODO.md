@@ -23,8 +23,9 @@ Sourced from the staged roadmaps and prerequisite lists in
 >
 > Design docs from triage: **`devdocs/missing_noun.md`** (missing-noun re-prompts — designed,
 > not implemented; needs a `matchGrammar` partial-match change + a `pendingNoun` flow mirroring
-> disambiguation). Still owed: an NPC conversation (talk/greet/order) design doc, and a
-> group/plural-objects design pass, before either is built.
+> disambiguation) and **`devdocs/plural_objects.md`** (collective plural objects — the `plural`
+> presentation field already works; the only new work is unifying the `them` pronoun; counting
+> is a non-goal). Still owed: an NPC conversation (talk/greet/order) design doc before it is built.
 
 ## Active
 

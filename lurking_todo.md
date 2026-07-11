@@ -282,7 +282,10 @@ disambiguation, the `it` pronoun, `"You can't go that way."`, and
   - Player capabilities: refer to it by plural name, examine/interact with the whole; can they
     single one out ("take a rat")? What happens to the group when they do?
   - Relationship to the existing pluralized-list rendering and the `[those]`/pronoun machinery.
-  Specify this properly, then implement.
+  **Design done — `devdocs/plural_objects.md`:** target is a single collective object (members
+  not referable), the `plural` presentation field already works, counting is a non-goal, and
+  the one new mechanism is unifying the `them` pronoun (a plural object and a multi-object
+  result share one antecedent slot).
 
 ---
 
