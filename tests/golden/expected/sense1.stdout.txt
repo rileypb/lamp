@@ -1,0 +1,21 @@
+kitchen
+A steamy kitchen.
+
+You see a rose and a brick here.
+
+> listen
+You hear a pot bubbling on the stove.
+
+> smell
+The air is thick with garlic.
+
+> smell rose
+The rose smells sweet.
+
+> sniff brick
+You smell nothing unexpected.
+
+> listen to brick
+You hear nothing unexpected.
+
+> quit

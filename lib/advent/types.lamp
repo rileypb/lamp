@@ -48,6 +48,12 @@ type physical < thing:
 	bool far_away = false
 	bool obstructed = false
 	bool edificial = false
+	# LISTEN / SMELL (see actions.lamp): the sound heard and the scent smelled. On a room these are
+	# the ambient sensations for objectless "listen"/"smell"; on a thing, what "listen to X" / "smell
+	# X" reports. Empty (the default) → the "nothing unexpected" reply. Unlike TOUCH/TASTE these are
+	# distance senses (no reach gating). A game sets the text or adds `instead listen`/`instead smell`.
+	string sound = ""
+	string scent = ""
 	# DRINK / EAT (see actions.lamp): a `drinkable`/`edible` thing can be drunk/eaten (consumed —
 	# the action removes its containment edge); the default reply refuses anything else. Most
 	# things are neither.

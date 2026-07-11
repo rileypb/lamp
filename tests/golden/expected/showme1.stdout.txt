@@ -16,6 +16,8 @@ gem (item)
   far_away: false
   obstructed: false
   edificial: false
+  sound: ""
+  scent: ""
   drinkable: false
   edible: false
   take_refusal: ""
@@ -47,6 +49,8 @@ safe (box)
   far_away: false
   obstructed: false
   edificial: false
+  sound: ""
+  scent: ""
   drinkable: false
   edible: false
   take_refusal: ""

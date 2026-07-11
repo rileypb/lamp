@@ -99,12 +99,13 @@ disambiguation, the `it` pronoun, `"You can't go that way."`, and
   "read sign" → "It says 'NO ADMITTANCE!'…" (L2118). `read [target]` is already a synonym for
   `examine` (en-US.lamp); a distinct READ with its own text property isn't worth it — authors
   fold the inscription into the examine description.
-- [Will do] **NEW — `listen` / `smell` / sensory verbs.** "listen" → "You hear the
-  chittering of rats." (L1247) — and the answer *changes over turns*. Same shape as the
-  existing TASTE/TOUCH sense verbs: fail-by-default `listen`/`smell` with per-object
-  `sound`/`smell` text and default "You hear/smell nothing unexpected."; games override.
-  The "changes over turns" part is the daemon/turn-cycle machinery (§4), layered on top —
-  not part of the verb.
+- [Done] **NEW — `listen` / `smell` / sensory verbs.** "listen" → "You hear the
+  chittering of rats." (L1247) — and the answer *changes over turns*. **Implemented
+  (2026-07-11):** distance sense verbs with objectless (ambient room `sound`/`scent`) and
+  targeted (`listen to X` / `smell X`, the thing's own `sound`/`scent`) forms; empty text →
+  "You hear/smell nothing unexpected." No reach gating; works in the dark; spends the turn (so
+  the "changes over turns" case is a game `instead listen` + §4 daemon). en-US + fr-FR
+  (écouter/sentir; added `entendre` to the French conjugator). Goldens `sense1`, `sensefr1`.
 - [Will do] **NEW — `look through X` / `look in X` / `look under X` / `look down X`.**
   "look through trapdoor" → "…you can see part of a workroom or lab." (L924). Fail-by-default
   prepositional LOOK verbs; games override per object. Needs the `through`/`under`/`in`/`down`

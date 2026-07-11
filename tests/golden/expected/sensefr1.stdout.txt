@@ -1,0 +1,21 @@
+cuisine
+Une cuisine embuée.
+
+Vous voyez une rose et une brique ici.
+
+> écouter
+Vous entendez une casserole qui bout sur le feu.
+
+> sentir
+L'air est chargé d'ail.
+
+> sentir rose
+La rose sent bon.
+
+> sentir brique
+Vous ne sentez rien d'inattendu.
+
+> écouter brique
+Vous n'entendez rien d'inattendu.
+
+> quitter

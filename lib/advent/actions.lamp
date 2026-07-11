@@ -626,6 +626,50 @@ report failed taste:
 		print message touch_cant_reach  # "[We] can't reach [regarding act.target][those]."
 		stop
 
+# LISTEN / SMELL — the distance senses (Inform's "listening to"/"smelling"). Like TOUCH/TASTE they
+# sense without changing the world (no `do` band) and work in the dark; unlike them they are NOT
+# contact, so there is no reach gating — you can listen to a door across the room. Two forms each:
+# objectless ("listen"/"smell") senses the surroundings via the actor's room `sound`/`scent`;
+# targeted ("listen to X"/"smell X") reads the thing's own. Empty text → the default "nothing
+# unexpected" reply; a non-empty one is printed verbatim (game content). These are ordinary in-world
+# actions, so they spend the turn — a game adds `instead listen`/`instead smell` for per-turn
+# sensations that change over time.
+action listen
+
+report listen:
+	let here = holder(self.actor)
+	if here.sound == "":
+		print message listen_nothing  # "[We] [hear] nothing unexpected."
+	else:
+		print "[here.sound]"
+
+action listen_to:
+	direct physical target
+
+report listen_to:
+	if self.target.sound == "":
+		print message listen_nothing
+	else:
+		print "[act.target.sound]"
+
+action smell
+
+report smell:
+	let here = holder(self.actor)
+	if here.scent == "":
+		print message smell_nothing  # "[We] [smell] nothing unexpected."
+	else:
+		print "[here.scent]"
+
+action smell_thing:
+	direct physical target
+
+report smell_thing:
+	if self.target.scent == "":
+		print message smell_nothing
+	else:
+		print "[act.target.scent]"
+
 # PUSH for buttons, switches and the like (Inform's "pushing a thing"). Like ATTACK, the
 # action *fails* by default — most things don't respond — so the default is a `report failed`
 # message and a game contributes `instead push` rules for the controls that do (e.g. a button

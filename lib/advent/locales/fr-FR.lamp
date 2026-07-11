@@ -144,6 +144,8 @@ examine_in_container_plural: "[par]Dans [le act.target] se trouvent [render_cont
 # --- touch ---
 touch_nothing: "[cap(sujet_ne_verbe(\"sentir\"))] rien d'inattendu."
 taste_nothing: "Cela n'a rien d'inattendu au goût."
+listen_nothing: "[cap(sujet_ne_verbe(\"entendre\"))] rien d'inattendu."
+smell_nothing: "[cap(sujet_ne_verbe(\"sentir\"))] rien d'inattendu."
 touch_feels: "[act.target.feels]"
 touch_cant: "[cap(sujet_ne_verbe(\"pouvoir\"))] pas toucher [le act.target]."
 touch_cant_reach: "[cap(sujet_ne_verbe(\"pouvoir\"))] pas atteindre [le act.target]."
@@ -283,6 +285,16 @@ understand "éteins [target]" as switch_off
 
 understand "toucher [target]" as touch
 understand "touche [target]" as touch
+
+understand "écouter" as listen
+understand "écoute" as listen
+understand "écouter [target]" as listen_to
+understand "écoute [target]" as listen_to
+understand "sentir" as smell
+understand "sens" as smell
+understand "sentir [target]" as smell_thing
+understand "sens [target]" as smell_thing
+understand "renifler [target]" as smell_thing
 
 understand "attaquer [target]" as attack
 understand "attaque [target]" as attack

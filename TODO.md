@@ -10,14 +10,15 @@ Sourced from the staged roadmaps and prerequisite lists in
 > record. The only optional remnant is item 6 below.
 
 > Feature backlog **triaged (2026-07-11)**: `lurking_todo.md` (candidates mined from
-> `lurkinghorror.txt`) is now fully labeled — **51 Done** (mostly already-built; the
-> "we don't have" framing was stale), **18 Won't do**, **19 Will do**. Shipped 2026-07-11:
+> `lurkinghorror.txt`) is now fully labeled — **52 Done** (mostly already-built; the
+> "we don't have" framing was stale), **18 Won't do**, **18 Will do**. Shipped 2026-07-11:
 > `lit`-illuminates-room (`light_in_scope`, golden `providinglight2`); collective
 > plural objects via the unified `them` pronoun (`noteGroupAntecedent`/`pronounGroupOf`,
-> golden `themgroup1`); and `turn on`/`turn off` (`switchable`/`switched_on`, en-US + fr-FR,
-> goldens `switchdevice1`/`switchdevicefr1`). Remaining Will-do work
+> golden `themgroup1`); `turn on`/`turn off` (`switchable`/`switched_on`, en-US + fr-FR,
+> goldens `switchdevice1`/`switchdevicefr1`); and `listen`/`smell` distance senses (`sound`/
+> `scent`, en-US + fr-FR, goldens `sense1`/`sensefr1`). Remaining Will-do work
 > clusters into: enter/exit + vehicles (incl. non-vehicle enterables); `take X from Y`
-> scope-narrowing; `listen`/`smell` + prepositional
+> scope-narrowing; prepositional
 > LOOK; NPC talk/greet/order + `ask for`/`feed` (own design doc); verbose/brief/superbrief
 > modes; group/plural objects (needs a design pass); a general implicit-action facility;
 > base `SLEEP`; and the "noun missing" parse-error refinement. Text substitution (Slices 1–7)
