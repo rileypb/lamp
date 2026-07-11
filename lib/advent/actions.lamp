@@ -129,6 +129,25 @@ report failed take:
 		print message take_too_massive  # "[The act.taken] [is] much too massive to take."
 		stop
 
+# TAKE X FROM Y / TAKE X OUT OF Y — not a new world verb, just ordinary TAKE with the FROM clause
+# narrowing which objects `taken` resolves against: the runtime scopes `taken` to `source`'s
+# contents (registered in index.js via setSlotScopedByContents). This bounds `all` (`take all from
+# coffer`) and disambiguates a same-named object; a wrong object or a closed/empty source yields no
+# match, falling through to the generic "can't see any such thing" (no bespoke message, as in
+# Inform). `do` delegates to TAKE per object, so all its checks and reports apply.
+# Installs the FROM-scoping for TAKE_FROM (index.js). Called once from `on startup`.
+native function void wire_verb_scoping()
+
+action take_from:
+	direct item taken
+	multi
+	physical source
+
+do take_from:
+	try take:
+		taken self.taken
+		actor self.actor
+
 action inventory
 
 # Per-item inventory annotations — the " (worn)" / " (providing light)" tags

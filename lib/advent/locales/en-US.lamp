@@ -196,6 +196,11 @@ understand "take [taken]" as take
 understand "get [taken]" as take
 understand "pick up [taken]" as take
 understand "pick [taken] up" as take
+understand "take [taken] from [source]" as take_from
+understand "get [taken] from [source]" as take_from
+understand "take [taken] out of [source]" as take_from
+understand "get [taken] out of [source]" as take_from
+understand "remove [taken] from [source]" as take_from
 
 understand "inventory" as inventory
 understand "i" as inventory

@@ -1,0 +1,18 @@
+vault
+A stone vault.
+
+You see a coin, a crate (in which are a coin and a key) and a chest here.
+
+> take coin from crate
+Taken.
+
+> take all from crate
+key: Taken.
+
+> take gem from chest
+You can't see any such thing.
+
+> take gem from crate
+You can't see any such thing.
+
+> quit

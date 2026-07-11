@@ -1,0 +1,5 @@
+take coin from crate
+take all from crate
+take gem from chest
+take gem from crate
+quit

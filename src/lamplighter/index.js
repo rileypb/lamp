@@ -640,6 +640,17 @@ function isWorldScope(actionName) {
     return !!(typeRegistry.get(actionName) || {}).worldScope;
 }
 
+// Mark an action's `slot` as scoped to the CONTENTS of another slot (`take X from Y`): the slot
+// resolves within `fromSlot`'s contents rather than the actor's scope. This narrows a same-named
+// noun and bounds `all` (`take all from coffer`) to the source; a closed/empty source yields
+// nothing, so a wrong object falls through to the generic no-match (as in Inform). The world
+// library declares the relationship (e.g. `take_from`.`taken` scoped by `source`).
+function setSlotScopedByContents(actionName, slot, fromSlot) {
+    const type = typeRegistry.get(actionName);
+    if (!type) throw new Error(`setSlotScopedByContents: unknown action type "${actionName}"`);
+    type.scopeSlotBy = { slot, from: fromSlot };
+}
+
 // Mark an action `multi`: its direct slot accepts a multiple-object noun phrase
 // ("drop ball and umbrella"); the parser resolves the list and dispatches the action
 // once per object, so rules always see a single object in the slot. Off by default —
@@ -798,6 +809,22 @@ function scopeOf(actor) {
     }
 
     return [...inScope];
+}
+
+// The objects reachable INSIDE a container/supporter instance, for a FROM-scoped slot
+// (`take X from Y`): its direct contents, or none if it seals them (a closed container). Mirrors
+// scope's containment, so a closed box yields nothing — a wrong object then falls through to the
+// generic no-match, as in Inform. Works for supporters too (their held items have it as container).
+function contentsScope(container) {
+    if (!container || sealsContents(container)) return [];
+    const containment = buildContainmentIndex();
+    const out = [];
+    for (const instances of instanceRegistry.values()) {
+        for (const inst of instances) {
+            if (containerOf(inst, containment) === container) out.push(inst);
+        }
+    }
+    return out;
 }
 
 // The candidate objects for a slot. Physical objects must be in the actor's
@@ -1232,8 +1259,24 @@ function literalSlotValue(span, slotType) {
     return /^-?\d+(\.\d+)?$/.test(toks[0]) ? parseFloat(toks[0]) : undefined;
 }
 
+// Reorder a slot list so `fromField` precedes `scopedField` (a FROM-scoped slot needs its source
+// resolved first). No-op when either is absent (the source may already be resolved on the instance)
+// or already in order.
+function orderFromBefore(slots, fromField, scopedField) {
+    const fromIdx = slots.findIndex(([f]) => f === fromField);
+    const scopedIdx = slots.findIndex(([f]) => f === scopedField);
+    if (fromIdx === -1 || scopedIdx === -1 || fromIdx < scopedIdx) return slots;
+    const reordered = slots.slice();
+    const [fromEntry] = reordered.splice(fromIdx, 1);
+    reordered.splice(scopedIdx, 0, fromEntry);
+    return reordered;
+}
+
 function resolveSlots(slots, instance, scope, slotTypes, multiOut = { field: null, objects: null }) {
-    const directSlot = (typeRegistry.get(instance.type) || {}).directSlot || null;
+    const meta = typeRegistry.get(instance.type) || {};
+    const directSlot = meta.directSlot || null;
+    const scopeCfg = meta.scopeSlotBy || null;
+    if (scopeCfg) slots = orderFromBefore(slots, scopeCfg.from, scopeCfg.slot);
     for (let i = 0; i < slots.length; i++) {
         const [field, span] = slots[i];
         if (PRIMITIVE_SLOT_TYPES.has(slotTypes[field])) {
@@ -1244,7 +1287,10 @@ function resolveSlots(slots, instance, scope, slotTypes, multiOut = { field: nul
             instance[field] = value;
             continue;
         }
-        const candidates = resolveCandidates(span, resolvePool(slotTypes[field], scope), slotTypes[field], instance.actor);
+        // A FROM-scoped slot resolves within its source's contents (`take X from Y`); everything
+        // else against the action's scope.
+        const fieldScope = (scopeCfg && field === scopeCfg.slot) ? contentsScope(instance[scopeCfg.from]) : scope;
+        const candidates = resolveCandidates(span, resolvePool(slotTypes[field], fieldScope), slotTypes[field], instance.actor);
         if (candidates.length === 0) {
             // A multi action's direct slot accepts an ALL phrase ("all", "all but
             // the sword") or a connector-separated list ("ball and umbrella") —
@@ -1258,7 +1304,7 @@ function resolveSlots(slots, instance, scope, slotTypes, multiOut = { field: nul
                 const group = pronounGroupOf(span);
                 if (group) {
                     const st = slotTypes[field];
-                    const pool = new Set(resolvePool(st, scope));
+                    const pool = new Set(resolvePool(st, fieldScope));
                     const usable = group.filter((o) => pool.has(o) && (!st || isTypeOrSubtype(o.type, st)));
                     if (usable.length === 0) return "unresolved";
                     multiOut.field = field;
@@ -1268,13 +1314,13 @@ function resolveSlots(slots, instance, scope, slotTypes, multiOut = { field: nul
                 }
                 const all = parseAllPhrase(span);
                 if (all) {
-                    const status = resolveAllPhrase(all, instance, field, scope, slotTypes, multiOut);
+                    const status = resolveAllPhrase(all, instance, field, fieldScope, slotTypes, multiOut);
                     if (status === "ok") continue;
                     return status;
                 }
                 const pieces = splitMultiSpan(span);
                 if (pieces) {
-                    const status = resolveMultiPieces(pieces, 0, [], instance, field, slots.slice(i + 1), scope, slotTypes, multiOut);
+                    const status = resolveMultiPieces(pieces, 0, [], instance, field, slots.slice(i + 1), fieldScope, slotTypes, multiOut);
                     if (status === "ok") continue;
                     return status;
                 }
@@ -3446,6 +3492,7 @@ module.exports = {
     setDirectSlot,
     setOutOfWorld,
     setWorldScope,
+    setSlotScopedByContents,
     setMultiAction,
     setAllFilter,
     runCommand,

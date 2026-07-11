@@ -31,16 +31,15 @@ disambiguation, the `it` pronoun, `"You can't go that way."`, and
 - [Done] **NEW — `put X in Y` (containment) verb.** We only have `put X on Y`
   (supporters). "put carton in microwave" → "Done." (L278); refused when closed:
   "Inspection reveals that the microwave oven isn't open." (L273)
-- [Will do] **NEW — `take X from Y` / `take X out of Y`.** "take stone from professor" (L2049)
-  Design: **not a new world-model verb** — it's the ordinary `take` (already `multi`,
-  `do take` = `move taken to actor`) with the `FROM Y` clause **narrowing the noun-resolution
-  scope** to `Y`'s contents. This bounds `all` (`take all from coffer`) and disambiguates a
-  same-named object in multiple places. Purely a parser/scope job — needs the `from` token
-  (§2 richer prepositional grammar). Deliberately **no** bespoke error messages: a wrong object
-  or a closed `Y` should fall through to the **generic** no-match failure, matching Inform —
-  a specific "the ball isn't in the basket" / "the basket is closed" would leak whether the ball
-  exists or where it is. Open question: confirm whether an open container's contents are already
-  in default scope (`index.js`) — if not, `FROM` is also the only way to reach into one.
+- [Done] **NEW — `take X from Y` / `take X out of Y`.** "take stone from professor" (L2049).
+  **Implemented (2026-07-11):** not a new world verb — a `take_from` action whose `taken` slot the
+  runtime **scopes to `source`'s contents** (`setSlotScopedByContents`, registered in index.js;
+  resolveSlots resolves the source first and narrows the slot's scope). Disambiguates a same-named
+  object and bounds `all` (`take all from coffer`); a closed/empty source or absent object → the
+  **generic** no-match (no bespoke message, matching Inform — a specific "isn't in the basket"
+  would leak existence/location). `do` delegates to TAKE per object. en-US (`from`/`out of`/`remove
+  … from`) + fr-FR (`prendre … dans/sur`). Confirmed open-container contents are already in scope,
+  so FROM's job is narrowing/bounding. Goldens `takefrom1`/`takefromfr1`.
 - [Done] **NEW — `turn on` / `turn off` (switchable devices).** pc, flashlight,
   forklift, computer. "The flashlight clicks on." (L839); "The forklift sputters
   to life." (L774). **Implemented (2026-07-11):** `switchable`/`switched_on` on `physical`

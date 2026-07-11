@@ -251,6 +251,10 @@ understand "z" as wait
 understand "prendre [taken]" as take
 understand "prends [taken]" as take
 understand "ramasser [taken]" as take
+understand "prendre [taken] dans [source]" as take_from
+understand "prends [taken] dans [source]" as take_from
+understand "prendre [taken] sur [source]" as take_from
+understand "prends [taken] sur [source]" as take_from
 
 understand "inventaire" as inventory
 understand "i" as inventory

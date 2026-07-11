@@ -1,0 +1,45 @@
+# TAKE X FROM Y en français (lib/advent fr-FR): "prendre X dans Y" — délègue à TAKE ("Pris."), borne
+# "tout" au contenu de la source, et renvoie l'échec générique pour une source fermée.
+
+locale "fr-FR"
+lib advent
+
+game PrendreFR:
+	start caveau
+
+room caveau:
+	description "Un caveau de pierre."
+
+box caisse:
+	printed_name "caisse"
+	grammatical_gender "feminine"
+	description "Une caisse en bois."
+
+box coffre:
+	closable
+	closed
+	printed_name "coffre"
+	description "Un coffre en fer."
+
+item piece:
+	printed_name "pièce"
+	grammatical_gender "feminine"
+	understand "pièce"
+	description "Une pièce."
+
+item cle:
+	printed_name "clé"
+	grammatical_gender "feminine"
+	understand "clé"
+	description "Une clé."
+
+item gemme:
+	printed_name "gemme"
+	grammatical_gender "feminine"
+	description "Une gemme."
+
+contains caisse piece
+contains caisse cle
+contains coffre gemme
+contains caveau caisse
+contains caveau coffre
