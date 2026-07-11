@@ -48,6 +48,12 @@ open_locked: "It seems to be locked."
 close_report: "[We] [close] [the act.target]."
 close_not_closable: "That's not something [we] can close."
 close_already_closed: "[The act.target] [is] already closed."
+switch_on_report: "[We] [switch] on [the act.target]."
+switch_on_not_switchable: "That's not something [we] can switch on."
+switch_on_already: "[The act.target] [is] already on."
+switch_off_report: "[We] [switch] off [the act.target]."
+switch_off_not_switchable: "That's not something [we] can switch off."
+switch_off_already: "[The act.target] [is] already off."
 unlock_report: "[We] [unlock] [the act.target]."
 unlock_not_locked: "[The act.target] [is] not locked."
 unlock_no_key: "[We] [have] no key that fits [the act.target]."
@@ -197,6 +203,15 @@ understand "open [target]" as open
 
 understand "close [target]" as close
 understand "shut [target]" as close
+
+understand "turn on [target]" as switch_on
+understand "turn [target] on" as switch_on
+understand "switch on [target]" as switch_on
+understand "switch [target] on" as switch_on
+understand "turn off [target]" as switch_off
+understand "turn [target] off" as switch_off
+understand "switch off [target]" as switch_off
+understand "switch [target] off" as switch_off
 
 # The with-key forms first (registration order): bare "unlock door with key"
 # would otherwise let the keyless [target] slot swallow the whole phrase before

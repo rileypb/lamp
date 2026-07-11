@@ -41,9 +41,15 @@ disambiguation, the `it` pronoun, `"You can't go that way."`, and
   a specific "the ball isn't in the basket" / "the basket is closed" would leak whether the ball
   exists or where it is. Open question: confirm whether an open container's contents are already
   in default scope (`index.js`) — if not, `FROM` is also the only way to reach into one.
-- [Will do] **NEW — `turn on` / `turn off` (switchable devices).** pc, flashlight,
+- [Done] **NEW — `turn on` / `turn off` (switchable devices).** pc, flashlight,
   forklift, computer. "The flashlight clicks on." (L839); "The forklift sputters
-  to life." (L774)
+  to life." (L774). **Implemented (2026-07-11):** `switchable`/`switched_on` on `physical`
+  (types.lamp); `switch_on`/`switch_off` actions do **only** one thing — set/clear
+  `switched_on`, refusing a non-`switchable` and the already-on/off cases (actions.lamp).
+  Deliberately generic — the verb owns no device behavior; consequences are game-wired (a
+  `report switch_on` links a flashlight's `switched_on` → `lit`; a forklift's "sputters to life"
+  is a per-object report). Grammar `turn on/off [x]` / `switch on/off [x]` both orders, en-US +
+  fr-FR (allumer/éteindre). Goldens `switchdevice1`, `switchdevicefr1`.
 - [Done] **NEW — `unlock X with Y` / `lock X with Y`.** Lock+key as world state.
   "The lock, though rusty and unwilling, opens, releasing the hatch." (L1229);
   "The master key doesn't work on this lock." (L1964)
@@ -229,7 +235,9 @@ disambiguation, the `it` pronoun, `"You can't go that way."`, and
   now illuminates an otherwise-dark room — `light_in_scope` native (index.js, reuses `scopeOf`
   so a closed box seals the light) drives `in_darkness`/`describe_room` (rooms.lamp). No special
   item type. Golden `providinglight2` (carried light → visible; sealed in a closed box → dark;
-  reopened → lit). Pairs with turn on/off (a switchable's on-state sets `lit`) — still Will do.
+  reopened → lit). Pairs with turn on/off (still Will do), but the linkage is game-wired: TURN
+  ON only sets `switched_on`; a flashlight connects `switched_on` → `lit` itself (a rule or a
+  derived `lit`). The verb stays generic across machine kinds and owns no lighting behavior.
 - [Done] **NEW — doors as shared, stateful connectors between two rooms.** A door/glass
   wall/plate that is itself an object and blocks the exit until opened/unlocked.
   "There is a glass wall in the way." (L679); "The Alchemy Department door is

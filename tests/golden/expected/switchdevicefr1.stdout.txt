@@ -1,0 +1,21 @@
+salle
+Une salle nue.
+
+Vous voyez une pierre ici.
+
+> allumer lampe
+Vous allumez la lampe.
+
+> allumer lampe
+C'est déjà allumé.
+
+> éteindre lampe
+Vous éteignez la lampe.
+
+> éteindre lampe
+C'est déjà éteint.
+
+> allumer pierre
+Ce n'est pas quelque chose que vous pouvez allumer.
+
+> quitter

@@ -333,6 +333,57 @@ report failed close:
 		print message close_already_closed  # "[The act.target] [is] already closed."
 		stop
 
+# TURN ON / TURN OFF a switchable device (Inform's "switching on"/"switching off"). The action does
+# ONLY one thing — set/clear `switched_on` — and owns no device-specific behaviour: a game wires the
+# consequences (a flashlight links `switched_on` → `lit`; a forklift's report says "sputters to
+# life") with its own `report`/`after` rules. A non-`switchable` thing refuses; an already-on/off one
+# reports so. `target` is `direct`, so `it`/`them` refers back. Grammar covers both TURN and SWITCH.
+action switch_on:
+	direct item target
+
+check switch_on:
+	if not self.target.switchable:
+		stop failed not_switchable
+	if self.target.switched_on:
+		stop failed already_on
+
+do switch_on:
+	self.target.switched_on = true
+
+report switch_on:
+	print message switch_on_report  # "[We] [switch] on [the act.target]."
+
+report failed switch_on:
+	if self.reason == not_switchable:
+		print message switch_on_not_switchable  # "That's not something [we] can switch on."
+		stop
+	if self.reason == already_on:
+		print message switch_on_already  # "[The act.target] [is] already on."
+		stop
+
+action switch_off:
+	direct item target
+
+check switch_off:
+	if not self.target.switchable:
+		stop failed not_switchable
+	if not self.target.switched_on:
+		stop failed already_off
+
+do switch_off:
+	self.target.switched_on = false
+
+report switch_off:
+	print message switch_off_report  # "[We] [switch] off [the act.target]."
+
+report failed switch_off:
+	if self.reason == not_switchable:
+		print message switch_off_not_switchable  # "That's not something [we] can switch off."
+		stop
+	if self.reason == already_off:
+		print message switch_off_already  # "[The act.target] [is] already off."
+		stop
+
 # UNLOCK / LOCK. Two forms each: "unlock [target] with [key]" names the key;
 # bare "unlock [target]" uses the target's `matching_key` when the actor holds
 # it (announcing "(with the brass key)", the IF convention). A `matching_key`

@@ -1,0 +1,8 @@
+turn on flashlight
+look
+turn on flashlight
+switch off flashlight
+look
+turn flashlight on
+turn on rock
+quit

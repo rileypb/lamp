@@ -117,6 +117,12 @@ open_locked: "Cela semble verrouillé."
 close_report: "[cap(sujet_verbe(\"fermer\"))] [le act.target]."
 close_not_closable: "Ce n'est pas quelque chose que [sujet_verbe(\"pouvoir\")] fermer."
 close_already_closed: "C'est déjà fermé."
+switch_on_report: "[cap(sujet_verbe(\"allumer\"))] [le act.target]."
+switch_on_not_switchable: "Ce n'est pas quelque chose que [sujet_verbe(\"pouvoir\")] allumer."
+switch_on_already: "C'est déjà allumé."
+switch_off_report: "[cap(sujet_verbe(\"éteindre\"))] [le act.target]."
+switch_off_not_switchable: "Ce n'est pas quelque chose que [sujet_verbe(\"pouvoir\")] éteindre."
+switch_off_already: "C'est déjà éteint."
 
 # --- lock / unlock ---
 unlock_report: "[cap(sujet_verbe(\"déverrouiller\"))] [le act.target]."
@@ -269,6 +275,11 @@ understand "ouvre [target]" as open
 
 understand "fermer [target]" as close
 understand "ferme [target]" as close
+
+understand "allumer [target]" as switch_on
+understand "allume [target]" as switch_on
+understand "éteindre [target]" as switch_off
+understand "éteins [target]" as switch_off
 
 understand "toucher [target]" as touch
 understand "touche [target]" as touch

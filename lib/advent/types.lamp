@@ -65,6 +65,13 @@ type physical < thing:
 	# light_in_scope in rooms.lamp). Also annotates the inventory row as "(providing light)". A game
 	# sets it (e.g. Phobos's FROTZ).
 	bool lit = false
+	# TURN ON / TURN OFF (see actions.lamp): a `switchable` thing responds to the verbs, which do
+	# ONLY one thing — set/clear `switched_on`. The verb owns no device behaviour; a game wires the
+	# consequences (a flashlight links `switched_on` → `lit`; a forklift reports "sputters to life")
+	# via its own `report`/`after` rules. Many kinds of machine switch on (flashlight, pc, forklift),
+	# so this lives on `physical` (like `lit`), and a fixed control panel can be `scenery` too.
+	bool switchable = false
+	bool switched_on = false
 	# Excluded from `all` ("take all" skips it) while staying available by name — the
 	# declarative knob read by all_includes (actions.lamp). Being a field, a game can
 	# also flip it from rules as the world changes.
