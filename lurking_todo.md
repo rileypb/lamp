@@ -57,8 +57,8 @@ disambiguation, the `it` pronoun, `"You can't go that way."`, and
   metal trapdoor beneath." (L2701)
 - [Done] **NEW — `pull` / `move`.** `pull` exists as a fail-by-default action
   ([actions.lamp](lib/advent/actions.lamp), same shape as `push`); responders are
-  per-game `instead pull` rules for levers etc. `move` is an optional one-line grammar
-  synonym for `pull` (left to games, exactly like `press`→`push`).
+  per-game `instead pull` rules for levers etc. `move` is now wired as a base grammar synonym
+  for `pull` (en-US `move`, fr-FR `déplacer`), 2026-07-11.
 - [Won't do] **NEW — `pry X with Y` / `break X with Y` / `cut X with Y` (tool-mediated).**
   Two-noun instrument verbs. "remove cover with crowbar" (L896); "cut cord with ax"
   (L1810); "break glass" → "Wearing the heavy gloves, you confidently smash the glass…"

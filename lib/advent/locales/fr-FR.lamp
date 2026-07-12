@@ -343,6 +343,8 @@ understand "appuyer sur [target]" as push
 
 understand "tirer [target]" as pull
 understand "tire [target]" as pull
+understand "déplacer [target]" as pull
+understand "déplace [target]" as pull
 
 # The à/a pair: the accented form is the real spelling; the bare "a" variant
 # accepts unaccented typing (common at a game prompt).

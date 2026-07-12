@@ -286,6 +286,7 @@ understand "smooch [target]" as kiss
 understand "push [target]" as push
 
 understand "pull [target]" as pull
+understand "move [target]" as pull
 
 understand "give [gift] to [recipient]" as give
 
