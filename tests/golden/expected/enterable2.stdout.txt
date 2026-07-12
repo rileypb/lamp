@@ -1,0 +1,39 @@
+hall
+A hall.
+
+You see a chair (on which is a cushion), a closet (in which is a key) and a coin here.
+
+> look
+hall
+A hall.
+
+You see a chair (on which is a cushion), a closet (in which is a key) and a coin here.
+
+> take coin
+Taken.
+
+> sit on chair
+You get on the chair.
+
+> take cushion
+Taken.
+
+> get off
+You get off the chair.
+
+> get in closet
+You get in the closet.
+
+> take key
+Taken.
+
+> get off
+You get out of the closet.
+
+> inventory
+You are carrying:
+  a coin
+  a cushion
+  a key
+
+> quit
