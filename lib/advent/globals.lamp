@@ -27,6 +27,11 @@ global bool session_over = false
 # so the exit line (printed in `do`, before the move) can name it.
 global object last_exited = none
 
+# The player's darkness state as last reported, for the light-transition check at end of turn
+# (check_light_transition, rooms.lamp): light→dark announces "It is now pitch dark…"; dark→light
+# re-describes. Synced whenever an arrival describe already reflected the change.
+global bool was_dark = false
+
 # The door that most recently refused a `go` (set by the closed-door check just
 # before `stop failed door_closed`). Exists so the refusal message can name the
 # door: a named message may reference only `act`/globals, never a rule local.

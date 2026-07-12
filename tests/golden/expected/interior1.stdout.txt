@@ -16,12 +16,21 @@ In the closet you see a key.
 > close closet
 You close the closet.
 
+It is now pitch dark in here!
+
 > l
 Darkness
 It is pitch dark, and you can't see a thing.
 
 > open closet
 You open the closet.
+
+hall (in the closet)
+A hall.
+
+You see a lantern here.
+
+In the closet you see a key.
 
 > get out
 You get out of the closet.

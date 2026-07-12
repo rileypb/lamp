@@ -140,6 +140,10 @@ on startup:
 					if story == ongoing:
 						print "[par if printed]"
 						follow every_turn_rules()
+						# After the turn's rules: announce a light change the action (or a
+						# daemon) caused — see check_light_transition (rooms.lamp). Plain code,
+						# not a rule, so a game rule stopping the book can't suppress it.
+						check_light_transition()
 				if session_over:
 					break
 				if not (story == ongoing):

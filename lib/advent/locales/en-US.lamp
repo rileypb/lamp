@@ -141,6 +141,7 @@ story_lost: "*** You have lost ***[line break]"
 # --- rooms.lamp ---
 darkness_name: "Darkness[line break]"
 darkness_description: "It is pitch dark, and [we] can't see a thing."
+now_dark: "It is now pitch dark in here!"
 room_contents_intro: "[par][We] [see] "
 room_contents_outro: " here."
 

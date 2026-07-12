@@ -2146,6 +2146,14 @@ LOOK/arrival entry point choosing room vs. interior. Opening from inside doesn't
 (`enclosed_by` gates the reveal message — the contents were never hidden from within).
 Golden `interior1`.
 
+**Light transitions** (2026-07-11): when an action (or a daemon) changes the light without
+moving the player — a lamp switched off, a lit lantern shut in a box, `lighted` flipped by a
+rule — the end of the turn announces it: light→dark prints `now_dark` ("It is now pitch dark
+in here!"), dark→light re-describes the location. `check_light_transition` (rooms.lamp) runs
+from the command loop after every-turn rules (plain code, so a game rule stopping the book
+can't suppress it) against the `was_dark` global; the arrival hook syncs `was_dark` after its
+own describe, so walking into a dark room reports darkness once, not twice.
+
 **PUT X IN Y** (2026-07-07, Inform's "inserting it into"): `put_in` takes a carried
 item and an **open, real `container`** destination — a non-container refuses ("[We]
 can't put things in [those]."), a closed box refuses ("[The act.destination] [is]

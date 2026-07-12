@@ -294,6 +294,21 @@ function void describe_location(person p):
 	else:
 		describe_interior(p)
 
+# End-of-turn light-transition check (called from the command loop after every-turn rules): when
+# an action changed the light without moving the player — a lamp switched off, a lit lantern shut
+# in a box, a room's `lighted` flipped by a rule — announce it. Light→dark prints `now_dark`;
+# dark→light re-describes (what was hidden is now visible). The arrival hook syncs `was_dark`
+# after its own describe, so walking into a dark room doesn't double-report.
+function void check_light_transition():
+	let dark = in_darkness(player)
+	if dark and not was_dark:
+		print "[par if printed]"
+		print message now_dark  # "It is now pitch dark in here!"
+	if was_dark and not dark:
+		print "[par if printed]"
+		describe_location(player)
+	was_dark = dark
+
 function void list_room_contents(room r):
 	# An item that hasn't been handled and carries an `initial_appearance` describes
 	# itself in its own paragraph (e.g. "A form hangs on the wall beneath the sign.")
@@ -329,6 +344,9 @@ on contains add:
 			describe_on_arrival(c)
 		else:
 			describe_interior(player)
+		# The describe above already reflected any light change the move caused — sync the
+		# transition tracker so the end-of-turn check doesn't re-announce it.
+		was_dark = in_darkness(player)
 
 # A person is in darkness when neither their room's own light (`room.lighted`) nor any lit thing
 # in their scope illuminates it. A carried or present light source thus lifts a dark room.

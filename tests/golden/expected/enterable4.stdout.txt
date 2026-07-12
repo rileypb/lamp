@@ -23,6 +23,8 @@ In the closet you see a key.
 > close closet
 You close the closet.
 
+It is now pitch dark in here!
+
 > get out
 The closet is closed.
 
@@ -31,6 +33,11 @@ You need to get out of the closet first.
 
 > open closet
 You open the closet.
+
+hall (in the closet)
+A hall.
+
+In the closet you see a key.
 
 > get out
 You get out of the closet.

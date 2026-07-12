@@ -93,6 +93,7 @@ parser_nothing_all: "Il n'y a rien de disponible."
 # is built from a bare [we] + literal "n'y" rather than the sujet_ne_verbe helper.
 darkness_name: "Obscurité[line break]"
 darkness_description: "Il fait nuit noire, et [we] n'y [voir] rien."
+now_dark: "Il fait maintenant nuit noire ici !"
 room_contents_intro: "[par][cap(sujet_verbe(\"voir\"))] "
 room_contents_outro: " ici."
 
