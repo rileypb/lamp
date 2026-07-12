@@ -1,0 +1,17 @@
+# EXAMINE ME (lib/advent): the self-words me/myself/self resolve to the acting actor, and examining
+# yourself with no description prints the self-description default (examine_self, "As good-looking as
+# ever.") instead of the generic "nothing unusual about…". A game overrides via player.description
+# (or a §5 health rule). Examining another thing with no description still gets examine_nothing.
+
+lib advent
+
+game ExamineMe:
+	start hall
+
+room hall:
+	description "A plain hall."
+
+item pebble:
+	printed_name "pebble"
+
+contains hall pebble

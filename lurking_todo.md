@@ -117,10 +117,13 @@ disambiguation, the `it` pronoun, `"You can't go that way."`, and
   under`/`look behind` fail-by-default (games add `instead look_under`/`look_behind` to reveal a
   hidden object). en-US + fr-FR (`regarder dans`/`à travers`/`sous`/`derrière`). Golden
   `look1`/`lookfr1`.
-- [Will do] **NEW — `examine me` / self-description.** "x me" → "You are wide awake, and are
-  in good health." (L663). Needs `me`/`myself`/`self` to resolve to the player and EXAMINE to
-  print a player `description` (default e.g. "As good-looking as ever."). The fatigue/health
-  wording is the §5 player-state item, layered on top — base ask is just "x me works."
+- [Done] **NEW — `examine me` / self-description.** "x me" → "You are wide awake, and are
+  in good health." (L663). **Implemented (2026-07-11):** `me`/`myself`/`self` (fr `moi`/`me`/
+  `moi-même`) resolve to the acting actor (self-words, already wired; added `self`/`moi-même`);
+  EXAMINE of yourself with no `description` prints `examine_self` ("You are as good-looking as
+  ever." / "Vous êtes en pleine forme.") instead of the generic line. A game sets the actor's
+  `description` for the health/fatigue wording (§5, layered on top). Goldens
+  `examineme1`/`examinemefr1`.
 
 ### Eating / drinking / consumables
 - [Done] **NEW — `eat X` / `drink X`, with edible/potable traits.** "drink coke" →

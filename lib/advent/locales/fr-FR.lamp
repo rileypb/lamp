@@ -52,6 +52,7 @@ doff_not_worn: "[cap(sujet_ne_verbe(\"porter\"))] pas cela."
 # produce — it doesn't see the preceding preposition. "[Le act.target] n'a rien…"
 # sidesteps it: "Le caillou n'a rien d'inhabituel."
 examine_nothing: "[Le act.target] n'a rien d'inhabituel."
+examine_self: "[cap(sujet_verbe(\"être\"))] en pleine forme."
 examine_too_dark: "Il fait trop sombre pour voir cela."
 
 # --- go ---

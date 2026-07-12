@@ -572,10 +572,16 @@ check examine:
 # Print the target's description, or a default when it has none (an unset string
 # reads as ""). Both are named messages, so a game or translation can retheme them.
 report examine:
-	if self.target.description == "":
-		print message examine_nothing  # "[We] [see] nothing unusual about [the act.target]."
-	else:
+	if not (self.target.description == ""):
 		print message examine_report  # "[act.target.description][line break]"
+	else:
+		# Examining yourself (`x me`) gets a self-description default instead of the generic
+		# "nothing unusual about…"; a game overrides via the actor's `description` or a §5
+		# health/fatigue rule. Any actor examining itself qualifies (an NPC's "x me" too).
+		if self.target == self.actor:
+			print message examine_self  # "[We] [are] as good-looking as ever."
+		else:
+			print message examine_nothing  # "[We] [see] nothing unusual about [the act.target]."
 	# Inform's examine-a-container behaviour: list the contents of an open container (`contents_of`
 	# already yields nothing for a closed one). Gated to real container kinds so examining a person or
 	# other holder doesn't spill its contents. `is`/`are` agrees with how many things are inside.
