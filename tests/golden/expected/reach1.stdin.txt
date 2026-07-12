@@ -1,0 +1,11 @@
+enter booth
+close booth
+take apple
+push lever
+eat apple
+put flashlight on table
+turn on flashlight
+open booth
+get out
+take apple
+quit

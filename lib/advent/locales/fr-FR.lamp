@@ -165,6 +165,7 @@ smell_nothing: "[cap(sujet_ne_verbe(\"sentir\"))] rien d'inattendu."
 touch_feels: "[act.target.feels]"
 touch_cant: "[cap(sujet_ne_verbe(\"pouvoir\"))] pas toucher [le act.target]."
 touch_cant_reach: "[cap(sujet_ne_verbe(\"pouvoir\"))] pas atteindre [le act.target]."
+beyond_reach_msg: "[cap(sujet_ne_verbe(\"pouvoir\"))] pas atteindre [le beyond_reach]."
 
 # --- attack / kiss / push / pull ---
 attack_violence: "La violence n'est pas la solution."

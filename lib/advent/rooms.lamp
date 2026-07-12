@@ -48,24 +48,43 @@ function bool enclosed_by(person p, physical x):
 	return false
 
 # The closed container (if any) standing between actor `p` and object `x` — you can SEE a marble
-# through a closed transparent box (it's in scope), but not reach it. Walks x's holder chain up to
-# the room; a closed container blocks unless it encloses `p` too (both inside the same box can
-# touch its contents). Returns none when reach is clear. Gates TAKE/TOUCH/TASTE (actions.lamp);
-# an opaque closed box rarely gets here (its contents are already out of scope).
+# through a closed transparent box (or the room through a closed glass booth), but not reach
+# through the glass. Symmetric: a closed container enclosing exactly ONE of the two blocks —
+# around `x` it blocks reaching IN (the display case), around `p` it blocks reaching OUT (the
+# booth the actor shut themself in). One enclosing both never blocks (two people shut in the same
+# box can touch its contents). Returns none when reach is clear. Gates the contact verbs
+# (actions.lamp); an opaque sealed side rarely gets here (scope already hides across it).
 function physical reach_barrier(person p, physical x):
-	let mine = []
+	let xs = []
+	let xh = holder(x)
+	while not (xh == none):
+		append(xs, xh)
+		xh = holder(xh)
 	let m = holder(p)
-	while not (m == none):
-		append(mine, m)
+	while not (m == none) and not (m is room):
+		# The enclosure ITSELF is always reachable from within (its walls are right there) —
+		# you can open the booth you shut yourself in. Deeper barriers still block.
+		if m.closed and not (m == x):
+			let shared_out = false
+			for e in xs:
+				if e == m:
+					shared_out = true
+			if not shared_out:
+				return m
 		m = holder(m)
+	let mine = []
+	let ph = holder(p)
+	while not (ph == none):
+		append(mine, ph)
+		ph = holder(ph)
 	let h = holder(x)
 	while not (h == none) and not (h is room):
 		if h.closed:
-			let shared = false
-			for e in mine:
-				if e == h:
-					shared = true
-			if not shared:
+			let shared_in = false
+			for e2 in mine:
+				if e2 == h:
+					shared_in = true
+			if not shared_in:
 				return h
 		h = holder(h)
 	return none

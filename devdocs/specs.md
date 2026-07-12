@@ -2128,12 +2128,19 @@ from a box's. Already-open/closed are reported. Refusal reasons:
 **Transparent boxes** (2026-07-11): a box with **`transparent true`** (a glass case) shows
 its contents even when closed — they stay in scope (visible, referable, examinable, listed;
 LOOK IN/SEARCH render them) and **light passes through** (a `lit` thing inside a closed
-transparent box still lights a dark room) — but they are **not reachable**: TAKE/TOUCH/TASTE
-refuse with `cant_reach` via **`reach_barrier`** (rooms.lamp), which walks the target's holder
-chain and blocks on a closed container that does not also enclose the actor (two people shut
-in the same box can touch its contents). PUT IN still requires it open, and a closed
-transparent *enterable* still refuses ENTER/EXIT (glass is a physical barrier). Opaque
-(`false`) is the default. Golden `transparent1`.
+transparent box still lights a dark room) — but they are **not reachable**: the contact verbs
+refuse via **`reach_barrier`** (rooms.lamp), which is **symmetric** — a closed container
+enclosing exactly one of {actor, target} blocks: around the target it blocks reaching *in*
+(the display case), around the actor it blocks reaching *out* (the glass booth they shut
+themself in — visible room, untouchable contents). One enclosing **both** never blocks (two
+people shut in the same box can touch its contents), and the enclosure **itself** is always
+reachable from within (you can open the booth you're shut in). TAKE/TOUCH/TASTE carry their
+own checks (their `cant_reach` messages); the other contact verbs (ENTER, OPEN/CLOSE,
+LOCK/UNLOCK, switch, PUSH/PULL, PUT ON/IN, EAT/DRINK) share `instead` reach rules printing
+`beyond_reach_msg`. Purely visual verbs (EXAMINE, LOOK IN, SEARCH, SHOW) stay reach-free.
+PUT IN still requires it open, and a closed transparent *enterable* still refuses ENTER/EXIT
+(glass is a physical barrier). Opaque (`false`) is the default. Goldens `transparent1`,
+`reach1`.
 
 **The visibility ceiling** (2026-07-11): how far out an actor can *see* — the holder-chain
 walk stops at a closed opaque container (`vis_ceiling`, rooms.lamp; a closed *transparent*

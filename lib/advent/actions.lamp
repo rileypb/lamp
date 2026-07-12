@@ -806,6 +806,37 @@ report failed taste:
 		print message touch_cant_reach  # "[We] can't reach [regarding act.target][those]."
 		stop
 
+# Reach gating for the other contact verbs (TAKE/TOUCH/TASTE carry their own checks): a closed
+# container between actor and object — the sealed display case around the target, or the glass
+# booth the actor shut themself in — blocks manipulation even though the thing is visible
+# (reach_barrier is symmetric; see rooms.lamp). The refusal prints here and stops with a bare
+# `stop failed`, so each verb's own reports stay unprinted (the documented refusal pattern).
+# `beyond_reach` carries the object into the shared message. Purely visual verbs (EXAMINE,
+# LOOK IN, SEARCH, SHOW) stay reach-free.
+instead enter or open or close or unlock or unlock_keyless or lock or lock_keyless or switch_on or switch_off or push or pull:
+	if not (reach_barrier(self.actor, self.target) == none):
+		beyond_reach = self.target
+		print message beyond_reach_msg  # "[We] can't reach [regarding beyond_reach][those]."
+		stop failed
+
+instead put_on or put_in:
+	if not (reach_barrier(self.actor, self.destination) == none):
+		beyond_reach = self.destination
+		print message beyond_reach_msg
+		stop failed
+
+instead eat:
+	if not (reach_barrier(self.actor, self.food) == none):
+		beyond_reach = self.food
+		print message beyond_reach_msg
+		stop failed
+
+instead drink:
+	if not (reach_barrier(self.actor, self.liquid) == none):
+		beyond_reach = self.liquid
+		print message beyond_reach_msg
+		stop failed
+
 # LISTEN / SMELL — the distance senses (Inform's "listening to"/"smelling"). Like TOUCH/TASTE they
 # sense without changing the world (no `do` band) and work in the dark; unlike them they are NOT
 # contact, so there is no reach gating — you can listen to a door across the room. Two forms each:
