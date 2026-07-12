@@ -30,6 +30,13 @@ Sourced from the staged roadmaps and prerequisite lists in
 > goldens `nounmissing1`/`nounmissingfr1`) and **`devdocs/plural_objects.md`** (collective
 > plural objects — the `them`-pronoun unification). Still owed: an NPC conversation
 > (talk/greet/order) design doc before it is built.
+>
+> New design (beyond the transcript triage), **designed not implemented**:
+> **`devdocs/command_inference.md`** — "does the player mean" candidate inference: rank
+> disambiguation candidates by action-plausibility so an obvious winner (a takeable coin over
+> an already-held one) is chosen without asking. Local addition to `resolveSlots`'
+> disambiguation branch + a `set_dpm_ranker` hook mirroring `set_all_filter`; policy is
+> "infer rank differences, ask ties." Awaiting a build decision.
 
 ## Active
 
