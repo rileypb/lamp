@@ -39,6 +39,13 @@ Sourced from the staged roadmaps and prerequisite lists in
 > disambiguation branch + a `set_dpm_ranker` hook mirroring `set_all_filter`; policy is
 > "infer rank differences, ask ties." Awaiting a build decision.
 >
+> **`devdocs/accessibility.md`** (designed 2026-07-12, not implemented): per-slot
+> accessibility — `touchable` (default, reach-gated via `reach_barrier`) vs `visible`
+> (sight-only) markers on action slots, enforced once in the runtime between `instead` and
+> `check` via a library-installed gate. Replaces the per-verb reach enumeration (the four
+> `instead` selector rules + TAKE/TOUCH/TASTE checks) and makes mixed-accessibility actions
+> ("gaze at X through Y") expressible. Compiler + runtime + library change.
+>
 > Deferred (decided 2026-07-11): **room-contents list order vs Inform.** Nested enterables now
 > match Inform structurally (`enterable3`, verified against `example.inform`/`example.out`), but
 > Lamp lists contents in a different order (Lamp "a key and an undercloset" / "chair, coin,
