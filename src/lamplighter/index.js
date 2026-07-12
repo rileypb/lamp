@@ -818,7 +818,14 @@ function sealsContents(container) {
 // (containerOf): the `contains` relation.
 function scopeOf(actor) {
     const containment = buildContainmentIndex();
-    const location = containerOf(actor, containment);
+    // Reach out through open enclosing containers: an actor nested in an open box or enterable
+    // (a chair, a closet, an undercloset) still sees the enclosing room and everything in it. Walk
+    // up from the immediate holder while it is contained by something AND does not seal (a closed
+    // container stops the walk — its interior is the scope). The top (a room) has no container.
+    let location = containerOf(actor, containment);
+    while (location && containerOf(location, containment) && !sealsContents(location)) {
+        location = containerOf(location, containment);
+    }
     const inScope = new Set();
 
     for (const instances of instanceRegistry.values()) {

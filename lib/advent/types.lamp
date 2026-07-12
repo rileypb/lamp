@@ -160,11 +160,7 @@ type box < item, container:
 # here (not its own file) so it is emitted after its parent `item`. See specs.md "Backdrops".
 type backdrop < item
 
-type person < physical:
-	# The enterable object this actor is currently on/in (a chair, bed), or none. Set by
-	# ENTER/GET ON and cleared by GET OFF/EXIT (actions.lamp); annotates the room heading
-	# (perch_phrase) and blocks movement until the actor gets off. Non-vehicle model.
-	physical perch = none
+type person < physical
 
 type direction < thing:
 	direction inverse

@@ -279,12 +279,13 @@ disambiguation, the `it` pronoun, `"You can't go that way."`, and
   can't take it, it's a liquid." (L2760). (Umbrella for pour + consumable depletion, both
   Won't do; the "can't take, it's a liquid" refusal is game-authorable via `take_refusal`.)
 - [Done] **NEW — enterable objects that aren't vehicles (beds, chairs, closets).**
-  **Implemented (2026-07-11)** with a lighter model than "relocate the holder": an `enterable`
-  flag + a `perch` field on the actor. Getting on/in records the perch (the actor stays in the
-  room, so scope/darkness/description are untouched); the heading gains ", on the chair" /
-  ", in the closet" (`perch_phrase`); `go` is blocked until they get off. "on" for a supporter,
-  "in" otherwise. The holder-relocation model is reserved for vehicles (which need it for
-  interior scope + movement). Goldens `enterable1`/`enterablefr1`.
+  **Implemented (2026-07-11), then reworked to match Inform:** the actor is **moved into/onto**
+  the thing (holder relocation) and can **nest** (get in a closet, then an undercloset inside it).
+  `scopeOf` was extended to reach out through open enclosures (an actor inside still sees the
+  room); LOOK shows the `(in the closet) (in the undercloset)` heading chain + layered "In the X
+  you see …" paragraphs; `location_of`/`in_darkness` walk up to the enclosing room. Verified
+  against `example.inform`/`example.out` (Inform structure matches; Lamp keeps its own wording —
+  "You see"/"get in"). Goldens `enterable1`/`enterable2`/`enterable3`/`enterablefr1`.
 - [Will do] **NEW — enterable / ride-able objects (vehicles) with their own location
   semantics.** Room headers gain ", on the forklift" / ", in the forklift"
   (L789, L795).

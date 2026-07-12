@@ -23,6 +23,12 @@ global verbosity_mode verbosity = verbose
 # true for the instant between the verb and the loop's break, never during active play.
 global bool session_over = false
 
+# ENTER/EXIT bookkeeping (actions.lamp): `last_exited` holds the object just gotten out of, so the
+# EXIT report can name it after the move. `arrival_silent` suppresses the arrival auto-description
+# for one player move (set by EXIT so getting out doesn't re-describe the whole room).
+global object last_exited = none
+global bool arrival_silent = false
+
 # The door that most recently refused a `go` (set by the closed-door check just
 # before `stop failed door_closed`). Exists so the refusal message can name the
 # door: a named message may reference only `act`/globals, never a rule local.

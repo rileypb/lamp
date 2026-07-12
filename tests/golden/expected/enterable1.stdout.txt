@@ -7,13 +7,13 @@ You see a chair and a closet here.
 You get on the chair.
 
 > look
-hall, on the chair
+hall (on the chair)
 A hall.
 
 You see a closet here.
 
 > north
-You need to leave the chair first.
+You need to get out of the chair first.
 
 > get off
 You get off the chair.
@@ -22,7 +22,7 @@ You get off the chair.
 You get in the closet.
 
 > look
-hall, in the closet
+hall (in the closet)
 A hall.
 
 You see a chair here.

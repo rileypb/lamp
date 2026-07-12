@@ -11,7 +11,7 @@ action look
 
 # look changes nothing; its whole effect is to describe, so it lives in report.
 report look:
-	describe_room(holder(self.actor))
+	describe_room(location_of(self.actor))
 
 # WAIT — let a turn pass (Inform's "waiting"). Like LOOK it changes nothing, so there's no `do`
 # band; but it is an ordinary in-world action, so it still spends the turn and every-turn rules fire
@@ -891,28 +891,34 @@ check show:
 report failed show when self.reason == show_declined:
 	print message show_declined_msg  # "[The act.recipient] [are] unimpressed."
 
-# ENTER / GET IN / GET ON an `enterable` thing (a chair, bed, closet) — the non-vehicle model. The
-# actor stays in the room; a `perch` is recorded on the actor (person.perch), which annotates the
-# room heading (", on the chair" / ", in the closet" via perch_phrase) and blocks GO until they get
-# off. "on" for a `supporter`, "in" otherwise. A non-`enterable` thing refuses; a game still adds
-# `instead enter` for special cases (e.g. a ride-able vehicle, a later model). `target` is `direct`.
+# ENTER / GET IN / GET ON an `enterable` thing (a chair, bed, closet) — the non-vehicle model,
+# following Inform: the actor is MOVED into/onto the thing (holder relocation), and can nest (get in
+# a closet, then an undercloset inside it). Scope still reaches the enclosing room through open
+# enterables (see scopeOf), and the room heading / description gain the nesting (rooms.lamp). "on"
+# for a `supporter`, "in" otherwise. After entering, the thing's contents are described (Inform's
+# post-enter look). A non-`enterable` refuses; a game adds `instead enter` for a ride-able vehicle.
 action enter:
 	direct physical target
 
 check enter:
 	if not self.target.enterable:
 		stop failed cant_enter
-	if self.actor.perch == self.target:
+	if holder(self.actor) == self.target:
 		stop failed already_entered
 
 do enter:
-	self.actor.perch = self.target
+	move self.actor to self.target
 
 report enter:
 	if self.target.supporter:
 		print message enter_on_report  # "[We] [get] on [the act.target]."
 	else:
 		print message enter_in_report  # "[We] [get] in [the act.target]."
+	# "In the closet you see an undercloset … and a key." — what's in/on the thing just entered.
+	let inside = contents_of(self.target)
+	if not (inside.first == none):
+		print "[par]"
+		print enclosure_contents_phrase(self.target, render_list(inside))
 
 report failed enter:
 	if self.reason == cant_enter:
@@ -922,20 +928,25 @@ report failed enter:
 		print message enter_already  # "[We] [are] already there."
 		stop
 
-# EXIT / GET OFF / GET OUT / STAND UP — leave the enterable object the actor is on/in. Objectless
-# (an actor perches on at most one thing). The report reads the perch before clearing it.
+# EXIT / GET OFF / GET OUT / STAND UP — leave the enterable object the actor is on/in, moving to its
+# holder (an outer enterable, or the room). Objectless. `last_exited` holds the object left so the
+# report can name it after the move; `arrival_silent` keeps an exit-to-room from re-describing.
 action exit_object
 
 check exit_object:
-	if self.actor.perch == none:
+	if holder(self.actor) is room:
 		stop failed not_perched
 
+do exit_object:
+	last_exited = holder(self.actor)
+	arrival_silent = true
+	move self.actor to holder(last_exited)
+
 report exit_object:
-	if self.actor.perch.supporter:
-		print message exit_off_report  # "[We] [get] off [the act.actor.perch]."
+	if last_exited.supporter:
+		print message exit_off_report  # "[We] [get] off [the last_exited]."
 	else:
-		print message exit_out_report  # "[We] [get] out of [the act.actor.perch]."
-	self.actor.perch = none
+		print message exit_out_report  # "[We] [get] out of [the last_exited]."
 
 report failed exit_object when self.reason == not_perched:
 	print message exit_not_perched  # "[We] [are] not on or in anything."
@@ -943,9 +954,9 @@ report failed exit_object when self.reason == not_perched:
 action go:
 	direction way
 
-# Can't walk off while perched on/in a non-vehicle enterable — get off first.
+# Can't walk off while on/in a non-vehicle enterable — get out first.
 check go:
-	if not (self.actor.perch == none):
+	if not (holder(self.actor) is room):
 		stop failed perched
 
 # `here` binds the actor's location first: a relation-query slot may hold a value,

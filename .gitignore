@@ -142,3 +142,5 @@ dist
 lib/.DS_Store
 /transcripts
 ideas.md
+example.inform
+example.out

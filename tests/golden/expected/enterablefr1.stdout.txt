@@ -7,13 +7,13 @@ Vous voyez une chaise et un placard ici.
 Vous montez sur la chaise.
 
 > regarder
-salle, sur la chaise
+salle (sur la chaise)
 Une salle.
 
 Vous voyez un placard ici.
 
 > nord
-Il faut d'abord quitter la chaise.
+Il faut d'abord sortir de la chaise.
 
 > se lever
 Vous quittez la chaise.
@@ -22,7 +22,7 @@ Vous quittez la chaise.
 Vous entrez dans le placard.
 
 > regarder
-salle, dans le placard
+salle (dans le placard)
 Une salle.
 
 Vous voyez une chaise ici.

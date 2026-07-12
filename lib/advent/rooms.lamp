@@ -10,6 +10,32 @@ function bool is_container(physical x):
 # no light. Drives in_darkness / describe_room — a carried or present light lifts a dark room.
 native function bool light_in_scope(person p)
 
+# ENTER/EXIT support (see actions.lamp). location_of walks the containment chain up through any
+# enterable objects the actor is on/in to the enclosing room. enclosing_enterables returns those
+# objects, immediate one first — [undercloset, closet] when standing in an undercloset inside a
+# closet; empty when the actor stands directly in the room.
+function room location_of(person p):
+	let h = holder(p)
+	while not (h == none) and not (h is room):
+		h = holder(h)
+	return h
+
+function list<physical> enclosing_enterables(person p):
+	let result = []
+	let h = holder(p)
+	while not (h == none) and not (h is room):
+		append(result, h)
+		h = holder(h)
+	return result
+
+# The " (in the undercloset) (in the closet)" heading suffix (innermost first). Each clause names
+# its object via `the`, flagging it `mentioned` so the room's own contents list drops it.
+function string enclosure_chain(person p):
+	let s = ""
+	for c in enclosing_enterables(p):
+		s = s + enclosure_clause(c)
+	return s
+
 # An object's container: the one place that contains x (the `unique` contained
 # endpoint means at most one, so `?only` is safe — none when uncontained). Author code
 # reads containment through this rather than any field. Pure Lamp (was a native
@@ -72,8 +98,9 @@ rulebook bool room_heading_rules(room r):
 	default true
 	when true:
 		# While the player is on/in an enterable object, the heading gains ", on the chair" /
-		# ", in the closet" (perch_phrase; empty when not perched).
-		print "[bold][r][/bold][perch_phrase(player.perch)][line break]"
+		# " (in the closet) (in the undercloset)" when the player is nested in enterables (empty
+		# otherwise). Naming those objects flags them `mentioned`, dropping them from the room list.
+		print "[bold][r][/bold][enclosure_chain(player)][line break]"
 		stop true
 
 # All of the printing for room description is in here, including
@@ -90,6 +117,9 @@ function void describe_room(room r):
 		if not (r.description == ""):
 			print "[r.description][line break]"
 		list_room_contents(r)
+		# Layered "In the closet you see a key." paragraphs for each enclosing enterable the
+		# player is on/in (no-op when standing directly in the room).
+		describe_enclosures_from(holder(player))
 	else:
 		print message darkness_name  # "Darkness[line break]"
 		print message darkness_description  # "It is pitch dark, and [we] can't see a thing."
@@ -142,6 +172,19 @@ function string render_list(list<physical> xs):
 function string render_contents(physical holder):
 	return render_list(contents_of(holder))
 
+# The layered "In the closet you see a key." paragraphs. Given the actor's immediate holder `h`,
+# recurse to the OUTERMOST enclosing enterable first, then print each one's still-unmentioned
+# contents (so the next-inner enterable, flagged mentioned by the heading, is dropped). No-op once
+# the recursion reaches the room. `enclosure_contents_phrase` is the locale's "In X you see …".
+function void describe_enclosures_from(physical h):
+	if h == none or (h is room):
+		return
+	describe_enclosures_from(holder(h))
+	let inside = listable_contents(h)
+	if not (inside.first == none):
+		print "[par]"
+		print enclosure_contents_phrase(h, render_list(inside))
+
 function void list_room_contents(room r):
 	# An item that hasn't been handled and carries an `initial_appearance` describes
 	# itself in its own paragraph (e.g. "A form hangs on the wall beneath the sign.")
@@ -168,9 +211,14 @@ function void list_room_contents(room r):
 # placed, using the new container (`self.place`).
 on contains add:
 	if self.contained == player:
-		describe_on_arrival(self.place)
+		# Auto-describe only a room arrival (a GO) — ENTER moves into a non-room enterable and
+		# reports itself; EXIT sets `arrival_silent` so getting out doesn't re-describe the room.
+		# Any player move resets the flag so it never leaks to the next command.
+		if (self.place is room) and not arrival_silent:
+			describe_on_arrival(self.place)
+		arrival_silent = false
 
 # A person is in darkness when neither their room's own light (`room.lighted`) nor any lit thing
 # in their scope illuminates it. A carried or present light source thus lifts a dark room.
 function bool in_darkness(person p):
-	return not (holder(p).lighted or light_in_scope(p))
+	return not (location_of(p).lighted or light_in_scope(p))
