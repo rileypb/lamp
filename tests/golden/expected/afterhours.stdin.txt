@@ -1,0 +1,32 @@
+x case
+take moonstone
+open case
+take flashlight
+sit on armchair
+x cushion
+get off
+enter booth
+close booth
+look
+get out
+open booth
+get out
+north
+turn on flashlight
+enter crate
+open crate
+take key
+open hatbox
+enter wardrobe
+close wardrobe
+look
+turn off flashlight
+turn on flashlight
+open wardrobe
+get out
+south
+unlock case with key
+open case
+take moonstone
+put moonstone on pedestal
+quit
