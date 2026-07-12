@@ -38,6 +38,13 @@ Sourced from the staged roadmaps and prerequisite lists in
 > an already-held one) is chosen without asking. Local addition to `resolveSlots`'
 > disambiguation branch + a `set_dpm_ranker` hook mirroring `set_all_filter`; policy is
 > "infer rank differences, ask ties." Awaiting a build decision.
+>
+> Deferred (decided 2026-07-11): **room-contents list order vs Inform.** Nested enterables now
+> match Inform structurally (`enterable3`, verified against `example.inform`/`example.out`), but
+> Lamp lists contents in a different order (Lamp "a key and an undercloset" / "chair, coin,
+> closet"; Inform "an undercloset … and a key" / "chair, closet, coin"). Matching would mean an
+> Inform-style ordering rule in `contents_of`/`render_list` and churns every room-contents golden
+> — deliberately left alone; revisit only if 1:1 transcript parity for a port demands it.
 
 ## Active
 
