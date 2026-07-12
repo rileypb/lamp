@@ -1,0 +1,24 @@
+hall
+A hall.
+
+You see a table (on which is a book), a shelf, a rug, a crate (in which is a coin), a chest and a basket here.
+
+> search crate
+In the crate is a coin.
+
+> search chest
+The chest is closed.
+
+> search basket
+The basket is empty.
+
+> search table
+On the table is a book.
+
+> search shelf
+There is nothing on the shelf.
+
+> search rug
+You find nothing of interest.
+
+> quit

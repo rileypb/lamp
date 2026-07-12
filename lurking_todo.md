@@ -72,11 +72,13 @@ disambiguation, the `it` pronoun, `"You can't go that way."`, and
   (Merged from the former separate `attack` bullet.)
 - [Won't do] **NEW — `pour X on Y` / `pour X`.** "pour liquid" → "It pours out and spreads
   like ants at a picnic." (L1884)
-- [Will do] **NEW — `search X`.** "search junk" → "You find many worthless items… but
-  nothing of any use or value." (L848). Fail-by-default like `push` ("You find nothing of
-  interest."), **but succeeds for a container/supporter** — searching one lists its
-  (in-scope) contents, same rendering as looking in/on it. Games add `instead search X`
-  for scenery that hides things.
+- [Done] **NEW — `search X`.** "search junk" → "You find many worthless items… but
+  nothing of any use or value." (L848). **Implemented (2026-07-11):** succeeds for a container
+  (lists contents via the shared `render_container` helper, same as LOOK IN — closed/empty
+  handled) or a supporter ("On the table is …" via `supporter_phrase`); fails by default
+  ("You find nothing of interest.") otherwise, so games add `instead search X` for scenery that
+  hides things. Reach/light-gated. en-US (`search`) + fr-FR (`fouiller`). Goldens
+  `search1`/`searchfr1`.
 - [Won't do] **NEW — `dig` / `dig in X`.** "dig in dirt" → "…you encounter something hard."
   (L2159)
 - [Done] **NEW — `touch`/`fiddle with`.** "Fiddling with the cardboard carton has no

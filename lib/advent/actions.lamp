@@ -633,6 +633,22 @@ report failed look_behind when self.reason == nothing_there:
 # synonym). A non-container refuses; a closed one reports closed; an empty one reports empty;
 # otherwise the contents list with number agreement (like EXAMINE's container branch). Reach/light
 # gated like EXAMINE.
+# Lists an open container's contents for LOOK IN / SEARCH: closed → closed, empty → empty, else the
+# contents with number agreement. The messages render `[act.target]`, so the caller's action target
+# must be the container `c` (both look_in and search pass their `target`).
+function void render_container(physical c):
+	if c.closed:
+		print message look_in_closed  # "[The act.target] [is] closed."
+	else:
+		let inside = contents_of(c)
+		if inside.first == none:
+			print message look_in_empty  # "[The act.target] [is] empty."
+		else:
+			if inside.size == 1:
+				print message look_in_contents  # "In [the act.target] is [render_contents(act.target)]."
+			else:
+				print message look_in_contents_plural  # "In [the act.target] are [render_contents(act.target)]."
+
 action look_in:
 	direct physical target
 
@@ -643,17 +659,7 @@ check look_in:
 		stop failed not_container
 
 report look_in:
-	if self.target.closed:
-		print message look_in_closed  # "[The act.target] [is] closed."
-	else:
-		let inside = contents_of(self.target)
-		if inside.first == none:
-			print message look_in_empty  # "[The act.target] [is] empty."
-		else:
-			if inside.size == 1:
-				print message look_in_contents  # "In [the act.target] is [render_contents(act.target)]."
-			else:
-				print message look_in_contents_plural  # "In [the act.target] are [render_contents(act.target)]."
+	render_container(self.target)
 
 report failed look_in:
 	if self.reason == too_dark:
@@ -661,6 +667,37 @@ report failed look_in:
 		stop
 	if self.reason == not_container:
 		print message look_in_not_container  # "[We] can't look inside [regarding act.target][those]."
+		stop
+
+# SEARCH X — succeeds for a container (list its contents, like LOOK IN) or a supporter (list what's
+# on it, "On the table is …"), and fails by default for anything else ("You find nothing of
+# interest.") so a game adds `instead search X` for scenery that hides things. Reach/light-gated like
+# EXAMINE. `target` is `direct`, so `it`/`them` refers back.
+action search:
+	direct physical target
+
+check search:
+	if in_darkness(self.actor) and in_darkness(self.target):
+		stop failed too_dark
+	if not (is_container(self.target) or self.target.supporter):
+		stop failed nothing_found
+
+report search:
+	if is_container(self.target):
+		render_container(self.target)
+	else:
+		let on_it = contents_of(self.target)
+		if on_it.first == none:
+			print message search_nothing_on  # "There is nothing on [the act.target]."
+		else:
+			print supporter_phrase(self.target, render_list(on_it), on_it.size)
+
+report failed search:
+	if self.reason == too_dark:
+		print message examine_too_dark
+		stop
+	if self.reason == nothing_found:
+		print message search_nothing  # "[We] [find] nothing of interest."
 		stop
 
 # TOUCH / FEEL (Inform's "touching", ported from Can't Touch This.i7x). Touching changes nothing

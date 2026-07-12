@@ -152,6 +152,8 @@ look_in_empty: "C'est vide."
 look_in_contents: "Dans [le act.target] se trouve [render_contents(act.target)]."
 look_in_contents_plural: "Dans [le act.target] se trouvent [render_contents(act.target)]."
 look_in_not_container: "[cap(sujet_ne_verbe(\"pouvoir\"))] pas regarder là-dedans."
+search_nothing: "[cap(sujet_ne_verbe(\"trouver\"))] rien d'intéressant."
+search_nothing_on: "Il n'y a rien sur [le act.target]."
 
 # --- touch ---
 touch_nothing: "[cap(sujet_ne_verbe(\"sentir\"))] rien d'inattendu."
@@ -291,6 +293,8 @@ understand "regarder sous [target]" as look_under
 understand "regarder derrière [target]" as look_behind
 understand "regarder dans [target]" as look_in
 understand "regarder à travers [target]" as look_in
+understand "fouiller [target]" as search
+understand "fouille [target]" as search
 
 understand "aller [way]" as go
 # The bare-direction grammar ("nord" alone moves north) — each locale declares it

@@ -1,0 +1,41 @@
+# SEARCH X en français (lib/advent fr-FR): "fouiller X" — conteneur ("Dans …"), support ("Sur …"),
+# et l'échec par défaut ("Vous ne trouvez rien d'intéressant.").
+
+locale "fr-FR"
+lib advent
+
+game FouillerFR:
+	start salle
+
+room salle:
+	description "Une salle."
+
+box caisse:
+	printed_name "caisse"
+	grammatical_gender "feminine"
+	description "Une caisse."
+
+item table:
+	supporter
+	printed_name "table"
+	grammatical_gender "feminine"
+	description "Une table."
+
+item tapis:
+	printed_name "tapis"
+	description "Un tapis."
+
+item piece:
+	printed_name "pièce"
+	grammatical_gender "feminine"
+	description "Une pièce."
+
+item livre:
+	printed_name "livre"
+	description "Un livre."
+
+contains caisse piece
+contains table livre
+contains salle caisse
+contains salle table
+contains salle tapis

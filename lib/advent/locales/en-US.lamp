@@ -80,6 +80,8 @@ look_in_empty: "[The act.target] [is] empty."
 look_in_contents: "In [the act.target] is [render_contents(act.target)]."
 look_in_contents_plural: "In [the act.target] are [render_contents(act.target)]."
 look_in_not_container: "[We] can't look inside [regarding act.target][those]."
+search_nothing: "[We] [find] nothing of interest."
+search_nothing_on: "There is nothing on [the act.target]."
 examine_too_dark: "It's too dark to see [regarding act.target][those]."
 touch_nothing: "[We] [feel] nothing unexpected."
 taste_nothing: "[We] [taste] nothing unexpected."
@@ -198,6 +200,7 @@ understand "look behind [target]" as look_behind
 understand "look in [target]" as look_in
 understand "look inside [target]" as look_in
 understand "look through [target]" as look_in
+understand "search [target]" as search
 
 understand "wait" as wait
 understand "z" as wait

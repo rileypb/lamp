@@ -1,0 +1,7 @@
+search crate
+search chest
+search basket
+search table
+search shelf
+search rug
+quit
