@@ -30,7 +30,7 @@ The closet is closed.
 You need to get out of the closet first.
 
 > open closet
-You open the closet, revealing a key.
+You open the closet.
 
 > get out
 You get out of the closet.

@@ -2135,6 +2135,17 @@ in the same box can touch its contents). PUT IN still requires it open, and a cl
 transparent *enterable* still refuses ENTER/EXIT (glass is a physical barrier). Opaque
 (`false`) is the default. Golden `transparent1`.
 
+**The visibility ceiling** (2026-07-11): how far out an actor can *see* — the holder-chain
+walk stops at a closed opaque container (`vis_ceiling`, rooms.lamp; a closed *transparent*
+one doesn't stop it). Shut inside a closed closet, your world is its interior: LOOK
+describes the **ceiling** ("closet" heading + its contents seen from within —
+`contents_within`, to which the closed gate doesn't apply) rather than the enclosing room,
+and darkness is interior-only (no room light reaches in; a carried `lit` thing illuminates).
+`in_darkness` and the arrival hook follow the ceiling; `describe_location` is the single
+LOOK/arrival entry point choosing room vs. interior. Opening from inside doesn't "reveal"
+(`enclosed_by` gates the reveal message — the contents were never hidden from within).
+Golden `interior1`.
+
 **PUT X IN Y** (2026-07-07, Inform's "inserting it into"): `put_in` takes a carried
 item and an **open, real `container`** destination — a non-container refuses ("[We]
 can't put things in [those]."), a closed box refuses ("[The act.destination] [is]

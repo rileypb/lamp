@@ -1,0 +1,13 @@
+enter closet
+close closet
+l
+open closet
+get out
+take lantern
+enter closet
+close closet
+l
+take key
+open closet
+get out
+quit

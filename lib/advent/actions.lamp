@@ -11,7 +11,7 @@ action look
 
 # look changes nothing; its whole effect is to describe, so it lives in report.
 report look:
-	describe_room(location_of(self.actor))
+	describe_location(self.actor)
 
 # WAIT — let a turn pass (Inform's "waiting"). Like LOOK it changes nothing, so there's no `do`
 # band; but it is an ordinary in-world action, so it still spends the turn and every-turn rules fire
@@ -346,9 +346,11 @@ do open:
 	self.target.closed = false
 
 report open:
-	# By report time the box is open, so contents_of returns its (now unsealed) contents.
+	# By report time the box is open, so contents_of returns its (now unsealed) contents. Opening
+	# only "reveals" to an OUTSIDE opener — an actor shut inside could already see the contents
+	# (contents_within), so opening from within just opens.
 	let inner = contents_of(self.target)
-	if inner.first == none:
+	if inner.first == none or enclosed_by(self.actor, self.target):
 		print message open_report  # "[We] [open] [the act.target]."
 	else:
 		print message open_report_revealing  # "[We] [open] [the act.target], revealing [render_contents(act.target)]."

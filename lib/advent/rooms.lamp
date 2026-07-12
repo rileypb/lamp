@@ -28,6 +28,25 @@ function list<physical> enclosing_enterables(person p):
 		h = holder(h)
 	return result
 
+# The visibility ceiling: how far out the actor can SEE. Walk up the holder chain; a closed opaque
+# container stops the walk (from inside a shut closet, the closet is your world — you see its
+# contents, not the room), a closed TRANSPARENT one doesn't (glass: you see out). Returns the
+# enclosing room when nothing seals. Mirrors the runtime's scope walk (scopeOf/sealsContents).
+function physical vis_ceiling(person p):
+	let h = holder(p)
+	while not (h == none) and not (h is room) and not (h.closed and not h.transparent):
+		h = holder(h)
+	return h
+
+# True when `x` is somewhere in `p`'s holder chain (the closet the actor stands in).
+function bool enclosed_by(person p, physical x):
+	let h = holder(p)
+	while not (h == none):
+		if h == x:
+			return true
+		h = holder(h)
+	return false
+
 # The closed container (if any) standing between actor `p` and object `x` — you can SEE a marble
 # through a closed transparent box (it's in scope), but not reach it. Walks x's holder chain up to
 # the room; a closed container blocks unless it encloses `p` too (both inside the same box can
@@ -90,6 +109,23 @@ function list<physical> contents_of(physical r):
 function list<physical> listable_contents(room r):
 	let result = []
 	for x in contents_of(r):
+		if not x.mentioned and (x.handled or x.initial_appearance == ""):
+			append(result, x)
+	return result
+
+# The FROM-INSIDE view of a container's contents: like contents_of but without the closed gate —
+# an actor shut inside a closed closet still sees the key beside them. Used by describe_interior;
+# outside viewers keep going through contents_of.
+function list<physical> contents_within(physical c):
+	let result = []
+	for x in physical.all:
+		if holder(x) == c and not x.scenery and not (x == player):
+			append(result, x)
+	return result
+
+function list<physical> listable_within(physical c):
+	let result = []
+	for x in contents_within(c):
 		if not x.mentioned and (x.handled or x.initial_appearance == ""):
 			append(result, x)
 	return result
@@ -208,6 +244,56 @@ function void describe_enclosures_from(physical h):
 		print "[par]"
 		print enclosure_contents_phrase(h, render_list(inside))
 
+# The " (in the undercloset)" heading clauses for enclosures strictly BELOW `top` (exclusive) —
+# the interior heading's chain, where `top` is the sealed ceiling itself.
+function string enclosure_chain_below(person p, physical top):
+	let s = ""
+	let h = holder(p)
+	while not (h == none) and not (h == top) and not (h is room):
+		s = s + enclosure_clause(h)
+		h = holder(h)
+	return s
+
+# Like describe_enclosures_from but bounded at `top` (exclusive) — layered paragraphs for the
+# enterables nested inside a sealed ceiling.
+function void describe_enclosures_below(physical h, physical top):
+	if h == none or h == top or (h is room):
+		return
+	describe_enclosures_below(holder(h), top)
+	let inside = listable_contents(h)
+	if not (inside.first == none):
+		print "[par]"
+		print enclosure_contents_phrase(h, render_list(inside))
+
+# Describe the inside of a sealed enclosure — the actor's whole visible world when shut in a
+# closed opaque container. Heading is the ceiling (plus any nested chain below it), then the
+# ceiling's contents seen FROM INSIDE (contents_within — the closed gate doesn't apply to an
+# observer within), then layered paragraphs for nested enterables. Darkness is interior-only:
+# no room light reaches in, so only a lit thing in scope illuminates.
+function void describe_interior(person p):
+	for x in physical.all:
+		x.mentioned = false
+	let c = vis_ceiling(p)
+	if not light_in_scope(p):
+		print message darkness_name  # "Darkness[line break]"
+		print message darkness_description  # "It is pitch dark, and [we] can't see a thing."
+		return
+	print "[bold][c][/bold][enclosure_chain_below(p, c)][line break]"
+	let inside = listable_within(c)
+	if not (inside.first == none):
+		print "[par]"
+		print enclosure_contents_phrase(c, render_list(inside))
+	describe_enclosures_below(holder(p), c)
+
+# Describe whatever the actor can currently see: the enclosing room when nothing seals the view,
+# else the sealed enclosure's interior. The one entry point for LOOK and the arrival hook.
+function void describe_location(person p):
+	let c = vis_ceiling(p)
+	if c is room:
+		describe_room(c)
+	else:
+		describe_interior(p)
+
 function void list_room_contents(room r):
 	# An item that hasn't been handled and carries an `initial_appearance` describes
 	# itself in its own paragraph (e.g. "A form hangs on the wall beneath the sign.")
@@ -236,10 +322,21 @@ on contains add:
 	if self.contained == player:
 		# Any change of the player's holder re-describes — a GO between rooms, and ENTER/EXIT of
 		# an enterable (their "You get in …" line prints in `do` *before* the move, so the
-		# description follows it; the enclosure heading/paragraphs reflect the new position).
-		describe_on_arrival(location_of(player))
+		# description follows it). A room arrival goes through verbosity (describe_on_arrival);
+		# a view sealed by a closed opaque enclosure describes the interior instead.
+		let c = vis_ceiling(player)
+		if c is room:
+			describe_on_arrival(c)
+		else:
+			describe_interior(player)
 
 # A person is in darkness when neither their room's own light (`room.lighted`) nor any lit thing
 # in their scope illuminates it. A carried or present light source thus lifts a dark room.
+# Darkness follows the visibility ceiling: inside a closed opaque container no room light reaches
+# in, so only a lit thing in scope counts; otherwise the enclosing room's `lighted` (or a light in
+# scope) decides.
 function bool in_darkness(person p):
-	return not (location_of(p).lighted or light_in_scope(p))
+	let c = vis_ceiling(p)
+	if c is room:
+		return not (c.lighted or light_in_scope(p))
+	return not light_in_scope(p)
