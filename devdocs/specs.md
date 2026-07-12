@@ -2134,13 +2134,18 @@ enclosing exactly one of {actor, target} blocks: around the target it blocks rea
 (the display case), around the actor it blocks reaching *out* (the glass booth they shut
 themself in — visible room, untouchable contents). One enclosing **both** never blocks (two
 people shut in the same box can touch its contents), and the enclosure **itself** is always
-reachable from within (you can open the booth you're shut in). TAKE/TOUCH/TASTE carry their
-own checks (their `cant_reach` messages); the other contact verbs (ENTER, OPEN/CLOSE,
-LOCK/UNLOCK, switch, PUSH/PULL, PUT ON/IN, EAT/DRINK) share `instead` reach rules printing
-`beyond_reach_msg`. Purely visual verbs (EXAMINE, LOOK IN, SEARCH, SHOW) stay reach-free.
-PUT IN still requires it open, and a closed transparent *enterable* still refuses ENTER/EXIT
-(glass is a physical barrier). Opaque (`false`) is the default. Goldens `transparent1`,
-`reach1`.
+reachable from within (you can open the booth you're shut in). Enforcement is the **per-slot
+accessibility gate** (2026-07-12, `devdocs/accessibility.md`): every physical action slot is
+**`touchable` by default** — the engine calls the library-installed `reach_gate` (rooms.lamp,
+via lib/sys `set_reach_gate`) for each one between the `instead` and `check` bands, printing
+`beyond_reach_msg` and failing the action (no checks, no reports) when blocked. The sensory
+verbs relax their slots with the **`visible`** marker (`direct visible physical target`) —
+EXAMINE, LOOK IN/UNDER/BEHIND, SEARCH, LISTEN TO, SMELL, SHOW's recipient, conversation's
+interlocutor — so sight-only actions work through glass, and a mixed action ("gaze at
+[target] through [instrument]") declares each slot's level. A `multi` sweep gates per object
+("moonstone: You can't reach that."). PUT IN still requires it open, and a closed transparent
+*enterable* still refuses ENTER/EXIT (glass is a physical barrier). Opaque (`false`) is the
+default. Goldens `transparent1`, `reach1`, `accessibility1`.
 
 **The visibility ceiling** (2026-07-11): how far out an actor can *see* — the holder-chain
 walk stops at a closed opaque container (`vis_ceiling`, rooms.lamp; a closed *transparent*

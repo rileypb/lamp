@@ -83,6 +83,9 @@ on startup:
 	# Install the `all` inclusion policy (all_includes, actions.lamp). Installed here,
 	# before startup_rules, so a game's `rule startup_rules: set_all_filter(...)` wins.
 	set_all_filter(all_includes)
+	# Install the reach gate (reach_gate, rooms.lamp): touchable slots refuse across a closed
+	# container between actor and object. Same override story as the all filter.
+	set_reach_gate(reach_gate)
 	let this_game = game.all.first
 	# Auto-print the title banner before any startup_rules contributions, unless the game opts out
 	# (auto_banner false) to place it itself — e.g. between its intro narration and a reveal.

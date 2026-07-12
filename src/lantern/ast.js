@@ -97,8 +97,10 @@ function createIfStatement(condition, thenBody, elseBody) {
     return { kind: "IfStatement", condition, thenBody, elseBody };
 }
 
-function createFieldDecl(typeName, fieldName, defaultValue = null, direct = false) {
-    return { kind: "FieldDecl", typeName, fieldName, defaultValue, direct };
+// `visible` marks an action slot as sight-only (relaxed from the `touchable` default) —
+// see devdocs/accessibility.md. Only meaningful on action slots; type fields ignore it.
+function createFieldDecl(typeName, fieldName, defaultValue = null, direct = false, visible = false) {
+    return { kind: "FieldDecl", typeName, fieldName, defaultValue, direct, visible };
 }
 
 function createFieldAssign(fieldName, value, filePath, lineNumber) {

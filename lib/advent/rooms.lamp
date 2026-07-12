@@ -89,6 +89,18 @@ function physical reach_barrier(person p, physical x):
 		h = holder(h)
 	return none
 
+# The reach gate installed into the engine (set_reach_gate, startup.lamp; see
+# devdocs/accessibility.md): the engine calls it for every `touchable` (non-`visible`) physical
+# slot of a resolved action, between the `instead` and `check` bands. Blocked → print the
+# refusal and report true (the action then fails without running checks or reports).
+function bool reach_gate(person p, physical x):
+	let barrier = reach_barrier(p, x)
+	if barrier == none:
+		return false
+	beyond_reach = x
+	print message beyond_reach_msg  # "[We] can't reach [regarding beyond_reach][those]."
+	return true
+
 # The " (in the undercloset) (in the closet)" heading suffix (innermost first). Each clause names
 # its object via `the`, flagging it `mentioned` so the room's own contents list drops it.
 function string enclosure_chain(person p):

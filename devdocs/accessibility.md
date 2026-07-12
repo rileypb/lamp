@@ -1,7 +1,17 @@
 # Slot Accessibility — visible vs. touchable
 
-> Status: **design complete (core decisions resolved 2026-07-12); not yet
-> implemented.** Defines per-slot accessibility for actions — which noun slots
+> Status: **implemented (2026-07-12).** `visible`/`touchable` slot markers
+> (parser → `setVisibleSlot`), the runtime gate (`setReachGate` /
+> `gateBlockedSlot` between `instead` and `check` in `runAction`), the library
+> gate (`reach_gate`, rooms.lamp, installed via lib/sys `set_reach_gate` at
+> startup), and the migration (8 `visible` markers in lib/advent + 2 in
+> lib/conversation; the four `instead` reach rules and the TAKE/TOUCH/TASTE
+> `reach_barrier` checks deleted). Goldens `transparent1`/`reach1` held
+> **byte-identical** through the mechanism swap; `accessibility1` covers the
+> spyglass example and per-object multi gating. One nuance beyond the design:
+> a gate-blocked action also skips `report_failed` (a verb's own failure prose
+> — e.g. a `take_refusal` — would double-report after the gate's message).
+> Defines per-slot accessibility for actions — which noun slots
 > require *reach* (touchable) and which need only *sight* (visible) — replacing
 > the current per-verb enumeration of reach checks. Companion to the reach model
 > in `lib/advent/rooms.lamp` (`reach_barrier`) and the transparent-box /

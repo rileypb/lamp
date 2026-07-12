@@ -1,0 +1,28 @@
+hall
+A hall.
+
+You see a spyglass, a coin and a glass case (in which are a moonstone and a lorgnette) here.
+
+> gaze at moonstone through spyglass
+Through the spyglass, the moonstone looms in magnificent detail.
+
+> gaze at moonstone through lorgnette
+You can't reach that.
+
+> x moonstone
+A milky stone.
+
+> take all
+spyglass: Taken.
+coin: Taken.
+glass case: Taken.
+moonstone: You can't reach that.
+lorgnette: You can't reach that.
+
+> open case
+You open the glass case, revealing a moonstone and a lorgnette.
+
+> take moonstone
+Taken.
+
+> quit

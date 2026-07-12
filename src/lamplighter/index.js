@@ -559,8 +559,18 @@ function runAction(actionName, instance, opts = {}) {
     if (hasAct) globalRegistry.set("act", instance);
     try {
         let outcome = "succeeded";
+        let gateBlocked = false;
         outer: for (const band of ACTION_BANDS) {
             if (opts.silent && band === "report") break outer;
+            // Slot accessibility (devdocs/accessibility.md): after `instead` (the game's
+            // per-case override hatch), before `check`. A blocked touchable slot fails the
+            // action outright — no checks, and no report_failed either (the gate printed
+            // the refusal; a verb's own failure prose would double-report).
+            if (band === "check" && gateBlockedSlot(actionName, instance)) {
+                gateBlocked = true;
+                outcome = "failed";
+                break outer;
+            }
             const printsBefore = streamMark();
             for (const { rule } of orderedRules(bands[band])) {
                 const result = rule(instance);
@@ -579,7 +589,7 @@ function runAction(actionName, instance, opts = {}) {
                 streamRequestBreak(2);
             }
         }
-        if (outcome === "failed" && !opts.silent) {
+        if (outcome === "failed" && !opts.silent && !gateBlocked) {
             for (const { rule } of orderedRules(bands.report_failed)) {
                 const result = rule(instance);
                 if (result === HALT || result !== undefined) {
@@ -614,6 +624,43 @@ function setDirectSlot(actionName, fieldName) {
     const type = typeRegistry.get(actionName);
     if (!type) throw new Error(`setDirectSlot: unknown action type "${actionName}"`);
     type.directSlot = fieldName;
+}
+
+// Mark an action slot `visible` (sight-only): the reach gate skips it. `touchable` is the
+// default for physical slots, so the compiler emits only these relaxations — see
+// devdocs/accessibility.md.
+function setVisibleSlot(actionName, fieldName) {
+    const type = typeRegistry.get(actionName);
+    if (!type) throw new Error(`setVisibleSlot: unknown action type "${actionName}"`);
+    (type.visibleSlots ??= new Set()).add(fieldName);
+}
+
+// The reach gate, installed by the world library (lib/sys `set_reach_gate` -> lib/advent's
+// reach_gate): called as gate(actor, value) for every touchable physical slot of a resolved
+// action, between the `instead` and `check` bands. A truthy return means BLOCKED — the gate
+// prints its own refusal, and the action fails without running checks or reports. The engine
+// holds no reach policy; without an installed gate every slot passes.
+let reachGate = null;
+function setReachGate(fn) {
+    reachGate = fn;
+}
+
+// True when any touchable physical slot of `instance` is blocked by the reach gate. Skips
+// `visible`-marked slots, non-physical slot types, empty slots, and the actor itself (you can
+// always reach yourself); `world_scope` actions bypass entirely (their slots may be anywhere).
+function gateBlockedSlot(actionName, instance) {
+    if (!reachGate || !instance.actor || isWorldScope(actionName)) return false;
+    const meta = typeRegistry.get(actionName) || {};
+    const fields = meta.fields || {};
+    for (const [field, slotType] of Object.entries(fields)) {
+        if (meta.visibleSlots && meta.visibleSlots.has(field)) continue;
+        if (!slotType || PRIMITIVE_SLOT_TYPES.has(slotType)) continue;
+        if (!typeRegistry.has("physical") || !isTypeOrSubtype(slotType, "physical")) continue;
+        const value = instance[field];
+        if (!value || typeof value !== "object" || value === instance.actor) continue;
+        if (reachGate(instance.actor, value)) return true;
+    }
+    return false;
 }
 
 // Mark an action `out of world`: it runs normally (its bands fire) but bypasses the turn
@@ -3578,6 +3625,8 @@ module.exports = {
     HALT,
     registerGrammar,
     setDirectSlot,
+    setVisibleSlot,
+    setReachGate,
     setOutOfWorld,
     setWorldScope,
     setSlotScopedByContents,

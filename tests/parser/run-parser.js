@@ -88,8 +88,8 @@ const cases = [
             assert.strictEqual(type.name, "box");
             assert.deepStrictEqual(type.parents, ["item", "container"]);
             assert.deepStrictEqual(type.fields, [
-                { kind: "FieldDecl", typeName: "list<game>", fieldName: "items", defaultValue: null, direct: false },
-                { kind: "FieldDecl", typeName: "int", fieldName: "count", defaultValue: null, direct: false },
+                { kind: "FieldDecl", typeName: "list<game>", fieldName: "items", defaultValue: null, direct: false, visible: false },
+                { kind: "FieldDecl", typeName: "int", fieldName: "count", defaultValue: null, direct: false, visible: false },
             ]);
         },
     },

@@ -105,10 +105,6 @@ check take:
 		stop failed cant_take_unfeelable
 	if self.taken.far_away or self.taken.obstructed:
 		stop failed cant_reach
-	# A closed container between actor and item — a marble seen through a closed transparent box —
-	# blocks reach (reach_barrier, rooms.lamp).
-	if not (reach_barrier(self.actor, self.taken) == none):
-		stop failed cant_reach
 	if self.taken.edificial:
 		stop failed too_massive
 
@@ -569,7 +565,7 @@ report failed lock_keyless:
 
 # Targets any `physical` (not just `item`) so people and other non-item scenery can be examined.
 action examine:
-	direct physical target
+	direct visible physical target
 
 check examine:
 	if in_darkness(self.actor) and in_darkness(self.target):
@@ -618,7 +614,7 @@ report look_direction:
 # refusal a game overrides with `instead look_under` / `instead look_behind` (e.g. to reveal a key
 # under a rug). They share the `nothing_there` reason but keep their own default messages.
 action look_under:
-	direct physical target
+	direct visible physical target
 
 check look_under:
 	stop failed nothing_there
@@ -627,7 +623,7 @@ report failed look_under when self.reason == nothing_there:
 	print message look_under_nothing  # "[We] [find] nothing of interest there."
 
 action look_behind:
-	direct physical target
+	direct visible physical target
 
 check look_behind:
 	stop failed nothing_there
@@ -656,7 +652,7 @@ function void render_container(physical c):
 				print message look_in_contents_plural  # "In [the act.target] are [render_contents(act.target)]."
 
 action look_in:
-	direct physical target
+	direct visible physical target
 
 check look_in:
 	if in_darkness(self.actor) and in_darkness(self.target):
@@ -680,7 +676,7 @@ report failed look_in:
 # interest.") so a game adds `instead search X` for scenery that hides things. Reach/light-gated like
 # EXAMINE. `target` is `direct`, so `it`/`them` refers back.
 action search:
-	direct physical target
+	direct visible physical target
 
 check search:
 	if in_darkness(self.actor) and in_darkness(self.target):
@@ -719,8 +715,6 @@ check touch:
 	if not self.target.feelable:
 		stop failed cant_touch
 	if self.target.far_away or self.target.obstructed:
-		stop failed cant_reach
-	if not (reach_barrier(self.actor, self.target) == none):
 		stop failed cant_reach
 
 report touch:
@@ -792,8 +786,6 @@ check taste:
 		stop failed cant_touch
 	if self.target.far_away or self.target.obstructed:
 		stop failed cant_reach
-	if not (reach_barrier(self.actor, self.target) == none):
-		stop failed cant_reach
 
 report taste:
 	print message taste_nothing  # "[We] [taste] nothing unexpected."
@@ -806,36 +798,10 @@ report failed taste:
 		print message touch_cant_reach  # "[We] can't reach [regarding act.target][those]."
 		stop
 
-# Reach gating for the other contact verbs (TAKE/TOUCH/TASTE carry their own checks): a closed
-# container between actor and object — the sealed display case around the target, or the glass
-# booth the actor shut themself in — blocks manipulation even though the thing is visible
-# (reach_barrier is symmetric; see rooms.lamp). The refusal prints here and stops with a bare
-# `stop failed`, so each verb's own reports stay unprinted (the documented refusal pattern).
-# `beyond_reach` carries the object into the shared message. Purely visual verbs (EXAMINE,
-# LOOK IN, SEARCH, SHOW) stay reach-free.
-instead enter or open or close or unlock or unlock_keyless or lock or lock_keyless or switch_on or switch_off or push or pull:
-	if not (reach_barrier(self.actor, self.target) == none):
-		beyond_reach = self.target
-		print message beyond_reach_msg  # "[We] can't reach [regarding beyond_reach][those]."
-		stop failed
-
-instead put_on or put_in:
-	if not (reach_barrier(self.actor, self.destination) == none):
-		beyond_reach = self.destination
-		print message beyond_reach_msg
-		stop failed
-
-instead eat:
-	if not (reach_barrier(self.actor, self.food) == none):
-		beyond_reach = self.food
-		print message beyond_reach_msg
-		stop failed
-
-instead drink:
-	if not (reach_barrier(self.actor, self.liquid) == none):
-		beyond_reach = self.liquid
-		print message beyond_reach_msg
-		stop failed
+# Reach gating lives in the engine's slot-accessibility gate (devdocs/accessibility.md):
+# every physical slot is `touchable` by default and refuses across a closed container between
+# actor and object (reach_gate, rooms.lamp — installed at startup); the sensory verbs relax
+# their slots with the `visible` marker. No per-verb reach rules remain here.
 
 # LISTEN / SMELL — the distance senses (Inform's "listening to"/"smelling"). Like TOUCH/TASTE they
 # sense without changing the world (no `do` band) and work in the dark; unlike them they are NOT
@@ -855,7 +821,7 @@ report listen:
 		print "[here.sound]"
 
 action listen_to:
-	direct physical target
+	direct visible physical target
 
 report listen_to:
 	if self.target.sound == "":
@@ -873,7 +839,7 @@ report smell:
 		print "[here.scent]"
 
 action smell_thing:
-	direct physical target
+	direct visible physical target
 
 report smell_thing:
 	if self.target.scent == "":
@@ -924,7 +890,7 @@ report failed give when self.reason == give_declined:
 
 action show:
 	direct item shown
-	physical recipient
+	visible physical recipient
 
 check show:
 	stop failed show_declined
