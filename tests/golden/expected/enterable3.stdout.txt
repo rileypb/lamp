@@ -6,10 +6,22 @@ You see a chair (on which is a cushion), a coin and a closet (in which are a key
 > enter closet
 You get in the closet.
 
+hall (in the closet)
+A hall. North of here is a study.
+
+You see a chair (on which is a cushion) and a coin here.
+
 In the closet you see a key and an undercloset (in which is a frog).
 
 > enter undercloset
 You get in the undercloset.
+
+hall (in the undercloset) (in the closet)
+A hall. North of here is a study.
+
+You see a chair (on which is a cushion) and a coin here.
+
+In the closet you see a key.
 
 In the undercloset you see a frog.
 
@@ -26,8 +38,20 @@ In the undercloset you see a frog.
 > get out
 You get out of the undercloset.
 
+hall (in the closet)
+A hall. North of here is a study.
+
+You see a chair (on which is a cushion) and a coin here.
+
+In the closet you see a key and an undercloset (in which is a frog).
+
 > get out
 You get out of the closet.
+
+hall
+A hall. North of here is a study.
+
+You see a chair (on which is a cushion), a coin and a closet (in which are a key and an undercloset (in which is a frog)) here.
 
 > l
 hall

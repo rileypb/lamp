@@ -6,6 +6,11 @@ Vous voyez une chaise et un placard ici.
 > monter sur chaise
 Vous montez sur la chaise.
 
+salle (sur la chaise)
+Une salle.
+
+Vous voyez un placard ici.
+
 > regarder
 salle (sur la chaise)
 Une salle.
@@ -18,8 +23,18 @@ Il faut d'abord sortir de la chaise.
 > se lever
 Vous quittez la chaise.
 
+salle
+Une salle.
+
+Vous voyez une chaise et un placard ici.
+
 > entrer dans placard
 Vous entrez dans le placard.
+
+salle (dans le placard)
+Une salle.
+
+Vous voyez une chaise ici.
 
 > regarder
 salle (dans le placard)
@@ -29,5 +44,10 @@ Vous voyez une chaise ici.
 
 > se lever
 Vous quittez le placard.
+
+salle
+Une salle.
+
+Vous voyez une chaise et un placard ici.
 
 > quitter

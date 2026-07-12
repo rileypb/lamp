@@ -211,12 +211,10 @@ function void list_room_contents(room r):
 # placed, using the new container (`self.place`).
 on contains add:
 	if self.contained == player:
-		# Auto-describe only a room arrival (a GO) — ENTER moves into a non-room enterable and
-		# reports itself; EXIT sets `arrival_silent` so getting out doesn't re-describe the room.
-		# Any player move resets the flag so it never leaks to the next command.
-		if (self.place is room) and not arrival_silent:
-			describe_on_arrival(self.place)
-		arrival_silent = false
+		# Any change of the player's holder re-describes — a GO between rooms, and ENTER/EXIT of
+		# an enterable (their "You get in …" line prints in `do` *before* the move, so the
+		# description follows it; the enclosure heading/paragraphs reflect the new position).
+		describe_on_arrival(location_of(player))
 
 # A person is in darkness when neither their room's own light (`room.lighted`) nor any lit thing
 # in their scope illuminates it. A carried or present light source thus lifts a dark room.

@@ -906,19 +906,16 @@ check enter:
 	if holder(self.actor) == self.target:
 		stop failed already_entered
 
+# The report line prints in `do`, BEFORE the move: moving the player fires the `contains add`
+# handler, which re-describes the location — so "You get in the closet." leads and the description
+# (heading chain + layered contents) follows, like GO's arrival.
 do enter:
-	move self.actor to self.target
-
-report enter:
 	if self.target.supporter:
 		print message enter_on_report  # "[We] [get] on [the act.target]."
 	else:
 		print message enter_in_report  # "[We] [get] in [the act.target]."
-	# "In the closet you see an undercloset … and a key." — what's in/on the thing just entered.
-	let inside = contents_of(self.target)
-	if not (inside.first == none):
-		print "[par]"
-		print enclosure_contents_phrase(self.target, render_list(inside))
+	print "[par]"
+	move self.actor to self.target
 
 report failed enter:
 	if self.reason == cant_enter:
@@ -929,8 +926,8 @@ report failed enter:
 		stop
 
 # EXIT / GET OFF / GET OUT / STAND UP — leave the enterable object the actor is on/in, moving to its
-# holder (an outer enterable, or the room). Objectless. `last_exited` holds the object left so the
-# report can name it after the move; `arrival_silent` keeps an exit-to-room from re-describing.
+# holder (an outer enterable, or the room). Objectless. Like ENTER, the report line prints in `do`
+# before the move, so the move's re-description follows it; `last_exited` names the object left.
 action exit_object
 
 check exit_object:
@@ -939,14 +936,12 @@ check exit_object:
 
 do exit_object:
 	last_exited = holder(self.actor)
-	arrival_silent = true
-	move self.actor to holder(last_exited)
-
-report exit_object:
 	if last_exited.supporter:
 		print message exit_off_report  # "[We] [get] off [the last_exited]."
 	else:
 		print message exit_out_report  # "[We] [get] out of [the last_exited]."
+	print "[par]"
+	move self.actor to holder(last_exited)
 
 report failed exit_object when self.reason == not_perched:
 	print message exit_not_perched  # "[We] [are] not on or in anything."
