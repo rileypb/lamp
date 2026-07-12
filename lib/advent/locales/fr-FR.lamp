@@ -117,6 +117,9 @@ open_locked: "Cela semble verrouillé."
 close_report: "[cap(sujet_verbe(\"fermer\"))] [le act.target]."
 close_not_closable: "Ce n'est pas quelque chose que [sujet_verbe(\"pouvoir\")] fermer."
 close_already_closed: "C'est déjà fermé."
+verbose_report: "Descriptions complètes."
+brief_report: "Descriptions brèves. Les lieux déjà visités sont décrits brièvement."
+superbrief_report: "Descriptions minimales."
 switch_on_report: "[cap(sujet_verbe(\"allumer\"))] [le act.target]."
 switch_on_not_switchable: "Ce n'est pas quelque chose que [sujet_verbe(\"pouvoir\")] allumer."
 switch_on_already: "C'est déjà allumé."
@@ -244,6 +247,12 @@ transcript_ended: "Transcription terminée."
 # by its name/understand tokens, not its printed_name).
 
 understand "regarder" as look
+understand "détaillé" as set_verbose
+understand "verbeux" as set_verbose
+understand "bref" as set_brief
+understand "normal" as set_brief
+understand "minimal" as set_superbrief
+understand "court" as set_superbrief
 
 understand "attendre" as wait
 understand "z" as wait

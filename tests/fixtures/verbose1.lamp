@@ -1,0 +1,17 @@
+# VERBOSE / BRIEF / SUPERBRIEF (lib/advent): the Infocom display modes. Default VERBOSE = full
+# room description on every arrival (unchanged behavior). BRIEF = full on first visit, name-only on
+# re-entry. SUPERBRIEF = name-only always. An explicit LOOK is always full regardless. The mode
+# verbs are out-of-world (spend no turn). See describe_on_arrival / `visited` (rooms.lamp/types.lamp).
+
+lib advent
+
+game Verbose:
+	start hall
+
+room hall:
+	description "A grand hall with marble floors."
+
+room study:
+	description "A cozy study lined with books."
+
+bidi connects hall east study

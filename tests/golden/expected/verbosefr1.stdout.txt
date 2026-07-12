@@ -1,0 +1,34 @@
+Vestibule
+Un grand vestibule au sol de marbre.
+
+> bref
+Descriptions brèves. Les lieux déjà visités sont décrits brièvement.
+
+> e
+Étude
+Une étude confortable pleine de livres.
+
+> o
+Vestibule
+
+> e
+Étude
+
+> regarder
+Étude
+Une étude confortable pleine de livres.
+
+> minimal
+Descriptions minimales.
+
+> o
+Vestibule
+
+> détaillé
+Descriptions complètes.
+
+> e
+Étude
+Une étude confortable pleine de livres.
+
+> quitter

@@ -1,0 +1,10 @@
+brief
+e
+w
+e
+look
+superbrief
+w
+verbose
+e
+quit

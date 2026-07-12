@@ -92,6 +92,30 @@ function void describe_room(room r):
 		print message darkness_name  # "Darkness[line break]"
 		print message darkness_description  # "It is pitch dark, and [we] can't see a thing."
 
+# The BRIEF/SUPERBRIEF short form: the room heading (via the same `room_heading_rules`, so a game's
+# heading override still applies) and its contents, but NOT the description prose. Same darkness
+# handling as describe_room. Used by describe_on_arrival for a name-only re-entry.
+function void describe_room_brief(room r):
+	for x in physical.all:
+		x.mentioned = false
+	if r.lighted or light_in_scope(player):
+		follow room_heading_rules(r)
+		list_room_contents(r)
+	else:
+		print message darkness_name
+		print message darkness_description
+
+# Auto-description when the player arrives (not an explicit LOOK, which is always full). Consults
+# `verbosity` and the room's `visited` flag: VERBOSE always full; BRIEF full on the first visit,
+# name-only after; SUPERBRIEF name-only always. Marks the room visited. Calls describe_room for the
+# full case so a game's describe_room override still applies.
+function void describe_on_arrival(room r):
+	if verbosity == verbose or (verbosity == brief and not r.visited):
+		describe_room(r)
+	else:
+		describe_room_brief(r)
+	r.visited = true
+
 # Recursive content listing: each visible thing is rendered with the things it
 # holds in a parenthetical — "a box (in which is a thimble (in which is a marble))".
 # `render_contents` joins a holder's visible contents as prose; `render_thing`
@@ -142,7 +166,7 @@ function void list_room_contents(room r):
 # placed, using the new container (`self.place`).
 on contains add:
 	if self.contained == player:
-		describe_room(self.place)
+		describe_on_arrival(self.place)
 
 # A person is in darkness when neither their room's own light (`room.lighted`) nor any lit thing
 # in their scope illuminates it. A carried or present light source thus lifts a dark room.

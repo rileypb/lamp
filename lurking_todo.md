@@ -168,10 +168,13 @@ disambiguation, the `it` pronoun, `"You can't go that way."`, and
 - [Done] **NEW — `score`.** Implied by the endgame readout (L1848). `understand "score" as
   request_score` (en-US.lamp) + dedicated `lib/advent/scoring.lamp` (`max_score`, point awards).
   Narrower than §8 (rank table + move counter decided there); the SCORE verb + tracking exist.
-- [Will do] **NEW — `verbose` / `brief` / `superbrief` display modes.** "Verbose
-  descriptions." (L593) — controls whether room text reprints on re-entry. Three commands +
-  a mode global + a per-room `visited` flag; arrival/LOOK consults the mode (verbose = always
-  full, brief = full on first visit only, superbrief = name only).
+- [Done] **NEW — `verbose` / `brief` / `superbrief` display modes.** "Verbose
+  descriptions." (L593). **Implemented (2026-07-11):** a `verbosity_mode` enum global (default
+  `verbose`, so existing behavior is unchanged) + a per-room `visited` flag; `describe_on_arrival`
+  consults them (verbose = always full, brief = full first visit then name-only, superbrief = name
+  only), while explicit LOOK stays full. Out-of-world `set_verbose`/`set_brief`/`set_superbrief`
+  (no turn). en-US (`verbose`/`long`, `brief`/`normal`, `superbrief`/`short`) + fr-FR
+  (`détaillé`/`bref`/`minimal`). Goldens `verbose1`/`verbosefr1`.
 
 ---
 

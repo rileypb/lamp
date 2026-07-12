@@ -105,6 +105,9 @@ type container < physical
 
 type room < container:
 	bool lighted = true
+	# Set true the first time the player is described entering the room (see describe_on_arrival,
+	# rooms.lamp). Consulted only by BRIEF verbosity to decide full vs. name-only re-entry.
+	bool visited = false
 
 type item < physical:
 	bool wearable

@@ -1,0 +1,34 @@
+hall
+A grand hall with marble floors.
+
+> brief
+Brief descriptions. Rooms you have seen are described in brief.
+
+> e
+study
+A cozy study lined with books.
+
+> w
+hall
+
+> e
+study
+
+> look
+study
+A cozy study lined with books.
+
+> superbrief
+Superbrief descriptions.
+
+> w
+hall
+
+> verbose
+Verbose descriptions.
+
+> e
+study
+A cozy study lined with books.
+
+> quit

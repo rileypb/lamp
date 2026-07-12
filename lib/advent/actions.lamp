@@ -22,6 +22,37 @@ action wait
 report wait:
 	print message wait_report  # "Time passes."
 
+# VERBOSE / BRIEF / SUPERBRIEF — set the room-description verbosity (Infocom's display modes). They
+# only change how the auto-description on ARRIVAL renders (see describe_on_arrival, rooms.lamp); an
+# explicit LOOK is always full. Out-of-world, like SCORE: they spend no turn and fire no every-turn
+# rules. Each confirms with a named, retheme-able message.
+action set_verbose:
+	out_of_world
+
+do set_verbose:
+	verbosity = verbose
+
+report set_verbose:
+	print message verbose_report  # "Verbose descriptions."
+
+action set_brief:
+	out_of_world
+
+do set_brief:
+	verbosity = brief
+
+report set_brief:
+	print message brief_report  # "Brief descriptions."
+
+action set_superbrief:
+	out_of_world
+
+do set_superbrief:
+	verbosity = superbrief
+
+report set_superbrief:
+	print message superbrief_report  # "Superbrief descriptions."
+
 # The "all includes" policy (Inform's "deciding whether all includes" activity): the
 # engine calls this for every eligible in-scope object when a multi action's direct
 # slot is `all` (installed at startup via set_all_filter — see startup.lamp). Defaults:

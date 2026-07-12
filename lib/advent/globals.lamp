@@ -9,6 +9,13 @@ global string input = none
 kind story_state = enum(ongoing, won, lost)
 global story_state story = ongoing
 
+# Room-description verbosity (Infocom's VERBOSE/BRIEF/SUPERBRIEF). `verbose` (the default,
+# preserving the always-full behaviour): full description on every arrival. `brief`: full on the
+# first visit to a room, name-only thereafter. `superbrief`: name-only always. Only affects the
+# auto-description on ARRIVAL — an explicit LOOK is always full. See describe_on_arrival (rooms.lamp).
+kind verbosity_mode = enum(verbose, brief, superbrief)
+global verbosity_mode verbosity = verbose
+
 # Session-control signal. The QUIT and RESTART verbs (out-of-world actions) set this;
 # the command loop reads it after each command and unwinds. QUIT then lets the runtime
 # `run()` exit; an armed RESTART (via `request_restart`) makes `run()` restore the

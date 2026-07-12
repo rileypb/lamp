@@ -48,6 +48,9 @@ open_locked: "It seems to be locked."
 close_report: "[We] [close] [the act.target]."
 close_not_closable: "That's not something [we] can close."
 close_already_closed: "[The act.target] [is] already closed."
+verbose_report: "Verbose descriptions."
+brief_report: "Brief descriptions. Rooms you have seen are described in brief."
+superbrief_report: "Superbrief descriptions."
 switch_on_report: "[We] [switch] on [the act.target]."
 switch_on_not_switchable: "That's not something [we] can switch on."
 switch_on_already: "[The act.target] [is] already on."
@@ -182,6 +185,12 @@ transcript_ended: "Transcript ended."
 understand "look" as look
 understand "l" as look
 understand "look around" as look
+understand "verbose" as set_verbose
+understand "long" as set_verbose
+understand "brief" as set_brief
+understand "normal" as set_brief
+understand "superbrief" as set_superbrief
+understand "short" as set_superbrief
 understand "look [way]" as look_direction
 understand "look under [target]" as look_under
 understand "look behind [target]" as look_behind
