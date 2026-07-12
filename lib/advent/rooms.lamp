@@ -28,6 +28,29 @@ function list<physical> enclosing_enterables(person p):
 		h = holder(h)
 	return result
 
+# The closed container (if any) standing between actor `p` and object `x` — you can SEE a marble
+# through a closed transparent box (it's in scope), but not reach it. Walks x's holder chain up to
+# the room; a closed container blocks unless it encloses `p` too (both inside the same box can
+# touch its contents). Returns none when reach is clear. Gates TAKE/TOUCH/TASTE (actions.lamp);
+# an opaque closed box rarely gets here (its contents are already out of scope).
+function physical reach_barrier(person p, physical x):
+	let mine = []
+	let m = holder(p)
+	while not (m == none):
+		append(mine, m)
+		m = holder(m)
+	let h = holder(x)
+	while not (h == none) and not (h is room):
+		if h.closed:
+			let shared = false
+			for e in mine:
+				if e == h:
+					shared = true
+			if not shared:
+				return h
+		h = holder(h)
+	return none
+
 # The " (in the undercloset) (in the closet)" heading suffix (innermost first). Each clause names
 # its object via `the`, flagging it `mentioned` so the room's own contents list drops it.
 function string enclosure_chain(person p):
@@ -52,7 +75,7 @@ function physical holder(physical x):
 # (was a native) via physical.all + holder + append.
 function list<physical> contents_of(physical r):
 	let result = []
-	if r.closed:
+	if r.closed and not r.transparent:
 		return result
 	for x in physical.all:
 		if holder(x) == r and not x.scenery and not (x == player):

@@ -1,0 +1,43 @@
+# Transparent boxes (lib/advent): a closed `transparent` box (a glass case) shows its contents —
+# they stay in scope (listed, examinable, look in/search render them) and its light shines out (the
+# lit lantern inside lights the dark cellar) — but reach is blocked: TAKE/TOUCH through the glass
+# refuse (reach_barrier). The opaque crate contrasts: its hammer is out of scope entirely. Opening
+# the case makes its contents takeable.
+
+lib advent
+
+game Transparent:
+	start cellar
+
+room cellar:
+	lighted false
+	description "A damp cellar."
+
+box vitrine:
+	transparent
+	closable
+	closed
+	understand "glass/case"
+	printed_name "glass case"
+	description "A glass display case."
+
+box crate:
+	closable
+	closed
+	description "A wooden crate."
+
+item marble:
+	description "A glass marble."
+
+item lantern:
+	lit
+	description "A glowing lantern."
+
+item hammer:
+	description "A hammer."
+
+contains cellar vitrine
+contains cellar crate
+contains vitrine marble
+contains vitrine lantern
+contains crate hammer

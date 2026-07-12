@@ -1,0 +1,39 @@
+cellar
+A damp cellar.
+
+You see a glass case (in which are a marble and a lantern) and a crate here.
+
+> x marble
+A glass marble.
+
+> take marble
+You can't reach that.
+
+> touch marble
+You can't reach that.
+
+> look in case
+In the glass case are a marble and a lantern.
+
+> take hammer
+You can't see any such thing.
+
+> open case
+You open the glass case, revealing a marble and a lantern.
+
+> take marble
+Taken.
+
+> take lantern
+Taken.
+
+> close case
+You close the glass case.
+
+> look
+cellar
+A damp cellar.
+
+You see a glass case and a crate here.
+
+> quit

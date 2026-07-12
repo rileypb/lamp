@@ -105,6 +105,10 @@ check take:
 		stop failed cant_take_unfeelable
 	if self.taken.far_away or self.taken.obstructed:
 		stop failed cant_reach
+	# A closed container between actor and item — a marble seen through a closed transparent box —
+	# blocks reach (reach_barrier, rooms.lamp).
+	if not (reach_barrier(self.actor, self.taken) == none):
+		stop failed cant_reach
 	if self.taken.edificial:
 		stop failed too_massive
 
@@ -637,7 +641,7 @@ report failed look_behind when self.reason == nothing_there:
 # contents with number agreement. The messages render `[act.target]`, so the caller's action target
 # must be the container `c` (both look_in and search pass their `target`).
 function void render_container(physical c):
-	if c.closed:
+	if c.closed and not c.transparent:
 		print message look_in_closed  # "[The act.target] [is] closed."
 	else:
 		let inside = contents_of(c)
@@ -714,6 +718,8 @@ check touch:
 		stop failed cant_touch
 	if self.target.far_away or self.target.obstructed:
 		stop failed cant_reach
+	if not (reach_barrier(self.actor, self.target) == none):
+		stop failed cant_reach
 
 report touch:
 	if self.target.feels == "":
@@ -783,6 +789,8 @@ check taste:
 	if not self.target.feelable:
 		stop failed cant_touch
 	if self.target.far_away or self.target.obstructed:
+		stop failed cant_reach
+	if not (reach_barrier(self.actor, self.target) == none):
 		stop failed cant_reach
 
 report taste:

@@ -2002,7 +2002,7 @@ described below.
 | `physical` | `thing` | `article article`, `string description`, `string pronouns` (default `""`, free-text pronoun set), `string grammatical_gender` (default `"masculine"`, for gendered-locale articles), `string feels` (default `""`), `bool feelable` (default `true`), `bool far_away`, `bool obstructed`, `bool edificial`, `string take_refusal`, `string attack_refusal`, `bool lit` (Inform's `lit`; darkness is room-level so this only annotates the inventory row `(providing light)`), `bool scenery`, `string initial_appearance` (default `""`), `bool handled`, `bool mentioned` (Inform's `mentioned`; see Room contents listing) |
 | `room` | `container` | `string description`, `bool lighted` (default `true`) |
 | `item` | `physical` | `bool wearable` |
-| `box` | `item, container` | `bool closable`, `bool closed`, `bool locked` |
+| `box` | `item, container` | `bool closable`, `bool closed`, `bool locked`, `bool transparent` |
 | `person` | `physical` | — |
 | `direction` | `thing` | `direction inverse`, `string understand` |
 | `door` | `item` | `bool closed=true`, `bool locked=false`, `bool lockable=true`, one `room` field per direction |
@@ -2124,6 +2124,16 @@ open ("It seems to be locked."); the `locked` test runs **first**, so a locked d
 for a door only the game's own mechanism may open); their `closed`/`locked` defaults differ
 from a box's. Already-open/closed are reported. Refusal reasons:
 `not_openable`/`not_closable`/`already_open`/`already_closed`/`locked_shut`.
+
+**Transparent boxes** (2026-07-11): a box with **`transparent true`** (a glass case) shows
+its contents even when closed — they stay in scope (visible, referable, examinable, listed;
+LOOK IN/SEARCH render them) and **light passes through** (a `lit` thing inside a closed
+transparent box still lights a dark room) — but they are **not reachable**: TAKE/TOUCH/TASTE
+refuse with `cant_reach` via **`reach_barrier`** (rooms.lamp), which walks the target's holder
+chain and blocks on a closed container that does not also enclose the actor (two people shut
+in the same box can touch its contents). PUT IN still requires it open, and a closed
+transparent *enterable* still refuses ENTER/EXIT (glass is a physical barrier). Opaque
+(`false`) is the default. Golden `transparent1`.
 
 **PUT X IN Y** (2026-07-07, Inform's "inserting it into"): `put_in` takes a carried
 item and an **open, real `container`** destination — a non-container refuses ("[We]

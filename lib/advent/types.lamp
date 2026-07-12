@@ -152,6 +152,11 @@ type box < item, container:
 	bool closed
 	bool locked = false
 	item matching_key = none
+	# A `transparent` box (a glass case) shows its contents even when closed: they stay in scope
+	# (visible, referable, examinable, listed) and light passes through — but they are NOT
+	# reachable. TAKE/TOUCH/TASTE through the glass refuse (`reach_barrier`, rooms.lamp), and
+	# PUT IN still needs it open. Opaque (false) is the default.
+	bool transparent = false
 
 # A backdrop is present in scope in *every* room (walls, floor, ceiling, sky, the distant
 # horizon) rather than contained in one. The scope provider in index.js surfaces all backdrop
