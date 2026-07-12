@@ -181,6 +181,8 @@ enter_already: "[cap(sujet_verbe(\"être\"))] déjà là."
 exit_off_report: "[cap(sujet_verbe(\"quitter\"))] [le last_exited]."
 exit_out_report: "[cap(sujet_verbe(\"quitter\"))] [le last_exited]."
 exit_not_perched: "Il n'y a rien à quitter."
+enter_closed_msg: "C'est fermé."
+exit_closed_msg: "C'est fermé."
 go_perched: "Il faut d'abord sortir de [le holder(act.actor)]."
 
 # --- go: directional refusals ---

@@ -828,6 +828,13 @@ function scopeOf(actor) {
     }
     const inScope = new Set();
 
+    // The actor's own enclosure chain (the chair sat on, the closet stood in) is always
+    // referable — critically, a CLOSED container the actor is shut inside, so OPEN still
+    // resolves from within. Non-room holders only; the walk above already placed `location`.
+    for (let h = containerOf(actor, containment); h && containerOf(h, containment); h = containerOf(h, containment)) {
+        inScope.add(h);
+    }
+
     for (const instances of instanceRegistry.values()) {
         for (const inst of instances) {
             const container = containerOf(inst, containment);

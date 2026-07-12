@@ -1,0 +1,43 @@
+hall
+A hall.
+
+You see a closet (in which is a key) here.
+
+> close closet
+You close the closet.
+
+> enter closet
+The closet is closed.
+
+> open closet
+You open the closet, revealing a key.
+
+> enter closet
+You get in the closet.
+
+hall (in the closet)
+A hall.
+
+In the closet you see a key.
+
+> close closet
+You close the closet.
+
+> get out
+The closet is closed.
+
+> north
+You need to get out of the closet first.
+
+> open closet
+You open the closet, revealing a key.
+
+> get out
+You get out of the closet.
+
+hall
+A hall.
+
+You see a closet (in which is a key) here.
+
+> quit

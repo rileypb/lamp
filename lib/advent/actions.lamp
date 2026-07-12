@@ -903,6 +903,10 @@ action enter:
 check enter:
 	if not self.target.enterable:
 		stop failed cant_enter
+	# A closed enterable container can't be gotten into (open it first). `closed` reads false on
+	# anything without the field (a chair), so only closable boxes are gated.
+	if self.target.closed:
+		stop failed enter_closed
 	if holder(self.actor) == self.target:
 		stop failed already_entered
 
@@ -921,6 +925,9 @@ report failed enter:
 	if self.reason == cant_enter:
 		print message cant_enter_msg  # "That's not something [we] can enter."
 		stop
+	if self.reason == enter_closed:
+		print message enter_closed_msg  # "[The act.target] [is] closed."
+		stop
 	if self.reason == already_entered:
 		print message enter_already  # "[We] [are] already there."
 		stop
@@ -933,6 +940,11 @@ action exit_object
 check exit_object:
 	if holder(self.actor) is room:
 		stop failed not_perched
+	# Can't climb out of a closed container — open it first. This is what makes a trap work: the
+	# enclosure stays referable from inside (scopeOf), so OPEN resolves, but a locked or
+	# game-sealed one genuinely holds the player. The library never guarantees escape.
+	if holder(self.actor).closed:
+		stop failed exit_closed
 
 do exit_object:
 	last_exited = holder(self.actor)
@@ -943,8 +955,13 @@ do exit_object:
 	print "[par]"
 	move self.actor to holder(last_exited)
 
-report failed exit_object when self.reason == not_perched:
-	print message exit_not_perched  # "[We] [are] not on or in anything."
+report failed exit_object:
+	if self.reason == not_perched:
+		print message exit_not_perched  # "[We] [are] not on or in anything."
+		stop
+	if self.reason == exit_closed:
+		print message exit_closed_msg  # "[The holder(act.actor)] [is] closed."
+		stop
 
 action go:
 	direction way
