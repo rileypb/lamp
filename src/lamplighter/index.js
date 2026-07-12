@@ -703,6 +703,49 @@ function matchGrammar(parts, tokens) {
     return ti === tokens.length ? slots : null;
 }
 
+// A missing-noun PARTIAL match: the template's final part is a slot the player left empty, and the
+// prefix (everything before it) contains a verb literal AND consumes ALL the typed tokens. Returns
+// `{ field }` for that empty final slot, else null. The trailing preposition (if any) must have
+// been TYPED — we never supply an un-typed literal, because that could switch verbs (bare "take"
+// would otherwise "complete" to "take off"). See devdocs/missing_noun.md.
+function matchGrammarPartial(parts, tokens) {
+    if (parts.length < 2) return null;
+    const last = parts[parts.length - 1];
+    if (last.kind !== "slot") return null;
+    const prefix = parts.slice(0, parts.length - 1);
+    if (!prefix.some((p) => p.kind === "literal")) return null;
+    if (matchGrammar(prefix, tokens) === null) return null;
+    return { field: last.field };
+}
+
+// The unique missing-noun completion for `tokens`, or null when there are zero or several. A
+// template that FULLY matches is skipped (a complete command wins; the noun wasn't omitted).
+// Deduped by action+slot, so verb synonyms ("examine"/"x") count once; several distinct
+// completions (`put lamp in` vs `put lamp on` — only when the preposition is typed) fall through.
+function uniquePartialCompletion(tokens) {
+    const found = new Map();
+    for (const entry of grammarRegistry) {
+        if (matchGrammar(entry.parts, tokens) !== null) continue;
+        const partial = matchGrammarPartial(entry.parts, tokens);
+        if (!partial) continue;
+        const slotTypes = (typeRegistry.get(entry.actionName) || {}).fields || {};
+        found.set(entry.actionName + "|" + partial.field, {
+            actionName: entry.actionName,
+            field: partial.field,
+            slotType: slotTypes[partial.field],
+        });
+    }
+    return found.size === 1 ? [...found.values()][0] : null;
+}
+
+// The interrogative for a missing slot's type: a person → "who", a direction → "which_way",
+// anything else → "what". The locale's nounMissing renderer turns this into prose.
+function missingNounKind(slotType) {
+    if (slotType && typeRegistry.has("person") && isTypeOrSubtype(slotType, "person")) return "who";
+    if (slotType && typeRegistry.has("direction") && isTypeOrSubtype(slotType, "direction")) return "which_way";
+    return "what";
+}
+
 // An object's container — the world-model containment contract. The container is
 // the source of the object's `contains` edge (the object is the target); the `to`
 // endpoint is `unique`, so there is at most one. Returns null when uncontained (or
@@ -1196,6 +1239,11 @@ function objectDisplayName(obj) {
 let disambiguationRenderer = (candidates) =>
     "Which do you mean: " + candidates.map(objectDisplayName).join(" or ") + "?";
 let unknownReferenceRenderer = (word) => `I don't know what "${word}" refers to.`;
+//   nounMissing(kind, phrase) -> the "What/Who/Which way do you want to <phrase>?" prompt, where
+//   `kind` is "what"/"who"/"which_way" (from the missing slot's type) and `phrase` is the command
+//   the player typed so far (the verb + any typed nouns/preposition).
+let nounMissingRenderer = (kind, phrase) =>
+    (kind === "who" ? "Who" : kind === "which_way" ? "Which way" : "What") + ` do you want to ${phrase}?`;
 
 // The single seam a locale calls to own the parser's language: the noun-phrase
 // vocabulary and the two prose renderers. Each key is optional (a partial install
@@ -1218,6 +1266,7 @@ function setParserLanguage(spec) {
     if (spec.againWords) parserAgainWords = new Set(spec.againWords);
     if (spec.disambiguation) disambiguationRenderer = spec.disambiguation;
     if (spec.unknownReference) unknownReferenceRenderer = spec.unknownReference;
+    if (spec.nounMissing) nounMissingRenderer = spec.nounMissing;
 }
 
 function printDisambiguationPrompt(candidates) {
@@ -1227,6 +1276,11 @@ function printDisambiguationPrompt(candidates) {
 // Pending disambiguation: set when a slot matches multiple candidates.
 // Cleared on the next runCommand call whether or not the answer resolves it.
 let pendingDisambiguation = null;
+
+// Pending missing-noun prompt: set when the input is a unique prefix of one template missing its
+// final slot ("take" → "What do you want to take?"). The next line is spliced onto the command and
+// re-parsed. Cleared as soon as it is consumed.
+let pendingNoun = null;
 
 // Resolve [field, span] slot pairs onto `instance`. Returns one of:
 //   "ok"          — every slot filled with a single candidate.
@@ -1563,6 +1617,15 @@ function runCommand(line, actor, metaOnly = false) {
         pendingDisambiguation = null;
     }
 
+    if (pendingNoun) {
+        const { commandSoFar } = pendingNoun;
+        pendingNoun = null;
+        // Splice the answer onto the command that prompted and re-parse the whole thing: the answer
+        // fills the missing final slot, and re-running resolves everything fresh — chaining into
+        // disambiguation, ALL/multi, and the AGAIN target, with no special case.
+        return runCommand(commandSoFar + " " + String(line).trim(), actor, metaOnly);
+    }
+
     // AGAIN / G — replay the last in-world command. Handled above the grammar because it
     // must return the REPLAYED command's turn result, so the loop fires every-turn rules and
     // takes an undo checkpoint exactly as if the player had retyped it. Each line is already
@@ -1661,6 +1724,17 @@ function runCommand(line, actor, metaOnly = false) {
     if (sawMultiAttempt) {
         print(message("parser_no_multi", "You can't use multiple objects with that verb."));
         return false;
+    }
+    // Missing noun: no complete template matched (sawVerbMatch false), but the input is a unique
+    // prefix of one template with an empty final slot — ask for it instead of "I don't understand".
+    // See devdocs/missing_noun.md.
+    if (!sawVerbMatch) {
+        const completion = uniquePartialCompletion(tokens);
+        if (completion) {
+            print(nounMissingRenderer(missingNounKind(completion.slotType), lastCommand));
+            pendingNoun = { commandSoFar: lastCommand };
+            return false;
+        }
     }
     print(sawVerbMatch
         ? message("parser_cant_see", "You can't see any such thing.")

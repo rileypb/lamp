@@ -1,7 +1,13 @@
 # Missing-Noun Prompts
 
-> Status: **design complete (open questions resolved 2026-07-11); not yet
-> implemented.** Defines the intended design for
+> Status: **implemented (2026-07-11).** `matchGrammarPartial` /
+> `uniquePartialCompletion` / `missingNounKind` + a `pendingNoun` state and the
+> `nounMissing` locale renderer (`src/lamplighter/index.js`, `lib/en-US`, `lib/fr-FR`);
+> goldens `nounmissing1` / `nounmissingfr1`. **One divergence from the design below:**
+> an un-typed preposition is **not** supplied — the suffix is the final slot only, the
+> preposition (if any) must have been typed — because supplying one could switch verbs
+> (bare `take` would otherwise "complete" to `take off`). So the "ask Fred → about what?"
+> case is out of scope; everything else stands. Defines the intended design for
 > *missing-noun* handling in the Game Parser — the "What do you want to take?" /
 > "Who do you want to give it to?" re-prompt an IF parser issues when a command
 > names a verb but omits a required noun. Companion to `devdocs/game_parser.md`
@@ -26,14 +32,18 @@ Examples (interrogative varies by slot type; preposition by grammar):
 | Input | Prompt |
 |---|---|
 | `take` | What do you want to take? |
-| `unlock door with` | What do you want to unlock the door with? |
-| `ask Fred` | What do you want to ask Fred about? *(preposition supplied)* |
-| `give lamp to` | Who do you want to give the lamp to? |
+| `give lamp to` | What do you want to give lamp to? *(preposition typed)* |
 | `go` | Which way do you want to go? |
 
-Only a **bare single-noun verb** or a verb missing its **final** slot prompts;
-a two-noun verb missing its *first* noun (`give to hacker`, `ask about keys`)
-does not — see **Non-goals**.
+Only a **bare single-noun verb** or a verb missing its **final** slot **with any
+preposition already typed** prompts. A two-noun verb missing its *first* noun
+(`give to hacker`) does not — the empty slot must be final. And an un-typed
+preposition is **not** supplied (`ask Fred` does *not* become "…about what?"),
+because supplying one could switch verbs — see **Detection** and **Non-goals**.
+
+> The interrogative follows the slot's **declared type**. `give`'s recipient is
+> `physical` (you may give to anything), so `give lamp to` asks "**What**…", not
+> "Who". A slot typed `person` would ask "Who"; a `direction` slot, "Which way".
 
 ## The controlling constraint
 
@@ -77,27 +87,25 @@ aligned template with exactly one empty *required* slot:
 - the already-filled slots (their spans), so a chained prompt can re-resolve the
   whole command once the answer arrives.
 
-A template is a **partial-match candidate** when its `parts` split into:
+**As implemented** (`matchGrammarPartial`), a template is a **partial-match
+candidate** when:
 
-- a **prefix** that matches the tokens exactly and consumes **all** input
-  (every prefix literal aligns, every prefix slot captures ≥1 token), and
-- a **suffix** of *zero or more literals followed by exactly one slot* — so
-  exactly one slot is unfilled and it is the template's **final** slot.
+- its **final part is a slot** (the omitted noun), and
+- the **prefix** (everything before that final slot) contains a verb literal and
+  **matches and consumes all the typed tokens** (every prefix literal aligns,
+  every prefix slot captures ≥1 token).
 
-The suffix's literals are the connecting preposition(s) (`about`, `with`, …).
-**Crucially they need not have been typed:** `ask Fred` matches
-`ask [interlocutor] about [topic]` with prefix `ask [interlocutor]` (=Fred) and
-suffix `about [topic]`, yielding *"Ask Fred about what?"*. A typed trailing
-preposition (`unlock door with`) simply means the suffix is just the bare final
-slot.
+So the unfilled slot is always the template's **final** slot, and any preposition
+before it is part of the prefix — i.e. it **must have been typed**. We never
+supply an un-typed literal. This differs from the original design (which supplied
+prepositions to yield "ask Fred → about what?"): supplying `off` would let bare
+`take` "complete" to `take off` (doff), making the common case ambiguous. Dropping
+supplied prepositions keeps `take`/`eat`/`go` unambiguous at the cost of the
+`ask Fred` niceness.
 
-Requiring the empty slot to be **final** (all earlier slots filled) is what
-keeps a two-noun verb's *first* noun out of scope (Non-goals).
-
-What excludes `put lamp` is therefore **not** the un-typed preposition but
-**ambiguity**: both `put [x] in [y]` and `put [x] on [y]` yield a valid suffix
-(`in [y]` / `on [y]`), so there are *two* candidate completions. Uniqueness of
-the completion is the gate — see **Tie-break**.
+Requiring the empty slot to be **final** keeps a two-noun verb's *first* noun out
+of scope (Non-goals). `put lamp` yields no candidate at all (its templates need a
+typed `in`/`on`); `put lamp in` yields exactly one (`put_in`) and prompts.
 
 ### 2. Question phrasing — from slot type + preposition
 

@@ -229,12 +229,16 @@ disambiguation, the `it` pronoun, `"You can't go that way."`, and
   **verb/noun mismatch** ("How do you do that with a banners?" L238) both collapse into
   `no_understand`; **bad preposition** ("You used 'of' in a way…" L830) would need a known-word
   registry + positional analysis.
-- [Will do] **NEW — "noun missing" parse error.** "There seems to be a noun missing in that
-  sentence." (L39). Designed as interactive re-prompts ("What do you want to take?" / "Who…?" /
-  "Which way…?") rather than a static error. Detection needs `matchGrammar` to surface partial
-  matches (the `span.length===0 → return null` line currently blocks it); the answer flow
-  reuses `pendingDisambiguation`. Full design + cases + boundary + tie-break in
-  **`devdocs/missing_noun.md`**.
+- [Done] **NEW — "noun missing" parse error.** "There seems to be a noun missing in that
+  sentence." (L39). **Implemented (2026-07-11)** as interactive re-prompts ("What do you want to
+  take?" / "Which way do you want to go?"): a bare verb (or a verb missing its typed final slot)
+  that's a **unique** prefix of one template prompts instead of "I don't understand"; the answer
+  is spliced onto the command and re-parsed, so it chains into disambiguation, ALL/multi, and the
+  AGAIN target. `matchGrammarPartial`/`uniquePartialCompletion` + a `pendingNoun` state (splice +
+  re-run); interrogative from slot type (what/who/which-way); `nounMissing` locale renderer
+  (en-US + fr-FR). One divergence: an un-typed preposition isn't supplied (so no "ask Fred → about
+  what?"), to avoid `take`→`take off` ambiguity. Goldens `nounmissing1`/`nounmissingfr1`. Full
+  design in `devdocs/missing_noun.md`.
 
 ---
 

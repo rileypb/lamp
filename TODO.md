@@ -10,8 +10,8 @@ Sourced from the staged roadmaps and prerequisite lists in
 > record. The only optional remnant is item 6 below.
 
 > Feature backlog **triaged (2026-07-11)**: `lurking_todo.md` (candidates mined from
-> `lurkinghorror.txt`) is now fully labeled — **59 Done** (mostly already-built; the
-> "we don't have" framing was stale), **18 Won't do**, **11 Will do**. Shipped 2026-07-11:
+> `lurkinghorror.txt`) is now fully labeled — **60 Done** (mostly already-built; the
+> "we don't have" framing was stale), **18 Won't do**, **10 Will do**. Shipped 2026-07-11:
 > `lit`-illuminates-room (`light_in_scope`, golden `providinglight2`); collective
 > plural objects via the unified `them` pronoun (`noteGroupAntecedent`/`pronounGroupOf`,
 > golden `themgroup1`); `turn on`/`turn off` (`switchable`/`switched_on`, en-US + fr-FR,
@@ -25,11 +25,11 @@ Sourced from the staged roadmaps and prerequisite lists in
 > base `SLEEP`; and the "noun missing" parse-error refinement. Text substitution (Slices 1–7)
 > is **all DONE**; per-slice record in `devdocs/text.md`.
 >
-> Design docs from triage: **`devdocs/missing_noun.md`** (missing-noun re-prompts — designed,
-> not implemented; needs a `matchGrammar` partial-match change + a `pendingNoun` flow mirroring
-> disambiguation) and **`devdocs/plural_objects.md`** (collective plural objects — **implemented
-> 2026-07-11**; the `them`-pronoun unification is the built mechanism; counting is a non-goal).
-> Still owed: an NPC conversation (talk/greet/order) design doc before it is built.
+> Design docs from triage, both **implemented 2026-07-11**: **`devdocs/missing_noun.md`**
+> (missing-noun re-prompts — `matchGrammarPartial` + a `pendingNoun` splice-and-re-run;
+> goldens `nounmissing1`/`nounmissingfr1`) and **`devdocs/plural_objects.md`** (collective
+> plural objects — the `them`-pronoun unification). Still owed: an NPC conversation
+> (talk/greet/order) design doc before it is built.
 
 ## Active
 
