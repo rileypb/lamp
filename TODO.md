@@ -10,8 +10,8 @@ Sourced from the staged roadmaps and prerequisite lists in
 > record. The only optional remnant is item 6 below.
 
 > Feature backlog **triaged (2026-07-11)**: `lurking_todo.md` (candidates mined from
-> `lurkinghorror.txt`) is now fully labeled — **60 Done** (mostly already-built; the
-> "we don't have" framing was stale), **18 Won't do**, **10 Will do**. Shipped 2026-07-11:
+> `lurkinghorror.txt`) is now fully labeled — **62 Done** (mostly already-built; the
+> "we don't have" framing was stale), **18 Won't do**, **8 Will do**. Shipped 2026-07-11:
 > `lit`-illuminates-room (`light_in_scope`, golden `providinglight2`); collective
 > plural objects via the unified `them` pronoun (`noteGroupAntecedent`/`pronounGroupOf`,
 > golden `themgroup1`); `turn on`/`turn off` (`switchable`/`switched_on`, en-US + fr-FR,
@@ -20,7 +20,8 @@ Sourced from the staged roadmaps and prerequisite lists in
 > <direction>` + `look in`/`through`/`under`/`behind` (en-US + fr-FR, goldens `look1`/`lookfr1`).
 > (also shipped: `take X from Y` scope-narrowing — `setSlotScopedByContents`, goldens
 > `takefrom1`/`takefromfr1`). Remaining Will-do work
-> clusters into: enter/exit + vehicles (incl. non-vehicle enterables); NPC talk/greet/order +
+> clusters into: ride-able vehicles + vehicle-constrained movement (enter/exit + non-vehicle
+> enterables now done); NPC talk/greet/order +
 > `ask for` (own design doc); a general implicit-action facility;
 > base `SLEEP`; and the "noun missing" parse-error refinement. Text substitution (Slices 1–7)
 > is **all DONE**; per-slice record in `devdocs/text.md`.

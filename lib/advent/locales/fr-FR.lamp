@@ -175,6 +175,13 @@ pull_inert: "Rien d'évident ne se produit."
 give_declined_msg: "[Le act.recipient] ne [sembler] pas s'y intéresser."
 show_declined_msg: "Cela ne fait guère d'effet [au act.recipient]."
 cant_enter_msg: "Ce n'est pas quelque chose où [sujet_verbe(\"pouvoir\")] entrer."
+enter_on_report: "[cap(sujet_verbe(\"monter\"))] sur [le act.target]."
+enter_in_report: "[cap(sujet_verbe(\"entrer\"))] dans [le act.target]."
+enter_already: "[cap(sujet_verbe(\"être\"))] déjà là."
+exit_off_report: "[cap(sujet_verbe(\"quitter\"))] [le act.actor.perch]."
+exit_out_report: "[cap(sujet_verbe(\"quitter\"))] [le act.actor.perch]."
+exit_not_perched: "Il n'y a rien à quitter."
+go_perched: "Il faut d'abord quitter [le act.actor.perch]."
 
 # --- go: directional refusals ---
 go_cant_up: "[cap(sujet_ne_verbe(\"savoir\"))] ni escalader les murs ni voler."
@@ -355,6 +362,10 @@ understand "montrer [shown] à [recipient]" as show
 understand "montrer [shown] a [recipient]" as show
 
 understand "entrer dans [target]" as enter
+understand "monter sur [target]" as enter
+understand "monter dans [target]" as enter
+understand "se lever" as exit_object
+understand "debout" as exit_object
 
 understand "boire [liquid]" as drink
 understand "bois [liquid]" as drink

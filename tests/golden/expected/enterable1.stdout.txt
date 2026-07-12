@@ -1,0 +1,36 @@
+hall
+A hall.
+
+You see a chair and a closet here.
+
+> sit on chair
+You get on the chair.
+
+> look
+hall, on the chair
+A hall.
+
+You see a closet here.
+
+> north
+You need to leave the chair first.
+
+> get off
+You get off the chair.
+
+> get in closet
+You get in the closet.
+
+> look
+hall, in the closet
+A hall.
+
+You see a chair here.
+
+> get off
+You get out of the closet.
+
+> get off
+You are not on or in anything.
+
+> quit

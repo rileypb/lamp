@@ -98,6 +98,13 @@ pull_inert: "Nothing obvious happens."
 give_declined_msg: "[The act.recipient] [do] not seem interested."
 show_declined_msg: "[The act.recipient] [are] unimpressed."
 cant_enter_msg: "That's not something [we] can enter."
+enter_on_report: "[We] [get] on [the act.target]."
+enter_in_report: "[We] [get] in [the act.target]."
+enter_already: "[We] [are] already there."
+exit_off_report: "[We] [get] off [the act.actor.perch]."
+exit_out_report: "[We] [get] out of [the act.actor.perch]."
+exit_not_perched: "[We] [are] not on or in anything."
+go_perched: "[We] [need] to leave [the act.actor.perch] first."
 go_cant_up: "[We] can neither climb walls nor fly."
 go_cant_down: "[We] can't just dig downward."
 go_cant_in: "What [do] [we] want to enter?"
@@ -293,6 +300,17 @@ understand "give [gift] to [recipient]" as give
 understand "show [shown] to [recipient]" as show
 
 understand "enter [target]" as enter
+understand "get in [target]" as enter
+understand "get into [target]" as enter
+understand "get on [target]" as enter
+understand "get onto [target]" as enter
+understand "sit on [target]" as enter
+understand "sit in [target]" as enter
+understand "get off" as exit_object
+understand "get out" as exit_object
+understand "get up" as exit_object
+understand "stand" as exit_object
+understand "stand up" as exit_object
 
 understand "go [way]" as go
 understand "[way]" as go

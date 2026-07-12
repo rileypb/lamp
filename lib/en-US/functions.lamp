@@ -112,6 +112,11 @@ native function string contained_phrase(object container, string inner, int coun
 # so it lives here.
 native function string supporter_phrase(object supporter, string contents, int count)
 
+# The ", on the chair" / ", in the closet" clause appended to a room heading while the player is
+# perched on/in an enterable object (see enter_object, actions.lamp). "on" for a supporter, "in"
+# otherwise; empty when `p` is none. Language-specific, so it lives in the locale.
+native function string perch_phrase(object p)
+
 # Count-driven copula agreement (G3). are(n) is the bare primitive: "is" when the
 # count is exactly 1, else "are" (so are(0) -> "are 0 bullets"). The [is LIST] sugar
 # forms render the verb agreeing with the list's size followed by the list itself —

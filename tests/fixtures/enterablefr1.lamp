@@ -1,0 +1,32 @@
+# ENTER/EXIT non-véhicule en français (lib/advent fr-FR): monter sur / entrer dans, en-tête « sur la
+# chaise » / « dans le placard », mouvement bloqué, se lever pour quitter.
+
+locale "fr-FR"
+lib advent
+
+game EntrerFR:
+	start salle
+
+room salle:
+	description "Une salle."
+
+room etude:
+	printed_name "Étude"
+	description "Une étude."
+
+bidi connects salle north etude
+
+item chaise:
+	enterable
+	supporter
+	printed_name "chaise"
+	grammatical_gender "feminine"
+	description "Une chaise."
+
+item placard:
+	enterable
+	printed_name "placard"
+	description "Un placard."
+
+contains salle chaise
+contains salle placard

@@ -71,7 +71,9 @@ function void describe_supporters(room r):
 rulebook bool room_heading_rules(room r):
 	default true
 	when true:
-		print "[bold][r][/bold][line break]"
+		# While the player is on/in an enterable object, the heading gains ", on the chair" /
+		# ", in the closet" (perch_phrase; empty when not perched).
+		print "[bold][r][/bold][perch_phrase(player.perch)][line break]"
 		stop true
 
 # All of the printing for room description is in here, including

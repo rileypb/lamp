@@ -86,9 +86,11 @@ disambiguation, the `it` pronoun, `"You can't go that way."`, and
 - [Won't do] **NEW — `set X to Y`.** Setting a value/dial. "set timer to 4:20" (L510)
 
 ### Movement variants
-- [Will do] **NEW — `enter`/`exit`/`get in`/`get out`/`get on`/`get off` (vehicles &
-  enterable objects).** "You are now in the forklift." (L768); reach limits while
-  riding: "You can't reach the urchin from within the forklift." (L783)
+- [Done] **NEW — `enter`/`exit`/`get in`/`get out`/`get on`/`get off` (enterable objects).**
+  **Implemented (2026-07-11)** for the **non-vehicle** case: `enter`/`get in`/`get on`/`sit on`
+  and `exit_object` (`get off`/`get out`/`stand`) verbs, with the world model below. The
+  **vehicle** forms ("You are now in the forklift", riding reach-limits) remain separate (the
+  two vehicle items). en-US + fr-FR (monter sur / entrer dans / se lever).
 - [Won't do] **PARTIAL — `up`/`down`/`in`/`out` already exist as directions, but `climb X`,
   `climb up/down`, and verb-form `enter`/`exit` mapping to movement do not.**
   "climb rope" (L2325)
@@ -276,13 +278,13 @@ disambiguation, the `it` pronoun, `"You can't go that way."`, and
 - [Won't do] **NEW — liquids as a substance kind.** Not takeable; drinkable; pourable. "You
   can't take it, it's a liquid." (L2760). (Umbrella for pour + consumable depletion, both
   Won't do; the "can't take, it's a liquid" refusal is game-authorable via `take_refusal`.)
-- [Will do] **NEW — enterable objects that aren't vehicles (beds, chairs, closets).**
-  Getting in/on such a thing relocates the player's holder to it (posture "in"/"on") and
-  adds ", in the bed" / ", on the chair" to the room header; `exit`/`get out` returns to the
-  room. **No** driving or movement-constraint semantics — that's the vehicle item below.
-  In Inform terms: an `enterable` container or supporter that isn't a vehicle — simpler than
-  the vehicle model, and its natural substrate. Shares the `enter`/`exit`/`get in`/`get out`/
-  `get on`/`get off` grammar (§1 Movement variants).
+- [Done] **NEW — enterable objects that aren't vehicles (beds, chairs, closets).**
+  **Implemented (2026-07-11)** with a lighter model than "relocate the holder": an `enterable`
+  flag + a `perch` field on the actor. Getting on/in records the perch (the actor stays in the
+  room, so scope/darkness/description are untouched); the heading gains ", on the chair" /
+  ", in the closet" (`perch_phrase`); `go` is blocked until they get off. "on" for a supporter,
+  "in" otherwise. The holder-relocation model is reserved for vehicles (which need it for
+  interior scope + movement). Goldens `enterable1`/`enterablefr1`.
 - [Will do] **NEW — enterable / ride-able objects (vehicles) with their own location
   semantics.** Room headers gain ", on the forklift" / ", in the forklift"
   (L789, L795).

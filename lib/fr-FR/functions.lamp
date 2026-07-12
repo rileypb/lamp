@@ -96,6 +96,10 @@ native function string contained_phrase(object container, string inner, int coun
 # pre-rendered contents prose, and the item count. Same signature as lib/en-US.
 native function string supporter_phrase(object supporter, string contents, int count)
 
+# ", sur la chaise" / ", dans le placard" ajouté à l'en-tête de la pièce quand le joueur est
+# assis sur / dans un objet où l'on peut entrer (voir enter_object). Vide si `p` est none.
+native function string perch_phrase(object p)
+
 # Count-driven copula agreement: are(n) is "est" when the count is exactly 1,
 # else "sont". The [is LIST] sugar forms render the verb agreeing with the list
 # size followed by the list itself.

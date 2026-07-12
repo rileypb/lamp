@@ -25,6 +25,7 @@ gem (item)
   lit: false
   switchable: false
   switched_on: false
+  enterable: false
   all_exempt: false
   initial_appearance: ""
   handled: false
@@ -58,6 +59,7 @@ safe (box)
   lit: false
   switchable: false
   switched_on: false
+  enterable: false
   all_exempt: false
   initial_appearance: ""
   handled: false

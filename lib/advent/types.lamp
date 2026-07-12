@@ -78,6 +78,11 @@ type physical < thing:
 	# so this lives on `physical` (like `lit`), and a fixed control panel can be `scenery` too.
 	bool switchable = false
 	bool switched_on = false
+	# ENTER / GET IN / GET ON (see enter_object, actions.lamp): a thing the player can get into or
+	# onto (a chair, bed, closet). "on" for a `supporter`, "in" otherwise. Non-vehicle: the player
+	# stays in the room (a `perch`, tracked on `person`) — it just annotates the heading and blocks
+	# movement until they get off. A ride-able vehicle is a separate, later model.
+	bool enterable = false
 	# Excluded from `all` ("take all" skips it) while staying available by name — the
 	# declarative knob read by all_includes (actions.lamp). Being a field, a game can
 	# also flip it from rules as the world changes.
@@ -155,7 +160,11 @@ type box < item, container:
 # here (not its own file) so it is emitted after its parent `item`. See specs.md "Backdrops".
 type backdrop < item
 
-type person < physical
+type person < physical:
+	# The enterable object this actor is currently on/in (a chair, bed), or none. Set by
+	# ENTER/GET ON and cleared by GET OFF/EXIT (actions.lamp); annotates the room heading
+	# (perch_phrase) and blocks movement until the actor gets off. Non-vehicle model.
+	physical perch = none
 
 type direction < thing:
 	direction inverse

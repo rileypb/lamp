@@ -1,0 +1,33 @@
+salle
+Une salle.
+
+Vous voyez une chaise et un placard ici.
+
+> monter sur chaise
+Vous montez sur la chaise.
+
+> regarder
+salle, sur la chaise
+Une salle.
+
+Vous voyez un placard ici.
+
+> nord
+Il faut d'abord quitter la chaise.
+
+> se lever
+Vous quittez la chaise.
+
+> entrer dans placard
+Vous entrez dans le placard.
+
+> regarder
+salle, dans le placard
+Une salle.
+
+Vous voyez une chaise ici.
+
+> se lever
+Vous quittez le placard.
+
+> quitter
