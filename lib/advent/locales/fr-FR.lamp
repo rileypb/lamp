@@ -118,6 +118,7 @@ open_locked: "Cela semble verrouillé."
 close_report: "[cap(sujet_verbe(\"fermer\"))] [le act.target]."
 close_not_closable: "Ce n'est pas quelque chose que [sujet_verbe(\"pouvoir\")] fermer."
 close_already_closed: "C'est déjà fermé."
+sleep_refused: "[cap(sujet_ne_verbe(\"avoir\"))] pas particulièrement sommeil."
 verbose_report: "Descriptions complètes."
 brief_report: "Descriptions brèves. Les lieux déjà visités sont décrits brièvement."
 superbrief_report: "Descriptions minimales."
@@ -259,6 +260,7 @@ understand "court" as set_superbrief
 
 understand "attendre" as wait
 understand "z" as wait
+understand "dormir" as sleep
 
 understand "prendre [taken]" as take
 understand "prends [taken]" as take

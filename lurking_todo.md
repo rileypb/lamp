@@ -151,9 +151,8 @@ disambiguation, the `it` pronoun, `"You can't go that way."`, and
   reactions: "give chinese food to hacker" → "'Yuck! This isn't warm enough!'" (L393);
   "show stone to creature" → "The thing is uninterested." (L154). Built in advent
   (actions.lamp): both fail-by-default with per-recipient `instead give`/`instead show`.
-- [Will do] **NEW — `ask X for Y` / `feed`.** The reverse of give (NPC hands you something)
-  plus `feed X to Y`. `ask [someone] for [thing]` grammar + action; `feed` likely a
-  give-to-a-creature synonym. Neither present yet.
+- [Will do] **NEW — `ask X for Y`.** The reverse of give (an NPC hands you something):
+  `ask [someone] for [thing]` grammar + action. Not present yet.
 - [Will do] **NEW — `X, COMMAND` (ordering an NPC).** "urchin, boo" (L761); enforced
   addressing: "You must address the urchin directly." (L759). Parse `NPC, imperative`, run the
   action with `actor = that NPC`, plus the "must address directly" refusal for un-orderable
@@ -354,10 +353,12 @@ disambiguation, the `it` pronoun, `"You can't go that way."`, and
   tired." escalating; sleeping or caffeine resets it. Authorable: a fatigue global
   incremented in `every_turn_rules`, escalating messages at thresholds, reset by SLEEP/caffeine.
   No built-in health model; the thresholds/resets are game content.
-- [Will do] **NEW — `sleep` and dream sequences.** "sleep" → narrated rest / nightmare
-  (L2523). Add a base fail-by-default `sleep` verb ("You aren't feeling especially drowsy.")
-  that games override, like the other stock IF verbs. The dream sequence itself is game
-  content (a scripted scene on `every_turn_rules`).
+- [Done] **NEW — `sleep` and dream sequences.** "sleep" → narrated rest / nightmare
+  (L2523). **Implemented (2026-07-11):** an objectless `sleep` verb that fails by default ("You
+  are not feeling especially drowsy.") for games to override with `instead sleep`; ordinary
+  in-world action (spends the turn, so a scripted dream runs on `every_turn_rules`). en-US
+  (`sleep`/`nap`) + fr-FR (`dormir`). Goldens `sleep1`/`sleepfr1`. The dream sequence itself is
+  game content.
 - [Done] **NEW — death state + endgame menu.** "**** You have died ****" then "Would you
   like to restart… (Type RESTART, RESTORE, or QUIT):" (L1844-L1851). Built: a death = `story =
   lost`; `end_story_rules` prints the banner (globals.lamp; LH's "died" is a re-themed

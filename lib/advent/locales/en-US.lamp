@@ -48,6 +48,7 @@ open_locked: "It seems to be locked."
 close_report: "[We] [close] [the act.target]."
 close_not_closable: "That's not something [we] can close."
 close_already_closed: "[The act.target] [is] already closed."
+sleep_refused: "[We] [are] not feeling especially drowsy."
 verbose_report: "Verbose descriptions."
 brief_report: "Brief descriptions. Rooms you have seen are described in brief."
 superbrief_report: "Superbrief descriptions."
@@ -204,6 +205,8 @@ understand "search [target]" as search
 
 understand "wait" as wait
 understand "z" as wait
+understand "sleep" as sleep
+understand "nap" as sleep
 
 understand "take [taken]" as take
 understand "get [taken]" as take

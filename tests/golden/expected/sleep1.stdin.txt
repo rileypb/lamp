@@ -1,0 +1,4 @@
+sleep
+nap
+ticks
+quit

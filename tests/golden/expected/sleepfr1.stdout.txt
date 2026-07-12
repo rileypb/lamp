@@ -1,0 +1,7 @@
+Hall
+Un hall.
+
+> dormir
+Vous n'avez pas particulièrement sommeil.
+
+> quitter

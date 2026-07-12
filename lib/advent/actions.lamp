@@ -760,6 +760,18 @@ check kiss:
 report failed kiss when self.reason == kiss_pointless:
 	print message kiss_refused  # "[We] [do] not think [the act.target] would appreciate that."
 
+# SLEEP — an objectless action that **fails by default** (you can't just nod off), so the default is
+# a refusal a game overrides with `instead sleep` (to narrate rest, a dream, or end a scene). It is
+# an ordinary in-world action, so a refused attempt still spends the turn and every-turn rules fire —
+# a game's scripted dream can run on `every_turn_rules`.
+action sleep
+
+check sleep:
+	stop failed cant_sleep
+
+report failed sleep when self.reason == cant_sleep:
+	print message sleep_refused  # "[We] [are] not feeling especially drowsy."
+
 # TASTE (Inform's "tasting"). Like TOUCH it senses without changing the world —
 # no `do` band — and succeeds with a universal default reply a game rethemes
 # (per object with `instead taste`, or wholesale by overriding the message).
