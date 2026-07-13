@@ -234,21 +234,33 @@ Decided and built 2026-07-12 (v1). Four decisions:
    to the web build**. (The `--enable-features=SharedArrayBuffer` switch was
    rejected — it leaves `crossOriginIsolated` false and would fork both
    index.html and shell.js.)
-3. **fs-backed saves — the first Electron-only capability (added 2026-07-13;
-   v1 shipped with localStorage).** Saves are real files under
-   `userData/saves/`, one JSON `{ key, data, meta }` per save, filename
-   `base64url(key)` so player-typed slot names are filesystem-safe everywhere.
-   The seam is in the *shell's backing*, exactly as sandbox.md prescribes — the
-   broker protocol and the worker are untouched: `shell.js` routes its four
-   save operations (list/read/write/remove) through a backend that prefers a
-   preload-exposed `window.lampSaves` bridge and falls back to localStorage
-   (the web backing) when absent. `preload.js` (template) exposes exactly those
-   four operations over `ipcRenderer.invoke`; `main.js` services them with
-   `fs`. The bridge methods return promises — fine on the wire, since the
-   worker blocks on `Atomics.wait` until `replySave`, the same contract as
-   input. The renderer stays fully locked down (`sandbox: true`,
-   `contextIsolation: true`, `nodeIntegration: false`); the preload is the
-   only, four-method-wide opening.
+3. **fs-backed saves with native OS dialogs — the Electron-only capability
+   (added 2026-07-13; v1 shipped with localStorage).** The desktop-IF
+   convention (Frotz, Gargoyle, Lectrote): SAVE opens the OS save panel,
+   RESTORE the OS open panel, and the shell's HTML pickers never appear in
+   Electron. Both panels reopen in the **last folder saved to or restored
+   from** (one shared memory, persisted across runs in `userData/last-save-dir`);
+   until a first choice — or if that folder is gone — they default to
+   `Documents` (`Documents/<app>.lampsave` for save). The seam is in the *shell's
+   backing*, exactly as sandbox.md prescribes — the broker protocol and the
+   worker are untouched: `shell.js` routes its save operations through a
+   backend that prefers a preload-exposed `window.lampSaves` bridge and falls
+   back to localStorage + HTML modals (the web rendering) when absent.
+   `preload.js` (template) exposes the four storage operations
+   (list/read/write/remove) plus `promptSave`/`promptRestore` over
+   `ipcRenderer.invoke`; `main.js` services them with `fs` and `dialog`. The
+   save panel's chosen path is held main-process-side until the worker's
+   follow-up `save_write` lands (the `save_prompt` reply carries only the
+   name, per the protocol); a promptless write falls back to managed
+   `{ key, data, meta }` JSON files under `userData/saves/` — the same format
+   as a player-placed `.lampsave`, so the two are interchangeable. A non-save
+   file picked in the restore panel passes through raw so the runtime rejects
+   it with its own message instead of looking like a cancel. Bridge methods
+   return promises — fine on the wire, since the worker blocks on
+   `Atomics.wait` until `replySave`, the same contract as input. The renderer
+   stays fully locked down (`sandbox: true`, `contextIsolation: true`,
+   `nodeIntegration: false`); the preload is the only, six-method-wide
+   opening.
 4. **`buildElectron` wraps `buildWeb` verbatim** (`src/lighthouse/electron.js`
    + thin CLI `build-electron.js`): it builds the web bundle into `app/`,
    deletes the now-inert `sw.js` as a packaging post-step, and lays the
@@ -275,9 +287,11 @@ Node and `require("electron")` returns no API. Remaining manual-only: the
 DOM-level pass in a real Electron window (modals, transcript download —
 the same layer that stays manual for the web shell); the app itself got a
 manual pass 2026-07-13. fs saves were verified live the same day beyond the
-smoke round-trip: a one-off DOM-driven session (typed SAVE → modal → RESTORE
-→ picker) produced and consumed a real file under
-`…/Application Support/<productName>/saves/`.
+smoke round-trip: a one-off DOM-driven session with the two `dialog` methods
+stubbed to canned paths (the panels themselves can't be driven headlessly)
+exercised the full chain — SAVE → save panel path → `.lampsave` on disk with
+the right meta, no HTML modal shown, walk away, RESTORE → open panel → "Game
+restored." The OS panels proper are a one-click manual check.
 
 ## Assumptions
 

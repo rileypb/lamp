@@ -493,15 +493,22 @@ the shell ships byte-identical. **Verified live** (Electron 43, macOS): the
 template's `LAMP_SMOKE=1` self-check reports isolated/SAB/booted all true.
 Static + wire-protocol coverage in `tests/lighthouse`. Docs:
 devdocs/lighthouse.md → "Electron"; sandbox.md's "Electron host" open question
-closed. Follow-ups: **fs-backed saves DONE (2026-07-13)** — save-backend seam
-in shell.js (`window.lampSaves` bridge preferred, localStorage fallback;
-promise-tolerant call sites, worker just stays blocked on `Atomics.wait`),
-`preload.js` template exposing the four operations over `ipcRenderer.invoke`,
-`ipcMain` handlers writing JSON files (base64url(key) names) under
-`userData/saves/`; renderer stays sandboxed + context-isolated. Verified live:
-extended `LAMP_SMOKE` bridge round-trip, plus a one-off DOM-driven SAVE/RESTORE
-session that produced and consumed a real file on disk. Web backing unchanged;
-shell ships byte-identical. A manual DOM pass in a real Electron window — done,
+closed. Follow-ups: **fs-backed saves DONE (2026-07-13), extended the same day
+with native OS save/restore dialogs** — save-backend seam in shell.js
+(`window.lampSaves` bridge preferred, localStorage + HTML modals as the web
+fallback; promise-tolerant call sites, worker just stays blocked on
+`Atomics.wait`), `preload.js` exposing four storage operations +
+`promptSave`/`promptRestore` over `ipcRenderer.invoke`, `ipcMain` servicing
+them with `dialog.showSaveDialog`/`showOpenDialog` (`.lampsave`; both panels
+reopen in the last folder saved to/restored from, persisted in
+`userData/last-save-dir`, Documents until a first choice; the save panel's
+path held for the follow-up `save_write`) and `fs`
+(managed `userData/saves/` only for promptless writes); renderer stays
+sandboxed + context-isolated. Verified live: `LAMP_SMOKE` bridge round-trip,
+plus one-off DOM-driven sessions (dialogs stubbed to canned paths) covering
+the full SAVE→file→RESTORE chain with no HTML modal shown. Web backing
+unchanged; shell ships byte-identical. Remaining manual: one click through the
+real OS panels. A manual DOM pass in a real Electron window — done,
 app confirmed good 2026-07-13; **packaging guidance (approach sketched
 2026-07-13)**: ship a `README.md` template *inside* the generated project
 (sibling of main.js, title-templated) documenting run + LAMP_SMOKE self-check

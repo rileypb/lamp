@@ -712,10 +712,24 @@
                 listSaves(msg.prefix).then((rows) => replySave(JSON.stringify(rows.map((r) => r.meta))));
                 break;
             case "save_prompt":
-                showSaveModal(msg.prefix);
+                // A host bridge with prompt methods (Electron) renders native OS
+                // file dialogs; the HTML modals are the web fallback. Reply
+                // contracts are the modals': {name} JSON or null for save,
+                // the blob or null for restore.
+                if (saves.promptSave) {
+                    Promise.resolve(saves.promptSave(msg.prefix))
+                        .then((name) => replySave(name == null ? null : JSON.stringify({ name })));
+                } else {
+                    showSaveModal(msg.prefix);
+                }
                 break;
             case "restore_prompt":
-                showRestoreModal(msg.prefix);
+                if (saves.promptRestore) {
+                    Promise.resolve(saves.promptRestore(msg.prefix))
+                        .then((blob) => replySave(blob == null ? null : blob));
+                } else {
+                    showRestoreModal(msg.prefix);
+                }
                 break;
             case "transcript_start":
                 transcriptName = msg.key;

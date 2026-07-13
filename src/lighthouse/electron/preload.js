@@ -2,10 +2,12 @@
 //
 // Runs sandboxed with context isolation. The page — and therefore the game
 // shell — sees exactly one extra global, `lampSaves`: the save broker's four
-// operations, forwarded to the main process, which stores saves as files under
-// the app's userData directory. Nothing else crosses the boundary. shell.js
-// prefers this bridge over its localStorage default when present. See
-// devdocs/lighthouse.md ("Electron") and devdocs/sandbox.md.
+// storage operations plus the two prompts, forwarded to the main process. The
+// prompts open native OS save/open dialogs (so shell.js skips its HTML
+// modals); saves are real .lampsave files wherever the player puts them.
+// Nothing else crosses the boundary. shell.js prefers this bridge over its
+// localStorage default when present. See devdocs/lighthouse.md ("Electron")
+// and devdocs/sandbox.md.
 
 const { contextBridge, ipcRenderer } = require("electron");
 
@@ -14,4 +16,6 @@ contextBridge.exposeInMainWorld("lampSaves", {
     read: (key) => ipcRenderer.invoke("lamp-save-read", key),
     write: (key, data, meta) => ipcRenderer.invoke("lamp-save-write", key, data, meta),
     remove: (key) => ipcRenderer.invoke("lamp-save-remove", key),
+    promptSave: (prefix) => ipcRenderer.invoke("lamp-save-prompt", prefix),
+    promptRestore: (prefix) => ipcRenderer.invoke("lamp-restore-prompt", prefix),
 });

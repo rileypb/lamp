@@ -8,11 +8,16 @@
 // byte-identical to the web build.
 //
 // The renderer is fully locked down (sandbox, context isolation, no Node
-// integration). Saves are real files under the app's userData directory — the
-// Electron-only capability the web build backs with localStorage: preload.js
-// exposes the save broker's four operations as `lampSaves`, serviced here over
-// IPC. The broker protocol is unchanged; only the shell's backing differs. See
-// devdocs/lighthouse.md ("Electron") and devdocs/sandbox.md.
+// integration). Saves are real files chosen through native OS dialogs — the
+// desktop-IF convention: SAVE opens a save panel (default
+// `Documents/<app>.lampsave`), RESTORE an open panel, and the shell's HTML
+// pickers never appear. preload.js exposes the save broker's operations as
+// `lampSaves`, serviced here over IPC; the save panel's chosen path is held
+// until the worker's follow-up save_write lands (the prompt returns only the
+// name — the broker protocol is unchanged, only the shell's backing differs).
+// A promptless write (nothing pending) falls back to managed files under
+// userData/saves/. See devdocs/lighthouse.md ("Electron") and
+// devdocs/sandbox.md.
 //
 // LAMP_SMOKE=1 runs a headless self-check instead of showing the window:
 // prints `LAMP_SMOKE {"isolated":…,"sab":…,"booted":…,"saves":…}` (cross-origin
@@ -20,7 +25,7 @@
 // transcript, and a save round-trip through the fs bridge) and exits 0 iff all
 // four hold.
 
-const { app, BrowserWindow, ipcMain, net, protocol } = require("electron");
+const { app, BrowserWindow, dialog, ipcMain, net, protocol } = require("electron");
 const fs = require("fs");
 const path = require("path");
 const { pathToFileURL } = require("url");
@@ -47,10 +52,11 @@ function serveApp(request) {
     });
 }
 
-// One save per file under userData/saves, stored as JSON { key, data, meta }.
-// The filename is base64url(key), so any player-typed slot name is
-// filesystem-safe on every platform; list() reads the key back from the file
-// content, never from the name.
+// Managed fallback store for promptless writes: one save per file under
+// userData/saves, stored as JSON { key, data, meta } — the same format as a
+// player-placed .lampsave, so the two are interchangeable. The filename is
+// base64url(key), so any key is filesystem-safe on every platform; list()
+// reads the key back from the file content, never from the name.
 function savesDir() {
     return path.join(app.getPath("userData"), "saves");
 }
@@ -59,9 +65,83 @@ function saveFile(key) {
     return path.join(savesDir(), Buffer.from(String(key), "utf8").toString("base64url") + ".json");
 }
 
+const SAVE_EXT = ".lampsave";
+
+// The path chosen in the save panel, consumed by the worker's follow-up
+// save_write (the prompt reply carries only the name; the path stays host-side).
+let pendingSavePath = null;
+
+// Both panels reopen in the last folder saved to or restored from, persisted
+// across runs; Documents until a first choice (or if that folder is gone).
+function lastDirFile() {
+    return path.join(app.getPath("userData"), "last-save-dir");
+}
+
+function lastSaveDir() {
+    try {
+        const dir = fs.readFileSync(lastDirFile(), "utf8").trim();
+        if (dir && fs.statSync(dir).isDirectory()) return dir;
+    } catch {}
+    return app.getPath("documents");
+}
+
+function rememberSaveDir(filePath) {
+    try {
+        fs.mkdirSync(app.getPath("userData"), { recursive: true });
+        fs.writeFileSync(lastDirFile(), path.dirname(filePath), "utf8");
+    } catch {}
+}
+
 function registerSaveHandlers() {
+    ipcMain.handle("lamp-save-prompt", async (event) => {
+        pendingSavePath = null;
+        const win = BrowserWindow.fromWebContents(event.sender);
+        const { canceled, filePath } = await dialog.showSaveDialog(win, {
+            title: "Save game",
+            defaultPath: path.join(lastSaveDir(), `${app.getName()}${SAVE_EXT}`),
+            filters: [{ name: "Lamp saved game", extensions: [SAVE_EXT.slice(1)] }],
+        });
+        if (canceled || !filePath) return null;
+        pendingSavePath = filePath.endsWith(SAVE_EXT) ? filePath : filePath + SAVE_EXT;
+        rememberSaveDir(pendingSavePath);
+        return path.basename(pendingSavePath, SAVE_EXT);
+    });
+    ipcMain.handle("lamp-restore-prompt", async (event) => {
+        const win = BrowserWindow.fromWebContents(event.sender);
+        const { canceled, filePaths } = await dialog.showOpenDialog(win, {
+            title: "Restore game",
+            defaultPath: lastSaveDir(),
+            filters: [
+                { name: "Lamp saved game", extensions: [SAVE_EXT.slice(1)] },
+                { name: "All files", extensions: ["*"] },
+            ],
+            properties: ["openFile"],
+        });
+        if (canceled || !filePaths.length) return null;
+        rememberSaveDir(filePaths[0]);
+        let content;
+        try {
+            content = fs.readFileSync(filePaths[0], "utf8");
+        } catch {
+            return null;
+        }
+        // A non-save file passes through raw so the runtime rejects it with its
+        // own "restore failed" message instead of looking like a cancel.
+        try {
+            const row = JSON.parse(content);
+            return typeof row.data === "string" ? row.data : content;
+        } catch {
+            return content;
+        }
+    });
     ipcMain.handle("lamp-save-write", (event, key, data, meta) => {
         if (typeof key !== "string" || typeof data !== "string") throw new Error("bad save request");
+        if (pendingSavePath) {
+            const target = pendingSavePath;
+            pendingSavePath = null;
+            fs.writeFileSync(target, JSON.stringify({ key, data, meta: meta || null }), "utf8");
+            return;
+        }
         fs.mkdirSync(savesDir(), { recursive: true });
         fs.writeFileSync(saveFile(key), JSON.stringify({ key, data, meta: meta || null }), "utf8");
     });

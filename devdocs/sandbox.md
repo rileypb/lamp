@@ -222,9 +222,12 @@ Worker → host (each blocks for one reply):
 The protocol supports both host-seam renderings without divergence:
 
 - **Browser/Electron (native UX):** the runtime sends `save_prompt`/`restore_prompt`;
-  the shell renders the modal/picker, enumerating slots itself (it owns localStorage),
-  and replies deferred. The shell may never send `save_list` at all — listing is
-  internal to its modal.
+  the host renders the prompt and replies deferred. The web shell renders HTML
+  modals, enumerating slots itself (it owns localStorage); the Electron host
+  answers with **native OS save/open panels** instead (`.lampsave` files,
+  Documents by default) — same messages, same reply contracts, different
+  rendering. The shell may never send `save_list` at all — listing is internal
+  to its prompt rendering.
 - **CLI (text UX):** the thin stdio host has no modal. The library renders the prompt
   via `promptLine` and drives the **inline primitives** directly — `save_list` to back
   `^L`-lists-saves, `save_read`/`save_write`/`save_delete` by key. The host stays
@@ -294,10 +297,11 @@ There are three environments, but only two host-shell codebases:
   real files under `userData/saves/` instead of localStorage — the "save to
   disk backed with real `fs`" this section anticipated, and the first
   Electron-only backing. The mechanism is exactly the backing/protocol split
-  above: `shell.js` (byte-identical to the web bundle) routes its four save
+  above: `shell.js` (byte-identical to the web bundle) routes its save
   operations through a backend seam that prefers a preload-exposed
-  `window.lampSaves` bridge and falls back to localStorage; the bridge is four
-  `ipcRenderer.invoke` methods wide and nothing more, with the renderer still
+  `window.lampSaves` bridge and falls back to localStorage + HTML modals; the
+  bridge is six `ipcRenderer.invoke` methods wide (four storage operations +
+  the two native-dialog prompts) and nothing more, with the renderer still
   `sandbox: true`, context-isolated, no Node integration. Isolation headers
   come from the app's `app://` protocol handler, so the page is genuinely
   `crossOriginIsolated`. See devdocs/lighthouse.md → "Electron".

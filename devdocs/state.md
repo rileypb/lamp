@@ -548,12 +548,17 @@ the proven snapshot machinery, so it is preferred now that the crash blocker is 
   save location is also done (per-user app-data dir + `LAMP_SAVE_DIR`).
   Build-smoke coverage in `tests/lighthouse`; the live browser loop is manually
   verified (the headless test gap is the same one already noted for input).
-  Since 2026-07-13 the shell's backing sits behind a four-operation **backend
-  seam** (list/read/write/remove) whose call sites tolerate promises — the
-  worker just stays blocked on `Atomics.wait` until the reply, the same
-  contract as input. localStorage remains the web default; the Electron host's
-  preload bridge (`window.lampSaves`) backs the same seam with real files
-  under `userData/saves/` (devdocs/lighthouse.md → "Electron").
+  Since 2026-07-13 the shell's backing sits behind a **backend seam** (the
+  four storage operations list/read/write/remove, plus optional
+  `promptSave`/`promptRestore` prompt renderings) whose call sites tolerate
+  promises — the worker just stays blocked on `Atomics.wait` until the reply,
+  the same contract as input. localStorage + the HTML modals remain the web
+  default; the Electron host's preload bridge (`window.lampSaves`) backs the
+  same seam with **native OS save/open dialogs and real `.lampsave` files**
+  (Documents by default; managed `userData/saves/` files only as the
+  promptless-write fallback) — which also delivers Slice 3b's "file
+  export/import" for the desktop target, since saves are ordinary
+  player-visible files (devdocs/lighthouse.md → "Electron").
 - **Slice 3b — save/restore UX as a host seam. (Design, 2026-06-22.)** Browser
   name-entry + restore-picker modals (mockup:
   `src/lighthouse/web/mockup-save-restore.html`); the `save_list`/metadata protocol

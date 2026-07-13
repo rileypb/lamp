@@ -229,10 +229,27 @@ try {
             const preload = fs.readFileSync(path.join(elOut, "preload.js"), "utf8");
             assertParses(preload, "preload.js");
             assert.ok(preload.includes('exposeInMainWorld("lampSaves"'), "lampSaves bridge missing");
+
+            // Native save/restore dialogs: the bridge carries the two prompt
+            // operations, main.js answers them with OS panels (holding the save
+            // panel's path for the follow-up save_write), and the shell prefers
+            // them over its HTML modals.
+            assert.ok(preload.includes("promptSave") && preload.includes("promptRestore"),
+                "bridge prompt operations missing");
+            for (const channel of ["lamp-save-prompt", "lamp-restore-prompt"]) {
+                assert.ok(main.includes(`ipcMain.handle("${channel}"`), `main.js missing ${channel} handler`);
+            }
+            assert.ok(main.includes("showSaveDialog") && main.includes("showOpenDialog"),
+                "native dialogs missing");
+            assert.ok(main.includes("pendingSavePath"), "save-panel path handshake missing");
+            assert.ok(main.includes("lastSaveDir()") && main.includes("rememberSaveDir("),
+                "panels must reopen in the last folder saved to / restored from");
             const stockShell = fs.readFileSync(path.join(__dirname, "..", "..", "src", "lighthouse", "web", "shell.js"), "utf8");
             assert.strictEqual(fs.readFileSync(path.join(elOut, "app", "shell.js"), "utf8"), stockShell,
                 "the Electron app must ship the stock web shell byte-identical");
             assert.ok(stockShell.includes("window.lampSaves"), "shell save-backend seam missing");
+            assert.ok(stockShell.includes("saves.promptSave") && stockShell.includes("saves.promptRestore"),
+                "shell must prefer host-native prompts when the bridge offers them");
 
             const pkg = JSON.parse(fs.readFileSync(path.join(elOut, "package.json"), "utf8"));
             assert.strictEqual(pkg.main, "main.js");
