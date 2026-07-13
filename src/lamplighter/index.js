@@ -649,6 +649,27 @@ function setReachGate(fn) {
     reachGate = fn;
 }
 
+// The persuasion gate, installed by the world library (lib/sys `set_persuasion_gate` ->
+// lib/advent's persuasion_gate): consulted when a player-typed ORDER ("urchin, take lamp")
+// is about to dispatch with the NPC as actor. Called as gate(npc) with the resolved action
+// exposed as the `act` global (so persuasion rules can discriminate on the action and its
+// slots); truthy = granted. A refusing gate prints its own message ("The urchin has better
+// things to do."); the refused order still spends the turn. Without an installed gate every
+// order is refused silently-safe: we treat no-gate as refuse-nothing (orders all granted)
+// only when a gate is absent AND the library never installed one — in practice advent always
+// installs. See devdocs/conversation.md.
+let persuasionGate = null;
+function setPersuasionGate(fn) {
+    persuasionGate = fn;
+}
+
+// Order-execution state: `orderMode` is nonzero while resolving the remainder of an
+// addressing command ("urchin, take lamp") with the NPC as actor. In order mode a parse
+// failure stays SILENT (`orderUnparsed` is flagged instead of printing), so the addressing
+// parser can fall back to a directed utterance ("urchin, boo" -> say "boo" to the urchin).
+let orderMode = 0;
+let orderUnparsed = false;
+
 // True when any touchable physical slot of `instance` is blocked by the reach gate. Skips
 // `visible`-marked slots, non-physical slot types, empty slots, and the actor itself (you can
 // always reach yourself); `world_scope` actions bypass entirely (their slots may be anywhere).
@@ -1549,12 +1570,33 @@ function resolveMultiPieces(pieces, startIdx, resolved, instance, field, remaini
 // "objectname: " prefix so the single-object report rules compose into the
 // IF-transcript convention ("chair: Taken." / "pc: Your load is too heavy.").
 function dispatchResolvedAction(actionName, instance, multiOut) {
-    lastCommandRan = true;
     const oow = isOutOfWorld(actionName);
+    // An out-of-world verb is never orderable ("urchin, save"): flag unparsed so the
+    // addressing parser falls back to a directed utterance instead.
+    if (orderMode && oow) {
+        orderUnparsed = true;
+        return false;
+    }
+    lastCommandRan = true;
     // Only an in-world command becomes the AGAIN target — repeating UNDO/SAVE/SCORE is
     // meaningless, and AGAIN never reaches here (it is intercepted in runCommand).
     if (!oow && repeatableSource) lastRepeatableCommand = repeatableSource;
     if (!oow) { checkpoint(); advanceTurn(); }
+    // Persuasion (devdocs/conversation.md): a player-typed order consults the installed gate
+    // once per command (before any multi fan-out), with `act` exposed so persuasion rules can
+    // read the action and its slots. Refused -> the gate printed; the turn is still spent.
+    if (orderMode && persuasionGate && !oow) {
+        const hasAct = globalRegistry.has("act");
+        const savedAct = hasAct ? globalRegistry.get("act") : undefined;
+        if (hasAct) globalRegistry.set("act", instance);
+        let granted;
+        try {
+            granted = persuasionGate(instance.actor);
+        } finally {
+            if (hasAct) globalRegistry.set("act", savedAct);
+        }
+        if (!granted) return true;
+    }
     const objects = (multiOut && multiOut.objects) || null;
     if (objects && (objects.length > 1 || multiOut.announce)) {
         for (const obj of objects) {
@@ -1775,6 +1817,13 @@ function runCommand(line, actor, metaOnly = false) {
             }
         }
     }
+    // In order mode a parse failure is the addressing parser's problem: flag it and stay
+    // silent, so "urchin, boo" can fall back to a directed utterance instead of printing
+    // "I don't understand that." (devdocs/conversation.md).
+    if (orderMode) {
+        orderUnparsed = true;
+        return false;
+    }
     // An unbound pronoun (the player said "it" before referring to anything) gets
     // its own message ahead of the generic scope/grammar failures.
     const unbound = unboundPronounIn(unresolvedSpans);
@@ -1786,6 +1835,43 @@ function runCommand(line, actor, metaOnly = false) {
     // A meta-only prompt swallows parser failures: unrecognized input silently re-prompts,
     // matching the traditional restricted end-of-story screen.
     if (metaOnly) return false;
+    // X, COMMAND — the addressing form (devdocs/conversation.md): a leading noun phrase that
+    // resolves to a single visible person, a comma, and a remainder. Runs only after the
+    // grammar pass found no complete match, so a grammar line containing a comma (greet's
+    // "[interlocutor] , hello") wins first, and a multi-object list comma ("take lamp, rope"
+    // — which follows a verb) never reads as an address. The remainder resolves with the NPC
+    // as ACTOR in the NPC's scope; persuasion gates the dispatch (dispatchResolvedAction).
+    // An unparseable remainder becomes a DIRECTED UTTERANCE: say the words to the addressee.
+    if (typeRegistry.has("person")) {
+        const commaIdx = tokens.indexOf(",");
+        if (commaIdx > 0 && commaIdx < tokens.length - 1) {
+            const addressee = resolveCandidates(tokens.slice(0, commaIdx), actorScope(), "person", actor);
+            if (addressee.length === 1 && addressee[0] !== actor) {
+                const npc = addressee[0];
+                const remainder = tokens.slice(commaIdx + 1).join(" ");
+                const fullSource = repeatableSource;
+                orderMode += 1;
+                orderUnparsed = false;
+                let ran;
+                try {
+                    ran = runCommand(remainder, npc, metaOnly);
+                } finally {
+                    orderMode -= 1;
+                }
+                if (!orderUnparsed) {
+                    // The order dispatched (or parked a prompt); AGAIN replays the whole address.
+                    if (lastCommandRan && lastRepeatableCommand) lastRepeatableCommand = fullSource;
+                    return ran;
+                }
+                if (typeRegistry.has("say")) {
+                    // Built directly (never via grammar), so plain SAY's template stays one-slot;
+                    // the game hooks `instead say when self.interlocutor == …`.
+                    const utterance = { type: "say", action: "say", actor, topic: remainder, interlocutor: npc };
+                    return dispatchResolvedAction("say", utterance, { field: null, objects: null });
+                }
+            }
+        }
+    }
     if (sawMultiAttempt) {
         print(message("parser_no_multi", "You can't use multiple objects with that verb."));
         return false;
@@ -3631,6 +3717,7 @@ module.exports = {
     setDirectSlot,
     setVisibleSlot,
     setReachGate,
+    setPersuasionGate,
     setOutOfWorld,
     setWorldScope,
     setSlotScopedByContents,

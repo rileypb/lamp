@@ -1,0 +1,17 @@
+talk to robot
+greet hacker
+hello
+hacker, hello
+robot, take lamp
+i
+hacker, take lamp
+hacker, boo
+robot, boo
+ask hacker for manual
+i
+ask robot for lamp
+ask hacker about keys
+ask hacker about moonstone
+ask robot about moonstone
+tell hacker about keys
+quit

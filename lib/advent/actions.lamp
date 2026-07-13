@@ -915,6 +915,36 @@ check show:
 report failed show when self.reason == show_declined:
 	print message show_declined_msg  # "[The act.recipient] [are] unimpressed."
 
+# ASK X FOR Y — the reverse of GIVE (devdocs/conversation.md): the NPC hands something over.
+# Fails by default (most NPCs part with nothing); a game hooks `instead ask_for` and does its
+# own `move` + reply. `requested` is `visible` (you're asking, not grabbing — the NPC does the
+# transfer, so a request through the glass is fair) and `direct` (the natural "it":
+# "ask her for the stone. x it"). An NPC's carried items are in scope, so they resolve.
+action ask_for:
+	visible physical interlocutor
+	direct visible item requested
+
+check ask_for:
+	stop failed ask_for_declined
+
+report failed ask_for when self.reason == ask_for_declined:
+	print message ask_for_declined_msg  # "[The act.interlocutor] [do] not seem inclined to part with [regarding act.requested][those]."
+
+# Persuasion (devdocs/conversation.md): a player-typed order ("urchin, take lamp") consults
+# this rulebook — via the persuasion gate installed at startup — before the order runs with
+# the NPC as actor. Default REFUSE; a game grants per-NPC/per-action with rules that read the
+# resolved order through `act`:
+#   rule persuasion_rules when p == robot: stop true
+#   rule persuasion_rules when p == urchin and act.action == "go": stop true
+rulebook bool persuasion_rules(person p):
+	default false
+
+function bool persuasion_gate(person p):
+	if follow persuasion_rules(p):
+		return true
+	print message persuasion_refused  # "[The act.actor] [have] better things to do."
+	return false
+
 # ENTER / GET IN / GET ON an `enterable` thing (a chair, bed, closet) — the non-vehicle model,
 # following Inform: the actor is MOVED into/onto the thing (holder relocation), and can nest (get in
 # a closet, then an undercloset inside it). Scope still reaches the enclosing room through open

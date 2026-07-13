@@ -16,27 +16,64 @@ type subject < thing:
 	# The interlocutor's reply when ASKED about this topic. Empty → the default puzzled message.
 	string reply = ""
 
-# ASK <someone> ABOUT <topic>. The interlocutor is a `physical` (in scope); the topic is a
-# `subject` (resolved globally). Default report prints the topic's `reply`, or a puzzled line.
-action ask:
-	# `visible`: talking is vocal — the interlocutor needs only to be perceivable, not
-	# touchable (you can question someone through the glass booth). See devdocs/accessibility.md.
+# GREET / TALK TO — the conversational opener (devdocs/conversation.md). Deliberately modest:
+# the default nudges the player toward ASK/TELL ("The hacker waits for you to say something."),
+# and a game gives an NPC a real opening with `instead greet when self.interlocutor == hacker`.
+# The comma templates catch the addressed greeting ("hacker, hello") ahead of the engine's
+# X,-COMMAND fallback — greeting is the PLAYER's act, never an order. `visible`: talking is
+# vocal, so it works through the glass booth (devdocs/accessibility.md).
+action greet:
 	direct visible physical interlocutor
-	subject topic
+	syntax:
+		"talk to [interlocutor]"
+		"greet [interlocutor]"
+		"say hello to [interlocutor]"
+		"[interlocutor] , hello"
+		"[interlocutor] , hi"
+
+check greet:
+	if not (self.interlocutor is person):
+		stop failed greet_not_person
+
+report greet:
+	print greet_default:"[The act.interlocutor] [wait] for [us] to say something."
+
+report failed greet when self.reason == greet_not_person:
+	print greet_no_reply:"[We] [get] no reply."
+
+# Bare HELLO with no addressee. No guess-the-addressee magic (that would belong to command
+# inference); just a retheme-able pleasantry.
+action hello:
+	syntax:
+		"hello"
+		"hi"
+
+report hello:
+	print hello_reply:"Cheery, aren't you?"
+
+# ASK <someone> ABOUT <topic>. The interlocutor is a `physical` (in scope); the topic is any
+# `thing` — a declared `subject` (with its stock `reply`) or a PHYSICAL OBJECT by name
+# ("ask hacker about moonstone"), resolved globally in both cases (conversation may reference
+# what is elsewhere — you remember it). A physical topic has no `reply`, so it falls to the
+# puzzled default unless a game rule answers (`instead ask when self.topic == moonstone`).
+# `direct` sits on the topic, so "ask her about the stone. x it" tracks the stone.
+action ask:
+	visible physical interlocutor
+	direct thing topic
 	syntax:
 		"ask [interlocutor] about [topic]"
 
 report ask:
-	if self.topic.reply == "":
-		print convo_no_reply:"[The act.interlocutor] [have] nothing to say about that."
-	else:
+	if (self.topic is subject) and not (self.topic.reply == ""):
 		print "[self.topic.reply]"
+	else:
+		print convo_no_reply:"[The act.interlocutor] [have] nothing to say about that."
 
 # TELL <someone> ABOUT <topic>. Informing rather than querying: no stock answer, so the default
 # is a neutral non-reaction; a game adds `instead tell when self.topic == X` for topics that land.
 action tell:
-	direct visible physical interlocutor
-	subject topic
+	visible physical interlocutor
+	direct thing topic
 	syntax:
 		"tell [interlocutor] about [topic]"
 
@@ -51,8 +88,14 @@ report tell:
 # `instead say` rules for the utterances that land and `stop succeeded`, letting anything its
 # guards don't match fall through (no `stop`) to the default reply.
 
+# The optional `interlocutor` slot is never bound by these templates — the engine's addressing
+# parser fills it when an order's remainder parses as nothing ("urchin, boo" → say "boo" TO the
+# urchin; devdocs/conversation.md), so a game hooks the directed form with
+# `instead say when self.topic == "boo" and self.interlocutor == urchin`. Plain SAY leaves it
+# unset, and any guard against a specific person is simply false.
 action say:
 	string topic
+	visible physical interlocutor
 	syntax:
 		"say [topic]"
 		"answer [topic]"

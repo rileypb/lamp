@@ -10,8 +10,8 @@ Sourced from the staged roadmaps and prerequisite lists in
 > record. The only optional remnant is item 6 below.
 
 > Feature backlog **triaged (2026-07-11)**: `lurking_todo.md` (candidates mined from
-> `lurkinghorror.txt`) is now fully labeled — **64 Done** (mostly already-built; the
-> "we don't have" framing was stale), **19 Won't do**, **5 Will do**. Shipped 2026-07-11:
+> `lurkinghorror.txt`) is now fully labeled — **69 Done** (all resolved; the
+> "we don't have" framing was stale), **19 Won't do**, **0 Will do — triage complete**. Shipped 2026-07-11:
 > `lit`-illuminates-room (`light_in_scope`, golden `providinglight2`); collective
 > plural objects via the unified `them` pronoun (`noteGroupAntecedent`/`pronounGroupOf`,
 > golden `themgroup1`); `turn on`/`turn off` (`switchable`/`switched_on`, en-US + fr-FR,
@@ -22,13 +22,11 @@ Sourced from the staged roadmaps and prerequisite lists in
 > `search`, `sleep`, missing-noun prompts, enter/exit + nested enterables, transparent boxes +
 > the visibility ceiling + symmetric reach, light transitions, per-slot accessibility, and —
 > 2026-07-12 — **vehicles**: a `vehicle` flag drives on GO while ridden, golden `vehicle1`;
-> fit constraints decided per-game). Remaining Will-do work: only the **NPC conversation cluster**
-> (talk/greet/order + `ask for` + two flavor riders) — its design doc is now written:
-> **`devdocs/conversation.md`** (2026-07-12; greet in lib/conversation, `X, COMMAND` parsed in
-> the engine with an advent `persuasion_rules` rulebook via `setPersuasionGate`, `ask_for` in
-> advent, topics widened to `thing` for ask-about-objects). Awaiting a build go-ahead. The
-> implicit-action facility shipped 2026-07-12 (`implicitly_take`/`implicitly_doff`, golden
-> `implicit1`).
+> fit constraints decided per-game). **The triage is complete** — the final NPC
+> conversation cluster shipped 2026-07-12 per **`devdocs/conversation.md`** (greet/hello in
+> lib/conversation, `X, COMMAND` orders with the `persuasion_rules` rulebook, `ask_for`,
+> ask-about-objects; golden `conversation2`), as did the implicit-action facility
+> (`implicitly_take`/`implicitly_doff`, golden `implicit1`).
 > Text substitution (Slices 1–7) is **all DONE**; per-slice record in `devdocs/text.md`.
 >
 > Design docs from triage, both **implemented 2026-07-11**: **`devdocs/missing_noun.md`**

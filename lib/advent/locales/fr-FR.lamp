@@ -175,6 +175,8 @@ pull_inert: "Rien d'évident ne se produit."
 # --- give / show / enter ---
 give_declined_msg: "[Le act.recipient] ne [sembler] pas s'y intéresser."
 show_declined_msg: "Cela ne fait guère d'effet [au act.recipient]."
+ask_for_declined_msg: "[Le act.interlocutor] ne semble pas disposé à céder [le act.requested]."
+persuasion_refused: "[Le act.actor] a mieux à faire."
 cant_enter_msg: "Ce n'est pas quelque chose où [sujet_verbe(\"pouvoir\")] entrer."
 enter_on_report: "[cap(sujet_verbe(\"monter\"))] sur [le act.target]."
 enter_in_report: "[cap(sujet_verbe(\"entrer\"))] dans [le act.target]."
@@ -362,6 +364,7 @@ understand "donner [gift] à [recipient]" as give
 understand "donner [gift] a [recipient]" as give
 
 understand "montrer [shown] à [recipient]" as show
+understand "demander [requested] à [interlocutor]" as ask_for
 understand "montrer [shown] a [recipient]" as show
 
 understand "entrer dans [target]" as enter

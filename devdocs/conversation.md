@@ -1,7 +1,20 @@
 # NPC Conversation — greet, order, ask-for, and topics
 
-> Status: **design complete (placement/persuasion/topic decisions resolved
-> 2026-07-12); not yet implemented.** Designs the last Lurking Horror triage
+> Status: **implemented (2026-07-12).** Engine: the `X, COMMAND` addressing
+> fallback in `runCommand` (after the grammar pass, so greet's comma templates
+> win first), `orderMode`/`orderUnparsed`, and `setPersuasionGate` (dispatch
+> consults it with `act` exposed; refusal spends the turn). advent:
+> `persuasion_rules` rulebook + `persuasion_gate` (installed at startup),
+> `ask_for` (en `ask X for Y`, fr `demander Y à X`). lib/conversation: `greet`
+> (incl. the "[interlocutor] , hello" templates), bare `hello`, topics widened
+> to `thing`, `say` gains the engine-filled `interlocutor` slot. Golden
+> `conversation2` exercises the whole surface. **Implementation deviations:**
+> an ordered out-of-world verb falls back to the directed utterance (not "not
+> understood"); a disambiguation answer resumed mid-order bypasses persuasion
+> (v1 limitation); ordered parse failures (including would-be missing-noun
+> prompts) silently become the directed utterance; `wait` was added to the
+> en-US `verb` list for the greet default's conjugation.
+> Designs the last Lurking Horror triage
 > cluster — `talk to X` / `hello`, `X, COMMAND` (ordering an NPC), and
 > `ask X for Y` — and the ask-about-objects extension, as one coherent
 > conversational surface. Companion to `lib/conversation/conversation.lamp`

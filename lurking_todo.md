@@ -139,10 +139,12 @@ disambiguation, the `it` pronoun, `"You can't go that way."`, and
   empty." (L2242)
 
 ### NPC interaction (a whole subsystem)
-- [Will do] **NEW — `talk to X` / `X, hello`.** "talk to hacker" → "Hmmm … the hacker waits
-  for you to say something." (L12). Not in `lib/conversation` (which has `say`/`ask`/`tell` but
-  no greet/opener). A `TALK TO` nudge + `hello`/greeting handling. **Design deferred to a
-  separate document.**
+- [Done] **NEW — `talk to X` / `X, hello`.** "talk to hacker" → "Hmmm … the hacker waits
+  for you to say something." (L12). **Implemented (2026-07-12,** `devdocs/conversation.md`**):**
+  `greet` in lib/conversation (`talk to`/`greet`/`say hello to`/`X, hello` — the comma grammar
+  templates win ahead of the ordering fallback), default "waits for you to say something", games
+  override with `instead greet`; bare `hello` → the retheme-able pleasantry. Golden
+  `conversation2`.
 - [Done] **NEW — `ask X about TOPIC`.** Topic-based dialogue. "ask hacker about keys" →
   a paragraph of lore (L196). Unknown topic: "I don't know the word 'hacking.'"
   (L18). Built in `lib/conversation`: `ask [interlocutor] about [topic]` resolves a `subject`
@@ -155,13 +157,17 @@ disambiguation, the `it` pronoun, `"You can't go that way."`, and
   reactions: "give chinese food to hacker" → "'Yuck! This isn't warm enough!'" (L393);
   "show stone to creature" → "The thing is uninterested." (L154). Built in advent
   (actions.lamp): both fail-by-default with per-recipient `instead give`/`instead show`.
-- [Will do] **NEW — `ask X for Y`.** The reverse of give (an NPC hands you something):
-  `ask [someone] for [thing]` grammar + action. Not present yet.
-- [Will do] **NEW — `X, COMMAND` (ordering an NPC).** "urchin, boo" (L761); enforced
-  addressing: "You must address the urchin directly." (L759). Parse `NPC, imperative`, run the
-  action with `actor = that NPC`, plus the "must address directly" refusal for un-orderable
-  NPCs. Execution side is partly there (actions carry `self.actor`; reports branch on
-  `actor == player`); the **parsing** of the `X, …` addressing form is the new work.
+- [Done] **NEW — `ask X for Y`.** The reverse of give (an NPC hands you something).
+  **Implemented (2026-07-12):** `ask_for` in advent beside give/show — fail-by-default, a game's
+  `instead ask_for` hands the thing over; `requested` is visible+direct. en + fr. Golden
+  `conversation2`.
+- [Done] **NEW — `X, COMMAND` (ordering an NPC).** "urchin, boo" (L761). **Implemented
+  (2026-07-12,** `devdocs/conversation.md`**):** the addressing form parses after the grammar
+  pass (leading person + comma + remainder); the remainder runs with `actor = NPC` in the NPC's
+  scope, gated by the `persuasion_rules` rulebook (default refuse — "The hacker has better
+  things to do.", turn spent; games grant per-NPC/per-action). An unparseable remainder becomes
+  a **directed utterance** — `say` gains an `interlocutor` slot, so "urchin, boo" hooks
+  `instead say`. The `_other` reports render the obeying NPC. Golden `conversation2`.
 
 ### Meta / out-of-world
 - [Done] **DONE — `wait` / `z`.** "Time passes." — a core advent action (lib/advent/actions.lamp),
@@ -429,12 +435,14 @@ mechanism needed:
 - [Done] "You can't get a good grip on the new brick with your fingers." — needs a tool (L1345) → `take_refusal`.
 
 **Rides an already-decided item:**
-- [Will do] "Cheery, aren't you?" — "hello" (L616): the message is content once the `hello`/greeting
-  verb lands (§1 talk-to, Will do, separate doc).
-- [Will do] "Please use compass directions instead." — `exit`/`out` where invalid (L1059): part of
+- [Done] "Cheery, aren't you?" — "hello" (L616): the bare `hello` action's `hello_reply`
+  default is exactly this line (2026-07-12); games retheme the named message.
+- [Done] "Please use compass directions instead." — `exit`/`out` where invalid (L1059): part of
   the enter/exit cluster (§1, Will do) — the `exit`-as-direction vs leave-object tension.
 
 **Actually a new verb (not just tone) — needs a decision:**
+  (Parent enter/exit cluster shipped; the line itself is a per-game `report failed go` retheme,
+  authorable like the rest of §7's flavor catalog.)
 - [Won't do] **COMPARE (two-noun verb).** "You can only compare two things." (L1046) / "Allowing for
   the different media…, they are identical." (L1049). A real `compare X to/with Y` verb with
   arity checking and a success path. (A game that needs it adds its own two-noun action.)

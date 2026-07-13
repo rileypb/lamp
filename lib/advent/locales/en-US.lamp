@@ -97,6 +97,8 @@ push_inert: "Nothing obvious happens."
 pull_inert: "Nothing obvious happens."
 give_declined_msg: "[The act.recipient] [do] not seem interested."
 show_declined_msg: "[The act.recipient] [are] unimpressed."
+ask_for_declined_msg: "[The act.interlocutor] [do] not seem inclined to part with [regarding act.requested][those]."
+persuasion_refused: "[The act.actor] [have] better things to do."
 cant_enter_msg: "That's not something [we] can enter."
 enter_on_report: "[We] [get] on [the act.target]."
 enter_in_report: "[We] [get] in [the act.target]."
@@ -301,6 +303,7 @@ understand "move [target]" as pull
 understand "give [gift] to [recipient]" as give
 
 understand "show [shown] to [recipient]" as show
+understand "ask [interlocutor] for [requested]" as ask_for
 
 understand "enter [target]" as enter
 understand "get in [target]" as enter
