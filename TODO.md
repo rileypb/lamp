@@ -480,6 +480,24 @@ defined). Low priority. **Where:** `src/lamplighter/index.js` (`run`).
 
 ## Design (not scheduled)
 
+### Lighthouse Electron target — DONE (2026-07-12)
+All four decisions approved and implemented the same day: (1) the artifact is an
+**Electron project directory** (`npm run build:electron -- <game.lamp>`; author
+runs `npx electron .` — zero new lamp deps); (2) isolation via a custom
+`app://` scheme whose `protocol.handle` responses carry COOP/COEP, so the page
+is genuinely `crossOriginIsolated`; (3) capability set identical to web v1
+(localStorage saves; renderer `sandbox:true`, no preload); (4) `buildElectron`
+(`src/lighthouse/electron.js`) calls `buildWeb` verbatim, deletes the inert
+`sw.js`, and lays the template `main.js` + generated `package.json` around it —
+the shell ships byte-identical. **Verified live** (Electron 43, macOS): the
+template's `LAMP_SMOKE=1` self-check reports isolated/SAB/booted all true.
+Static + wire-protocol coverage in `tests/lighthouse`. Docs:
+devdocs/lighthouse.md → "Electron"; sandbox.md's "Electron host" open question
+closed. Follow-ups if wanted: fs-backed saves via a preload bridge (the first
+Electron-only capability); a manual DOM pass in a real Electron window (modals,
+transcript download); packaged-app/installer guidance (author-side
+`@electron/packager`).
+
 ### Multi-actions (`take all`, `drop X and Y`, `put all but Z in box`) — slices 1+2 DONE (2026-07-06)
 **Direction (approved):** Inform-style **parser-level expansion** — the parser resolves
 a multi noun phrase to an object list, then dispatches the action **once per object**
@@ -1302,8 +1320,9 @@ the shades).
   `<name>.txt` **download** when the transcript closes (SCRIPT OFF, or game end with one
   open — the analogue of the CLI's close-on-exit; a page closed mid-transcript loses it).
   Verified end-to-end by driving the phobos release bundle through the worker protocol
-  (the item-5 harness); static wiring assertions in `tests/lighthouse`. Remaining:
-  Electron, if that host ever lands. **Applied
+  (the item-5 harness); static wiring assertions in `tests/lighthouse`. The Electron host
+  landed 2026-07-12 and reuses the same shell download path (manual in-window pass still
+  pending). **Applied
   the same split to SAVE/RESTORE *and* UNDO (2026-06-30; see items 1–2), retiring the
   native meta-verb dispatch table (`outOfWorldCommands`/`registerOutOfWorld`) entirely — so
   all player commands now resolve through one grammar path.**

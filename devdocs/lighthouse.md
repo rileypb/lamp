@@ -1,10 +1,11 @@
-# Lighthouse — Web Packaging
+# Lighthouse — Web and Electron Packaging
 
-> Status: design. First target is the **static web bundle**; Electron is
-> deferred. Lighthouse is the packager only — it imports Lamplighter's worker
-> bootstrap, channel protocol, and capability allowlist rather than
-> reimplementing them. See `devdocs/sandbox.md` for the execution/isolation model
-> and the Lamplighter-vs-Lighthouse ownership line this doc builds on.
+> Status: built. Two targets: the **static web bundle** and the **Electron
+> project directory** (see "Electron" below). Lighthouse is the packager only —
+> it imports Lamplighter's worker bootstrap, channel protocol, and capability
+> allowlist rather than reimplementing them. See `devdocs/sandbox.md` for the
+> execution/isolation model and the Lamplighter-vs-Lighthouse ownership line
+> this doc builds on.
 
 ## Purpose
 
@@ -16,13 +17,14 @@ game logic and the capability boundary remain in Lamplighter's worker.
 
 ## Boundaries
 
-- **In scope (this iteration):** the static web bundle — HTML/CSS/JS shell, the
-  browser `Worker` adapter, the build step that produces the bundle, and the
-  cross-origin-isolation mechanism.
-- **Out of scope (deferred):** Electron wrapping (same HTML shell, different
-  packaging and capability backing — pulled forward later); the platform's
-  per-author permission *policy*; any change to the Lamp language or the
-  Lamplighter channel protocol.
+- **In scope:** the static web bundle — HTML/CSS/JS shell, the browser `Worker`
+  adapter, the build step that produces the bundle, and the
+  cross-origin-isolation mechanism — plus the Electron project directory that
+  wraps that bundle (below).
+- **Out of scope:** packaged Electron apps/installers and code signing (the
+  project directory is the artifact; packaging is the author's step); the
+  platform's per-author permission *policy*; any change to the Lamp language or
+  the Lamplighter channel protocol.
 
 ## Inputs and Outputs
 
@@ -212,6 +214,57 @@ Built in `src/lighthouse/web/` as the bundle's template assets:
   capabilities exactly when the bundle carries a `custom.js`.
 - The shell contains no game logic — render, capture input, broker, nothing more.
 
+## Electron (project directory)
+
+Decided and built 2026-07-12 (v1). Four decisions:
+
+1. **Artifact: an Electron *project directory*, not a packaged app.**
+   `npm run build:electron -- <game.lamp> [outDir]` (default
+   `dist/<name>-electron/`) emits `main.js` + `package.json` + the web bundle
+   under `app/`. The author runs it with `npx electron .` (or `npm install &&
+   npm start`) and packages it with the tool of their choice
+   (`@electron/packager`, electron-builder). No Electron dependency enters Lamp
+   itself.
+2. **Cross-origin isolation via an `app://` custom scheme.** The web bundle's
+   service worker cannot run on a custom scheme, so `main.js` registers `app://`
+   as standard+secure and serves `app/` through `protocol.handle`, setting
+   COOP/COEP/CORP on every response. The page loads genuinely
+   `crossOriginIsolated`: index.html's registration snippet exits on its first
+   check, shell.js's isolation gate passes, and the shell runs **byte-identical
+   to the web build**. (The `--enable-features=SharedArrayBuffer` switch was
+   rejected — it leaves `crossOriginIsolated` false and would fork both
+   index.html and shell.js.)
+3. **Capability set identical to web v1.** Saves ride the same
+   localStorage-backed broker; the renderer is fully locked down
+   (`sandbox: true`, `contextIsolation: true`, `nodeIntegration: false`, no
+   preload). fs-backed saves under `userData` (real files, export/import) are a
+   possible later Electron-only capability — the first thing that would need a
+   preload bridge.
+4. **`buildElectron` wraps `buildWeb` verbatim** (`src/lighthouse/electron.js`
+   + thin CLI `build-electron.js`): it builds the web bundle into `app/`,
+   deletes the now-inert `sw.js` as a packaging post-step, and lays the
+   template `main.js` (`src/lighthouse/electron/main.js`) plus a generated
+   `package.json` (name/productName/author from the meta sidecar, a `start`
+   script, the `electron` devDependency) around it. All web options pass
+   through (`--encode-strings`, `--no-minify`, `--debug`, `--eject-shell`);
+   custom shells ride along unchanged.
+
+**Self-check:** `LAMP_SMOKE=1 npx electron .` shows no window; it prints
+`LAMP_SMOKE {"isolated":…,"sab":…,"booted":…}` and exits 0 iff the page is
+cross-origin isolated, `SharedArrayBuffer` exists, and the game's first output
+reached the transcript.
+
+**Status:** verified live 2026-07-12 (Electron 43, macOS) — the smoke check
+reports all three true for the cloak project, confirming custom-scheme header
+injection yields `crossOriginIsolated` under a sandboxed renderer.
+`tests/lighthouse` covers the project structure, sw.js removal, the locked-down
+webPreferences, the generated package.json, and drives the emitted `app/`
+bundle over the real wire protocol. Gotcha: from a VSCode-hosted terminal,
+unset `ELECTRON_RUN_AS_NODE` (VSCode exports it) or Electron runs as plain
+Node and `require("electron")` returns no API. Remaining manual-only: the
+DOM-level pass in a real Electron window (modals, transcript download —
+the same layer that stays manual for the web shell).
+
 ## Assumptions
 
 - The browser worker boundary is sufficient isolation on its own; Lighthouse does
@@ -221,8 +274,9 @@ Built in `src/lighthouse/web/` as the bundle's template assets:
 
 ## Non-Goals
 
-- Electron packaging (deferred; same shell later).
-- Any brokered capability beyond output and input for v1.
+- Packaged Electron apps/installers, icons, auto-update, code signing (the
+  project directory is the v1 artifact).
+- Any brokered capability beyond output, input, save, and transcript for v1.
 - Reimplementing or forking the worker bootstrap or capability list.
 
 ## Built
@@ -261,7 +315,6 @@ manual browser pass.
 - **Shell/UX polish.** Minor details observed in the first live run remain to be
   pinned down and fixed (to be enumerated).
 - **`lamp build` CLI surface.** Currently `npm run build:web -- <game.lamp>
-  [outDir]`. Confirm the eventual unified `lamp` command name and whether it also
-  accepts pre-compiled output.
-- **Electron target.** Same shell, different packaging and capability backing;
-  deferred. Confirm it reuses this bundle's shell and the worker bootstrap.
+  [outDir]` and `npm run build:electron -- <game.lamp> [outDir]`. Confirm the
+  eventual unified `lamp` command name and whether it also accepts pre-compiled
+  output.

@@ -188,7 +188,11 @@ function buildWeb(inputFile, outDir, { encodeStrings = false, minify = true, rel
 
     const extras = hasShellDir ? copyShellExtras(shellDir, absOut) : [];
 
-    return { outDir: absOut, files: ["game.worker.js", "assets.json", ...SHELL_ASSETS, ...extras] };
+    return {
+        outDir: absOut,
+        files: ["game.worker.js", "assets.json", ...SHELL_ASSETS, ...extras],
+        meta: { name: meta.name || null, title: meta.title || null, author: meta.author || null },
+    };
 }
 
 module.exports = { buildWeb };

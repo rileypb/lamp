@@ -289,6 +289,13 @@ There are three environments, but only two host-shell codebases:
   Chromium, so it could use either adapter. It must use the browser `Worker` path
   so its boundary behavior matches the web build; otherwise Electron silently
   diverges from what web players experience.
+- **Electron v1 (built 2026-07-12) sits exactly at the web build's point on the
+  trust spectrum:** identical capability set, localStorage-backed saves, and a
+  fully locked-down renderer (`sandbox: true`, no Node integration, no preload).
+  Isolation headers come from the app's `app://` protocol handler, so the page
+  is genuinely `crossOriginIsolated` and the shell runs byte-identical to the
+  web bundle. fs-backed saves would be the first Electron-only capability, via
+  a preload bridge, if ever wanted. See devdocs/lighthouse.md → "Electron".
 - **Shared-memory input only constrains the browser-`Worker` environments.** The
   dev CLI's `worker_threads` adapter gets `SharedArrayBuffer` without any header
   requirement, so development cannot surface a COOP/COEP misconfiguration.
@@ -526,6 +533,6 @@ adapter, and headers on top.
 - **Capability-broker manifest.** How does a native library declare which
   privileged actions it needs, and how does the platform grant or deny them? This
   likely warrants its own spec section.
-- **Electron host.** Where does the Electron target sit between the trusting
-  terminal CLI and the strict web build? Confirm it uses the same transport with
-  a host-configured capability set.
+- ~~**Electron host.**~~ Resolved 2026-07-12: Electron v1 uses the same
+  browser-`Worker` transport and the web build's exact capability set (see
+  "Host Environments" above and devdocs/lighthouse.md → "Electron").
