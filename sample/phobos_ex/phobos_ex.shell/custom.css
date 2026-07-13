@@ -163,8 +163,12 @@
 .map-grid {
     display: grid;
     grid-template-columns: repeat(5, minmax(44px, 76px));
-    grid-template-rows: repeat(6, minmax(26px, 34px));
-    gap: 6px;
+    /* Rows, gaps, and labels scale with viewport height so the whole plan
+       compresses smoothly into the panel's 34vh instead of clipping as soon as
+       the window shortens (fits without cutoff down to ~430px tall; the floors
+       keep cells tappable below that, where clipping becomes inevitable). */
+    grid-template-rows: repeat(6, clamp(13px, 3.6vh, 34px));
+    gap: clamp(2px, 0.7vh, 6px);
     justify-content: center;
     position: relative;
 }
@@ -181,7 +185,7 @@
     background: #131824;
     color: #aebedc;
     font-family: "SFMono-Regular", Consolas, Menlo, monospace;
-    font-size: 0.68rem;
+    font-size: clamp(0.5rem, 1.7vh, 0.68rem);
     padding: 0;
     overflow: hidden;
     white-space: nowrap;
@@ -239,7 +243,7 @@ button.map-cell:active { transform: scale(0.95); }
 @media (max-width: 640px) {
     .map-grid {
         grid-template-columns: repeat(5, minmax(0, 1fr));
-        grid-template-rows: repeat(6, 30px);
+        grid-template-rows: repeat(6, clamp(13px, 3.6vh, 30px));
     }
     #map-panel { max-height: 42vh; }
     #map-panel.map-collapsed.map-peek { max-height: 42vh; }
