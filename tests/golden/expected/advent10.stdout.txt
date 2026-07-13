@@ -8,7 +8,6 @@ That's not something you can wear.
 
 > wear hat
 (first taking the hat)
-Taken.
 You put on the hat.
 
 > i

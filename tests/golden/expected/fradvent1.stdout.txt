@@ -15,7 +15,6 @@ Vous portez :
 
 > porter manteau
 (vous prenez d'abord le manteau)
-Pris.
 Vous mettez le manteau.
 
 > enlever manteau

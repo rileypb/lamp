@@ -242,18 +242,18 @@ check drop:
 
 # The implicit-action facility (Inform's "implicitly taking"): an action whose precondition it
 # can supply itself — WEAR needs the clothing held, DROP/PUT need a worn item off first —
-# announces "(first taking …)" for the player, tries the enabling action, and reports whether
-# the condition now holds; the caller bails with a bare `stop failed` when it doesn't.
-# `implicitly_take` tries LOUDLY (take's own "Taken." composes under the parenthetical);
-# `implicitly_doff` tries SILENTLY (the caller's own report speaks next) — matching the
-# long-standing per-verb behavior these helpers replace.
+# announces "(first taking …)" for the player, SILENTLY tries the enabling action, and reports
+# whether the condition now holds; the caller bails with a bare `stop failed` when it doesn't.
+# `silently` suppresses only the success report (Inform's semantics), so the enabling action's
+# own success chatter is dropped ("(first taking the cloak)" / "You put on the cloak." with no
+# "Taken." between) while a FAILED try still prints its refusal ("…much too massive to take.").
 function bool implicitly_take(person p, item x):
 	if holder(x) == p:
 		return true
 	if p == player:
 		implicit_target = x
 		print message implicit_take_msg  # "(first taking [the implicit_target])[line break]"
-	try take:
+	silently try take:
 		taken x
 		actor p
 	return holder(x) == p

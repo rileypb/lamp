@@ -5,7 +5,6 @@ You see a lamp, a snake and a cloak here.
 
 > wave lamp
 (first taking the lamp)
-Taken.
 You wave the lamp with a flourish.
 
 > wave lamp
@@ -17,7 +16,6 @@ The snake is much too massive to take.
 
 > wear cloak
 (first taking the cloak)
-Taken.
 You put on the cloak.
 
 > drop cloak

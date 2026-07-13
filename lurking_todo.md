@@ -394,7 +394,8 @@ disambiguation, the `it` pronoun, `"You can't go that way."`, and
   first)" (L2096); "(first taking off X)". **Implemented (2026-07-12):** the general facility —
   `implicitly_take`/`implicitly_doff` (actions.lamp) announce "(first …)" for the player (via
   the shared `implicit_take_msg`/`implicit_doff_msg` + `implicit_target` global), try the
-  enabling action (take loudly so "Taken."/its refusal composes; doff silently), and report
+  enabling action silently (Inform's `silently`: the success report is suppressed, a failed
+  try still prints its refusal), and report
   whether the condition holds — the caller bails with a bare `stop failed`. The four hand-coded
   blocks in `wear`/`drop`/`put_on`/`put_in` collapsed to one-liners (goldens byte-identical),
   and a game action uses the same helpers (golden `implicit1`).

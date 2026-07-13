@@ -589,7 +589,11 @@ function runAction(actionName, instance, opts = {}) {
                 streamRequestBreak(2);
             }
         }
-        if (outcome === "failed" && !opts.silent && !gateBlocked) {
+        // `silently` (Inform's semantics) suppresses only the SUCCESS report band — a failed
+        // silent try still reports its refusal, so an implicit action's failure explains itself
+        // ("(first taking the snake)" / "…much too massive"). A gate-blocked action stays mute
+        // here regardless: the reach gate already printed the refusal.
+        if (outcome === "failed" && !gateBlocked) {
             for (const { rule } of orderedRules(bands.report_failed)) {
                 const result = rule(instance);
                 if (result === HALT || result !== undefined) {
