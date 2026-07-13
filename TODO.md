@@ -23,8 +23,12 @@ Sourced from the staged roadmaps and prerequisite lists in
 > the visibility ceiling + symmetric reach, light transitions, per-slot accessibility, and —
 > 2026-07-12 — **vehicles**: a `vehicle` flag drives on GO while ridden, golden `vehicle1`;
 > fit constraints decided per-game). Remaining Will-do work: only the **NPC conversation cluster**
-> (talk/greet/order + `ask for` + two flavor riders; own design doc owed) — the implicit-action
-> facility shipped 2026-07-12 (`implicitly_take`/`implicitly_doff`, golden `implicit1`).
+> (talk/greet/order + `ask for` + two flavor riders) — its design doc is now written:
+> **`devdocs/conversation.md`** (2026-07-12; greet in lib/conversation, `X, COMMAND` parsed in
+> the engine with an advent `persuasion_rules` rulebook via `setPersuasionGate`, `ask_for` in
+> advent, topics widened to `thing` for ask-about-objects). Awaiting a build go-ahead. The
+> implicit-action facility shipped 2026-07-12 (`implicitly_take`/`implicitly_doff`, golden
+> `implicit1`).
 > Text substitution (Slices 1–7) is **all DONE**; per-slice record in `devdocs/text.md`.
 >
 > Design docs from triage, both **implemented 2026-07-11**: **`devdocs/missing_noun.md`**
