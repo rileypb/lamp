@@ -93,6 +93,10 @@ html, body {
     overflow-y: auto;
     white-space: pre-wrap;
     word-break: break-word;
+    scrollbar-width: none;
+}
+#transcript::-webkit-scrollbar {
+    display: none;
 }
 
 /* A text-window pane: monospace (the game composes lines expecting columns to
@@ -363,6 +367,10 @@ html, body {
     border-radius: 5px;
     max-height: 11rem;
     overflow-y: auto;
+    scrollbar-width: none;
+}
+.modal-slots::-webkit-scrollbar {
+    display: none;
 }
 
 .modal-slot {
