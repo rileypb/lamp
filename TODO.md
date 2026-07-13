@@ -10,21 +10,21 @@ Sourced from the staged roadmaps and prerequisite lists in
 > record. The only optional remnant is item 6 below.
 
 > Feature backlog **triaged (2026-07-11)**: `lurking_todo.md` (candidates mined from
-> `lurkinghorror.txt`) is now fully labeled — **62 Done** (mostly already-built; the
-> "we don't have" framing was stale), **18 Won't do**, **8 Will do**. Shipped 2026-07-11:
+> `lurkinghorror.txt`) is now fully labeled — **63 Done** (mostly already-built; the
+> "we don't have" framing was stale), **19 Won't do**, **6 Will do**. Shipped 2026-07-11:
 > `lit`-illuminates-room (`light_in_scope`, golden `providinglight2`); collective
 > plural objects via the unified `them` pronoun (`noteGroupAntecedent`/`pronounGroupOf`,
 > golden `themgroup1`); `turn on`/`turn off` (`switchable`/`switched_on`, en-US + fr-FR,
 > goldens `switchdevice1`/`switchdevicefr1`); `listen`/`smell` distance senses (`sound`/
 > `scent`, en-US + fr-FR, goldens `sense1`/`sensefr1`); and prepositional LOOK — `look
 > <direction>` + `look in`/`through`/`under`/`behind` (en-US + fr-FR, goldens `look1`/`lookfr1`).
-> (also shipped: `take X from Y` scope-narrowing — `setSlotScopedByContents`, goldens
-> `takefrom1`/`takefromfr1`). Remaining Will-do work
-> clusters into: ride-able vehicles + vehicle-constrained movement (enter/exit + non-vehicle
-> enterables now done); NPC talk/greet/order +
-> `ask for` (own design doc); a general implicit-action facility;
-> base `SLEEP`; and the "noun missing" parse-error refinement. Text substitution (Slices 1–7)
-> is **all DONE**; per-slice record in `devdocs/text.md`.
+> (also shipped: `take X from Y` scope-narrowing, `verbose`/`brief`/`superbrief`, `examine me`,
+> `search`, `sleep`, missing-noun prompts, enter/exit + nested enterables, transparent boxes +
+> the visibility ceiling + symmetric reach, light transitions, per-slot accessibility, and —
+> 2026-07-12 — **vehicles**: a `vehicle` flag drives on GO while ridden, golden `vehicle1`;
+> fit constraints decided per-game). Remaining Will-do work: the **NPC conversation cluster**
+> (talk/greet/order + `ask for`, own design doc) and the **general implicit-action facility**.
+> Text substitution (Slices 1–7) is **all DONE**; per-slice record in `devdocs/text.md`.
 >
 > Design docs from triage, both **implemented 2026-07-11**: **`devdocs/missing_noun.md`**
 > (missing-noun re-prompts — `matchGrammarPartial` + a `pendingNoun` splice-and-re-run;

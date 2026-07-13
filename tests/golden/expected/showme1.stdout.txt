@@ -26,6 +26,7 @@ gem (item)
   switchable: false
   switched_on: false
   enterable: false
+  vehicle: false
   all_exempt: false
   initial_appearance: ""
   handled: false
@@ -60,6 +61,7 @@ safe (box)
   switchable: false
   switched_on: false
   enterable: false
+  vehicle: false
   all_exempt: false
   initial_appearance: ""
   handled: false

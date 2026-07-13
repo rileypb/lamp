@@ -78,11 +78,16 @@ type physical < thing:
 	# so this lives on `physical` (like `lit`), and a fixed control panel can be `scenery` too.
 	bool switchable = false
 	bool switched_on = false
-	# ENTER / GET IN / GET ON (see enter_object, actions.lamp): a thing the player can get into or
-	# onto (a chair, bed, closet). "on" for a `supporter`, "in" otherwise. Non-vehicle: the player
-	# stays in the room (a `perch`, tracked on `person`) — it just annotates the heading and blocks
-	# movement until they get off. A ride-able vehicle is a separate, later model.
+	# ENTER / GET IN / GET ON (see enter, actions.lamp): a thing the player can get into or
+	# onto (a chair, bed, closet) — the actor is moved into/onto it. "on" for a `supporter`,
+	# "in" otherwise. A plain enterable blocks GO until the actor gets out.
 	bool enterable = false
+	# A `vehicle` (a forklift, a cart) is enterable (the flag implies it — no need to set both)
+	# and, while the actor is DIRECTLY inside/on it and it stands in a room, a direction command
+	# drives it: GO moves the vehicle (the rider rides along via containment) and re-describes
+	# with the "(in the forklift)" heading. Whether a vehicle fits a given exit is a per-game
+	# concern (`check go` rules) — the library imposes no fit model.
+	bool vehicle = false
 	# Excluded from `all` ("take all" skips it) while staying available by name — the
 	# declarative knob read by all_includes (actions.lamp). Being a field, a game can
 	# also flip it from rules as the world changes.

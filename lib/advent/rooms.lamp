@@ -364,20 +364,26 @@ function void list_room_contents(room r):
 # Describe the room the player arrives in. Containment changes fire `contains add`
 # (a `move`/`contains` assertion); we re-describe only when the player is the thing
 # placed, using the new container (`self.place`).
+# Describe what the player sees on arriving somewhere new: a room arrival goes through
+# verbosity (describe_on_arrival); a view sealed by a closed opaque enclosure describes the
+# interior instead. Syncs the light-transition tracker, since the describe already reflected
+# any light change the move caused. Called by the containment hook below (the player moved)
+# and by vehicle driving (the player's ENCLOSURE moved — no containment event fires for the
+# rider; see `do go`, actions.lamp).
+function void describe_player_arrival():
+	let c = vis_ceiling(player)
+	if c is room:
+		describe_on_arrival(c)
+	else:
+		describe_interior(player)
+	was_dark = in_darkness(player)
+
 on contains add:
 	if self.contained == player:
 		# Any change of the player's holder re-describes — a GO between rooms, and ENTER/EXIT of
 		# an enterable (their "You get in …" line prints in `do` *before* the move, so the
-		# description follows it). A room arrival goes through verbosity (describe_on_arrival);
-		# a view sealed by a closed opaque enclosure describes the interior instead.
-		let c = vis_ceiling(player)
-		if c is room:
-			describe_on_arrival(c)
-		else:
-			describe_interior(player)
-		# The describe above already reflected any light change the move caused — sync the
-		# transition tracker so the end-of-turn check doesn't re-announce it.
-		was_dark = in_darkness(player)
+		# description follows it).
+		describe_player_arrival()
 
 # A person is in darkness when neither their room's own light (`room.lighted`) nor any lit thing
 # in their scope illuminates it. A carried or present light source thus lifts a dark room.

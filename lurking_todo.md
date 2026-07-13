@@ -94,8 +94,10 @@ disambiguation, the `it` pronoun, `"You can't go that way."`, and
 - [Won't do] **PARTIAL — `up`/`down`/`in`/`out` already exist as directions, but `climb X`,
   `climb up/down`, and verb-form `enter`/`exit` mapping to movement do not.**
   "climb rope" (L2325)
-- [Will do] **NEW — vehicle-constrained movement.** A ride blocks some exits: "The forklift
-  won't fit into the stairwell." (L786)
+- [Won't do] **NEW — vehicle-constrained movement.** A ride blocks some exits: "The forklift
+  won't fit into the stairwell." (L786). **Per-game concern (decided 2026-07-12):** a game adds
+  its own `check go` rules (author order, they run before the library's); the library imposes
+  no fit model.
 
 ### Sensory / examine extensions
 - [Won't do] **NEW — `read X` distinct from `examine`.** Text objects render their writing.
@@ -286,9 +288,13 @@ disambiguation, the `it` pronoun, `"You can't go that way."`, and
   you see …" paragraphs; `location_of`/`in_darkness` walk up to the enclosing room. Verified
   against `example.inform`/`example.out` (Inform structure matches; Lamp keeps its own wording —
   "You see"/"get in"). Goldens `enterable1`/`enterable2`/`enterable3`/`enterablefr1`.
-- [Will do] **NEW — enterable / ride-able objects (vehicles) with their own location
+- [Done] **NEW — enterable / ride-able objects (vehicles) with their own location
   semantics.** Room headers gain ", on the forklift" / ", in the forklift"
-  (L789, L795).
+  (L789, L795). **Implemented (2026-07-12):** a `vehicle` flag (implies enterable): while the
+  actor sits directly in/on it and it stands in a room, a direction DRIVES it — GO moves the
+  vehicle, the rider rides along via containment, and the arrival re-describes with the
+  "(on the forklift)" heading. A nested seat or a plain enterable still refuses GO. Fit
+  constraints are per-game (see the vehicle-constrained item, Won't do). Golden `vehicle1`.
 - [Done] **NEW — object state that changes description & reactions.** Szechuan shrimp is
   cold → warm → hot → overcooked depending on microwave time, and the hacker
   reacts differently to each (L332, L371, L396, L478, L560). Authorable today: mutable

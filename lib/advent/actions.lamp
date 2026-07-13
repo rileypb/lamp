@@ -908,7 +908,8 @@ action enter:
 	direct physical target
 
 check enter:
-	if not self.target.enterable:
+	# `vehicle` implies enterable — a game needn't set both flags.
+	if not (self.target.enterable or self.target.vehicle):
 		stop failed cant_enter
 	# A closed enterable container can't be gotten into (open it first). `closed` reads false on
 	# anything without the field (a chair), so only closable boxes are gated.
@@ -973,21 +974,36 @@ report failed exit_object:
 action go:
 	direction way
 
-# Can't walk off while on/in a non-vehicle enterable — get out first.
+# A direction while enclosed: DRIVE when the actor sits directly in/on a `vehicle` that itself
+# stands in a room (the vehicle moves; the rider rides along); any other enclosure — a chair, a
+# nested seat inside the vehicle, a vehicle parked inside something — refuses: get out first.
+# Whether a vehicle fits a given exit is per-game (`check go` rules from the game file run
+# before these, author-order).
 check go:
-	if not (holder(self.actor) is room):
-		stop failed perched
+	let h = holder(self.actor)
+	if not (h is room):
+		if not h.vehicle:
+			stop failed perched
+		if not (holder(h) is room):
+			stop failed perched
 
-# `here` binds the actor's location first: a relation-query slot may hold a value,
-# variable, or property chain, but not a function call like `holder(self.actor)`.
+# `here` binds the travel origin first (the actor's room, or the ridden vehicle's): a
+# relation-query slot may hold a value, variable, or property chain, but not a function call.
 check go:
-	let here = holder(self.actor)
+	let here = location_of(self.actor)
 	if not connects here self.way _:
 		stop failed cant_go_that_way
 
 do go:
-	let here = holder(self.actor)
-	move self.actor to connects here self.way ?first
+	let h = holder(self.actor)
+	let here = location_of(self.actor)
+	if h is room:
+		move self.actor to connects here self.way ?first
+	else:
+		# Driving: move the VEHICLE; containment carries the rider, so no containment event
+		# fires for the player — describe the arrival explicitly (rooms.lamp).
+		move h to connects here self.way ?first
+		describe_player_arrival()
 
 # Direction-aware excuses for a blocked exit (Can't Go That Way.i7x): up/down/in get their own
 # default lines, everything else the generic "can't go that way." A game refines per-room by
