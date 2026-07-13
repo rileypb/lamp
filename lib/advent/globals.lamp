@@ -33,9 +33,14 @@ global object last_exited = none
 global bool was_dark = false
 
 # The object a contact verb just refused as out of reach (a thing seen through the glass of a
-# closed transparent box or booth) — set by the shared reach rules (actions.lamp) so the one
+# closed transparent box or booth) — set by the reach gate (reach_gate, rooms.lamp) so the one
 # `beyond_reach_msg` can name it.
 global object beyond_reach = none
+
+# The object an implicit enabling action is being tried on — set by implicitly_take /
+# implicitly_doff (actions.lamp) so the shared "(first taking …)" announcements can name it
+# (a named message may reference only `act` and globals, and the caller's slot names differ).
+global object implicit_target = none
 
 # The door that most recently refused a `go` (set by the closed-door check just
 # before `stop failed door_closed`). Exists so the refusal message can name the

@@ -390,12 +390,14 @@ disambiguation, the `it` pronoun, `"You can't go that way."`, and
   narrow path winds eastward through the junk." after the forklift clears it
   (L1096 vs L842). Room-level twin of object-state-changes-description (Done): a text template
   with `[if …]` or a rule appending after `describe_room` (override-friendly). Authorable.
-- [Will do] **NEW — implicit-action announcements.** "(Taking the pair of rubber boots
-  first)" (L2096); "(first taking off X)". Player-facing cases already work per-verb
-  (`put_on`/`put_in`/`wear`/`drop` each hand-code "(first …)" + `try`). This item is the
-  **general facility**: factor the pattern into one reusable implicit-action helper (Inform's
-  "implicitly taking") so any action can require+announce+try+bail uniformly. Internal
-  refactor/convenience, not a new player capability.
+- [Done] **NEW — implicit-action announcements.** "(Taking the pair of rubber boots
+  first)" (L2096); "(first taking off X)". **Implemented (2026-07-12):** the general facility —
+  `implicitly_take`/`implicitly_doff` (actions.lamp) announce "(first …)" for the player (via
+  the shared `implicit_take_msg`/`implicit_doff_msg` + `implicit_target` global), try the
+  enabling action (take loudly so "Taken."/its refusal composes; doff silently), and report
+  whether the condition holds — the caller bails with a bare `stop failed`. The four hand-coded
+  blocks in `wear`/`drop`/`put_on`/`put_in` collapsed to one-liners (goldens byte-identical),
+  and a game action uses the same helpers (golden `implicit1`).
 - [Done] **NEW — varied object-presence sentences.** "Sitting at a terminal is a hacker…"
   / "Nearby is one of those ugly molded plastic chairs." / "A really whiz-bang pc
   is right inside the door." — per-object custom presence text instead of "There

@@ -30,13 +30,12 @@ inventory_worn: " (porté)"
 inventory_empty: "[cap(sujet_ne_verbe(\"porter\"))] rien."
 
 # --- drop ---
-drop_first_doff: "([sujet_verbe(\"enlever\")] d'abord [le act.dropped])[line break]"
+implicit_doff_msg: "([sujet_verbe(\"enlever\")] d'abord [le implicit_target])[line break]"
 drop_report: "Laissé."
 drop_report_other: "[Le act.actor] [laisser] [le act.dropped]."
 drop_not_carrying: "[cap(sujet_ne_verbe(\"avoir\"))] pas cela."
 
 # --- wear ---
-wear_first_take: "([sujet_verbe(\"prendre\")] d'abord [le act.clothing])[line break]"
 wear_report: "[cap(sujet_verbe(\"mettre\"))] [le act.clothing]."
 wear_report_other: "[Le act.actor] [mettre] [le act.clothing]."
 wear_not_wearable: "Ce n'est pas quelque chose que [sujet_verbe(\"pouvoir\")] porter."
@@ -59,7 +58,7 @@ examine_too_dark: "Il fait trop sombre pour voir cela."
 go_cant: "[cap(sujet_ne_verbe(\"pouvoir\"))] pas aller par là."
 
 # --- put on ---
-put_on_first_doff: "([sujet_verbe(\"enlever\")] d'abord [le act.put_item])[line break]"
+implicit_take_msg: "([sujet_verbe(\"prendre\")] d'abord [le implicit_target])[line break]"
 put_on_report: "[cap(sujet_verbe(\"poser\"))] [le act.put_item] sur [le act.destination]."
 put_on_report_other: "[Le act.actor] [poser] [le act.put_item] sur [le act.destination]."
 put_on_not_carrying: "[cap(sujet_ne_verbe(\"avoir\"))] pas cela."

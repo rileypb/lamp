@@ -10,8 +10,8 @@ Sourced from the staged roadmaps and prerequisite lists in
 > record. The only optional remnant is item 6 below.
 
 > Feature backlog **triaged (2026-07-11)**: `lurking_todo.md` (candidates mined from
-> `lurkinghorror.txt`) is now fully labeled — **63 Done** (mostly already-built; the
-> "we don't have" framing was stale), **19 Won't do**, **6 Will do**. Shipped 2026-07-11:
+> `lurkinghorror.txt`) is now fully labeled — **64 Done** (mostly already-built; the
+> "we don't have" framing was stale), **19 Won't do**, **5 Will do**. Shipped 2026-07-11:
 > `lit`-illuminates-room (`light_in_scope`, golden `providinglight2`); collective
 > plural objects via the unified `them` pronoun (`noteGroupAntecedent`/`pronounGroupOf`,
 > golden `themgroup1`); `turn on`/`turn off` (`switchable`/`switched_on`, en-US + fr-FR,
@@ -22,8 +22,9 @@ Sourced from the staged roadmaps and prerequisite lists in
 > `search`, `sleep`, missing-noun prompts, enter/exit + nested enterables, transparent boxes +
 > the visibility ceiling + symmetric reach, light transitions, per-slot accessibility, and —
 > 2026-07-12 — **vehicles**: a `vehicle` flag drives on GO while ridden, golden `vehicle1`;
-> fit constraints decided per-game). Remaining Will-do work: the **NPC conversation cluster**
-> (talk/greet/order + `ask for`, own design doc) and the **general implicit-action facility**.
+> fit constraints decided per-game). Remaining Will-do work: only the **NPC conversation cluster**
+> (talk/greet/order + `ask for` + two flavor riders; own design doc owed) — the implicit-action
+> facility shipped 2026-07-12 (`implicitly_take`/`implicitly_doff`, golden `implicit1`).
 > Text substitution (Slices 1–7) is **all DONE**; per-slice record in `devdocs/text.md`.
 >
 > Design docs from triage, both **implemented 2026-07-11**: **`devdocs/missing_noun.md`**

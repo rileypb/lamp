@@ -240,15 +240,38 @@ check drop:
 	if not (holder(self.dropped) == self.actor):
 		stop failed not_carrying
 
+# The implicit-action facility (Inform's "implicitly taking"): an action whose precondition it
+# can supply itself — WEAR needs the clothing held, DROP/PUT need a worn item off first —
+# announces "(first taking …)" for the player, tries the enabling action, and reports whether
+# the condition now holds; the caller bails with a bare `stop failed` when it doesn't.
+# `implicitly_take` tries LOUDLY (take's own "Taken." composes under the parenthetical);
+# `implicitly_doff` tries SILENTLY (the caller's own report speaks next) — matching the
+# long-standing per-verb behavior these helpers replace.
+function bool implicitly_take(person p, item x):
+	if holder(x) == p:
+		return true
+	if p == player:
+		implicit_target = x
+		print message implicit_take_msg  # "(first taking [the implicit_target])[line break]"
+	try take:
+		taken x
+		actor p
+	return holder(x) == p
+
+function bool implicitly_doff(person p, item x):
+	if not (wears p x):
+		return true
+	if p == player:
+		implicit_target = x
+		print message implicit_doff_msg  # "(first taking off [the implicit_target])[line break]"
+	silently try doff:
+		clothing x
+		actor p
+	return not (wears p x)
+
 do drop:
-	if wears self.actor self.dropped:
-		if (self.actor == player):
-			print message drop_first_doff  # "(first taking off [the act.dropped])[line break]"
-		silently try doff:
-			clothing self.dropped
-			actor self.actor
-		if wears self.actor self.dropped:
-			stop failed
+	if not implicitly_doff(self.actor, self.dropped):
+		stop failed
 	move self.dropped to holder(self.actor)
 
 report drop:
@@ -274,14 +297,8 @@ check wear:
 		stop failed already_worn
 
 do wear:
-	if not (holder(self.clothing) == self.actor):
-		if (self.actor == player):
-			print message wear_first_take  # "(first taking [the act.clothing])[line break]"
-		try take:
-			taken self.clothing
-			actor self.actor
-		if not (holder(self.clothing) == self.actor):
-			stop failed
+	if not implicitly_take(self.actor, self.clothing):
+		stop failed
 	wears self.actor self.clothing
 
 report wear:
@@ -1056,14 +1073,8 @@ check put_on:
 		stop failed cant_put_on_that
 
 do put_on:
-	if wears self.actor self.put_item:
-		if (self.actor == player):
-			print message put_on_first_doff  # "(first taking off [the act.put_item])[line break]"
-		silently try doff:
-			clothing self.put_item
-			actor self.actor
-		if wears self.actor self.put_item:
-			stop failed
+	if not implicitly_doff(self.actor, self.put_item):
+		stop failed
 	move self.put_item to self.destination
 	supports self.destination self.put_item
 
@@ -1113,14 +1124,8 @@ check put_in:
 		cur = holder(cur)
 
 do put_in:
-	if wears self.actor self.put_item:
-		if (self.actor == player):
-			print message put_on_first_doff  # "(first taking off [the act.put_item])[line break]"
-		silently try doff:
-			clothing self.put_item
-			actor self.actor
-		if wears self.actor self.put_item:
-			stop failed
+	if not implicitly_doff(self.actor, self.put_item):
+		stop failed
 	move self.put_item to self.destination
 
 report put_in:

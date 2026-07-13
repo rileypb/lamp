@@ -1,0 +1,27 @@
+hall
+A hall.
+
+You see a lamp, a snake and a cloak here.
+
+> wave lamp
+(first taking the lamp)
+Taken.
+You wave the lamp with a flourish.
+
+> wave lamp
+You wave the lamp with a flourish.
+
+> wave snake
+(first taking the snake)
+The snake is much too massive to take.
+
+> wear cloak
+(first taking the cloak)
+Taken.
+You put on the cloak.
+
+> drop cloak
+(first taking off the cloak)
+Dropped.
+
+> quit
