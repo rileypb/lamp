@@ -47,8 +47,14 @@ function buildElectron(inputFile, outDir, options = {}) {
     if (web.meta.author) pkg.author = web.meta.author;
     fs.writeFileSync(path.join(absOut, "package.json"), JSON.stringify(pkg, null, 2) + "\n", "utf8");
 
+    // Author-facing run/package/sign guidance travels with the artifact; the
+    // title is the one templated value.
+    const readme = fs.readFileSync(path.join(TEMPLATE_DIR, "README.md"), "utf8")
+        .replaceAll("{{TITLE}}", pkg.productName);
+    fs.writeFileSync(path.join(absOut, "README.md"), readme, "utf8");
+
     const appFiles = web.files.filter((f) => f !== "sw.js").map((f) => path.join("app", f));
-    return { outDir: absOut, files: [...TEMPLATES, "package.json", ...appFiles] };
+    return { outDir: absOut, files: [...TEMPLATES, "README.md", "package.json", ...appFiles] };
 }
 
 module.exports = { buildElectron };

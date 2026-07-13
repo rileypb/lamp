@@ -270,6 +270,19 @@ Decided and built 2026-07-12 (v1). Four decisions:
    through (`--encode-strings`, `--no-minify`, `--debug`, `--eject-shell`);
    custom shells ride along unchanged.
 
+**Author guidance travels with the artifact:** `buildElectron` writes a
+title-templated `README.md` (template beside `main.js`) into the project —
+run/self-check instructions (including the `ELECTRON_RUN_AS_NODE` gotcha), one
+blessed packaging path (`npx @electron/packager . --out=release`; zero config
+because the generated package.json already carries
+name/productName/version/author), electron-builder named as the installer
+escalation, and an honest signing section (Gatekeeper/notarization,
+SmartScreen, itch.io as the pragmatic middle ground). Verified 2026-07-13:
+a packager-emitted `.app` passes the full smoke (all four checks) both
+unpacked and with `--asar` — `net.fetch(file://…)` resolves into the archive
+through Electron's asar-aware layer, so no asar caveat is needed. Lighthouse
+deliberately has no `--package` flag; packaging stays the author's step.
+
 **Self-check:** `LAMP_SMOKE=1 npx electron .` shows no window; it prints
 `LAMP_SMOKE {"isolated":…,"sab":…,"booted":…,"saves":…}` and exits 0 iff the
 page is cross-origin isolated, `SharedArrayBuffer` exists, the game's first

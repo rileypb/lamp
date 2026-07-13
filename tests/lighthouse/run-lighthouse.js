@@ -200,10 +200,21 @@ try {
         const elOut = fs.mkdtempSync(path.join(os.tmpdir(), "lamp-lighthouse-electron-"));
         try {
             const result = buildElectron(GAME, elOut, { minify: true });
-            for (const file of ["main.js", "preload.js", "package.json", "app/index.html",
+            for (const file of ["main.js", "preload.js", "README.md", "package.json", "app/index.html",
                 "app/game.worker.js", "app/shell.js", "app/shell.css", "app/assets.json"]) {
                 assert.ok(fs.existsSync(path.join(elOut, file)), `missing ${file}`);
             }
+
+            // The packaging guidance ships inside the project, title-templated,
+            // and documents the blessed path plus the signing reality.
+            const readme = fs.readFileSync(path.join(elOut, "README.md"), "utf8");
+            assert.ok(readme.startsWith("# Cloak of Darkness — desktop app"), "README title templating missing");
+            assert.ok(!readme.includes("{{"), "unreplaced README placeholder");
+            assert.ok(readme.includes("@electron/packager"), "blessed packaging path missing");
+            assert.ok(readme.includes("LAMP_SMOKE") && readme.includes("ELECTRON_RUN_AS_NODE"),
+                "self-check + run gotcha missing");
+            assert.ok(readme.includes("notarization") && readme.includes("SmartScreen"),
+                "signing guidance missing");
             assert.ok(!fs.existsSync(path.join(elOut, "app", "sw.js")),
                 "the inert service worker must not ship in the Electron project");
             assert.ok(!result.files.includes(path.join("app", "sw.js")),

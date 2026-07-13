@@ -509,19 +509,18 @@ plus one-off DOM-driven sessions (dialogs stubbed to canned paths) covering
 the full SAVE→file→RESTORE chain with no HTML modal shown. Web backing
 unchanged; shell ships byte-identical. Remaining manual: one click through the
 real OS panels. A manual DOM pass in a real Electron window — done,
-app confirmed good 2026-07-13; **packaging guidance (approach sketched
-2026-07-13)**: ship a `README.md` template *inside* the generated project
-(sibling of main.js, title-templated) documenting run + LAMP_SMOKE self-check
-(+ the ELECTRON_RUN_AS_NODE gotcha), one blessed path (`npx @electron/packager
-. --out=release` — zero config, the generated package.json already carries
-name/productName/version/author, note `--platform`/`--arch`/`--icon`),
-electron-builder named as the installer escalation, and an honest signing
-section (Gatekeeper quarantine/notarization on macOS, SmartScreen on Windows,
-itch.io as the pragmatic middle ground). Before writing it as fact: package
-cloak once and run the .app with LAMP_SMOKE=1 to prove app:// serving survives
-asar (`net.fetch(file://…)` into an archive is the thing to prove; else
-document `--asar=false` or asarUnpack for app/). Deliberately no `--package`
-flag in Lighthouse — packaging stays the author's step per decision 1.
+app confirmed good 2026-07-13; **packaging guidance DONE (2026-07-13)** — a
+title-templated `README.md` now ships inside every generated project (template
+in `src/lighthouse/electron/`): run + LAMP_SMOKE self-check + the
+ELECTRON_RUN_AS_NODE gotcha, the blessed `npx @electron/packager .
+--out=release` path (`--platform`/`--arch`/`--icon`/`--asar` notes),
+electron-builder as the installer escalation, and the honest signing section
+(Gatekeeper/notarization, SmartScreen, itch.io middle ground). Claims proven
+live before documenting: a packager-emitted .app passes the full four-check
+smoke both unpacked **and with `--asar`** (net.fetch resolves into the archive
+through Electron's asar-aware layer — no caveat needed). Deliberately no
+`--package` flag in Lighthouse — packaging stays the author's step per
+decision 1. The Electron target's follow-up list is now empty.
 
 ### Multi-actions (`take all`, `drop X and Y`, `put all but Z in box`) — slices 1+2 DONE (2026-07-06)
 **Direction (approved):** Inform-style **parser-level expansion** — the parser resolves
