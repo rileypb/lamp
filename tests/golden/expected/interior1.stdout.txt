@@ -1,0 +1,76 @@
+hall
+A hall.
+
+You see a lantern and a closet (in which is a key) here.
+
+> enter closet
+You get in the closet.
+
+hall (in the closet)
+A hall.
+
+You see a lantern here.
+
+In the closet you see a key.
+
+> close closet
+You close the closet.
+
+It is now pitch dark in here!
+
+> l
+Darkness
+It is pitch dark, and you can't see a thing.
+
+> open closet
+You open the closet.
+
+hall (in the closet)
+A hall.
+
+You see a lantern here.
+
+In the closet you see a key.
+
+> get out
+You get out of the closet.
+
+hall
+A hall.
+
+You see a lantern and a closet (in which is a key) here.
+
+> take lantern
+Taken.
+
+> enter closet
+You get in the closet.
+
+hall (in the closet)
+A hall.
+
+In the closet you see a key.
+
+> close closet
+You close the closet.
+
+> l
+closet
+
+In the closet you see a key.
+
+> take key
+Taken.
+
+> open closet
+You open the closet.
+
+> get out
+You get out of the closet.
+
+hall
+A hall.
+
+You see a closet here.
+
+> quit

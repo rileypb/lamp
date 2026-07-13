@@ -1,0 +1,31 @@
+# TURN ON / TURN OFF (lib/advent): the verbs set/clear `switched_on` on a `switchable` thing and
+# nothing else — a game wires the consequence (here a `report` rule links the flashlight's
+# `switched_on` to `lit`, so switching it on lifts the darkness; see providinglight2). Exercises:
+# the toggle, the game-wired lighting effect, already-on/already-off, a non-switchable refusal, and
+# the TURN/SWITCH synonyms + both particle orders.
+
+lib advent
+
+game SwitchDevice:
+	start cellar
+
+room cellar:
+	lighted false
+	description "A damp cellar."
+
+item flashlight:
+	switchable
+	description "A heavy flashlight."
+
+item rock:
+	description "An ordinary rock."
+
+contains yourself flashlight
+contains cellar rock
+
+# Game wiring: the flashlight's on-state drives its light. The library verb owns no such behavior.
+report switch_on:
+	flashlight.lit = true
+
+report switch_off:
+	flashlight.lit = false

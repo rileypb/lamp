@@ -1,0 +1,42 @@
+# The implicit-action facility (lib/advent): implicitly_take / implicitly_doff announce
+# "(first taking …)" for the player, try the enabling action, and report whether the condition
+# now holds. The library's own WEAR/DROP/PUT ON/PUT IN use them; this exercises a GAME action
+# doing the same — WAVE requires the thing held and implicitly takes it (loudly, so "Taken."
+# composes under the parenthetical), and fails cleanly when the take fails (the snake is
+# edificial: take's own refusal prints, wave adds nothing).
+
+lib advent
+
+game Implicit:
+	start hall
+
+room hall:
+	description "A hall."
+
+item lamp:
+	description "A brass lamp."
+
+item snake:
+	edificial
+	understand "snake"
+	description "A stone snake, far too massive to lift."
+
+item cloak:
+	wearable
+	description "A velvet cloak."
+
+contains hall lamp
+contains hall snake
+contains hall cloak
+
+action wave:
+	direct item target
+	syntax:
+		"wave [target]"
+
+do wave:
+	if not implicitly_take(self.actor, self.target):
+		stop failed
+
+report wave:
+	print "[We] [wave] [the act.target] with a flourish."

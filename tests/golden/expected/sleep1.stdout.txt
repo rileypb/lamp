@@ -1,0 +1,13 @@
+hall
+A hall.
+
+> sleep
+You are not feeling especially drowsy.
+
+> nap
+You are not feeling especially drowsy.
+
+> ticks
+ticks: 2
+
+> quit

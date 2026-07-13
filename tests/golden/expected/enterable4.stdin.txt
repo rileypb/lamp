@@ -1,0 +1,10 @@
+close closet
+enter closet
+open closet
+enter closet
+close closet
+get out
+north
+open closet
+get out
+quit

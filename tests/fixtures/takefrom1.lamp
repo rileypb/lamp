@@ -1,0 +1,45 @@
+# TAKE X FROM Y (lib/advent): ordinary TAKE with the FROM clause narrowing which objects `taken`
+# resolves against — `taken` is scoped to `source`'s contents (index.js setSlotScopedByContents).
+# This disambiguates a same-named object (take coin from crate → the crate's coin, not the floor's),
+# bounds `all` (take all from crate → only its contents), and yields a generic no-match for a closed
+# source or an absent object (no bespoke message, as in Inform). Delegates to TAKE per object.
+
+lib advent
+
+game TakeFrom:
+	start vault
+
+room vault:
+	description "A stone vault."
+
+box crate:
+	description "A wooden crate."
+
+box chest:
+	closable
+	closed
+	description "An iron chest."
+
+item boxcoin:
+	printed_name "coin"
+	understand "coin"
+	description "A coin in the crate."
+
+item floorcoin:
+	printed_name "coin"
+	understand "coin"
+	description "A coin on the floor."
+
+item key:
+	description "A brass key."
+
+item gem:
+	printed_name "gem"
+	description "A ruby gem."
+
+contains crate boxcoin
+contains crate key
+contains vault floorcoin
+contains chest gem
+contains vault crate
+contains vault chest

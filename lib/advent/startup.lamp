@@ -78,9 +78,17 @@ on startup:
 	wire_doors()
 	# Materialize part-of containment so parts are in scope with their wholes (parts.lamp).
 	wire_parts()
+	# Register FROM-scoped verbs (take X from Y); see actions.lamp / index.js.
+	wire_verb_scoping()
 	# Install the `all` inclusion policy (all_includes, actions.lamp). Installed here,
 	# before startup_rules, so a game's `rule startup_rules: set_all_filter(...)` wins.
 	set_all_filter(all_includes)
+	# Install the reach gate (reach_gate, rooms.lamp): touchable slots refuse across a closed
+	# container between actor and object. Same override story as the all filter.
+	set_reach_gate(reach_gate)
+	# Install the persuasion gate (persuasion_rules/persuasion_gate, actions.lamp): a player-typed
+	# order runs only when a game rule grants it; the default refuses.
+	set_persuasion_gate(persuasion_gate)
 	let this_game = game.all.first
 	# Auto-print the title banner before any startup_rules contributions, unless the game opts out
 	# (auto_banner false) to place it itself — e.g. between its intro narration and a reveal.
@@ -138,6 +146,10 @@ on startup:
 					if story == ongoing:
 						print "[par if printed]"
 						follow every_turn_rules()
+						# After the turn's rules: announce a light change the action (or a
+						# daemon) caused — see check_light_transition (rooms.lamp). Plain code,
+						# not a rule, so a game rule stopping the book can't suppress it.
+						check_light_transition()
 				if session_over:
 					break
 				if not (story == ongoing):

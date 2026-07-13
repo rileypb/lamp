@@ -1,0 +1,96 @@
+warehouse
+A cavernous warehouse.
+
+You see a forklift (on which is a seat) and a chair here.
+
+> enter chair
+You get in the chair.
+
+warehouse (in the chair)
+A cavernous warehouse.
+
+You see a forklift (on which is a seat) here.
+
+> east
+You need to get out of the chair first.
+
+> get out
+You get out of the chair.
+
+warehouse
+A cavernous warehouse.
+
+You see a forklift (on which is a seat) and a chair here.
+
+> get on forklift
+You get on the forklift.
+
+warehouse (on the forklift)
+A cavernous warehouse.
+
+You see a chair here.
+
+On the forklift you see a seat.
+
+> enter seat
+You get in the seat.
+
+warehouse (in the seat) (on the forklift)
+A cavernous warehouse.
+
+You see a chair here.
+
+> east
+You need to get out of the seat first.
+
+> get out
+You get out of the seat.
+
+warehouse (on the forklift)
+A cavernous warehouse.
+
+You see a chair here.
+
+On the forklift you see a seat.
+
+> east
+yard (on the forklift)
+A gravel yard.
+
+You see a crate here.
+
+On the forklift you see a seat.
+
+> take crate
+Taken.
+
+> north
+shed (on the forklift)
+A low shed.
+
+On the forklift you see a seat.
+
+> west
+You can't go that way.
+
+> south
+yard (on the forklift)
+A gravel yard.
+
+On the forklift you see a seat.
+
+> get off
+You get off the forklift.
+
+yard
+A gravel yard.
+
+You see a forklift (on which is a seat) here.
+
+> west
+warehouse
+A cavernous warehouse.
+
+You see a chair here.
+
+> quit

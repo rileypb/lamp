@@ -1,0 +1,28 @@
+# LISTEN / SMELL en français (lib/advent fr-FR): verrouille les défauts localisés et la conjugaison
+# ajoutée pour cette fonctionnalité — entendre ("vous n'entendez rien") et sentir ("vous ne sentez
+# rien"). Formes sans objet (ambiante) et ciblée; écouter / sentir / renifler.
+
+locale "fr-FR"
+lib advent
+
+game SensFR:
+	start cuisine
+
+room cuisine:
+	description "Une cuisine embuée."
+	sound "Vous entendez une casserole qui bout sur le feu."
+	scent "L'air est chargé d'ail."
+
+item rose:
+	printed_name "rose"
+	grammatical_gender "feminine"
+	scent "La rose sent bon."
+	description "Une rose rouge."
+
+item brique:
+	printed_name "brique"
+	grammatical_gender "feminine"
+	description "Une brique ordinaire."
+
+contains cuisine rose
+contains cuisine brique

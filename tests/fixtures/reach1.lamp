@@ -1,0 +1,42 @@
+# Symmetric reach (lib/advent): a closed container blocks reach around EITHER end — around the
+# target (a sealed display case) or around the actor (the glass booth they shut themself in:
+# they see the room through the glass but can't take/open/push/enter anything outside). The
+# enclosure itself stays reachable from within (open the booth you're shut in), and a carried
+# thing is inside with you (the flashlight still switches). See reach_barrier (rooms.lamp).
+
+lib advent
+
+game Reach:
+	start hall
+
+room hall:
+	description "A hall."
+
+box booth:
+	enterable
+	transparent
+	closable
+	printed_name "glass booth"
+	understand "booth/glass"
+	description "A glass booth."
+
+item lever:
+	description "A lever."
+
+item apple:
+	edible
+	description "An apple."
+
+item flashlight:
+	switchable
+	description "A flashlight."
+
+item table:
+	supporter
+	description "A table."
+
+contains hall booth
+contains hall lever
+contains hall apple
+contains hall table
+contains yourself flashlight

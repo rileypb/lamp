@@ -1,0 +1,24 @@
+# LISTEN / SMELL (lib/advent): distance sense verbs with objectless (ambient) and targeted forms.
+# Objectless "listen"/"smell" read the actor's room `sound`/`scent`; "smell X"/"listen to X" read the
+# thing's own; empty text → the "nothing unexpected" default. No reach gating (distance senses),
+# works in the dark. `sniff` is a smell synonym. See actions.lamp / types.lamp.
+
+lib advent
+
+game Sense:
+	start kitchen
+
+room kitchen:
+	description "A steamy kitchen."
+	sound "You hear a pot bubbling on the stove."
+	scent "The air is thick with garlic."
+
+item rose:
+	scent "The rose smells sweet."
+	description "A red rose."
+
+item brick:
+	description "An ordinary brick."
+
+contains kitchen rose
+contains kitchen brick

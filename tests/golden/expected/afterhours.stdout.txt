@@ -1,0 +1,174 @@
+After Hours
+A little game of light, glass, and getting into things by Lamp
+Version 0 dev
+
+Closing time at Lamplight Antiques. The last customer is long gone, the sign is turned, and the moonstone — the one piece you were told never to leave out of its case — is, of course, still locked in its case. The pedestal by the window stands empty, waiting for it.
+
+showroom
+The showroom of Lamplight Antiques, warm and cluttered. A long counter runs along one wall, an old glass telephone booth stands in the corner, and an empty pedestal waits by the window. The storeroom is north.
+
+You see a pedestal, an armchair (on which is a cushion), a display case (in which is a moonstone) and a glass booth here.
+
+On the counter is a flashlight.
+
+> x case
+A display case of thick bevelled glass, kept locked. Whatever sits inside is perfectly visible and perfectly out of reach.
+
+In the display case is a moonstone.
+
+> take moonstone
+You can't reach that.
+
+> open case
+It seems to be locked.
+
+> take flashlight
+Taken.
+
+> sit on armchair
+You get on the armchair.
+
+showroom (on the armchair)
+The showroom of Lamplight Antiques, warm and cluttered. A long counter runs along one wall, an old glass telephone booth stands in the corner, and an empty pedestal waits by the window. The storeroom is north.
+
+You see a pedestal, a display case (in which is a moonstone) and a glass booth here.
+
+On the armchair you see a cushion.
+
+> x cushion
+A needlepoint cushion, worn to blankness.
+
+> get off
+You get off the armchair.
+
+showroom
+The showroom of Lamplight Antiques, warm and cluttered. A long counter runs along one wall, an old glass telephone booth stands in the corner, and an empty pedestal waits by the window. The storeroom is north.
+
+You see a pedestal, an armchair (on which is a cushion), a display case (in which is a moonstone) and a glass booth here.
+
+> enter booth
+You get in the glass booth.
+
+showroom (in the glass booth)
+The showroom of Lamplight Antiques, warm and cluttered. A long counter runs along one wall, an old glass telephone booth stands in the corner, and an empty pedestal waits by the window. The storeroom is north.
+
+You see a pedestal, an armchair (on which is a cushion) and a display case (in which is a moonstone) here.
+
+> close booth
+You close the glass booth.
+
+> look
+showroom (in the glass booth)
+The showroom of Lamplight Antiques, warm and cluttered. A long counter runs along one wall, an old glass telephone booth stands in the corner, and an empty pedestal waits by the window. The storeroom is north.
+
+You see a pedestal, an armchair (on which is a cushion) and a display case (in which is a moonstone) here.
+
+> get out
+The glass booth is closed.
+
+> open booth
+You open the glass booth.
+
+> get out
+You get out of the glass booth.
+
+showroom
+The showroom of Lamplight Antiques, warm and cluttered. A long counter runs along one wall, an old glass telephone booth stands in the corner, and an empty pedestal waits by the window. The storeroom is north.
+
+You see a pedestal, an armchair (on which is a cushion), a display case (in which is a moonstone) and a glass booth here.
+
+> north
+Darkness
+It is pitch dark, and you can't see a thing.
+
+> turn on flashlight
+You switch on the flashlight.
+
+storeroom
+Bare brick and raw shelving. Crates and cast-offs loom in the gloom.
+
+You see a wardrobe (in which is a wool coat) and a crate here.
+
+On the shelf is a hatbox.
+
+> enter crate
+That's not something you can enter.
+
+> open crate
+You open the crate, revealing a brass key.
+
+> take key
+Taken.
+
+> open hatbox
+You open the hatbox, revealing a spare bulb.
+
+> enter wardrobe
+You get in the wardrobe.
+
+storeroom (in the wardrobe)
+Bare brick and raw shelving. Crates and cast-offs loom in the gloom.
+
+You see a crate here.
+
+On the shelf is a hatbox (in which is a spare bulb).
+
+In the wardrobe you see a wool coat.
+
+> close wardrobe
+You close the wardrobe.
+
+> look
+wardrobe
+
+In the wardrobe you see a wool coat.
+
+> turn off flashlight
+You switch off the flashlight.
+
+It is now pitch dark in here!
+
+> turn on flashlight
+You switch on the flashlight.
+
+wardrobe
+
+In the wardrobe you see a wool coat.
+
+> open wardrobe
+You open the wardrobe.
+
+> get out
+You get out of the wardrobe.
+
+storeroom
+Bare brick and raw shelving. Crates and cast-offs loom in the gloom.
+
+You see a wardrobe (in which is a wool coat) and a crate here.
+
+On the shelf is a hatbox (in which is a spare bulb).
+
+> south
+showroom
+The showroom of Lamplight Antiques, warm and cluttered. A long counter runs along one wall, an old glass telephone booth stands in the corner, and an empty pedestal waits by the window. The storeroom is north.
+
+You see a pedestal, an armchair (on which is a cushion), a display case (in which is a moonstone) and a glass booth here.
+
+> unlock case with key
+You unlock the display case.
+
+> open case
+You open the display case, revealing a moonstone.
+
+> take moonstone
+Taken.
+
+> put moonstone on pedestal
+The moonstone settles onto the pedestal and drinks the streetlight, glowing like a second moon in the window. That is exactly where it belongs.
+
+You put the moonstone on the pedestal.
+
+*** You have won ***
+
+Please type RESTART, RESTORE, or QUIT.
+> quit

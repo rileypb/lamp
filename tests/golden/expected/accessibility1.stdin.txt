@@ -1,0 +1,7 @@
+gaze at moonstone through spyglass
+gaze at moonstone through lorgnette
+x moonstone
+take all
+open case
+take moonstone
+quit

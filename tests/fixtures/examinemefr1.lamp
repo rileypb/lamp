@@ -1,0 +1,17 @@
+# EXAMINE ME en français (lib/advent fr-FR): moi/me/moi-même se résolvent en l'acteur; s'examiner
+# soi-même sans description donne examine_self ("Vous êtes en pleine forme."), sinon examine_nothing.
+
+locale "fr-FR"
+lib advent
+
+game MoiFR:
+	start hall
+
+room hall:
+	printed_name "Hall"
+	description "Un hall ordinaire."
+
+item caillou:
+	printed_name "caillou"
+
+contains hall caillou

@@ -1,0 +1,13 @@
+caveau
+Un caveau de pierre.
+
+Vous voyez une caisse (dans laquelle se trouvent une pièce et une clé) et un coffre ici.
+
+> prendre tout dans caisse
+pièce: Pris.
+clé: Pris.
+
+> prendre gemme dans coffre
+Vous ne voyez rien de tel ici.
+
+> quitter

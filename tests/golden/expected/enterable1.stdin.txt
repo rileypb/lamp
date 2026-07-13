@@ -1,0 +1,9 @@
+sit on chair
+look
+north
+get off
+get in closet
+look
+get off
+get off
+quit

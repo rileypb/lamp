@@ -1,0 +1,9 @@
+look down
+look in crate
+look through crate
+look in chest
+look in basket
+look under table
+look behind table
+look in table
+quit

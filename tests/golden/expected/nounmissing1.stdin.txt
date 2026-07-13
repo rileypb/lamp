@@ -1,0 +1,10 @@
+take
+coin
+gold
+eat
+apple
+go
+north
+xyzzy
+take xyzzy
+quit

@@ -1,0 +1,49 @@
+# Per-slot accessibility (devdocs/accessibility.md): physical slots are `touchable` by default
+# (reach-gated between `instead` and `check` via the library's reach_gate); a slot marked
+# `visible` needs only sight. The custom GAZE action is the motivating example: the instrument
+# must be touchable, the target merely visible — so gazing at the sealed moonstone through the
+# carried spyglass works, gazing through the sealed lorgnette refuses. `take all` gates per
+# object ("moonstone: You can't reach that." inside the sweep).
+
+lib advent
+
+game Accessibility:
+	start hall
+
+room hall:
+	description "A hall."
+
+box vitrine:
+	transparent
+	closable
+	closed
+	printed_name "glass case"
+	understand "case/glass"
+	description "A glass case."
+
+item moonstone:
+	description "A milky stone."
+
+item lorgnette:
+	description "A folding lorgnette."
+
+item spyglass:
+	description "A brass spyglass."
+
+item coin:
+	description "A coin."
+
+contains hall vitrine
+contains vitrine moonstone
+contains vitrine lorgnette
+contains hall spyglass
+contains hall coin
+
+action gaze:
+	direct visible physical target
+	touchable item instrument
+	syntax:
+		"gaze at [target] through [instrument]"
+
+report gaze:
+	print "Through [the act.instrument], [the act.target] looms in magnificent detail."

@@ -1,0 +1,15 @@
+Hall
+Un hall ordinaire.
+
+Vous voyez un caillou ici.
+
+> x moi
+Vous êtes en pleine forme.
+
+> examiner moi-même
+Vous êtes en pleine forme.
+
+> regarder caillou
+Le caillou n'a rien d'inhabituel.
+
+> quitter

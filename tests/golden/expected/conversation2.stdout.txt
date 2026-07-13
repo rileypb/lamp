@@ -1,0 +1,55 @@
+lab
+A humming lab.
+
+You see a lamp, a moonstone, a hacker and a robot here.
+
+> talk to robot
+The robot waits for you to say something.
+
+> greet hacker
+The hacker looks up. "Yes? I'm compiling."
+
+> hello
+Cheery, aren't you?
+
+> hacker, hello
+The hacker looks up. "Yes? I'm compiling."
+
+> robot, take lamp
+The robot takes the lamp.
+
+> i
+You are carrying nothing.
+
+> hacker, take lamp
+The hacker has better things to do.
+
+> hacker, boo
+The hacker jumps a foot in the air.
+
+> robot, boo
+There is no reply.
+
+> ask hacker for manual
+"Take it, I know it by heart."
+
+> i
+You are carrying:
+  a manual
+
+> ask robot for lamp
+The robot does not seem inclined to part with that.
+
+> ask hacker about keys
+"Master keys? Talk to the urchin," the hacker mutters.
+
+> ask hacker about moonstone
+"That rock? Found it in the vents."
+
+> ask robot about moonstone
+The robot has nothing to say about that.
+
+> tell hacker about keys
+The hacker does not seem interested.
+
+> quit

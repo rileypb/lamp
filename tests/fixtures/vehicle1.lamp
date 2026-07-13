@@ -1,0 +1,45 @@
+# Vehicles (lib/advent): a thing marked `vehicle` (implies enterable) drives when the actor sits
+# DIRECTLY in/on it and it stands in a room — a direction moves the vehicle, the rider rides along
+# via containment, and the arrival re-describes with the "(on the forklift)" heading. A plain
+# enterable (the chair) and a nested seat on the vehicle still refuse GO — get out first. Fit
+# constraints ("the forklift won't fit into the stairwell") are per-game `check go` rules.
+
+lib advent
+
+game Vehicle:
+	start warehouse
+
+room warehouse:
+	description "A cavernous warehouse."
+
+room yard:
+	description "A gravel yard."
+
+room shed:
+	description "A low shed."
+
+bidi connects warehouse east yard
+bidi connects yard north shed
+
+item forklift:
+	vehicle
+	supporter
+	description "A battered yellow forklift."
+
+item seat:
+	enterable
+	description "A sprung seat."
+
+item chair:
+	enterable
+	description "A folding chair."
+
+item crate2:
+	printed_name "crate"
+	understand "crate"
+	description "A crate."
+
+contains warehouse forklift
+contains forklift seat
+contains warehouse chair
+contains yard crate2

@@ -1,0 +1,37 @@
+# Missing-noun prompts (src/lamplighter): a bare verb (or a verb missing its typed final slot) that
+# is a UNIQUE prefix of one grammar template prompts "What/Who/Which way do you want to <verb>?"
+# instead of "I don't understand." The answer is spliced onto the command and re-parsed, so it
+# chains into disambiguation, ALL/multi, and the AGAIN target. Gibberish and a typed-but-unresolvable
+# noun still get the generic errors. See devdocs/missing_noun.md.
+
+lib advent
+
+game NounMissing:
+	start hall
+
+room hall:
+	description "A hall."
+
+room study:
+	description "A study."
+
+bidi connects hall north study
+
+item gold_coin:
+	understand "coin/gold"
+	printed_name "gold coin"
+	description "A gold coin."
+
+item silver_coin:
+	understand "coin/silver"
+	printed_name "silver coin"
+	description "A silver coin."
+
+item apple:
+	edible
+	understand "apple"
+	description "An apple."
+
+contains hall gold_coin
+contains hall silver_coin
+contains hall apple

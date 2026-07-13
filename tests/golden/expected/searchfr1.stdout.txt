@@ -1,0 +1,15 @@
+salle
+Une salle.
+
+Vous voyez une table (sur laquelle se trouve un livre), un tapis et une caisse (dans laquelle se trouve une pièce) ici.
+
+> fouiller caisse
+Dans la caisse se trouve une pièce.
+
+> fouiller table
+Sur la table se trouve un livre.
+
+> fouiller tapis
+Vous ne trouvez rien d'intéressant.
+
+> quitter

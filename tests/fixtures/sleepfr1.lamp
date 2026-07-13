@@ -1,0 +1,11 @@
+# SLEEP en français (lib/advent fr-FR): "dormir" — échec par défaut localisé.
+
+locale "fr-FR"
+lib advent
+
+game DormirFR:
+	start hall
+
+room hall:
+	printed_name "Hall"
+	description "Un hall."

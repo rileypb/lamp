@@ -1,0 +1,25 @@
+# SLEEP (lib/advent): an objectless verb that fails by default ("You aren't feeling especially
+# drowsy.") so a game overrides with `instead sleep` to narrate rest / a dream. It is an ordinary
+# in-world action, so a refused attempt still spends the turn (the ticks counter reaches 2 after two
+# sleeps), letting a scripted dream run on every_turn_rules.
+
+lib advent
+
+game Sleep:
+	start hall
+
+room hall:
+	description "A hall."
+
+global int ticks = 0
+
+rule every_turn_rules:
+	ticks = ticks + 1
+
+action show_ticks:
+	out_of_world
+
+report show_ticks:
+	print "ticks: [ticks]"
+
+understand "ticks" as show_ticks

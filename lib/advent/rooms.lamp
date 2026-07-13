@@ -5,6 +5,110 @@
 function bool is_container(physical x):
 	return x is container
 
+# True when any object in the actor's scope is `lit` (a carried flashlight, a glowing thing
+# present in the room). Reuses the runtime's scope, so a lit thing sealed in a closed box gives
+# no light. Drives in_darkness / describe_room — a carried or present light lifts a dark room.
+native function bool light_in_scope(person p)
+
+# ENTER/EXIT support (see actions.lamp). location_of walks the containment chain up through any
+# enterable objects the actor is on/in to the enclosing room. enclosing_enterables returns those
+# objects, immediate one first — [undercloset, closet] when standing in an undercloset inside a
+# closet; empty when the actor stands directly in the room.
+function room location_of(person p):
+	let h = holder(p)
+	while not (h == none) and not (h is room):
+		h = holder(h)
+	return h
+
+function list<physical> enclosing_enterables(person p):
+	let result = []
+	let h = holder(p)
+	while not (h == none) and not (h is room):
+		append(result, h)
+		h = holder(h)
+	return result
+
+# The visibility ceiling: how far out the actor can SEE. Walk up the holder chain; a closed opaque
+# container stops the walk (from inside a shut closet, the closet is your world — you see its
+# contents, not the room), a closed TRANSPARENT one doesn't (glass: you see out). Returns the
+# enclosing room when nothing seals. Mirrors the runtime's scope walk (scopeOf/sealsContents).
+function physical vis_ceiling(person p):
+	let h = holder(p)
+	while not (h == none) and not (h is room) and not (h.closed and not h.transparent):
+		h = holder(h)
+	return h
+
+# True when `x` is somewhere in `p`'s holder chain (the closet the actor stands in).
+function bool enclosed_by(person p, physical x):
+	let h = holder(p)
+	while not (h == none):
+		if h == x:
+			return true
+		h = holder(h)
+	return false
+
+# The closed container (if any) standing between actor `p` and object `x` — you can SEE a marble
+# through a closed transparent box (or the room through a closed glass booth), but not reach
+# through the glass. Symmetric: a closed container enclosing exactly ONE of the two blocks —
+# around `x` it blocks reaching IN (the display case), around `p` it blocks reaching OUT (the
+# booth the actor shut themself in). One enclosing both never blocks (two people shut in the same
+# box can touch its contents). Returns none when reach is clear. Gates the contact verbs
+# (actions.lamp); an opaque sealed side rarely gets here (scope already hides across it).
+function physical reach_barrier(person p, physical x):
+	let xs = []
+	let xh = holder(x)
+	while not (xh == none):
+		append(xs, xh)
+		xh = holder(xh)
+	let m = holder(p)
+	while not (m == none) and not (m is room):
+		# The enclosure ITSELF is always reachable from within (its walls are right there) —
+		# you can open the booth you shut yourself in. Deeper barriers still block.
+		if m.closed and not (m == x):
+			let shared_out = false
+			for e in xs:
+				if e == m:
+					shared_out = true
+			if not shared_out:
+				return m
+		m = holder(m)
+	let mine = []
+	let ph = holder(p)
+	while not (ph == none):
+		append(mine, ph)
+		ph = holder(ph)
+	let h = holder(x)
+	while not (h == none) and not (h is room):
+		if h.closed:
+			let shared_in = false
+			for e2 in mine:
+				if e2 == h:
+					shared_in = true
+			if not shared_in:
+				return h
+		h = holder(h)
+	return none
+
+# The reach gate installed into the engine (set_reach_gate, startup.lamp; see
+# devdocs/accessibility.md): the engine calls it for every `touchable` (non-`visible`) physical
+# slot of a resolved action, between the `instead` and `check` bands. Blocked → print the
+# refusal and report true (the action then fails without running checks or reports).
+function bool reach_gate(person p, physical x):
+	let barrier = reach_barrier(p, x)
+	if barrier == none:
+		return false
+	beyond_reach = x
+	print message beyond_reach_msg  # "[We] can't reach [regarding beyond_reach][those]."
+	return true
+
+# The " (in the undercloset) (in the closet)" heading suffix (innermost first). Each clause names
+# its object via `the`, flagging it `mentioned` so the room's own contents list drops it.
+function string enclosure_chain(person p):
+	let s = ""
+	for c in enclosing_enterables(p):
+		s = s + enclosure_clause(c)
+	return s
+
 # An object's container: the one place that contains x (the `unique` contained
 # endpoint means at most one, so `?only` is safe — none when uncontained). Author code
 # reads containment through this rather than any field. Pure Lamp (was a native
@@ -21,7 +125,7 @@ function physical holder(physical x):
 # (was a native) via physical.all + holder + append.
 function list<physical> contents_of(physical r):
 	let result = []
-	if r.closed:
+	if r.closed and not r.transparent:
 		return result
 	for x in physical.all:
 		if holder(x) == r and not x.scenery and not (x == player):
@@ -36,6 +140,23 @@ function list<physical> contents_of(physical r):
 function list<physical> listable_contents(room r):
 	let result = []
 	for x in contents_of(r):
+		if not x.mentioned and (x.handled or x.initial_appearance == ""):
+			append(result, x)
+	return result
+
+# The FROM-INSIDE view of a container's contents: like contents_of but without the closed gate —
+# an actor shut inside a closed closet still sees the key beside them. Used by describe_interior;
+# outside viewers keep going through contents_of.
+function list<physical> contents_within(physical c):
+	let result = []
+	for x in physical.all:
+		if holder(x) == c and not x.scenery and not (x == player):
+			append(result, x)
+	return result
+
+function list<physical> listable_within(physical c):
+	let result = []
+	for x in contents_within(c):
 		if not x.mentioned and (x.handled or x.initial_appearance == ""):
 			append(result, x)
 	return result
@@ -66,7 +187,10 @@ function void describe_supporters(room r):
 rulebook bool room_heading_rules(room r):
 	default true
 	when true:
-		print "[bold][r][/bold][line break]"
+		# While the player is on/in an enterable object, the heading gains ", on the chair" /
+		# " (in the closet) (in the undercloset)" when the player is nested in enterables (empty
+		# otherwise). Naming those objects flags them `mentioned`, dropping them from the room list.
+		print "[bold][r][/bold][enclosure_chain(player)][line break]"
 		stop true
 
 # All of the printing for room description is in here, including
@@ -77,15 +201,42 @@ function void describe_room(room r):
 	# reads the marks after the heading/description prose have rendered.
 	for x in physical.all:
 		x.mentioned = false
-	if r.lighted:
+	if r.lighted or light_in_scope(player):
 		follow room_heading_rules(r)
 		# A room with no description shows just its name (an unset string reads as "").
 		if not (r.description == ""):
 			print "[r.description][line break]"
 		list_room_contents(r)
+		# Layered "In the closet you see a key." paragraphs for each enclosing enterable the
+		# player is on/in (no-op when standing directly in the room).
+		describe_enclosures_from(holder(player))
 	else:
 		print message darkness_name  # "Darkness[line break]"
 		print message darkness_description  # "It is pitch dark, and [we] can't see a thing."
+
+# The BRIEF/SUPERBRIEF short form: the room heading (via the same `room_heading_rules`, so a game's
+# heading override still applies) and its contents, but NOT the description prose. Same darkness
+# handling as describe_room. Used by describe_on_arrival for a name-only re-entry.
+function void describe_room_brief(room r):
+	for x in physical.all:
+		x.mentioned = false
+	if r.lighted or light_in_scope(player):
+		follow room_heading_rules(r)
+		list_room_contents(r)
+	else:
+		print message darkness_name
+		print message darkness_description
+
+# Auto-description when the player arrives (not an explicit LOOK, which is always full). Consults
+# `verbosity` and the room's `visited` flag: VERBOSE always full; BRIEF full on the first visit,
+# name-only after; SUPERBRIEF name-only always. Marks the room visited. Calls describe_room for the
+# full case so a game's describe_room override still applies.
+function void describe_on_arrival(room r):
+	if verbosity == verbose or (verbosity == brief and not r.visited):
+		describe_room(r)
+	else:
+		describe_room_brief(r)
+	r.visited = true
 
 # Recursive content listing: each visible thing is rendered with the things it
 # holds in a parenthetical — "a box (in which is a thimble (in which is a marble))".
@@ -111,6 +262,84 @@ function string render_list(list<physical> xs):
 function string render_contents(physical holder):
 	return render_list(contents_of(holder))
 
+# The layered "In the closet you see a key." paragraphs. Given the actor's immediate holder `h`,
+# recurse to the OUTERMOST enclosing enterable first, then print each one's still-unmentioned
+# contents (so the next-inner enterable, flagged mentioned by the heading, is dropped). No-op once
+# the recursion reaches the room. `enclosure_contents_phrase` is the locale's "In X you see …".
+function void describe_enclosures_from(physical h):
+	if h == none or (h is room):
+		return
+	describe_enclosures_from(holder(h))
+	let inside = listable_contents(h)
+	if not (inside.first == none):
+		print "[par]"
+		print enclosure_contents_phrase(h, render_list(inside))
+
+# The " (in the undercloset)" heading clauses for enclosures strictly BELOW `top` (exclusive) —
+# the interior heading's chain, where `top` is the sealed ceiling itself.
+function string enclosure_chain_below(person p, physical top):
+	let s = ""
+	let h = holder(p)
+	while not (h == none) and not (h == top) and not (h is room):
+		s = s + enclosure_clause(h)
+		h = holder(h)
+	return s
+
+# Like describe_enclosures_from but bounded at `top` (exclusive) — layered paragraphs for the
+# enterables nested inside a sealed ceiling.
+function void describe_enclosures_below(physical h, physical top):
+	if h == none or h == top or (h is room):
+		return
+	describe_enclosures_below(holder(h), top)
+	let inside = listable_contents(h)
+	if not (inside.first == none):
+		print "[par]"
+		print enclosure_contents_phrase(h, render_list(inside))
+
+# Describe the inside of a sealed enclosure — the actor's whole visible world when shut in a
+# closed opaque container. Heading is the ceiling (plus any nested chain below it), then the
+# ceiling's contents seen FROM INSIDE (contents_within — the closed gate doesn't apply to an
+# observer within), then layered paragraphs for nested enterables. Darkness is interior-only:
+# no room light reaches in, so only a lit thing in scope illuminates.
+function void describe_interior(person p):
+	for x in physical.all:
+		x.mentioned = false
+	let c = vis_ceiling(p)
+	if not light_in_scope(p):
+		print message darkness_name  # "Darkness[line break]"
+		print message darkness_description  # "It is pitch dark, and [we] can't see a thing."
+		return
+	print "[bold][c][/bold][enclosure_chain_below(p, c)][line break]"
+	let inside = listable_within(c)
+	if not (inside.first == none):
+		print "[par]"
+		print enclosure_contents_phrase(c, render_list(inside))
+	describe_enclosures_below(holder(p), c)
+
+# Describe whatever the actor can currently see: the enclosing room when nothing seals the view,
+# else the sealed enclosure's interior. The one entry point for LOOK and the arrival hook.
+function void describe_location(person p):
+	let c = vis_ceiling(p)
+	if c is room:
+		describe_room(c)
+	else:
+		describe_interior(p)
+
+# End-of-turn light-transition check (called from the command loop after every-turn rules): when
+# an action changed the light without moving the player — a lamp switched off, a lit lantern shut
+# in a box, a room's `lighted` flipped by a rule — announce it. Light→dark prints `now_dark`;
+# dark→light re-describes (what was hidden is now visible). The arrival hook syncs `was_dark`
+# after its own describe, so walking into a dark room doesn't double-report.
+function void check_light_transition():
+	let dark = in_darkness(player)
+	if dark and not was_dark:
+		print "[par if printed]"
+		print message now_dark  # "It is now pitch dark in here!"
+	if was_dark and not dark:
+		print "[par if printed]"
+		describe_location(player)
+	was_dark = dark
+
 function void list_room_contents(room r):
 	# An item that hasn't been handled and carries an `initial_appearance` describes
 	# itself in its own paragraph (e.g. "A form hangs on the wall beneath the sign.")
@@ -135,9 +364,34 @@ function void list_room_contents(room r):
 # Describe the room the player arrives in. Containment changes fire `contains add`
 # (a `move`/`contains` assertion); we re-describe only when the player is the thing
 # placed, using the new container (`self.place`).
+# Describe what the player sees on arriving somewhere new: a room arrival goes through
+# verbosity (describe_on_arrival); a view sealed by a closed opaque enclosure describes the
+# interior instead. Syncs the light-transition tracker, since the describe already reflected
+# any light change the move caused. Called by the containment hook below (the player moved)
+# and by vehicle driving (the player's ENCLOSURE moved — no containment event fires for the
+# rider; see `do go`, actions.lamp).
+function void describe_player_arrival():
+	let c = vis_ceiling(player)
+	if c is room:
+		describe_on_arrival(c)
+	else:
+		describe_interior(player)
+	was_dark = in_darkness(player)
+
 on contains add:
 	if self.contained == player:
-		describe_room(self.place)
+		# Any change of the player's holder re-describes — a GO between rooms, and ENTER/EXIT of
+		# an enterable (their "You get in …" line prints in `do` *before* the move, so the
+		# description follows it).
+		describe_player_arrival()
 
+# A person is in darkness when neither their room's own light (`room.lighted`) nor any lit thing
+# in their scope illuminates it. A carried or present light source thus lifts a dark room.
+# Darkness follows the visibility ceiling: inside a closed opaque container no room light reaches
+# in, so only a lit thing in scope counts; otherwise the enclosing room's `lighted` (or a light in
+# scope) decides.
 function bool in_darkness(person p):
-	return not holder(p).lighted
+	let c = vis_ceiling(p)
+	if c is room:
+		return not (c.lighted or light_in_scope(p))
+	return not light_in_scope(p)

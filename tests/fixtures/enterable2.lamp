@@ -1,0 +1,40 @@
+# Like enterable1 (chair supporter + closet enterable, two rooms) but with takeable items on the
+# floor, on the chair, and in the closet — so the golden shows how contents render and are taken
+# relative to the player's perch. See enterable1 for the enter/exit model.
+
+lib advent
+
+game Enterable2:
+	start hall
+
+room hall:
+	description "A hall."
+
+room study:
+	description "A study."
+
+bidi connects hall north study
+
+item chair:
+	enterable
+	supporter
+	description "A wooden chair."
+
+item closet:
+	enterable
+	description "A cramped closet."
+
+item coin:
+	description "A gold coin."
+
+item cushion:
+	description "A velvet cushion."
+
+item key:
+	description "A brass key."
+
+contains hall chair
+contains hall closet
+contains hall coin
+contains chair cushion
+contains closet key

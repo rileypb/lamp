@@ -30,13 +30,12 @@ inventory_worn: " (porté)"
 inventory_empty: "[cap(sujet_ne_verbe(\"porter\"))] rien."
 
 # --- drop ---
-drop_first_doff: "([sujet_verbe(\"enlever\")] d'abord [le act.dropped])[line break]"
+implicit_doff_msg: "([sujet_verbe(\"enlever\")] d'abord [le implicit_target])[line break]"
 drop_report: "Laissé."
 drop_report_other: "[Le act.actor] [laisser] [le act.dropped]."
 drop_not_carrying: "[cap(sujet_ne_verbe(\"avoir\"))] pas cela."
 
 # --- wear ---
-wear_first_take: "([sujet_verbe(\"prendre\")] d'abord [le act.clothing])[line break]"
 wear_report: "[cap(sujet_verbe(\"mettre\"))] [le act.clothing]."
 wear_report_other: "[Le act.actor] [mettre] [le act.clothing]."
 wear_not_wearable: "Ce n'est pas quelque chose que [sujet_verbe(\"pouvoir\")] porter."
@@ -52,13 +51,14 @@ doff_not_worn: "[cap(sujet_ne_verbe(\"porter\"))] pas cela."
 # produce — it doesn't see the preceding preposition. "[Le act.target] n'a rien…"
 # sidesteps it: "Le caillou n'a rien d'inhabituel."
 examine_nothing: "[Le act.target] n'a rien d'inhabituel."
+examine_self: "[cap(sujet_verbe(\"être\"))] en pleine forme."
 examine_too_dark: "Il fait trop sombre pour voir cela."
 
 # --- go ---
 go_cant: "[cap(sujet_ne_verbe(\"pouvoir\"))] pas aller par là."
 
 # --- put on ---
-put_on_first_doff: "([sujet_verbe(\"enlever\")] d'abord [le act.put_item])[line break]"
+implicit_take_msg: "([sujet_verbe(\"prendre\")] d'abord [le implicit_target])[line break]"
 put_on_report: "[cap(sujet_verbe(\"poser\"))] [le act.put_item] sur [le act.destination]."
 put_on_report_other: "[Le act.actor] [poser] [le act.put_item] sur [le act.destination]."
 put_on_not_carrying: "[cap(sujet_ne_verbe(\"avoir\"))] pas cela."
@@ -92,6 +92,7 @@ parser_nothing_all: "Il n'y a rien de disponible."
 # is built from a bare [we] + literal "n'y" rather than the sujet_ne_verbe helper.
 darkness_name: "Obscurité[line break]"
 darkness_description: "Il fait nuit noire, et [we] n'y [voir] rien."
+now_dark: "Il fait maintenant nuit noire ici !"
 room_contents_intro: "[par][cap(sujet_verbe(\"voir\"))] "
 room_contents_outro: " ici."
 
@@ -117,6 +118,16 @@ open_locked: "Cela semble verrouillé."
 close_report: "[cap(sujet_verbe(\"fermer\"))] [le act.target]."
 close_not_closable: "Ce n'est pas quelque chose que [sujet_verbe(\"pouvoir\")] fermer."
 close_already_closed: "C'est déjà fermé."
+sleep_refused: "[cap(sujet_ne_verbe(\"avoir\"))] pas particulièrement sommeil."
+verbose_report: "Descriptions complètes."
+brief_report: "Descriptions brèves. Les lieux déjà visités sont décrits brièvement."
+superbrief_report: "Descriptions minimales."
+switch_on_report: "[cap(sujet_verbe(\"allumer\"))] [le act.target]."
+switch_on_not_switchable: "Ce n'est pas quelque chose que [sujet_verbe(\"pouvoir\")] allumer."
+switch_on_already: "C'est déjà allumé."
+switch_off_report: "[cap(sujet_verbe(\"éteindre\"))] [le act.target]."
+switch_off_not_switchable: "Ce n'est pas quelque chose que [sujet_verbe(\"pouvoir\")] éteindre."
+switch_off_already: "C'est déjà éteint."
 
 # --- lock / unlock ---
 unlock_report: "[cap(sujet_verbe(\"déverrouiller\"))] [le act.target]."
@@ -134,13 +145,26 @@ with_key_aside: "(avec [le act.target.matching_key])[line break]"
 examine_report: "[act.target.description][line break]"
 examine_in_container: "[par]Dans [le act.target] se trouve [render_contents(act.target)]."
 examine_in_container_plural: "[par]Dans [le act.target] se trouvent [render_contents(act.target)]."
+look_direction_nothing: "[cap(sujet_ne_verbe(\"voir\"))] rien d'inattendu par là."
+look_under_nothing: "[cap(sujet_ne_verbe(\"trouver\"))] rien d'intéressant là-dessous."
+look_behind_nothing: "Il n'y a rien derrière [le act.target]."
+look_in_closed: "C'est fermé."
+look_in_empty: "C'est vide."
+look_in_contents: "Dans [le act.target] se trouve [render_contents(act.target)]."
+look_in_contents_plural: "Dans [le act.target] se trouvent [render_contents(act.target)]."
+look_in_not_container: "[cap(sujet_ne_verbe(\"pouvoir\"))] pas regarder là-dedans."
+search_nothing: "[cap(sujet_ne_verbe(\"trouver\"))] rien d'intéressant."
+search_nothing_on: "Il n'y a rien sur [le act.target]."
 
 # --- touch ---
 touch_nothing: "[cap(sujet_ne_verbe(\"sentir\"))] rien d'inattendu."
 taste_nothing: "Cela n'a rien d'inattendu au goût."
+listen_nothing: "[cap(sujet_ne_verbe(\"entendre\"))] rien d'inattendu."
+smell_nothing: "[cap(sujet_ne_verbe(\"sentir\"))] rien d'inattendu."
 touch_feels: "[act.target.feels]"
 touch_cant: "[cap(sujet_ne_verbe(\"pouvoir\"))] pas toucher [le act.target]."
 touch_cant_reach: "[cap(sujet_ne_verbe(\"pouvoir\"))] pas atteindre [le act.target]."
+beyond_reach_msg: "[cap(sujet_ne_verbe(\"pouvoir\"))] pas atteindre [le beyond_reach]."
 
 # --- attack / kiss / push / pull ---
 attack_violence: "La violence n'est pas la solution."
@@ -151,7 +175,18 @@ pull_inert: "Rien d'évident ne se produit."
 # --- give / show / enter ---
 give_declined_msg: "[Le act.recipient] ne [sembler] pas s'y intéresser."
 show_declined_msg: "Cela ne fait guère d'effet [au act.recipient]."
+ask_for_declined_msg: "[Le act.interlocutor] ne semble pas disposé à céder [le act.requested]."
+persuasion_refused: "[Le act.actor] a mieux à faire."
 cant_enter_msg: "Ce n'est pas quelque chose où [sujet_verbe(\"pouvoir\")] entrer."
+enter_on_report: "[cap(sujet_verbe(\"monter\"))] sur [le act.target]."
+enter_in_report: "[cap(sujet_verbe(\"entrer\"))] dans [le act.target]."
+enter_already: "[cap(sujet_verbe(\"être\"))] déjà là."
+exit_off_report: "[cap(sujet_verbe(\"quitter\"))] [le last_exited]."
+exit_out_report: "[cap(sujet_verbe(\"quitter\"))] [le last_exited]."
+exit_not_perched: "Il n'y a rien à quitter."
+enter_closed_msg: "C'est fermé."
+exit_closed_msg: "C'est fermé."
+go_perched: "Il faut d'abord sortir de [le holder(act.actor)]."
 
 # --- go: directional refusals ---
 go_cant_up: "[cap(sujet_ne_verbe(\"savoir\"))] ni escalader les murs ni voler."
@@ -228,13 +263,24 @@ transcript_ended: "Transcription terminée."
 # by its name/understand tokens, not its printed_name).
 
 understand "regarder" as look
+understand "détaillé" as set_verbose
+understand "verbeux" as set_verbose
+understand "bref" as set_brief
+understand "normal" as set_brief
+understand "minimal" as set_superbrief
+understand "court" as set_superbrief
 
 understand "attendre" as wait
 understand "z" as wait
+understand "dormir" as sleep
 
 understand "prendre [taken]" as take
 understand "prends [taken]" as take
 understand "ramasser [taken]" as take
+understand "prendre [taken] dans [source]" as take_from
+understand "prends [taken] dans [source]" as take_from
+understand "prendre [taken] sur [source]" as take_from
+understand "prends [taken] sur [source]" as take_from
 
 understand "inventaire" as inventory
 understand "i" as inventory
@@ -256,6 +302,14 @@ understand "observer [target]" as examine
 understand "regarder [target]" as examine
 understand "x [target]" as examine
 
+understand "regarder [way]" as look_direction
+understand "regarder sous [target]" as look_under
+understand "regarder derrière [target]" as look_behind
+understand "regarder dans [target]" as look_in
+understand "regarder à travers [target]" as look_in
+understand "fouiller [target]" as search
+understand "fouille [target]" as search
+
 understand "aller [way]" as go
 # The bare-direction grammar ("nord" alone moves north) — each locale declares it
 # alongside its go verb since the grammar split.
@@ -270,8 +324,23 @@ understand "ouvre [target]" as open
 understand "fermer [target]" as close
 understand "ferme [target]" as close
 
+understand "allumer [target]" as switch_on
+understand "allume [target]" as switch_on
+understand "éteindre [target]" as switch_off
+understand "éteins [target]" as switch_off
+
 understand "toucher [target]" as touch
 understand "touche [target]" as touch
+
+understand "écouter" as listen
+understand "écoute" as listen
+understand "écouter [target]" as listen_to
+understand "écoute [target]" as listen_to
+understand "sentir" as smell
+understand "sens" as smell
+understand "sentir [target]" as smell_thing
+understand "sens [target]" as smell_thing
+understand "renifler [target]" as smell_thing
 
 understand "attaquer [target]" as attack
 understand "attaque [target]" as attack
@@ -286,6 +355,8 @@ understand "appuyer sur [target]" as push
 
 understand "tirer [target]" as pull
 understand "tire [target]" as pull
+understand "déplacer [target]" as pull
+understand "déplace [target]" as pull
 
 # The à/a pair: the accented form is the real spelling; the bare "a" variant
 # accepts unaccented typing (common at a game prompt).
@@ -293,9 +364,14 @@ understand "donner [gift] à [recipient]" as give
 understand "donner [gift] a [recipient]" as give
 
 understand "montrer [shown] à [recipient]" as show
+understand "demander [requested] à [interlocutor]" as ask_for
 understand "montrer [shown] a [recipient]" as show
 
 understand "entrer dans [target]" as enter
+understand "monter sur [target]" as enter
+understand "monter dans [target]" as enter
+understand "se lever" as exit_object
+understand "debout" as exit_object
 
 understand "boire [liquid]" as drink
 understand "bois [liquid]" as drink

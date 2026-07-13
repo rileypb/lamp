@@ -16,11 +16,17 @@ gem (item)
   far_away: false
   obstructed: false
   edificial: false
+  sound: ""
+  scent: ""
   drinkable: false
   edible: false
   take_refusal: ""
   attack_refusal: ""
   lit: false
+  switchable: false
+  switched_on: false
+  enterable: false
+  vehicle: false
   all_exempt: false
   initial_appearance: ""
   handled: false
@@ -45,17 +51,24 @@ safe (box)
   far_away: false
   obstructed: false
   edificial: false
+  sound: ""
+  scent: ""
   drinkable: false
   edible: false
   take_refusal: ""
   attack_refusal: ""
   lit: false
+  switchable: false
+  switched_on: false
+  enterable: false
+  vehicle: false
   all_exempt: false
   initial_appearance: ""
   handled: false
   mentioned: true
   locked: false
   matching_key: none
+  transparent: false
   printed_name: ""
   understand: ""
   description: ""

@@ -1,0 +1,27 @@
+# Unified "them" pronoun (src/lamplighter): the "them" antecedent serves BOTH a multiple-object
+# command result and a plural collective object, last-writer-wins. Exercises: a group ("take lamp
+# and rope") binds "them" → "drop them" dispatches the whole set; "them" against a non-multi verb
+# refuses like a typed list; and naming a plural collective ("x rats") re-binds "them" to it →
+# "attack them" dispatches it as a single object. See devdocs/plural_objects.md.
+
+lib advent
+
+game ThemGroup:
+	start hall
+
+room hall:
+	description "A plain hall."
+
+item lamp:
+	description "A brass lamp."
+
+item rope:
+	description "A coil of rope."
+
+item rats:
+	plural
+	description "A scurrying mass of rats."
+
+contains hall lamp
+contains hall rope
+contains hall rats

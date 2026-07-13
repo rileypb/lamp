@@ -1,0 +1,50 @@
+# Nested enterables (lib/advent), matching Inform's example.inform structure: a closet containing an
+# undercloset (with a frog), plus a chair with a cushion and a coin on the floor. Entering moves the
+# player in (holder relocation), nesting works, and LOOK shows the "(in the X)" heading chain + the
+# layered "In the X you see …" paragraphs. Scope still reaches the room from inside (see scopeOf).
+
+lib advent
+
+game Enterable3:
+	start hall
+
+room hall:
+	description "A hall. North of here is a study."
+
+room study:
+	description "A study. South of here is a hall."
+
+bidi connects hall north study
+
+item chair:
+	enterable
+	supporter
+	description "A wooden chair."
+
+box closet:
+	enterable
+	description "A cramped closet."
+
+box undercloset:
+	enterable
+	description "An undercloset."
+
+item frog:
+	description "A frog."
+
+item coin:
+	description "A coin."
+
+item cushion:
+	description "A cushion."
+
+item key:
+	description "A key."
+
+contains hall chair
+contains hall closet
+contains closet undercloset
+contains undercloset frog
+contains hall coin
+contains chair cushion
+contains closet key

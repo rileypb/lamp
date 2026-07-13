@@ -1,0 +1,18 @@
+# VERBOSE / BRIEF / SUPERBRIEF en français (lib/advent fr-FR): bref / minimal / détaillé, et les
+# rapports localisés. Même comportement qu'en anglais (verbose1).
+
+locale "fr-FR"
+lib advent
+
+game VerbeuxFR:
+	start hall
+
+room hall:
+	printed_name "Vestibule"
+	description "Un grand vestibule au sol de marbre."
+
+room etude:
+	printed_name "Étude"
+	description "Une étude confortable pleine de livres."
+
+bidi connects hall east etude

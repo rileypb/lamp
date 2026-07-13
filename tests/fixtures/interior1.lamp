@@ -1,0 +1,30 @@
+# The visibility ceiling (lib/advent): shut inside a closed OPAQUE container, your world is its
+# interior — LOOK describes the ceiling ("closet") and its contents seen from within
+# (contents_within — the closed gate is an outside-only view), NOT the enclosing room. With no
+# light inside, it's pitch dark (no room light reaches in); a carried lit lantern illuminates the
+# interior, and the key is visible and takeable. Opening from inside doesn't "reveal" (the
+# contents were never hidden from within); opening from outside still does. See foobar.txt bug.
+
+lib advent
+
+game Interior:
+	start hall
+
+room hall:
+	description "A hall."
+
+box closet:
+	enterable
+	closable
+	description "A closet."
+
+item key:
+	description "A key."
+
+item lantern:
+	lit
+	description "A glowing lantern."
+
+contains hall closet
+contains closet key
+contains hall lantern

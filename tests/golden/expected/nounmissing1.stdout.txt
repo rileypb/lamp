@@ -1,0 +1,34 @@
+hall
+A hall.
+
+You see a gold coin, a silver coin and an apple here.
+
+> take
+What do you want to take?
+
+> coin
+Which do you mean: the gold coin or the silver coin?
+
+> gold
+Taken.
+
+> eat
+What do you want to eat?
+
+> apple
+You eat the apple.
+
+> go
+Which way do you want to go?
+
+> north
+study
+A study.
+
+> xyzzy
+I don't understand that.
+
+> take xyzzy
+You can't see any such thing.
+
+> quit

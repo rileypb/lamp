@@ -1,0 +1,11 @@
+x marble
+take marble
+touch marble
+look in case
+take hammer
+open case
+take marble
+take lantern
+close case
+look
+quit

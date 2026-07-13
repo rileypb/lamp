@@ -9,10 +9,52 @@ Sourced from the staged roadmaps and prerequisite lists in
 > `devdocs/architecture.md` → "Known Architectural Issues" for the per-issue
 > record. The only optional remnant is item 6 below.
 
-> Feature backlog awaiting triage: `lurking_todo.md` catalogs candidate verbs,
-> grammar, world-model traits, turn-cycle/daemon, and message ideas mined from
-> `lurkinghorror.txt`. Text substitution (Slices 1–7) is **all DONE**; the full
-> per-slice record lives in `devdocs/text.md`.
+> Feature backlog **triaged (2026-07-11)**: `lurking_todo.md` (candidates mined from
+> `lurkinghorror.txt`) is now fully labeled — **69 Done** (all resolved; the
+> "we don't have" framing was stale), **19 Won't do**, **0 Will do — triage complete**. Shipped 2026-07-11:
+> `lit`-illuminates-room (`light_in_scope`, golden `providinglight2`); collective
+> plural objects via the unified `them` pronoun (`noteGroupAntecedent`/`pronounGroupOf`,
+> golden `themgroup1`); `turn on`/`turn off` (`switchable`/`switched_on`, en-US + fr-FR,
+> goldens `switchdevice1`/`switchdevicefr1`); `listen`/`smell` distance senses (`sound`/
+> `scent`, en-US + fr-FR, goldens `sense1`/`sensefr1`); and prepositional LOOK — `look
+> <direction>` + `look in`/`through`/`under`/`behind` (en-US + fr-FR, goldens `look1`/`lookfr1`).
+> (also shipped: `take X from Y` scope-narrowing, `verbose`/`brief`/`superbrief`, `examine me`,
+> `search`, `sleep`, missing-noun prompts, enter/exit + nested enterables, transparent boxes +
+> the visibility ceiling + symmetric reach, light transitions, per-slot accessibility, and —
+> 2026-07-12 — **vehicles**: a `vehicle` flag drives on GO while ridden, golden `vehicle1`;
+> fit constraints decided per-game). **The triage is complete** — the final NPC
+> conversation cluster shipped 2026-07-12 per **`devdocs/conversation.md`** (greet/hello in
+> lib/conversation, `X, COMMAND` orders with the `persuasion_rules` rulebook, `ask_for`,
+> ask-about-objects; golden `conversation2`), as did the implicit-action facility
+> (`implicitly_take`/`implicitly_doff`, golden `implicit1`).
+> Text substitution (Slices 1–7) is **all DONE**; per-slice record in `devdocs/text.md`.
+>
+> Design docs from triage, both **implemented 2026-07-11**: **`devdocs/missing_noun.md`**
+> (missing-noun re-prompts — `matchGrammarPartial` + a `pendingNoun` splice-and-re-run;
+> goldens `nounmissing1`/`nounmissingfr1`) and **`devdocs/plural_objects.md`** (collective
+> plural objects — the `them`-pronoun unification). Still owed: an NPC conversation
+> (talk/greet/order) design doc before it is built.
+>
+> New design (beyond the transcript triage), **designed not implemented**:
+> **`devdocs/command_inference.md`** — "does the player mean" candidate inference: rank
+> disambiguation candidates by action-plausibility so an obvious winner (a takeable coin over
+> an already-held one) is chosen without asking. Local addition to `resolveSlots`'
+> disambiguation branch + a `set_dpm_ranker` hook mirroring `set_all_filter`; policy is
+> "infer rank differences, ask ties." Awaiting a build decision.
+>
+> **`devdocs/accessibility.md`** (**implemented 2026-07-12**): per-slot accessibility —
+> `touchable` (default, reach-gated) vs `visible` (sight-only) markers on action slots,
+> enforced once in the runtime between `instead` and `check` via the library-installed
+> `reach_gate`. Replaced the per-verb reach enumeration; mixed-accessibility actions
+> ("gaze at X through Y") now declarable (golden `accessibility1`; `transparent1`/`reach1`
+> held byte-identical through the swap). Deferred: the `carried` level.
+>
+> Deferred (decided 2026-07-11): **room-contents list order vs Inform.** Nested enterables now
+> match Inform structurally (`enterable3`, verified against `example.inform`/`example.out`), but
+> Lamp lists contents in a different order (Lamp "a key and an undercloset" / "chair, coin,
+> closet"; Inform "an undercloset … and a key" / "chair, closet, coin"). Matching would mean an
+> Inform-style ordering rule in `contents_of`/`render_list` and churns every room-contents golden
+> — deliberately left alone; revisit only if 1:1 transcript parity for a port demands it.
 
 ## Active
 

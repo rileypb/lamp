@@ -1,0 +1,27 @@
+# TURN ON / TURN OFF in French (lib/advent fr-FR): locks the localized reports and the two verb
+# conjugations added for this feature — allumer (regular -er → "allumez") and the irregular
+# éteindre ("éteignez"). Exercises the toggle reports, already-on/already-off, and the
+# non-switchable refusal, with a feminine target for article agreement.
+
+locale "fr-FR"
+lib advent
+
+game InterrupteurFR:
+	start salle
+
+room salle:
+	description "Une salle nue."
+
+item lampe:
+	switchable
+	printed_name "lampe"
+	grammatical_gender "feminine"
+	description "Une lampe de poche."
+
+item pierre:
+	printed_name "pierre"
+	grammatical_gender "feminine"
+	description "Une pierre ordinaire."
+
+contains yourself lampe
+contains salle pierre

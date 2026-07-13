@@ -75,6 +75,18 @@ native function bool input_ended()
 # the library's for the defaults). Uninstalled, `all` includes every eligible object.
 native function void set_all_filter(function fn)
 
+# Install the reach gate (devdocs/accessibility.md): called as fn(actor, value) for every
+# `touchable` (non-`visible`) physical slot of a resolved action, between the `instead` and
+# `check` bands. Returning true means BLOCKED — the gate prints its own refusal and the action
+# fails without running checks or reports. Uninstalled, every slot passes (no reach policy).
+native function void set_reach_gate(function fn)
+
+# Install the persuasion gate (devdocs/conversation.md): consulted when a player-typed ORDER
+# ("urchin, take lamp") is about to run with the NPC as actor; called as fn(npc) with the
+# resolved order exposed as `act`. Returning true grants; false refuses (the gate prints its
+# own refusal) — the refused order still spends the turn. Uninstalled, orders dispatch freely.
+native function void set_persuasion_gate(function fn)
+
 # The player's most recent command line, as typed (original casing, trimmed). Use
 # it in narration as `[player_command()]` — e.g. "I don't understand
 # \"[player_command()]\"." Empty before the first command. See devdocs/text.md J1.

@@ -112,6 +112,13 @@ native function string contained_phrase(object container, string inner, int coun
 # so it lives here.
 native function string supporter_phrase(object supporter, string contents, int count)
 
+# " (on the chair)" / " (in the closet)" — one heading clause per enterable the player is on/in
+# (see enclosure_chain, rooms.lamp). "on" for a supporter, "in" otherwise. And "In the closet you
+# see a key." / "On the chair you see a cushion." — the layered contents paragraph for an enclosing
+# enterable (`contents` is the pre-rendered list prose). Language-specific, so they live here.
+native function string enclosure_clause(object p)
+native function string enclosure_contents_phrase(object container, string contents)
+
 # Count-driven copula agreement (G3). are(n) is the bare primitive: "is" when the
 # count is exactly 1, else "are" (so are(0) -> "are 0 bullets"). The [is LIST] sugar
 # forms render the verb agreeing with the list's size followed by the list itself —
@@ -145,7 +152,7 @@ native function string plural_suffix(string word)
 # conjugation *rules* live in conjugate() above, so a newly declared regular verb
 # conjugates for free. `do` is a keyword, accepted here as a verb word.
 verb is, are, has, have, does, do, goes, go
-verb drop, take, get, put, look, examine, open, close, wear, carry, hold, see, feel, drink, eat, kiss, unlock, lock, taste
+verb drop, take, get, put, look, examine, open, close, wear, carry, hold, see, feel, drink, eat, kiss, unlock, lock, taste, wait
 
 # Template-sugar tokens (devdocs/i18n.md "declarable grammar sugar"): the bare word in a
 # substitution — `[the X]`, `[We]`, `[those]`, `[we're]` — maps to this locale's native call. The

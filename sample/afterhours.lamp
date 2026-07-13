@@ -1,0 +1,165 @@
+# ============================================================================
+# After Hours
+# A small demonstration game for lib/advent's container & light model.
+#
+# Exercises, in one connected scenario:
+#   - light/dark rooms and light TRANSITIONS (turning the flashlight on/off,
+#     "It is now pitch dark in here!")
+#   - a switchable light source (the flashlight; the game wires
+#     switched_on -> lit)
+#   - a closed TRANSPARENT container (the display case: the moonstone is
+#     visible through the glass but out of reach; it is also locked)
+#   - a closed OPAQUE container (the crate: its key is invisible until opened)
+#   - a non-enterable container (the crate refuses ENTER)
+#   - enterable containers, opaque (the wardrobe — shut yourself in and it is
+#     your whole world) and transparent (the glass booth — shut in, you still
+#     see the showroom)
+#   - supporters (the pedestal), scenery supporters (the counter, the shelf),
+#     and an ENTERABLE supporter (the armchair)
+#   - nested containers/supporters (shelf > hatbox > bulb; armchair > cushion)
+#
+# Goal: the moonstone belongs on the pedestal. Its case is locked; the brass
+# key is in a crate in the pitch-dark storeroom.
+# ============================================================================
+
+lib advent
+
+game After_Hours:
+	author "Lamp"
+	tagline "A little game of light, glass, and getting into things"
+	version 0
+	release dev
+	start showroom
+
+rule startup_rules:
+	print "Closing time at Lamplight Antiques. The last customer is long gone, the sign is turned, and the moonstone — the one piece you were told never to leave out of its case — is, of course, still locked in its case. The pedestal by the window stands empty, waiting for it."
+	print "[par]"
+
+# ========== Rooms ==========
+
+room showroom:
+	description "The showroom of Lamplight Antiques, warm and cluttered. A long counter runs along one wall, an old glass telephone booth stands in the corner, and an empty pedestal waits by the window. The storeroom is north."
+	item counter:
+		scenery
+		supporter
+		description "A long oak counter, polished by a century of elbows."
+
+room storeroom:
+	description "Bare brick and raw shelving. Crates and cast-offs loom in the gloom."
+	lighted false
+	item shelf:
+		scenery
+		supporter
+		description "Raw pine shelving, bowed in the middle."
+
+bidi connects showroom north storeroom
+
+# ========== The goal ==========
+
+item pedestal:
+	supporter
+	description "A fluted walnut pedestal, dusted daily, displaying nothing."
+
+item moonstone:
+	description "A milky, moon-bright cabochon the size of a duck egg. It seems to gather what light there is."
+	lit
+
+box vitrine:
+	transparent
+	closable
+	closed
+	locked
+	matching_key brass_key
+	printed_name "display case"
+	understand "display/case/vitrine/glass"
+	description "A display case of thick bevelled glass, kept locked. Whatever sits inside is perfectly visible and perfectly out of reach."
+
+contains showroom pedestal
+contains showroom vitrine
+contains vitrine moonstone
+
+# ========== Light ==========
+
+item flashlight:
+	switchable
+	description "A heavy chrome flashlight, the kind you could defend yourself with."
+
+contains counter flashlight
+
+# The switch verb only flips `switched_on`; the game wires the consequence.
+report switch_on when self.target == flashlight:
+	flashlight.lit = true
+
+report switch_off when self.target == flashlight:
+	flashlight.lit = false
+
+# ========== Enterables ==========
+
+item armchair:
+	enterable
+	supporter
+	description "A sagging leather armchair that has outlasted three owners."
+
+item cushion:
+	description "A needlepoint cushion, worn to blankness."
+
+contains showroom armchair
+contains armchair cushion
+
+box booth:
+	enterable
+	transparent
+	closable
+	printed_name "glass booth"
+	understand "booth/telephone/phone/glass"
+	description "An old glass telephone booth, its telephone long since sold. The glass is spotless."
+
+contains showroom booth
+
+box wardrobe:
+	enterable
+	closable
+	description "A vast oak wardrobe, deep enough to stand in."
+
+item coat:
+	wearable
+	printed_name "wool coat"
+	understand "wool/coat"
+	description "A heavy wool coat, smelling faintly of camphor."
+
+contains storeroom wardrobe
+contains wardrobe coat
+
+# ========== Containers in the dark ==========
+
+box crate:
+	closable
+	closed
+	description "A nailed pine crate, stencilled LAMPLIGHT ANTIQUES — SUNDRIES."
+
+item brass_key:
+	printed_name "brass key"
+	understand "brass/key"
+	description "A small brass key with an ornate bow. It looks like it fits a display case."
+
+contains storeroom crate
+contains crate brass_key
+
+box hatbox:
+	closable
+	closed
+	description "A striped cardboard hatbox."
+
+item bulb:
+	printed_name "spare bulb"
+	understand "spare/bulb"
+	description "A spare bulb for the window lamp, still in its tissue."
+
+contains shelf hatbox
+contains hatbox bulb
+
+# ========== Winning ==========
+
+after put_on when self.put_item == moonstone and self.destination == pedestal:
+	print "The moonstone settles onto the pedestal and drinks the streetlight, glowing like a second moon in the window. That is exactly where it belongs.[par]"
+	story = won

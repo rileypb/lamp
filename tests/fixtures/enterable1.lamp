@@ -1,0 +1,29 @@
+# ENTER / GET IN / GET ON non-vehicle enterables (lib/advent): getting on/in an `enterable` thing
+# records a `perch` on the actor (they stay in the room), which annotates the heading (", on the
+# chair" / ", in the closet"), blocks GO until they get off, and is cleared by GET OFF / STAND. "on"
+# for a supporter, "in" otherwise. A ride-able vehicle is a separate, later model.
+
+lib advent
+
+game Enterable:
+	start hall
+
+room hall:
+	description "A hall."
+
+room study:
+	description "A study."
+
+bidi connects hall north study
+
+item chair:
+	enterable
+	supporter
+	description "A wooden chair."
+
+item closet:
+	enterable
+	description "A cramped closet."
+
+contains hall chair
+contains hall closet

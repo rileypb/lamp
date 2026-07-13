@@ -11,7 +11,7 @@ action look
 
 # look changes nothing; its whole effect is to describe, so it lives in report.
 report look:
-	describe_room(holder(self.actor))
+	describe_location(self.actor)
 
 # WAIT — let a turn pass (Inform's "waiting"). Like LOOK it changes nothing, so there's no `do`
 # band; but it is an ordinary in-world action, so it still spends the turn and every-turn rules fire
@@ -21,6 +21,37 @@ action wait
 
 report wait:
 	print message wait_report  # "Time passes."
+
+# VERBOSE / BRIEF / SUPERBRIEF — set the room-description verbosity (Infocom's display modes). They
+# only change how the auto-description on ARRIVAL renders (see describe_on_arrival, rooms.lamp); an
+# explicit LOOK is always full. Out-of-world, like SCORE: they spend no turn and fire no every-turn
+# rules. Each confirms with a named, retheme-able message.
+action set_verbose:
+	out_of_world
+
+do set_verbose:
+	verbosity = verbose
+
+report set_verbose:
+	print message verbose_report  # "Verbose descriptions."
+
+action set_brief:
+	out_of_world
+
+do set_brief:
+	verbosity = brief
+
+report set_brief:
+	print message brief_report  # "Brief descriptions."
+
+action set_superbrief:
+	out_of_world
+
+do set_superbrief:
+	verbosity = superbrief
+
+report set_superbrief:
+	print message superbrief_report  # "Superbrief descriptions."
 
 # The "all includes" policy (Inform's "deciding whether all includes" activity): the
 # engine calls this for every eligible in-scope object when a multi action's direct
@@ -129,6 +160,25 @@ report failed take:
 		print message take_too_massive  # "[The act.taken] [is] much too massive to take."
 		stop
 
+# TAKE X FROM Y / TAKE X OUT OF Y — not a new world verb, just ordinary TAKE with the FROM clause
+# narrowing which objects `taken` resolves against: the runtime scopes `taken` to `source`'s
+# contents (registered in index.js via setSlotScopedByContents). This bounds `all` (`take all from
+# coffer`) and disambiguates a same-named object; a wrong object or a closed/empty source yields no
+# match, falling through to the generic "can't see any such thing" (no bespoke message, as in
+# Inform). `do` delegates to TAKE per object, so all its checks and reports apply.
+# Installs the FROM-scoping for TAKE_FROM (index.js). Called once from `on startup`.
+native function void wire_verb_scoping()
+
+action take_from:
+	direct item taken
+	multi
+	physical source
+
+do take_from:
+	try take:
+		taken self.taken
+		actor self.actor
+
 action inventory
 
 # Per-item inventory annotations — the " (worn)" / " (providing light)" tags
@@ -190,15 +240,38 @@ check drop:
 	if not (holder(self.dropped) == self.actor):
 		stop failed not_carrying
 
+# The implicit-action facility (Inform's "implicitly taking"): an action whose precondition it
+# can supply itself — WEAR needs the clothing held, DROP/PUT need a worn item off first —
+# announces "(first taking …)" for the player, SILENTLY tries the enabling action, and reports
+# whether the condition now holds; the caller bails with a bare `stop failed` when it doesn't.
+# `silently` suppresses only the success report (Inform's semantics), so the enabling action's
+# own success chatter is dropped ("(first taking the cloak)" / "You put on the cloak." with no
+# "Taken." between) while a FAILED try still prints its refusal ("…much too massive to take.").
+function bool implicitly_take(person p, item x):
+	if holder(x) == p:
+		return true
+	if p == player:
+		implicit_target = x
+		print message implicit_take_msg  # "(first taking [the implicit_target])[line break]"
+	silently try take:
+		taken x
+		actor p
+	return holder(x) == p
+
+function bool implicitly_doff(person p, item x):
+	if not (wears p x):
+		return true
+	if p == player:
+		implicit_target = x
+		print message implicit_doff_msg  # "(first taking off [the implicit_target])[line break]"
+	silently try doff:
+		clothing x
+		actor p
+	return not (wears p x)
+
 do drop:
-	if wears self.actor self.dropped:
-		if (self.actor == player):
-			print message drop_first_doff  # "(first taking off [the act.dropped])[line break]"
-		silently try doff:
-			clothing self.dropped
-			actor self.actor
-		if wears self.actor self.dropped:
-			stop failed
+	if not implicitly_doff(self.actor, self.dropped):
+		stop failed
 	move self.dropped to holder(self.actor)
 
 report drop:
@@ -224,14 +297,8 @@ check wear:
 		stop failed already_worn
 
 do wear:
-	if not (holder(self.clothing) == self.actor):
-		if (self.actor == player):
-			print message wear_first_take  # "(first taking [the act.clothing])[line break]"
-		try take:
-			taken self.clothing
-			actor self.actor
-		if not (holder(self.clothing) == self.actor):
-			stop failed
+	if not implicitly_take(self.actor, self.clothing):
+		stop failed
 	wears self.actor self.clothing
 
 report wear:
@@ -292,9 +359,11 @@ do open:
 	self.target.closed = false
 
 report open:
-	# By report time the box is open, so contents_of returns its (now unsealed) contents.
+	# By report time the box is open, so contents_of returns its (now unsealed) contents. Opening
+	# only "reveals" to an OUTSIDE opener — an actor shut inside could already see the contents
+	# (contents_within), so opening from within just opens.
 	let inner = contents_of(self.target)
-	if inner.first == none:
+	if inner.first == none or enclosed_by(self.actor, self.target):
 		print message open_report  # "[We] [open] [the act.target]."
 	else:
 		print message open_report_revealing  # "[We] [open] [the act.target], revealing [render_contents(act.target)]."
@@ -331,6 +400,57 @@ report failed close:
 		stop
 	if self.reason == already_closed:
 		print message close_already_closed  # "[The act.target] [is] already closed."
+		stop
+
+# TURN ON / TURN OFF a switchable device (Inform's "switching on"/"switching off"). The action does
+# ONLY one thing — set/clear `switched_on` — and owns no device-specific behaviour: a game wires the
+# consequences (a flashlight links `switched_on` → `lit`; a forklift's report says "sputters to
+# life") with its own `report`/`after` rules. A non-`switchable` thing refuses; an already-on/off one
+# reports so. `target` is `direct`, so `it`/`them` refers back. Grammar covers both TURN and SWITCH.
+action switch_on:
+	direct item target
+
+check switch_on:
+	if not self.target.switchable:
+		stop failed not_switchable
+	if self.target.switched_on:
+		stop failed already_on
+
+do switch_on:
+	self.target.switched_on = true
+
+report switch_on:
+	print message switch_on_report  # "[We] [switch] on [the act.target]."
+
+report failed switch_on:
+	if self.reason == not_switchable:
+		print message switch_on_not_switchable  # "That's not something [we] can switch on."
+		stop
+	if self.reason == already_on:
+		print message switch_on_already  # "[The act.target] [is] already on."
+		stop
+
+action switch_off:
+	direct item target
+
+check switch_off:
+	if not self.target.switchable:
+		stop failed not_switchable
+	if not self.target.switched_on:
+		stop failed already_off
+
+do switch_off:
+	self.target.switched_on = false
+
+report switch_off:
+	print message switch_off_report  # "[We] [switch] off [the act.target]."
+
+report failed switch_off:
+	if self.reason == not_switchable:
+		print message switch_off_not_switchable  # "That's not something [we] can switch off."
+		stop
+	if self.reason == already_off:
+		print message switch_off_already  # "[The act.target] [is] already off."
 		stop
 
 # UNLOCK / LOCK. Two forms each: "unlock [target] with [key]" names the key;
@@ -462,7 +582,7 @@ report failed lock_keyless:
 
 # Targets any `physical` (not just `item`) so people and other non-item scenery can be examined.
 action examine:
-	direct physical target
+	direct visible physical target
 
 check examine:
 	if in_darkness(self.actor) and in_darkness(self.target):
@@ -471,10 +591,16 @@ check examine:
 # Print the target's description, or a default when it has none (an unset string
 # reads as ""). Both are named messages, so a game or translation can retheme them.
 report examine:
-	if self.target.description == "":
-		print message examine_nothing  # "[We] [see] nothing unusual about [the act.target]."
-	else:
+	if not (self.target.description == ""):
 		print message examine_report  # "[act.target.description][line break]"
+	else:
+		# Examining yourself (`x me`) gets a self-description default instead of the generic
+		# "nothing unusual about…"; a game overrides via the actor's `description` or a §5
+		# health/fatigue rule. Any actor examining itself qualifies (an NPC's "x me" too).
+		if self.target == self.actor:
+			print message examine_self  # "[We] [are] as good-looking as ever."
+		else:
+			print message examine_nothing  # "[We] [see] nothing unusual about [the act.target]."
 	# Inform's examine-a-container behaviour: list the contents of an open container (`contents_of`
 	# already yields nothing for a closed one). Gated to real container kinds so examining a person or
 	# other holder doesn't spill its contents. `is`/`are` agrees with how many things are inside.
@@ -489,6 +615,108 @@ report examine:
 report failed examine:
 	if self.reason == too_dark:
 		print message examine_too_dark  # "It's too dark to see [regarding act.target][those]."
+		stop
+
+# LOOK <direction> — glance a compass/vertical direction (Inform's "looking <direction>"), including
+# LOOK DOWN. Succeeds with a generic default a game overrides per room/direction (`instead
+# look_direction when self.way == down: …`). Distinct from bare LOOK (describe the room) by the
+# direction slot; no reach/light gating — it's a glance, not focused sight.
+action look_direction:
+	direction way
+
+report look_direction:
+	print message look_direction_nothing  # "[We] [see] nothing unexpected that way."
+
+# LOOK UNDER / LOOK BEHIND — fail-by-default like PUSH: most things hide nothing, so the default is a
+# refusal a game overrides with `instead look_under` / `instead look_behind` (e.g. to reveal a key
+# under a rug). They share the `nothing_there` reason but keep their own default messages.
+action look_under:
+	direct visible physical target
+
+check look_under:
+	stop failed nothing_there
+
+report failed look_under when self.reason == nothing_there:
+	print message look_under_nothing  # "[We] [find] nothing of interest there."
+
+action look_behind:
+	direct visible physical target
+
+check look_behind:
+	stop failed nothing_there
+
+report failed look_behind when self.reason == nothing_there:
+	print message look_behind_nothing  # "There is nothing behind [the act.target]."
+
+# LOOK IN / LOOK INSIDE / LOOK THROUGH — list an open container's contents (LOOK THROUGH is a
+# synonym). A non-container refuses; a closed one reports closed; an empty one reports empty;
+# otherwise the contents list with number agreement (like EXAMINE's container branch). Reach/light
+# gated like EXAMINE.
+# Lists an open container's contents for LOOK IN / SEARCH: closed → closed, empty → empty, else the
+# contents with number agreement. The messages render `[act.target]`, so the caller's action target
+# must be the container `c` (both look_in and search pass their `target`).
+function void render_container(physical c):
+	if c.closed and not c.transparent:
+		print message look_in_closed  # "[The act.target] [is] closed."
+	else:
+		let inside = contents_of(c)
+		if inside.first == none:
+			print message look_in_empty  # "[The act.target] [is] empty."
+		else:
+			if inside.size == 1:
+				print message look_in_contents  # "In [the act.target] is [render_contents(act.target)]."
+			else:
+				print message look_in_contents_plural  # "In [the act.target] are [render_contents(act.target)]."
+
+action look_in:
+	direct visible physical target
+
+check look_in:
+	if in_darkness(self.actor) and in_darkness(self.target):
+		stop failed too_dark
+	if not is_container(self.target):
+		stop failed not_container
+
+report look_in:
+	render_container(self.target)
+
+report failed look_in:
+	if self.reason == too_dark:
+		print message examine_too_dark
+		stop
+	if self.reason == not_container:
+		print message look_in_not_container  # "[We] can't look inside [regarding act.target][those]."
+		stop
+
+# SEARCH X — succeeds for a container (list its contents, like LOOK IN) or a supporter (list what's
+# on it, "On the table is …"), and fails by default for anything else ("You find nothing of
+# interest.") so a game adds `instead search X` for scenery that hides things. Reach/light-gated like
+# EXAMINE. `target` is `direct`, so `it`/`them` refers back.
+action search:
+	direct visible physical target
+
+check search:
+	if in_darkness(self.actor) and in_darkness(self.target):
+		stop failed too_dark
+	if not (is_container(self.target) or self.target.supporter):
+		stop failed nothing_found
+
+report search:
+	if is_container(self.target):
+		render_container(self.target)
+	else:
+		let on_it = contents_of(self.target)
+		if on_it.first == none:
+			print message search_nothing_on  # "There is nothing on [the act.target]."
+		else:
+			print supporter_phrase(self.target, render_list(on_it), on_it.size)
+
+report failed search:
+	if self.reason == too_dark:
+		print message examine_too_dark
+		stop
+	if self.reason == nothing_found:
+		print message search_nothing  # "[We] [find] nothing of interest."
 		stop
 
 # TOUCH / FEEL (Inform's "touching", ported from Can't Touch This.i7x). Touching changes nothing
@@ -551,6 +779,18 @@ check kiss:
 report failed kiss when self.reason == kiss_pointless:
 	print message kiss_refused  # "[We] [do] not think [the act.target] would appreciate that."
 
+# SLEEP — an objectless action that **fails by default** (you can't just nod off), so the default is
+# a refusal a game overrides with `instead sleep` (to narrate rest, a dream, or end a scene). It is
+# an ordinary in-world action, so a refused attempt still spends the turn and every-turn rules fire —
+# a game's scripted dream can run on `every_turn_rules`.
+action sleep
+
+check sleep:
+	stop failed cant_sleep
+
+report failed sleep when self.reason == cant_sleep:
+	print message sleep_refused  # "[We] [are] not feeling especially drowsy."
+
 # TASTE (Inform's "tasting"). Like TOUCH it senses without changing the world —
 # no `do` band — and succeeds with a universal default reply a game rethemes
 # (per object with `instead taste`, or wholesale by overriding the message).
@@ -574,6 +814,55 @@ report failed taste:
 	if self.reason == cant_reach:
 		print message touch_cant_reach  # "[We] can't reach [regarding act.target][those]."
 		stop
+
+# Reach gating lives in the engine's slot-accessibility gate (devdocs/accessibility.md):
+# every physical slot is `touchable` by default and refuses across a closed container between
+# actor and object (reach_gate, rooms.lamp — installed at startup); the sensory verbs relax
+# their slots with the `visible` marker. No per-verb reach rules remain here.
+
+# LISTEN / SMELL — the distance senses (Inform's "listening to"/"smelling"). Like TOUCH/TASTE they
+# sense without changing the world (no `do` band) and work in the dark; unlike them they are NOT
+# contact, so there is no reach gating — you can listen to a door across the room. Two forms each:
+# objectless ("listen"/"smell") senses the surroundings via the actor's room `sound`/`scent`;
+# targeted ("listen to X"/"smell X") reads the thing's own. Empty text → the default "nothing
+# unexpected" reply; a non-empty one is printed verbatim (game content). These are ordinary in-world
+# actions, so they spend the turn — a game adds `instead listen`/`instead smell` for per-turn
+# sensations that change over time.
+action listen
+
+report listen:
+	let here = holder(self.actor)
+	if here.sound == "":
+		print message listen_nothing  # "[We] [hear] nothing unexpected."
+	else:
+		print "[here.sound]"
+
+action listen_to:
+	direct visible physical target
+
+report listen_to:
+	if self.target.sound == "":
+		print message listen_nothing
+	else:
+		print "[act.target.sound]"
+
+action smell
+
+report smell:
+	let here = holder(self.actor)
+	if here.scent == "":
+		print message smell_nothing  # "[We] [smell] nothing unexpected."
+	else:
+		print "[here.scent]"
+
+action smell_thing:
+	direct visible physical target
+
+report smell_thing:
+	if self.target.scent == "":
+		print message smell_nothing
+	else:
+		print "[act.target.scent]"
 
 # PUSH for buttons, switches and the like (Inform's "pushing a thing"). Like ATTACK, the
 # action *fails* by default — most things don't respond — so the default is a `report failed`
@@ -618,7 +907,7 @@ report failed give when self.reason == give_declined:
 
 action show:
 	direct item shown
-	physical recipient
+	visible physical recipient
 
 check show:
 	stop failed show_declined
@@ -626,37 +915,150 @@ check show:
 report failed show when self.reason == show_declined:
 	print message show_declined_msg  # "[The act.recipient] [are] unimpressed."
 
-# ENTER a thing (Inform's "entering"). advent has no enterable-supporter/vehicle model yet, so
-# the action *fails* by default; a game adds `instead enter` rules for things that can be entered
-# (e.g. a vehicle that moves the actor to an interior room). `target` is `direct`, so `it` refers
-# back to it.
+# ASK X FOR Y — the reverse of GIVE (devdocs/conversation.md): the NPC hands something over.
+# Fails by default (most NPCs part with nothing); a game hooks `instead ask_for` and does its
+# own `move` + reply. `requested` is `visible` (you're asking, not grabbing — the NPC does the
+# transfer, so a request through the glass is fair) and `direct` (the natural "it":
+# "ask her for the stone. x it"). An NPC's carried items are in scope, so they resolve.
+action ask_for:
+	visible physical interlocutor
+	direct visible item requested
+
+check ask_for:
+	stop failed ask_for_declined
+
+report failed ask_for when self.reason == ask_for_declined:
+	print message ask_for_declined_msg  # "[The act.interlocutor] [do] not seem inclined to part with [regarding act.requested][those]."
+
+# Persuasion (devdocs/conversation.md): a player-typed order ("urchin, take lamp") consults
+# this rulebook — via the persuasion gate installed at startup — before the order runs with
+# the NPC as actor. Default REFUSE; a game grants per-NPC/per-action with rules that read the
+# resolved order through `act`:
+#   rule persuasion_rules when p == robot: stop true
+#   rule persuasion_rules when p == urchin and act.action == "go": stop true
+rulebook bool persuasion_rules(person p):
+	default false
+
+function bool persuasion_gate(person p):
+	if follow persuasion_rules(p):
+		return true
+	print message persuasion_refused  # "[The act.actor] [have] better things to do."
+	return false
+
+# ENTER / GET IN / GET ON an `enterable` thing (a chair, bed, closet) — the non-vehicle model,
+# following Inform: the actor is MOVED into/onto the thing (holder relocation), and can nest (get in
+# a closet, then an undercloset inside it). Scope still reaches the enclosing room through open
+# enterables (see scopeOf), and the room heading / description gain the nesting (rooms.lamp). "on"
+# for a `supporter`, "in" otherwise. After entering, the thing's contents are described (Inform's
+# post-enter look). A non-`enterable` refuses; a game adds `instead enter` for a ride-able vehicle.
 action enter:
-	direct item target
+	direct physical target
 
 check enter:
-	stop failed cant_enter
+	# `vehicle` implies enterable — a game needn't set both flags.
+	if not (self.target.enterable or self.target.vehicle):
+		stop failed cant_enter
+	# A closed enterable container can't be gotten into (open it first). `closed` reads false on
+	# anything without the field (a chair), so only closable boxes are gated.
+	if self.target.closed:
+		stop failed enter_closed
+	if holder(self.actor) == self.target:
+		stop failed already_entered
 
-report failed enter when self.reason == cant_enter:
-	print message cant_enter_msg  # "That's not something [we] can enter."
+# The report line prints in `do`, BEFORE the move: moving the player fires the `contains add`
+# handler, which re-describes the location — so "You get in the closet." leads and the description
+# (heading chain + layered contents) follows, like GO's arrival.
+do enter:
+	if self.target.supporter:
+		print message enter_on_report  # "[We] [get] on [the act.target]."
+	else:
+		print message enter_in_report  # "[We] [get] in [the act.target]."
+	print "[par]"
+	move self.actor to self.target
+
+report failed enter:
+	if self.reason == cant_enter:
+		print message cant_enter_msg  # "That's not something [we] can enter."
+		stop
+	if self.reason == enter_closed:
+		print message enter_closed_msg  # "[The act.target] [is] closed."
+		stop
+	if self.reason == already_entered:
+		print message enter_already  # "[We] [are] already there."
+		stop
+
+# EXIT / GET OFF / GET OUT / STAND UP — leave the enterable object the actor is on/in, moving to its
+# holder (an outer enterable, or the room). Objectless. Like ENTER, the report line prints in `do`
+# before the move, so the move's re-description follows it; `last_exited` names the object left.
+action exit_object
+
+check exit_object:
+	if holder(self.actor) is room:
+		stop failed not_perched
+	# Can't climb out of a closed container — open it first. This is what makes a trap work: the
+	# enclosure stays referable from inside (scopeOf), so OPEN resolves, but a locked or
+	# game-sealed one genuinely holds the player. The library never guarantees escape.
+	if holder(self.actor).closed:
+		stop failed exit_closed
+
+do exit_object:
+	last_exited = holder(self.actor)
+	if last_exited.supporter:
+		print message exit_off_report  # "[We] [get] off [the last_exited]."
+	else:
+		print message exit_out_report  # "[We] [get] out of [the last_exited]."
+	print "[par]"
+	move self.actor to holder(last_exited)
+
+report failed exit_object:
+	if self.reason == not_perched:
+		print message exit_not_perched  # "[We] [are] not on or in anything."
+		stop
+	if self.reason == exit_closed:
+		print message exit_closed_msg  # "[The holder(act.actor)] [is] closed."
+		stop
 
 action go:
 	direction way
 
-# `here` binds the actor's location first: a relation-query slot may hold a value,
-# variable, or property chain, but not a function call like `holder(self.actor)`.
+# A direction while enclosed: DRIVE when the actor sits directly in/on a `vehicle` that itself
+# stands in a room (the vehicle moves; the rider rides along); any other enclosure — a chair, a
+# nested seat inside the vehicle, a vehicle parked inside something — refuses: get out first.
+# Whether a vehicle fits a given exit is per-game (`check go` rules from the game file run
+# before these, author-order).
 check go:
-	let here = holder(self.actor)
+	let h = holder(self.actor)
+	if not (h is room):
+		if not h.vehicle:
+			stop failed perched
+		if not (holder(h) is room):
+			stop failed perched
+
+# `here` binds the travel origin first (the actor's room, or the ridden vehicle's): a
+# relation-query slot may hold a value, variable, or property chain, but not a function call.
+check go:
+	let here = location_of(self.actor)
 	if not connects here self.way _:
 		stop failed cant_go_that_way
 
 do go:
-	let here = holder(self.actor)
-	move self.actor to connects here self.way ?first
+	let h = holder(self.actor)
+	let here = location_of(self.actor)
+	if h is room:
+		move self.actor to connects here self.way ?first
+	else:
+		# Driving: move the VEHICLE; containment carries the rider, so no containment event
+		# fires for the player — describe the arrival explicitly (rooms.lamp).
+		move h to connects here self.way ?first
+		describe_player_arrival()
 
 # Direction-aware excuses for a blocked exit (Can't Go That Way.i7x): up/down/in get their own
 # default lines, everything else the generic "can't go that way." A game refines per-room by
 # contributing its own `report failed go` rule *from its main file* (author-order, so it runs first).
 report failed go:
+	if self.reason == perched:
+		print message go_perched  # "[We] [need] to leave [the act.actor.perch] first."
+		stop
 	if self.reason == cant_go_that_way:
 		if self.way == up:
 			print message go_cant_up  # "[We] can neither climb walls nor fly."
@@ -701,14 +1103,8 @@ check put_on:
 		stop failed cant_put_on_that
 
 do put_on:
-	if wears self.actor self.put_item:
-		if (self.actor == player):
-			print message put_on_first_doff  # "(first taking off [the act.put_item])[line break]"
-		silently try doff:
-			clothing self.put_item
-			actor self.actor
-		if wears self.actor self.put_item:
-			stop failed
+	if not implicitly_doff(self.actor, self.put_item):
+		stop failed
 	move self.put_item to self.destination
 	supports self.destination self.put_item
 
@@ -758,14 +1154,8 @@ check put_in:
 		cur = holder(cur)
 
 do put_in:
-	if wears self.actor self.put_item:
-		if (self.actor == player):
-			print message put_on_first_doff  # "(first taking off [the act.put_item])[line break]"
-		silently try doff:
-			clothing self.put_item
-			actor self.actor
-		if wears self.actor self.put_item:
-			stop failed
+	if not implicitly_doff(self.actor, self.put_item):
+		stop failed
 	move self.put_item to self.destination
 
 report put_in:

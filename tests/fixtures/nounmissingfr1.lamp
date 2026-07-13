@@ -1,0 +1,28 @@
+# Prompt de nom manquant en français (src/lamplighter / fr-FR): un verbe seul demande « Que/Qui
+# voulez-vous <verbe> ? », la réponse est recollée et ré-analysée. xyzzy → l'erreur générique.
+
+locale "fr-FR"
+lib advent
+
+game NomFR:
+	start salle
+
+room salle:
+	printed_name "Salle"
+	description "Une salle."
+
+item lampe:
+	understand "lampe"
+	printed_name "lampe"
+	grammatical_gender "feminine"
+	description "Une lampe."
+
+item pomme:
+	edible
+	understand "pomme"
+	printed_name "pomme"
+	grammatical_gender "feminine"
+	description "Une pomme."
+
+contains salle lampe
+contains salle pomme

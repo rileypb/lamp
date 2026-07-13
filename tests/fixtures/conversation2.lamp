@@ -1,0 +1,72 @@
+# NPC conversation (devdocs/conversation.md): the full surface in one scenario.
+# - GREET/TALK TO: library default ("waits for you to say something"), a game `instead greet`
+#   opening, bare HELLO, and the addressed greeting "hacker, hello" (a grammar line, so it wins
+#   ahead of the engine's ordering fallback).
+# - X, COMMAND orders: persuasion_rules defaults to REFUSE ("The hacker has better things to
+#   do.", turn spent); a game grant lets the robot obey ("The robot takes the lamp.", the _other
+#   report). An unparseable remainder becomes a DIRECTED UTTERANCE — "hacker, boo" hooks
+#   `instead say when self.interlocutor == hacker`; undirected fallback: "There is no reply."
+# - ASK X FOR Y: fail-by-default; a game `instead ask_for` hands the manual over.
+# - Topics: a `subject` reply, a PHYSICAL topic ("ask hacker about moonstone") answered by a
+#   game rule, the puzzled default, and TELL's default.
+
+lib advent
+lib conversation
+
+game Conversation2:
+	start lab
+
+room lab:
+	description "A humming lab."
+
+room closet2:
+	printed_name "closet"
+	description "A closet."
+
+bidi connects lab north closet2
+
+person hacker:
+	description "A hacker, mid-compile."
+
+person robot:
+	description "A brass robot."
+
+item manual:
+	description "A dog-eared manual."
+
+item lamp:
+	description "A lamp."
+
+item moonstone:
+	description "A milky stone."
+
+subject keys_topic:
+	printed_name "keys"
+	understand "keys/key"
+	reply "'Master keys? Talk to the urchin,' the hacker mutters."
+
+contains lab hacker
+contains lab robot
+contains hacker manual
+contains lab lamp
+contains lab moonstone
+
+rule persuasion_rules when p == robot:
+	stop true
+
+instead greet when self.interlocutor == hacker:
+	print "The hacker looks up. 'Yes? I'm compiling.'"
+	stop succeeded
+
+instead say when self.topic == "boo" and self.interlocutor == hacker:
+	print "The hacker jumps a foot in the air."
+	stop succeeded
+
+instead ask_for when self.interlocutor == hacker and self.requested == manual:
+	print "'Take it, I know it by heart.'"
+	move manual to player
+	stop succeeded
+
+instead ask when self.topic == moonstone and self.interlocutor == hacker:
+	print "'That rock? Found it in the vents.'"
+	stop succeeded

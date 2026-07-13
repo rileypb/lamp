@@ -9,12 +9,38 @@ global string input = none
 kind story_state = enum(ongoing, won, lost)
 global story_state story = ongoing
 
+# Room-description verbosity (Infocom's VERBOSE/BRIEF/SUPERBRIEF). `verbose` (the default,
+# preserving the always-full behaviour): full description on every arrival. `brief`: full on the
+# first visit to a room, name-only thereafter. `superbrief`: name-only always. Only affects the
+# auto-description on ARRIVAL — an explicit LOOK is always full. See describe_on_arrival (rooms.lamp).
+kind verbosity_mode = enum(verbose, brief, superbrief)
+global verbosity_mode verbosity = verbose
+
 # Session-control signal. The QUIT and RESTART verbs (out-of-world actions) set this;
 # the command loop reads it after each command and unwinds. QUIT then lets the runtime
 # `run()` exit; an armed RESTART (via `request_restart`) makes `run()` restore the
 # pre-startup baseline and re-fire startup — which resets this to false. It is only ever
 # true for the instant between the verb and the loop's break, never during active play.
 global bool session_over = false
+
+# ENTER/EXIT bookkeeping (actions.lamp): `last_exited` holds the object being gotten off/out of,
+# so the exit line (printed in `do`, before the move) can name it.
+global object last_exited = none
+
+# The player's darkness state as last reported, for the light-transition check at end of turn
+# (check_light_transition, rooms.lamp): light→dark announces "It is now pitch dark…"; dark→light
+# re-describes. Synced whenever an arrival describe already reflected the change.
+global bool was_dark = false
+
+# The object a contact verb just refused as out of reach (a thing seen through the glass of a
+# closed transparent box or booth) — set by the reach gate (reach_gate, rooms.lamp) so the one
+# `beyond_reach_msg` can name it.
+global object beyond_reach = none
+
+# The object an implicit enabling action is being tried on — set by implicitly_take /
+# implicitly_doff (actions.lamp) so the shared "(first taking …)" announcements can name it
+# (a named message may reference only `act` and globals, and the caller's slot names differ).
+global object implicit_target = none
 
 # The door that most recently refused a `go` (set by the closed-door check just
 # before `stop failed door_closed`). Exists so the refusal message can name the

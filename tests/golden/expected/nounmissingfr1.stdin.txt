@@ -1,0 +1,6 @@
+prendre
+lampe
+manger
+pomme
+xyzzy
+quitter

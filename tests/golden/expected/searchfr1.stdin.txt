@@ -1,0 +1,4 @@
+fouiller caisse
+fouiller table
+fouiller tapis
+quitter

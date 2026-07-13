@@ -18,7 +18,6 @@ J'ouvre le coffre.
 
 > porter manteau
 (je prends d'abord le manteau)
-Pris.
 Je mets le manteau.
 
 > enlever manteau

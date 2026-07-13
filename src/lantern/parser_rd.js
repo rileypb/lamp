@@ -1211,17 +1211,34 @@ function createParser(tokens, filePath, globalNames, functionNames = new Set(), 
                 continue;
             }
             let direct = false;
-            if (at("IDENT") && peek().value === "direct") {
-                if (slots.some((s) => s.direct)) {
-                    throw err("An action may have at most one `direct` slot");
+            let visible = false;
+            // Slot modifiers, in any order before the type: `direct` (pronoun anchor),
+            // and the accessibility markers `visible` (sight-only) / `touchable` (the
+            // default — parses as an explicit no-op). See devdocs/accessibility.md.
+            // The lookahead (an IDENT follows, and the line doesn't end right after it)
+            // keeps `visible`/`touchable` usable as type names: `visible x` is a slot of
+            // type `visible`, `visible physical x` is a marked physical slot.
+            for (;;) {
+                if (at("IDENT") && peek().value === "direct") {
+                    if (slots.some((s) => s.direct) || direct) {
+                        throw err("An action may have at most one `direct` slot");
+                    }
+                    direct = true;
+                    next();
+                    continue;
                 }
-                direct = true;
-                next();
+                if (at("IDENT") && (peek().value === "visible" || peek().value === "touchable")
+                        && peek(1).type === "IDENT" && peek(2).type !== "NEWLINE") {
+                    if (peek().value === "visible") visible = true;
+                    next();
+                    continue;
+                }
+                break;
             }
             const fieldType = parseFieldType();
             const fieldName = plainName("slot name");
             expectNewline();
-            slots.push(ast.createFieldDecl(fieldType, fieldName, null, direct));
+            slots.push(ast.createFieldDecl(fieldType, fieldName, null, direct, visible));
         }
         next();
         return { slots, templates, tags, outOfWorld, worldScope, multi };

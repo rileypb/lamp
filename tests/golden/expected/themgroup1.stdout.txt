@@ -1,0 +1,23 @@
+hall
+A plain hall.
+
+You see a lamp, a rope and some rats here.
+
+> take lamp and rope
+lamp: Taken.
+rope: Taken.
+
+> drop them
+lamp: Dropped.
+rope: Dropped.
+
+> examine them
+You can't use multiple objects with that verb.
+
+> x rats
+A scurrying mass of rats.
+
+> attack them
+Violence isn't the answer to this one.
+
+> quit

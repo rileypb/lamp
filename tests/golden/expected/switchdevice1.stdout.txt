@@ -1,0 +1,41 @@
+Darkness
+It is pitch dark, and you can't see a thing.
+
+> turn on flashlight
+You switch on the flashlight.
+
+cellar
+A damp cellar.
+
+You see a rock here.
+
+> look
+cellar
+A damp cellar.
+
+You see a rock here.
+
+> turn on flashlight
+The flashlight is already on.
+
+> switch off flashlight
+You switch off the flashlight.
+
+It is now pitch dark in here!
+
+> look
+Darkness
+It is pitch dark, and you can't see a thing.
+
+> turn flashlight on
+You switch on the flashlight.
+
+cellar
+A damp cellar.
+
+You see a rock here.
+
+> turn on rock
+That's not something you can switch on.
+
+> quit

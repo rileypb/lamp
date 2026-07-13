@@ -1,0 +1,49 @@
+# SEARCH X (lib/advent): succeeds for a container (lists contents, like LOOK IN — closed/empty
+# handled) or a supporter ("On the table is …"), and fails by default for anything else ("You find
+# nothing of interest.") so a game adds `instead search X` for scenery that hides things. Shares the
+# container-listing helper (render_container) with LOOK IN. See actions.lamp / specs.md.
+
+lib advent
+
+game Search:
+	start hall
+
+room hall:
+	description "A hall."
+
+box crate:
+	description "A crate."
+
+box chest:
+	closable
+	closed
+	description "A chest."
+
+box basket:
+	description "A basket."
+
+item table:
+	supporter
+	description "A table."
+
+item shelf:
+	supporter
+	description "A shelf."
+
+item rug:
+	description "A rug."
+
+item coin:
+	description "A coin."
+
+item book:
+	description "A book."
+
+contains crate coin
+contains table book
+contains hall crate
+contains hall chest
+contains hall basket
+contains hall table
+contains hall shelf
+contains hall rug

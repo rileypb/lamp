@@ -1,0 +1,7 @@
+enter closet
+enter undercloset
+l
+get out
+get out
+l
+quit

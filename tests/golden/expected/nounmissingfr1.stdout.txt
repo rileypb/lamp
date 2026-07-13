@@ -1,0 +1,21 @@
+Salle
+Une salle.
+
+Vous voyez une lampe et une pomme ici.
+
+> prendre
+Que voulez-vous prendre ?
+
+> lampe
+Pris.
+
+> manger
+Que voulez-vous manger ?
+
+> pomme
+Vous mangez la pomme.
+
+> xyzzy
+Je ne comprends pas cela.
+
+> quitter

@@ -408,6 +408,11 @@ function emitProgram(programAst, options = {}) {
         if (directSlot) {
             lines.push(`lamplighter.setDirectSlot(${emitName(actionNode.name)}, ${JSON.stringify(directSlot.fieldName)});`);
         }
+        // Accessibility: `touchable` is the default, so only the `visible` relaxations are
+        // emitted (devdocs/accessibility.md). The runtime's reach gate skips these slots.
+        for (const slot of actionNode.slots.filter((s) => s.visible)) {
+            lines.push(`lamplighter.setVisibleSlot(${emitName(actionNode.name)}, ${JSON.stringify(slot.fieldName)});`);
+        }
         if (actionNode.outOfWorld) {
             lines.push(`lamplighter.setOutOfWorld(${emitName(actionNode.name)});`);
         }

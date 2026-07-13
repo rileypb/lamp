@@ -1,0 +1,46 @@
+hall
+A hall.
+
+You see a lever, an apple, a table and a glass booth here.
+
+> enter booth
+You get in the glass booth.
+
+hall (in the glass booth)
+A hall.
+
+You see a lever, an apple and a table here.
+
+> close booth
+You close the glass booth.
+
+> take apple
+You can't reach that.
+
+> push lever
+You can't reach that.
+
+> eat apple
+You can't reach that.
+
+> put flashlight on table
+You can't reach that.
+
+> turn on flashlight
+You switch on the flashlight.
+
+> open booth
+You open the glass booth.
+
+> get out
+You get out of the glass booth.
+
+hall
+A hall.
+
+You see a lever, an apple, a table and a glass booth here.
+
+> take apple
+Taken.
+
+> quit

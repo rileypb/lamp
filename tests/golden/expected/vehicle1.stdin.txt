@@ -1,0 +1,15 @@
+enter chair
+east
+get out
+get on forklift
+enter seat
+east
+get out
+east
+take crate
+north
+west
+south
+get off
+west
+quit

@@ -1,0 +1,6 @@
+wave lamp
+wave lamp
+wave snake
+wear cloak
+drop cloak
+quit

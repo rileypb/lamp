@@ -96,6 +96,12 @@ native function string contained_phrase(object container, string inner, int coun
 # pre-rendered contents prose, and the item count. Same signature as lib/en-US.
 native function string supporter_phrase(object supporter, string contents, int count)
 
+# « (sur la chaise) » / « (dans le placard) » — une clause d'en-tête par objet où le joueur se
+# trouve (voir enclosure_chain). Et « Dans le placard vous voyez une clé. » — le paragraphe des
+# contenus d'un objet englobant (`contents` est la liste déjà rendue). Spécifique à la langue.
+native function string enclosure_clause(object p)
+native function string enclosure_contents_phrase(object container, string contents)
+
 # Count-driven copula agreement: are(n) is "est" when the count is exactly 1,
 # else "sont". The [is LIST] sugar forms render the verb agreeing with the list
 # size followed by the list itself.

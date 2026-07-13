@@ -1,0 +1,28 @@
+# Closed enterables (lib/advent): a closed enterable container refuses ENTER ("The closet is
+# closed.") and, from inside, refuses GET OUT — the trap mechanic. The enclosure stays referable
+# from within (scopeOf adds the actor's holder chain), so OPEN resolves from inside; a locked or
+# game-sealed container genuinely holds the player — the library never guarantees escape.
+
+lib advent
+
+game Enterable4:
+	start hall
+
+room hall:
+	description "A hall."
+
+room study:
+	description "A study."
+
+bidi connects hall north study
+
+box closet:
+	enterable
+	closable
+	description "A closet."
+
+item key:
+	description "A key."
+
+contains hall closet
+contains closet key

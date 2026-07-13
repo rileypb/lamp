@@ -1,0 +1,6 @@
+allumer lampe
+allumer lampe
+éteindre lampe
+éteindre lampe
+allumer pierre
+quitter

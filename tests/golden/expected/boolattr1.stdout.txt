@@ -5,7 +5,6 @@ You see a cloak and a lamp here.
 
 > wear cloak
 (first taking the cloak)
-Taken.
 You put on the cloak.
 
 > take rock

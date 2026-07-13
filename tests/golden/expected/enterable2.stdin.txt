@@ -1,0 +1,10 @@
+look
+take coin
+sit on chair
+take cushion
+get off
+get in closet
+take key
+get off
+inventory
+quit

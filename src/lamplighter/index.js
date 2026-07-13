@@ -559,8 +559,18 @@ function runAction(actionName, instance, opts = {}) {
     if (hasAct) globalRegistry.set("act", instance);
     try {
         let outcome = "succeeded";
+        let gateBlocked = false;
         outer: for (const band of ACTION_BANDS) {
             if (opts.silent && band === "report") break outer;
+            // Slot accessibility (devdocs/accessibility.md): after `instead` (the game's
+            // per-case override hatch), before `check`. A blocked touchable slot fails the
+            // action outright — no checks, and no report_failed either (the gate printed
+            // the refusal; a verb's own failure prose would double-report).
+            if (band === "check" && gateBlockedSlot(actionName, instance)) {
+                gateBlocked = true;
+                outcome = "failed";
+                break outer;
+            }
             const printsBefore = streamMark();
             for (const { rule } of orderedRules(bands[band])) {
                 const result = rule(instance);
@@ -579,7 +589,11 @@ function runAction(actionName, instance, opts = {}) {
                 streamRequestBreak(2);
             }
         }
-        if (outcome === "failed" && !opts.silent) {
+        // `silently` (Inform's semantics) suppresses only the SUCCESS report band — a failed
+        // silent try still reports its refusal, so an implicit action's failure explains itself
+        // ("(first taking the snake)" / "…much too massive"). A gate-blocked action stays mute
+        // here regardless: the reach gate already printed the refusal.
+        if (outcome === "failed" && !gateBlocked) {
             for (const { rule } of orderedRules(bands.report_failed)) {
                 const result = rule(instance);
                 if (result === HALT || result !== undefined) {
@@ -616,6 +630,64 @@ function setDirectSlot(actionName, fieldName) {
     type.directSlot = fieldName;
 }
 
+// Mark an action slot `visible` (sight-only): the reach gate skips it. `touchable` is the
+// default for physical slots, so the compiler emits only these relaxations — see
+// devdocs/accessibility.md.
+function setVisibleSlot(actionName, fieldName) {
+    const type = typeRegistry.get(actionName);
+    if (!type) throw new Error(`setVisibleSlot: unknown action type "${actionName}"`);
+    (type.visibleSlots ??= new Set()).add(fieldName);
+}
+
+// The reach gate, installed by the world library (lib/sys `set_reach_gate` -> lib/advent's
+// reach_gate): called as gate(actor, value) for every touchable physical slot of a resolved
+// action, between the `instead` and `check` bands. A truthy return means BLOCKED — the gate
+// prints its own refusal, and the action fails without running checks or reports. The engine
+// holds no reach policy; without an installed gate every slot passes.
+let reachGate = null;
+function setReachGate(fn) {
+    reachGate = fn;
+}
+
+// The persuasion gate, installed by the world library (lib/sys `set_persuasion_gate` ->
+// lib/advent's persuasion_gate): consulted when a player-typed ORDER ("urchin, take lamp")
+// is about to dispatch with the NPC as actor. Called as gate(npc) with the resolved action
+// exposed as the `act` global (so persuasion rules can discriminate on the action and its
+// slots); truthy = granted. A refusing gate prints its own message ("The urchin has better
+// things to do."); the refused order still spends the turn. Without an installed gate every
+// order is refused silently-safe: we treat no-gate as refuse-nothing (orders all granted)
+// only when a gate is absent AND the library never installed one — in practice advent always
+// installs. See devdocs/conversation.md.
+let persuasionGate = null;
+function setPersuasionGate(fn) {
+    persuasionGate = fn;
+}
+
+// Order-execution state: `orderMode` is nonzero while resolving the remainder of an
+// addressing command ("urchin, take lamp") with the NPC as actor. In order mode a parse
+// failure stays SILENT (`orderUnparsed` is flagged instead of printing), so the addressing
+// parser can fall back to a directed utterance ("urchin, boo" -> say "boo" to the urchin).
+let orderMode = 0;
+let orderUnparsed = false;
+
+// True when any touchable physical slot of `instance` is blocked by the reach gate. Skips
+// `visible`-marked slots, non-physical slot types, empty slots, and the actor itself (you can
+// always reach yourself); `world_scope` actions bypass entirely (their slots may be anywhere).
+function gateBlockedSlot(actionName, instance) {
+    if (!reachGate || !instance.actor || isWorldScope(actionName)) return false;
+    const meta = typeRegistry.get(actionName) || {};
+    const fields = meta.fields || {};
+    for (const [field, slotType] of Object.entries(fields)) {
+        if (meta.visibleSlots && meta.visibleSlots.has(field)) continue;
+        if (!slotType || PRIMITIVE_SLOT_TYPES.has(slotType)) continue;
+        if (!typeRegistry.has("physical") || !isTypeOrSubtype(slotType, "physical")) continue;
+        const value = instance[field];
+        if (!value || typeof value !== "object" || value === instance.actor) continue;
+        if (reachGate(instance.actor, value)) return true;
+    }
+    return false;
+}
+
 // Mark an action `out of world`: it runs normally (its bands fire) but bypasses the turn
 // clock — no undo checkpoint, no turn-count advance, and runCommand returns false so the
 // caller's every-turn rules don't fire. For meta/debug verbs. See devdocs/specs.md.
@@ -638,6 +710,17 @@ function setWorldScope(actionName) {
 }
 function isWorldScope(actionName) {
     return !!(typeRegistry.get(actionName) || {}).worldScope;
+}
+
+// Mark an action's `slot` as scoped to the CONTENTS of another slot (`take X from Y`): the slot
+// resolves within `fromSlot`'s contents rather than the actor's scope. This narrows a same-named
+// noun and bounds `all` (`take all from coffer`) to the source; a closed/empty source yields
+// nothing, so a wrong object falls through to the generic no-match (as in Inform). The world
+// library declares the relationship (e.g. `take_from`.`taken` scoped by `source`).
+function setSlotScopedByContents(actionName, slot, fromSlot) {
+    const type = typeRegistry.get(actionName);
+    if (!type) throw new Error(`setSlotScopedByContents: unknown action type "${actionName}"`);
+    type.scopeSlotBy = { slot, from: fromSlot };
 }
 
 // Mark an action `multi`: its direct slot accepts a multiple-object noun phrase
@@ -690,6 +773,49 @@ function matchGrammar(parts, tokens) {
         }
     }
     return ti === tokens.length ? slots : null;
+}
+
+// A missing-noun PARTIAL match: the template's final part is a slot the player left empty, and the
+// prefix (everything before it) contains a verb literal AND consumes ALL the typed tokens. Returns
+// `{ field }` for that empty final slot, else null. The trailing preposition (if any) must have
+// been TYPED — we never supply an un-typed literal, because that could switch verbs (bare "take"
+// would otherwise "complete" to "take off"). See devdocs/missing_noun.md.
+function matchGrammarPartial(parts, tokens) {
+    if (parts.length < 2) return null;
+    const last = parts[parts.length - 1];
+    if (last.kind !== "slot") return null;
+    const prefix = parts.slice(0, parts.length - 1);
+    if (!prefix.some((p) => p.kind === "literal")) return null;
+    if (matchGrammar(prefix, tokens) === null) return null;
+    return { field: last.field };
+}
+
+// The unique missing-noun completion for `tokens`, or null when there are zero or several. A
+// template that FULLY matches is skipped (a complete command wins; the noun wasn't omitted).
+// Deduped by action+slot, so verb synonyms ("examine"/"x") count once; several distinct
+// completions (`put lamp in` vs `put lamp on` — only when the preposition is typed) fall through.
+function uniquePartialCompletion(tokens) {
+    const found = new Map();
+    for (const entry of grammarRegistry) {
+        if (matchGrammar(entry.parts, tokens) !== null) continue;
+        const partial = matchGrammarPartial(entry.parts, tokens);
+        if (!partial) continue;
+        const slotTypes = (typeRegistry.get(entry.actionName) || {}).fields || {};
+        found.set(entry.actionName + "|" + partial.field, {
+            actionName: entry.actionName,
+            field: partial.field,
+            slotType: slotTypes[partial.field],
+        });
+    }
+    return found.size === 1 ? [...found.values()][0] : null;
+}
+
+// The interrogative for a missing slot's type: a person → "who", a direction → "which_way",
+// anything else → "what". The locale's nounMissing renderer turns this into prose.
+function missingNounKind(slotType) {
+    if (slotType && typeRegistry.has("person") && isTypeOrSubtype(slotType, "person")) return "who";
+    if (slotType && typeRegistry.has("direction") && isTypeOrSubtype(slotType, "direction")) return "which_way";
+    return "what";
 }
 
 // An object's container — the world-model containment contract. The container is
@@ -764,8 +890,22 @@ function sealsContents(container) {
 // (containerOf): the `contains` relation.
 function scopeOf(actor) {
     const containment = buildContainmentIndex();
-    const location = containerOf(actor, containment);
+    // Reach out through open enclosing containers: an actor nested in an open box or enterable
+    // (a chair, a closet, an undercloset) still sees the enclosing room and everything in it. Walk
+    // up from the immediate holder while it is contained by something AND does not seal (a closed
+    // container stops the walk — its interior is the scope). The top (a room) has no container.
+    let location = containerOf(actor, containment);
+    while (location && containerOf(location, containment) && !sealsContents(location)) {
+        location = containerOf(location, containment);
+    }
     const inScope = new Set();
+
+    // The actor's own enclosure chain (the chair sat on, the closet stood in) is always
+    // referable — critically, a CLOSED container the actor is shut inside, so OPEN still
+    // resolves from within. Non-room holders only; the walk above already placed `location`.
+    for (let h = containerOf(actor, containment); h && containerOf(h, containment); h = containerOf(h, containment)) {
+        inScope.add(h);
+    }
 
     for (const instances of instanceRegistry.values()) {
         for (const inst of instances) {
@@ -798,6 +938,22 @@ function scopeOf(actor) {
     }
 
     return [...inScope];
+}
+
+// The objects reachable INSIDE a container/supporter instance, for a FROM-scoped slot
+// (`take X from Y`): its direct contents, or none if it seals them (a closed container). Mirrors
+// scope's containment, so a closed box yields nothing — a wrong object then falls through to the
+// generic no-match, as in Inform. Works for supporters too (their held items have it as container).
+function contentsScope(container) {
+    if (!container || sealsContents(container)) return [];
+    const containment = buildContainmentIndex();
+    const out = [];
+    for (const instances of instanceRegistry.values()) {
+        for (const inst of instances) {
+            if (containerOf(inst, containment) === container) out.push(inst);
+        }
+    }
+    return out;
 }
 
 // The candidate objects for a slot. Physical objects must be in the actor's
@@ -835,8 +991,14 @@ let parserPronouns = new Set();
 // word -> the last object filed under that pronoun word. Dynamic words (a
 // neopronoun's object form) are recognized once bound, without appearing in
 // the static parserPronouns list.
+// word -> antecedent referent. Value is a single object for an ordinary/plural noun, OR an
+// ARRAY of objects for a group pronoun ("them" after a multiple-object command) — see
+// noteGroupAntecedent / pronounGroupOf.
 let pronounAntecedents = new Map();
 let antecedentWordsImpl = null;
+// The pronoun word(s) a multiple-object *group* files under ("them" in en-US). Locale data,
+// distinct from antecedentWords (which files a single object under its own pronoun).
+let groupAntecedentWordsImpl = null;
 
 // Pronouns refer to things in the world, not to non-physical referents such as
 // directions, so only physical objects become antecedents. A game without a
@@ -852,6 +1014,19 @@ function noteAntecedent(obj) {
     const words = antecedentWordsImpl ? antecedentWordsImpl(obj) : [...parserPronouns];
     for (const word of words || []) {
         pronounAntecedents.set(String(word).toLowerCase(), obj);
+    }
+}
+
+// File a multiple-object result (2+ objects) under the locale's GROUP pronoun word(s) — "them"
+// in en-US — so a later "them" refers to the whole set, unified with a plural collective object
+// (which files the same word via noteAntecedent). A single object is not a group and is left to
+// noteAntecedent. The set is snapshotted, so it doesn't track later world changes.
+function noteGroupAntecedent(objects) {
+    if (!objects || !groupAntecedentWordsImpl) return;
+    const eligible = objects.filter(canBeAntecedent);
+    if (eligible.length < 2) return;
+    for (const word of groupAntecedentWordsImpl() || []) {
+        pronounAntecedents.set(String(word).toLowerCase(), eligible.slice());
     }
 }
 
@@ -884,6 +1059,17 @@ function pronounOf(span) {
     if (tokens.length !== 1) return null;
     const word = tokens[0];
     return parserPronouns.has(word) || pronounAntecedents.has(word) ? word : null;
+}
+
+// The object group a pronoun span refers to, if it is a pronoun currently bound to a
+// multiple-object result ("them" after "take lamp and rope"); else null. A pronoun bound to a
+// single object — including a plural collective — is not a group and returns null (it resolves
+// as an ordinary single noun).
+function pronounGroupOf(span) {
+    const word = pronounOf(span);
+    if (!word) return null;
+    const bound = pronounAntecedents.get(word);
+    return Array.isArray(bound) ? bound : null;
 }
 
 // Self words — "me"/"myself" — resolve to the commanding actor (the agent running
@@ -1139,6 +1325,11 @@ function objectDisplayName(obj) {
 let disambiguationRenderer = (candidates) =>
     "Which do you mean: " + candidates.map(objectDisplayName).join(" or ") + "?";
 let unknownReferenceRenderer = (word) => `I don't know what "${word}" refers to.`;
+//   nounMissing(kind, phrase) -> the "What/Who/Which way do you want to <phrase>?" prompt, where
+//   `kind` is "what"/"who"/"which_way" (from the missing slot's type) and `phrase` is the command
+//   the player typed so far (the verb + any typed nouns/preposition).
+let nounMissingRenderer = (kind, phrase) =>
+    (kind === "who" ? "Who" : kind === "which_way" ? "Which way" : "What") + ` do you want to ${phrase}?`;
 
 // The single seam a locale calls to own the parser's language: the noun-phrase
 // vocabulary and the two prose renderers. Each key is optional (a partial install
@@ -1150,6 +1341,7 @@ function setParserLanguage(spec) {
     // (en-US: the object form of obj's own pronoun set). Absent, every referent
     // files under all static pronoun words (single-antecedent behavior).
     if (spec.antecedentWords) antecedentWordsImpl = spec.antecedentWords;
+    if (spec.groupAntecedentWords) groupAntecedentWordsImpl = spec.groupAntecedentWords;
     if (spec.selfWords) parserSelfWords = new Set(spec.selfWords);
     // The comma stays a connector under every locale (it is structural, not vocabulary).
     if (spec.connectors) parserConnectors = new Set([",", ...spec.connectors]);
@@ -1160,6 +1352,7 @@ function setParserLanguage(spec) {
     if (spec.againWords) parserAgainWords = new Set(spec.againWords);
     if (spec.disambiguation) disambiguationRenderer = spec.disambiguation;
     if (spec.unknownReference) unknownReferenceRenderer = spec.unknownReference;
+    if (spec.nounMissing) nounMissingRenderer = spec.nounMissing;
 }
 
 function printDisambiguationPrompt(candidates) {
@@ -1169,6 +1362,11 @@ function printDisambiguationPrompt(candidates) {
 // Pending disambiguation: set when a slot matches multiple candidates.
 // Cleared on the next runCommand call whether or not the answer resolves it.
 let pendingDisambiguation = null;
+
+// Pending missing-noun prompt: set when the input is a unique prefix of one template missing its
+// final slot ("take" → "What do you want to take?"). The next line is spliced onto the command and
+// re-parsed. Cleared as soon as it is consumed.
+let pendingNoun = null;
 
 // Resolve [field, span] slot pairs onto `instance`. Returns one of:
 //   "ok"          — every slot filled with a single candidate.
@@ -1201,8 +1399,24 @@ function literalSlotValue(span, slotType) {
     return /^-?\d+(\.\d+)?$/.test(toks[0]) ? parseFloat(toks[0]) : undefined;
 }
 
+// Reorder a slot list so `fromField` precedes `scopedField` (a FROM-scoped slot needs its source
+// resolved first). No-op when either is absent (the source may already be resolved on the instance)
+// or already in order.
+function orderFromBefore(slots, fromField, scopedField) {
+    const fromIdx = slots.findIndex(([f]) => f === fromField);
+    const scopedIdx = slots.findIndex(([f]) => f === scopedField);
+    if (fromIdx === -1 || scopedIdx === -1 || fromIdx < scopedIdx) return slots;
+    const reordered = slots.slice();
+    const [fromEntry] = reordered.splice(fromIdx, 1);
+    reordered.splice(scopedIdx, 0, fromEntry);
+    return reordered;
+}
+
 function resolveSlots(slots, instance, scope, slotTypes, multiOut = { field: null, objects: null }) {
-    const directSlot = (typeRegistry.get(instance.type) || {}).directSlot || null;
+    const meta = typeRegistry.get(instance.type) || {};
+    const directSlot = meta.directSlot || null;
+    const scopeCfg = meta.scopeSlotBy || null;
+    if (scopeCfg) slots = orderFromBefore(slots, scopeCfg.from, scopeCfg.slot);
     for (let i = 0; i < slots.length; i++) {
         const [field, span] = slots[i];
         if (PRIMITIVE_SLOT_TYPES.has(slotTypes[field])) {
@@ -1213,7 +1427,10 @@ function resolveSlots(slots, instance, scope, slotTypes, multiOut = { field: nul
             instance[field] = value;
             continue;
         }
-        const candidates = resolveCandidates(span, resolvePool(slotTypes[field], scope), slotTypes[field], instance.actor);
+        // A FROM-scoped slot resolves within its source's contents (`take X from Y`); everything
+        // else against the action's scope.
+        const fieldScope = (scopeCfg && field === scopeCfg.slot) ? contentsScope(instance[scopeCfg.from]) : scope;
+        const candidates = resolveCandidates(span, resolvePool(slotTypes[field], fieldScope), slotTypes[field], instance.actor);
         if (candidates.length === 0) {
             // A multi action's direct slot accepts an ALL phrase ("all", "all but
             // the sword") or a connector-separated list ("ball and umbrella") —
@@ -1221,15 +1438,29 @@ function resolveSlots(slots, instance, scope, slotTypes, multiOut = { field: nul
             // whose vocabulary contains a connector or quantifier word ("salt and
             // pepper shaker") keeps resolving as one thing.
             if (field === directSlot && isMultiAction(instance.type)) {
+                // "them" bound to a group ("take lamp and rope" → "drop them"): dispatch the
+                // whole set through the multi path, scoped/typed to the slot. Empty after
+                // filtering (all members gone) fails like an unresolvable noun.
+                const group = pronounGroupOf(span);
+                if (group) {
+                    const st = slotTypes[field];
+                    const pool = new Set(resolvePool(st, fieldScope));
+                    const usable = group.filter((o) => pool.has(o) && (!st || isTypeOrSubtype(o.type, st)));
+                    if (usable.length === 0) return "unresolved";
+                    multiOut.field = field;
+                    multiOut.objects = usable;
+                    instance[field] = usable[0];
+                    continue;
+                }
                 const all = parseAllPhrase(span);
                 if (all) {
-                    const status = resolveAllPhrase(all, instance, field, scope, slotTypes, multiOut);
+                    const status = resolveAllPhrase(all, instance, field, fieldScope, slotTypes, multiOut);
                     if (status === "ok") continue;
                     return status;
                 }
                 const pieces = splitMultiSpan(span);
                 if (pieces) {
-                    const status = resolveMultiPieces(pieces, 0, [], instance, field, slots.slice(i + 1), scope, slotTypes, multiOut);
+                    const status = resolveMultiPieces(pieces, 0, [], instance, field, slots.slice(i + 1), fieldScope, slotTypes, multiOut);
                     if (status === "ok") continue;
                     return status;
                 }
@@ -1290,6 +1521,7 @@ function resolveAllPhrase(all, instance, field, scope, slotTypes, multiOut) {
     multiOut.objects = objects;
     multiOut.announce = true;
     noteAntecedent(objects[objects.length - 1]);
+    noteGroupAntecedent(objects);
     return "ok";
 }
 
@@ -1327,6 +1559,7 @@ function resolveMultiPieces(pieces, startIdx, resolved, instance, field, remaini
     multiOut.field = field;
     multiOut.objects = resolved;
     noteAntecedent(resolved[resolved.length - 1]);
+    noteGroupAntecedent(resolved);
     return "ok";
 }
 
@@ -1337,12 +1570,33 @@ function resolveMultiPieces(pieces, startIdx, resolved, instance, field, remaini
 // "objectname: " prefix so the single-object report rules compose into the
 // IF-transcript convention ("chair: Taken." / "pc: Your load is too heavy.").
 function dispatchResolvedAction(actionName, instance, multiOut) {
-    lastCommandRan = true;
     const oow = isOutOfWorld(actionName);
+    // An out-of-world verb is never orderable ("urchin, save"): flag unparsed so the
+    // addressing parser falls back to a directed utterance instead.
+    if (orderMode && oow) {
+        orderUnparsed = true;
+        return false;
+    }
+    lastCommandRan = true;
     // Only an in-world command becomes the AGAIN target — repeating UNDO/SAVE/SCORE is
     // meaningless, and AGAIN never reaches here (it is intercepted in runCommand).
     if (!oow && repeatableSource) lastRepeatableCommand = repeatableSource;
     if (!oow) { checkpoint(); advanceTurn(); }
+    // Persuasion (devdocs/conversation.md): a player-typed order consults the installed gate
+    // once per command (before any multi fan-out), with `act` exposed so persuasion rules can
+    // read the action and its slots. Refused -> the gate printed; the turn is still spent.
+    if (orderMode && persuasionGate && !oow) {
+        const hasAct = globalRegistry.has("act");
+        const savedAct = hasAct ? globalRegistry.get("act") : undefined;
+        if (hasAct) globalRegistry.set("act", instance);
+        let granted;
+        try {
+            granted = persuasionGate(instance.actor);
+        } finally {
+            if (hasAct) globalRegistry.set("act", savedAct);
+        }
+        if (!granted) return true;
+    }
     const objects = (multiOut && multiOut.objects) || null;
     if (objects && (objects.length > 1 || multiOut.announce)) {
         for (const obj of objects) {
@@ -1470,6 +1724,15 @@ function runCommand(line, actor, metaOnly = false) {
         pendingDisambiguation = null;
     }
 
+    if (pendingNoun) {
+        const { commandSoFar } = pendingNoun;
+        pendingNoun = null;
+        // Splice the answer onto the command that prompted and re-parse the whole thing: the answer
+        // fills the missing final slot, and re-running resolves everything fresh — chaining into
+        // disambiguation, ALL/multi, and the AGAIN target, with no special case.
+        return runCommand(commandSoFar + " " + String(line).trim(), actor, metaOnly);
+    }
+
     // AGAIN / G — replay the last in-world command. Handled above the grammar because it
     // must return the REPLAYED command's turn result, so the loop fires every-turn rules and
     // takes an undo checkpoint exactly as if the player had retyped it. Each line is already
@@ -1548,11 +1811,18 @@ function runCommand(line, actor, metaOnly = false) {
             for (const [field, span] of Object.entries(matched)) {
                 if (PRIMITIVE_SLOT_TYPES.has(slotTypes[field])) continue;
                 const listAllowed = field === directSlot && isMultiAction(entry.actionName);
-                if (!listAllowed && (spanHasConnector(span) || parserAllWords.has(span[0]))) {
+                if (!listAllowed && (spanHasConnector(span) || parserAllWords.has(span[0]) || pronounGroupOf(span))) {
                     sawMultiAttempt = true;
                 }
             }
         }
+    }
+    // In order mode a parse failure is the addressing parser's problem: flag it and stay
+    // silent, so "urchin, boo" can fall back to a directed utterance instead of printing
+    // "I don't understand that." (devdocs/conversation.md).
+    if (orderMode) {
+        orderUnparsed = true;
+        return false;
     }
     // An unbound pronoun (the player said "it" before referring to anything) gets
     // its own message ahead of the generic scope/grammar failures.
@@ -1565,9 +1835,57 @@ function runCommand(line, actor, metaOnly = false) {
     // A meta-only prompt swallows parser failures: unrecognized input silently re-prompts,
     // matching the traditional restricted end-of-story screen.
     if (metaOnly) return false;
+    // X, COMMAND — the addressing form (devdocs/conversation.md): a leading noun phrase that
+    // resolves to a single visible person, a comma, and a remainder. Runs only after the
+    // grammar pass found no complete match, so a grammar line containing a comma (greet's
+    // "[interlocutor] , hello") wins first, and a multi-object list comma ("take lamp, rope"
+    // — which follows a verb) never reads as an address. The remainder resolves with the NPC
+    // as ACTOR in the NPC's scope; persuasion gates the dispatch (dispatchResolvedAction).
+    // An unparseable remainder becomes a DIRECTED UTTERANCE: say the words to the addressee.
+    if (typeRegistry.has("person")) {
+        const commaIdx = tokens.indexOf(",");
+        if (commaIdx > 0 && commaIdx < tokens.length - 1) {
+            const addressee = resolveCandidates(tokens.slice(0, commaIdx), actorScope(), "person", actor);
+            if (addressee.length === 1 && addressee[0] !== actor) {
+                const npc = addressee[0];
+                const remainder = tokens.slice(commaIdx + 1).join(" ");
+                const fullSource = repeatableSource;
+                orderMode += 1;
+                orderUnparsed = false;
+                let ran;
+                try {
+                    ran = runCommand(remainder, npc, metaOnly);
+                } finally {
+                    orderMode -= 1;
+                }
+                if (!orderUnparsed) {
+                    // The order dispatched (or parked a prompt); AGAIN replays the whole address.
+                    if (lastCommandRan && lastRepeatableCommand) lastRepeatableCommand = fullSource;
+                    return ran;
+                }
+                if (typeRegistry.has("say")) {
+                    // Built directly (never via grammar), so plain SAY's template stays one-slot;
+                    // the game hooks `instead say when self.interlocutor == …`.
+                    const utterance = { type: "say", action: "say", actor, topic: remainder, interlocutor: npc };
+                    return dispatchResolvedAction("say", utterance, { field: null, objects: null });
+                }
+            }
+        }
+    }
     if (sawMultiAttempt) {
         print(message("parser_no_multi", "You can't use multiple objects with that verb."));
         return false;
+    }
+    // Missing noun: no complete template matched (sawVerbMatch false), but the input is a unique
+    // prefix of one template with an empty final slot — ask for it instead of "I don't understand".
+    // See devdocs/missing_noun.md.
+    if (!sawVerbMatch) {
+        const completion = uniquePartialCompletion(tokens);
+        if (completion) {
+            print(nounMissingRenderer(missingNounKind(completion.slotType), lastCommand));
+            pendingNoun = { commandSoFar: lastCommand };
+            return false;
+        }
     }
     print(sawVerbMatch
         ? message("parser_cant_see", "You can't see any such thing.")
@@ -2842,15 +3160,22 @@ registerStateProvider({
     key: "pronoun",
     capture() {
         const out = {};
-        for (const [word, obj] of pronounAntecedents) out[word] = obj.name;
+        for (const [word, ref] of pronounAntecedents) {
+            out[word] = Array.isArray(ref) ? ref.map((o) => o.name) : ref.name;
+        }
         return out;
     },
     restore(data) {
         pronounAntecedents = new Map();
         if (data && typeof data === "object") {
-            for (const [word, name] of Object.entries(data)) {
-                const obj = nameRegistry.get(name);
-                if (obj) pronounAntecedents.set(word, obj);
+            for (const [word, val] of Object.entries(data)) {
+                if (Array.isArray(val)) {
+                    const objs = val.map((n) => nameRegistry.get(n)).filter(Boolean);
+                    if (objs.length) pronounAntecedents.set(word, objs);
+                } else {
+                    const obj = nameRegistry.get(val);
+                    if (obj) pronounAntecedents.set(word, obj);
+                }
             }
         }
     },
@@ -3390,8 +3715,12 @@ module.exports = {
     HALT,
     registerGrammar,
     setDirectSlot,
+    setVisibleSlot,
+    setReachGate,
+    setPersuasionGate,
     setOutOfWorld,
     setWorldScope,
+    setSlotScopedByContents,
     setMultiAction,
     setAllFilter,
     runCommand,
