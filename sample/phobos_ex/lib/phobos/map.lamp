@@ -9,13 +9,16 @@ lib advent
 # fixtures.)
 #
 # Fog of war: only rooms Galaxy has seen are sent with their labels (Siriusian
-# glyph cipher; plain English while the Cyberhelmet is worn). Rooms *adjacent* to
-# her current room ride along as label-less "frontier" cells so click-to-walk can
-# reach somewhere new — clicking any cell synthesizes that direction's command
-# through the ordinary submit path, so a closed door refuses exactly as if typed.
-# The whole visible map is re-sent each turn (declarative recompute): UNDO makes
-# it forget rooms again for free. On hosts without the custom layer nothing is
-# sent; the SCORE verb and prose remain the experience.
+# glyph cipher; plain English while the Cyberhelmet is worn). Rooms she has stood
+# *adjacent* to are marked `glimpsed` and ride along as label-less "?" frontier
+# cells — persistently, so openings she noticed stay on the plan as places to go
+# next even after she walks away. A frontier is clickable only while adjacent
+# (click-to-walk synthesizes that direction's command through the ordinary submit
+# path, so a closed door refuses exactly as if typed); a remembered-but-distant
+# "?" renders inert. The whole visible map is re-sent each turn (declarative
+# recompute): UNDO makes it forget rooms — and glimpses — again for free. On
+# hosts without the custom layer nothing is sent; the SCORE verb and prose remain
+# the experience.
 #
 # Payload protocol (name "map", |-separated fields):
 #   <hc>,<hr> | room;room;... | edge;edge;...        (either list may be empty)
@@ -34,6 +37,9 @@ type room:
 	int map_row = -1
 	string map_label = ""
 	bool seen = false
+	# Galaxy has stood adjacent to this room (it appeared as a "?" frontier);
+	# glimpsed rooms stay on the plan until visited. Snapshot-covered like seen.
+	bool glimpsed = false
 
 # The deck plan: a 5-column x 6-row grid.
 room Passage_End:
@@ -104,14 +110,13 @@ function string map_dir_to(physical origin, physical r):
 					return "[d]"
 	return ""
 
-# A cell is visible when seen, or when adjacent to Galaxy (a "frontier" cell —
-# clickable, but label-less: fog of war).
+# A cell is visible when seen, or when glimpsed (it has appeared as a "?"
+# frontier — those persist so noticed openings stay on the plan: fog of war
+# with memory). Current adjacency governs only clickability, not visibility.
 function bool map_shows(physical here, physical r):
 	if r.map_col < 0:
 		return false
-	if r.seen:
-		return true
-	return not (map_dir_to(here, r) == "")
+	return r.seen or r.glimpsed
 
 function string map_payload():
 	let here = holder(player)
@@ -151,13 +156,20 @@ function string map_payload():
 								edges = edges + "[r.map_col],[r.map_row],[dest.map_col],[dest.map_row]"
 	return herepos + "|" + rooms + "|" + edges
 
-# Mark the current room `seen` (world-state bookkeeping riding the per-turn
-# cadence; snapshot-covered, so UNDO forgets a room again), then send the whole
-# visible plan — a pure function of that state, per the declarative-recompute
-# model.
+# Mark the current room `seen` and its mapped neighbors `glimpsed` (world-state
+# bookkeeping riding the per-turn cadence; snapshot-covered, so UNDO forgets
+# rooms and glimpses again). Marking is unconditional — world state must not
+# depend on the host — then the whole visible plan is sent, a pure function of
+# that state, per the declarative-recompute model.
 rule window_refresh_rules:
 	let here = holder(player)
 	if here is room:
 		here.seen = true
+		for d in direction.all:
+			if connects here d _:
+				let dest = connects here d ?first
+				if dest is room:
+					if dest.map_col >= 0:
+						dest.glimpsed = true
 	if shell_available():
 		shell_send("map", map_payload())

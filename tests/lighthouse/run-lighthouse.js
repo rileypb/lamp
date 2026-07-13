@@ -12,6 +12,7 @@ const os = require("os");
 const path = require("path");
 const vm = require("vm");
 const { buildWeb } = require("../../src/lighthouse");
+const { buildElectron } = require("../../src/lighthouse/electron");
 const { driveBundle } = require("./drive-bundle");
 
 const GAME = path.join(__dirname, "..", "..", "sample", "cloak.lamp");
@@ -186,6 +187,56 @@ try {
         const plain = fs.readFileSync(path.join(outDir, "game.worker.js"), "utf8");
         assertParses(min, "game.worker.js (minified)");
         assert.ok(min.length < plain.length, "minified bundle should be smaller than unminified");
+    });
+
+    // Electron project (devdocs/lighthouse.md "Electron"): buildElectron wraps
+    // buildWeb's output verbatim (minus the inert sw.js) in a project directory —
+    // main.js serving app:// with isolation headers around a locked-down renderer,
+    // and a package.json the author runs with `npx electron .`. The bundle inside
+    // must stay playable over the same wire protocol as the web build. Whether
+    // Chromium actually grants crossOriginIsolated under app:// is covered by the
+    // LAMP_SMOKE self-check in the generated main.js (needs a real Electron).
+    await test("electron project: web bundle minus sw.js, main.js + package.json around it", async () => {
+        const elOut = fs.mkdtempSync(path.join(os.tmpdir(), "lamp-lighthouse-electron-"));
+        try {
+            const result = buildElectron(GAME, elOut, { minify: true });
+            for (const file of ["main.js", "package.json", "app/index.html", "app/game.worker.js",
+                "app/shell.js", "app/shell.css", "app/assets.json"]) {
+                assert.ok(fs.existsSync(path.join(elOut, file)), `missing ${file}`);
+            }
+            assert.ok(!fs.existsSync(path.join(elOut, "app", "sw.js")),
+                "the inert service worker must not ship in the Electron project");
+            assert.ok(!result.files.includes(path.join("app", "sw.js")),
+                "sw.js must not be reported in the file list");
+
+            const main = fs.readFileSync(path.join(elOut, "main.js"), "utf8");
+            assertParses(main, "main.js");
+            assert.ok(main.includes("registerSchemesAsPrivileged"), "app:// scheme privileges missing");
+            assert.ok(main.includes("Cross-Origin-Opener-Policy") && main.includes("Cross-Origin-Embedder-Policy"),
+                "isolation header injection missing");
+            assert.ok(main.includes("sandbox: true") && main.includes("contextIsolation: true"),
+                "locked-down renderer webPreferences missing");
+            assert.ok(!main.includes("preload:"), "v1 must not need a preload bridge");
+
+            const pkg = JSON.parse(fs.readFileSync(path.join(elOut, "package.json"), "utf8"));
+            assert.strictEqual(pkg.main, "main.js");
+            assert.ok(/^[a-z0-9][a-z0-9._-]*$/.test(pkg.name), `package name must be npm-safe, got: ${pkg.name}`);
+            assert.strictEqual(pkg.productName, "Cloak of Darkness");
+            assert.strictEqual(pkg.author, "Roger Firth");
+            assert.strictEqual(pkg.scripts.start, "electron .");
+            assert.ok(pkg.devDependencies.electron, "electron devDependency missing");
+
+            // The app/ bundle is the stock web shell: the isolation guard remains
+            // (it exits early under app://) and the title templating ran.
+            const html = fs.readFileSync(path.join(elOut, "app", "index.html"), "utf8");
+            assert.ok(html.includes("crossOriginIsolated"), "the shell's isolation guard must remain");
+            assert.ok(html.includes("<title>Cloak of Darkness by Roger Firth</title>"), "title templating missing");
+
+            const { output } = await driveBundle(path.join(elOut, "app"), ["west", "quit"]);
+            assert.ok(output.includes("Cloakroom"), "the packaged bundle should play over the wire protocol");
+        } finally {
+            fs.rmSync(elOut, { recursive: true, force: true });
+        }
     });
 
     // End-to-end: drive the MINIFIED bundle (the shape that ships) through the real
@@ -437,7 +488,7 @@ try {
         try {
             buildWeb(path.join(__dirname, "..", "..", "sample", "phobos_ex", "phobos_ex.lamp"), exOut, { minify: false });
 
-            const web = await driveBundle(exOut, ["hack green door", "north", "quit"], {
+            const web = await driveBundle(exOut, ["hack green door", "north", "north", "quit"], {
                 timeoutMs: 60000,
                 capabilities: { windows: { docks: ["top", "bottom", "left", "right"], kinds: ["text", "canvas"] }, shell: true },
             });
@@ -462,12 +513,22 @@ try {
             assert.strictEqual(edgesField, "2,4,2,5", "one corridor between here and the frontier");
             // After walking north the Southern Spoke is seen and new frontiers
             // appear (Storeroom west, Hub north; Passage End stays seen).
-            const after = maps[maps.length - 1];
+            const after = maps[maps.length - 2];
             const afterRooms = after.split("|")[1].split(";");
             assert.ok(afterRooms.some((r) => r.startsWith("2,4,h,")), "Southern Spoke is now here");
             assert.ok(afterRooms.some((r) => r.startsWith("2,5,s,south,")), "Passage End seen and clickable back");
             assert.ok(afterRooms.some((r) => r.startsWith("1,4,f,west,")), "Storeroom frontier");
             assert.ok(afterRooms.some((r) => r.startsWith("2,2,f,north,")), "Hub frontier");
+
+            // Frontier memory: another north (to the Hub) — the Storeroom's "?"
+            // PERSISTS (glimpsed, not seen) but is no longer clickable (empty
+            // command: click-to-walk stays adjacency-only), while the Hub's own
+            // frontiers appear as clickable "?" cells.
+            const atHub = maps[maps.length - 1].split("|")[1].split(";");
+            assert.ok(atHub.some((r) => r.startsWith("2,2,h,")), "Hub is now here");
+            assert.ok(atHub.some((r) => r === "1,4,f,,"), "the Storeroom's ? persists, inert at a distance");
+            assert.ok(atHub.some((r) => r.startsWith("1,2,f,west,")), "Western Spoke frontier clickable");
+            assert.ok(atHub.some((r) => r.startsWith("3,2,f,east,")), "Eastern Spoke frontier clickable");
 
             // The [fit] Galaxy banner (text.md I3): hacking the green door scores
             // a point, flashing the figlet — which must arrive as ONE write
