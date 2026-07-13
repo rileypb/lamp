@@ -234,12 +234,21 @@ Decided and built 2026-07-12 (v1). Four decisions:
    to the web build**. (The `--enable-features=SharedArrayBuffer` switch was
    rejected — it leaves `crossOriginIsolated` false and would fork both
    index.html and shell.js.)
-3. **Capability set identical to web v1.** Saves ride the same
-   localStorage-backed broker; the renderer is fully locked down
-   (`sandbox: true`, `contextIsolation: true`, `nodeIntegration: false`, no
-   preload). fs-backed saves under `userData` (real files, export/import) are a
-   possible later Electron-only capability — the first thing that would need a
-   preload bridge.
+3. **fs-backed saves — the first Electron-only capability (added 2026-07-13;
+   v1 shipped with localStorage).** Saves are real files under
+   `userData/saves/`, one JSON `{ key, data, meta }` per save, filename
+   `base64url(key)` so player-typed slot names are filesystem-safe everywhere.
+   The seam is in the *shell's backing*, exactly as sandbox.md prescribes — the
+   broker protocol and the worker are untouched: `shell.js` routes its four
+   save operations (list/read/write/remove) through a backend that prefers a
+   preload-exposed `window.lampSaves` bridge and falls back to localStorage
+   (the web backing) when absent. `preload.js` (template) exposes exactly those
+   four operations over `ipcRenderer.invoke`; `main.js` services them with
+   `fs`. The bridge methods return promises — fine on the wire, since the
+   worker blocks on `Atomics.wait` until `replySave`, the same contract as
+   input. The renderer stays fully locked down (`sandbox: true`,
+   `contextIsolation: true`, `nodeIntegration: false`); the preload is the
+   only, four-method-wide opening.
 4. **`buildElectron` wraps `buildWeb` verbatim** (`src/lighthouse/electron.js`
    + thin CLI `build-electron.js`): it builds the web bundle into `app/`,
    deletes the now-inert `sw.js` as a packaging post-step, and lays the
@@ -250,9 +259,10 @@ Decided and built 2026-07-12 (v1). Four decisions:
    custom shells ride along unchanged.
 
 **Self-check:** `LAMP_SMOKE=1 npx electron .` shows no window; it prints
-`LAMP_SMOKE {"isolated":…,"sab":…,"booted":…}` and exits 0 iff the page is
-cross-origin isolated, `SharedArrayBuffer` exists, and the game's first output
-reached the transcript.
+`LAMP_SMOKE {"isolated":…,"sab":…,"booted":…,"saves":…}` and exits 0 iff the
+page is cross-origin isolated, `SharedArrayBuffer` exists, the game's first
+output reached the transcript, and a save round-trip
+(write/list/read/remove) through the fs bridge holds.
 
 **Status:** verified live 2026-07-12 (Electron 43, macOS) — the smoke check
 reports all three true for the cloak project, confirming custom-scheme header
@@ -263,7 +273,11 @@ bundle over the real wire protocol. Gotcha: from a VSCode-hosted terminal,
 unset `ELECTRON_RUN_AS_NODE` (VSCode exports it) or Electron runs as plain
 Node and `require("electron")` returns no API. Remaining manual-only: the
 DOM-level pass in a real Electron window (modals, transcript download —
-the same layer that stays manual for the web shell).
+the same layer that stays manual for the web shell); the app itself got a
+manual pass 2026-07-13. fs saves were verified live the same day beyond the
+smoke round-trip: a one-off DOM-driven session (typed SAVE → modal → RESTORE
+→ picker) produced and consumed a real file under
+`…/Application Support/<productName>/saves/`.
 
 ## Assumptions
 

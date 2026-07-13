@@ -493,10 +493,28 @@ the shell ships byte-identical. **Verified live** (Electron 43, macOS): the
 template's `LAMP_SMOKE=1` self-check reports isolated/SAB/booted all true.
 Static + wire-protocol coverage in `tests/lighthouse`. Docs:
 devdocs/lighthouse.md → "Electron"; sandbox.md's "Electron host" open question
-closed. Follow-ups if wanted: fs-backed saves via a preload bridge (the first
-Electron-only capability); a manual DOM pass in a real Electron window (modals,
-transcript download); packaged-app/installer guidance (author-side
-`@electron/packager`).
+closed. Follow-ups: **fs-backed saves DONE (2026-07-13)** — save-backend seam
+in shell.js (`window.lampSaves` bridge preferred, localStorage fallback;
+promise-tolerant call sites, worker just stays blocked on `Atomics.wait`),
+`preload.js` template exposing the four operations over `ipcRenderer.invoke`,
+`ipcMain` handlers writing JSON files (base64url(key) names) under
+`userData/saves/`; renderer stays sandboxed + context-isolated. Verified live:
+extended `LAMP_SMOKE` bridge round-trip, plus a one-off DOM-driven SAVE/RESTORE
+session that produced and consumed a real file on disk. Web backing unchanged;
+shell ships byte-identical. A manual DOM pass in a real Electron window — done,
+app confirmed good 2026-07-13; **packaging guidance (approach sketched
+2026-07-13)**: ship a `README.md` template *inside* the generated project
+(sibling of main.js, title-templated) documenting run + LAMP_SMOKE self-check
+(+ the ELECTRON_RUN_AS_NODE gotcha), one blessed path (`npx @electron/packager
+. --out=release` — zero config, the generated package.json already carries
+name/productName/version/author, note `--platform`/`--arch`/`--icon`),
+electron-builder named as the installer escalation, and an honest signing
+section (Gatekeeper quarantine/notarization on macOS, SmartScreen on Windows,
+itch.io as the pragmatic middle ground). Before writing it as fact: package
+cloak once and run the .app with LAMP_SMOKE=1 to prove app:// serving survives
+asar (`net.fetch(file://…)` into an archive is the thing to prove; else
+document `--asar=false` or asarUnpack for app/). Deliberately no `--package`
+flag in Lighthouse — packaging stays the author's step per decision 1.
 
 ### Multi-actions (`take all`, `drop X and Y`, `put all but Z in box`) — slices 1+2 DONE (2026-07-06)
 **Direction (approved):** Inform-style **parser-level expansion** — the parser resolves

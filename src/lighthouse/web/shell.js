@@ -247,9 +247,10 @@
     }
 
     // Save storage: a second shared buffer for the worker's brokered save/restore.
-    // localStorage is synchronous, so a request is satisfied inline and the worker
-    // (blocked on Atomics.wait) is released immediately. A length of -1 is the
-    // "no such save" sentinel; the blob is opaque (obfuscated by the runtime).
+    // The worker blocks on Atomics.wait until replySave fills the buffer, so the
+    // backing may answer asynchronously (the fs bridge does; localStorage doesn't) —
+    // the same contract as input. A length of -1 is the "no such save" sentinel;
+    // the blob is opaque (obfuscated by the runtime).
     const saveBuffer = new SharedArrayBuffer(SAVE_BUFFER_BYTES);
     const sctrl = new Int32Array(saveBuffer, 0, 2);
     const sdata = new Uint8Array(saveBuffer, INPUT_DATA_OFFSET);
@@ -291,25 +292,47 @@
         transcriptText = "";
     }
 
-    // Enumerate this game's saved slots from the metadata sidecars (keys
-    // "<prefix>…#meta"), newest first. Reads only the unobfuscated meta, never the
-    // blobs. Each row carries the blob storage key (the sidecar key minus the prefix
-    // and the "#meta" suffix) so the restore picker can fetch the chosen blob.
-    function listLocalSaves(prefix) {
-        const metaPrefix = SAVE_KEY_PREFIX + prefix;
-        const rows = [];
-        for (let i = 0; i < localStorage.length; i++) {
-            const k = localStorage.key(i);
-            if (!k || !k.startsWith(metaPrefix) || !k.endsWith("#meta")) continue;
-            try {
-                const meta = JSON.parse(localStorage.getItem(k));
-                rows.push({ key: k.slice(SAVE_KEY_PREFIX.length, -"#meta".length), meta });
-            } catch (e) {
-                // Skip a corrupt sidecar rather than fail the whole list.
+    // Save backing: four operations (list/read/write/remove) behind one seam.
+    // Default is localStorage — the blob under "<prefix><key>" plus an
+    // unobfuscated "#meta" sidecar a picker can label slots from without
+    // decoding the blob. An Electron host's preload bridge (window.lampSaves)
+    // backs the same four operations with real files under the app's userData;
+    // its methods return promises, so every call site tolerates both shapes.
+    // See devdocs/sandbox.md and devdocs/lighthouse.md ("Electron").
+    const saves = window.lampSaves || {
+        list(prefix) {
+            const metaPrefix = SAVE_KEY_PREFIX + prefix;
+            const rows = [];
+            for (let i = 0; i < localStorage.length; i++) {
+                const k = localStorage.key(i);
+                if (!k || !k.startsWith(metaPrefix) || !k.endsWith("#meta")) continue;
+                try {
+                    const meta = JSON.parse(localStorage.getItem(k));
+                    rows.push({ key: k.slice(SAVE_KEY_PREFIX.length, -"#meta".length), meta });
+                } catch (e) {
+                    // Skip a corrupt sidecar rather than fail the whole list.
+                }
             }
-        }
-        rows.sort((a, b) => String(b.meta.savedAt).localeCompare(String(a.meta.savedAt)));
-        return rows;
+            return rows;
+        },
+        read(key) {
+            return localStorage.getItem(SAVE_KEY_PREFIX + key);
+        },
+        write(key, data, meta) {
+            localStorage.setItem(SAVE_KEY_PREFIX + key, data);
+            if (meta) localStorage.setItem(SAVE_KEY_PREFIX + key + "#meta", JSON.stringify(meta));
+        },
+        remove(key) {
+            localStorage.removeItem(SAVE_KEY_PREFIX + key);
+            localStorage.removeItem(SAVE_KEY_PREFIX + key + "#meta");
+        },
+    };
+
+    // Enumerate this game's saved slots, newest first. Each row carries the
+    // storage key so the restore picker can fetch or delete the chosen blob.
+    function listSaves(prefix) {
+        return Promise.resolve(saves.list(prefix)).then((rows) =>
+            rows.sort((a, b) => String(b.meta.savedAt).localeCompare(String(a.meta.savedAt))));
     }
 
     // --- Text-window panes (devdocs/text-windows.md) -----------------------
@@ -677,23 +700,16 @@
                 requestInputPaged(msg.prompt);
                 break;
             case "save_write":
-                try {
-                    localStorage.setItem(SAVE_KEY_PREFIX + msg.key, msg.data);
-                    // Unobfuscated metadata sidecar: a save picker reads it to label
-                    // slots without decoding the blob. See devdocs/sandbox.md.
-                    if (msg.meta) {
-                        localStorage.setItem(SAVE_KEY_PREFIX + msg.key + "#meta", JSON.stringify(msg.meta));
-                    }
-                    replySave("ok");
-                } catch (e) {
-                    replySave(`error: ${e && e.message ? e.message : "save failed"}`);
-                }
+                Promise.resolve()
+                    .then(() => saves.write(msg.key, msg.data, msg.meta || null))
+                    .then(() => replySave("ok"),
+                        (e) => replySave(`error: ${e && e.message ? e.message : "save failed"}`));
                 break;
             case "save_read":
-                replySave(localStorage.getItem(SAVE_KEY_PREFIX + msg.key));
+                Promise.resolve(saves.read(msg.key)).then((blob) => replySave(blob == null ? null : blob));
                 break;
             case "save_list":
-                replySave(JSON.stringify(listLocalSaves(msg.prefix).map((r) => r.meta)));
+                listSaves(msg.prefix).then((rows) => replySave(JSON.stringify(rows.map((r) => r.meta))));
                 break;
             case "save_prompt":
                 showSaveModal(msg.prefix);
@@ -881,8 +897,11 @@
     }
 
     function showSaveModal(prefix) {
+        listSaves(prefix).then((existing) => buildSaveModal(existing));
+    }
+
+    function buildSaveModal(existing) {
         closeModal();
-        const existing = listLocalSaves(prefix);
         const { overlay, dialog } = buildDialog("Save game");
 
         const field = document.createElement("input");
@@ -953,8 +972,11 @@
     }
 
     function showRestoreModal(prefix) {
+        listSaves(prefix).then((existing) => buildRestoreModal(prefix, existing));
+    }
+
+    function buildRestoreModal(prefix, existing) {
         closeModal();
-        const existing = listLocalSaves(prefix);
         const { overlay, dialog } = buildDialog("Restore game");
 
         const actions = document.createElement("div");
@@ -987,10 +1009,8 @@
             for (const [r, el] of rowEls) el.classList.toggle("selected", r === row);
         }
         function deleteRow(row) {
-            localStorage.removeItem(SAVE_KEY_PREFIX + row.key);
-            localStorage.removeItem(SAVE_KEY_PREFIX + row.key + "#meta");
             // Rebuild from the now-smaller store (falls to the empty state if last).
-            showRestoreModal(prefix);
+            Promise.resolve(saves.remove(row.key)).then(() => showRestoreModal(prefix));
         }
         for (const row of existing) {
             const el = slotRow(row, () => select(row), () => deleteRow(row));
@@ -1007,7 +1027,7 @@
 
         function submit() {
             if (!selected) return;
-            resolveModal(localStorage.getItem(SAVE_KEY_PREFIX + selected.key));
+            Promise.resolve(saves.read(selected.key)).then((blob) => resolveModal(blob == null ? null : blob));
         }
         confirm.addEventListener("click", submit);
         cancel.addEventListener("click", () => resolveModal(null));

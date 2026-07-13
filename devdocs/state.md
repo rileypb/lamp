@@ -544,11 +544,16 @@ the proven snapshot machinery, so it is preferred now that the crash blocker is 
 - **Slice 3 — browser persistence. (Implemented, localStorage.)** The browser
   worker installs the same brokered save channel as the CLI; the shell
   (`src/lighthouse/web/shell.js`) backs it with **localStorage** over a second
-  shared buffer (synchronous, so it fits the blocking broker with no async work).
-  Named slots persist per game across reloads. The durable CLI save location is
-  also done (per-user app-data dir + `LAMP_SAVE_DIR`). Build-smoke coverage in
-  `tests/lighthouse`; the live browser loop is manually verified (the headless
-  test gap is the same one already noted for input).
+  shared buffer. Named slots persist per game across reloads. The durable CLI
+  save location is also done (per-user app-data dir + `LAMP_SAVE_DIR`).
+  Build-smoke coverage in `tests/lighthouse`; the live browser loop is manually
+  verified (the headless test gap is the same one already noted for input).
+  Since 2026-07-13 the shell's backing sits behind a four-operation **backend
+  seam** (list/read/write/remove) whose call sites tolerate promises — the
+  worker just stays blocked on `Atomics.wait` until the reply, the same
+  contract as input. localStorage remains the web default; the Electron host's
+  preload bridge (`window.lampSaves`) backs the same seam with real files
+  under `userData/saves/` (devdocs/lighthouse.md → "Electron").
 - **Slice 3b — save/restore UX as a host seam. (Design, 2026-06-22.)** Browser
   name-entry + restore-picker modals (mockup:
   `src/lighthouse/web/mockup-save-restore.html`); the `save_list`/metadata protocol

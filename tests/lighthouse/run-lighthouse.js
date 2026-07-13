@@ -200,8 +200,8 @@ try {
         const elOut = fs.mkdtempSync(path.join(os.tmpdir(), "lamp-lighthouse-electron-"));
         try {
             const result = buildElectron(GAME, elOut, { minify: true });
-            for (const file of ["main.js", "package.json", "app/index.html", "app/game.worker.js",
-                "app/shell.js", "app/shell.css", "app/assets.json"]) {
+            for (const file of ["main.js", "preload.js", "package.json", "app/index.html",
+                "app/game.worker.js", "app/shell.js", "app/shell.css", "app/assets.json"]) {
                 assert.ok(fs.existsSync(path.join(elOut, file)), `missing ${file}`);
             }
             assert.ok(!fs.existsSync(path.join(elOut, "app", "sw.js")),
@@ -216,7 +216,23 @@ try {
                 "isolation header injection missing");
             assert.ok(main.includes("sandbox: true") && main.includes("contextIsolation: true"),
                 "locked-down renderer webPreferences missing");
-            assert.ok(!main.includes("preload:"), "v1 must not need a preload bridge");
+
+            // fs-backed saves: the preload bridge exposes exactly the broker's four
+            // operations; main.js services them as files under userData. The shell
+            // stays the stock web file — it prefers the bridge when present and
+            // falls back to localStorage (the web backing) when not.
+            assert.ok(main.includes("preload:"), "preload bridge not wired into webPreferences");
+            for (const channel of ["lamp-save-list", "lamp-save-read", "lamp-save-write", "lamp-save-remove"]) {
+                assert.ok(main.includes(`ipcMain.handle("${channel}"`), `main.js missing ${channel} handler`);
+            }
+            assert.ok(main.includes('getPath("userData")'), "saves must live under userData");
+            const preload = fs.readFileSync(path.join(elOut, "preload.js"), "utf8");
+            assertParses(preload, "preload.js");
+            assert.ok(preload.includes('exposeInMainWorld("lampSaves"'), "lampSaves bridge missing");
+            const stockShell = fs.readFileSync(path.join(__dirname, "..", "..", "src", "lighthouse", "web", "shell.js"), "utf8");
+            assert.strictEqual(fs.readFileSync(path.join(elOut, "app", "shell.js"), "utf8"), stockShell,
+                "the Electron app must ship the stock web shell byte-identical");
+            assert.ok(stockShell.includes("window.lampSaves"), "shell save-backend seam missing");
 
             const pkg = JSON.parse(fs.readFileSync(path.join(elOut, "package.json"), "utf8"));
             assert.strictEqual(pkg.main, "main.js");

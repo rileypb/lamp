@@ -8,15 +8,20 @@
 // byte-identical to the web build.
 //
 // The renderer is fully locked down (sandbox, context isolation, no Node
-// integration, no preload): saves ride the same localStorage-backed broker as
-// the web build. See devdocs/lighthouse.md ("Electron") and devdocs/sandbox.md.
+// integration). Saves are real files under the app's userData directory — the
+// Electron-only capability the web build backs with localStorage: preload.js
+// exposes the save broker's four operations as `lampSaves`, serviced here over
+// IPC. The broker protocol is unchanged; only the shell's backing differs. See
+// devdocs/lighthouse.md ("Electron") and devdocs/sandbox.md.
 //
 // LAMP_SMOKE=1 runs a headless self-check instead of showing the window:
-// prints `LAMP_SMOKE {"isolated":…,"sab":…,"booted":…}` (cross-origin
-// isolation, SharedArrayBuffer, and the game's first output reaching the
-// transcript) and exits 0 iff all three hold.
+// prints `LAMP_SMOKE {"isolated":…,"sab":…,"booted":…,"saves":…}` (cross-origin
+// isolation, SharedArrayBuffer, the game's first output reaching the
+// transcript, and a save round-trip through the fs bridge) and exits 0 iff all
+// four hold.
 
-const { app, BrowserWindow, net, protocol } = require("electron");
+const { app, BrowserWindow, ipcMain, net, protocol } = require("electron");
+const fs = require("fs");
 const path = require("path");
 const { pathToFileURL } = require("url");
 
@@ -42,14 +47,71 @@ function serveApp(request) {
     });
 }
 
+// One save per file under userData/saves, stored as JSON { key, data, meta }.
+// The filename is base64url(key), so any player-typed slot name is
+// filesystem-safe on every platform; list() reads the key back from the file
+// content, never from the name.
+function savesDir() {
+    return path.join(app.getPath("userData"), "saves");
+}
+
+function saveFile(key) {
+    return path.join(savesDir(), Buffer.from(String(key), "utf8").toString("base64url") + ".json");
+}
+
+function registerSaveHandlers() {
+    ipcMain.handle("lamp-save-write", (event, key, data, meta) => {
+        if (typeof key !== "string" || typeof data !== "string") throw new Error("bad save request");
+        fs.mkdirSync(savesDir(), { recursive: true });
+        fs.writeFileSync(saveFile(key), JSON.stringify({ key, data, meta: meta || null }), "utf8");
+    });
+    ipcMain.handle("lamp-save-read", (event, key) => {
+        try {
+            return JSON.parse(fs.readFileSync(saveFile(key), "utf8")).data;
+        } catch {
+            return null;
+        }
+    });
+    ipcMain.handle("lamp-save-list", (event, prefix) => {
+        let names;
+        try {
+            names = fs.readdirSync(savesDir());
+        } catch {
+            return [];
+        }
+        const rows = [];
+        for (const name of names) {
+            if (!name.endsWith(".json")) continue;
+            try {
+                const row = JSON.parse(fs.readFileSync(path.join(savesDir(), name), "utf8"));
+                if (row && typeof row.key === "string" && row.key.startsWith(String(prefix)) && row.meta) {
+                    rows.push({ key: row.key, meta: row.meta });
+                }
+            } catch {
+                // Skip a corrupt save file rather than fail the whole list.
+            }
+        }
+        return rows;
+    });
+    ipcMain.handle("lamp-save-remove", (event, key) => {
+        fs.rmSync(saveFile(key), { force: true });
+    });
+}
+
 app.whenReady().then(() => {
     protocol.handle("app", serveApp);
+    registerSaveHandlers();
 
     const win = new BrowserWindow({
         width: 1000,
         height: 720,
         show: false,
-        webPreferences: { sandbox: true, contextIsolation: true, nodeIntegration: false },
+        webPreferences: {
+            sandbox: true,
+            contextIsolation: true,
+            nodeIntegration: false,
+            preload: path.join(__dirname, "preload.js"),
+        },
     });
     if (!SMOKE) win.once("ready-to-show", () => win.show());
     if (SMOKE) {
@@ -57,15 +119,26 @@ app.whenReady().then(() => {
             const result = await win.webContents.executeJavaScript(`(async () => {
                 const text = () => (document.getElementById("transcript")?.textContent || "").trim();
                 for (let i = 0; i < 50 && !text(); i++) await new Promise((r) => setTimeout(r, 100));
+                let saves = false;
+                try {
+                    const key = "lamp-smoke#probe";
+                    await window.lampSaves.write(key, "blob", { name: "probe", savedAt: "smoke" });
+                    const rows = await window.lampSaves.list("lamp-smoke#");
+                    const data = await window.lampSaves.read(key);
+                    await window.lampSaves.remove(key);
+                    const gone = await window.lampSaves.read(key);
+                    saves = data === "blob" && rows.length === 1 && rows[0].meta.name === "probe" && gone === null;
+                } catch (e) {}
                 return JSON.stringify({
                     isolated: self.crossOriginIsolated,
                     sab: typeof SharedArrayBuffer !== "undefined",
                     booted: text().length > 0,
+                    saves,
                 });
             })()`);
             console.log(`LAMP_SMOKE ${result}`);
             const check = JSON.parse(result);
-            app.exit(check.isolated && check.sab && check.booted ? 0 : 1);
+            app.exit(check.isolated && check.sab && check.booted && check.saves ? 0 : 1);
         });
     }
     win.loadURL("app://game/index.html");

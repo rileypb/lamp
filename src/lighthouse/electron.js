@@ -12,7 +12,8 @@ const fs = require("fs");
 const path = require("path");
 const { buildWeb } = require("./index");
 
-const MAIN_TEMPLATE = path.join(__dirname, "electron", "main.js");
+const TEMPLATE_DIR = path.join(__dirname, "electron");
+const TEMPLATES = ["main.js", "preload.js"];
 const ELECTRON_RANGE = "^43.0.0";
 
 function npmPackageName(rawName) {
@@ -29,7 +30,9 @@ function buildElectron(inputFile, outDir, options = {}) {
     const web = buildWeb(inputFile, appDir, options);
 
     fs.rmSync(path.join(appDir, "sw.js"), { force: true });
-    fs.copyFileSync(MAIN_TEMPLATE, path.join(absOut, "main.js"));
+    for (const template of TEMPLATES) {
+        fs.copyFileSync(path.join(TEMPLATE_DIR, template), path.join(absOut, template));
+    }
 
     const baseName = path.basename(inputFile, ".lamp");
     const pkg = {
@@ -45,7 +48,7 @@ function buildElectron(inputFile, outDir, options = {}) {
     fs.writeFileSync(path.join(absOut, "package.json"), JSON.stringify(pkg, null, 2) + "\n", "utf8");
 
     const appFiles = web.files.filter((f) => f !== "sw.js").map((f) => path.join("app", f));
-    return { outDir: absOut, files: ["main.js", "package.json", ...appFiles] };
+    return { outDir: absOut, files: [...TEMPLATES, "package.json", ...appFiles] };
 }
 
 module.exports = { buildElectron };

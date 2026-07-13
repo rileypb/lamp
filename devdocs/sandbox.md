@@ -289,13 +289,18 @@ There are three environments, but only two host-shell codebases:
   Chromium, so it could use either adapter. It must use the browser `Worker` path
   so its boundary behavior matches the web build; otherwise Electron silently
   diverges from what web players experience.
-- **Electron v1 (built 2026-07-12) sits exactly at the web build's point on the
-  trust spectrum:** identical capability set, localStorage-backed saves, and a
-  fully locked-down renderer (`sandbox: true`, no Node integration, no preload).
-  Isolation headers come from the app's `app://` protocol handler, so the page
-  is genuinely `crossOriginIsolated` and the shell runs byte-identical to the
-  web bundle. fs-backed saves would be the first Electron-only capability, via
-  a preload bridge, if ever wanted. See devdocs/lighthouse.md → "Electron".
+- **Electron (built 2026-07-12/13) sits one deliberate step above the web build
+  on the trust spectrum:** same capability *surface*, but saves are backed by
+  real files under `userData/saves/` instead of localStorage — the "save to
+  disk backed with real `fs`" this section anticipated, and the first
+  Electron-only backing. The mechanism is exactly the backing/protocol split
+  above: `shell.js` (byte-identical to the web bundle) routes its four save
+  operations through a backend seam that prefers a preload-exposed
+  `window.lampSaves` bridge and falls back to localStorage; the bridge is four
+  `ipcRenderer.invoke` methods wide and nothing more, with the renderer still
+  `sandbox: true`, context-isolated, no Node integration. Isolation headers
+  come from the app's `app://` protocol handler, so the page is genuinely
+  `crossOriginIsolated`. See devdocs/lighthouse.md → "Electron".
 - **Shared-memory input only constrains the browser-`Worker` environments.** The
   dev CLI's `worker_threads` adapter gets `SharedArrayBuffer` without any header
   requirement, so development cannot surface a COOP/COEP misconfiguration.
