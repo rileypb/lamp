@@ -1073,6 +1073,20 @@ consider a manual browser pass on the color CSS (headless checks can't see
 the shades).
 
 ## Smaller / opportunistic
+- ~~**French input contractions (`au`/`aux`/`du`/`des` as preposition+article).**~~ **DONE
+  (2026-07-13):** found during the cloak_fr translation review — a grammar literal `à`
+  didn't match the natural typed contraction "accrocher le manteau **au** crochet".
+  Fixed parser-level: `setParserLanguage({ contractions })` (fr-FR: `au`→`à le`,
+  `aux`→`à les`, `du`→`de le`, `des`→`de les`) and `matchGrammar` gained a second pass —
+  exact matching first (a grammar spelling `au` literally still wins; zero change for
+  contraction-less locales), then a literal may consume a contraction whose first word
+  it equals, the split-off article carried into the next noun slot where article
+  stripping absorbs it. The split lives inside matching only, never on the token list,
+  so free-text slots keep "au revoir" verbatim. cloak_fr's `au` grammar-variant
+  workaround removed (the `sur` variant kept — genuinely different phrasing); the
+  natural phrasing is golden-covered (`cloak_fr` stdin now types it). Docs:
+  i18n.md + game_parser.md. **Where:** `src/lamplighter/index.js` (`matchGrammar`/
+  `matchGrammarPass`, `setParserLanguage`), `lib/fr-FR/index.js`.
 - ~~**The `[fit]` style**~~ **BUILT (2026-07-10; design record in devdocs/text.md I3).**
   A paired style `[fit]…[/fit]` declaring "column-true composition; must not
   wrap" — the web shell scales the whole block by one ratio (its widest line;

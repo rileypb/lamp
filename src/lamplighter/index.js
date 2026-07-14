@@ -753,18 +753,41 @@ function setAllFilter(fn) {
 // verbatim; a slot captures the run of tokens up to the next literal (or the
 // end). Returns a field -> token-span map, or null if the template does not
 // match the whole input.
+//
+// Two passes: the exact pass first (the traditional reading always wins), then —
+// only when it fails and the locale declares input contractions ("au" = à + le) —
+// a pass where a literal may consume a contraction whose first word it equals,
+// carrying the split-off article into the following noun slot (where article
+// stripping absorbs it). The split stays inside matching, never touching the
+// shared token list, so a free-text slot reads back "au revoir" untouched.
 function matchGrammar(parts, tokens) {
+    const plain = matchGrammarPass(parts, tokens, false);
+    if (plain || parserContractions.size === 0) return plain;
+    return matchGrammarPass(parts, tokens, true);
+}
+
+function matchGrammarPass(parts, tokens, splitContractions) {
     const slots = {};
     let ti = 0;
+    let carry = null;
     for (let pi = 0; pi < parts.length; pi += 1) {
         const part = parts[pi];
         if (part.kind === "literal") {
-            if (tokens[ti] !== part.text) return null;
-            ti += 1;
+            if (carry) return null;
+            if (tokens[ti] === part.text) {
+                ti += 1;
+            } else if (splitContractions && (parserContractions.get(tokens[ti]) || [])[0] === part.text) {
+                carry = parserContractions.get(tokens[ti]).slice(1);
+                ti += 1;
+            } else {
+                return null;
+            }
         } else {
             const nextLiteral = parts[pi + 1] && parts[pi + 1].kind === "literal" ? parts[pi + 1].text : null;
-            const span = [];
-            while (ti < tokens.length && tokens[ti] !== nextLiteral) {
+            const span = carry || [];
+            carry = null;
+            while (ti < tokens.length && tokens[ti] !== nextLiteral
+                && !(splitContractions && nextLiteral !== null && (parserContractions.get(tokens[ti]) || [])[0] === nextLiteral)) {
                 span.push(tokens[ti]);
                 ti += 1;
             }
@@ -772,7 +795,7 @@ function matchGrammar(parts, tokens) {
             slots[part.field] = span;
         }
     }
-    return ti === tokens.length ? slots : null;
+    return ti === tokens.length && !carry ? slots : null;
 }
 
 // A missing-noun PARTIAL match: the template's final part is a slot the player left empty, and the
@@ -977,6 +1000,12 @@ let vocabIndex = new Map();
 // policy of its own; lib/en-US installs the English set, lib/fr-FR the French.
 // A locale-less program (no locale pack) simply doesn't strip articles.
 let parserArticles = new Set();
+
+// Input contractions: a typed word that fuses a grammar literal with an article
+// ("au" = à + le, "du" = de + le). word -> expansion word list, first word the
+// literal it may stand in for. Consulted only by matchGrammar's second pass, so
+// a language without contractions pays nothing. Locale data via setParserLanguage.
+let parserContractions = new Map();
 
 // Pronouns the player may use in place of a noun. Antecedents are tracked PER
 // PRONOUN WORD: binding a noun phrase files the object under the words the
@@ -1336,6 +1365,9 @@ let nounMissingRenderer = (kind, phrase) =>
 // keeps the current value), so a locale can override only what it needs.
 function setParserLanguage(spec) {
     if (spec.articles) parserArticles = new Set(spec.articles);
+    // contractions: { au: ["à", "le"], ... } — typed word -> expansion, first
+    // word the grammar literal it may stand in for (see matchGrammar).
+    if (spec.contractions) parserContractions = new Map(Object.entries(spec.contractions));
     if (spec.pronouns) parserPronouns = new Set(spec.pronouns);
     // antecedentWords(obj) -> the pronoun words to file obj under when it binds
     // (en-US: the object form of obj's own pronoun set). Absent, every referent

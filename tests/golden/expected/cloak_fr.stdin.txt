@@ -2,6 +2,8 @@ inventaire
 examiner manteau
 ouest
 accrocher manteau à crochet
+prendre manteau
+accrocher le manteau au crochet
 est
 sud
 lire sciure

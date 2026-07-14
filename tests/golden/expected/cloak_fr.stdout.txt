@@ -2,7 +2,7 @@ Manteau de l'obscurité
 Un portage Lamp du classique de l'aventure textuelle par Roger Firth
 Version 0 dev
 
-Pressé dans la nuit pluvieuse de novembre, vous êtes heureux de voir les lumières éclatantes de l'Opéra. C'est surprenant qu'il n'y ait pas plus de monde, mais bon, à quoi vous attendiez-vous dans un petit jeu de démonstration… ?
+Pressant le pas dans la nuit pluvieuse de novembre, vous êtes heureux de voir les lumières éclatantes de l'Opéra. C'est surprenant qu'il n'y ait pas plus de monde, mais bon, à quoi vous attendiez-vous dans un petit jeu de démonstration… ?
 
 Foyer
 Vous vous tenez dans un hall spacieux, splendidement décoré de rouge et d'or, avec des lustres scintillants au-dessus de vous. L'entrée depuis la rue est au nord, et il y a des portes au sud et à l'ouest.
@@ -20,6 +20,12 @@ Les murs de cette petite pièce étaient clairement autrefois garnis de crochets
 
 > accrocher manteau à crochet
 (vous enlevez d'abord le manteau de velours)
+Vous accrochez soigneusement le manteau au crochet.
+
+> prendre manteau
+Pris.
+
+> accrocher le manteau au crochet
 Vous accrochez soigneusement le manteau au crochet.
 
 > est

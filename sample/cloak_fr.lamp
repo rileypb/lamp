@@ -25,7 +25,7 @@ game Manteau_de_l_obscurite:
 # ========== Texte d'introduction ==========
 
 rule startup_rules:
-	print "Pressé dans la nuit pluvieuse de novembre, vous êtes heureux de voir les lumières éclatantes de l'Opéra. C'est surprenant qu'il n'y ait pas plus de monde, mais bon, à quoi vous attendiez-vous dans un petit jeu de démonstration… ?"
+	print "Pressant le pas dans la nuit pluvieuse de novembre, vous êtes heureux de voir les lumières éclatantes de l'Opéra. C'est surprenant qu'il n'y ait pas plus de monde, mais bon, à quoi vous attendiez-vous dans un petit jeu de démonstration… ?"
 	print "[par]"
 
 # ========== Lieux ==========
@@ -144,7 +144,10 @@ report examine when self.target == sawdust:
 
 # « accrocher … à … » n'est qu'une formulation imagée pour l'action générique
 # `put_on` d'advent (le crochet est un supporter, donc le check de put_on l'accepte).
+# « accrocher le manteau au crochet » passe aussi : le pack fr-FR déclare les
+# contractions d'entrée (au = à + le), donc le littéral « à » absorbe « au ».
 understand "accrocher [put_item] à [destination]" as put_on
+understand "accrocher [put_item] sur [destination]" as put_on
 
 report put_on when self.put_item == velvet_cloak:
 	print "Vous accrochez soigneusement le manteau au crochet.[line break]"

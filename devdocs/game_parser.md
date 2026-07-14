@@ -170,6 +170,12 @@ The design targets these Inform 7/10 parser capabilities, grouped by stage:
   set, `lib/fr-FR` the French (so "le manteau" strips and the prompt reads "Lequel voulez-vous
   dire : …"). Proper-name handling therefore lives in the locale's `the()`, not the runtime.
   "Deciding which one" rules remain deferred.
+- Input contractions (locale data, `setParserLanguage({ contractions })`): a typed word may fuse
+  a grammar literal with an article — French `au` = `à` + `le`. `matchGrammar` tries the exact
+  pass first, then a pass where a literal consumes such a word and the split-off article joins
+  the following noun slot, so "accrocher le manteau au crochet" matches an `… à [destination]`
+  grammar. The split never touches the token list, so free-text slots keep "au revoir" verbatim.
+  See devdocs/i18n.md.
 - Reachability/visibility distinction (you can *see* through a window but not
   *take* through it) — modeled as accessibility checks in the action rules.
 
