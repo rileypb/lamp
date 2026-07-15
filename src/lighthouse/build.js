@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 // Thin CLI entry: build a web bundle from a Lamp game.
 //
-// Usage: node src/lighthouse/build.js <input.lamp> [outDir] [--encode-strings] [--no-minify] [--debug]
+// Usage: lighthouse <input.lamp> [outDir] [--encode-strings] [--no-minify] [--debug]
 
 const path = require("path");
 const { buildWeb } = require("./index");
@@ -18,7 +18,7 @@ const ejectShell = args.includes("--eject-shell");
 const [inputArg, outArg] = args.filter((arg) => !arg.startsWith("--"));
 
 if (!inputArg) {
-    console.error("Usage: node src/lighthouse/build.js <input.lamp> [outDir] [--encode-strings] [--no-minify] [--debug] [--eject-shell]");
+    console.error("Usage: lighthouse <input.lamp> [outDir] [--encode-strings] [--no-minify] [--debug] [--eject-shell]");
     process.exit(1);
 }
 

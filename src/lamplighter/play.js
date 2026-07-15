@@ -5,7 +5,7 @@ const { playFile } = require("./sandbox/host");
 
 const generatedPath = process.argv[2];
 if (!generatedPath) {
-    console.error("Usage: node src/lamplighter/play.js <generated.js>");
+    console.error("Usage: lamplighter <generated.js>");
     process.exit(1);
 }
 

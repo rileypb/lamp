@@ -8,6 +8,7 @@
 
 const { execFileSync } = require("child_process");
 const fs = require("fs");
+const os = require("os");
 const path = require("path");
 const esbuild = require("esbuild");
 
@@ -120,11 +121,21 @@ function copyShellExtras(shellDir, absOut) {
     return copied.sort();
 }
 
-function buildWeb(inputFile, outDir, { encodeStrings = false, minify = true, release = true, ejectShell = false } = {}) {
+// Intermediates (the compiled game, the worker entry) go to a per-invocation temp
+// dir, not a build/ folder inside the package: a globally installed lighthouse
+// would otherwise write into npm's global node_modules, which may not be writable.
+function buildWeb(inputFile, outDir, options = {}) {
+    const buildDir = fs.mkdtempSync(path.join(os.tmpdir(), "lighthouse-"));
+    try {
+        return buildWebInto(buildDir, inputFile, outDir, options);
+    } finally {
+        fs.rmSync(buildDir, { recursive: true, force: true });
+    }
+}
+
+function buildWebInto(buildDir, inputFile, outDir, { encodeStrings = false, minify = true, release = true, ejectShell = false } = {}) {
     const absInput = path.resolve(inputFile);
     const absOut = path.resolve(outDir);
-    const buildDir = path.join(PROJECT_ROOT, "build");
-    fs.mkdirSync(buildDir, { recursive: true });
     fs.mkdirSync(absOut, { recursive: true });
 
     const shellDir = shellDirFor(absInput);

@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 // Thin CLI entry: build an Electron project directory from a Lamp game.
 //
-// Usage: node src/lighthouse/build-electron.js <input.lamp> [outDir] [--encode-strings] [--no-minify] [--debug] [--eject-shell]
+// Usage: lighthouse-electron <input.lamp> [outDir] [--encode-strings] [--no-minify] [--debug] [--eject-shell]
 
 const path = require("path");
 const { buildElectron } = require("./electron");
@@ -14,7 +14,7 @@ const ejectShell = args.includes("--eject-shell");
 const [inputArg, outArg] = args.filter((arg) => !arg.startsWith("--"));
 
 if (!inputArg) {
-    console.error("Usage: node src/lighthouse/build-electron.js <input.lamp> [outDir] [--encode-strings] [--no-minify] [--debug] [--eject-shell]");
+    console.error("Usage: lighthouse-electron <input.lamp> [outDir] [--encode-strings] [--no-minify] [--debug] [--eject-shell]");
     process.exit(1);
 }
 

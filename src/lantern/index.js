@@ -29,7 +29,7 @@ function runCompilation() {
     const [inputFileArg, outputFileArg] = positionals;
 
     if (!inputFileArg) {
-        console.error("Usage: node src/lantern/index.js <input.lamp> [output.js] [--locale <tag>] [--encode-strings] [--meta <path>]");
+        console.error("Usage: lantern <input.lamp> [output.js] [--locale <tag>] [--encode-strings] [--meta <path>]");
         process.exit(1);
     }
 

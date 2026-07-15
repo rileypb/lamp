@@ -1073,6 +1073,37 @@ consider a manual browser pass on the color CSS (headless checks can't see
 the shades).
 
 ## Smaller / opportunistic
+- **Global-install ergonomics (raised 2026-07-14).** `npm install -g .` already works —
+  `bin` exposes `lantern`/`lantern-exe`, and lib/stdlib resolution is `__dirname`-relative
+  so a copied install finds `lib/`. Gaps if global install becomes a supported path:
+  (1) ~~`lantern-exe` writes its temp compile to `<install>/build/`~~ **DONE (2026-07-14):**
+  `exe.js` now compiles into a per-invocation `fs.mkdtempSync(os.tmpdir() + "/lantern-exe-")`
+  dir, removed on process exit (both the success and compile-error paths verified live);
+  README updated. (2) ~~`play` and the Lighthouse builders are npm scripts only~~ **DONE
+  (2026-07-14):** `bin` now also exposes `lamplighter` (play.js), `lighthouse` (build.js),
+  and `lighthouse-electron` (build-electron.js); usage strings switched to bin-name style.
+  Two things this surfaced, both fixed: **esbuild moved devDependencies→dependencies**
+  (a global install skips devDeps, so `lighthouse` would have crashed at `require`), and
+  **`buildWeb`'s intermediates moved off `PROJECT_ROOT/build/`** to a per-invocation
+  `mkdtemp` (same global-node_modules-write bug as exe.js; the one test that peeked at the
+  leaked `build/image1.meta.json` sidecar now compiles it itself via the Lantern CLI).
+  Verified: tarball-installed to a sandbox prefix (note: `npm install -g <folder>` only
+  SYMLINKS the clone — `npm pack` + install the tgz is the real repo-independent path),
+  all five commands exercised from an outside dir, install tree stays pristine; 285
+  goldens + lighthouse suite green. Name caveat: `lighthouse` collides with Google's
+  Lighthouse CLI if the user has it installed globally — rename if it ever bites.
+  (3) ~~No `files` field in package.json~~ **DONE (2026-07-14):** `files: ["src", "lib"]`
+  trims the pack from the whole repo to 59 files / ~253 kB (no sample/tests/devdocs; all
+  five lib dirs + the web/electron shell templates verified in), and the README gained an
+  "Install globally (optional)" section documenting the pack-and-install path, the five
+  commands, and the folder-install-symlinks gotcha. Full flow re-verified against the
+  trimmed tarball (all five commands + an fr-FR locale compile from an outside dir).
+  (4) ~~The name `lamp` is taken on npm~~ **DONE (2026-07-14):** package renamed to
+  `lampif` (confirmed free on the registry; `lamp` is a GPT terminal client). Bin
+  command names unchanged. README's pack/uninstall lines updated; tarball install
+  smoke-tested as `lampif-0.1.0.tgz`. Publish-time note if it ever happens: the
+  `lighthouse` bin name collides with Google's Lighthouse CLI for users who install
+  both globally.
 - ~~**French input contractions (`au`/`aux`/`du`/`des` as preposition+article).**~~ **DONE
   (2026-07-13):** found during the cloak_fr translation review — a grammar literal `à`
   didn't match the natural typed contraction "accrocher le manteau **au** crochet".

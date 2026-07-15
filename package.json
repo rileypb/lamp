@@ -1,9 +1,16 @@
 {
-  "name": "lamp",
+  "name": "lampif",
   "version": "0.1.0",
+  "files": [
+    "src",
+    "lib"
+  ],
   "bin": {
     "lantern": "./src/lantern/index.js",
-    "lantern-exe": "./src/lantern/exe.js"
+    "lantern-exe": "./src/lantern/exe.js",
+    "lamplighter": "./src/lamplighter/play.js",
+    "lighthouse": "./src/lighthouse/build.js",
+    "lighthouse-electron": "./src/lighthouse/build-electron.js"
   },
   "scripts": {
     "compile": "node src/lantern/index.js",
@@ -30,7 +37,7 @@
     "test:windows": "node tests/windows/run-windows.js",
     "test:shell": "node tests/shell/run-shell.js"
   },
-  "devDependencies": {
+  "dependencies": {
     "esbuild": "^0.28.1"
   }
 }

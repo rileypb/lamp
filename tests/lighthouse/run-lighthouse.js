@@ -7,6 +7,7 @@
 // Run with: npm run test:lighthouse
 
 const assert = require("assert");
+const { execFileSync } = require("child_process");
 const fs = require("fs");
 const os = require("os");
 const path = require("path");
@@ -371,7 +372,16 @@ try {
         const imgOut = fs.mkdtempSync(path.join(os.tmpdir(), "lamp-lighthouse-img-"));
         try {
             buildWeb(path.join(__dirname, "..", "fixtures", "image1.lamp"), imgOut, { minify: false });
-            const meta = JSON.parse(fs.readFileSync(path.join(__dirname, "..", "..", "build", "image1.meta.json"), "utf8"));
+            // buildWeb's own compile intermediates live in a deleted temp dir, so
+            // produce the sidecar directly through the Lantern CLI to inspect it.
+            const metaPath = path.join(imgOut, "image1.meta.json");
+            execFileSync("node", [
+                path.join(__dirname, "..", "..", "src", "lantern", "index.js"),
+                path.join(__dirname, "..", "fixtures", "image1.lamp"),
+                path.join(imgOut, "image1.generated.js"),
+                "--meta", metaPath,
+            ], { stdio: "inherit" });
+            const meta = JSON.parse(fs.readFileSync(metaPath, "utf8"));
             assert.strictEqual(meta.assets.length, 1, "one declared asset expected");
             assert.strictEqual(meta.assets[0].name, "floor_map");
             assert.ok(meta.assets[0].sourcePath.endsWith(path.join("tests", "fixtures", "art", "map.svg")),

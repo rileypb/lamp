@@ -12,7 +12,7 @@ The system has three parts:
   player input, game state, and rendering. It includes a small CLI for playing a
   game in the terminal.
 - **Lighthouse** — the bundler. It packages a compiled game and the runtime into a
-  distributable web (or, in future, Electron) application.
+  distributable web or Electron application.
 
 See [`devdocs/architecture.md`](devdocs/architecture.md) for the full design and
 [`devdocs/specs.md`](devdocs/specs.md) for the language specification.
@@ -21,11 +21,36 @@ See [`devdocs/architecture.md`](devdocs/architecture.md) for the full design and
 
 - [Node.js](https://nodejs.org/) (the toolchain is plain Node.js with no runtime
   dependencies).
-- `npm install` — installs the single dev dependency, [esbuild](https://esbuild.github.io/),
+- `npm install` — installs the single dependency, [esbuild](https://esbuild.github.io/),
   which Lighthouse uses to bundle web builds. Lantern and the terminal player do
   not need it.
 
 Sample games live in [`sample/`](sample/) (e.g. [`sample/cloak.lamp`](sample/cloak.lamp)).
+
+## Install globally (optional)
+
+Everything below runs straight from the repo, but the toolchain also installs as
+global commands. Pack a tarball and install that:
+
+```sh
+npm pack                      # from the repo root; writes lampif-0.1.0.tgz
+npm install -g lampif-0.1.0.tgz
+```
+
+Install from the tarball, not `npm install -g .` — npm symlinks a folder install
+back to the clone instead of copying it.
+
+This puts five commands on your `PATH`, usable from any directory; the standard
+library ships inside the install, so the clone is no longer needed:
+
+- `lantern <input.lamp> [output.js]` — compile a game
+- `lamplighter <generated.js>` — play a compiled game in the terminal
+- `lantern-exe <input.lamp>` — compile and play in one step
+- `lighthouse <input.lamp> [outDir]` — build a web bundle
+- `lighthouse-electron <input.lamp> [outDir]` — build an Electron project
+
+Per-game libraries resolve exactly as they do in the repo: from a `lib/` folder
+next to your `.lamp` file. Uninstall with `npm uninstall -g lampif`.
 
 ## Lantern: compile a game
 
@@ -71,8 +96,9 @@ node src/lamplighter/play.js build/cloak.generated.js
 
 ### Compile and play in one step
 
-`lantern-exe` compiles a `.lamp` file to `build/` and immediately plays it. Compile
-flags after the input pass straight through to Lantern:
+`lantern-exe` compiles a `.lamp` file to a temporary directory (cleaned up on exit)
+and immediately plays it. Compile flags after the input pass straight through to
+Lantern:
 
 ```sh
 node src/lantern/exe.js <input.lamp> [--release] [--locale <tag>] [--encode-strings]

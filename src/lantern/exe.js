@@ -1,6 +1,8 @@
 #!/usr/bin/env node
 
 const { execFileSync } = require("child_process");
+const fs = require("fs");
+const os = require("os");
 const path = require("path");
 
 const inputArg = process.argv[2];
@@ -14,7 +16,11 @@ if (!inputArg) {
 const compileFlags = process.argv.slice(3);
 
 const inputFile = path.resolve(inputArg);
-const buildDir = path.join(__dirname, "..", "..", "build");
+// A per-invocation temp dir, not a build/ folder inside the package: a globally
+// installed lantern-exe would otherwise write into npm's global node_modules,
+// which may not be writable.
+const buildDir = fs.mkdtempSync(path.join(os.tmpdir(), "lantern-exe-"));
+process.on("exit", () => fs.rmSync(buildDir, { recursive: true, force: true }));
 const tmpFile = path.join(buildDir, `${path.basename(inputFile, ".lamp")}.generated.js`);
 const lanternCli = path.join(__dirname, "index.js");
 const playCli = path.join(__dirname, "..", "lamplighter", "play.js");
