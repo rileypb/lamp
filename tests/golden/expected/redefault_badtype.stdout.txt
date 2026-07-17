@@ -1,0 +1,3 @@
+Compile error: tests/fixtures/redefault_badtype.lamp:9: type error: type "chrome_gadget" re-declares inherited field "feels" as "int", but it is declared "string" on an ancestor
+  9 | type chrome_gadget < gadget:
+    | ^

@@ -122,11 +122,19 @@ let localScope = new Set();
 // collection. See devdocs/text-persistence.md.
 let emitWarnings = null;
 
+// True while emitting a declaration-site field value (a type-body default or an
+// object-body field). There, `self` in a template means the *owning object* — but no
+// instance exists at declaration time, so a self-capturing template emits a
+// `selfTemplate(id)` marker that createObject resolves per instance, instead of the
+// rule-body form `instantiateTemplate(id, [self])` (which needs a lexical `self`).
+let inDeclarationFieldValue = false;
+
 function emitProgram(programAst, options = {}) {
     variationSiteCounter = 0;
     templateIdCounter = 0;
     templateRegistrations = [];
     localScope = new Set();
+    inDeclarationFieldValue = false;
     emitWarnings = options.warnings || null;
     const nativeJsContents = options.nativeJsContents || [];
     const globalDeclNodes = programAst.nodes.filter((node) => node.kind === "GlobalDecl");
@@ -544,6 +552,7 @@ function emitKindExpr(expr) {
 function emitTypeDecl(node) {
     const fields = {};
     const defaultPairs = [];
+    inDeclarationFieldValue = true;
     for (const field of node.fields) {
         fields[field.fieldName] = field.typeName;
         if (field.defaultValue !== null) {
@@ -552,6 +561,7 @@ function emitTypeDecl(node) {
             defaultPairs.push(`${JSON.stringify(field.fieldName)}: ${emitValue(field.defaultValue)}`);
         }
     }
+    inDeclarationFieldValue = false;
     const defaultsArg = defaultPairs.length > 0 ? `, { ${defaultPairs.join(", ")} }` : "";
     return `lamplighter.defineType(${emitName(node.name)}, ${emitNameList(node.parents)}, ${emitFieldSchema(fields)}${defaultsArg});`;
 }
@@ -622,11 +632,13 @@ function emitRelationQuery(node, globalNames) {
 
 function emitObjectDecl(node, mergedTypes = new Map()) {
     const fields = {};
+    inDeclarationFieldValue = true;
     for (const field of node.fields) {
         if (!isObjectTypedField(field, node.typeName, mergedTypes)) {
             fields[field.fieldName] = emitValue(field.value);
         }
     }
+    inDeclarationFieldValue = false;
 
     const pairs = Object.entries(fields).map(([key, value]) => `${JSON.stringify(key)}: ${value}`);
     const call = `lamplighter.createObject(${emitName(node.typeName)}, ${emitName(node.objectName)}, { ${pairs.join(", ")} })`;
@@ -1218,7 +1230,13 @@ function emitExpression(expr, globalNames = new Set()) {
         // so an object renders as its name, a list as its prose, etc. A `cond` part
         // (inline `[if]`/`[else if]`/`[else]`) emits a ternary chain that renders the
         // chosen branch's nested parts.
+        // Inside the emitted thunk any nested template sees a lexical `self` (the
+        // factory's parameter), so nested emission must not take the declaration-
+        // marker path — clear the flag for the duration of the body emission.
+        const wasDeclarationFieldValue = inDeclarationFieldValue;
+        inDeclarationFieldValue = false;
         const thunk = `lamplighter.makeText(() => lamplighter.renderTemplate([${emitTemplateFrags(expr.parts, globalNames)}]))`;
+        inDeclarationFieldValue = wasDeclarationFieldValue;
         // Persistability turns on what the template captures. Nothing → rebuildable from its
         // id alone. Exactly `{self}` → rebuildable with an env carrying `self` (Phase 2b); the
         // factory takes `self`, the use site passes the current one, and encodeValue serializes
@@ -1228,6 +1246,19 @@ function emitExpression(expr, globalNames = new Set()) {
         // devdocs/text-persistence.md.
         const captures = new Set();
         collectTemplateCaptures(expr.parts, globalNames, captures);
+        // In a declaration-site field value, `self` is the owning object. No instance
+        // exists yet, so emit a marker createObject resolves per instance (binding the
+        // new instance as the template's env). Any *other* capture there is an error —
+        // a declaration has no locals, so nothing else can be in scope.
+        if (inDeclarationFieldValue && captures.has("self")) {
+            if (captures.size > 1) {
+                const others = [...captures].filter((n) => n !== "self" && n !== UNKNOWN_CAPTURE);
+                throw new Error(`a field template may reference \`self\`, globals, and named objects only${others.length ? ` (found ${others.map((n) => `"${n}"`).join(", ")})` : ""}`);
+            }
+            const id = templateIdCounter++;
+            templateRegistrations.push(`lamplighter.registerTemplate(${id}, (self) => ${thunk});`);
+            return `lamplighter.selfTemplate(${id})`;
+        }
         const brandable = captures.size === 0 || (captures.size === 1 && captures.has("self"));
         if (!brandable) {
             return thunk;

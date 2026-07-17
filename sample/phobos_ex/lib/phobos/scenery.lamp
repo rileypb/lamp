@@ -7,75 +7,44 @@ lib advent
 # (The handprint scanners, the suit light, and the RESET button are *parts* of other objects,
 # modeled via advent's `part_of` relation — see the part_of declarations below.)
 
-# The "inadequate sign" objects (Base.i7x): privately-named "sign" (so the object identifier doesn't
-# leak colliding tokens like "locker"/"door" into the parser — `private_name true`), a plastic feel,
-# take-refused as "firmly attached to the wall". Scanning one falls to the scan action's not-textual
-# reply ("…needs more text than is available on the sign."), so no special rule is needed. advent type
-# bodies can't default inherited fields, so the shared sign fields are repeated per object.
-item door_sign:
-	printed_name "sign"
-	private_name true
-	scenery
-	understand "sign/label"
-	feels "It feels like a plastic sign, with raised letters."
-	take_refusal "The sign is firmly attached to the wall."
+# The "inadequate sign" objects (Base.i7x): a `wall_sign` subtype carries the shared
+# presentation once as re-declared field defaults — privately-named "sign" (so the object
+# identifier doesn't leak colliding tokens like "locker"/"door" into the parser —
+# `private_name true`), a plastic feel, take-refused as "firmly attached to the wall".
+# Each sign then carries only its own description plus any deviation (the storeroom sign's
+# etched feel + attack refusal, the west sign's "opening" synonym, the poster's identity).
+# Scanning one falls to the scan action's not-textual reply ("…needs more text than is
+# available on the sign."), so no special rule is needed.
+type wall_sign < item:
+	string printed_name = "sign"
+	bool private_name = true
+	bool scenery = true
+	string understand = "sign/label"
+	string feels = "It feels like a plastic sign, with raised letters."
+	string take_refusal = "The sign is firmly attached to the wall."
+
+wall_sign door_sign:
 	description "A sign on the door reads '[siriusian(\"This way to the secret base\")]'."
-item west_sign:
-	printed_name "sign"
-	private_name true
-	scenery
+wall_sign west_sign:
 	understand "opening/sign/label"
-	feels "It feels like a plastic sign, with raised letters."
-	take_refusal "The sign is firmly attached to the wall."
 	description "An opening to the west is labeled '[siriusian(\"Storeroom\")]'."
-item storeroom_sign:
-	printed_name "sign"
-	private_name true
-	scenery
-	understand "sign/label"
+wall_sign storeroom_sign:
 	feels "It's a plastic surface with etched letters."
-	take_refusal "The sign is firmly attached to the wall."
 	attack_refusal "There's no point in attacking the sign."
 	description "It reads '[siriusian(\"Please sign out any supplies or equipment before taking them\")].'"
-item junction_signs:
-	printed_name "sign"
-	private_name true
-	scenery
+wall_sign junction_signs:
 	understand "sign/label/signs"
-	feels "It feels like a plastic sign, with raised letters."
-	take_refusal "The sign is firmly attached to the wall."
 	description "The western corridor is labeled '[siriusian(\"Science\")]', the southern one, '[siriusian(\"Storage\")]', and the eastern one, '[siriusian(\"Personnel\")]'. The purple door to the north is labeled '[siriusian(\"Control Room\")]'."
-item eastern_sign:
-	printed_name "sign"
-	private_name true
-	scenery
-	understand "sign/label"
-	feels "It feels like a plastic sign, with raised letters."
-	take_refusal "The sign is firmly attached to the wall."
+wall_sign eastern_sign:
 	description "An opening to the north is labeled '[siriusian(\"Barracks A\")]', one to the south is labeled '[siriusian(\"Barracks B\")]', and the blue door at the east end of the hallway is labeled '[siriusian(\"Commander's Quarters\")]'."
-item western_sign:
-	printed_name "sign"
-	private_name true
-	scenery
-	understand "sign/label"
-	feels "It feels like a plastic sign, with raised letters."
-	take_refusal "The sign is firmly attached to the wall."
+wall_sign western_sign:
 	description "An opening to the north is labeled '[siriusian(\"Science\")]'. The red door to the south ([if red_door.closed]closed[else]open[end if]) is labeled '[siriusian(\"Armory\")]', and the yellow door at the west end of the hallway is labeled '[siriusian(\"Reactor Room\")]'."
-item poster:
+wall_sign poster:
 	printed_name "poster"
-	private_name true
-	scenery
 	understand "poster/sign/label"
 	feels "The poster is made of paper, and feels smooth to the touch."
-	take_refusal "The sign is firmly attached to the wall."
 	description "Several happy cyborgs are shown on the poster, with the caption '[siriusian(\"Let's work together to kick the $stupid out of the $silly humans\")]'."
-item locker_sign:
-	printed_name "sign"
-	private_name true
-	scenery
-	understand "sign/label"
-	feels "It feels like a plastic sign, with raised letters."
-	take_refusal "The sign is firmly attached to the wall."
+wall_sign locker_sign:
 	description "The locker is labeled '[siriusian(\"!mfk5plas\")]'."
 
 contains Passage_End door_sign
@@ -88,40 +57,31 @@ contains North_Barracks poster
 contains South_Barracks locker_sign
 
 # --- Sleeping pods (north & south barracks) ----------------------------------
-# Privately-named too — the object identifiers would otherwise leak "north"/"south" (directions).
-item north_sleeping_pods:
-	printed_name "sleeping pods"
-	private_name true
-	scenery
-	understand "pod/pods/sleeping"
-	feels "The sleeping pods are made of a lightweight plastic, and feel smooth to the touch."
-	take_refusal "The sleeping pods are firmly attached to the floor."
-	attack_refusal "Galaxy Jones is not going to attack the sleeping pods."
-	description "This must be how Siriusians sleep: in claustrophobic little pods, closed to the outside world."
-item south_sleeping_pods:
-	printed_name "sleeping pods"
-	private_name true
-	scenery
-	understand "pod/pods/sleeping"
-	feels "The sleeping pods are made of a lightweight plastic, and feel smooth to the touch."
-	take_refusal "The sleeping pods are firmly attached to the floor."
-	attack_refusal "Galaxy Jones is not going to attack the sleeping pods."
-	description "This must be how Siriusians sleep: in claustrophobic little pods, closed to the outside world."
+# The two barracks' pods are textually identical, so the subtype carries everything —
+# each instance is a bare declaration. Privately-named too — the object identifiers
+# would otherwise leak "north"/"south" (directions).
+type sleeping_pods < item:
+	string printed_name = "sleeping pods"
+	bool private_name = true
+	bool scenery = true
+	string understand = "pod/pods/sleeping"
+	string feels = "The sleeping pods are made of a lightweight plastic, and feel smooth to the touch."
+	string take_refusal = "The sleeping pods are firmly attached to the floor."
+	string attack_refusal = "Galaxy Jones is not going to attack the sleeping pods."
+	string description = "This must be how Siriusians sleep: in claustrophobic little pods, closed to the outside world."
+
+sleeping_pods north_sleeping_pods
+sleeping_pods south_sleeping_pods
 
 contains North_Barracks north_sleeping_pods
 contains South_Barracks south_sleeping_pods
 
-# Galaxy won't climb into / open a pod mid-mission (Base.i7x).
-instead enter when self.target == north_sleeping_pods:
+# Galaxy won't climb into / open a pod mid-mission (Base.i7x). One rule per verb via the
+# `is` type test, covering both pod objects.
+instead enter when self.target is sleeping_pods:
 	print "Galaxy Jones is not going to climb into a sleeping pod right now. She has a mission to complete."
 	stop failed
-instead enter when self.target == south_sleeping_pods:
-	print "Galaxy Jones is not going to climb into a sleeping pod right now. She has a mission to complete."
-	stop failed
-instead open when self.target == north_sleeping_pods:
-	print "Galaxy Jones is not going to climb into a sleeping pod right now. She has a mission to complete."
-	stop failed
-instead open when self.target == south_sleeping_pods:
+instead open when self.target is sleeping_pods:
 	print "Galaxy Jones is not going to climb into a sleeping pod right now. She has a mission to complete."
 	stop failed
 
@@ -159,56 +119,31 @@ instead examine when self.target == pa_system:
 # --- Parts (Base.i7x / GJ Basics.i7x / KIM.i7x) ------------------------------
 # advent's `part_of` relation: each is in scope wherever its whole is. The handprint scanners ride
 # their doors (visible from both sides), the suit light the worn suit, the RESET button the carried
-# KIM. All privately-named (the identifiers would leak colliding tokens like "green"/"button").
+# KIM. A `handprint_scanner` subtype carries the shared presentation; all privately-named (the
+# identifiers would leak colliding tokens like "green"/"button"). The attack refusals stay
+# per-object: they name the door color (not derivable from the shared prose), the yellow one also
+# take-refuses (as in the original), and the flight-deck scanner carries none at all.
 # Hacking still targets the door, not the scanner (the scanner is examinable flavour).
-item green_scanner:
-	printed_name "handprint scanner"
-	private_name true
-	scenery
-	understand "scanner/handprint/indentations"
-	feels "Galaxy's five fingers don't fit in the three ridged indentations, but she can feel the metal surface of the scanner."
+type handprint_scanner < item:
+	string printed_name = "handprint scanner"
+	bool private_name = true
+	bool scenery = true
+	string understand = "scanner/handprint/indentations"
+	string feels = "Galaxy's five fingers don't fit in the three ridged indentations, but she can feel the metal surface of the scanner."
+	string description = "The three ridged indentations here are apparently designed to scan a Siriusian hand for security purposes."
+
+handprint_scanner green_scanner:
 	attack_refusal "Galaxy pounds uselessly on the green handprint scanner."
-	description "The three ridged indentations here are apparently designed to scan a Siriusian hand for security purposes."
-item yellow_scanner:
-	printed_name "handprint scanner"
-	private_name true
-	scenery
-	understand "scanner/handprint/indentations"
-	feels "Galaxy's five fingers don't fit in the three ridged indentations, but she can feel the metal surface of the scanner."
+handprint_scanner yellow_scanner:
 	take_refusal "Galaxy pounds uselessly on the yellow handprint scanner."
 	attack_refusal "Galaxy pounds uselessly on the yellow handprint scanner."
-	description "The three ridged indentations here are apparently designed to scan a Siriusian hand for security purposes."
-item red_scanner:
-	printed_name "handprint scanner"
-	private_name true
-	scenery
-	understand "scanner/handprint/indentations"
-	feels "Galaxy's five fingers don't fit in the three ridged indentations, but she can feel the metal surface of the scanner."
+handprint_scanner red_scanner:
 	attack_refusal "Galaxy pounds uselessly on the red handprint scanner."
-	description "The three ridged indentations here are apparently designed to scan a Siriusian hand for security purposes."
-item blue_scanner:
-	printed_name "handprint scanner"
-	private_name true
-	scenery
-	understand "scanner/handprint/indentations"
-	feels "Galaxy's five fingers don't fit in the three ridged indentations, but she can feel the metal surface of the scanner."
+handprint_scanner blue_scanner:
 	attack_refusal "Galaxy pounds uselessly on the blue handprint scanner."
-	description "The three ridged indentations here are apparently designed to scan a Siriusian hand for security purposes."
-item purple_scanner:
-	printed_name "handprint scanner"
-	private_name true
-	scenery
-	understand "scanner/handprint/indentations"
-	feels "Galaxy's five fingers don't fit in the three ridged indentations, but she can feel the metal surface of the scanner."
+handprint_scanner purple_scanner:
 	attack_refusal "Galaxy pounds uselessly on the purple handprint scanner."
-	description "The three ridged indentations here are apparently designed to scan a Siriusian hand for security purposes."
-item flight_deck_scanner:
-	printed_name "handprint scanner"
-	private_name true
-	scenery
-	understand "scanner/handprint/indentations"
-	feels "Galaxy's five fingers don't fit in the three ridged indentations, but she can feel the metal surface of the scanner."
-	description "The three ridged indentations here are apparently designed to scan a Siriusian hand for security purposes."
+handprint_scanner flight_deck_scanner
 
 part_of green_scanner green_door
 part_of yellow_scanner yellow_door

@@ -458,6 +458,7 @@ function buildFunctionSchema(nodes) {
 function buildTypeSchema(nodes, kindSchema = new Map()) {
     const typeFields = new Map();
     const typeParents = new Map();
+    const typeDeclSites = new Map();
 
     for (const rawNode of nodes) {
         // An action declaration is a type whose parent is `action` and whose
@@ -474,6 +475,7 @@ function buildTypeSchema(nodes, kindSchema = new Map()) {
         if (!isReopen) {
             typeFields.set(node.name, new Map());
             typeParents.set(node.name, node.parents || []);
+            typeDeclSites.set(node.name, { filePath: node.filePath, lineNumber: node.lineNumber });
         } else if (node.parents && node.parents.length > 0) {
             throw typeError(
                 node.filePath,
@@ -515,7 +517,38 @@ function buildTypeSchema(nodes, kindSchema = new Map()) {
         }
     }
 
+    // A subtype may re-declare an inherited field to give it a new default
+    // ("nearest definition wins" at runtime) — but only at the same type, so a
+    // re-default can't silently change what the field holds. Checked as a
+    // post-pass because a parent may gain fields in a later reopen.
+    for (const [typeName, fields] of typeFields) {
+        for (const [fieldName, fieldType] of fields) {
+            const inherited = lookupInheritedFieldType(typeName, fieldName, typeFields, typeParents);
+            if (inherited !== null && inherited !== fieldType) {
+                const site = typeDeclSites.get(typeName) || {};
+                throw typeError(site.filePath, site.lineNumber,
+                    `type "${typeName}" re-declares inherited field "${fieldName}" as "${fieldType}", but it is declared "${inherited}" on an ancestor`);
+            }
+        }
+    }
+
     return { typeFields, typeParents };
+}
+
+// The type of `fieldName` as declared on an ancestor of `typeName` (excluding
+// typeName itself), or null when no ancestor declares it.
+function lookupInheritedFieldType(typeName, fieldName, typeFields, typeParents) {
+    const visited = new Set([typeName]);
+    const queue = [...(typeParents.get(typeName) || [])];
+    while (queue.length > 0) {
+        const ancestor = queue.shift();
+        if (visited.has(ancestor)) continue;
+        visited.add(ancestor);
+        const fields = typeFields.get(ancestor);
+        if (fields && fields.has(fieldName)) return fields.get(fieldName);
+        queue.push(...(typeParents.get(ancestor) || []));
+    }
+    return null;
 }
 
 function buildKindSchema(nodes) {

@@ -418,6 +418,12 @@ function createObject(typeName, objectName, fieldValues) {
         ...fieldValues,
     };
 
+    for (const key of Object.keys(instance)) {
+        if (isSelfTemplateMarker(instance[key])) {
+            instance[key] = instantiateTemplate(instance[key].__selfTmplId, [instance]);
+        }
+    }
+
     instanceRegistry.get(typeName).push(instance);
     nameRegistry.set(objectName, instance);
     return instance;
@@ -2728,6 +2734,20 @@ function instantiateTemplate(id, env = []) {
     return value;
 }
 
+// A declaration-site field template that references `self` (the owning object)
+// cannot be instantiated when the type/object declaration runs — the instance a
+// given copy belongs to doesn't exist yet. The emitter emits this marker as the
+// field's value; createObject resolves it per instance, binding the new instance
+// as the template's captured `self` (an ordinary Phase-2b env, so the resulting
+// text persists across undo/save like any self-capturing template).
+function selfTemplate(id) {
+    return { __selfTmplId: id };
+}
+
+function isSelfTemplateMarker(value) {
+    return value !== null && typeof value === "object" && typeof value.__selfTmplId === "number";
+}
+
 function renderText(value) {
     return isTextValue(value) ? renderTextValue(value) : String(formatValue(value));
 }
@@ -3720,6 +3740,7 @@ module.exports = {
     makeText,
     registerTemplate,
     instantiateTemplate,
+    selfTemplate,
     renderText,
     renderSubject,
     renderSetSubject,

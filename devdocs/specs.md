@@ -546,7 +546,46 @@ type startup < event
 
 A type with no additional fields omits the `:` and body entirely.
 
-#### Universal fields
+**Re-defaulting an inherited field.** A subtype may re-declare an inherited field to
+give it a new default — the nearest declaration in the hierarchy wins when an
+instance is created. The re-declaration must repeat the field's declared type
+exactly; changing the type is a compile error (a re-default changes what the field
+*starts as*, never what it *holds*). Re-declaring a field on the **same** type (in
+a reopen) remains an error.
+
+```lamp
+type gadget:
+    string feels = "generic plastic"
+
+type chrome_gadget < gadget:
+    string feels = "smooth cold metal"   # chrome_gadget instances start with this
+```
+
+#### Declaration-site `self`
+
+Inside a **field value at a declaration** — a type-body field default or an
+object-body field — a text template may reference `self`, meaning **the object the
+field belongs to**. The template is bound per instance at creation, so one shared
+default renders each instance's own name and state:
+
+```lamp
+type scanner_door < door:
+    string description = "The door is [if self.closed]closed[else]open[end if]."
+    string take_refusal = "[The self] won't budge."
+```
+
+Every `scanner_door` instance gets a live text whose `self` is that door: the
+description re-renders against the door's current `closed` on every print, and
+`[The self]` names the door it sits on. This is the declaration-context reading of
+the same convention `self` follows everywhere — the instance the enclosing
+declaration is about (the action instance in a phase rule, the changed instance in
+a change handler, the edge in a relation handler, the owning object here). An
+object-body field value overrides a type default and may use `self` the same way.
+A field template may reference `self`, globals, named objects, and function calls —
+nothing else is in scope at a declaration (a lexical capture there is a compile
+error). Global declarations have no `self`. The bound text persists across
+undo/save/restore like any self-capturing template (the instance is serialized as
+its `{$ref}` in the template env — see devdocs/text-persistence.md).
 
 All objects expose the following built-in fields:
 

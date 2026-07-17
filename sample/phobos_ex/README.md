@@ -40,5 +40,17 @@ never collide with the original). Enhancements so far:
   (`shell_available()` gates in hacking.lamp). CLI/plain hosts keep the ASCII
   keypads exactly as ported.
 
+- **Declaration dedup via subtypes + declaration-site `self`** (base.lamp,
+  scenery.lamp): the six coloured doors, seven wall signs, six handprint
+  scanners, and two sleeping pods each collapse onto a shared subtype
+  (`scanner_door`, `wall_sign`, `handprint_scanner`, `sleeping_pods`) that
+  re-declares inherited fields with new defaults; the shared refusal/description
+  prose names the owning object and reads its live state through `self`
+  (`[the self]`, `[if self.closed]…` — specs.md "Declaration-site `self`").
+  Player-visible behavior is unchanged from the original (verified by transcript
+  diff against `sample/phobos`); the pod enter/open refusals also merge into two
+  `is sleeping_pods` rules. `sample/phobos` keeps the repeated per-object form —
+  that's the faithful port.
+
 The full `test endgame` walkthrough is a golden (`phobos_ex` in
 tests/golden/expected/), so EX must stay winnable as enhancements land.

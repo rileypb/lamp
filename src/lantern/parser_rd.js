@@ -461,7 +461,7 @@ function createParser(tokens, filePath, globalNames, functionNames = new Set(), 
             let defaultValue = null;
             if (at("EQUALS")) {
                 next();
-                defaultValue = parseSimpleValue();
+                defaultValue = parseSimpleValue(new Set(["self"]));
             }
             expectNewline();
             fields.push(ast.createFieldDecl(fieldType, fieldName, defaultValue));
@@ -830,7 +830,7 @@ function createParser(tokens, filePath, globalNames, functionNames = new Set(), 
             // Bare boolean shorthand: `wearable` (a field name with no value) means
             // `wearable true`. A non-bool field given the bare form is rejected by the
             // checker (it sees `= true` against, e.g., a string field).
-            const value = at("NEWLINE") ? ast.createBooleanLiteral(true) : parseSimpleValue();
+            const value = at("NEWLINE") ? ast.createBooleanLiteral(true) : parseSimpleValue(new Set(["self"]));
             expectNewline();
             fields.push(ast.createFieldAssign(fieldName, value, filePath, nameToken.line));
         }
@@ -887,13 +887,15 @@ function createParser(tokens, filePath, globalNames, functionNames = new Set(), 
     // Object-field and global values are literals or a bare object reference,
     // never full expressions (mirrors the legacy parseSimpleValue) — except a
     // quoted string may carry `[expr]` substitutions, becoming a TemplateLiteral
-    // (`text`) here just as in expression position. Embedded expressions see only
-    // file-level names (globals/objects/functions); there is no local or `self`
-    // scope at a field/global default, so an empty local set is passed.
-    function parseSimpleValue() {
+    // (`text`) here just as in expression position. Embedded expressions see
+    // file-level names (globals/objects/functions) plus whatever `localNames`
+    // the declaration context supplies: a type-body default and an object-body
+    // field pass `self` (the owning object); a global has no such scope and
+    // passes nothing.
+    function parseSimpleValue(localNames = new Set()) {
         const token = next();
         if (token.type === "NUMBER") return ast.createNumberLiteral(token.value);
-        if (token.type === "STRING") return parseStringExpr(token, new Set());
+        if (token.type === "STRING") return parseStringExpr(token, localNames);
         if (token.type === "IDENT") {
             if (token.value === "true") return ast.createBooleanLiteral(true);
             if (token.value === "false") return ast.createBooleanLiteral(false);

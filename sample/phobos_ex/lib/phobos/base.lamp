@@ -133,70 +133,40 @@ bidi connects Eastern_Spoke north North_Barracks
 bidi connects Eastern_Spoke south South_Barracks
 
 # Doors (advent door subsystem). Reading: `<direction> <room>` = the room reached
-# by going that direction. closed (default) + locked + not lockable, matching the
-# I7 base. Each door carries its description (the handprint-scanner line, with the
-# open/closed state conditional) and feels; the scanner itself is a `part_of` object
-# (lib/phobos/scenery.lamp). Doors are opened by HACK (lib/phobos/hacking.lamp).
-door green_door:
-	description "A cyborg handprint scanner adorns the center of the door, which is [if green_door.closed]closed[else]open[end if]."
-	feels "The door is smooth cold metal."
-	take_refusal "Galaxy could probably rip the green door off its hinges if she used the Galaxy Suit, if that's what she wants to use the charges up for."
-	attack_refusal "Galaxy pounds uselessly on the green door."
+# by going that direction. All six base doors share the handprint-scanner presentation, so
+# a `scanner_door` subtype carries the shared text once, as re-declared field defaults
+# (nearest definition wins); the refusal prose names the owning door through the
+# declaration-site `[the self]`, so each door keeps its color wording ("the green door",
+# "the flight deck door") without repeating it. closed (default) + locked + not lockable,
+# matching the I7 base. The scanner itself is a `part_of` object (lib/phobos/scenery.lamp).
+# Doors are opened by HACK (lib/phobos/hacking.lamp).
+type scanner_door < door:
+	string description = "A cyborg handprint scanner adorns the center of the door, which is [if self.closed]closed[else]open[end if]."
+	string feels = "The door is smooth cold metal."
+	string take_refusal = "Galaxy could probably rip [the self] off its hinges if she used the Galaxy Suit, if that's what she wants to use the charges up for."
+	string attack_refusal = "Galaxy pounds uselessly on [the self]."
+	bool scenery = true
+	bool locked = true
+	bool lockable = false
+
+scanner_door green_door:
 	north Southern_Spoke
 	south Passage_End
-	scenery
-	locked true
-	lockable false
-door yellow_door:
-	description "A cyborg handprint scanner adorns the center of the door, which is [if yellow_door.closed]closed[else]open[end if]."
-	feels "The door is smooth cold metal."
-	take_refusal "Galaxy could probably rip the yellow door off its hinges if she used the Galaxy Suit, if that's what she wants to use the charges up for."
-	attack_refusal "Galaxy pounds uselessly on the yellow door."
+scanner_door yellow_door:
 	west Reactor_Room
 	east Western_Spoke
-	scenery
-	locked true
-	lockable false
-door red_door:
-	description "A cyborg handprint scanner adorns the center of the door, which is [if red_door.closed]closed[else]open[end if]."
-	feels "The door is smooth cold metal."
-	take_refusal "Galaxy could probably rip the red door off its hinges if she used the Galaxy Suit, if that's what she wants to use the charges up for."
-	attack_refusal "Galaxy pounds uselessly on the red door."
+scanner_door red_door:
 	south armory
 	north Western_Spoke
-	scenery
-	locked true
-	lockable false
-door blue_door:
-	description "A cyborg handprint scanner adorns the center of the door, which is [if blue_door.closed]closed[else]open[end if]."
-	feels "The door is smooth cold metal."
-	take_refusal "Galaxy could probably rip the blue door off its hinges if she used the Galaxy Suit, if that's what she wants to use the charges up for."
-	attack_refusal "Galaxy pounds uselessly on the blue door."
+scanner_door blue_door:
 	east Commanders_Quarters
 	west Eastern_Spoke
-	scenery
-	locked true
-	lockable false
-door purple_door:
-	description "A cyborg handprint scanner adorns the center of the door, which is [if purple_door.closed]closed[else]open[end if]."
-	feels "The door is smooth cold metal."
-	take_refusal "Galaxy could probably rip the purple door off its hinges if she used the Galaxy Suit, if that's what she wants to use the charges up for."
-	attack_refusal "Galaxy pounds uselessly on the purple door."
+scanner_door purple_door:
 	north Control_Room
 	south Hub_Junction
-	scenery
-	locked true
-	lockable false
-door flight_deck_door:
-	description "A cyborg handprint scanner adorns the center of the door, which is [if flight_deck_door.closed]closed[else]open[end if]."
-	feels "The door is smooth cold metal."
-	take_refusal "Galaxy could probably rip the flight deck door off its hinges if she used the Galaxy Suit, if that's what she wants to use the charges up for."
-	attack_refusal "Galaxy pounds uselessly on the flight deck door."
+scanner_door flight_deck_door:
 	north Flight_Deck
 	south Control_Room
-	scenery
-	locked true
-	lockable false
 
 # --- Textual documents (Texts.i7x) -------------------------------------------
 # Four more textual things, one per remaining difficulty tier (the diary above is

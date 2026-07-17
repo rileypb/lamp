@@ -1,0 +1,38 @@
+# Declaration-site `self`: in a type-body field default (or an object-body field),
+# a template's `self` is the owning object — bound per instance at creation, so one
+# shared default renders each instance's own state. Also: a subtype may re-declare
+# an inherited field to give it a new default (nearest definition wins).
+
+game Selffield
+
+type gadget:
+	string feels = "generic plastic"
+	bool closed = true
+	string description = "[The self] is [if self.closed]closed[else]open[end if]. It feels like [self.feels]."
+
+# Subtype re-defaults of inherited fields: new default, same field type.
+type chrome_gadget < gadget:
+	string feels = "smooth cold metal"
+	bool closed = false
+
+gadget widget
+
+chrome_gadget doohickey
+
+# An object-body value overrides the type default; it may use `self` too.
+chrome_gadget whatsit:
+	description "Plain [self.feels] all the way down."
+
+on startup:
+	print "[widget.description]"
+	print "[doohickey.description]"
+	print "[whatsit.description]"
+	# The default is a live template: it re-renders against current state.
+	widget.closed = false
+	print "[widget.description]"
+	# Bare [self] in a default renders the owner's name.
+	print "[doohickey.label]"
+
+# Reopen the type to add a field whose default also uses self.
+type gadget:
+	string label = "label: [self]"

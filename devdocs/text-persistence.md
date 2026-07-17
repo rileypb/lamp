@@ -213,15 +213,30 @@ text, and `[the noun]`-style context that isn't saved state).
   time — persists in a change handler, freezes in an action), so the transient-`self` freeze
   stays silent; and a `freeze`-d string never triggers it (an explicit snapshot).
 
+- **Declaration-site `self` (built, 2026-07-16).** A field value at a declaration — a
+  type-body default or an object-body field — may reference `self`, meaning the owning
+  object. No instance exists when the declaration runs, so the emitter emits a
+  `lamplighter.selfTemplate(id)` **marker** (the factory is still registered as
+  `(self) => …`); `createObject` resolves the marker per instance via
+  `instantiateTemplate(id, [instance])`, so the field holds an ordinary Phase-2b
+  self-capturing text — same `{$tmpl:id, env:[{$ref}]}` persistence, always live (the
+  owner is a named instance by construction). Inside the emitted factory a nested
+  template sees the lexical `self` parameter, so nested emission takes the normal
+  Phase-2b path, not the marker path. Any capture other than `self` in a declaration
+  field value is a compile error (a declaration has no locals). See specs.md
+  "Declaration-site `self`"; golden `selffield1`.
+
 Regression goldens: `textlive1` (construction, global + named instance), `textlive2`
-(rule-assigned named instance), `textlive3` (change-handler `self`) — all undo *and*
-save/restore.
+(rule-assigned named instance), `textlive3` (change-handler `self`), `selffield1`
+(declaration-site `self`: per-instance binding, subtype re-defaults, live re-render) —
+undo *and* save/restore covered by the first three.
 
 ## Open questions
 
-- **`self` in construction templates.** Today it's unsupported (`emitter.js:604`). If Phase
+- ~~**`self` in construction templates.** Today it's unsupported (`emitter.js:604`). If Phase
   2's factory mechanism makes `self` cheap, should construction templates gain `self` scope
-  (env `{ self: <the object being built> }`)? Orthogonal, but the machinery would allow it.
+  (env `{ self: <the object being built> }`)?~~ **Resolved (2026-07-16): built** — see
+  "Declaration-site `self`" above.
 - **Action-context templates** (`[the noun]` analogues) assigned to fields: freeze (matches
   I7) vs. reject at compile time. Leaning freeze + warn.
 - **Overhead.** Branding every template literal (even transiently-printed ones) adds an `id`

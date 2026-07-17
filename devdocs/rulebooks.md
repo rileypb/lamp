@@ -1,12 +1,18 @@
 # Rules and Rulebooks
 
-> Status: design proposal. Not yet implemented. This document defines the
-> rule/rulebook mechanism that underlies action processing and other ordered,
-> decision-making pipelines in Lamp. The action pipeline in
-> `devdocs/game_parser.md` is the primary client and motivating use case.
+> Status: **implemented** (initial surface). Rulebooks, `follow`, `rule`
+> contributions, the six-band action pipeline with `stop`/typed stop reasons,
+> action selectors, and tags are built and specified in `devdocs/specs.md`
+> ("Rulebooks", "Action rulebooks"); specs.md is the source of truth for the
+> shipped surface, and its "Deferred (not in this surface)" list names what from
+> this design remains unbuilt (named rules, group/`order` constraints, `void`
+> rulebooks, runtime mutation). This document remains the design rationale —
+> the unified model, ordering theory, and the divergences from Inform 7.
 
-Source-of-truth note: rulebooks are not yet described in `devdocs/specs.md`; this
-document proposes them. The design builds on existing language features — kinds
+This document defines the rule/rulebook mechanism that underlies action
+processing and other ordered, decision-making pipelines in Lamp. The action
+pipeline in `devdocs/game_parser.md` is the primary client and motivating use
+case. The design builds on existing language features — kinds
 and enums, events, conditional overloads and specificity (`devdocs/specs.md`,
 `devdocs/specificity.md`), and the `stop` statement introduced for the parser —
 and calls out the new language/runtime support each part needs rather than

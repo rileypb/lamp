@@ -1,0 +1,13 @@
+# A subtype re-declaring an inherited field must keep the field's type: the
+# re-declaration exists to change the *default*, never what the field holds.
+
+game RedefaultBadtype
+
+type gadget:
+	string feels = "generic plastic"
+
+type chrome_gadget < gadget:
+	int feels = 3
+
+on startup:
+	print "unreachable"

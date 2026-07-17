@@ -480,6 +480,32 @@ defined). Low priority. **Where:** `src/lamplighter/index.js` (`run`).
 
 ## Design (not scheduled)
 
+### Phobos ergonomics audit (2026-07-16) — language-feature candidates
+A pattern audit of `sample/phobos` (all 21 files) found recurring IF patterns the game
+codes by hand that Lamp could internalize. **Full analysis: `devdocs/phobos_gaps.md`**
+(evidence with file:line references, design sketches, open questions per item). The ten
+candidates, ranked by duplication removed: (1) ~~subtype field re-defaults + `self` (the
+owning object) in field-default templates~~ **DONE (2026-07-16)** — re-defaults already
+worked (hardened with a same-type checker guard, golden `redefault_badtype`); the real
+gap was declaration-site `self`, now emitted as a `selfTemplate(id)` marker that
+`createObject` binds per instance (golden `selffield1`; undo/save verified live; closes
+text-persistence.md's "self in construction templates" open question). Applied to
+**phobos_ex only** (`scanner_door`/`wall_sign`/`handprint_scanner`/`sleeping_pods`
+subtypes in base.lamp/scenery.lamp, ~150 lines shed; transcript-diff-identical to
+sample/phobos, `phobos_ex` golden byte-invariant; the frozen port keeps its duplication
+by design). Docs: specs.md "Type inheritance" + "Declaration-site `self`".
+(2) object/type-scoped phase rules (~60 rules key on `when self.target == X`); (3) static
+data tables / const list-map literals at global scope (keypad flip-sets, `pa_message`,
+`rank_name`, `kim_surface_name` are if-chain tables); (4) lib/sys list predicates
+`contains`/`any`/`all`/`count`; (5) scenes / `during` guards (the guard-meeting /
+commando-fight / KIM-adhered global-bool lattices); (6) timed events (already tracked
+under Parser v2 — two new concrete cases); (7) regions (region-scoped backdrops +
+per-region defaults); (8) optional action slots (the fly/fly_thing split); (9) NPC
+movement helper + route-finding; (10) a once-only shuffled deck mode for `pick`.
+Recommended next: §4 (list predicates), then a scenes design doc (§5). The stale
+rulebooks.md status header flagged by the audit is now fixed (points at specs.md as
+source of truth for the shipped surface).
+
 ### Lighthouse Electron target — DONE (2026-07-12)
 All four decisions approved and implemented the same day: (1) the artifact is an
 **Electron project directory** (`npm run build:electron -- <game.lamp>`; author
