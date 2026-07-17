@@ -87,10 +87,7 @@ function int token_difficulty(string word):
 function string translate(string text, list<bool> levels):
 	let tokens = split(text)
 	let len = tokens.size
-	let num_levels = 0
-	for b in levels:
-		if b:
-			num_levels = num_levels + 1
+	let num_levels = count_of(levels, true)
 	let out = ""
 	let last_siriusian = false
 	for i = 0 to len - 1:

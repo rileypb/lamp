@@ -239,10 +239,7 @@ global list<bool> nine_buttons = none
 
 # Shared goal for every nine-button door: all nine lit blue (true).
 function bool nine_solved():
-	for i = 0 to 8:
-		if not nine_buttons[i]:
-			return false
-	return true
+	return all_true(nine_buttons)
 
 # The keypad display: a red button shows as [N], a blue one as <N>.
 function void show_keypad_9():
@@ -274,21 +271,11 @@ before press_key:
 # X RESET work; RESET / PRESS RESET are convenience verbs for the same. A redundant reset (already at
 # the start) "does nothing", matching I7's `initial keypad state` test.
 function bool nine_all_red():
-	for i = 0 to 8:
-		if nine_buttons[i]:
-			return false
-	return true
+	return not any_true(nine_buttons)
 
-# The red door starts with button 6 already lit.
+# The red door starts with button 6 already lit (and only it).
 function bool nine_at_red_start():
-	for i = 0 to 8:
-		if i == 5:
-			if not nine_buttons[i]:
-				return false
-		else:
-			if nine_buttons[i]:
-				return false
-	return true
+	return nine_buttons[5] and count_of(nine_buttons, true) == 1
 
 # The locker starts {red, blue, blue, red}.
 function bool four_at_start():
@@ -561,10 +548,7 @@ report press_key when kim_adhered_to == blue_door:
 global list<bool> four_buttons = none
 
 function bool four_solved():
-	for i = 0 to 3:
-		if not four_buttons[i]:
-			return false
-	return true
+	return all_true(four_buttons)
 
 # A red button shows as [N], a blue one as <N>, followed by the [RESET] button.
 function void show_keypad_4():
@@ -631,10 +615,7 @@ function string button_glyph(int n):
 
 # All five tiers scanned? (the gate for revealing the code in the commander's log.)
 function bool fully_scanned():
-	for b in scan_levels:
-		if not b:
-			return false
-	return true
+	return all_true(scan_levels)
 
 # In debug (non-release) builds the control code is forced to buttons 1-5 so walkthroughs are
 # deterministic — mirroring I7 (KIM.i7x: "if DEBUG is true, now control code is 12345"). A release
@@ -654,28 +635,15 @@ function void ensure_control_parts():
 			control_code = control_code + button_glyph(control_parts[i])
 		code_generated = true
 
-function bool in_control_parts(int n):
-	for p in control_parts:
-		if p == n:
-			return true
-	return false
-
 # Solved = exactly five buttons lit and every lit button is a control part.
 function bool purple_solved():
-	let count = 0
 	for i = 0 to 15:
-		if sixteen_buttons[i]:
-			count = count + 1
-			if not in_control_parts(i + 1):
-				return false
-	return count == 5
+		if sixteen_buttons[i] and not includes(control_parts, i + 1):
+			return false
+	return lit_count() == 5
 
 function int lit_count():
-	let count = 0
-	for i = 0 to 15:
-		if sixteen_buttons[i]:
-			count = count + 1
-	return count
+	return count_of(sixteen_buttons, true)
 
 # The keypad display: each button shows its number and Siriusian glyph (so the code glyphs
 # from the log can be matched to numbers). A dark button is [N glyph], a lit one <N glyph>.

@@ -1,0 +1,20 @@
+# lib/sys list predicates: includes / count_of (generic, == comparison) and
+# all_true / any_true (list<bool> folds; empty list is vacuously all, not any).
+# A sought string must be let-bound (a bare literal in the object-typed position
+# reads as an object name — the language-wide dispatch rule).
+
+game Listpred
+
+on startup:
+	let nums = [3, 1, 4, 1, 5]
+	let flags = [true, true, false]
+	print "includes 4: [includes(nums, 4)]"
+	print "includes 9: [includes(nums, 9)]"
+	print "count 1: [count_of(nums, 1)]"
+	print "count true: [count_of(flags, true)]"
+	print "all: [all_true(flags)] any: [any_true(flags)]"
+	let a = "a"
+	let words = ["a", "b", "a"]
+	print "includes a: [includes(words, a)] count a: [count_of(words, a)]"
+	let nothing = []
+	print "empty: all [all_true(nothing)] any [any_true(nothing)]"

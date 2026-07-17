@@ -496,13 +496,18 @@ sample/phobos, `phobos_ex` golden byte-invariant; the frozen port keeps its dupl
 by design). Docs: specs.md "Type inheritance" + "Declaration-site `self`".
 (2) object/type-scoped phase rules (~60 rules key on `when self.target == X`); (3) static
 data tables / const list-map literals at global scope (keypad flip-sets, `pa_message`,
-`rank_name`, `kim_surface_name` are if-chain tables); (4) lib/sys list predicates
-`contains`/`any`/`all`/`count`; (5) scenes / `during` guards (the guard-meeting /
+`rank_name`, `kim_surface_name` are if-chain tables); (4) ~~lib/sys list predicates~~
+**DONE (2026-07-16)** — `includes`/`count_of`/`all_true`/`any_true`, pure Lamp in
+lib/sys/functions.lamp (golden `listpred1`; `contains` was taken by the containment
+relation; sys locals are `sys_`-prefixed to dodge the no-shadowing rule against game
+globals). Applied to phobos_ex hacking/linguistics (eight loop-predicates → one-liners,
+`in_control_parts` deleted; keypad/RESET transcript diff identical to sample/phobos).
+(5) scenes / `during` guards (the guard-meeting /
 commando-fight / KIM-adhered global-bool lattices); (6) timed events (already tracked
 under Parser v2 — two new concrete cases); (7) regions (region-scoped backdrops +
 per-region defaults); (8) optional action slots (the fly/fly_thing split); (9) NPC
 movement helper + route-finding; (10) a once-only shuffled deck mode for `pick`.
-Recommended next: §4 (list predicates), then a scenes design doc (§5). The stale
+Recommended next: a scenes design doc (§5). The stale
 rulebooks.md status header flagged by the audit is now fixed (points at specs.md as
 source of truth for the shipped surface).
 

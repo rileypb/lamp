@@ -52,5 +52,12 @@ never collide with the original). Enhancements so far:
   `is sleeping_pods` rules. `sample/phobos` keeps the repeated per-object form —
   that's the faithful port.
 
+- **List predicates** (hacking.lamp, linguistics.lamp): the keypad goal checks
+  and scan-tier counts use lib/sys's `includes`/`count_of`/`all_true`/`any_true`
+  instead of hand-rolled index loops (`nine_solved` is `all_true(nine_buttons)`;
+  `in_control_parts` is gone in favor of `includes(control_parts, n)`).
+  Behavior verified identical against `sample/phobos` by a keypad/RESET
+  transcript diff; the frozen port keeps its loops.
+
 The full `test endgame` walkthrough is a golden (`phobos_ex` in
 tests/golden/expected/), so EX must stay winnable as enhancements land.

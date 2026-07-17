@@ -37,6 +37,42 @@ native function list<string> map_strings(list<object> xs, function fn)
 # (pass any list<T> and a matching item).
 native function void append(list<object> xs, object item)
 
+# List predicates — pure Lamp over the open list<object>/object generics (like
+# append's). `includes`/`count_of` compare elements by `==` (objects by
+# identity, values by equality); `all_true`/`any_true` fold a list<bool>
+# (`all_true` of an empty list is true, `any_true` false). Note the language-wide
+# object-position dispatch: a *bare string literal* passed as the sought value
+# reads as an object name (a compile error if no such object) — bind it to a
+# local first (`let key = "reset"` … `includes(words, key)`). Ints, bools, and
+# expressions are unaffected. (`includes`, not `contains` — that names the
+# world-model containment relation.) Locals here are sys_-prefixed: no-shadowing
+# means a game global with the same name would fail the game's compile, and
+# lib/sys loads into every game.
+function bool includes(list<object> sys_xs, object sys_v):
+	for sys_x in sys_xs:
+		if sys_x == sys_v:
+			return true
+	return false
+
+function int count_of(list<object> sys_xs, object sys_v):
+	let sys_n = 0
+	for sys_x in sys_xs:
+		if sys_x == sys_v:
+			sys_n = sys_n + 1
+	return sys_n
+
+function bool all_true(list<bool> sys_xs):
+	for sys_x in sys_xs:
+		if not sys_x:
+			return false
+	return true
+
+function bool any_true(list<bool> sys_xs):
+	for sys_x in sys_xs:
+		if sys_x:
+			return true
+	return false
+
 # Parse one line of input and run the matched action on behalf of `actor` (see
 # devdocs/game_parser.md). The actor is supplied by the caller — typically the
 # world library's player — so this base function names no world-specific global.

@@ -137,6 +137,21 @@ static data gravitates into function if-chains.
 
 ## 4. List predicates in lib/sys
 
+> **Status: BUILT (2026-07-16).** `includes(xs, v)`, `count_of(xs, v)`,
+> `all_true(xs)`, `any_true(xs)` — pure Lamp in `lib/sys/functions.lamp` over
+> the open `list<object>`/`object` generics (golden `listpred1`; specs.md lists
+> them with the other sys functions). Two naming forced deviations from the
+> sketch below: `contains` is the world-model containment relation (hence
+> `includes`), and lib/sys locals are `sys_`-prefixed because the no-shadowing
+> rule would otherwise fail any game declaring a global `n`/`x` (four fixtures
+> do). Known caveat: a bare string literal as the sought value reads as an
+> object name (the language-wide object-position dispatch) — let-bind it first.
+> Applied in `sample/phobos_ex` (hacking.lamp, linguistics.lamp): the eight
+> hand-rolled predicates below became one-liners (`in_control_parts` deleted
+> outright in favor of `includes`); behavior verified identical against
+> `sample/phobos` by a keypad/RESET transcript diff, endgame golden
+> byte-invariant. The frozen port keeps its loops.
+
 `lib/sys` has `append`, `shuffle`, and `map_strings`, but no `contains`, `any`,
 `all`, or `count`. So `hacking.lamp` hand-rolls seven index-loop predicates —
 `nine_solved`, `nine_all_red`, `nine_at_red_start`, `four_solved`,
@@ -261,7 +276,8 @@ type test.
 
 1. ~~**Subtype field re-defaults + `self` in field templates** (§1)~~ —
    **DONE (2026-07-16)**, see §1's status note.
-2. **lib/sys list predicates** (§4) — smallest effort, immediately useful.
+2. ~~**lib/sys list predicates** (§4)~~ — **DONE (2026-07-16)**, see §4's
+   status note.
 3. **Scenes design doc** (§5) — highest structural value, but interacts with
    `every_turn_rules`, state capture, and the rulebook model, so it needs a
    design pass first.
