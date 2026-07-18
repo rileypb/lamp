@@ -1,6 +1,6 @@
 # Scenes
 
-> Status: **Slices 1 and 2 BUILT (2026-07-17).** Slice 1 — the core: `scene`
+> Status: **ALL SLICES BUILT (2026-07-17).** Slice 1 — the core: `scene`
 > declarations, declared transitions with edge atoms, the begin/end events,
 > `begin_scene`/`end_scene`/`evaluate_scenes`/`end_all_scenes`, the field-write
 > compile error, advent loop integration (per-turn + startup + story-end
@@ -8,7 +8,9 @@
 > rulebook contributions, event/change/relation handlers), compile-checked
 > names. Goldens `scene1`–`scene4`, `scene_writeforbid`,
 > `scene_during_unknown`, `scene_runaway`; shipped surface specified in
-> `devdocs/specs.md` → "Scenes". **Slice 3 (phobos_ex adoption) remains.** The four design questions
+> `devdocs/specs.md` → "Scenes". Slice 3 — phobos_ex adoption (kim_hacking,
+> commando_fight, guard_meeting; see "Adoption findings" below): endgame golden
+> byte-identical, seven hand-test transcripts identical to sample/phobos. The four design questions
 > were decided by the author — see "Resolved decisions". This document designs
 > the scene mechanism — named, latched spans of play time with begin/end hooks
 > and a `during` rule guard. The motivating evidence is
@@ -391,6 +393,47 @@ output.
   be wanted.
 - **Exclusivity/priorities** between scenes: scenes are independent; any set
   may be active at once.
+
+## Adoption findings (Slice 3, phobos_ex)
+
+Three scenes landed; two mappings from the worked example were adjusted during
+adoption, and both adjustments are instructive:
+
+- **`kim_hacking`** (hacking.lamp) — exactly as designed, but *declared*, not
+  imperative: `begins when` adhered-and-in-room, `ends when` not, `recurring`
+  (debug `gonear` can teleport away mid-hack, so the room condition matters and
+  return resumes). All five copies of the compound guard became
+  `kim_hacking.active` reads / a `during` on the implicit-retrieve `before go`.
+  Every consumer reads on a later turn than the transition, so turn-boundary
+  latching is exact.
+- **`commando_fight`** (guard_endgame.lamp) — begins-condition as designed; the
+  burst-in moved to the begin hook (the hook fires right after
+  `every_turn_rules`, which preserves the PA-line-then-burst-in order the
+  every-turn registration produced). Two deviations: the **finale stayed in
+  `down_commando`** — an end hook would print it after the turn's PA line
+  instead of immediately after the knockout, and the story-end sweep would also
+  fire it on Galaxy's death; and the distracted rule kept a player-presence
+  `when` alongside `during`.
+- **`guard_meeting`** (guard_persuasion.lamp) — dropped `met_guard` from the
+  begins-condition: the spy-death button rules it guards
+  (control_room.lamp, `during guard_meeting`) fire on co-presence alone in the
+  original, and debug `gonear` reaches the room without ever latching
+  `met_guard` (it skips the `go` action). The **interjections roll stayed on
+  its original live guard** entirely: its eligibility counts the *re-arrival
+  turn*, which the old rule sees live at every-turn time but a scene only
+  reflects at that turn's pass — the documented mid-turn-observation limit.
+  Moving it would have shifted the interjection schedule by one turn on every
+  re-entry. The greeting likewise stayed in `after go` (a begin hook would
+  print it after the PA line).
+
+The general lesson: a scene replaces a lattice exactly when its consumers read
+the mode on **later turns** than the transitions; a consumer that must observe
+the mode **on the transition turn itself** (the re-arrival tick, the greeting's
+output position) keeps a live guard or an action-band rule. Fidelity was held
+throughout — the endgame golden is byte-identical and seven adversarial
+hand-test transcripts (keypads/RESET, mid-hack leave/return, gonear meeting,
+walk-in meeting with interjections, spy-death pushes, persuasion) match
+sample/phobos except the title line.
 
 ## Resolved decisions (2026-07-17)
 

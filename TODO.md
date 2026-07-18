@@ -523,13 +523,23 @@ every hook form — phase rules (after the selector, before `when`), `rule`
 contributions, event handlers, change handlers, relation add/remove handlers —
 one leading `SCENE.active` gate ahead of any `when` guard; scene name
 compile-checked (goldens `scene4` + `scene_during_unknown`; 295 goldens green).
-Remaining: Slice 3 (phobos_ex guard-arc adoption, endgame golden byte-identical).
+**Slice 3 BUILT (2026-07-17)**: phobos_ex adopted three scenes — `kim_hacking`
+(declared recurring conditions replacing all five compound adhered-and-in-room
+guards; `during` on the implicit-retrieve before-go), `commando_fight` (burst-in
+as the begin hook — order-preserved after the PA line; distracted rule
+`during`; `commando_started` deleted into `.happened`), `guard_meeting`
+(spy-death button rules `during`; scene deliberately met_guard-free for gonear
+exactness). Two consumers kept live guards by design — the interjection roll
+(re-arrival-turn tick is a mid-turn observation the scene pass lags) and the
+greeting (output position) — recorded as "Adoption findings" in scenes.md.
+Endgame golden byte-identical; seven hand-test transcripts identical to
+sample/phobos.
 (6) timed events (already tracked
 under Parser v2 — two new concrete cases); (7) regions (region-scoped backdrops +
 per-region defaults); (8) optional action slots (the fly/fly_thing split); (9) NPC
 movement helper + route-finding; (10) a once-only shuffled deck mode for `pick`.
-Recommended next: scenes Slice 3 (phobos_ex guard-arc adoption); or a
-smaller item (§7 regions or §8 optional slots). The stale
+Recommended next: a smaller audit item (§7 regions or §8 optional slots), or §2/§3
+(object-scoped rules / data tables). The stale
 rulebooks.md status header flagged by the audit is now fixed (points at specs.md as
 source of truth for the shipped surface).
 

@@ -37,6 +37,22 @@ global bool guard_allied = false
 global string pleased_by = ""
 global bool met_guard = false
 
+# The meeting as a scene (devdocs/scenes.md): Galaxy and the not-yet-allied guard
+# together in the control room, until the alliance or a separation. `recurring`, so
+# stepping out and back resumes it. Deliberately NOT gated on met_guard: the button
+# spy-death overrides (control_room.lamp, `during guard_meeting`) fire on co-presence
+# alone — debug gonear skips the go action and so never latches met_guard, and the
+# originals still shot the spy. The interjections roll (interjections.lamp) and the
+# every-turn detection rule below keep their own live guards: interjection eligibility
+# is evaluated mid-turn on the re-arrival turn (ahead of the scene pass — the
+# documented scene-boundary lag, devdocs/scenes.md), and detection turns on the finer
+# pleased/asserted distinctions. The greeting stays in the after-go rule so it prints
+# before the turn's PA line.
+scene guard_meeting:
+	recurring
+	begins when not guard_allied and holder(player) == Control_Room and holder(guard) == Control_Room
+	ends when guard_allied or not (holder(player) == Control_Room) or not (holder(guard) == Control_Room)
+
 # SAY/ANSWER state (Guard.i7x). `player_assert_humanity` latches once Galaxy claims to be human;
 # it spares her from the detection rule and opens the alliance reveal with no gift. The loyalty
 # yes/no is answerable only on the turn right after the commander's log is given — modelled with a

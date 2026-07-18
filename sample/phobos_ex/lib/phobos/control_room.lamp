@@ -4,10 +4,11 @@ lib advent
 # endgame. PUSH is advent's generic item verb (lib/advent/actions.lamp); these `instead push` rules
 # give the launch and self-destruct buttons their responses.
 #
-# Guard-present overrides come FIRST (so they win by source order): while the guard is in the
-# control room and not yet allied — i.e. during the disguised meeting — reaching for either button
-# blows Galaxy's cover and she's shot as a spy (guard_spy_death, in guard_persuasion.lamp). Once the
-# guard has left to lead the arming (or died), these fall through to the no-guard behaviour below.
+# Guard-present overrides come FIRST (so they win by source order): during the meeting
+# (`during guard_meeting` — the scene in guard_persuasion.lamp), reaching for either button
+# blows Galaxy's cover and she's shot as a spy (guard_spy_death, in guard_persuasion.lamp).
+# Once the guard has left to lead the arming (or died) the scene has ended, so these fall
+# through to the no-guard behaviour below.
 
 # Set once the self-destruct button is pushed (the control-room half of the sequence). The
 # guard-led reactor lever arming (guard_endgame.lamp) then sets `self_destruct_in_progress`
@@ -19,13 +20,13 @@ global bool self_destruct_pushed = false
 # (Reused by the Guard's death endings later.)
 global string ending_override = ""
 
-# Guard-present spy-death overrides (Guard.i7x). More specific than the no-guard rules below and
-# declared first, so they fire while the guard is present and unallied; otherwise they bow out.
-instead push when self.target == launch_button and holder(guard) == Control_Room and not guard_allied:
+# Guard-present spy-death overrides (Guard.i7x). Declared first, so they fire during the
+# meeting; otherwise they bow out to the no-guard rules below.
+instead push during guard_meeting when self.target == launch_button:
 	print "As Galaxy reaches for the launch button, the Siriusian guard looks at her with sudden suspicion and shouts,"
 	guard_spy_death()
 	stop succeeded
-instead push when self.target == self_destruct_button and holder(guard) == Control_Room and not guard_allied:
+instead push during guard_meeting when self.target == self_destruct_button:
 	print "As Galaxy reaches for the self-destruct button, the Siriusian guard looks at her with sudden suspicion and shouts,"
 	guard_spy_death()
 	stop succeeded

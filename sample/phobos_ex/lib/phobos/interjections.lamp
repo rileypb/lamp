@@ -50,6 +50,12 @@ function void interjection(int i):
 
 # On a quiet turn during the meeting (disguised, guard present, not yet allied), maybe air the next
 # unspoken interjection. The flag is always cleared afterward, so it is fresh each turn.
+# NOTE deliberately NOT `during guard_meeting` (the scene in guard_persuasion.lamp): this
+# eligibility is evaluated live, mid-turn — on the turn Galaxy walks BACK into the meeting, the
+# original ticks its counter, but the scene only re-begins at that turn's scene pass (after
+# every_turn_rules), which would shift the interjection schedule by a turn. The scene's
+# turn-boundary latching is exactly the documented "mid-turn observation" limit
+# (devdocs/scenes.md, Assumptions) — so this rule keeps the original live conjunction.
 rule every_turn_rules:
 	if met_guard and not guard_allied and holder(player) == Control_Room and holder(guard) == Control_Room and not no_interjection_this_turn and interj_next < 7:
 		interj_tick = interj_tick + 1

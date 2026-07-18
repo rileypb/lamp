@@ -52,6 +52,19 @@ never collide with the original). Enhancements so far:
   `is sleeping_pods` rules. `sample/phobos` keeps the repeated per-object form —
   that's the faithful port.
 
+- **Scenes** (hacking.lamp, guard_endgame.lamp, guard_persuasion.lamp,
+  control_room.lamp): three of the game's dramatic modes are `scene`s
+  (devdocs/scenes.md) — `kim_hacking` (the five compound adhered-and-in-room
+  guards became one declared scene; the implicit KIM retrieve is a
+  `before go during kim_hacking` rule), `commando_fight` (the burst-in is the
+  begin hook, the distracted→shot rule is `during`, and the `commando_started`
+  latch dissolved into `.happened`), and `guard_meeting` (the button spy-death
+  overrides are `during`). The interjection roll and the arrival greeting
+  deliberately keep live guards — their timing is observed mid-turn, ahead of
+  the scene pass (see scenes.md "Adoption findings"). Behavior verified
+  identical: byte-identical endgame golden plus seven hand-test transcript
+  diffs against `sample/phobos`.
+
 - **List predicates** (hacking.lamp, linguistics.lamp): the keypad goal checks
   and scan-tier counts use lib/sys's `includes`/`count_of`/`all_true`/`any_true`
   instead of hand-rolled index loops (`nine_solved` is `all_true(nine_buttons)`;

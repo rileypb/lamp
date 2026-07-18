@@ -20,6 +20,19 @@ global physical kim_adhered_to = none
 # retrieves it (see `before go` below). Mirrors I7's "the KIM is enclosed by the location" gate.
 global physical kim_hack_room = none
 
+# The active-hack scene (devdocs/scenes.md): the KIM is adhered AND Galaxy is still in the
+# hack room. Leaving auto-retrieves the KIM (the `before go` rule below), but debug `gonear`
+# can teleport away mid-hack, so the room condition stays — `recurring`, so the mode resumes
+# on walking back. Replaces the five hand-written copies of
+# `kim_adhered_to == none or not (holder(player) == kim_hack_room)`. Transitions latch at
+# each turn's scene pass; every consumer reads on a later turn than the adhere/detach that
+# caused the change, so the boundary timing is exact (verified by transcript diff against
+# sample/phobos).
+scene kim_hacking:
+	recurring
+	begins when not (kim_adhered_to == none) and holder(player) == kim_hack_room
+	ends when kim_adhered_to == none or not (holder(player) == kim_hack_room)
+
 # Stick the KIM onto `surface` (the handprint scanner, or the walls for the locker — as in I7) and
 # record the hack target + room. Moving it out of inventory is what makes "leaving it behind"
 # impossible (and keeps it off the inventory list) the way the original does.
@@ -69,7 +82,7 @@ function void push_clue():
 # something][paragraph break][KIM state]"). advent prints the description in its library `report
 # examine`, and author rules run before library ones, so we preempt with `instead` and re-emit.
 instead examine when self.target == KIM:
-	if kim_adhered_to == none or not (holder(player) == kim_hack_room):
+	if not kim_hacking.active:
 		print "[self.target.description][line break]"
 	else:
 		print "[self.target.description][par]"
@@ -85,12 +98,12 @@ instead take when self.taken == KIM and not (kim_adhered_to == none):
 # Leaving the room mid-hack can't strand the KIM: Galaxy implicitly takes it first (I7's "leaving the
 # KIM behind is impossible" / "Before going ... carry out the implicitly taking activity"). Runs in
 # the `before` band so the retrieval prints ahead of the new room, then the move proceeds normally.
-before go:
-	if not (kim_adhered_to == none) and holder(player) == kim_hack_room:
-		print "(first taking the KIM)[line break]"
-		retrieve_kim()
-		# Separate the implicit-take report from the room description that `go` is about to print.
-		print "[par]"
+# (`during` reads the scene as of the previous turn's pass — mid-hack by construction here.)
+before go during kim_hacking:
+	print "(first taking the KIM)[line break]"
+	retrieve_kim()
+	# Separate the implicit-take report from the room description that `go` is about to print.
+	print "[par]"
 
 # The adhered-state block (I7 `To say KIM state`): which target the KIM is stuck to, the button-array
 # blurb, then the keypad itself (reusing the same renderers the hack/press flow shows).
@@ -261,7 +274,7 @@ action press_key:
 		"press [n]"
 
 before press_key:
-	if kim_adhered_to == none or not (holder(player) == kim_hack_room):
+	if not kim_hacking.active:
 		print "Galaxy isn't hacking anything right now."
 		stop failed
 
@@ -282,7 +295,7 @@ function bool four_at_start():
 	return (not four_buttons[0]) and four_buttons[1] and four_buttons[2] and (not four_buttons[3])
 
 function void reset_keypad():
-	if kim_adhered_to == none or not (holder(player) == kim_hack_room):
+	if not kim_hacking.active:
 		print "There's no RESET button around."
 	else:
 		if kim_adhered_to == yellow_door:
@@ -353,7 +366,7 @@ action press_word:
 		"press [keytext]"
 
 before press_word:
-	if kim_adhered_to == none or not (holder(player) == kim_hack_room):
+	if not kim_hacking.active:
 		print "Galaxy isn't hacking anything right now."
 		stop failed
 	if to_lower(self.keytext) == "reset":

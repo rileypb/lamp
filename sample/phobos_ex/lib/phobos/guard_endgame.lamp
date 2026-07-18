@@ -36,7 +36,19 @@ item dead_guard:
 	description "The guard is sprawled on the ground, dead. Its Cybercarapace is labeled '[siriusian(\"Cybercarapace Serial Number $mfk5plas\")]'. Oil and blood seep from the wound in its chest, staining the floor."
 
 global bool left_lever_pulled = false
-global bool commando_started = false
+
+# The commando ambush as a scene (devdocs/scenes.md): begins the turn Galaxy and the
+# allied guard stand armed in the control room together (the burst-in is the begin
+# hook, replacing the fire-once every-turn rule + `commando_started` latch — the
+# hook runs in the scene pass right after every_turn_rules, so the burst-in still
+# prints after the doom-clock PA line, as before); ends when both attackers are
+# down. `commando_fight.happened` replaces the latch for the guard-leading gates.
+# The finale stays in down_commando — an end *hook* would print it after the
+# turn's PA line instead of immediately after the knockout, and the story-end
+# sweep would also fire it on Galaxy's death.
+scene commando_fight:
+	begins when self_destruct_in_progress and guard_allied and holder(player) == Control_Room and holder(guard) == Control_Room
+	ends when commandos_down()
 
 # --- The guard leads Galaxy to the reactor (before the self-destruct is armed) ---------------
 # Fires while allied, not yet armed, and standing together: the guard takes one step toward the
@@ -86,7 +98,7 @@ instead pull when self.target == right_reactor_arming_lever and holder(guard) ==
 
 # --- The guard leads back to the control room (after arming) ---------------------------------
 rule every_turn_rules:
-	if self_destruct_in_progress and guard_allied and not commando_started and holder(guard) == holder(player):
+	if self_destruct_in_progress and guard_allied and not commando_fight.happened and holder(guard) == holder(player):
 		let here = holder(player)
 		if here == Reactor_Room:
 			g_say("We have disabled the failsafe on the base reactor. Now we must get out of here before it explodes. Be careful -- other guards may have been summoned to the base following the self-destruct command.")
@@ -101,16 +113,14 @@ rule every_turn_rules:
 
 # --- Commando attack ------------------------------------------------------------------------
 # Reaching the control room together, armed, springs the ambush: two commandos drop in from the
-# flight deck (whose door is now forced open).
-rule every_turn_rules:
-	if self_destruct_in_progress and guard_allied and not commando_started and holder(player) == Control_Room and holder(guard) == Control_Room:
-		commando_started = true
-		move tall_commando to Control_Room
-		move short_commando to Control_Room
-		let fdd = flight_deck_door
-		fdd.closed = false
-		fdd.locked = false
-		print "[par]Without warning, a pair of Siriusian commandos -- one tall, one short -- burst into the control room from the flight deck above, weapons drawn. Galaxy and the guard spring into action."
+# flight deck (whose door is now forced open). The scene's begin hook.
+on commando_fight_begins:
+	move tall_commando to Control_Room
+	move short_commando to Control_Room
+	let fdd = flight_deck_door
+	fdd.closed = false
+	fdd.locked = false
+	print "[par]Without warning, a pair of Siriusian commandos -- one tall, one short -- burst into the control room from the flight deck above, weapons drawn. Galaxy and the guard spring into action."
 
 # Distracted -> shot (Guard.i7x): while the ambush is live -- the commandos have burst in and at
 # least one is still up -- doing ANYTHING but ATTACK or SHOOT gets Galaxy gunned down. The action
@@ -120,7 +130,7 @@ rule every_turn_rules:
 # and commando take/touch rules below -- so taking/feeling/fleeing/examining mid-fight is all death.
 # Both attackers still up -> twin blasts; one left -> a single blast. (Fires for any non-combat
 # action, meta included -- a do-or-die moment.)
-before any except attack except shoot when commando_started and not commandos_down() and holder(player) == Control_Room:
+before any except attack except shoot during commando_fight when holder(player) == Control_Room:
 	if not tall_commando.defeated and not short_commando.defeated:
 		print "While Galaxy is distracted, the commandos take advantage of the situation and fire at her. She is hit by twin disruptor blasts, and she falls to the ground, unconscious. She never awakes."
 	else:
