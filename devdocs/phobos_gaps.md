@@ -164,6 +164,18 @@ direction), and high-frequency in any puzzle-heavy game.
 
 ## 5. Scenes
 
+> **Status: designed (2026-07-17), not implemented.** Full design in
+> **`devdocs/scenes.md`**: a scene is a singleton object of a built-in `scene`
+> type (`active`/`happened`/`recurring` fields — persistence free via the
+> instances provider), declared `begins when`/`ends when` conditions evaluated
+> at one turn-cycle point (fixpoint, ends-before-begins), name-based
+> `<scene>_begins`/`<scene>_ends` events as hooks, imperative
+> `begin_scene`/`end_scene` for action-anchored modes (the KIM), and a
+> `during SCENE` rule-header guard. Includes the worked Phobos guard-arc
+> mapping and a three-slice roadmap ending in phobos_ex adoption. Design
+> finalized 2026-07-17 (four open questions decided — see the doc's "Resolved
+> decisions"); ready to build.
+
 The strongest **structural** candidate. Phobos's dramatic arc is a chain of
 modes — KIM-adhered, guard meeting, guard leading (out and back), commando
 fight — each represented as a lattice of global bools (`kim_adhered_to`,
@@ -278,9 +290,9 @@ type test.
    **DONE (2026-07-16)**, see §1's status note.
 2. ~~**lib/sys list predicates** (§4)~~ — **DONE (2026-07-16)**, see §4's
    status note.
-3. **Scenes design doc** (§5) — highest structural value, but interacts with
-   `every_turn_rules`, state capture, and the rulebook model, so it needs a
-   design pass first.
+3. ~~**Scenes design doc** (§5)~~ — **DESIGNED & FINALIZED (2026-07-17)**:
+   `devdocs/scenes.md`; ready to build (three slices, ending in phobos_ex
+   adoption).
 
 ## Open Questions
 

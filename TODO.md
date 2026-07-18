@@ -502,12 +502,23 @@ lib/sys/functions.lamp (golden `listpred1`; `contains` was taken by the containm
 relation; sys locals are `sys_`-prefixed to dodge the no-shadowing rule against game
 globals). Applied to phobos_ex hacking/linguistics (eight loop-predicates → one-liners,
 `in_control_parts` deleted; keypad/RESET transcript diff identical to sample/phobos).
-(5) scenes / `during` guards (the guard-meeting /
-commando-fight / KIM-adhered global-bool lattices); (6) timed events (already tracked
+(5) scenes / `during` guards — **DESIGNED (2026-07-17), not implemented**: full design
+in **`devdocs/scenes.md`** (scene = singleton object of a built-in `scene` type with
+`active`/`happened`/`recurring` fields, so undo/save need nothing new; `begins when`/
+`ends when` conditions evaluated once per turn after every_turn_rules with a capped
+fixpoint, ends before begins; name-based `<scene>_begins`/`<scene>_ends` events as
+hooks; imperative `begin_scene`/`end_scene` for action-anchored modes; `during SCENE`
+rule-header sugar for `SCENE.active`). Three-slice roadmap: core → `during` →
+phobos_ex adoption of the guard arc (worked mapping in the doc, endgame golden must
+stay byte-identical). Design finalized 2026-07-17 — the four open questions decided
+(field writes forbidden at compile time; edge atoms `SCENE begins`/`SCENE ends` in;
+`during` on every hook form; fixed cap 16) — ready to build.
+(6) timed events (already tracked
 under Parser v2 — two new concrete cases); (7) regions (region-scoped backdrops +
 per-region defaults); (8) optional action slots (the fly/fly_thing split); (9) NPC
 movement helper + route-finding; (10) a once-only shuffled deck mode for `pick`.
-Recommended next: a scenes design doc (§5). The stale
+Recommended next: build scenes per devdocs/scenes.md Slice 1, or pick a smaller item
+(§7 regions or §8 optional slots). The stale
 rulebooks.md status header flagged by the audit is now fixed (points at specs.md as
 source of truth for the shipped surface).
 
