@@ -164,7 +164,7 @@ direction), and high-frequency in any puzzle-heavy game.
 
 ## 5. Scenes
 
-> **Status: designed (2026-07-17), not implemented.** Full design in
+> **Status: Slice 1 BUILT (2026-07-17); slices 2-3 remain.** Full design in
 > **`devdocs/scenes.md`**: a scene is a singleton object of a built-in `scene`
 > type (`active`/`happened`/`recurring` fields — persistence free via the
 > instances provider), declared `begins when`/`ends when` conditions evaluated
@@ -172,9 +172,10 @@ direction), and high-frequency in any puzzle-heavy game.
 > `<scene>_begins`/`<scene>_ends` events as hooks, imperative
 > `begin_scene`/`end_scene` for action-anchored modes (the KIM), and a
 > `during SCENE` rule-header guard. Includes the worked Phobos guard-arc
-> mapping and a three-slice roadmap ending in phobos_ex adoption. Design
-> finalized 2026-07-17 (four open questions decided — see the doc's "Resolved
-> decisions"); ready to build.
+> mapping and a three-slice roadmap ending in phobos_ex adoption. Slice 1 (the
+> core mechanism) shipped 2026-07-17: goldens `scene1`-`scene3` +
+> `scene_writeforbid`/`scene_runaway`, surface in specs.md "Scenes". Remaining:
+> Slice 2 (`during` on every hook form) and Slice 3 (phobos_ex guard arc).
 
 The strongest **structural** candidate. Phobos's dramatic arc is a chain of
 modes — KIM-adhered, guard meeting, guard leading (out and back), commando
@@ -290,9 +291,9 @@ type test.
    **DONE (2026-07-16)**, see §1's status note.
 2. ~~**lib/sys list predicates** (§4)~~ — **DONE (2026-07-16)**, see §4's
    status note.
-3. ~~**Scenes design doc** (§5)~~ — **DESIGNED & FINALIZED (2026-07-17)**:
-   `devdocs/scenes.md`; ready to build (three slices, ending in phobos_ex
-   adoption).
+3. ~~**Scenes** (§5)~~ — designed & **Slice 1 BUILT (2026-07-17)**:
+   `devdocs/scenes.md`; remaining: Slice 2 (`during`), Slice 3 (phobos_ex
+   guard-arc adoption).
 
 ## Open Questions
 

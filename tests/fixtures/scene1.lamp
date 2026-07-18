@@ -1,0 +1,50 @@
+# Scenes (devdocs/scenes.md), slice 1: a condition-latched scene — begin/end
+# hooks fire as events, `happened` latches, and a non-recurring scene never
+# re-begins from its conditions. `arrival` is active at startup (its condition
+# already holds after placement), so its begin hook prints before the first
+# prompt.
+
+lib advent
+
+game Scene1:
+	author "test"
+	title "Scene One"
+	version 1
+	release beta
+	start Hall
+
+room Hall:
+	description "A hall. The vault is south."
+room Vault:
+	description "The vault."
+
+bidi connects Hall south Vault
+
+scene arrival:
+	begins when holder(player) == Hall
+	ends when not (holder(player) == Hall)
+
+scene heist:
+	begins when holder(player) == Vault
+	ends when not (holder(player) == Vault)
+
+on arrival_begins:
+	print "(The story opens in the hall.)"
+
+on heist_begins:
+	print "The heist is on."
+
+on heist_ends:
+	print "The heist is over."
+
+action status:
+	syntax:
+		"status"
+
+report status:
+	print "heist active [heist.active] happened [heist.happened]"
+
+test_script test_scenes:
+	printed_name "scenes"
+	understand "scenes"
+	commands "status/s/status/n/status/s/status"

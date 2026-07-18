@@ -1,0 +1,34 @@
+Hall
+A hall. The vault is south.
+(The story opens in the hall.)
+
+> test scenes
+> status
+heist active false happened false
+
+> s
+Vault
+The vault.
+
+The heist is on.
+
+> status
+heist active true happened true
+
+> n
+Hall
+A hall. The vault is south.
+
+The heist is over.
+
+> status
+heist active false happened true
+
+> s
+Vault
+The vault.
+
+> status
+heist active false happened true
+
+> quit

@@ -1,0 +1,25 @@
+Sanctum
+The sanctum.
+
+> summon
+Candles flare.
+Summoned.
+
+> status
+ritual active true happened true
+
+> banish
+The candles gutter out.
+Banished.
+
+> summon
+Candles flare.
+Summoned.
+
+> undo
+[Previous turn undone.]
+
+> status
+ritual active false happened true
+
+> quit

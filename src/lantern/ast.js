@@ -225,6 +225,21 @@ function createDispatchStatement(eventName) {
     return { kind: "DispatchStatement", eventName };
 }
 
+// A scene's transition rules (devdocs/scenes.md). The companion ObjectDecl (type
+// `scene`, name `objectName`) is emitted separately by the parser; this node
+// carries the declared begins/ends condition expressions and the uncoerced
+// source identifier (`sceneName`), which is the `<scene>_begins`/`<scene>_ends`
+// event stem.
+function createSceneRegister(sceneName, objectName, beginsConds, endsConds, filePath, lineNumber) {
+    return { kind: "SceneRegister", sceneName, objectName, beginsConds, endsConds, filePath, lineNumber };
+}
+
+// `SCENE begins` / `SCENE ends` — a boolean edge atom, valid only inside a scene
+// body's conditions: true exactly when that scene began/ended this turn.
+function createEdgeAtomExpr(sceneName, objectName, edge) {
+    return { kind: "EdgeAtomExpr", sceneName, objectName, edge };
+}
+
 function createWhileStatement(condition, body) {
     return { kind: "WhileStatement", condition, body };
 }
@@ -454,6 +469,8 @@ module.exports = {
     createLocaleDecl,
     createNotForReleaseDecl,
     createDispatchStatement,
+    createSceneRegister,
+    createEdgeAtomExpr,
     createWhileStatement,
     createLessThanExpr,
     createLessOrEqualExpr,

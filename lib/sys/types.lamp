@@ -45,3 +45,17 @@ type window:
 	# never knows the pane's real size. Required (positive) when kind is "canvas".
 	int canvas_w = 0
 	int canvas_h = 0
+# A scene (devdocs/scenes.md): a named, latched span of play time. Declared with
+# `scene NAME:` (a singleton of this type plus its transition rules); the fields
+# are engine-maintained — game code reads them (directly or via `during`, when it
+# lands) and transitions only through begin_scene/end_scene or declared
+# `begins when`/`ends when` conditions (assigning them is a compile error). Being
+# ordinary instance fields, undo/save/restore capture them with no extra machinery.
+type scene:
+	# The scene is happening now.
+	bool active
+	# The scene has begun at least once, ever.
+	bool happened
+	# A non-recurring scene that has ended never re-begins from its declared
+	# conditions (begin_scene can still restart it explicitly).
+	bool recurring

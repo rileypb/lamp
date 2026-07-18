@@ -1,0 +1,53 @@
+# Scenes, slice 1: imperative transitions and undo. begin_scene fires the hook
+# immediately (mid-turn, before the report band), a repeated call is a no-op
+# (one hook per transition), begin_scene restarts an ended non-recurring scene
+# (an explicit call ignores recurrence), and UNDO rolls the fields back with the
+# rest of the turn — scene state is ordinary instance state.
+
+lib advent
+
+game Scene3:
+	author "test"
+	title "Scene Three"
+	version 1
+	release beta
+	start Sanctum
+
+room Sanctum:
+	description "The sanctum."
+
+scene ritual
+
+on ritual_begins:
+	print "Candles flare."
+
+on ritual_ends:
+	print "The candles gutter out."
+
+action summon:
+	syntax:
+		"summon"
+
+do summon:
+	begin_scene(ritual)
+	begin_scene(ritual)
+
+report summon:
+	print "Summoned."
+
+action banish:
+	syntax:
+		"banish"
+
+do banish:
+	end_scene(ritual)
+
+report banish:
+	print "Banished."
+
+action status:
+	syntax:
+		"status"
+
+report status:
+	print "ritual active [ritual.active] happened [ritual.happened]"

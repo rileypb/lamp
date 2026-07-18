@@ -107,6 +107,9 @@ on startup:
 		error "This game has no starting room. Declare one in the game block with `start <Room>` (for example, `start Foyer`)."
 	move player to this_game.start
 	dispatch started
+	# Scenes whose begins-conditions already hold at the start of play activate
+	# before the first prompt (devdocs/scenes.md).
+	evaluate_scenes()
 	# Session loop: play until the story ends (or the player quits/restarts), then run the
 	# end-of-story sequence. A successful RESTORE there brings `story` back to `ongoing`
 	# (it rides in the snapshot), looping back into the command loop; QUIT and an armed
@@ -146,6 +149,9 @@ on startup:
 					if story == ongoing:
 						print "[par if printed]"
 						follow every_turn_rules()
+						# Scene transitions evaluate after the turn's rules, so daemons
+						# that latch state are seen the same turn (devdocs/scenes.md).
+						evaluate_scenes()
 						# After the turn's rules: announce a light change the action (or a
 						# daemon) caused — see check_light_transition (rooms.lamp). Plain code,
 						# not a rule, so a game rule stopping the book can't suppress it.
@@ -169,6 +175,10 @@ on startup:
 		# `ongoing` then.) `run_meta_command` runs only the session verbs, so an in-world
 		# command can't run now that the game is over.
 		if not (story == ongoing):
+			# No scene outlives the story: end every active scene (end events fire,
+			# declaration order) ahead of the closing banner, so an end hook may
+			# contribute to the closing text (devdocs/scenes.md).
+			end_all_scenes()
 			print "[par]"
 			follow end_story_rules()
 			print "[par]"

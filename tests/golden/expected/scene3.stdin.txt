@@ -1,0 +1,8 @@
+summon
+status
+banish
+summon
+undo
+status
+quit
+y

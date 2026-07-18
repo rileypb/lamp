@@ -510,15 +510,22 @@ fixpoint, ends before begins; name-based `<scene>_begins`/`<scene>_ends` events 
 hooks; imperative `begin_scene`/`end_scene` for action-anchored modes; `during SCENE`
 rule-header sugar for `SCENE.active`). Three-slice roadmap: core → `during` →
 phobos_ex adoption of the guard arc (worked mapping in the doc, endgame golden must
-stay byte-identical). Design finalized 2026-07-17 — the four open questions decided
-(field writes forbidden at compile time; edge atoms `SCENE begins`/`SCENE ends` in;
-`during` on every hook form; fixed cap 16) — ready to build.
+stay byte-identical). Design finalized 2026-07-17 (four open questions decided) and
+**Slice 1 BUILT the same day**: `scene NAME:` declarations (a lib/sys `scene`-typed
+singleton + registered transition thunks), begins/ends conditions with the
+`SCENE begins`/`SCENE ends` edge atoms, `<name>_begins`/`<name>_ends` events,
+begin_scene/end_scene/evaluate_scenes/end_all_scenes natives, the scene-field
+write-forbid compile error, and the advent loop wiring (post-every_turn_rules pass +
+startup evaluation + story-end sweep) — goldens `scene1`-`scene3`,
+`scene_writeforbid`, `scene_runaway`; all 293 goldens + 16 suites green (sceneless
+games byte-invariant). Remaining: Slice 2 (`during` on every hook form), Slice 3
+(phobos_ex guard-arc adoption, endgame golden byte-identical).
 (6) timed events (already tracked
 under Parser v2 — two new concrete cases); (7) regions (region-scoped backdrops +
 per-region defaults); (8) optional action slots (the fly/fly_thing split); (9) NPC
 movement helper + route-finding; (10) a once-only shuffled deck mode for `pick`.
-Recommended next: build scenes per devdocs/scenes.md Slice 1, or pick a smaller item
-(§7 regions or §8 optional slots). The stale
+Recommended next: scenes Slice 2 (`during`), then Slice 3 (phobos_ex adoption); or a
+smaller item (§7 regions or §8 optional slots). The stale
 rulebooks.md status header flagged by the audit is now fixed (points at specs.md as
 source of truth for the shipped surface).
 

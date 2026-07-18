@@ -359,6 +359,21 @@ function emitProgram(programAst, options = {}) {
     const relationRemoveHandlerNodes = programAst.nodes.filter((node) => node.kind === "RelationRemoveHandler");
     const globalNames = new Set(globalDeclNodes.map((n) => n.name));
 
+    // Scene registrations (devdocs/scenes.md): the singleton object was created
+    // with the other ObjectDecls above; this registers its transition rules —
+    // begins/ends conditions as lazy thunks (order-independent: they only run
+    // inside evaluate_scenes, long after load) plus the uncoerced event stem for
+    // the `<scene>_begins`/`<scene>_ends` dispatches.
+    const sceneRegisterNodes = programAst.nodes.filter((node) => node.kind === "SceneRegister");
+    for (const node of sceneRegisterNodes) {
+        const begins = node.beginsConds.map((c) => `() => (${emitExpression(c, globalNames)})`).join(", ");
+        const ends = node.endsConds.map((c) => `() => (${emitExpression(c, globalNames)})`).join(", ");
+        lines.push(`lamplighter.registerScene(${emitName(node.objectName)}, ${JSON.stringify(node.sceneName)}, [${begins}], [${ends}]);`);
+    }
+    if (sceneRegisterNodes.length > 0) {
+        lines.push("");
+    }
+
     // Message overrides (e.g. translation packs) register their text at load time,
     // before any message is used at runtime; the override wins over the inline default.
     const messageOverrideNodes = programAst.nodes.filter((node) => node.kind === "MessageOverride");
@@ -1270,6 +1285,9 @@ function emitExpression(expr, globalNames = new Set()) {
     }
     if (expr.kind === "FreezeExpr") {
         return `lamplighter.renderText(${emitExpression(expr.expr, globalNames)})`;
+    }
+    if (expr.kind === "EdgeAtomExpr") {
+        return `lamplighter.sceneEdge(${emitName(expr.objectName)}, ${JSON.stringify(expr.edge)})`;
     }
     if (expr.kind === "VariableExpr") {
         return expr.name;

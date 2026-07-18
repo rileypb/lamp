@@ -99,6 +99,7 @@ function prescanDeclarations(tokens, knownTypeNames = new Set(), knownFieldNames
     const relationNames = new Set();
     const actionNames = new Set();
     const objectNames = new Set();
+    const sceneNames = new Set();
     const reasonNames = new Set();
     const tagNames = new Set();
     const verbNames = new Set();
@@ -147,6 +148,15 @@ function prescanDeclarations(tokens, knownTypeNames = new Set(), knownFieldNames
         const enclosing = blockStack.length > 0 ? blockStack[blockStack.length - 1] : null;
         const objName = objectNameOf(line, depth, enclosing);
         if (objName) objectNames.add(coerceName(objName));
+        // `scene NAME[:]` at top level — a scene declaration (devdocs/scenes.md). The
+        // line shape is the object-declaration shape (`scene` is lib/sys's scene type),
+        // so `objectNames` already collected the name above; this set additionally
+        // marks it a *scene* for edge-atom parsing (`NAME begins`/`NAME ends`) and
+        // the checker's field-write restriction. Uncoerced: edge atoms and event
+        // stems use the source identifier.
+        if (depth === 0 && isIdent(head) && head.value === "scene" && isIdent(line[1])) {
+            sceneNames.add(line[1].value);
+        }
         if (line[line.length - 1].type === "COLON") {
             blockStack.push({ depth, isObjectBody: objName !== null });
         }
@@ -275,6 +285,7 @@ function prescanDeclarations(tokens, knownTypeNames = new Set(), knownFieldNames
         relationNames,
         actionNames,
         objectNames,
+        sceneNames,
         reasonNames,
         sugarDecls,
         typeNames,

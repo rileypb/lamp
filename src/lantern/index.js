@@ -83,6 +83,7 @@ function runCompilation() {
     const verbNames = new Set();
     const sugarMap = new Map();
     const rulebookParams = new Map();
+    const sceneNames = new Set();
     const rawTemplates = [];
     // Type and field names first, across all files, so nested-object detection in
     // any file sees types/fields declared elsewhere (e.g. a game nesting an `item`
@@ -99,6 +100,7 @@ function runCompilation() {
         for (const name of decls.relationNames) relationNames.add(name);
         for (const name of decls.actionNames) actionNames.add(name);
         for (const name of decls.objectNames) objectNames.add(name);
+        for (const name of decls.sceneNames) sceneNames.add(name);
         for (const name of decls.reasonNames) reasonNames.add(name);
         for (const name of decls.tagNames) tagNames.add(name);
         for (const name of decls.verbNames) verbNames.add(name);
@@ -110,7 +112,7 @@ function runCompilation() {
     const relationTemplates = buildRelationTemplateDispatch(rawTemplates);
 
     for (const { sourceFile, tokens } of tokenizedFiles) {
-        const parsed = parseTokens(tokens, sourceFile, globalNames, functionNames, relationNames, relationTemplates, actionNames, objectNames, tagNames, rulebookParams, verbNames, typeNames, fieldNames, sugarMap);
+        const parsed = parseTokens(tokens, sourceFile, globalNames, functionNames, relationNames, relationTemplates, actionNames, objectNames, tagNames, rulebookParams, verbNames, typeNames, fieldNames, sugarMap, sceneNames);
         allNodes.push(...parsed.nodes);
     }
 

@@ -19,6 +19,7 @@
     - `append(list<object>, object)` — appends an item to a list **in place** (mutating the list, like `shuffle`), so a list held in a global/field grows durably and the append is captured by undo/save. It is the general list-builder: with `map_strings` and a `for` loop it expresses filter/collect, which Lamp has no literal syntax for (e.g. `let evens = []` then `append(evens, n)` inside a loop). A native because it is generic over the element type.
     - `includes(list<object>, object) → bool`, `count_of(list<object>, object) → int` — whether any element equals the sought value / how many do (`==`: objects by identity, scalar values by equality). Pure Lamp over the same open generics as `append`. Caveat (the language-wide object-position dispatch): a **bare string literal** passed as the sought value reads as an *object name* and is a compile error when no such object exists — bind it to a local first (`let key = "reset"` … `includes(words, key)`); ints, bools, and expressions are unaffected. (Named `includes` because `contains` is the world-model containment relation.)
     - `all_true(list<bool>) → bool`, `any_true(list<bool>) → bool` — fold a list of booleans: every element true / at least one true. An empty list is vacuously `all_true` and not `any_true`. Pure Lamp. Together with `includes`/`count_of` these replace the hand-rolled index-loop predicates puzzle code otherwise accumulates (goal checks like "all lit", "exactly five lit", "n is one of the code digits" — golden `listpred1`).
+    - `evaluate_scenes()`, `begin_scene(scene)`, `end_scene(scene)`, `end_all_scenes()` — the scene machinery (see *Scenes* below): one declared-transition evaluation pass; imperative begin/end (immediate, event-dispatching, no-op when already in the target state); end every active scene (the story-end sweep). The advent loop wires the first and last in; a bare-sys game with scenes calls them at its own boundaries.
     - `run_command(string, object) → bool` — parses one command against registered action templates, resolves slot objects in scope, and runs the matched action for the given actor. Returns **true iff a turn was spent** (an action actually ran), so the caller can fire every-turn rules; false for a parse failure, a disambiguation prompt, or an out-of-world verb.
     - `split_commands(string) → list<string>` — splits one typed line into the commands it holds (see *Command sequences* below). A full stop or the locale's sequence word (`then`) ends a command; the conjunction (`and`) does not.
     - `command_ran() → bool` — whether the last `run_command` reached an action at all. Unlike `run_command`'s own result it stays **true for an out-of-world verb** (which runs but spends no turn) and is false for a parse failure, an unresolved noun, or a disambiguation question. The command loop reads it to decide whether the rest of a multi-command line still stands.
@@ -1605,6 +1606,79 @@ silently try doff:
     clothing self.carried
     actor self.actor
 ```
+
+### Scenes
+
+A **scene** is a named, latched span of play time with begin/end hooks — the
+IF-structural device for dramatic modes (a meeting, a fight, a hack in
+progress). Design and rationale: `devdocs/scenes.md`.
+
+```lamp
+scene NAME:
+    begins when CONDITION
+    ends when CONDITION
+    recurring
+```
+
+`scene NAME` declares a **singleton object** of lib/sys's `scene` type (a bare
+`scene NAME` with no body is valid — a purely imperative scene). Its fields —
+readable anywhere, e.g. `NAME.active` in any condition — are engine-maintained:
+
+- `active` — the scene is happening now.
+- `happened` — it has begun at least once, ever.
+- `recurring` — set only by the declaration's bare `recurring` line: a
+  non-recurring scene that has ended never re-begins from its declared
+  conditions (`begin_scene` can still restart it).
+
+**Assigning a scene field is a compile error** (`scene field "active" is
+maintained by the engine and cannot be assigned; use begin_scene/end_scene`) —
+a direct write would skip the begin/end events. Because the fields are ordinary
+instance fields on a named singleton, undo/save/restore capture them with no
+scene-specific machinery, and a restore never re-evaluates transitions.
+
+**Transitions.** `begins when` / `ends when` each take a global-scope bool
+expression (globals, named objects, function calls — no params/locals/`self`;
+conditions should be pure reads, as they may run several times per turn). Both
+are optional and repeatable — several conditions OR together. Alternatively (or
+additionally) the lib/sys functions `begin_scene(s)` / `end_scene(s)` transition
+imperatively — immediately, mid-turn, so later rules in the same turn observe
+the change; both are no-ops when the scene is already in the target state.
+Every transition, declared or imperative, dispatches an **event** —
+`NAME_begins` / `NAME_ends` (the scene's source identifier plus the suffix) —
+so hooks are ordinary `on` handlers:
+
+```lamp
+on heist_begins:
+    print "The alarm panel goes dark."
+```
+
+**Edge atoms.** Inside a scene body's conditions — and only there — `SCENE
+begins` and `SCENE ends` are boolean atoms, true exactly when that scene
+began/ended **this turn**. They compose as ordinary booleans (`begins when
+patrol ends and story == ongoing`) and are the anchoring form for chained
+scenes: unlike the level-triggered `patrol.happened and not patrol.active`,
+an edge atom is true for one evaluation pass only, so it anchors correctly to
+*each* run of a recurring predecessor.
+
+**Evaluation.** Declared conditions are evaluated by `evaluate_scenes()`
+(lib/sys) at one point per turn — the advent loop calls it after
+`every_turn_rules` (a bare-sys game calls it at its own turn boundary), plus
+once at startup after the player is placed, so a scene whose condition already
+holds is active before the first prompt. The pass runs **ends before begins**,
+in declaration order, looping to a fixpoint so edge-chained scenes transition
+the same turn; the loop is capped at 16 iterations, and overflow (a cycle of
+mutually-triggering scenes) is a runtime error naming the scenes still
+flipping. Edge flags are cleared when the pass completes and are never part of
+the persisted state. When the story ends, the advent loop runs
+`end_all_scenes()` before `end_story_rules` — every active scene ends (hooks
+fire, declaration order), so no scene outlives the story and an end hook may
+contribute to the closing text.
+
+Goldens: `scene1` (condition-latched + startup activation + non-recurrence),
+`scene2` (recurring + edge chaining), `scene3` (imperative + undo),
+`scene_writeforbid` (the compile error), `scene_runaway` (the fixpoint cap).
+Deferred to a later slice: the `during SCENE` hook-header guard
+(`devdocs/scenes.md` Slice 2).
 
 ### Name resolution and scope
 

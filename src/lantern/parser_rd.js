@@ -28,16 +28,16 @@ function getInfixBP(token) {
 
 const PHASE_WORDS = new Set(["before", "instead", "check", "do", "after", "report"]);
 
-function parseSource(sourceText, filePath, globalNames = new Set(), functionNames = new Set(), relationNames = new Set(), relationTemplates = new Map(), actionNames = new Set(), objectNames = new Set(), tagNames = new Set(), rulebookParams = new Map(), verbNames = new Set(), typeNames = new Set(), fieldNames = new Set(), sugarMap = new Map()) {
+function parseSource(sourceText, filePath, globalNames = new Set(), functionNames = new Set(), relationNames = new Set(), relationTemplates = new Map(), actionNames = new Set(), objectNames = new Set(), tagNames = new Set(), rulebookParams = new Map(), verbNames = new Set(), typeNames = new Set(), fieldNames = new Set(), sugarMap = new Map(), sceneNames = new Set()) {
     const tokens = tokenize(sourceText, filePath);
-    return parseTokens(tokens, filePath, globalNames, functionNames, relationNames, relationTemplates, actionNames, objectNames, tagNames, rulebookParams, verbNames, typeNames, fieldNames, sugarMap);
+    return parseTokens(tokens, filePath, globalNames, functionNames, relationNames, relationTemplates, actionNames, objectNames, tagNames, rulebookParams, verbNames, typeNames, fieldNames, sugarMap, sceneNames);
 }
 
 // Parses an already-tokenized file. The driver (src/lantern/index.js) tokenizes
 // each file once, runs the token-level prescan over those tokens, then parses
 // from the same tokens — so tokenization happens exactly once per file.
-function parseTokens(tokens, filePath, globalNames = new Set(), functionNames = new Set(), relationNames = new Set(), relationTemplates = new Map(), actionNames = new Set(), objectNames = new Set(), tagNames = new Set(), rulebookParams = new Map(), verbNames = new Set(), typeNames = new Set(), fieldNames = new Set(), sugarMap = new Map()) {
-    return createParser(tokens, filePath, globalNames, functionNames, relationNames, relationTemplates, actionNames, objectNames, tagNames, rulebookParams, verbNames, typeNames, fieldNames, sugarMap).parseProgram();
+function parseTokens(tokens, filePath, globalNames = new Set(), functionNames = new Set(), relationNames = new Set(), relationTemplates = new Map(), actionNames = new Set(), objectNames = new Set(), tagNames = new Set(), rulebookParams = new Map(), verbNames = new Set(), typeNames = new Set(), fieldNames = new Set(), sugarMap = new Map(), sceneNames = new Set()) {
+    return createParser(tokens, filePath, globalNames, functionNames, relationNames, relationTemplates, actionNames, objectNames, tagNames, rulebookParams, verbNames, typeNames, fieldNames, sugarMap, sceneNames).parseProgram();
 }
 
 // Applies Inform's single-quote convention to a literal text run: a `'` flanked
@@ -266,13 +266,16 @@ function splitTemplate(rawValue, fail) {
     return { parts, hasSub };
 }
 
-function createParser(tokens, filePath, globalNames, functionNames = new Set(), relationNames = new Set(), relationTemplates = new Map(), actionNames = new Set(), objectNames = new Set(), tagNames = new Set(), rulebookParams = new Map(), verbNames = new Set(), typeNames = new Set(), fieldNames = new Set(), sugarMap = new Map()) {
+function createParser(tokens, filePath, globalNames, functionNames = new Set(), relationNames = new Set(), relationTemplates = new Map(), actionNames = new Set(), objectNames = new Set(), tagNames = new Set(), rulebookParams = new Map(), verbNames = new Set(), typeNames = new Set(), fieldNames = new Set(), sugarMap = new Map(), sceneNames = new Set()) {
     let pos = 0;
     // Nested/reference object placements (`item hook:` inside a room body) parse to
     // hoisted top-level nodes — the nested ObjectDecl plus a `contains` placement —
     // collected here and drained into the program by parseProgram after each
     // top-level declaration. See parseObjectBody.
     const hoisted = [];
+    // True while parsing a scene body's begins/ends condition — the only context
+    // where the `SCENE begins` / `SCENE ends` edge atoms are valid (devdocs/scenes.md).
+    let inSceneCondition = false;
 
     const peek = (offset = 0) => tokens[pos + offset];
     const next = () => tokens[pos++];
@@ -396,6 +399,13 @@ function createParser(tokens, filePath, globalNames, functionNames = new Set(), 
                 && peek(3).type === "IDENT" && peek(3).value === "file" && peek(4).type === "STRING") {
                 return parseImageDecl();
             }
+            // `scene NAME[:]` — a scene declaration (devdocs/scenes.md). Contextual on the
+            // exact shape (`scene` is not a keyword): the body carries transition rules
+            // (`begins when` / `ends when` / `recurring`), not field assignments, so it
+            // takes its own path rather than the ObjectDecl fallback below.
+            if (token.value === "scene" && peek(1).type === "IDENT") {
+                return parseSceneDecl();
+            }
             return peek(1).type === "EQUALS" ? parseGlobalAssign() : parseObjectDecl();
         }
         throw err(`Unexpected token at top level: ${token.type}`);
@@ -427,6 +437,56 @@ function createParser(tokens, filePath, globalNames, functionNames = new Set(), 
         const overrideExpr = parseStringExpr(strTok, new Set());
         expectNewline();
         return ast.createMessageOverride(nameTok.value, overrideExpr, filePath, nameTok.line);
+    }
+
+    // `scene NAME:` — a singleton of lib/sys's `scene` type plus its transition
+    // rules (devdocs/scenes.md). The body accepts `begins when EXPR` / `ends when
+    // EXPR` (repeatable; ORed at evaluation) and a bare `recurring`. Parses to an
+    // ordinary ObjectDecl (so the instance rides every existing object mechanism —
+    // checker, emitter, state capture) plus a hoisted SceneRegister carrying the
+    // conditions and the uncoerced identifier (the `<scene>_begins`/`<scene>_ends`
+    // event stem). Inside the conditions — and only there — `SCENE begins` /
+    // `SCENE ends` parse as edge atoms (see parseIdentExpr).
+    function parseSceneDecl() {
+        const head = next(); // the `scene` identifier
+        const name = plainName("scene name");
+        const objectName = coerceName(name);
+        let recurring = false;
+        const beginsConds = [];
+        const endsConds = [];
+        if (at("COLON")) {
+            next();
+            expectNewline();
+            expect("INDENT", "Expected an indented block");
+            while (!at("DEDENT")) {
+                const t = peek();
+                if (t.type === "IDENT" && t.value === "recurring") {
+                    next();
+                    expectNewline();
+                    recurring = true;
+                    continue;
+                }
+                if (t.type === "IDENT" && (t.value === "begins" || t.value === "ends")) {
+                    next();
+                    expectKeyword("when");
+                    inSceneCondition = true;
+                    const cond = parseExpression(0, new Set());
+                    inSceneCondition = false;
+                    expectNewline();
+                    (t.value === "begins" ? beginsConds : endsConds).push(cond);
+                    continue;
+                }
+                throw err("Expected 'begins when', 'ends when', or 'recurring' in a scene body", t.line);
+            }
+            next();
+        } else {
+            expectNewline();
+        }
+        hoisted.push(ast.createSceneRegister(name, objectName, beginsConds, endsConds, filePath, head.line));
+        const fields = recurring
+            ? [ast.createFieldAssign("recurring", ast.createBooleanLiteral(true), filePath, head.line)]
+            : [];
+        return ast.createObjectDecl("scene", objectName, fields, filePath, head.line);
     }
 
     function parseTypeDecl() {
@@ -1992,6 +2052,16 @@ function createParser(tokens, filePath, globalNames, functionNames = new Set(), 
         if (raw === "true") return ast.createBooleanLiteral(true);
         if (raw === "false") return ast.createBooleanLiteral(false);
         if (raw === "none") return ast.createNoneLiteral();
+
+        // Edge atoms (scene-body conditions only): `SCENE begins` / `SCENE ends` —
+        // true exactly when that scene began/ended this turn. Contextual on the
+        // scene name (prescan-collected) so `begins`/`ends` stay ordinary
+        // identifiers everywhere else.
+        if (inSceneCondition && sceneNames.has(raw) && at("IDENT")
+                && (peek().value === "begins" || peek().value === "ends")) {
+            const edge = next().value;
+            return ast.createEdgeAtomExpr(raw, coerceName(raw), edge);
+        }
 
         if (at("LPAREN")) {
             next();

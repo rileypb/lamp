@@ -325,3 +325,24 @@ native function int random(int n)
 # copied. A native rather than a Lamp function because it is generic over the element
 # type (Lamp has no generics — cf. `map_strings`); pass any `list<T>`.
 native function void shuffle(list<object> xs)
+
+# --- Scenes (devdocs/scenes.md) ----------------------------------------------
+# Run one scene-transition evaluation pass: ends before begins, non-recurring
+# scenes never re-begin from conditions, fixpoint capped at 16 (overflow is a
+# runtime error naming the scenes still flipping). The advent loop calls this
+# once per turn after every_turn_rules (and once at startup); a bare-sys game
+# calls it at its own turn boundary. Begin/end transitions dispatch the scene's
+# `<name>_begins` / `<name>_ends` events.
+native function void evaluate_scenes()
+
+# Imperative transitions — the same choke point as declared conditions (fields
+# flip, the edge is marked, the event dispatches immediately, mid-turn). No-ops
+# when already active/inactive respectively; begin_scene ignores recurrence (an
+# explicit call always means it).
+native function void begin_scene(scene s)
+native function void end_scene(scene s)
+
+# End every active scene in declaration order (end events fire). The advent loop
+# runs this when the story ends, before end_story_rules, so no scene outlives
+# the story and end hooks may contribute to the closing text.
+native function void end_all_scenes()

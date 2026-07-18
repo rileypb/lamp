@@ -33,6 +33,11 @@ let actionTagSchema = new Map();
 // object reference but names no declared object — e.g. a mistyped `stop failed` reason
 // (reasons are auto-created singletons, so a typo silently mints a distinct one).
 let declaredObjectNames = new Set();
+// Scene singleton names (coerced), for the scene field-write restriction.
+let sceneObjectNames = new Set();
+// The engine-maintained scene fields; game code may read but never assign them
+// (a direct write would skip the begin/end events) — see devdocs/scenes.md.
+const SCENE_ENGINE_FIELDS = new Set(["active", "happened", "recurring"]);
 
 function buildActionTagSchema(nodes) {
     const schema = new Map();
@@ -80,6 +85,17 @@ function checkProgram(programAst, options = {}) {
     actionSchema = buildActionSchema(programAst.nodes);
     actionTagSchema = buildActionTagSchema(programAst.nodes);
     declaredObjectNames = new Set(programAst.nodes.filter((n) => n.kind === "ObjectDecl").map((n) => n.objectName));
+    // Scene singletons (devdocs/scenes.md): collected for the field-write
+    // restriction below, plus a duplicate-declaration check (two `scene NAME`
+    // declarations would otherwise silently merge like an object reopen).
+    sceneObjectNames = new Set();
+    for (const node of programAst.nodes) {
+        if (node.kind !== "SceneRegister") continue;
+        if (sceneObjectNames.has(node.objectName)) {
+            throw typeError(node.filePath, node.lineNumber, `scene "${node.sceneName}" is declared more than once`);
+        }
+        sceneObjectNames.add(node.objectName);
+    }
     const kindSchema = buildKindSchema(programAst.nodes);
     const typeSchema = buildTypeSchema(programAst.nodes, kindSchema);
     const globalTypes = buildGlobalTypeSchema(programAst.nodes);
@@ -137,6 +153,13 @@ function checkProgram(programAst, options = {}) {
             checkActionDecl(node);
         } else if (node.kind === "UnderstandDecl") {
             checkUnderstandDecl(node);
+        } else if (node.kind === "SceneRegister") {
+            // Scene begins/ends conditions are global-scope bool expressions —
+            // no params, locals, or `self` — so they check with an empty local
+            // map (calls validated for existence/arity like any expression).
+            for (const cond of [...node.beginsConds, ...node.endsConds]) {
+                checkExprCalls(cond, typeSchema, kindSchema, new Map(), functionSchema);
+            }
         }
     }
 }
@@ -956,6 +979,17 @@ function checkAssignStatement(stmt, typeSchema, kindSchema, localTypes) {
 
     const objectChain = chain.slice(0, -1);
     const fieldName = chain[chain.length - 1];
+
+    // Scene fields are engine-maintained: assigning them would skip the
+    // begin/end events, so it is a compile error steering to the transition
+    // functions (devdocs/scenes.md). Catches a scene named directly and a
+    // scene-typed local/param.
+    const headIsScene = sceneObjectNames.has(coerceName(chain[0])) || localTypes.get(chain[0]) === "scene";
+    if (chain.length === 2 && headIsScene && SCENE_ENGINE_FIELDS.has(fieldName)) {
+        throw typeError(stmt.filePath, stmt.lineNumber,
+            `scene field "${fieldName}" is maintained by the engine and cannot be assigned; use begin_scene/end_scene`);
+    }
+
     const containerType = resolveChainType(objectChain, typeSchema, kindSchema, localTypes);
 
     if (!containerType) {

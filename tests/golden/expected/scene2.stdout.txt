@@ -1,0 +1,32 @@
+Yard
+The yard. A tower is south.
+
+> test scenes
+> s
+Tower
+The tower.
+
+A patrol sweeps the tower.
+
+> n
+Yard
+The yard. A tower is south.
+
+The patrol stands down.
+Alarms ring across the yard.
+
+> s
+Tower
+The tower.
+
+A patrol sweeps the tower.
+The alarms cut out.
+
+> n
+Yard
+The yard. A tower is south.
+
+The patrol stands down.
+Alarms ring across the yard.
+
+> quit

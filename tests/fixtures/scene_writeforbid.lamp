@@ -1,0 +1,23 @@
+# Scene fields are engine-maintained: a direct assignment would skip the
+# begin/end events, so it is a compile error steering to begin_scene/end_scene.
+
+lib advent
+
+game SceneWriteforbid:
+	author "test"
+	title "Scene Writeforbid"
+	version 1
+	release beta
+	start Hall
+
+room Hall:
+	description "A hall."
+
+scene ritual
+
+action cheat:
+	syntax:
+		"cheat"
+
+do cheat:
+	ritual.active = true

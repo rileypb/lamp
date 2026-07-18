@@ -1990,6 +1990,108 @@ function fireEvent(eventName) {
     }
 }
 
+// --- Scenes (devdocs/scenes.md) ---------------------------------------------
+// A scene is a singleton instance of lib/sys's `scene` type; its active/happened
+// fields are ordinary instance fields, so undo/save/restore capture them with no
+// scene-specific machinery. This registry holds only immutable program structure
+// (the declared transition-condition thunks and the event stem); the edge flags
+// are transient within one turn's evaluation pass and are deliberately never
+// part of the persisted state.
+const sceneRegistry = new Map(); // objectName -> { eventStem, beginsFns, endsFns }
+const sceneEdgeFlags = new Map(); // objectName -> { began, ended }
+
+function registerScene(objectName, eventStem, beginsFns = [], endsFns = []) {
+    sceneRegistry.set(objectName, { eventStem, beginsFns, endsFns });
+}
+
+// The `SCENE begins` / `SCENE ends` edge atoms: true exactly when that scene
+// began/ended this turn (set by any transition, cleared when the evaluation
+// pass completes).
+function sceneEdge(objectName, kind) {
+    const flags = sceneEdgeFlags.get(objectName);
+    if (!flags) return false;
+    return kind === "begins" ? flags.began : flags.ended;
+}
+
+function markSceneEdge(objectName, kind) {
+    const flags = sceneEdgeFlags.get(objectName) || { began: false, ended: false };
+    if (kind === "begins") flags.began = true;
+    else flags.ended = true;
+    sceneEdgeFlags.set(objectName, flags);
+}
+
+// The single transition choke point (with endScene): flips the fields via
+// setField (so change handlers observe), marks the edge, and dispatches the
+// begin event immediately — an imperative mid-turn call is visible to rules
+// later in the same turn. No-op on an already-active scene. Ignores
+// recurring/happened: an explicit call always means it (only *declared*
+// conditions respect non-recurrence, in evaluateScenes).
+function beginScene(instance) {
+    if (!instance || instance.active) return;
+    setField(instance, "active", true);
+    setField(instance, "happened", true);
+    markSceneEdge(instance.name, "begins");
+    const entry = sceneRegistry.get(instance.name);
+    fireEvent(`${entry ? entry.eventStem : instance.name}_begins`);
+}
+
+function endScene(instance) {
+    if (!instance || !instance.active) return;
+    setField(instance, "active", false);
+    markSceneEdge(instance.name, "ends");
+    const entry = sceneRegistry.get(instance.name);
+    fireEvent(`${entry ? entry.eventStem : instance.name}_ends`);
+}
+
+// One evaluation pass, at the turn boundary (the advent loop calls this after
+// every_turn_rules; a bare-sys game calls it at its own turn boundary). Ends
+// before begins; a non-recurring scene that has happened never re-begins from
+// its conditions; loop to fixpoint with a fixed cap of 16 — exceeding it is an
+// authoring bug (mutually-triggering scenes) surfaced as a runtime error naming
+// the scenes still flipping. Edge flags are cleared when the pass completes, so
+// `SCENE ends` atoms see this turn's transitions (including imperative mid-turn
+// ones) and nothing older.
+function evaluateScenes() {
+    let lastFlipped = new Set();
+    for (let pass = 0; pass < 16; pass += 1) {
+        const flipped = new Set();
+        for (const [name, entry] of sceneRegistry) {
+            const instance = nameRegistry.get(name);
+            if (!instance || !instance.active) continue;
+            if (entry.endsFns.some((condition) => condition())) {
+                endScene(instance);
+                flipped.add(name);
+            }
+        }
+        for (const [name, entry] of sceneRegistry) {
+            const instance = nameRegistry.get(name);
+            if (!instance || instance.active) continue;
+            if (instance.happened && !instance.recurring) continue;
+            if (entry.beginsFns.length > 0 && entry.beginsFns.some((condition) => condition())) {
+                beginScene(instance);
+                flipped.add(name);
+            }
+        }
+        if (flipped.size === 0) {
+            sceneEdgeFlags.clear();
+            return;
+        }
+        lastFlipped = flipped;
+    }
+    sceneEdgeFlags.clear();
+    throw new Error(`scene transitions did not settle after 16 passes (still flipping: ${[...lastFlipped].join(", ")})`);
+}
+
+// The story-end sweep: end every active scene, in declaration order, so end
+// hooks may contribute to the closing text and no scene outlives the story.
+function endAllScenes() {
+    for (const name of sceneRegistry.keys()) {
+        const instance = nameRegistry.get(name);
+        if (instance && instance.active) endScene(instance);
+    }
+    sceneEdgeFlags.clear();
+}
+
 // --- Output-stream paragraph control (text.md H) ----------------------------
 // Newlines are owned here, not by the host: `print` output is written raw (via
 // writeImpl, the "write" channel — the host/shell add no trailing newline) and this
@@ -3741,6 +3843,12 @@ module.exports = {
     registerTemplate,
     instantiateTemplate,
     selfTemplate,
+    registerScene,
+    sceneEdge,
+    beginScene,
+    endScene,
+    evaluateScenes,
+    endAllScenes,
     renderText,
     renderSubject,
     renderSetSubject,

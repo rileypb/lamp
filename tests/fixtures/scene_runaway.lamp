@@ -1,0 +1,27 @@
+# A cycle of mutually-triggering scenes never settles: ping wants to be active
+# exactly when pong is not, and pong exactly when ping is — so every fixpoint
+# iteration flips both, forever. The evaluation pass is capped at 16 iterations
+# and overflows loudly, naming the scenes that were still flipping — an
+# authoring bug surfaced, not an infinite hang.
+
+lib advent
+
+game SceneRunaway:
+	author "test"
+	title "Scene Runaway"
+	version 1
+	release beta
+	start Hall
+
+room Hall:
+	description "A hall."
+
+scene ping:
+	recurring
+	begins when not pong.active
+	ends when pong.active
+
+scene pong:
+	recurring
+	begins when ping.active
+	ends when not ping.active

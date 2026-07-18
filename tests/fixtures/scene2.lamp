@@ -1,0 +1,48 @@
+# Scenes, slice 1: recurring scenes and the edge atoms. `patrol` re-begins each
+# time its condition holds again; `alert` is chained on the edges — it begins the
+# same turn patrol ends and ends the same turn patrol next begins, which the
+# level-triggered `happened and not active` idiom cannot express for a recurring
+# predecessor (it would stay true between every run).
+
+lib advent
+
+game Scene2:
+	author "test"
+	title "Scene Two"
+	version 1
+	release beta
+	start Yard
+
+room Yard:
+	description "The yard. A tower is south."
+room Tower:
+	description "The tower."
+
+bidi connects Yard south Tower
+
+scene patrol:
+	recurring
+	begins when holder(player) == Tower
+	ends when not (holder(player) == Tower)
+
+scene alert:
+	recurring
+	begins when patrol ends
+	ends when patrol begins
+
+on patrol_begins:
+	print "A patrol sweeps the tower."
+
+on patrol_ends:
+	print "The patrol stands down."
+
+on alert_begins:
+	print "Alarms ring across the yard."
+
+on alert_ends:
+	print "The alarms cut out."
+
+test_script test_scenes:
+	printed_name "scenes"
+	understand "scenes"
+	commands "s/n/s/n"

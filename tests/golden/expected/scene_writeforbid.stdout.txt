@@ -1,0 +1,3 @@
+Compile error: tests/fixtures/scene_writeforbid.lamp:23: type error: scene field "active" is maintained by the engine and cannot be assigned; use begin_scene/end_scene
+  23 | 	ritual.active = true
+    |  ^

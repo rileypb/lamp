@@ -1,10 +1,16 @@
 # Scenes
 
-> Status: **design finalized (2026-07-17), not yet implemented.** The four
-> design questions were decided by the author — see "Resolved decisions" — so
-> this is ready to build (roadmap below). This document designs the
-> scene mechanism — named, latched spans of play time with begin/end hooks and a
-> `during` rule guard. The motivating evidence is `devdocs/phobos_gaps.md` §5:
+> Status: **Slice 1 BUILT (2026-07-17)** — the core: `scene` declarations,
+> declared transitions with edge atoms, the begin/end events,
+> `begin_scene`/`end_scene`/`evaluate_scenes`/`end_all_scenes`, the field-write
+> compile error, advent loop integration (per-turn + startup + story-end
+> sweep). Goldens `scene1`–`scene3`, `scene_writeforbid`, `scene_runaway`;
+> shipped surface specified in `devdocs/specs.md` → "Scenes". **Slices 2
+> (`during`) and 3 (phobos_ex adoption) remain.** The four design questions
+> were decided by the author — see "Resolved decisions". This document designs
+> the scene mechanism — named, latched spans of play time with begin/end hooks
+> and a `during` rule guard. The motivating evidence is
+> `devdocs/phobos_gaps.md` §5:
 > Phobos's dramatic modes (the guard meeting, the guard-led arming, the commando
 > fight, the KIM-adhered hack) are each a lattice of global bools whose
 > combinations are re-derived, verbatim, in every participating rule.
@@ -400,7 +406,10 @@ incorporates them:
 
 ## Open Questions
 
-- Where exactly do scene end-events land relative to `end_story_rules` output
+- ~~Where exactly do scene end-events land relative to `end_story_rules` output
   when the story ends mid-action (e.g. the doom clock) — before the `[par]`
-  separator or after? Decide during implementation against the countdown
-  golden.
+  separator or after?~~ **Resolved in Slice 1:** `end_all_scenes()` runs first
+  in the end-of-story sequence, *before* the `[par]` separator and the banner —
+  end-hook output reads as the last in-world text, the banner follows. (All
+  existing goldens byte-invariant; revisit against phobos_ex's countdown in
+  Slice 3 if the ordering reads wrong there.)
