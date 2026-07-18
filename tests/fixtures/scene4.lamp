@@ -1,0 +1,79 @@
+# Scenes, slice 2: the `during SCENE` guard on every hook form — a phase rule
+# (composing with `when`), a rulebook contribution, an event handler, a change
+# handler, and a relation-add handler. Each fires only while `watch` is active;
+# the same commands outside the scene print nothing extra. (A `during`-guarded
+# change handler needs a real field write — advent's `holder` moves via the
+# contains relation, which fires relation handlers, not change handlers.)
+
+lib advent
+
+game Scene4:
+	author "test"
+	title "Scene Four"
+	version 1
+	release beta
+	start Yard
+
+room Yard:
+	description "The yard. A tower is south."
+room Tower:
+	description "The tower."
+
+bidi connects Yard south Tower
+
+type item:
+	int polish
+
+item cloak:
+	wearable
+
+item stone
+
+contains yourself cloak
+contains Yard stone
+
+scene watch:
+	recurring
+	begins when holder(player) == Tower
+	ends when not (holder(player) == Tower)
+
+on watch_begins:
+	print "(watch begins)"
+
+on watch_ends:
+	print "(watch ends)"
+
+before wait during watch when 1 == 1:
+	print "The guard eyes you as you idle."
+
+rule every_turn_rules during watch:
+	print "A searchlight sweeps past."
+
+action ping:
+	syntax:
+		"ping"
+
+do ping:
+	dispatch pinged
+
+report ping:
+	print "Ping."
+
+on pinged during watch:
+	print "The tower PA crackles back."
+
+action buff:
+	syntax:
+		"buff"
+
+do buff:
+	stone.polish = stone.polish + 1
+
+report buff:
+	print "Buffed."
+
+on item.polish change during watch:
+	print "(the guard notices the buffing)"
+
+on wears add during watch:
+	print "(the guard notes your cloak)"

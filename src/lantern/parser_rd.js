@@ -1039,29 +1039,33 @@ function createParser(tokens, filePath, globalNames, functionNames = new Set(), 
             next();
             const fieldName = plainName("field name");
             expectKeyword("change");
+            const duringScene = parseDuringClause();
             expect("COLON", "Expected ':' after change handler header");
             expectNewline();
             const body = parseBlock(new Set(["self"]));
-            return ast.createChangeHandler(first, fieldName, body);
+            return ast.createChangeHandler(first, fieldName, body, duringScene);
         }
         if (at("IDENT") && peek().value === "add") {
             next();
+            const duringScene = parseDuringClause();
             expect("COLON", "Expected ':' after 'add'");
             expectNewline();
             const body = parseBlock(new Set(["self"]));
-            return ast.createRelationAddHandler(first, body);
+            return ast.createRelationAddHandler(first, body, duringScene);
         }
         if (atKeyword("remove")) {
             next();
+            const duringScene = parseDuringClause();
             expect("COLON", "Expected ':' after 'remove'");
             expectNewline();
             const body = parseBlock(new Set(["self"]));
-            return ast.createRelationRemoveHandler(first, body);
+            return ast.createRelationRemoveHandler(first, body, duringScene);
         }
+        const duringScene = parseDuringClause();
         expect("COLON", "Expected ':' after event name");
         expectNewline();
         const body = parseBlock(new Set());
-        return ast.createEventHandler(first, body);
+        return ast.createEventHandler(first, body, duringScene);
     }
 
     function parseLibImport() {
@@ -1321,6 +1325,20 @@ function createParser(tokens, filePath, globalNames, functionNames = new Set(), 
     // A leading-band phase rule: `BAND SELECTOR [when COND]:` followed by a block.
     // SELECTOR is a single action name (the common case) or a boolean selector over
     // actions/tags (see parseSelector). `self` is the action instance in the body.
+    // `during SCENE` — the scene-activity guard on a hook header (devdocs/scenes.md,
+    // Slice 2): sugar for gating the hook on `SCENE.active`. Recognized on shape
+    // (`during` + IDENT) after the head, before any `when` guard or the colon; the
+    // scene name is validated by the checker. Contextual — `during` stays an
+    // ordinary identifier everywhere else.
+    function parseDuringClause() {
+        if (at("IDENT") && peek().value === "during" && peek(1).type === "IDENT") {
+            next();
+            const nameTok = next();
+            return { sceneName: nameTok.value, objectName: coerceName(nameTok.value), filePath, lineNumber: nameTok.line };
+        }
+        return null;
+    }
+
     function parsePhaseRule() {
         const bandToken = next();
         let band = bandToken.value;
@@ -1331,6 +1349,7 @@ function createParser(tokens, filePath, globalNames, functionNames = new Set(), 
             band = "report_failed";
         }
         const selector = parseSelector();
+        const duringScene = parseDuringClause();
         let whenExpr = null;
         if (atKeyword("when")) {
             next();
@@ -1342,9 +1361,9 @@ function createParser(tokens, filePath, globalNames, functionNames = new Set(), 
         // A bare single action name keeps the single-action code path (actionName
         // set, selector null); anything else is a multi-action selector rule.
         if (selector.kind === "SelAtom" && actionNames.has(selector.name)) {
-            return ast.createPhaseRule(band, selector.name, whenExpr, body, filePath, bandToken.line);
+            return ast.createPhaseRule(band, selector.name, whenExpr, body, filePath, bandToken.line, null, duringScene);
         }
-        return ast.createPhaseRule(band, null, whenExpr, body, filePath, bandToken.line, selector);
+        return ast.createPhaseRule(band, null, whenExpr, body, filePath, bandToken.line, selector, duringScene);
     }
 
     // Selector grammar (lowest to highest precedence): `or`, then `and`/`except`
@@ -1397,6 +1416,7 @@ function createParser(tokens, filePath, globalNames, functionNames = new Set(), 
         const keyword = next();
         const rulebookName = plainName("rulebook name");
         const paramLocals = new Set(rulebookParams.get(rulebookName) || []);
+        const duringScene = parseDuringClause();
         let whenExpr = null;
         if (atKeyword("when")) {
             next();
@@ -1405,7 +1425,7 @@ function createParser(tokens, filePath, globalNames, functionNames = new Set(), 
         expect("COLON", "Expected ':' after rule header");
         expectNewline();
         const body = parseBlock(paramLocals);
-        return ast.createRulebookRule(rulebookName, whenExpr, body, filePath, keyword.line);
+        return ast.createRulebookRule(rulebookName, whenExpr, body, filePath, keyword.line, duringScene);
     }
 
     function parseRulebookDecl() {

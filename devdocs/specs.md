@@ -1674,11 +1674,37 @@ the persisted state. When the story ends, the advent loop runs
 fire, declaration order), so no scene outlives the story and an end hook may
 contribute to the closing text.
 
+**The `during` guard.** Every hook form accepts `during SCENE` — phase rules
+(including selector and `report failed` forms), `rule RULEBOOK` contributions,
+event handlers, change handlers, and relation add/remove handlers. It sits
+after the head, before any `when` guard or the colon, and gates the hook on
+`SCENE.active` — for a rule, ahead of its `when` guard; for a handler, an
+implicit enclosing check:
+
+```lamp
+before any except attack except shoot during ambush:
+    ...
+rule every_turn_rules during watch:
+    ...
+on pinged during watch:
+    ...
+on item.polish change during watch:
+    ...
+on wears add during watch:
+    ...
+```
+
+`during` is contextual — recognized only in a hook header, on the shape
+`during IDENT` — and the scene name is compile-checked (`unknown scene "…" in
+during guard`). `SCENE.active` remains valid in any ordinary expression.
+Conditional function overloads do not take `during` (their guards are a
+specificity-dispatch mechanism, not behavior hooks).
+
 Goldens: `scene1` (condition-latched + startup activation + non-recurrence),
 `scene2` (recurring + edge chaining), `scene3` (imperative + undo),
-`scene_writeforbid` (the compile error), `scene_runaway` (the fixpoint cap).
-Deferred to a later slice: the `during SCENE` hook-header guard
-(`devdocs/scenes.md` Slice 2).
+`scene4` (`during` on all five hook forms, composing with `when`),
+`scene_writeforbid` / `scene_during_unknown` (the compile errors),
+`scene_runaway` (the fixpoint cap).
 
 ### Name resolution and scope
 

@@ -776,13 +776,15 @@ function emitRulebookDecl(node, globalNames = new Set()) {
 function emitRulebookRule(node, globalNames = new Set()) {
     const order = node.filePath === mainFilePath ? 0 : 1;
     const paramNames = rulebookParamNames.get(node.rulebookName) || [];
-    return emitRulebookRuleFn(node.rulebookName, paramNames, node.whenExpr, node.body, order, globalNames);
+    return emitRulebookRuleFn(node.rulebookName, paramNames, node.whenExpr, node.body, order, globalNames, node.duringScene);
 }
 
 // Shared emit for a single rulebook rule (declaration or contribution): a
 // `registerRulebookRule` call wrapping the guard + body as a rule function.
-function emitRulebookRuleFn(rulebookName, paramNames, whenExpr, body, order, globalNames) {
+// Only a contribution can carry a `during` guard (declarations pass none).
+function emitRulebookRuleFn(rulebookName, paramNames, whenExpr, body, order, globalNames, duringScene = null) {
     const lines = [`lamplighter.registerRulebookRule(${JSON.stringify(rulebookName)}, (${paramNames.join(", ")}) => {`];
+    lines.push(...emitDuringGuard(duringScene));
     if (whenExpr) {
         lines.push(`    if (!(${emitExpression(whenExpr, globalNames)})) return;`);
     }
@@ -795,6 +797,7 @@ function emitEventHandler(node, globalNames = new Set()) {
     const bodyLines = emitStatementList(node.body, 1, globalNames);
     return [
         `lamplighter.onEvent(${JSON.stringify(node.eventName)}, () => {`,
+        ...emitDuringGuard(node.duringScene),
         ...bodyLines,
         "});",
     ].join("\n");
@@ -806,6 +809,13 @@ function emitEventHandler(node, globalNames = new Set()) {
 // lamplighter.HALT` (halt the band), and a fall-through (undefined) continues to
 // the next rule. The trailing order arg (0 author, 1 library) sorts author rules
 // first so they can suppress library ones.
+// The `during SCENE` hook guard (devdocs/scenes.md): one leading line gating the
+// hook body on the scene's `active` field. Emitted ahead of any `when` guard.
+function emitDuringGuard(duringScene) {
+    if (!duringScene) return [];
+    return [`    if (!lamplighter.getObject(${emitName(duringScene.objectName)}).active) return;`];
+}
+
 function emitPhaseRule(node, globalNames = new Set()) {
     const order = node.filePath === mainFilePath ? 0 : 1;
     // A multi-action selector expands to one registration per resolved action;
@@ -814,6 +824,7 @@ function emitPhaseRule(node, globalNames = new Set()) {
         ? resolveSelector(node.selector, allActionNames, actionTagMembers, emitSelectorError)
         : [node.actionName];
     const bodyLines = [];
+    bodyLines.push(...emitDuringGuard(node.duringScene));
     if (node.whenExpr) {
         bodyLines.push(`    if (!(${emitExpression(node.whenExpr, globalNames)})) return;`);
     }
@@ -837,6 +848,7 @@ function emitChangeHandler(node, globalNames = new Set()) {
     const bodyLines = emitStatementList(node.body, 1, globalNames);
     return [
         `lamplighter.registerChangeHandler(${emitName(node.typeName)}, ${JSON.stringify(node.fieldName)}, (self) => {`,
+        ...emitDuringGuard(node.duringScene),
         ...bodyLines,
         "});",
     ].join("\n");
@@ -846,6 +858,7 @@ function emitRelationAddHandler(node, globalNames = new Set()) {
     const bodyLines = emitStatementList(node.body, 1, globalNames);
     return [
         `lamplighter.registerRelationAddHandler(${emitName(node.relationName)}, (self) => {`,
+        ...emitDuringGuard(node.duringScene),
         ...bodyLines,
         "});",
     ].join("\n");
@@ -855,6 +868,7 @@ function emitRelationRemoveHandler(node, globalNames = new Set()) {
     const bodyLines = emitStatementList(node.body, 1, globalNames);
     return [
         `lamplighter.registerRelationRemoveHandler(${emitName(node.relationName)}, (self) => {`,
+        ...emitDuringGuard(node.duringScene),
         ...bodyLines,
         "});",
     ].join("\n");

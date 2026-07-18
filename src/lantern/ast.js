@@ -70,8 +70,8 @@ function createGlobalAssign(name, value, filePath, lineNumber) {
     return { kind: "GlobalAssign", name, value, filePath, lineNumber };
 }
 
-function createEventHandler(eventName, body) {
-    return { kind: "EventHandler", eventName, body };
+function createEventHandler(eventName, body, duringScene = null) {
+    return { kind: "EventHandler", eventName, body, duringScene };
 }
 
 function createLetStatement(name, expr, filePath, lineNumber) {
@@ -256,16 +256,16 @@ function createForEachStatement(varName, listExpr, body, filePath, lineNumber) {
     return { kind: "ForEachStatement", varName, listExpr, body, filePath, lineNumber };
 }
 
-function createChangeHandler(typeName, fieldName, body) {
-    return { kind: "ChangeHandler", typeName, fieldName, body };
+function createChangeHandler(typeName, fieldName, body, duringScene = null) {
+    return { kind: "ChangeHandler", typeName, fieldName, body, duringScene };
 }
 
-function createRelationAddHandler(relationName, body) {
-    return { kind: "RelationAddHandler", relationName, body };
+function createRelationAddHandler(relationName, body, duringScene = null) {
+    return { kind: "RelationAddHandler", relationName, body, duringScene };
 }
 
-function createRelationRemoveHandler(relationName, body) {
-    return { kind: "RelationRemoveHandler", relationName, body };
+function createRelationRemoveHandler(relationName, body, duringScene = null) {
+    return { kind: "RelationRemoveHandler", relationName, body, duringScene };
 }
 
 function createLessThanExpr(left, right) {
@@ -373,14 +373,14 @@ function createUnderstandDecl(template, actionName, filePath, lineNumber) {
 // do/after/report). `self` inside the body is the action instance. Exactly one of
 // `actionName` (single-action rule) or `selector` (multi-action rule, a SelNode
 // boolean tree) is non-null; see ast.SelNode constructors and devdocs/rulebooks.md.
-function createPhaseRule(band, actionName, whenExpr, body, filePath, lineNumber, selector = null) {
-    return { kind: "PhaseRule", band, actionName, whenExpr, body, filePath, lineNumber, selector };
+function createPhaseRule(band, actionName, whenExpr, body, filePath, lineNumber, selector = null, duringScene = null) {
+    return { kind: "PhaseRule", band, actionName, whenExpr, body, filePath, lineNumber, selector, duringScene };
 }
 
 // A rule contributed to an existing named rulebook from anywhere (`rule RULEBOOK
 // [when COND]:`). The rulebook's parameters are in scope in the guard and body.
-function createRulebookRule(rulebookName, whenExpr, body, filePath, lineNumber) {
-    return { kind: "RulebookRule", rulebookName, whenExpr, body, filePath, lineNumber };
+function createRulebookRule(rulebookName, whenExpr, body, filePath, lineNumber, duringScene = null) {
+    return { kind: "RulebookRule", rulebookName, whenExpr, body, filePath, lineNumber, duringScene };
 }
 
 // Action-selector AST: a boolean tree over atoms (action names / tags / `any`).

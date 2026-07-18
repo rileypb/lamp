@@ -517,14 +517,18 @@ singleton + registered transition thunks), begins/ends conditions with the
 begin_scene/end_scene/evaluate_scenes/end_all_scenes natives, the scene-field
 write-forbid compile error, and the advent loop wiring (post-every_turn_rules pass +
 startup evaluation + story-end sweep) — goldens `scene1`-`scene3`,
-`scene_writeforbid`, `scene_runaway`; all 293 goldens + 16 suites green (sceneless
-games byte-invariant). Remaining: Slice 2 (`during` on every hook form), Slice 3
-(phobos_ex guard-arc adoption, endgame golden byte-identical).
+`scene_writeforbid`, `scene_runaway`; all goldens + 16 suites green (sceneless
+games byte-invariant). **Slice 2 BUILT (2026-07-17)**: `during SCENE` accepted on
+every hook form — phase rules (after the selector, before `when`), `rule`
+contributions, event handlers, change handlers, relation add/remove handlers —
+one leading `SCENE.active` gate ahead of any `when` guard; scene name
+compile-checked (goldens `scene4` + `scene_during_unknown`; 295 goldens green).
+Remaining: Slice 3 (phobos_ex guard-arc adoption, endgame golden byte-identical).
 (6) timed events (already tracked
 under Parser v2 — two new concrete cases); (7) regions (region-scoped backdrops +
 per-region defaults); (8) optional action slots (the fly/fly_thing split); (9) NPC
 movement helper + route-finding; (10) a once-only shuffled deck mode for `pick`.
-Recommended next: scenes Slice 2 (`during`), then Slice 3 (phobos_ex adoption); or a
+Recommended next: scenes Slice 3 (phobos_ex guard-arc adoption); or a
 smaller item (§7 regions or §8 optional slots). The stale
 rulebooks.md status header flagged by the audit is now fixed (points at specs.md as
 source of truth for the shipped surface).

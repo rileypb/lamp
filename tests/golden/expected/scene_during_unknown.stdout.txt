@@ -1,0 +1,3 @@
+Compile error: tests/fixtures/scene_during_unknown.lamp:18: type error: unknown scene "wach" in during guard
+  18 | before wait during wach:
+    | ^

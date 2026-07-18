@@ -1,0 +1,12 @@
+wait
+ping
+buff
+s
+wait
+ping
+buff
+wear cloak
+n
+wait
+quit
+y

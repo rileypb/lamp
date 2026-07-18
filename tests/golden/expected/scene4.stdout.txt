@@ -1,0 +1,55 @@
+Yard
+The yard. A tower is south.
+
+You see a stone here.
+
+> wait
+Time passes.
+
+> ping
+Ping.
+
+> buff
+Buffed.
+
+> s
+Tower
+The tower.
+
+(watch begins)
+
+> wait
+The guard eyes you as you idle.
+Time passes.
+
+A searchlight sweeps past.
+
+> ping
+The tower PA crackles back.
+Ping.
+
+A searchlight sweeps past.
+
+> buff
+(the guard notices the buffing)Buffed.
+
+A searchlight sweeps past.
+
+> wear cloak
+(the guard notes your cloak)You put on the cloak.
+
+A searchlight sweeps past.
+
+> n
+Yard
+The yard. A tower is south.
+
+You see a stone here.
+
+A searchlight sweeps past.
+(watch ends)
+
+> wait
+Time passes.
+
+> quit

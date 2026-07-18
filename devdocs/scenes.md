@@ -1,12 +1,14 @@
 # Scenes
 
-> Status: **Slice 1 BUILT (2026-07-17)** — the core: `scene` declarations,
-> declared transitions with edge atoms, the begin/end events,
+> Status: **Slices 1 and 2 BUILT (2026-07-17).** Slice 1 — the core: `scene`
+> declarations, declared transitions with edge atoms, the begin/end events,
 > `begin_scene`/`end_scene`/`evaluate_scenes`/`end_all_scenes`, the field-write
 > compile error, advent loop integration (per-turn + startup + story-end
-> sweep). Goldens `scene1`–`scene3`, `scene_writeforbid`, `scene_runaway`;
-> shipped surface specified in `devdocs/specs.md` → "Scenes". **Slices 2
-> (`during`) and 3 (phobos_ex adoption) remain.** The four design questions
+> sweep). Slice 2 — the `during SCENE` guard on every hook form (phase rules,
+> rulebook contributions, event/change/relation handlers), compile-checked
+> names. Goldens `scene1`–`scene4`, `scene_writeforbid`,
+> `scene_during_unknown`, `scene_runaway`; shipped surface specified in
+> `devdocs/specs.md` → "Scenes". **Slice 3 (phobos_ex adoption) remains.** The four design questions
 > were decided by the author — see "Resolved decisions". This document designs
 > the scene mechanism — named, latched spans of play time with begin/end hooks
 > and a `during` rule guard. The motivating evidence is

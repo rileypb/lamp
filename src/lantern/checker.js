@@ -96,6 +96,14 @@ function checkProgram(programAst, options = {}) {
         }
         sceneObjectNames.add(node.objectName);
     }
+    // A `during SCENE` hook guard must name a declared scene (any hook form —
+    // phase rules, rulebook contributions, event/change/relation handlers).
+    for (const node of programAst.nodes) {
+        const during = node.duringScene;
+        if (during && !sceneObjectNames.has(during.objectName)) {
+            throw typeError(during.filePath, during.lineNumber, `unknown scene "${during.sceneName}" in during guard`);
+        }
+    }
     const kindSchema = buildKindSchema(programAst.nodes);
     const typeSchema = buildTypeSchema(programAst.nodes, kindSchema);
     const globalTypes = buildGlobalTypeSchema(programAst.nodes);

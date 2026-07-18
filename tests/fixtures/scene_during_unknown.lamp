@@ -1,0 +1,19 @@
+# A `during` guard must name a declared scene — a typo is a compile error, on
+# any hook form.
+
+lib advent
+
+game SceneDuringUnknown:
+	author "test"
+	title "Scene During Unknown"
+	version 1
+	release beta
+	start Hall
+
+room Hall:
+	description "A hall."
+
+scene watch
+
+before wait during wach:
+	print "unreachable"
