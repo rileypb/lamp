@@ -1,0 +1,8 @@
+take ruby
+take opal
+take pebble
+x pebble
+x ruby
+drop pebble
+quit
+y

@@ -505,17 +505,23 @@ function createParser(tokens, filePath, globalNames, functionNames = new Set(), 
         if (at("COLON")) {
             next();
             expectNewline();
-            fields = parseTypeBody();
+            fields = parseTypeBody(name);
         } else {
             expectNewline();
         }
         return ast.createTypeDecl(name, parents, fields, filePath, keyword.line);
     }
 
-    function parseTypeBody() {
+    function parseTypeBody(typeName) {
         expect("INDENT", "Expected an indented block");
         const fields = [];
         while (!at("DEDENT")) {
+            // A body-nested phase rule scoped to this type (all its instances,
+            // subtypes included — the implicit guard is an `is` test).
+            if (scopedRuleStartsAt()) {
+                hoisted.push(parseScopedPhaseRule({ kind: "type", name: typeName }));
+                continue;
+            }
             const fieldType = parseFieldType();
             const fieldName = plainName("field name");
             let defaultValue = null;
@@ -867,6 +873,12 @@ function createParser(tokens, filePath, globalNames, functionNames = new Set(), 
         expect("INDENT", "Expected an indented block");
         const fields = [];
         while (!at("DEDENT")) {
+            // A body-nested phase rule scoped to this object (hoisted like a nested
+            // object declaration; source order is preserved).
+            if (scopedRuleStartsAt()) {
+                hoisted.push(parseScopedPhaseRule({ kind: "object", name: containerName }));
+                continue;
+            }
             const head = peek();
             if (head.type === "IDENT" && typeNames.has(head.value) && !fieldNames.has(head.value)
                     && peek(1).type === "IDENT") {
@@ -1325,6 +1337,44 @@ function createParser(tokens, filePath, globalNames, functionNames = new Set(), 
     // A leading-band phase rule: `BAND SELECTOR [when COND]:` followed by a block.
     // SELECTOR is a single action name (the common case) or a boolean selector over
     // actions/tags (see parseSelector). `self` is the action instance in the body.
+    // Does a body-nested phase rule start at the current token? A band word whose
+    // next token names a declared action (or `report failed ACTION`). Contextual:
+    // `instead` as a field or type name stays ordinary because the action-name
+    // check must also hit.
+    function scopedRuleStartsAt() {
+        const t = peek();
+        if (t.type !== "IDENT" || !PHASE_WORDS.has(t.value)) return false;
+        if (peek(1).type === "IDENT" && actionNames.has(peek(1).value)) return true;
+        return t.value === "report" && peek(1).type === "IDENT" && peek(1).value === "failed"
+            && peek(2).type === "IDENT" && actionNames.has(peek(2).value);
+    }
+
+    // A phase rule nested in a type or object body (devdocs/phobos_gaps.md §2):
+    // `BAND ACTION [during SCENE] [when COND]:` — no selectors (a body-nested rule
+    // scopes one action; a multi-action rule stays top-level). The rule is
+    // implicitly guarded on the action's `direct` slot: `self.<slot> == <object>`
+    // for an object body, `self.<slot> is <type>` for a type body (the emitter
+    // prepends the guard; the checker requires the action to have a direct slot).
+    function parseScopedPhaseRule(scope) {
+        const bandToken = next();
+        let band = bandToken.value;
+        if (band === "report" && at("IDENT") && peek().value === "failed") {
+            next();
+            band = "report_failed";
+        }
+        const actionName = plainName("action name");
+        const duringScene = parseDuringClause();
+        let whenExpr = null;
+        if (atKeyword("when")) {
+            next();
+            whenExpr = parseExpression(0, new Set(["self"]));
+        }
+        expect("COLON", "Expected ':' after phase rule header");
+        expectNewline();
+        const body = parseBlock(new Set(["self"]));
+        return ast.createPhaseRule(band, actionName, whenExpr, body, filePath, bandToken.line, null, duringScene, scope);
+    }
+
     // `during SCENE` — the scene-activity guard on a hook header (devdocs/scenes.md,
     // Slice 2): sugar for gating the hook on `SCENE.active`. Recognized on shape
     // (`during` + IDENT) after the head, before any `when` guard or the colon; the

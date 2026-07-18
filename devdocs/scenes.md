@@ -426,6 +426,16 @@ adoption, and both adjustments are instructive:
   re-entry. The greeting likewise stayed in `after go` (a begin hook would
   print it after the PA line).
 
+One deliberate improvement surfaced later (while testing §2 body-nested rules):
+in the original, dying to the distracted→shot rule mid-fight leaves the
+fight-lattice live, so typing QUIT at the endgame prompt fires the distracted
+rule again and prints the death text a second time — a post-mortem double-death
+bug. The scene version doesn't reproduce it: the story-end sweep ends
+`commando_fight` before the endgame prompt, so no fight rule can fire after
+death. This is the "no scene outlives the story" guarantee doing its job, and
+the one knowing, documented deviation from transcript equality (it manifests
+only after the story has ended, at the meta prompt).
+
 The general lesson: a scene replaces a lattice exactly when its consumers read
 the mode on **later turns** than the transitions; a consumer that must observe
 the mode **on the transition turn itself** (the re-arrival tick, the greeting's

@@ -1,0 +1,3 @@
+Compile error: tests/fixtures/scoped_nodirect.lamp:17: type error: a rule in an object body scopes to the action's direct slot, but "wait" has no direct slot
+  17 | 	instead wait:
+    |  ^

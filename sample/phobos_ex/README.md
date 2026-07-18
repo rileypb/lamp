@@ -48,9 +48,9 @@ never collide with the original). Enhancements so far:
   prose names the owning object and reads its live state through `self`
   (`[the self]`, `[if self.closed]…` — specs.md "Declaration-site `self`").
   Player-visible behavior is unchanged from the original (verified by transcript
-  diff against `sample/phobos`); the pod enter/open refusals also merge into two
-  `is sleeping_pods` rules. `sample/phobos` keeps the repeated per-object form —
-  that's the faithful port.
+  diff against `sample/phobos`). `sample/phobos` keeps the repeated per-object
+  form — that's the faithful port. (The pod enter/open refusals, first merged
+  via `is` guards, now live in the type body — see Body-nested rules below.)
 
 - **Scenes** (hacking.lamp, guard_endgame.lamp, guard_persuasion.lamp,
   control_room.lamp): three of the game's dramatic modes are `scene`s
@@ -64,6 +64,17 @@ never collide with the original). Enhancements so far:
   the scene pass (see scenes.md "Adoption findings"). Behavior verified
   identical: byte-identical endgame golden plus seven hand-test transcript
   diffs against `sample/phobos`.
+
+- **Body-nested rules** (guard_endgame.lamp, scenery.lamp): the commando
+  type body carries the shared combat behavior — attack/shoot/touch/take/drop,
+  each implicitly scoped to "the direct slot is a commando", merging the
+  per-object rule pairs via `self.taken`/`self.dropped` — and the
+  sleeping_pods type body carries the enter/open refusals. Combat-variant
+  transcripts diff-identical to `sample/phobos`. (One knowing deviation, from
+  the scenes work: the original re-fires the mid-fight distracted→shot rule on
+  QUIT after Galaxy has already died there — a post-mortem double-death the
+  scene's story-end sweep correctly prevents; see scenes.md "Adoption
+  findings".)
 
 - **List predicates** (hacking.lamp, linguistics.lamp): the keypad goal checks
   and scan-tier counts use lib/sys's `includes`/`count_of`/`all_true`/`any_true`

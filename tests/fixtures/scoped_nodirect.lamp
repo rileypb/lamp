@@ -1,0 +1,18 @@
+# A body-nested rule scopes to the action's direct slot; an action without one
+# (wait) has nothing to compare against — a compile error.
+
+lib advent
+
+game ScopedNodirect:
+	author "test"
+	title "Scoped Nodirect"
+	version 1
+	release beta
+	start Hall
+
+room Hall:
+	description "A hall."
+
+item rock:
+	instead wait:
+		print "unreachable"

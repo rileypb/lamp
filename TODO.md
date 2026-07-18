@@ -494,7 +494,16 @@ text-persistence.md's "self in construction templates" open question). Applied t
 subtypes in base.lamp/scenery.lamp, ~150 lines shed; transcript-diff-identical to
 sample/phobos, `phobos_ex` golden byte-invariant; the frozen port keeps its duplication
 by design). Docs: specs.md "Type inheritance" + "Declaration-site `self`".
-(2) object/type-scoped phase rules (~60 rules key on `when self.target == X`); (3) static
+(2) ~~object/type-scoped phase rules~~ **BUILT (2026-07-18), body-nested form** (the
+author's pick over header sugar): a phase rule inside a type/object body implicitly
+guards on the action's `direct` slot (`is` type / `==` object), composes with
+`during`/`when`, selectors stay top-level, no-direct-slot is a compile error
+(goldens `scoped1`/`scoped_nodirect`; specs.md "Body-nested rules"). phobos_ex:
+commando combat rules + pod refusals folded into their type bodies,
+combat-variant transcripts diff-identical (plus one documented improvement: the
+original's post-mortem double-death on QUIT after a distracted-shot death is
+prevented by the scenes story-end sweep — recorded in scenes.md). Header sugar
+deferred. (3) static
 data tables / const list-map literals at global scope (keypad flip-sets, `pa_message`,
 `rank_name`, `kim_surface_name` are if-chain tables); (4) ~~lib/sys list predicates~~
 **DONE (2026-07-16)** — `includes`/`count_of`/`all_true`/`any_true`, pure Lamp in
@@ -538,8 +547,8 @@ sample/phobos.
 under Parser v2 — two new concrete cases); (7) regions (region-scoped backdrops +
 per-region defaults); (8) optional action slots (the fly/fly_thing split); (9) NPC
 movement helper + route-finding; (10) a once-only shuffled deck mode for `pick`.
-Recommended next: a smaller audit item (§7 regions or §8 optional slots), or §2/§3
-(object-scoped rules / data tables). The stale
+Recommended next: §3 (static data tables / const literals), or a smaller item
+(§7 regions or §8 optional slots). The stale
 rulebooks.md status header flagged by the audit is now fixed (points at specs.md as
 source of truth for the shipped surface).
 

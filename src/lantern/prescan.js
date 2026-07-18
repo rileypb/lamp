@@ -85,6 +85,8 @@ function prescanTypes(tokens) {
             return;
         }
         if (typeBodyDepth >= 0 && depth === typeBodyDepth) {
+            // A body-nested phase rule (`instead attack:`) is not a field line.
+            if (isIdent(line[0]) && BAND_WORDS.has(line[0].value)) return;
             const eq = line.findIndex((t) => t.type === "EQUALS");
             const nameTok = eq > 0 ? line[eq - 1] : line[line.length - 1];
             if (nameTok && nameTok.type === "IDENT") fieldNames.add(nameTok.value);

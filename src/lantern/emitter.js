@@ -53,6 +53,8 @@ let actionTagMembers = new Map();
 // Rulebook name -> ordered parameter names, so a `rule RULEBOOK:` contribution
 // emits a rule function with the rulebook's parameters in scope.
 let rulebookParamNames = new Map();
+// Action name -> its `direct` slot name, for body-nested rules' implicit guards.
+let actionDirectSlotNames = new Map();
 // Absolute path of the author's game file; phase rules from it sort ahead of
 // library rules (order 0 vs 1). See devdocs/rulebooks.md.
 let mainFilePath = null;
@@ -170,6 +172,12 @@ function emitProgram(programAst, options = {}) {
     encodeStrings = options.encodeStrings === true;
     functionParamTypes = new Map();
     rulebookParamNames = new Map();
+    actionDirectSlotNames = new Map();
+    for (const node of programAst.nodes) {
+        if (node.kind !== "ActionDecl") continue;
+        const direct = node.slots.find((slot) => slot.direct);
+        if (direct) actionDirectSlotNames.set(node.name, direct.fieldName);
+    }
     for (const node of programAst.nodes) {
         if (node.kind === "FunctionDecl" || node.kind === "NativeFunctionDecl" || node.kind === "RulebookDecl") {
             functionParamTypes.set(node.name, node.params.map((p) => p.typeName));
@@ -824,6 +832,14 @@ function emitPhaseRule(node, globalNames = new Set()) {
         ? resolveSelector(node.selector, allActionNames, actionTagMembers, emitSelectorError)
         : [node.actionName];
     const bodyLines = [];
+    // A body-nested rule's implicit scope guard: the enclosing object/type
+    // compared against the action's direct slot (checker guarantees one exists).
+    if (node.scope) {
+        const slot = actionDirectSlotNames.get(node.actionName);
+        bodyLines.push(node.scope.kind === "object"
+            ? `    if (!(self.${slot} === lamplighter.getObject(${emitName(node.scope.name)}))) return;`
+            : `    if (!lamplighter.isType(self.${slot}, ${emitName(node.scope.name)})) return;`);
+    }
     bodyLines.push(...emitDuringGuard(node.duringScene));
     if (node.whenExpr) {
         bodyLines.push(`    if (!(${emitExpression(node.whenExpr, globalNames)})) return;`);

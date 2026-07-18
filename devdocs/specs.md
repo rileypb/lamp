@@ -1377,6 +1377,46 @@ reason was given. A bare `stop` inside a `report failed` body suppresses further
 `report failed` rules (identical to `stop` behavior in other bands). If no
 `report failed` rule fires, the failed action produces no output.
 
+#### Body-nested rules
+
+A phase rule may be declared **inside a type or object body**, implicitly
+scoped to that type or object (devdocs/phobos_gaps.md §2 — behavior lives with
+the thing it belongs to):
+
+```lamp
+type commando < item:
+    bool defeated = false
+
+    instead attack:
+        if self.target.defeated:
+            print "Attacking a defenseless person is not Galaxy's style."
+            stop failed
+        ...
+
+box locker:
+    scenery
+
+    instead hack:
+        # self.target == locker implied
+        ...
+```
+
+The rule is guarded on the action's **`direct` slot**: a type-body rule adds
+`self.<slot> is TYPE` (subtype-inclusive), an object-body rule adds
+`self.<slot> == OBJECT` — prepended ahead of any `during`/`when` guard, which
+compose as usual (`instead take during ambush when self.taken.cursed:`). The
+action must have a `direct` slot (compile error otherwise — e.g. `wait` has
+nothing to scope to). A body-nested rule names **one action** — multi-action
+selectors stay top-level. Recognition is contextual: a band word opens a rule
+only when the next token names a declared action, so fields and types named
+like band words are unaffected. Ordering is exactly as if the rule were
+written at top level immediately after the declaration (author file before
+library, source order within a file). A rule keyed on a **non-direct** slot
+(give's recipient, say) stays top-level with an explicit `when` guard — or
+nests in the *gift*'s body with the recipient in `when`. Goldens: `scoped1`
+(type dispatch incl. subtypes, object dispatch, `when` composition,
+fall-through), `scoped_nodirect` (the no-direct-slot compile error).
+
 #### Implicit slots: `actor` and `action`
 
 Beyond its declared slots, every action instance carries two implicit fields:

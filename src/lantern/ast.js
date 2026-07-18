@@ -373,8 +373,12 @@ function createUnderstandDecl(template, actionName, filePath, lineNumber) {
 // do/after/report). `self` inside the body is the action instance. Exactly one of
 // `actionName` (single-action rule) or `selector` (multi-action rule, a SelNode
 // boolean tree) is non-null; see ast.SelNode constructors and devdocs/rulebooks.md.
-function createPhaseRule(band, actionName, whenExpr, body, filePath, lineNumber, selector = null, duringScene = null) {
-    return { kind: "PhaseRule", band, actionName, whenExpr, body, filePath, lineNumber, selector, duringScene };
+// `scope` marks a body-nested rule (devdocs/phobos_gaps.md §2): a phase rule
+// declared inside a type or object body, implicitly guarded on the action's
+// `direct` slot — `{kind:"type", name}` guards `self.<slot> is name`,
+// `{kind:"object", name}` guards `self.<slot> == name`.
+function createPhaseRule(band, actionName, whenExpr, body, filePath, lineNumber, selector = null, duringScene = null, scope = null) {
+    return { kind: "PhaseRule", band, actionName, whenExpr, body, filePath, lineNumber, selector, duringScene, scope };
 }
 
 // A rule contributed to an existing named rulebook from anywhere (`rule RULEBOOK

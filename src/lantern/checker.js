@@ -33,6 +33,9 @@ let actionTagSchema = new Map();
 // object reference but names no declared object — e.g. a mistyped `stop failed` reason
 // (reasons are auto-created singletons, so a typo silently mints a distinct one).
 let declaredObjectNames = new Set();
+// Action name -> its `direct` slot name (or absent) — a body-nested phase rule
+// scopes to the action's direct slot, so it needs one.
+let actionDirectSlots = new Map();
 // Scene singleton names (coerced), for the scene field-write restriction.
 let sceneObjectNames = new Set();
 // The engine-maintained scene fields; game code may read but never assign them
@@ -85,6 +88,12 @@ function checkProgram(programAst, options = {}) {
     actionSchema = buildActionSchema(programAst.nodes);
     actionTagSchema = buildActionTagSchema(programAst.nodes);
     declaredObjectNames = new Set(programAst.nodes.filter((n) => n.kind === "ObjectDecl").map((n) => n.objectName));
+    actionDirectSlots = new Map();
+    for (const node of programAst.nodes) {
+        if (node.kind !== "ActionDecl") continue;
+        const direct = node.slots.find((s) => s.direct);
+        if (direct) actionDirectSlots.set(node.name, direct.fieldName);
+    }
     // Scene singletons (devdocs/scenes.md): collected for the field-write
     // restriction below, plus a duplicate-declaration check (two `scene NAME`
     // declarations would otherwise silently merge like an object reopen).
@@ -237,6 +246,12 @@ function checkPhaseRule(node, typeSchema, kindSchema, functionSchema, globalName
         label = "selector rule";
     } else if (!actionSchema.has(node.actionName)) {
         throw typeError(node.filePath, node.lineNumber, `unknown action "${node.actionName}"`);
+    }
+    // A body-nested rule scopes to the action's `direct` slot — an action without
+    // one has nothing to compare the enclosing type/object against.
+    if (node.scope && !actionDirectSlots.has(node.actionName)) {
+        throw typeError(node.filePath, node.lineNumber,
+            `a rule in ${node.scope.kind === "object" ? "an object" : "a type"} body scopes to the action's direct slot, but "${node.actionName}" has no direct slot`);
     }
     const localTypes = new Map([["self", selfType]]);
     if (node.whenExpr) {

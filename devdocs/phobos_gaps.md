@@ -87,6 +87,18 @@ declarations.
 
 ## 2. Object-scoped rules
 
+> **Status: BUILT (2026-07-18) — body-nested form.** The author chose
+> body-nesting over header sugar (the recorded open question): a phase rule
+> inside a type/object body is implicitly guarded on the action's `direct`
+> slot (`is` the type / `==` the object), composing with `during`/`when`;
+> selectors stay top-level; an action without a direct slot is a compile
+> error. Goldens `scoped1`/`scoped_nodirect`; surface in specs.md
+> "Body-nested rules". Applied in phobos_ex: the commando type body absorbed
+> the attack/shoot/touch/take/drop rule pairs (per-object bodies merged via
+> `self.taken`/`self.dropped`), the sleeping_pods type body the enter/open
+> refusals — combat-variant transcripts diff-identical to sample/phobos.
+> Header sugar (object lists / typed bindings) deferred until a real need.
+
 About 60 rules in the port have the shape
 `instead VERB when self.target == some_object`. Workable, but it forces pure
 duplication whenever two objects need the same behavior:
@@ -291,9 +303,11 @@ type test.
 
 1. ~~**Subtype field re-defaults + `self` in field templates** (§1)~~ —
    **DONE (2026-07-16)**, see §1's status note.
-2. ~~**lib/sys list predicates** (§4)~~ — **DONE (2026-07-16)**, see §4's
+2. ~~**Object-scoped rules** (§2)~~ — **BUILT (2026-07-18)**, body-nested
+   form; see §2's status note.
+3. ~~**lib/sys list predicates** (§4)~~ — **DONE (2026-07-16)**, see §4's
    status note.
-3. ~~**Scenes** (§5)~~ — designed & **ALL SLICES BUILT (2026-07-17)**:
+4. ~~**Scenes** (§5)~~ — designed & **ALL SLICES BUILT (2026-07-17)**:
    `devdocs/scenes.md` (incl. the Slice 3 adoption findings).
 
 ## Open Questions

@@ -1,0 +1,24 @@
+Vault
+The vault.
+
+You see a pebble, a ruby and an opal here.
+
+> take ruby
+(Carefully now.) Taken.
+
+> take opal
+The opal sears Galaxy's hand -- cursed!
+
+> take pebble
+Taken.
+
+> x pebble
+Just a pebble. Or IS it?
+
+> x ruby
+You see nothing unusual about the ruby.
+
+> drop pebble
+It clatters ominously.
+
+> quit

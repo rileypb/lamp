@@ -1,0 +1,49 @@
+# Body-nested phase rules (devdocs/phobos_gaps.md §2): a phase rule inside a type
+# or object body is implicitly guarded on the action's `direct` slot — `is` the
+# type (subtype-inclusive) for a type body, `==` the object for an object body.
+# Composes with `when` (and `during`); a rule that falls through continues to the
+# library defaults, like any phase rule.
+
+lib advent
+
+game Scoped:
+	author "test"
+	title "Scoped Rules"
+	version 1
+	release beta
+	start Vault
+
+room Vault:
+	description "The vault."
+
+type gem < item:
+	bool cursed = false
+
+	instead take when self.taken.cursed:
+		print "[The self.taken] sears Galaxy's hand -- cursed!"
+		stop failed
+
+	instead take:
+		print "(Carefully now.) [run on]"
+
+gem ruby:
+	printed_name "ruby"
+
+gem opal:
+	printed_name "opal"
+	cursed true
+
+item pebble:
+	printed_name "pebble"
+
+	instead examine:
+		print "Just a pebble. Or IS it?"
+		stop succeeded
+
+	after drop:
+		print "It clatters ominously."
+		stop succeeded
+
+contains Vault ruby
+contains Vault opal
+contains Vault pebble
