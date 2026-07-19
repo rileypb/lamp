@@ -276,15 +276,62 @@ purely because an unfilled slot can't read as `none` — the file's own comment
 (63-66) says so. An optional-slot marker (bare syntax leaves the slot `none`)
 would merge them, and generalizes to any verb with an implied noun.
 
-## 9. NPC movement helper (+ route-finding)
+## 9. NPC movement (+ route-finding)
 
-The guard-leading sequences hand-move the guard room by room and hand-write
-each "The Siriusian guard goes south." line (`guard_endgame.lamp:44-100`, two
-rules of four branches each). An advent `npc_go(npc, direction)` that consults
-the map, moves the NPC, and prints the locale movement message (visible only
-when witnessed) is the classic IF facility; a `route_to(npc, room)` pathfinder
-(Inform's "best route") is the natural follow-on that would reduce each leading
-rule to one line.
+> **Status: designed (2026-07-18), not implemented.** Author decisions: NPC
+> movement is **`try go: actor guard, way south`** — the ordinary action
+> pipeline with an actor override — not a bespoke `npc_go` function (which
+> would be a second movement path bypassing checks, doors, and rules); and
+> the rule-hygiene prerequisite below inverts Inform's actor default.
+
+**What already works today** (verified against advent's source): `do go` moves
+`self.actor` (the action bands are deliberately actor-generic — the orders
+machinery depends on it); the post-move room description fires from a
+`contains add` handler gated on the *player*, so an NPC's move prints nothing;
+the checks bind the NPC — a closed or locked door refuses the guard exactly as
+it refuses the player, a real correctness win over today's raw `move` (which
+teleports through anything); and `let r = try go: …` captures the outcome
+while `silently try` probes without output.
+
+**Prerequisite — the actor default (rule hygiene).** Today every phase rule
+fires for any actor, so adopting try-go would let the guard's `go` trip
+player-assuming game rules (phobos_ex's `before go during kim_hacking` would
+retrieve Galaxy's KIM when the *guard* walks). Decided design, inverting
+Inform's convention:
+
+- A phase rule matches **only the player** by default — an implicit
+  `self.actor == player` guard.
+- `BAND actor SELECTOR …` (the word `actor` between the band word and the
+  selector: `before actor go:`, `report failed actor go:`, body-nested
+  `instead actor attack:`) opts into **any actor**. Contextual: `actor` after
+  a band word is the marker unless it is itself the entire selector.
+- The default is **uniform** — library rules included. advent migrates by
+  marking its actor-generic rules (`check/do take` must serve "urchin, take
+  lamp"); the orders/persuasion goldens are the migration net, and the audit
+  will surface latent questions (what should `report take` print for an NPC?).
+- **Bare-sys escape:** the implicit guard compares against advent's `player`
+  global, which a bare-sys game may not declare — so it is emitted only when a
+  `player` global exists in the program; games without one keep actor-generic
+  rules.
+- **Documented trade-off:** the player default protects against narrative
+  leakage but *exempts NPCs from unmarked world-law rules* (an NPC ordered to
+  take the sacred idol sails past an unmarked `instead take` refusal — the
+  case Inform's default exists for). Authors writing NPC-actor content mark
+  their shared world rules `actor`; games without NPC actors lose nothing.
+- Scope: **action phase rules only** — rulebook contributions have no actor.
+
+**Remaining build items**, in order: (1) the actor default + `actor` marker +
+advent migration; (2) the witnessed-movement report — an advent `report actor
+go` band for non-player actors printing the departure line when the player is
+at the origin ("[The self.actor] goes [self.way].") and an arrival line at the
+destination, silence otherwise; needs the origin, which the move consumes, so
+`go` stashes it (e.g. an `origin` slot filled in the `do` band); (3) the
+failure-wording decision — `report failed go` speaks as `[We]`, wrong for an
+NPC; likely suppress for non-player actors, with `silently try` for probing;
+(4) `route_to(npc, destination)` — the pathfinder (Inform's "best route"),
+yielding a direction to feed the `way` slot; (5) phobos_ex adoption: the
+guard-leading sequences (`guard_endgame.lamp`) become try-go steps, under the
+usual byte-identical endgame golden.
 
 ## 10. Once-only shuffled deck
 

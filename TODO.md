@@ -561,7 +561,13 @@ sample/phobos.
 (6) timed events (already tracked
 under Parser v2 — two new concrete cases); (7) regions (region-scoped backdrops +
 per-region defaults); (8) optional action slots (the fly/fly_thing split); (9) NPC
-movement helper + route-finding; (10) a once-only shuffled deck mode for `pick`.
+movement — **designed 2026-07-18** (phobos_gaps.md §9): `try go: actor guard, way
+south` over the ordinary pipeline (no bespoke npc_go), with a prerequisite
+rule-hygiene feature inverting Inform's actor default (phase rules match only the
+player unless written `before actor go:`; uniform incl. advent, which migrates;
+implicit guard only when a `player` global exists; trade-off documented). Build
+order: actor default → witnessed-movement report band (+ origin slot) → NPC
+failure-wording → route_to → phobos_ex guard-leading adoption; (10) a once-only shuffled deck mode for `pick`.
 Recommended next: a smaller item (§7 regions or §8 optional slots), or §6/§9/§10. The stale
 rulebooks.md status header flagged by the audit is now fixed (points at specs.md as
 source of truth for the shipped surface).
