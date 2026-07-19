@@ -15,10 +15,10 @@ action purloin:
 	syntax:
 		"purloin [target]"
 
-do purloin:
+do actor purloin:
 	move self.target to self.actor
 
-report purloin:
+report actor purloin:
 	print message purloin_report  # "[The act.target]: purloined."
 
 # SHOWME [thing] — dump a thing's identity, location, fields, and contents. `world_scope`,
@@ -33,7 +33,7 @@ action showme:
 	syntax:
 		"showme [target]"
 
-report showme:
+report actor showme:
 	write(describe_object(self.target))
 	write(line_break())
 
@@ -57,7 +57,7 @@ action gonear:
 	syntax:
 		"gonear [target]"
 
-do gonear:
+do actor gonear:
 	move self.actor to room_of(self.target)
 
 # TREE — dump the whole world's containment tree (every room and its contents, recursively
@@ -69,7 +69,7 @@ action tree:
 	syntax:
 		"tree"
 
-report tree:
+report actor tree:
 	write(world_tree())
 	write(line_break())
 
@@ -82,7 +82,7 @@ action scope:
 	syntax:
 		"scope"
 
-report scope:
+report actor scope:
 	write(scope_listing())
 	write(line_break())
 
@@ -109,5 +109,5 @@ action test:
 	syntax:
 		"test [script]"
 
-do test:
+do actor test:
 	queue_commands(split_on(self.script.commands, "/"))

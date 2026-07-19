@@ -10,7 +10,7 @@
 action look
 
 # look changes nothing; its whole effect is to describe, so it lives in report.
-report look:
+report actor look:
 	describe_location(self.actor)
 
 # WAIT — let a turn pass (Inform's "waiting"). Like LOOK it changes nothing, so there's no `do`
@@ -19,7 +19,7 @@ report look:
 # game or locale can retheme it.
 action wait
 
-report wait:
+report actor wait:
 	print message wait_report  # "Time passes."
 
 # VERBOSE / BRIEF / SUPERBRIEF — set the room-description verbosity (Infocom's display modes). They
@@ -29,28 +29,28 @@ report wait:
 action set_verbose:
 	out_of_world
 
-do set_verbose:
+do actor set_verbose:
 	verbosity = verbose
 
-report set_verbose:
+report actor set_verbose:
 	print message verbose_report  # "Verbose descriptions."
 
 action set_brief:
 	out_of_world
 
-do set_brief:
+do actor set_brief:
 	verbosity = brief
 
-report set_brief:
+report actor set_brief:
 	print message brief_report  # "Brief descriptions."
 
 action set_superbrief:
 	out_of_world
 
-do set_superbrief:
+do actor set_superbrief:
 	verbosity = superbrief
 
-report set_superbrief:
+report actor set_superbrief:
 	print message superbrief_report  # "Superbrief descriptions."
 
 # The "all includes" policy (Inform's "deciding whether all includes" activity): the
@@ -84,7 +84,7 @@ action take:
 	direct physical taken
 	multi
 
-check take:
+check actor take:
 	if self.taken == self.actor:
 		stop failed take_self
 	if self.taken is person:
@@ -92,7 +92,7 @@ check take:
 	if not (self.taken is item):
 		stop failed cant_take_that
 
-check take:
+check actor take:
 	if holder(self.taken) == self.actor:
 		stop failed already_carrying
 
@@ -100,7 +100,7 @@ check take:
 # taken, an out-of-reach one can't be reached, and an edificial one is too massive. Runs before
 # the scenery check so a massive scenery fixture reports "too massive" rather than the generic
 # refusal.
-check take:
+check actor take:
 	if not self.taken.feelable:
 		stop failed cant_take_unfeelable
 	if self.taken.far_away or self.taken.obstructed:
@@ -108,11 +108,11 @@ check take:
 	if self.taken.edificial:
 		stop failed too_massive
 
-check take:
+check actor take:
 	if self.taken.scenery:
 		stop failed cant_take_that
 
-do take:
+do actor take:
 	move self.taken to self.actor
 	# Mark it handled, so an item with an `initial_appearance` stops describing itself in
 	# its own paragraph and joins the standard room-contents list once dropped.
@@ -123,7 +123,7 @@ do take:
 # pack can retheme it by name (`take_report: "…"`). Messages reference the running
 # action via the `act` global rather than the lexical `self`, so an override authored
 # elsewhere renders against the current action.
-report take:
+report actor take:
 	if self.actor == player:
 		print message take_report  # "Taken."
 	else:
@@ -131,7 +131,7 @@ report take:
 
 # Failure text lives here, keyed by reason, so a game can retheme a refusal
 # without restating the `check` condition (see devdocs/rulebooks.md).
-report failed take:
+report failed actor take:
 	# A custom per-object refusal (Can't Take That.i7x) replaces the default for any "can't take
 	# this thing" failure — but not the state errors (already/​not carrying), which aren't about the
 	# thing being un-takeable.
@@ -174,7 +174,7 @@ action take_from:
 	multi
 	physical source
 
-do take_from:
+do actor take_from:
 	try take:
 		taken self.taken
 		actor self.actor
@@ -210,7 +210,7 @@ function void inventory_contents_rows(item x, string indent):
 		print "[line break]"
 		inventory_contents_rows(y, indent + "  ")
 
-report inventory:
+report actor inventory:
 	let found = false
 	for x in item.all:
 		# A part of the actor (wire_parts materializes part_of as containment) is
@@ -236,7 +236,7 @@ action drop:
 	direct item dropped
 	multi
 
-check drop:
+check actor drop:
 	if not (holder(self.dropped) == self.actor):
 		stop failed not_carrying
 
@@ -269,18 +269,18 @@ function bool implicitly_doff(person p, item x):
 		actor p
 	return not (wears p x)
 
-do drop:
+do actor drop:
 	if not implicitly_doff(self.actor, self.dropped):
 		stop failed
 	move self.dropped to holder(self.actor)
 
-report drop:
+report actor drop:
 	if self.actor == player:
 		print message drop_report  # "Dropped."
 	else:
 		print message drop_report_other  # "[The act.actor] [drop] [the act.dropped]."
 
-report failed drop:
+report failed actor drop:
 	if self.reason == not_carrying:
 		print message drop_not_carrying  # "You aren't carrying [regarding act.dropped][those]."
 		stop
@@ -288,26 +288,26 @@ report failed drop:
 action wear:
 	direct item clothing
 
-check wear:
+check actor wear:
 	if not self.clothing.wearable:
 		stop failed not_wearable
 
-check wear:
+check actor wear:
 	if wears self.actor self.clothing:
 		stop failed already_worn
 
-do wear:
+do actor wear:
 	if not implicitly_take(self.actor, self.clothing):
 		stop failed
 	wears self.actor self.clothing
 
-report wear:
+report actor wear:
 	if self.actor == player:
 		print message wear_report  # "[We] [put] on [the act.clothing]."
 	else:
 		print message wear_report_other  # "[The act.actor] [put] on [the act.clothing]."
 
-report failed wear:
+report failed actor wear:
 	if self.reason == not_wearable:
 		print message wear_not_wearable  # "That's not something [we] can wear."
 		stop
@@ -318,20 +318,20 @@ report failed wear:
 action doff:
 	direct item clothing
 
-check doff:
+check actor doff:
 	if not (wears self.actor self.clothing):
 		stop failed not_worn
 
-do doff:
+do actor doff:
 	remove wears self.actor self.clothing
 
-report doff:
+report actor doff:
 	if self.actor == player:
 		print message doff_report  # "[We] [take] off [the act.clothing]."
 	else:
 		print message doff_report_other  # "[The act.actor] [take] off [the act.clothing]."
 
-report failed doff:
+report failed actor doff:
 	if self.reason == not_worn:
 		print message doff_not_worn  # "You're not wearing [regarding act.clothing][those]."
 		stop
@@ -345,7 +345,7 @@ report failed doff:
 action open:
 	direct item target
 
-check open:
+check actor open:
 	# A locked thing reports "locked" before anything else — including a door, which isn't `closable`
 	# (it opens via its own hack/passage mechanism) but is still meaningfully locked.
 	if self.target.locked:
@@ -355,10 +355,10 @@ check open:
 	if not self.target.closed:
 		stop failed already_open
 
-do open:
+do actor open:
 	self.target.closed = false
 
-report open:
+report actor open:
 	# By report time the box is open, so contents_of returns its (now unsealed) contents. Opening
 	# only "reveals" to an OUTSIDE opener — an actor shut inside could already see the contents
 	# (contents_within), so opening from within just opens.
@@ -368,7 +368,7 @@ report open:
 	else:
 		print message open_report_revealing  # "[We] [open] [the act.target], revealing [render_contents(act.target)]."
 
-report failed open:
+report failed actor open:
 	if self.reason == not_openable:
 		print message open_not_openable  # "That's not something [we] can open."
 		stop
@@ -382,19 +382,19 @@ report failed open:
 action close:
 	direct item target
 
-check close:
+check actor close:
 	if not self.target.closable:
 		stop failed not_closable
 	if self.target.closed:
 		stop failed already_closed
 
-do close:
+do actor close:
 	self.target.closed = true
 
-report close:
+report actor close:
 	print message close_report  # "[We] [close] [the act.target]."
 
-report failed close:
+report failed actor close:
 	if self.reason == not_closable:
 		print message close_not_closable  # "That's not something [we] can close."
 		stop
@@ -410,19 +410,19 @@ report failed close:
 action switch_on:
 	direct item target
 
-check switch_on:
+check actor switch_on:
 	if not self.target.switchable:
 		stop failed not_switchable
 	if self.target.switched_on:
 		stop failed already_on
 
-do switch_on:
+do actor switch_on:
 	self.target.switched_on = true
 
-report switch_on:
+report actor switch_on:
 	print message switch_on_report  # "[We] [switch] on [the act.target]."
 
-report failed switch_on:
+report failed actor switch_on:
 	if self.reason == not_switchable:
 		print message switch_on_not_switchable  # "That's not something [we] can switch on."
 		stop
@@ -433,19 +433,19 @@ report failed switch_on:
 action switch_off:
 	direct item target
 
-check switch_off:
+check actor switch_off:
 	if not self.target.switchable:
 		stop failed not_switchable
 	if not self.target.switched_on:
 		stop failed already_off
 
-do switch_off:
+do actor switch_off:
 	self.target.switched_on = false
 
-report switch_off:
+report actor switch_off:
 	print message switch_off_report  # "[We] [switch] off [the act.target]."
 
-report failed switch_off:
+report failed actor switch_off:
 	if self.reason == not_switchable:
 		print message switch_off_not_switchable  # "That's not something [we] can switch off."
 		stop
@@ -464,7 +464,7 @@ action unlock:
 	direct item target
 	item key
 
-check unlock:
+check actor unlock:
 	if not self.target.locked:
 		stop failed not_locked
 	if not (holder(self.key) == self.actor):
@@ -472,13 +472,13 @@ check unlock:
 	if not (self.target.matching_key == self.key):
 		stop failed key_wrong
 
-do unlock:
+do actor unlock:
 	self.target.locked = false
 
-report unlock:
+report actor unlock:
 	print message unlock_report  # "[We] [unlock] [the act.target]."
 
-report failed unlock:
+report failed actor unlock:
 	if self.reason == not_locked:
 		print message unlock_not_locked  # "[The act.target] [is] not locked."
 		stop
@@ -492,7 +492,7 @@ report failed unlock:
 action unlock_keyless:
 	direct item target
 
-check unlock_keyless:
+check actor unlock_keyless:
 	if not self.target.locked:
 		stop failed not_locked
 	if self.target.matching_key == none:
@@ -500,14 +500,14 @@ check unlock_keyless:
 	if not (holder(self.target.matching_key) == self.actor):
 		stop failed no_fitting_key
 
-do unlock_keyless:
+do actor unlock_keyless:
 	self.target.locked = false
 
-report unlock_keyless:
+report actor unlock_keyless:
 	print message with_key_aside  # "(with [the act.target.matching_key])[line break]"
 	print message unlock_report
 
-report failed unlock_keyless:
+report failed actor unlock_keyless:
 	if self.reason == not_locked:
 		print message unlock_not_locked
 		stop
@@ -519,7 +519,7 @@ action lock:
 	direct item target
 	item key
 
-check lock:
+check actor lock:
 	if self.target.locked:
 		stop failed already_locked
 	if not self.target.closed:
@@ -529,13 +529,13 @@ check lock:
 	if not (self.target.matching_key == self.key):
 		stop failed key_wrong
 
-do lock:
+do actor lock:
 	self.target.locked = true
 
-report lock:
+report actor lock:
 	print message lock_report  # "[We] [lock] [the act.target]."
 
-report failed lock:
+report failed actor lock:
 	if self.reason == already_locked:
 		print message lock_already_locked  # "[The act.target] [is] already locked."
 		stop
@@ -552,7 +552,7 @@ report failed lock:
 action lock_keyless:
 	direct item target
 
-check lock_keyless:
+check actor lock_keyless:
 	if self.target.locked:
 		stop failed already_locked
 	if not self.target.closed:
@@ -562,14 +562,14 @@ check lock_keyless:
 	if not (holder(self.target.matching_key) == self.actor):
 		stop failed no_fitting_key
 
-do lock_keyless:
+do actor lock_keyless:
 	self.target.locked = true
 
-report lock_keyless:
+report actor lock_keyless:
 	print message with_key_aside
 	print message lock_report
 
-report failed lock_keyless:
+report failed actor lock_keyless:
 	if self.reason == already_locked:
 		print message lock_already_locked
 		stop
@@ -584,13 +584,13 @@ report failed lock_keyless:
 action examine:
 	direct visible physical target
 
-check examine:
+check actor examine:
 	if in_darkness(self.actor) and in_darkness(self.target):
 		stop failed too_dark
 
 # Print the target's description, or a default when it has none (an unset string
 # reads as ""). Both are named messages, so a game or translation can retheme them.
-report examine:
+report actor examine:
 	if not (self.target.description == ""):
 		print message examine_report  # "[act.target.description][line break]"
 	else:
@@ -612,7 +612,7 @@ report examine:
 			else:
 				print message examine_in_container_plural  # "[par]In [the act.target] are [render_contents(act.target)]."
 
-report failed examine:
+report failed actor examine:
 	if self.reason == too_dark:
 		print message examine_too_dark  # "It's too dark to see [regarding act.target][those]."
 		stop
@@ -624,7 +624,7 @@ report failed examine:
 action look_direction:
 	direction way
 
-report look_direction:
+report actor look_direction:
 	print message look_direction_nothing  # "[We] [see] nothing unexpected that way."
 
 # LOOK UNDER / LOOK BEHIND — fail-by-default like PUSH: most things hide nothing, so the default is a
@@ -633,19 +633,19 @@ report look_direction:
 action look_under:
 	direct visible physical target
 
-check look_under:
+check actor look_under:
 	stop failed nothing_there
 
-report failed look_under when self.reason == nothing_there:
+report failed actor look_under when self.reason == nothing_there:
 	print message look_under_nothing  # "[We] [find] nothing of interest there."
 
 action look_behind:
 	direct visible physical target
 
-check look_behind:
+check actor look_behind:
 	stop failed nothing_there
 
-report failed look_behind when self.reason == nothing_there:
+report failed actor look_behind when self.reason == nothing_there:
 	print message look_behind_nothing  # "There is nothing behind [the act.target]."
 
 # LOOK IN / LOOK INSIDE / LOOK THROUGH — list an open container's contents (LOOK THROUGH is a
@@ -671,16 +671,16 @@ function void render_container(physical c):
 action look_in:
 	direct visible physical target
 
-check look_in:
+check actor look_in:
 	if in_darkness(self.actor) and in_darkness(self.target):
 		stop failed too_dark
 	if not is_container(self.target):
 		stop failed not_container
 
-report look_in:
+report actor look_in:
 	render_container(self.target)
 
-report failed look_in:
+report failed actor look_in:
 	if self.reason == too_dark:
 		print message examine_too_dark
 		stop
@@ -695,13 +695,13 @@ report failed look_in:
 action search:
 	direct visible physical target
 
-check search:
+check actor search:
 	if in_darkness(self.actor) and in_darkness(self.target):
 		stop failed too_dark
 	if not (is_container(self.target) or self.target.supporter):
 		stop failed nothing_found
 
-report search:
+report actor search:
 	if is_container(self.target):
 		render_container(self.target)
 	else:
@@ -711,7 +711,7 @@ report search:
 		else:
 			print supporter_phrase(self.target, render_list(on_it), on_it.size)
 
-report failed search:
+report failed actor search:
 	if self.reason == too_dark:
 		print message examine_too_dark
 		stop
@@ -728,19 +728,19 @@ report failed search:
 action touch:
 	direct physical target
 
-check touch:
+check actor touch:
 	if not self.target.feelable:
 		stop failed cant_touch
 	if self.target.far_away or self.target.obstructed:
 		stop failed cant_reach
 
-report touch:
+report actor touch:
 	if self.target.feels == "":
 		print message touch_nothing  # "[We] [feel] nothing unexpected."
 	else:
 		print message touch_feels  # "[act.target.feels]"
 
-report failed touch:
+report failed actor touch:
 	if self.reason == cant_touch:
 		print message touch_cant  # "[We] can't touch [regarding act.target][those]."
 		stop
@@ -757,10 +757,10 @@ report failed touch:
 action attack:
 	direct physical target
 
-check attack:
+check actor attack:
 	stop failed attack_pointless
 
-report failed attack when self.reason == attack_pointless:
+report failed actor attack when self.reason == attack_pointless:
 	# A custom per-object refusal (Can't Hit That.i7x) replaces the generic "violence" line.
 	if not (self.target.attack_refusal == ""):
 		print "[act.target.attack_refusal]"
@@ -773,10 +773,10 @@ report failed attack when self.reason == attack_pointless:
 action kiss:
 	direct physical target
 
-check kiss:
+check actor kiss:
 	stop failed kiss_pointless
 
-report failed kiss when self.reason == kiss_pointless:
+report failed actor kiss when self.reason == kiss_pointless:
 	print message kiss_refused  # "[We] [do] not think [the act.target] would appreciate that."
 
 # SLEEP — an objectless action that **fails by default** (you can't just nod off), so the default is
@@ -785,10 +785,10 @@ report failed kiss when self.reason == kiss_pointless:
 # a game's scripted dream can run on `every_turn_rules`.
 action sleep
 
-check sleep:
+check actor sleep:
 	stop failed cant_sleep
 
-report failed sleep when self.reason == cant_sleep:
+report failed actor sleep when self.reason == cant_sleep:
 	print message sleep_refused  # "[We] [are] not feeling especially drowsy."
 
 # TASTE (Inform's "tasting"). Like TOUCH it senses without changing the world —
@@ -798,16 +798,16 @@ report failed sleep when self.reason == cant_sleep:
 action taste:
 	direct physical target
 
-check taste:
+check actor taste:
 	if not self.target.feelable:
 		stop failed cant_touch
 	if self.target.far_away or self.target.obstructed:
 		stop failed cant_reach
 
-report taste:
+report actor taste:
 	print message taste_nothing  # "[We] [taste] nothing unexpected."
 
-report failed taste:
+report failed actor taste:
 	if self.reason == cant_touch:
 		print message touch_cant  # "[We] can't touch [regarding act.target][those]."
 		stop
@@ -830,7 +830,7 @@ report failed taste:
 # sensations that change over time.
 action listen
 
-report listen:
+report actor listen:
 	let here = holder(self.actor)
 	if here.sound == "":
 		print message listen_nothing  # "[We] [hear] nothing unexpected."
@@ -840,7 +840,7 @@ report listen:
 action listen_to:
 	direct visible physical target
 
-report listen_to:
+report actor listen_to:
 	if self.target.sound == "":
 		print message listen_nothing
 	else:
@@ -848,7 +848,7 @@ report listen_to:
 
 action smell
 
-report smell:
+report actor smell:
 	let here = holder(self.actor)
 	if here.scent == "":
 		print message smell_nothing  # "[We] [smell] nothing unexpected."
@@ -858,7 +858,7 @@ report smell:
 action smell_thing:
 	direct visible physical target
 
-report smell_thing:
+report actor smell_thing:
 	if self.target.scent == "":
 		print message smell_nothing
 	else:
@@ -874,10 +874,10 @@ report smell_thing:
 action push:
 	direct item target
 
-check push:
+check actor push:
 	stop failed nothing_happens
 
-report failed push when self.reason == nothing_happens:
+report failed actor push when self.reason == nothing_happens:
 	print message push_inert  # "Nothing obvious happens."
 
 # PULL — the counterpart to PUSH (Inform's "pulling a thing"), for levers and the like. Same
@@ -886,10 +886,10 @@ report failed push when self.reason == nothing_happens:
 action pull:
 	direct item target
 
-check pull:
+check actor pull:
 	stop failed nothing_happens
 
-report failed pull when self.reason == nothing_happens:
+report failed actor pull when self.reason == nothing_happens:
 	print message pull_inert  # "Nothing obvious happens."
 
 # GIVE / SHOW a thing to someone. Both *fail* by default (most recipients don't react), so the
@@ -899,20 +899,20 @@ action give:
 	direct item gift
 	physical recipient
 
-check give:
+check actor give:
 	stop failed give_declined
 
-report failed give when self.reason == give_declined:
+report failed actor give when self.reason == give_declined:
 	print message give_declined_msg  # "[The act.recipient] [do] not seem interested."
 
 action show:
 	direct item shown
 	visible physical recipient
 
-check show:
+check actor show:
 	stop failed show_declined
 
-report failed show when self.reason == show_declined:
+report failed actor show when self.reason == show_declined:
 	print message show_declined_msg  # "[The act.recipient] [are] unimpressed."
 
 # ASK X FOR Y — the reverse of GIVE (devdocs/conversation.md): the NPC hands something over.
@@ -924,10 +924,10 @@ action ask_for:
 	visible physical interlocutor
 	direct visible item requested
 
-check ask_for:
+check actor ask_for:
 	stop failed ask_for_declined
 
-report failed ask_for when self.reason == ask_for_declined:
+report failed actor ask_for when self.reason == ask_for_declined:
 	print message ask_for_declined_msg  # "[The act.interlocutor] [do] not seem inclined to part with [regarding act.requested][those]."
 
 # Persuasion (devdocs/conversation.md): a player-typed order ("urchin, take lamp") consults
@@ -954,7 +954,7 @@ function bool persuasion_gate(person p):
 action enter:
 	direct physical target
 
-check enter:
+check actor enter:
 	# `vehicle` implies enterable — a game needn't set both flags.
 	if not (self.target.enterable or self.target.vehicle):
 		stop failed cant_enter
@@ -968,7 +968,7 @@ check enter:
 # The report line prints in `do`, BEFORE the move: moving the player fires the `contains add`
 # handler, which re-describes the location — so "You get in the closet." leads and the description
 # (heading chain + layered contents) follows, like GO's arrival.
-do enter:
+do actor enter:
 	if self.target.supporter:
 		print message enter_on_report  # "[We] [get] on [the act.target]."
 	else:
@@ -976,7 +976,7 @@ do enter:
 	print "[par]"
 	move self.actor to self.target
 
-report failed enter:
+report failed actor enter:
 	if self.reason == cant_enter:
 		print message cant_enter_msg  # "That's not something [we] can enter."
 		stop
@@ -992,7 +992,7 @@ report failed enter:
 # before the move, so the move's re-description follows it; `last_exited` names the object left.
 action exit_object
 
-check exit_object:
+check actor exit_object:
 	if holder(self.actor) is room:
 		stop failed not_perched
 	# Can't climb out of a closed container — open it first. This is what makes a trap work: the
@@ -1001,7 +1001,7 @@ check exit_object:
 	if holder(self.actor).closed:
 		stop failed exit_closed
 
-do exit_object:
+do actor exit_object:
 	last_exited = holder(self.actor)
 	if last_exited.supporter:
 		print message exit_off_report  # "[We] [get] off [the last_exited]."
@@ -1010,7 +1010,7 @@ do exit_object:
 	print "[par]"
 	move self.actor to holder(last_exited)
 
-report failed exit_object:
+report failed actor exit_object:
 	if self.reason == not_perched:
 		print message exit_not_perched  # "[We] [are] not on or in anything."
 		stop
@@ -1026,7 +1026,7 @@ action go:
 # nested seat inside the vehicle, a vehicle parked inside something — refuses: get out first.
 # Whether a vehicle fits a given exit is per-game (`check go` rules from the game file run
 # before these, author-order).
-check go:
+check actor go:
 	let h = holder(self.actor)
 	if not (h is room):
 		if not h.vehicle:
@@ -1036,12 +1036,12 @@ check go:
 
 # `here` binds the travel origin first (the actor's room, or the ridden vehicle's): a
 # relation-query slot may hold a value, variable, or property chain, but not a function call.
-check go:
+check actor go:
 	let here = location_of(self.actor)
 	if not connects here self.way _:
 		stop failed cant_go_that_way
 
-do go:
+do actor go:
 	let h = holder(self.actor)
 	let here = location_of(self.actor)
 	if h is room:
@@ -1055,7 +1055,7 @@ do go:
 # Direction-aware excuses for a blocked exit (Can't Go That Way.i7x): up/down/in get their own
 # default lines, everything else the generic "can't go that way." A game refines per-room by
 # contributing its own `report failed go` rule *from its main file* (author-order, so it runs first).
-report failed go:
+report failed actor go:
 	if self.reason == perched:
 		print message go_perched  # "[We] [need] to leave [the act.actor.perch] first."
 		stop
@@ -1094,27 +1094,27 @@ action put_on:
 	multi
 	item destination
 
-check put_on:
+check actor put_on:
 	if not (holder(self.put_item) == self.actor):
 		stop failed not_carrying
 
-check put_on:
+check actor put_on:
 	if not self.destination.supporter:
 		stop failed cant_put_on_that
 
-do put_on:
+do actor put_on:
 	if not implicitly_doff(self.actor, self.put_item):
 		stop failed
 	move self.put_item to self.destination
 	supports self.destination self.put_item
 
-report put_on:
+report actor put_on:
 	if self.actor == player:
 		print message put_on_report  # "[We] [put] [the act.put_item] on [the act.destination]."
 	else:
 		print message put_on_report_other  # "[The act.actor] [put] [the act.put_item] on [the act.destination]."
 
-report failed put_on:
+report failed actor put_on:
 	if self.reason == not_carrying:
 		print message put_on_not_carrying  # "You aren't carrying [regarding act.put_item][those]."
 		stop
@@ -1132,19 +1132,19 @@ action put_in:
 	multi
 	item destination
 
-check put_in:
+check actor put_in:
 	if not (holder(self.put_item) == self.actor):
 		stop failed not_carrying
 
-check put_in:
+check actor put_in:
 	if not (self.destination is container):
 		stop failed cant_put_in_that
 
-check put_in:
+check actor put_in:
 	if self.destination.closed:
 		stop failed dest_closed
 
-check put_in:
+check actor put_in:
 	if self.destination == self.put_item:
 		stop failed put_in_self
 	let cur = holder(self.destination)
@@ -1153,18 +1153,18 @@ check put_in:
 			stop failed put_in_self
 		cur = holder(cur)
 
-do put_in:
+do actor put_in:
 	if not implicitly_doff(self.actor, self.put_item):
 		stop failed
 	move self.put_item to self.destination
 
-report put_in:
+report actor put_in:
 	if self.actor == player:
 		print message put_in_report  # "[We] [put] [the act.put_item] in [the act.destination]."
 	else:
 		print message put_in_report_other  # "[The act.actor] [put] [the act.put_item] in [the act.destination]."
 
-report failed put_in:
+report failed actor put_in:
 	if self.reason == not_carrying:
 		print message put_on_not_carrying  # "You aren't carrying [regarding act.put_item][those]."
 		stop
@@ -1181,20 +1181,20 @@ report failed put_in:
 action drink:
 	direct item liquid
 
-check drink:
+check actor drink:
 	if not self.liquid.drinkable:
 		stop failed not_drinkable
 	
-do drink:
+do actor drink:
 	remove contains _ self.liquid
 
-report drink:
+report actor drink:
 	if self.actor == player:
 		print message drink_report  # "[We] [drink] [the act.liquid]."
 	else:
 		print message drink_report_other  # "[The act.actor] [drink] [the act.liquid]."
 
-report failed drink:
+report failed actor drink:
 	if self.reason == not_drinkable:
 		print message drink_not_drinkable  # "[We] can't drink [regarding act.liquid][those]."
 		stop
@@ -1202,20 +1202,20 @@ report failed drink:
 action eat:
 	direct item food
 
-check eat:
+check actor eat:
 	if not self.food.edible:
 		stop failed not_edible
 
-do eat:
+do actor eat:
 	remove contains _ self.food
 
-report eat:
+report actor eat:
 	if self.actor == player:
 		print message eat_report  # "[We] [eat] [the act.food]."
 	else:
 		print message eat_report_other  # "[The act.actor] [eat] [the act.food]."
 
-report failed eat:
+report failed actor eat:
 	if self.reason == not_edible:
 		print message eat_not_edible  # "[We] can't eat [regarding act.food][those]."
 		stop

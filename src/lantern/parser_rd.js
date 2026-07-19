@@ -294,6 +294,14 @@ function createParser(tokens, filePath, globalNames, functionNames = new Set(), 
         return false;
     };
 
+    // The `actor` marker (devdocs/phobos_gaps.md §9): a phase rule matches only
+    // the player by default; `BAND actor SELECTOR` opts into any actor. The
+    // marker is contextual — `actor` right after the band word, with a selector
+    // following — so an action literally named `actor` still parses as the
+    // selector when nothing follows it.
+    const actorMarkerAt = (offset) => peek(offset).type === "IDENT" && peek(offset).value === "actor"
+        && selectorStartsAt(offset + 1);
+
     function err(message, line) {
         return syntaxError(filePath, line !== undefined ? line : peek().line, message);
     }
@@ -384,10 +392,10 @@ function createParser(tokens, filePath, globalNames, functionNames = new Set(), 
             // message (e.g. a translation pack). See devdocs/messages.md.
             if (peek(1).type === "COLON" && peek(2).type === "STRING") return parseMessageOverride();
             if (token.value === "rule" && peek(1).type === "IDENT" && rulebookParams.has(peek(1).value)) return parseRulebookRule();
-            if (PHASE_WORDS.has(token.value) && selectorStartsAt(1)) return parsePhaseRule();
+            if (PHASE_WORDS.has(token.value) && (selectorStartsAt(1) || actorMarkerAt(1))) return parsePhaseRule();
             // `report failed SELECTOR:` — the failure-reporting band.
             if (token.value === "report" && peek(1).type === "IDENT" && peek(1).value === "failed"
-                && selectorStartsAt(2)) return parsePhaseRule();
+                && (selectorStartsAt(2) || actorMarkerAt(2))) return parsePhaseRule();
             if (token.value === "understand" && peek(1).type === "STRING") return parseUnderstandDecl();
             if (relationNames.has(token.value) && peek(1).type === "COLON") return parseRelationAssert();
             if (relationTemplates.has(token.value)) return parseCustomSyntaxAssert(relationTemplates.get(token.value), null);
@@ -1429,9 +1437,12 @@ function createParser(tokens, filePath, globalNames, functionNames = new Set(), 
     function scopedRuleStartsAt() {
         const t = peek();
         if (t.type !== "IDENT" || !PHASE_WORDS.has(t.value)) return false;
-        if (peek(1).type === "IDENT" && actionNames.has(peek(1).value)) return true;
+        const isAction = (offset) => peek(offset).type === "IDENT" && actionNames.has(peek(offset).value);
+        const isActorMarker = (offset) => peek(offset).type === "IDENT" && peek(offset).value === "actor"
+            && isAction(offset + 1);
+        if (isAction(1) || isActorMarker(1)) return true;
         return t.value === "report" && peek(1).type === "IDENT" && peek(1).value === "failed"
-            && peek(2).type === "IDENT" && actionNames.has(peek(2).value);
+            && (isAction(2) || isActorMarker(2));
     }
 
     // A phase rule nested in a type or object body (devdocs/phobos_gaps.md §2):
@@ -1447,6 +1458,11 @@ function createParser(tokens, filePath, globalNames, functionNames = new Set(), 
             next();
             band = "report_failed";
         }
+        let anyActor = false;
+        if (at("IDENT") && peek().value === "actor" && peek(1).type === "IDENT" && actionNames.has(peek(1).value)) {
+            next();
+            anyActor = true;
+        }
         const actionName = plainName("action name");
         const duringScene = parseDuringClause();
         let whenExpr = null;
@@ -1457,7 +1473,7 @@ function createParser(tokens, filePath, globalNames, functionNames = new Set(), 
         expect("COLON", "Expected ':' after phase rule header");
         expectNewline();
         const body = parseBlock(new Set(["self"]));
-        return ast.createPhaseRule(band, actionName, whenExpr, body, filePath, bandToken.line, null, duringScene, scope);
+        return ast.createPhaseRule(band, actionName, whenExpr, body, filePath, bandToken.line, null, duringScene, scope, anyActor);
     }
 
     // `during SCENE` — the scene-activity guard on a hook header (devdocs/scenes.md,
@@ -1479,9 +1495,17 @@ function createParser(tokens, filePath, globalNames, functionNames = new Set(), 
         let band = bandToken.value;
         // `report failed SELECTOR` selects the failure-reporting band; the `failed`
         // modifier distinguishes it from the success `report` band.
-        if (band === "report" && at("IDENT") && peek().value === "failed" && selectorStartsAt(1)) {
+        if (band === "report" && at("IDENT") && peek().value === "failed"
+                && (selectorStartsAt(1) || actorMarkerAt(1))) {
             next();
             band = "report_failed";
+        }
+        // The any-actor marker; without it the rule is implicitly guarded on
+        // `self.actor == player` (when the program declares a `player` global).
+        let anyActor = false;
+        if (actorMarkerAt(0)) {
+            next();
+            anyActor = true;
         }
         const selector = parseSelector();
         const duringScene = parseDuringClause();
@@ -1496,9 +1520,9 @@ function createParser(tokens, filePath, globalNames, functionNames = new Set(), 
         // A bare single action name keeps the single-action code path (actionName
         // set, selector null); anything else is a multi-action selector rule.
         if (selector.kind === "SelAtom" && actionNames.has(selector.name)) {
-            return ast.createPhaseRule(band, selector.name, whenExpr, body, filePath, bandToken.line, null, duringScene);
+            return ast.createPhaseRule(band, selector.name, whenExpr, body, filePath, bandToken.line, null, duringScene, null, anyActor);
         }
-        return ast.createPhaseRule(band, null, whenExpr, body, filePath, bandToken.line, selector, duringScene);
+        return ast.createPhaseRule(band, null, whenExpr, body, filePath, bandToken.line, selector, duringScene, null, anyActor);
     }
 
     // Selector grammar (lowest to highest precedence): `or`, then `and`/`except`

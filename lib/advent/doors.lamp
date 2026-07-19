@@ -32,7 +32,7 @@ native function void wire_doors()
 # A closed door blocks movement through it. Order-independent vs. the cant-go check:
 # a missing exit has no doorway edge and falls through to `cant_go_that_way`; a real
 # but closed door stops here.
-check go:
+check actor go:
 	let here = holder(self.actor)
 	let barrier = doorway here self.way ?first
 	if not (barrier == none):
@@ -40,7 +40,7 @@ check go:
 			blocking_door = barrier
 			stop failed door_closed
 
-report failed go:
+report failed actor go:
 	if self.reason == door_closed:
 		print message door_closed_msg  # "[The blocking_door] is closed."
 		stop

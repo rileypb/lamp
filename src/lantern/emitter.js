@@ -55,6 +55,10 @@ let actionTagMembers = new Map();
 let rulebookParamNames = new Map();
 // Action name -> its `direct` slot name, for body-nested rules' implicit guards.
 let actionDirectSlotNames = new Map();
+// Whether the program declares a `player` global — the actor-default guard
+// (devdocs/phobos_gaps.md §9) compares against it, so without one (a bare-sys
+// game passing arbitrary actors) phase rules stay actor-generic.
+let hasPlayerGlobal = false;
 // Absolute path of the author's game file; phase rules from it sort ahead of
 // library rules (order 0 vs 1). See devdocs/rulebooks.md.
 let mainFilePath = null;
@@ -178,6 +182,7 @@ function emitProgram(programAst, options = {}) {
         const direct = node.slots.find((slot) => slot.direct);
         if (direct) actionDirectSlotNames.set(node.name, direct.fieldName);
     }
+    hasPlayerGlobal = globalDeclNodes.some((node) => node.name === "player");
     for (const node of programAst.nodes) {
         if (node.kind === "FunctionDecl" || node.kind === "NativeFunctionDecl" || node.kind === "RulebookDecl") {
             functionParamTypes.set(node.name, node.params.map((p) => p.typeName));
@@ -900,6 +905,12 @@ function emitPhaseRule(node, globalNames = new Set()) {
         ? resolveSelector(node.selector, allActionNames, actionTagMembers, emitSelectorError)
         : [node.actionName];
     const bodyLines = [];
+    // The actor default (devdocs/phobos_gaps.md §9): without the `actor` marker
+    // a phase rule matches only the player — emitted first, ahead of every other
+    // guard. Skipped entirely when no `player` global exists (bare-sys games).
+    if (!node.anyActor && hasPlayerGlobal) {
+        bodyLines.push(`    if (!(self.actor === lamplighter.getGlobal(${emitName("player")}))) return;`);
+    }
     // A body-nested rule's implicit scope guard: the enclosing object/type
     // compared against the action's direct slot (checker guarantees one exists).
     if (node.scope) {

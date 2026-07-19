@@ -1,0 +1,55 @@
+# The actor default (devdocs/phobos_gaps.md §9): a phase rule matches only the
+# player unless written `BAND actor SELECTOR`. Here the robot takes the coin via
+# `try` with an actor override: the unmarked rules stay silent for it (top-level
+# and body-nested alike), the `actor`-marked rules fire for both actors, and
+# advent's own (actor-marked) machinery moves the object and reports as usual.
+
+lib advent
+
+game ActorDefault:
+	author "test"
+	title "Actor Default"
+	version 1
+	release beta
+	start Lab
+
+room Lab:
+	description "A lab."
+
+person robot:
+	understand "robot"
+	description "A boxy little robot."
+
+item coin:
+	printed_name "coin"
+
+	before take:
+		print "(unmarked body rule: player reaches)"
+
+	before actor take:
+		print "(actor body rule: [self.actor] reaches)"
+
+contains Lab robot
+contains Lab coin
+
+instead take when self.taken == coin and holder(coin) == robot:
+	print "(unmarked top rule: the robot has it)"
+	stop failed
+
+after actor take:
+	print "([self.actor] now holds [self.taken])"
+
+action order_robot:
+	syntax:
+		"order robot"
+
+do order_robot:
+	try take:
+		actor robot
+		taken coin
+
+report order_robot:
+	print "The robot complies."
+
+report failed actor take:
+	print "(actor-marked failure report)"

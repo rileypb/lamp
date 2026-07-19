@@ -8,7 +8,7 @@
 action quit:
 	out_of_world
 
-do quit:
+do actor quit:
 	session_over = true
 
 # RESTART discards the game and begins again from `on startup` (run() restores the pre-startup
@@ -17,7 +17,7 @@ do quit:
 action restart:
 	out_of_world
 
-do restart:
+do actor restart:
 	# Report unavailability up front (no baseline captured) so the player isn't asked to
 	# confirm a restart that can't happen.
 	if not restart_available():

@@ -278,7 +278,16 @@ would merge them, and generalizes to any verb with an implied noun.
 
 ## 9. NPC movement (+ route-finding)
 
-> **Status: designed (2026-07-18), not implemented.** Author decisions: NPC
+> **Status: slice 1 (the actor default) BUILT (2026-07-18); movement report /
+> route-finding / adoption remain.** The actor-default prerequisite below is
+> in: implicit `self.actor == player` guard on unmarked phase rules, the
+> `actor` marker on all forms (selectors, `report failed`, `during`, body
+> nesting), emitted only when a `player` global exists; advent + conversation
+> migrated (157 rules actor-marked — today's behavior preserved exactly, the
+> orders goldens byte-identical); one migration finding: a rule that
+> *reassigns the player mid-action* (`selfword1`'s SWAP) needs `actor` on its
+> later bands, since the guard reads the global live. Golden `actordefault1`;
+> specs.md "The actor default". Author decisions: NPC
 > movement is **`try go: actor guard, way south`** — the ordinary action
 > pipeline with an actor override — not a bespoke `npc_go` function (which
 > would be a second movement path bypassing checks, doors, and rules); and

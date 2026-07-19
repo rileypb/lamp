@@ -11,7 +11,7 @@
 action script_on:
 	out_of_world
 
-do script_on:
+do actor script_on:
 	if transcript_running():
 		print message transcript_already  # "A transcript is already running."
 		stop
@@ -32,7 +32,7 @@ do script_on:
 action script_off:
 	out_of_world
 
-do script_off:
+do actor script_off:
 	if not transcript_running():
 		print message transcript_not_running  # "No transcript is running."
 		stop

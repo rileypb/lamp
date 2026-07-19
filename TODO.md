@@ -566,8 +566,12 @@ south` over the ordinary pipeline (no bespoke npc_go), with a prerequisite
 rule-hygiene feature inverting Inform's actor default (phase rules match only the
 player unless written `before actor go:`; uniform incl. advent, which migrates;
 implicit guard only when a `player` global exists; trade-off documented). Build
-order: actor default → witnessed-movement report band (+ origin slot) → NPC
-failure-wording → route_to → phobos_ex guard-leading adoption; (10) a once-only shuffled deck mode for `pick`.
+order: ~~actor default~~ **BUILT 2026-07-18** (implicit player guard on unmarked
+phase rules; `actor` marker on every form; player-global-gated emission; advent +
+conversation migrated, 157 rules, orders goldens byte-identical; golden
+`actordefault1`; the selfword1 mid-action-player-reassignment finding recorded) →
+witnessed-movement report band (+ origin slot) → NPC failure-wording → route_to →
+phobos_ex guard-leading adoption; (10) a once-only shuffled deck mode for `pick`.
 Recommended next: a smaller item (§7 regions or §8 optional slots), or §6/§9/§10. The stale
 rulebooks.md status header flagged by the audit is now fixed (points at specs.md as
 source of truth for the shipped surface).

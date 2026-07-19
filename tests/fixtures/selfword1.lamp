@@ -23,8 +23,12 @@ action swap:
 	syntax:
 		"swap"
 
-do swap:
+# `actor`-marked: the do band reassigns the player mid-action, so by the report
+# band the original actor is no longer the player — the actor-default guard
+# would (correctly) suppress an unmarked report. Protagonist-shifting rules are
+# the textbook case for the any-actor marker.
+do actor swap:
 	player = robot
 
-report swap:
+report actor swap:
 	print "Control transfers to the robot."

@@ -31,14 +31,14 @@ action greet:
 		"[interlocutor] , hello"
 		"[interlocutor] , hi"
 
-check greet:
+check actor greet:
 	if not (self.interlocutor is person):
 		stop failed greet_not_person
 
-report greet:
+report actor greet:
 	print greet_default:"[The act.interlocutor] [wait] for [us] to say something."
 
-report failed greet when self.reason == greet_not_person:
+report failed actor greet when self.reason == greet_not_person:
 	print greet_no_reply:"[We] [get] no reply."
 
 # Bare HELLO with no addressee. No guess-the-addressee magic (that would belong to command
@@ -48,7 +48,7 @@ action hello:
 		"hello"
 		"hi"
 
-report hello:
+report actor hello:
 	print hello_reply:"Cheery, aren't you?"
 
 # ASK <someone> ABOUT <topic>. The interlocutor is a `physical` (in scope); the topic is any
@@ -63,7 +63,7 @@ action ask:
 	syntax:
 		"ask [interlocutor] about [topic]"
 
-report ask:
+report actor ask:
 	if (self.topic is subject) and not (self.topic.reply == ""):
 		print "[self.topic.reply]"
 	else:
@@ -77,7 +77,7 @@ action tell:
 	syntax:
 		"tell [interlocutor] about [topic]"
 
-report tell:
+report actor tell:
 	print convo_not_interested:"[The act.interlocutor] [do] not seem interested."
 
 # SAY / ANSWER free text. Unlike ASK/TELL ABOUT — which resolve a declared `[topic]` subject
@@ -100,8 +100,8 @@ action say:
 		"say [topic]"
 		"answer [topic]"
 
-check say:
+check actor say:
 	stop failed nothing_to_say
 
-report failed say when self.reason == nothing_to_say:
+report failed actor say when self.reason == nothing_to_say:
 	print say_no_reply:"There is no reply."

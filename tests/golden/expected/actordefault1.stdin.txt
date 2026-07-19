@@ -1,0 +1,6 @@
+take coin
+drop coin
+order robot
+take coin
+quit
+y

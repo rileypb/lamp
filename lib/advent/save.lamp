@@ -12,7 +12,7 @@
 action undo:
 	out_of_world
 
-do undo:
+do actor undo:
 	if undo_turn():
 		print message undo_done  # "\[Previous turn undone.\]"
 	else:
@@ -21,7 +21,7 @@ do undo:
 action save:
 	out_of_world
 
-do save:
+do actor save:
 	if not save_available():
 		print message save_unavailable  # "Saving isn't available here."
 		stop
@@ -41,7 +41,7 @@ do save:
 action restore:
 	out_of_world
 
-do restore:
+do actor restore:
 	if not save_available():
 		print message restore_unavailable  # "Restoring isn't available here."
 		stop

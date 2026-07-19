@@ -385,8 +385,11 @@ function createUnderstandDecl(template, actionName, filePath, lineNumber) {
 // declared inside a type or object body, implicitly guarded on the action's
 // `direct` slot — `{kind:"type", name}` guards `self.<slot> is name`,
 // `{kind:"object", name}` guards `self.<slot> == name`.
-function createPhaseRule(band, actionName, whenExpr, body, filePath, lineNumber, selector = null, duringScene = null, scope = null) {
-    return { kind: "PhaseRule", band, actionName, whenExpr, body, filePath, lineNumber, selector, duringScene, scope };
+// `anyActor` is the `actor` marker (devdocs/phobos_gaps.md §9): without it a
+// phase rule is implicitly guarded on `self.actor == player` (when the program
+// declares a `player` global); with it the rule matches any actor.
+function createPhaseRule(band, actionName, whenExpr, body, filePath, lineNumber, selector = null, duringScene = null, scope = null, anyActor = false) {
+    return { kind: "PhaseRule", band, actionName, whenExpr, body, filePath, lineNumber, selector, duringScene, scope, anyActor };
 }
 
 // A rule contributed to an existing named rulebook from anywhere (`rule RULEBOOK

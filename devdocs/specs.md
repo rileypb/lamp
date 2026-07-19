@@ -1451,6 +1451,45 @@ reason was given. A bare `stop` inside a `report failed` body suppresses further
 `report failed` rules (identical to `stop` behavior in other bands). If no
 `report failed` rule fires, the failed action produces no output.
 
+#### The actor default
+
+A phase rule matches **only the player** by default: unless marked, every rule
+carries an implicit leading guard `self.actor == player`, so NPC-actor actions
+(an order — "urchin, take lamp" — or a `try` with an `actor` override) pass it
+by. The word **`actor`** between the band word and the selector opts the rule
+into **any actor**:
+
+```lamp
+check actor take:
+    ...                       # binds every actor (the library's rules are all
+                              # actor-marked — mechanics serve NPC orders too)
+
+instead take when self.taken == idol:
+    ...                       # the player only: an ordered NPC sails past
+
+report failed actor go:
+    ...                       # composes with `failed`, selectors, `during`,
+before actor any except attack during ambush:
+    ...                       # and body nesting:
+    # instead actor attack:   (in a type/object body)
+```
+
+This inverts Inform's convention (there, rules bind every "person asked" and
+authors must remember "Instead of the *player* going") — the noise lands on
+library authors once, and game rules are safe against NPC leakage by default.
+The trade-off is the mirror image, and deliberate: **an unmarked game rule does
+not bind NPCs**, so an NPC ordered to take a guarded object passes an unmarked
+`instead take` refusal — authors writing NPC-actor content mark their shared
+world-law rules `actor`. Details: the marker is contextual (`actor` right after
+the band word, with a selector following — an action literally named `actor`
+still parses as the selector when nothing follows it); the implicit guard is
+emitted **only when the program declares a `player` global**, so a bare-sys
+game passing arbitrary actors to `run_command` keeps actor-generic rules; and a
+rule that *reassigns* the player mid-action needs `actor` on its own later
+bands (the guard reads the global live — see the `selfword1` fixture). Applies
+to action phase rules only; rulebook contributions have no actor. Golden
+`actordefault1`.
+
 #### Body-nested rules
 
 A phase rule may be declared **inside a type or object body**, implicitly

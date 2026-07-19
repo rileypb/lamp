@@ -1,0 +1,21 @@
+Lab
+A lab.
+
+You see a coin and a robot here.
+
+> take coin
+(unmarked body rule: player reaches)(actor body rule: yourself reaches)(yourself now holds coin)
+
+Taken.
+
+> drop coin
+Dropped.
+
+> order robot
+(actor body rule: robot reaches)(robot now holds coin)The robot takes the coin.
+The robot complies.
+
+> take coin
+(unmarked body rule: player reaches)(actor body rule: yourself reaches)(unmarked top rule: the robot has it)(actor-marked failure report)
+
+> quit
