@@ -126,7 +126,7 @@ philosophy:
 
 ## 3. Static data tables / map literals
 
-> **Status: list tier BUILT (2026-07-18); map tier + `const` remain.** List
+> **Status: list + map tiers BUILT (2026-07-18); `const` remains.** List
 > literals (nested included) are now legal global initializers, with implicit
 > line joining inside brackets for multi-line tables and object-name elements
 > resolved against the declared element type (golden `listglobal1`; specs.md
@@ -136,9 +136,16 @@ philosophy:
 > `pa_message`/`interjection` functions deleted), and the
 > `pa_order`/`interj_order`/`scan_levels` initializers (their startup_rules
 > fills dropped) — endgame golden byte-identical, eight hand-test transcripts
-> identical. Remaining from this item: object-keyed **map literals** (the
-> kim_targets record — though fields on the objects compete, see below) and
-> **`const`** (snapshot exemption + immutability enforcement).
+> identical. **Map tier** (same day): `map<K, V>` globals with `{key: value}`
+> literals — object/string/number keys typed against K, function-typed values
+> emitting the (compile-checked) functions themselves, shared list/map
+> index-read/write runtime path, missing key → none, undo/save capture
+> (golden `mapglobal1`; specs.md "Map-literal initializers"). Applied in
+> phobos_ex: the KIM's four per-target tables (`kim_surfaces`/`kim_blurbs`/
+> `kim_show`/`kim_ranges`) replaced the three parallel five-way if-chains in
+> `kim_surface_name`/`kim_state`/`press_bad_digit` — nine-transcript battery
+> identical. Remaining from this item: **`const`** (snapshot exemption +
+> immutability enforcement), on demand.
 
 The closest thing to Inform's Tables that Phobos actually misses. Lookup tables
 are encoded as if-chains throughout:
@@ -319,8 +326,8 @@ type test.
    **DONE (2026-07-16)**, see §1's status note.
 2. ~~**Object-scoped rules** (§2)~~ — **BUILT (2026-07-18)**, body-nested
    form; see §2's status note.
-3. **Static data tables** (§3) — **list tier BUILT (2026-07-18)**; map
-   literals + `const` remain, on demand.
+3. **Static data tables** (§3) — **list + map tiers BUILT (2026-07-18)**;
+   `const` remains, on demand.
 3. ~~**lib/sys list predicates** (§4)~~ — **DONE (2026-07-16)**, see §4's
    status note.
 4. ~~**Scenes** (§5)~~ — designed & **ALL SLICES BUILT (2026-07-17)**:

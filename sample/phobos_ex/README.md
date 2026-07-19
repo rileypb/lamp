@@ -83,9 +83,14 @@ never collide with the original). Enhancements so far:
   ranks and the twelve PA broadcasts and seven interjections are indexed
   string tables (their lookup functions deleted), and
   `pa_order`/`interj_order`/`scan_levels` initialize at their declarations
-  (the startup_rules fills dropped; startup only shuffles). Behavior verified
+  (the startup_rules fills dropped; startup only shuffles). The KIM's
+  per-target data is four `map<physical, …>` tables
+  (`kim_surfaces`/`kim_blurbs`/`kim_show`/`kim_ranges` — the last a
+  function-valued map whose entries are the keypad renderers), replacing the
+  three parallel five-way if-chains in
+  `kim_surface_name`/`kim_state`/`press_bad_digit`. Behavior verified
   identical against `sample/phobos` — endgame golden byte-identical plus the
-  eight-transcript battery.
+  nine-transcript battery.
 
 - **List predicates** (hacking.lamp, linguistics.lamp): the keypad goal checks
   and scan-tier counts use lib/sys's `includes`/`count_of`/`all_true`/`any_true`

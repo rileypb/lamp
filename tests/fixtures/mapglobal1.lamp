@@ -1,0 +1,67 @@
+# Map-literal global initializers (devdocs/phobos_gaps.md §3, map tier):
+# `map<K, V>` globals declare their entries at the declaration — object keys
+# (resolved against K), string keys, and values that are literals, object names,
+# list literals, or function names (a function-typed value emits the function
+# itself, compile-checked). Indexing yields V (`let fn = praise[x]` is callable);
+# a missing key reads as none; writes mutate durably (undo rolls them back).
+
+lib advent
+
+game Mapglobal:
+	author "test"
+	title "Map Global"
+	version 1
+	release beta
+	start Hall
+
+room Hall:
+	description "A hall."
+
+item ruby
+item opal
+
+contains Hall ruby
+contains Hall opal
+
+function void praise_ruby():
+	print "It glitters."
+
+function void praise_opal():
+	print "It shimmers."
+
+global map<item, string> nicknames = {ruby: "the red one", opal: "the milky one"}
+global map<string, int> costs = {"ruby": 90, "opal": 40}
+global map<item, list<bool>> facets = {ruby: [true, false], opal: [false, true, true]}
+global map<item, function> praise = {
+	ruby: praise_ruby,
+	opal: praise_opal}
+
+action appraise:
+	direct item target
+	syntax:
+		"appraise [target]"
+
+report appraise:
+	let nick = nicknames[self.target]
+	print "Known as [nick]."
+	let f = facets[self.target]
+	print "facets: [f.size]"
+	let fn = praise[self.target]
+	fn()
+
+action haggle:
+	syntax:
+		"haggle"
+
+do haggle:
+	let key = "ruby"
+	let before = costs[key]
+	print "ruby costs [before]... [run on]"
+	costs[key] = 75
+	let after = costs[key]
+	print "now [after]."
+
+report haggle:
+	let missing = "pearl"
+	if costs[missing] == none:
+		print "(No pearl on the list.)"

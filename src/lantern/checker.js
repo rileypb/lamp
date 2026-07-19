@@ -38,6 +38,11 @@ let declaredObjectNames = new Set();
 let actionDirectSlots = new Map();
 // Scene singleton names (coerced), for the scene field-write restriction.
 let sceneObjectNames = new Set();
+// Global name -> declared type, for typing indexed reads of global tables
+// (`let fn = praise[k]` needs `praise`'s map<K, V> to type `fn`). Scoped to the
+// IndexExpr branch of inference — GlobalExpr itself stays lenient (null) so no
+// previously-tolerated expression becomes an error.
+let globalTypeSchema = new Map();
 // The engine-maintained scene fields; game code may read but never assign them
 // (a direct write would skip the begin/end events) — see devdocs/scenes.md.
 const SCENE_ENGINE_FIELDS = new Set(["active", "happened", "recurring"]);
@@ -116,6 +121,7 @@ function checkProgram(programAst, options = {}) {
     const kindSchema = buildKindSchema(programAst.nodes);
     const typeSchema = buildTypeSchema(programAst.nodes, kindSchema);
     const globalTypes = buildGlobalTypeSchema(programAst.nodes);
+    globalTypeSchema = globalTypes;
     const functionSchema = buildFunctionSchema(programAst.nodes);
     const globalNames = new Set(globalTypes.keys());
 
@@ -1159,9 +1165,25 @@ function inferExprType(expr, typeSchema, kindSchema, localTypes, functionSchema 
         return "outcome";
     }
     if (expr.kind === "IndexExpr") {
-        const targetType = inferExprType(expr.target, typeSchema, kindSchema, localTypes, functionSchema);
+        let targetType = inferExprType(expr.target, typeSchema, kindSchema, localTypes, functionSchema);
+        if (targetType === null && expr.target && expr.target.kind === "GlobalExpr") {
+            targetType = globalTypeSchema.get(expr.target.name) || null;
+        }
         const listMatch = targetType && targetType.match(/^list<(.+)>$/);
-        return listMatch ? listMatch[1] : null;
+        if (listMatch) return listMatch[1];
+        // Indexing a map yields its value type (`map<K, V>` — split at the
+        // top-level comma; V may itself be generic, e.g. map<item, list<bool>>).
+        const mapMatch = targetType && targetType.match(/^map<(.+)>$/);
+        if (mapMatch) {
+            let depth = 0;
+            const inner = mapMatch[1];
+            for (let i = 0; i < inner.length; i += 1) {
+                if (inner[i] === "<") depth += 1;
+                else if (inner[i] === ">") depth -= 1;
+                else if (inner[i] === "," && depth === 0) return inner.slice(i + 1).trim();
+            }
+        }
+        return null;
     }
     if (expr.kind === "ListLiteral") {
         // Element type from the first element whose type is inferable; an empty or

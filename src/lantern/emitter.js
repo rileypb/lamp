@@ -538,7 +538,8 @@ function valueIsObjectRef(valueNode, declaredType) {
         && declaredType !== "function"
         && !PRIMITIVE_TYPES.has(declaredType)
         && !emitKindNames.has(declaredType)
-        && !declaredType.startsWith("list<");
+        && !declaredType.startsWith("list<")
+        && !declaredType.startsWith("map<");
 }
 
 // Emits a value appearing in a typed position (field, argument, slot, return).
@@ -552,10 +553,59 @@ function emitObjectOrValue(valueNode, declaredType, filePath, lineNumber, global
 }
 
 function emitGlobalDecl(node) {
-    const valueExpr = node.value.kind === "ListLiteral"
-        ? emitTypedListLiteral(node.value, node.typeName, node.filePath, node.lineNumber)
-        : emitObjectOrValue(node.value, node.typeName, node.filePath, node.lineNumber, new Set());
+    let valueExpr;
+    if (node.value.kind === "ListLiteral") {
+        valueExpr = emitTypedListLiteral(node.value, node.typeName, node.filePath, node.lineNumber);
+    } else if (node.value.kind === "MapLiteral") {
+        valueExpr = emitTypedMapLiteral(node.value, node.typeName, node.filePath, node.lineNumber);
+    } else {
+        valueExpr = emitObjectOrValue(node.value, node.typeName, node.filePath, node.lineNumber, new Set());
+    }
     return `lamplighter.defineGlobal(${emitName(node.name)}, ${valueExpr});`;
+}
+
+// Splits `map<K, V>` at its top-level comma (V may itself be generic, e.g.
+// `map<physical, list<bool>>`).
+function splitMapTypes(declaredType) {
+    if (!declaredType || !declaredType.startsWith("map<")) return { keyType: undefined, valueType: undefined };
+    const inner = declaredType.slice(4, -1);
+    let depth = 0;
+    for (let i = 0; i < inner.length; i += 1) {
+        const ch = inner[i];
+        if (ch === "<") depth += 1;
+        else if (ch === ">") depth -= 1;
+        else if (ch === "," && depth === 0) {
+            return { keyType: inner.slice(0, i).trim(), valueType: inner.slice(i + 1).trim() };
+        }
+    }
+    return { keyType: inner.trim(), valueType: undefined };
+}
+
+// A map-literal global initializer, key and value each emitted against the
+// declared `map<K, V>` types: object-typed keys/values resolve as validated
+// object references, list values recurse through emitTypedListLiteral, and a
+// **function-typed** value emits the named function itself (the identifier
+// de-coerced back to its source spelling and checked against the declared
+// functions, so a typo fails the compile).
+function emitTypedMapLiteral(node, declaredType, filePath, lineNumber) {
+    const { keyType, valueType } = splitMapTypes(declaredType);
+    const pairs = node.entries.map(({ key, value }) => {
+        const keyExpr = emitObjectOrValue(key, keyType, filePath, lineNumber, new Set());
+        let valueExpr;
+        if (value.kind === "ListLiteral") {
+            valueExpr = emitTypedListLiteral(value, valueType, filePath, lineNumber);
+        } else if (valueType === "function" && value.kind === "StringLiteral") {
+            const fnName = value.value.replace(/ /g, "_");
+            if (!functionParamTypes.has(fnName)) {
+                throw new Error(`${filePath}:${lineNumber}: unknown function "${fnName}" in map literal`);
+            }
+            valueExpr = fnName;
+        } else {
+            valueExpr = emitObjectOrValue(value, valueType, filePath, lineNumber, new Set());
+        }
+        return `[${keyExpr}, ${valueExpr}]`;
+    });
+    return `lamplighter.makeMap([${pairs.join(", ")}])`;
 }
 
 // A list-literal global initializer, emitted with the declared element type
@@ -964,7 +1014,7 @@ function emitStatementLines(statement, indentLevel, globalNames = new Set(), bar
         if (statement.index != null) {
             let listExpr = headExpr;
             if (tail.length > 0) listExpr += `.${tail.join(".")}`;
-            return [`${indent}${listExpr}.items[${emitExpression(statement.index, globalNames)}] = ${valueExpr};`];
+            return [`${indent}lamplighter.indexAssign(${listExpr}, ${emitExpression(statement.index, globalNames)}, ${valueExpr});`];
         }
         if (tail.length === 0 && isGlobal) {
             return [`${indent}lamplighter.setGlobal(${emitName(chead)}, ${valueExpr});`];
@@ -1346,7 +1396,7 @@ function emitExpression(expr, globalNames = new Set()) {
         return String(expr.value);
     }
     if (expr.kind === "IndexExpr") {
-        return `${emitExpression(expr.target, globalNames)}.items[${emitExpression(expr.index, globalNames)}]`;
+        return `lamplighter.indexValue(${emitExpression(expr.target, globalNames)}, ${emitExpression(expr.index, globalNames)})`;
     }
     if (expr.kind === "ListLiteral") {
         return `lamplighter.makeList([${expr.elements.map((e) => emitExpression(e, globalNames)).join(", ")}])`;

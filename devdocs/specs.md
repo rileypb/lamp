@@ -713,6 +713,30 @@ List literals remain *global-initializer-only* as declaration values: a
 type-body field default of list type would be one shared value aliased across
 every instance, so field defaults still reject them. Golden `listglobal1`.
 
+**Map-literal initializers.** A `map<K, V>` global declares its entries the
+same way — the home for object-keyed tables (three if-chains keyed on the same
+five objects was the motivating shape; devdocs/phobos_gaps.md §3):
+
+```lamp
+global map<item, string> nicknames = {ruby: "the red one", opal: "the milky one"}
+global map<string, int> costs = {"ruby": 90, "opal": 40}
+global map<item, list<bool>> facets = {ruby: [true, false], opal: [false, true]}
+global map<item, function> praise = {ruby: praise_ruby, opal: praise_opal}
+```
+
+Keys are bare object names (resolved and validated against `K`), plain
+strings, or numbers; values are simple values, nested list literals, or —
+when `V` is `function` — bare **function names**, which emit the function
+itself (compile-checked, so a typo fails the build; the retrieved value is
+callable: `let fn = praise[x]` then `fn()`). Nested map values are not
+supported. Indexing (`m[k]`) and index assignment (`m[k] = v`) work on maps
+exactly as on lists (one shared runtime path); keys compare like Lamp `==`
+(objects by identity, values by equality); a **missing key reads as `none`**.
+The result is an ordinary mutable global — writes are durable and captured by
+undo/save (`{$mapv: [[k,v],…]}` in the snapshot encoding). Not yet supported
+on maps: `for … in` iteration, `.size`, and printing a map renders a
+placeholder (`[map: N entries]`), not prose. Golden `mapglobal1`.
+
 #### Global assignments
 
 A bare `NAME = VALUE` line assigns a new value to a previously-declared global, whether at the top level or inside a local context (an event handler, change handler, or function body). At the top level this lets user files override defaults set by the standard library; inside a local context it mutates shared game state.

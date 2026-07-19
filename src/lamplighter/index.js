@@ -2961,6 +2961,9 @@ function formatValue(value) {
     if (isListValue(value)) {
         return formatListValue(value.items);
     }
+    if (isMapValue(value)) {
+        return `[map: ${value.entries.size} entries]`;
+    }
     if (value && typeof value === "object" && typeof value.name === "string") {
         // A `printed_name` field, when set, overrides the canonical `name` for
         // display only (the registry key stays `name`). It may hold a text
@@ -3001,6 +3004,36 @@ function setListFormatter(formatter) {
 
 function formatListValue(items) {
     return listFormatter(items.map((item) => String(formatValue(item))));
+}
+
+// A map value (devdocs/phobos_gaps.md §3, map tier): declared by a map-literal
+// global initializer, read/written through indexValue/indexAssign. Keys compare
+// by identity/===, matching Lamp `==`.
+function makeMap(pairs) {
+    return { __lampMap: true, entries: new Map(pairs) };
+}
+
+function isMapValue(value) {
+    return Boolean(value) && typeof value === "object" && value.__lampMap === true;
+}
+
+// Indexing, shared by lists and maps (the emitter routes every `x[k]` read and
+// `x[k] = v` write here). A missing map key reads as null (the object-reference
+// "none" convention); a list index behaves as before.
+function indexValue(target, key) {
+    if (isMapValue(target)) {
+        const value = target.entries.get(key);
+        return value === undefined ? null : value;
+    }
+    return target.items[key];
+}
+
+function indexAssign(target, key, value) {
+    if (isMapValue(target)) {
+        target.entries.set(key, value);
+        return;
+    }
+    target.items[key] = value;
 }
 
 function makeList(items) {
@@ -3146,6 +3179,7 @@ function encodeValue(value) {
         }
     }
     if (isListValue(value)) return { $list: value.items.map(encodeValue) };
+    if (isMapValue(value)) return { $mapv: [...value.entries].map(([k, v]) => [encodeValue(k), encodeValue(v)]) };
     if (typeof value === "object") {
         if (typeof value.name === "string" && nameRegistry.get(value.name) === value) {
             return { $ref: value.name };
@@ -3163,6 +3197,7 @@ function decodeValue(data) {
     if (typeof data === "object") {
         if ("$ref" in data) return nameRegistry.get(data.$ref) ?? null;
         if ("$list" in data) return makeList(data.$list.map(decodeValue));
+        if ("$mapv" in data) return makeMap(data.$mapv.map(([k, v]) => [decodeValue(k), decodeValue(v)]));
         // A persistable text template: rebuild a fresh live thunk from the registry, binding
         // any captured refs from the env (devdocs/text-persistence.md). A plain string (a
         // frozen fallback text, or any old save) decodes below as itself.
@@ -3843,6 +3878,9 @@ module.exports = {
     registerTemplate,
     instantiateTemplate,
     selfTemplate,
+    makeMap,
+    indexValue,
+    indexAssign,
     registerScene,
     sceneEdge,
     beginScene,

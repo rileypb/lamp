@@ -837,10 +837,17 @@ function createParser(tokens, filePath, globalNames, functionNames = new Set(), 
         const base = plainName("type name");
         if (at("LT")) {
             next();
-            // The element type may itself be generic (`list<list<int>>` — nested
-            // list-literal tables, devdocs/phobos_gaps.md §3), so recurse.
+            // The parameter types may themselves be generic (`list<list<int>>` —
+            // nested list-literal tables, devdocs/phobos_gaps.md §3), so recurse;
+            // a two-parameter generic (`map<K, V>`) takes a comma.
             const inner = parseFieldType();
-            expect("GT", "Expected '>' to close list type");
+            if (at("COMMA")) {
+                next();
+                const second = parseFieldType();
+                expect("GT", "Expected '>' to close generic type");
+                return `${base}<${inner}, ${second}>`;
+            }
+            expect("GT", "Expected '>' to close generic type");
             return `${base}<${inner}>`;
         }
         return base;
@@ -987,12 +994,45 @@ function createParser(tokens, filePath, globalNames, functionNames = new Set(), 
         let value;
         if (at("EQUALS")) {
             next();
-            value = at("LBRACKET") ? parseLiteralList() : parseSimpleValue();
+            if (at("LBRACKET")) value = parseLiteralList();
+            else if (at("LBRACE")) value = parseLiteralMap();
+            else value = parseSimpleValue();
         } else {
             value = ast.createNoneLiteral();
         }
         expectNewline();
         return ast.createGlobalDecl(name, typeName, value, filePath, keyword.line);
+    }
+
+    // A map literal as a global initializer (devdocs/phobos_gaps.md §3, map
+    // tier): `{KEY: VALUE, ...}`. A key is a bare object name (resolved against
+    // the declared key type), a plain string, or a number; a value is a simple
+    // value or a nested list literal. Like list initializers: static data, never
+    // expressions, and globals only. (Nested map values are not supported.)
+    function parseLiteralMap() {
+        const open = expect("LBRACE", "Expected '{'");
+        const entries = [];
+        if (!at("RBRACE")) {
+            entries.push(parseMapEntry());
+            while (at("COMMA")) {
+                next();
+                entries.push(parseMapEntry());
+            }
+        }
+        expect("RBRACE", "Expected '}' to close map literal");
+        return ast.createMapLiteral(entries, filePath, open.line);
+    }
+
+    function parseMapEntry() {
+        const keyToken = next();
+        let key;
+        if (keyToken.type === "IDENT") key = ast.createStringLiteral(coerceName(keyToken.value));
+        else if (keyToken.type === "STRING") key = ast.createStringLiteral(keyToken.value);
+        else if (keyToken.type === "NUMBER") key = ast.createNumberLiteral(keyToken.value);
+        else throw err(`Expected a map key, got ${keyToken.type}`, keyToken.line);
+        expect("COLON", "Expected ':' after map key");
+        const value = at("LBRACKET") ? parseLiteralList() : parseSimpleValue();
+        return { key, value };
     }
 
     // A list literal as a global initializer (devdocs/phobos_gaps.md §3, list

@@ -71,6 +71,8 @@ const SINGLE_CHAR_TOKENS = {
     ",": "COMMA",
     "[": "LBRACKET",
     "]": "RBRACKET",
+    "{": "LBRACE",
+    "}": "RBRACE",
     "?": "QUESTION",
 };
 
@@ -80,7 +82,7 @@ function tokenize(sourceText, filePath) {
     const indentStack = [0];
     let lastLine = 0;
     let li = 0;
-    // Implicit line joining inside brackets: while a `[` is open, following
+    // Implicit line joining inside brackets: while a `[` (or `{`) is open, following
     // physical lines continue the same logical line — no NEWLINE, no
     // INDENT/DEDENT — so a long list literal wraps freely (multi-line tables,
     // devdocs/phobos_gaps.md §3). Brackets inside string literals are STRING
@@ -107,8 +109,8 @@ function tokenize(sourceText, filePath) {
         const before = tokens.length;
         const lastLi = tokenizeLine(codeLine, lineNumber, filePath, tokens, rawLines, li);
         for (let t = before; t < tokens.length; t += 1) {
-            if (tokens[t].type === "LBRACKET") bracketDepth += 1;
-            else if (tokens[t].type === "RBRACKET") bracketDepth = Math.max(0, bracketDepth - 1);
+            if (tokens[t].type === "LBRACKET" || tokens[t].type === "LBRACE") bracketDepth += 1;
+            else if (tokens[t].type === "RBRACKET" || tokens[t].type === "RBRACE") bracketDepth = Math.max(0, bracketDepth - 1);
         }
         lastLine = lastLi + 1;
         if (bracketDepth === 0) {

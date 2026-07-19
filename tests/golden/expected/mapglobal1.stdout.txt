@@ -1,0 +1,25 @@
+Hall
+A hall.
+
+You see a ruby and an opal here.
+
+> appraise ruby
+Known as the red one.
+facets: 2It glitters.
+
+> appraise opal
+Known as the milky one.
+facets: 3It shimmers.
+
+> haggle
+ruby costs 90... now 75.
+(No pearl on the list.)
+
+> undo
+[Previous turn undone.]
+
+> haggle
+ruby costs 90... now 75.
+(No pearl on the list.)
+
+> quit

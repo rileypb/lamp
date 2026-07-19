@@ -1,0 +1,7 @@
+appraise ruby
+appraise opal
+haggle
+undo
+haggle
+quit
+y

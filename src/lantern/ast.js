@@ -89,6 +89,12 @@ function createListLiteral(elements, filePath, lineNumber) {
     return { kind: "ListLiteral", elements, filePath, lineNumber };
 }
 
+// A map literal (global initializers only — devdocs/phobos_gaps.md §3):
+// `entries` is [{ key, value }] with literal key/value nodes.
+function createMapLiteral(entries, filePath, lineNumber) {
+    return { kind: "MapLiteral", entries, filePath, lineNumber };
+}
+
 function createErrorStatement(expr) {
     return { kind: "ErrorStatement", expr };
 }
@@ -516,4 +522,5 @@ module.exports = {
     createNotExpr,
     createIndexExpr,
     createListLiteral,
+    createMapLiteral,
 };
