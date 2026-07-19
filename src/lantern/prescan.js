@@ -164,7 +164,8 @@ function prescanDeclarations(tokens, knownTypeNames = new Set(), knownFieldNames
         }
 
         // global TYPE name = value  → name is the identifier before `=`.
-        if (isKeyword(head, "global")) {
+        // `const TYPE name = value` declares a (read-only) global the same way.
+        if (isKeyword(head, "global") || (isIdent(head) && head.value === "const" && depth === 0)) {
             const eq = line.findIndex((t) => t.type === "EQUALS");
             if (eq > 0 && line[eq - 1].type === "IDENT") {
                 globalNames.add(line[eq - 1].value);

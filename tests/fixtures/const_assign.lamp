@@ -1,0 +1,8 @@
+# Assigning a const is a compile error.
+
+game ConstAssign
+
+const int answer = 42
+
+on startup:
+	answer = 7

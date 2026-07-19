@@ -26,7 +26,7 @@ global bool self_destruct_in_progress = false
 
 # Siriusian numerals, indexed by digit 0-9 (a separate cipher from the letter glyphs).
 # Distinct from the linguistic module's letter alphabet; numbers are never scanned.
-global string siriusian_digits = "ļĽľĿŀŁłĹĺĻ"
+const string siriusian_digits = "ļĽľĿŀŁłĹĺĻ"
 
 # Render a non-negative integer as a Siriusian numeral. The original maps each decimal
 # digit to a glyph and reverses the whole string; extracting least-significant-first with

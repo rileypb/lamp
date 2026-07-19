@@ -40,7 +40,7 @@ function void galaxy_score(int n):
 
 # Score-to-rank (Rank.i7x), indexed by score 0..11 (max_score, set in the game's
 # startup_rules) — a list-literal table (devdocs/phobos_gaps.md §3).
-global list<string> ranks = ["Cyborg Bait", "Cyborg Bait", "Cyborg Bait", "Rookie", "Veteran", "Cyborg Hunter", "Hero of Hellas", "Mistress of Marineris", "Lady of Olympus", "Dame of Deimos", "Princess of Phobos", "Queen of Mars"]
+const list<string> ranks = ["Cyborg Bait", "Cyborg Bait", "Cyborg Bait", "Rookie", "Veteran", "Cyborg Hunter", "Hero of Hellas", "Mistress of Marineris", "Lady of Olympus", "Dame of Deimos", "Princess of Phobos", "Queen of Mars"]
 
 function string rank_name():
 	return ranks[score]

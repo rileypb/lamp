@@ -1,0 +1,3 @@
+Compile error: tests/fixtures/const_indexassign.lamp:8: type error: cannot assign to const "nums"
+  8 | 	nums[0] = 9
+    |  ^

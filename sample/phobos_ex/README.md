@@ -88,7 +88,10 @@ never collide with the original). Enhancements so far:
   (`kim_surfaces`/`kim_blurbs`/`kim_show`/`kim_ranges` — the last a
   function-valued map whose entries are the keypad renderers), replacing the
   three parallel five-way if-chains in
-  `kim_surface_name`/`kim_state`/`press_bad_digit`. Behavior verified
+  `kim_surface_name`/`kim_state`/`press_bad_digit`. The genuinely-static
+  tables and cipher strings are `const` — immutable and exempt from the
+  per-turn undo/save snapshot; the shuffled order lists stay `global`.
+  Behavior verified
   identical against `sample/phobos` — endgame golden byte-identical plus the
   nine-transcript battery.
 

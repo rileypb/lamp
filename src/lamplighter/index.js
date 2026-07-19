@@ -2307,9 +2307,44 @@ function defineGlobal(name, value) {
     globalRegistry.set(name, value);
 }
 
+// Const globals (devdocs/phobos_gaps.md §3): immutable static data. They live in
+// the ordinary global registry (reads are plain getGlobal), but assignment is
+// refused, their list/map values are deep-branded so the mutating paths
+// (indexAssign, append, shuffle) throw, and the globals state provider skips
+// them — a table of prose is program, not game state, so undo/save stop
+// re-capturing it every checkpoint.
+const constGlobalNames = new Set();
+
+function brandConst(value) {
+    if (isListValue(value)) {
+        value.__lampConst = true;
+        for (const item of value.items) brandConst(item);
+    } else if (isMapValue(value)) {
+        value.__lampConst = true;
+        for (const inner of value.entries.values()) brandConst(inner);
+    }
+    return value;
+}
+
+function defineConst(name, value) {
+    defineGlobal(name, brandConst(value));
+    constGlobalNames.add(name);
+}
+
+// Called by every in-place list/map mutator (runtime indexAssign; lib/sys
+// append/shuffle) so a const table can't be changed through an alias either.
+function assertMutable(value) {
+    if (value && typeof value === "object" && value.__lampConst === true) {
+        throw new Error("cannot mutate a const value (declared with `const`)");
+    }
+}
+
 function setGlobal(name, value) {
     if (!globalRegistry.has(name)) {
         throw new Error(`Unknown global: ${name}`);
+    }
+    if (constGlobalNames.has(name)) {
+        throw new Error(`cannot assign to const "${name}"`);
     }
     globalRegistry.set(name, value);
 }
@@ -3029,6 +3064,7 @@ function indexValue(target, key) {
 }
 
 function indexAssign(target, key, value) {
+    assertMutable(target);
     if (isMapValue(target)) {
         target.entries.set(key, value);
         return;
@@ -3292,6 +3328,7 @@ registerStateProvider({
         // `act` is transient execution state (the running action), not world state.
         for (const [name, value] of globalRegistry) {
             if (name === "act") continue;
+            if (constGlobalNames.has(name)) continue;
             try {
                 out[name] = encodeValue(value);
             } catch (err) {
@@ -3881,6 +3918,8 @@ module.exports = {
     makeMap,
     indexValue,
     indexAssign,
+    defineConst,
+    assertMutable,
     registerScene,
     sceneEdge,
     beginScene,

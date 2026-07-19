@@ -561,7 +561,8 @@ function emitGlobalDecl(node) {
     } else {
         valueExpr = emitObjectOrValue(node.value, node.typeName, node.filePath, node.lineNumber, new Set());
     }
-    return `lamplighter.defineGlobal(${emitName(node.name)}, ${valueExpr});`;
+    const define = node.isConst ? "defineConst" : "defineGlobal";
+    return `lamplighter.${define}(${emitName(node.name)}, ${valueExpr});`;
 }
 
 // Splits `map<K, V>` at its top-level comma (V may itself be generic, e.g.

@@ -1,0 +1,3 @@
+Compile error: tests/fixtures/const_assign.lamp:8: type error: cannot assign to const "answer"
+  8 | 	answer = 7
+    |  ^

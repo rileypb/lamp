@@ -43,6 +43,8 @@ let sceneObjectNames = new Set();
 // IndexExpr branch of inference — GlobalExpr itself stays lenient (null) so no
 // previously-tolerated expression becomes an error.
 let globalTypeSchema = new Map();
+// Names declared `const` — assignment (whole or indexed) is a compile error.
+let constGlobalNames = new Set();
 // The engine-maintained scene fields; game code may read but never assign them
 // (a direct write would skip the begin/end events) — see devdocs/scenes.md.
 const SCENE_ENGINE_FIELDS = new Set(["active", "happened", "recurring"]);
@@ -122,6 +124,7 @@ function checkProgram(programAst, options = {}) {
     const typeSchema = buildTypeSchema(programAst.nodes, kindSchema);
     const globalTypes = buildGlobalTypeSchema(programAst.nodes);
     globalTypeSchema = globalTypes;
+    constGlobalNames = new Set(programAst.nodes.filter((n) => n.kind === "GlobalDecl" && n.isConst).map((n) => n.name));
     const functionSchema = buildFunctionSchema(programAst.nodes);
     const globalNames = new Set(globalTypes.keys());
 
@@ -993,6 +996,9 @@ function directSubExprs(stmt) {
 }
 
 function checkGlobalAssign(node, globalTypes, typeSchema, kindSchema) {
+    if (constGlobalNames.has(node.name)) {
+        throw typeError(node.filePath, node.lineNumber, `cannot assign to const "${node.name}"`);
+    }
     const globalType = globalTypes.get(node.name);
     if (!globalType) {
         throw typeError(node.filePath, node.lineNumber, `unknown global "${node.name}"`);
@@ -1002,6 +1008,11 @@ function checkGlobalAssign(node, globalTypes, typeSchema, kindSchema) {
 
 function checkAssignStatement(stmt, typeSchema, kindSchema, localTypes) {
     const chain = stmt.targetChain;
+    // A const global takes no assignment — neither the whole name nor an
+    // indexed element (aliased mutation is caught at runtime by the brand).
+    if (constGlobalNames.has(coerceName(chain[0])) && (chain.length === 1 || stmt.index != null)) {
+        throw typeError(stmt.filePath, stmt.lineNumber, `cannot assign to const "${chain[0]}"`);
+    }
     if (chain.length < 2) {
         return;
     }

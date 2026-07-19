@@ -20,7 +20,7 @@ type item:
 
 # The glyph alphabet: codepoints 97-122 (a-z) map to these in order (a-t cycle the
 # same ten glyphs twice; u-z are unique). Indexed by code_at(...) - 97 in the cipher.
-global string siriusian_glyphs = "ĹĺĻļĽľĿŀŁłĹĺĻļĽľĿŀŁłЃΐſŧīı"
+const string siriusian_glyphs = "ĹĺĻļĽľĿŀŁłĹĺĻļĽľĿŀŁłЃΐſŧīı"
 
 # Which difficulty tiers have been scanned: scan_levels[t-1] is true once tier t is
 # scanned. A fixed five-slot list (one per tier), starting all-unscanned — a

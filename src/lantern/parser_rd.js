@@ -399,6 +399,11 @@ function createParser(tokens, filePath, globalNames, functionNames = new Set(), 
                 && peek(3).type === "IDENT" && peek(3).value === "file" && peek(4).type === "STRING") {
                 return parseImageDecl();
             }
+            // `const TYPE NAME = VALUE` — an immutable, snapshot-exempt global
+            // (devdocs/phobos_gaps.md §3). Contextual on the head word, like `scene`.
+            if (token.value === "const" && peek(1).type === "IDENT") {
+                return parseConstDecl();
+            }
             // `scene NAME[:]` — a scene declaration (devdocs/scenes.md). Contextual on the
             // exact shape (`scene` is not a keyword): the body carries transition rules
             // (`begins when` / `ends when` / `recurring`), not field assignments, so it
@@ -1002,6 +1007,23 @@ function createParser(tokens, filePath, globalNames, functionNames = new Set(), 
         }
         expectNewline();
         return ast.createGlobalDecl(name, typeName, value, filePath, keyword.line);
+    }
+
+    // `const TYPE NAME = VALUE`: a global that never changes — the checker
+    // refuses assignment, the runtime brands the value so in-place mutation
+    // (indexed writes, append, shuffle) throws, and undo/save skip it. The
+    // initializer is required and takes the same literal forms a global does.
+    function parseConstDecl() {
+        const keyword = next();
+        const typeName = parseFieldType();
+        const name = coercedName("const name");
+        expect("EQUALS", "Expected '=' — a const requires an initializer");
+        let value;
+        if (at("LBRACKET")) value = parseLiteralList();
+        else if (at("LBRACE")) value = parseLiteralMap();
+        else value = parseSimpleValue();
+        expectNewline();
+        return ast.createGlobalDecl(name, typeName, value, filePath, keyword.line, true);
     }
 
     // A map literal as a global initializer (devdocs/phobos_gaps.md §3, map

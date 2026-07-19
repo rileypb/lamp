@@ -1,0 +1,10 @@
+# In-place mutation of a const through a mutating native throws at runtime —
+# the value is branded, so aliasing can't dodge the compile-time checks.
+
+game ConstShuffle
+
+const list<int> nums = [1, 2, 3]
+
+on startup:
+	shuffle(nums)
+	print "unreachable"

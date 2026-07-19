@@ -1,0 +1,8 @@
+# Indexed assignment into a const is a compile error.
+
+game ConstIndexAssign
+
+const list<int> nums = [1, 2]
+
+on startup:
+	nums[0] = 9

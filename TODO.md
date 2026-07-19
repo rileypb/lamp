@@ -515,8 +515,12 @@ against K; function-typed values emit the compile-checked functions; shared
 list/map index read/write runtime path; missing key → none; undo/save capture;
 golden `mapglobal1`). phobos_ex: the KIM's four per-target tables replaced the
 three parallel five-way if-chains (`kim_surface_name`/`kim_state`/
-`press_bad_digit`); nine-transcript battery identical. Remaining: `const`
-(snapshot exemption / immutability), on demand; (4) ~~lib/sys list predicates~~
+`press_bad_digit`); nine-transcript battery identical. **`const` tier BUILT
+(2026-07-18)**: `const TYPE NAME = VALUE` — compile-error assignment, deep-branded
+values (aliased shuffle/append/indexed writes throw), globals snapshot skips them
+(goldens `constglobal1` + `const_assign`/`const_indexassign`/`const_shuffle`).
+phobos_ex: thirteen static tables/ciphers converted; shuffled order lists stay
+`global`. §3 is fully closed; (4) ~~lib/sys list predicates~~
 **DONE (2026-07-16)** — `includes`/`count_of`/`all_true`/`any_true`, pure Lamp in
 lib/sys/functions.lamp (golden `listpred1`; `contains` was taken by the containment
 relation; sys locals are `sys_`-prefixed to dodge the no-shadowing rule against game
@@ -558,8 +562,7 @@ sample/phobos.
 under Parser v2 — two new concrete cases); (7) regions (region-scoped backdrops +
 per-region defaults); (8) optional action slots (the fly/fly_thing split); (9) NPC
 movement helper + route-finding; (10) a once-only shuffled deck mode for `pick`.
-Recommended next: §3's `const` if wanted, or a smaller item (§7 regions or
-§8 optional slots). The stale
+Recommended next: a smaller item (§7 regions or §8 optional slots), or §6/§9/§10. The stale
 rulebooks.md status header flagged by the audit is now fixed (points at specs.md as
 source of truth for the shipped surface).
 

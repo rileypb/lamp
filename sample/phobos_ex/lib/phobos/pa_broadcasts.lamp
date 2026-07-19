@@ -25,7 +25,7 @@ rule startup_rules:
 		shuffle(pa_order)
 
 # The twelve broadcasts (verbatim from the Table of PAMessages), as data.
-global list<string> pa_messages = [
+const list<string> pa_messages = [
 	"Hello, everyone. This is your friendly guard !mfk5plas. I just want to let you know that I'm sooooo bored.",
 	"Halloooo! !mfk5plas speaking. Everyone who'd rather not kill off the entire population of Mars, please report to the control room. No? I guess I'm the only one, then. Poor me.",
 	"This is your commander speaking. I hereby direct you all to report to !mfk5plas from now on. They are the only one who seems to have any sense around here. I don't know how they got assigned to this base, but I guess they must have been a real pain in the $rearend.",

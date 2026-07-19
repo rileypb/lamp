@@ -53,25 +53,25 @@ function void detach_kim():
 # "handprint scanner", so the colour is keyed off the target — as I7 spells it
 # out), the adhered-state board blurb, the keypad renderer, and the bad-digit
 # range reminder.
-global map<physical, string> kim_surfaces = {
+const map<physical, string> kim_surfaces = {
 	yellow_door: "the yellow handprint scanner",
 	red_door: "the red handprint scanner",
 	blue_door: "the blue handprint scanner",
 	purple_door: "the purple handprint scanner",
 	locker: "the locker"}
-global map<physical, string> kim_blurbs = {
+const map<physical, string> kim_blurbs = {
 	yellow_door: "an array of nine colored buttons, labeled 1 through 9, adjacent to a RESET button",
 	red_door: "an array of nine colored buttons, labeled 1 through 9, adjacent to a RESET button",
 	blue_door: "an array of nine colored buttons, labeled 1 through 9",
 	purple_door: "an array of 16 colored buttons, labeled 1 through 16",
 	locker: "an array of four colored buttons, labeled 1 through 4, adjacent to a RESET button"}
-global map<physical, function> kim_show = {
+const map<physical, function> kim_show = {
 	yellow_door: show_keypad_9,
 	red_door: show_keypad_9,
 	blue_door: show_keypad_blue,
 	purple_door: show_keypad_16,
 	locker: show_keypad_4}
-global map<physical, string> kim_ranges = {
+const map<physical, string> kim_ranges = {
 	yellow_door: "Use the digits 1-9.",
 	red_door: "Use the digits 1-9.",
 	blue_door: "Use the digits 1-9.",
@@ -264,8 +264,8 @@ global list<bool> nine_buttons = none
 # The hidden per-key flip-sets, as data (list-literal globals — devdocs/phobos_gaps.md
 # §3): pressing key N flips each button listed in entry N. One table per nine-button
 # door; the red door's is the harder rule.
-global list<list<int>> yellow_flips = [[1], [2, 3], [3, 4], [1, 2, 4], [5, 6], [1, 2, 3, 6], [7, 8], [1, 2, 4, 8], [1, 3, 9]]
-global list<list<int>> red_flips = [[1], [1, 3, 5, 7, 9], [1, 2, 4, 5, 7, 8], [1, 3, 5, 7, 9], [1, 2, 3, 4, 6, 7, 8, 9], [1, 5, 7, 9], [1, 2, 3, 4, 5, 6, 8, 9], [1, 3, 5, 7, 9], [1, 2, 4, 5, 7, 8]]
+const list<list<int>> yellow_flips = [[1], [2, 3], [3, 4], [1, 2, 4], [5, 6], [1, 2, 3, 6], [7, 8], [1, 2, 4, 8], [1, 3, 9]]
+const list<list<int>> red_flips = [[1], [1, 3, 5, 7, 9], [1, 2, 4, 5, 7, 8], [1, 3, 5, 7, 9], [1, 2, 3, 4, 6, 7, 8, 9], [1, 5, 7, 9], [1, 2, 3, 4, 5, 6, 8, 9], [1, 3, 5, 7, 9], [1, 2, 4, 5, 7, 8]]
 
 # Shared goal for every nine-button door: all nine lit blue (true).
 function bool nine_solved():
@@ -588,7 +588,7 @@ global bool purple_reset = false
 
 # Sixteen distinct glyphs, one per button (the keypad's "Siriusian numerals"). Drawn from
 # the cipher alphabet's non-aliasing glyphs (a-j + u-z; k-t alias a-j in siriusian_glyphs).
-global string button_glyphs = "ĹĺĻļĽľĿŀŁłЃΐſŧīı"
+const string button_glyphs = "ĹĺĻļĽľĿŀŁłЃΐſŧīı"
 
 function string button_glyph(int n):
 	return char_at(button_glyphs, n - 1)

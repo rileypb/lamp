@@ -126,7 +126,7 @@ philosophy:
 
 ## 3. Static data tables / map literals
 
-> **Status: list + map tiers BUILT (2026-07-18); `const` remains.** List
+> **Status: FULLY BUILT (2026-07-18) — list, map, and `const` tiers.** List
 > literals (nested included) are now legal global initializers, with implicit
 > line joining inside brackets for multi-line tables and object-name elements
 > resolved against the declared element type (golden `listglobal1`; specs.md
@@ -144,8 +144,13 @@ philosophy:
 > phobos_ex: the KIM's four per-target tables (`kim_surfaces`/`kim_blurbs`/
 > `kim_show`/`kim_ranges`) replaced the three parallel five-way if-chains in
 > `kim_surface_name`/`kim_state`/`press_bad_digit` — nine-transcript battery
-> identical. Remaining from this item: **`const`** (snapshot exemption +
-> immutability enforcement), on demand.
+> identical. **`const` tier** (same day): `const TYPE NAME = VALUE` —
+> assignment a compile error, values deep-branded so aliased mutation
+> (shuffle/append/indexed writes) throws, and the globals snapshot skips them
+> (goldens `constglobal1` + three error goldens; specs.md "`const`
+> declarations"). phobos_ex: the thirteen genuinely-static tables/ciphers are
+> const (flip-sets, ranks, PA/interjection tables, the four KIM maps, the
+> three cipher strings); the shuffled order lists stay `global`.
 
 The closest thing to Inform's Tables that Phobos actually misses. Lookup tables
 are encoded as if-chains throughout:
@@ -326,8 +331,8 @@ type test.
    **DONE (2026-07-16)**, see §1's status note.
 2. ~~**Object-scoped rules** (§2)~~ — **BUILT (2026-07-18)**, body-nested
    form; see §2's status note.
-3. **Static data tables** (§3) — **list + map tiers BUILT (2026-07-18)**;
-   `const` remains, on demand.
+3. ~~**Static data tables** (§3)~~ — **FULLY BUILT (2026-07-18)**: list, map,
+   and `const` tiers; see §3's status note.
 3. ~~**lib/sys list predicates** (§4)~~ — **DONE (2026-07-16)**, see §4's
    status note.
 4. ~~**Scenes** (§5)~~ — designed & **ALL SLICES BUILT (2026-07-17)**:

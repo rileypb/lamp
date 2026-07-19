@@ -737,6 +737,29 @@ undo/save (`{$mapv: [[k,v],…]}` in the snapshot encoding). Not yet supported
 on maps: `for … in` iteration, `.size`, and printing a map renders a
 placeholder (`[map: N entries]`), not prose. Golden `mapglobal1`.
 
+**`const` declarations.** `const TYPE NAME = VALUE` at top level declares an
+**immutable, snapshot-exempt** global — the right home for genuinely static
+tables and scalars:
+
+```lamp
+const int max_rank = 11
+const string cipher_glyphs = "ĹĺĻļĽ…"
+const list<list<int>> yellow_flips = [[1], [2, 3], [3, 4]]
+const map<physical, string> kim_surfaces = {yellow_door: "the yellow handprint scanner"}
+```
+
+Reads, iteration, and indexing work like any global. Three layers make it
+truly constant: **assignment is a compile error** (whole-name and indexed —
+`cannot assign to const "ranks"`); the value is **deep-branded** so in-place
+mutation through an alias (`shuffle(ranks)`, `append`, an indexed write via a
+`let`) throws a clear runtime error; and the globals **state provider skips
+it** — a table of prose is program, not game state, so undo/save stop
+re-capturing it every checkpoint. The initializer is required; the literal
+forms are those of `global`. `const` is contextual (recognized at top level
+before a type name), not a reserved word. A shuffled-at-startup order list
+stays `global` — const is for data that never changes. Goldens
+`constglobal1`, `const_assign`, `const_indexassign`, `const_shuffle`.
+
 #### Global assignments
 
 A bare `NAME = VALUE` line assigns a new value to a previously-declared global, whether at the top level or inside a local context (an event handler, change handler, or function body). At the top level this lets user files override defaults set by the standard library; inside a local context it mutates shared game state.

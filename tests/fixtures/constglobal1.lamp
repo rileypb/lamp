@@ -1,0 +1,28 @@
+# Const globals (devdocs/phobos_gaps.md §3): `const TYPE NAME = VALUE` declares
+# an immutable, snapshot-exempt global — reads, iteration, and indexing work
+# like any global; assignment is a compile error (const_assign/const_indexassign
+# fixtures) and in-place mutation through an alias throws at runtime
+# (const_shuffle). The initializer is required.
+
+game Constglobal
+
+type gem:
+	string label = ""
+
+gem ruby
+
+const int answer = 42
+const string motto = "onward"
+const list<string> colors = ["red", "green", "blue"]
+const list<list<int>> grid = [[1, 2], [3]]
+const map<gem, string> names = {ruby: "the red one"}
+
+on startup:
+	print "answer [answer] motto [motto]"
+	for c in colors:
+		print "- [c]"
+	let row = grid[0]
+	let cell = row[1]
+	print "cell [cell]"
+	let n = names[ruby]
+	print "name [n]"

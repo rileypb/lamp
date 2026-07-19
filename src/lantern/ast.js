@@ -56,8 +56,10 @@ function createOutputSlot(mode) {
     return { kind: "OutputSlot", mode };
 }
 
-function createGlobalDecl(name, typeName, value, filePath, lineNumber) {
-    return { kind: "GlobalDecl", name, typeName, value, filePath, lineNumber };
+// `isConst` marks a `const TYPE NAME = VALUE` declaration: an immutable,
+// snapshot-exempt global (devdocs/phobos_gaps.md §3).
+function createGlobalDecl(name, typeName, value, filePath, lineNumber, isConst = false) {
+    return { kind: "GlobalDecl", name, typeName, value, filePath, lineNumber, isConst };
 }
 
 // An `image NAME: file "PATH"` asset declaration (devdocs/freestyle-windows.md).
