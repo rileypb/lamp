@@ -38,24 +38,9 @@ function void galaxy_score(int n):
 	galaxy_banner()
 	award_points(n)
 
-# Score-to-rank (Rank.i7x). Max score is 11 (set in phobos.lamp startup_rules).
+# Score-to-rank (Rank.i7x), indexed by score 0..11 (max_score, set in the game's
+# startup_rules) — a list-literal table (devdocs/phobos_gaps.md §3).
+global list<string> ranks = ["Cyborg Bait", "Cyborg Bait", "Cyborg Bait", "Rookie", "Veteran", "Cyborg Hunter", "Hero of Hellas", "Mistress of Marineris", "Lady of Olympus", "Dame of Deimos", "Princess of Phobos", "Queen of Mars"]
+
 function string rank_name():
-	if score <= 2:
-		return "Cyborg Bait"
-	if score == 3:
-		return "Rookie"
-	if score == 4:
-		return "Veteran"
-	if score == 5:
-		return "Cyborg Hunter"
-	if score == 6:
-		return "Hero of Hellas"
-	if score == 7:
-		return "Mistress of Marineris"
-	if score == 8:
-		return "Lady of Olympus"
-	if score == 9:
-		return "Dame of Deimos"
-	if score == 10:
-		return "Princess of Phobos"
-	return "Queen of Mars"
+	return ranks[score]

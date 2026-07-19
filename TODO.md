@@ -504,8 +504,13 @@ combat-variant transcripts diff-identical (plus one documented improvement: the
 original's post-mortem double-death on QUIT after a distracted-shot death is
 prevented by the scenes story-end sweep — recorded in scenes.md). Header sugar
 deferred. (3) static
-data tables / const list-map literals at global scope (keypad flip-sets, `pa_message`,
-`rank_name`, `kim_surface_name` are if-chain tables); (4) ~~lib/sys list predicates~~
+data tables — **list tier BUILT (2026-07-18)**: list literals (nested included) as
+global initializers, implicit line joining inside brackets, object elements resolved
+against the declared element type; `list<list<T>>` type grammar recurses (golden
+`listglobal1`; specs.md "List-literal initializers"). phobos_ex: flip-set tables,
+`ranks`, `pa_messages`, interjection tables, order-list initializers — endgame golden
+byte-identical, eight transcripts identical. Remaining: map literals + `const`
+(snapshot exemption / immutability); (4) ~~lib/sys list predicates~~
 **DONE (2026-07-16)** — `includes`/`count_of`/`all_true`/`any_true`, pure Lamp in
 lib/sys/functions.lamp (golden `listpred1`; `contains` was taken by the containment
 relation; sys locals are `sys_`-prefixed to dodge the no-shadowing rule against game
@@ -547,8 +552,8 @@ sample/phobos.
 under Parser v2 — two new concrete cases); (7) regions (region-scoped backdrops +
 per-region defaults); (8) optional action slots (the fly/fly_thing split); (9) NPC
 movement helper + route-finding; (10) a once-only shuffled deck mode for `pick`.
-Recommended next: §3 (static data tables / const literals), or a smaller item
-(§7 regions or §8 optional slots). The stale
+Recommended next: §3's map/const tier if wanted, or a smaller item (§7 regions or
+§8 optional slots). The stale
 rulebooks.md status header flagged by the audit is now fixed (points at specs.md as
 source of truth for the shipped surface).
 

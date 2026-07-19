@@ -80,6 +80,14 @@ function tokenize(sourceText, filePath) {
     const indentStack = [0];
     let lastLine = 0;
     let li = 0;
+    // Implicit line joining inside brackets: while a `[` is open, following
+    // physical lines continue the same logical line — no NEWLINE, no
+    // INDENT/DEDENT — so a long list literal wraps freely (multi-line tables,
+    // devdocs/phobos_gaps.md §3). Brackets inside string literals are STRING
+    // token content and never reach this count. The cost of the freedom: a
+    // missing `]` joins everything to the end of the file, so the eventual
+    // error points far from the culprit.
+    let bracketDepth = 0;
 
     while (li < rawLines.length) {
         const lineNumber = li + 1;
@@ -90,13 +98,22 @@ function tokenize(sourceText, filePath) {
             continue;
         }
 
-        const indent = computeIndent(codeLine);
-        emitIndentation(tokens, indentStack, indent, filePath, lineNumber);
+        if (bracketDepth === 0) {
+            const indent = computeIndent(codeLine);
+            emitIndentation(tokens, indentStack, indent, filePath, lineNumber);
+        }
         // A multi-line string literal consumes raw lines past `li`; tokenizeLine
         // returns the index of the last line it consumed so we resume after it.
+        const before = tokens.length;
         const lastLi = tokenizeLine(codeLine, lineNumber, filePath, tokens, rawLines, li);
+        for (let t = before; t < tokens.length; t += 1) {
+            if (tokens[t].type === "LBRACKET") bracketDepth += 1;
+            else if (tokens[t].type === "RBRACKET") bracketDepth = Math.max(0, bracketDepth - 1);
+        }
         lastLine = lastLi + 1;
-        tokens.push({ type: "NEWLINE", line: lastLine });
+        if (bracketDepth === 0) {
+            tokens.push({ type: "NEWLINE", line: lastLine });
+        }
         li = lastLi + 1;
     }
 

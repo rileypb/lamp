@@ -126,6 +126,20 @@ philosophy:
 
 ## 3. Static data tables / map literals
 
+> **Status: list tier BUILT (2026-07-18); map tier + `const` remain.** List
+> literals (nested included) are now legal global initializers, with implicit
+> line joining inside brackets for multi-line tables and object-name elements
+> resolved against the declared element type (golden `listglobal1`; specs.md
+> "List-literal initializers"). Applied in phobos_ex: the keypad flip-sets
+> (two `list<list<int>>` tables replacing the twin nine-branch if-chains),
+> `ranks`, `pa_messages`, the interjection narration/speech tables (the
+> `pa_message`/`interjection` functions deleted), and the
+> `pa_order`/`interj_order`/`scan_levels` initializers (their startup_rules
+> fills dropped) — endgame golden byte-identical, eight hand-test transcripts
+> identical. Remaining from this item: object-keyed **map literals** (the
+> kim_targets record — though fields on the objects compete, see below) and
+> **`const`** (snapshot exemption + immutability enforcement).
+
 The closest thing to Inform's Tables that Phobos actually misses. Lookup tables
 are encoded as if-chains throughout:
 
@@ -305,6 +319,8 @@ type test.
    **DONE (2026-07-16)**, see §1's status note.
 2. ~~**Object-scoped rules** (§2)~~ — **BUILT (2026-07-18)**, body-nested
    form; see §2's status note.
+3. **Static data tables** (§3) — **list tier BUILT (2026-07-18)**; map
+   literals + `const` remain, on demand.
 3. ~~**lib/sys list predicates** (§4)~~ — **DONE (2026-07-16)**, see §4's
    status note.
 4. ~~**Scenes** (§5)~~ — designed & **ALL SLICES BUILT (2026-07-17)**:

@@ -1,0 +1,36 @@
+# List-literal global initializers (devdocs/phobos_gaps.md §3, list tier):
+# a global list declares its static contents at the declaration — ints, strings,
+# bools, nested lists (list<list<int>> tables), and object references (resolved
+# after construction) — ending the `= none` + fill-in-startup_rules idiom.
+# Elements are simple values, never expressions; the lists stay ordinary mutable
+# globals (element assignment and append work, and state capture is unchanged).
+
+game Listglobal
+
+type widget:
+	string label = ""
+
+widget alpha:
+	label "alpha"
+widget beta:
+	label "beta"
+
+global list<int> nums = [3, 1, 4]
+global list<string> words = ["red", "green", "blue"]
+global list<bool> flags = [true, false]
+global list<list<int>> grid = [[1], [2, 3], [4, 5, 6]]
+global list<widget> kit = [alpha, beta]
+
+on startup:
+	print "nums: [nums.size] first [nums.first]"
+	let w = words[2]
+	print "word: [w]"
+	print "flags: [all_true(flags)] [any_true(flags)]"
+	let row = grid[1]
+	let cell = row[1]
+	print "grid: [cell] rows [grid.size]"
+	let k = kit[1]
+	print "kit: [k.label]"
+	nums[0] = 9
+	append(nums, 7)
+	print "mutated: [nums.first] size [nums.size]"

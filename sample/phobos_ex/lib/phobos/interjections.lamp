@@ -14,39 +14,35 @@ lib advent
 # fire and the golden is untouched; verified by hand.)
 
 global bool no_interjection_this_turn = false
-global list<int> interj_order = none
+# The airing order starts natural (the debug order) and shuffles at startup in a
+# release build — a list-literal initializer, so startup only shuffles.
+global list<int> interj_order = [0, 1, 2, 3, 4, 5, 6]
 global int interj_next = 0
 global int interj_tick = 0
 
 rule startup_rules:
-	interj_order = [0, 1, 2, 3, 4, 5, 6]
 	if not debug_mode:
 		shuffle(interj_order)
 
-# The seven interjections (verbatim from the Table of Interjections): English narration + the
-# guard's Siriusian aside (via g_say, so it is scan-aware like all guard speech).
-function void interjection(int i):
-	if i == 0:
-		print "The guard sighs."
-		g_say("It's such a drag living on the base.")
-	if i == 1:
-		print "The guard brightens up."
-		g_say("At least we're almost done with the mission. Soon we can go home.")
-	if i == 2:
-		print "The guard says to Galaxy,"
-		g_say("!NB563FFAA, I can't overstate the importance of good Cyberhelmet maintenance. You should really get yours checked out.")
-	if i == 3:
-		print "The guard says,"
-		g_say("I'm sure you, like everyone else on the base, think I'm a bit crazy. But it's not crazy to think about what's right and wrong, is it?")
-	if i == 4:
-		print "The guard says to Galaxy,"
-		g_say("If you learned there was even one good human, would you change your mind about our mission?")
-	if i == 5:
-		print "The guard stares off into the distance."
-		g_say("Do you know how many people live on Mars? It's a lot. A real big lot.")
-	if i == 6:
-		print "The guard looks apprehensive."
-		g_say("How many people do you think the Humans will kill on Sirius if we destroy Mars? I don't know, but I bet it's a lot. Like, more than you can count.")
+# The seven interjections (verbatim from the Table of Interjections), as parallel
+# tables: English narration + the guard's Siriusian aside (spoken via g_say, so
+# it is scan-aware like all guard speech).
+global list<string> interj_narration = [
+	"The guard sighs.",
+	"The guard brightens up.",
+	"The guard says to Galaxy,",
+	"The guard says,",
+	"The guard says to Galaxy,",
+	"The guard stares off into the distance.",
+	"The guard looks apprehensive."]
+global list<string> interj_lines = [
+	"It's such a drag living on the base.",
+	"At least we're almost done with the mission. Soon we can go home.",
+	"!NB563FFAA, I can't overstate the importance of good Cyberhelmet maintenance. You should really get yours checked out.",
+	"I'm sure you, like everyone else on the base, think I'm a bit crazy. But it's not crazy to think about what's right and wrong, is it?",
+	"If you learned there was even one good human, would you change your mind about our mission?",
+	"Do you know how many people live on Mars? It's a lot. A real big lot.",
+	"How many people do you think the Humans will kill on Sirius if we destroy Mars? I don't know, but I bet it's a lot. Like, more than you can count."]
 
 # On a quiet turn during the meeting (disguised, guard present, not yet allied), maybe air the next
 # unspoken interjection. The flag is always cleared afterward, so it is fresh each turn.
@@ -68,6 +64,9 @@ rule every_turn_rules:
 				fire = true
 		if fire:
 			print "[par]"
-			interjection(interj_order[interj_next])
+			let idx = interj_order[interj_next]
+			let narration = interj_narration[idx]
+			print "[narration]"
+			g_say(interj_lines[idx])
 			interj_next = interj_next + 1
 	no_interjection_this_turn = false

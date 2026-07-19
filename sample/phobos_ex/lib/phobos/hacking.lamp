@@ -250,6 +250,12 @@ instead hack:
 # the player must work out). Re-pressing a button undoes it; a RESET button (below) also clears it.
 global list<bool> nine_buttons = none
 
+# The hidden per-key flip-sets, as data (list-literal globals — devdocs/phobos_gaps.md
+# §3): pressing key N flips each button listed in entry N. One table per nine-button
+# door; the red door's is the harder rule.
+global list<list<int>> yellow_flips = [[1], [2, 3], [3, 4], [1, 2, 4], [5, 6], [1, 2, 3, 6], [7, 8], [1, 2, 4, 8], [1, 3, 9]]
+global list<list<int>> red_flips = [[1], [1, 3, 5, 7, 9], [1, 2, 4, 5, 7, 8], [1, 3, 5, 7, 9], [1, 2, 3, 4, 6, 7, 8, 9], [1, 5, 7, 9], [1, 2, 3, 4, 5, 6, 8, 9], [1, 3, 5, 7, 9], [1, 2, 4, 5, 7, 8]]
+
 # Shared goal for every nine-button door: all nine lit blue (true).
 function bool nine_solved():
 	return all_true(nine_buttons)
@@ -379,27 +385,7 @@ do press_key when kim_adhered_to == yellow_door:
 	if self.n < 1 or self.n > 9:
 		press_bad_digit()
 		stop failed
-	# Per-key flip-sets (the hidden rule). Pressing flips each listed button.
-	let flip = [0]
-	if self.n == 1:
-		flip = [1]
-	if self.n == 2:
-		flip = [2, 3]
-	if self.n == 3:
-		flip = [3, 4]
-	if self.n == 4:
-		flip = [1, 2, 4]
-	if self.n == 5:
-		flip = [5, 6]
-	if self.n == 6:
-		flip = [1, 2, 3, 6]
-	if self.n == 7:
-		flip = [7, 8]
-	if self.n == 8:
-		flip = [1, 2, 4, 8]
-	if self.n == 9:
-		flip = [1, 3, 9]
-	for x in flip:
+	for x in yellow_flips[self.n - 1]:
 		nine_buttons[x - 1] = not nine_buttons[x - 1]
 	if nine_solved():
 		let yd = yellow_door
@@ -420,27 +406,7 @@ do press_key when kim_adhered_to == red_door:
 	if self.n < 1 or self.n > 9:
 		press_bad_digit()
 		stop failed
-	# Per-key flip-sets (the hidden rule, distinct from the yellow door's).
-	let flip = [0]
-	if self.n == 1:
-		flip = [1]
-	if self.n == 2:
-		flip = [1, 3, 5, 7, 9]
-	if self.n == 3:
-		flip = [1, 2, 4, 5, 7, 8]
-	if self.n == 4:
-		flip = [1, 3, 5, 7, 9]
-	if self.n == 5:
-		flip = [1, 2, 3, 4, 6, 7, 8, 9]
-	if self.n == 6:
-		flip = [1, 5, 7, 9]
-	if self.n == 7:
-		flip = [1, 2, 3, 4, 5, 6, 8, 9]
-	if self.n == 8:
-		flip = [1, 3, 5, 7, 9]
-	if self.n == 9:
-		flip = [1, 2, 4, 5, 7, 8]
-	for x in flip:
+	for x in red_flips[self.n - 1]:
 		nine_buttons[x - 1] = not nine_buttons[x - 1]
 	if nine_solved():
 		let rd = red_door

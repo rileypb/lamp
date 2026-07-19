@@ -552,8 +552,25 @@ function emitObjectOrValue(valueNode, declaredType, filePath, lineNumber, global
 }
 
 function emitGlobalDecl(node) {
-    const valueExpr = emitObjectOrValue(node.value, node.typeName, node.filePath, node.lineNumber, new Set());
+    const valueExpr = node.value.kind === "ListLiteral"
+        ? emitTypedListLiteral(node.value, node.typeName, node.filePath, node.lineNumber)
+        : emitObjectOrValue(node.value, node.typeName, node.filePath, node.lineNumber, new Set());
     return `lamplighter.defineGlobal(${emitName(node.name)}, ${valueExpr});`;
+}
+
+// A list-literal global initializer, emitted with the declared element type
+// threaded through — so `global list<item> kit = [lamp, rope]` resolves its bare
+// names as (validated) object references, a `list<string>` keeps them prose, and
+// a nested `list<list<int>>` recurses with the inner element type. Globals are
+// defined after object construction, so the references resolve.
+function emitTypedListLiteral(node, declaredType, filePath, lineNumber) {
+    const elementType = declaredType && declaredType.startsWith("list<")
+        ? declaredType.slice(5, -1)
+        : undefined;
+    const parts = node.elements.map((element) => element.kind === "ListLiteral"
+        ? emitTypedListLiteral(element, elementType, filePath, lineNumber)
+        : emitObjectOrValue(element, elementType, filePath, lineNumber, new Set()));
+    return `lamplighter.makeList([${parts.join(", ")}])`;
 }
 
 function emitGlobalAssign(node) {

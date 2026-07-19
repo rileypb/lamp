@@ -1,0 +1,1 @@
+nums: 3 first 3word: blueflags: false truegrid: 3 rows 3kit: betamutated: 9 size 4

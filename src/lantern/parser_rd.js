@@ -837,7 +837,9 @@ function createParser(tokens, filePath, globalNames, functionNames = new Set(), 
         const base = plainName("type name");
         if (at("LT")) {
             next();
-            const inner = plainName("type name");
+            // The element type may itself be generic (`list<list<int>>` — nested
+            // list-literal tables, devdocs/phobos_gaps.md §3), so recurse.
+            const inner = parseFieldType();
             expect("GT", "Expected '>' to close list type");
             return `${base}<${inner}>`;
         }
@@ -985,12 +987,33 @@ function createParser(tokens, filePath, globalNames, functionNames = new Set(), 
         let value;
         if (at("EQUALS")) {
             next();
-            value = parseSimpleValue();
+            value = at("LBRACKET") ? parseLiteralList() : parseSimpleValue();
         } else {
             value = ast.createNoneLiteral();
         }
         expectNewline();
         return ast.createGlobalDecl(name, typeName, value, filePath, keyword.line);
+    }
+
+    // A list literal as a global initializer (devdocs/phobos_gaps.md §3, list
+    // tier): elements are simple values — literals, bare object names, or nested
+    // list literals — never expressions (a global initializes at load; static
+    // data, not computation). Ends the `= none` + fill-in-startup_rules idiom
+    // that pushed tables into if-chain functions. Globals only: a *type default*
+    // list would be one shared value aliased across every instance, so
+    // parseSimpleValue (fields/defaults) still rejects `[`.
+    function parseLiteralList() {
+        const open = expect("LBRACKET", "Expected '['");
+        const elements = [];
+        if (!at("RBRACKET")) {
+            elements.push(at("LBRACKET") ? parseLiteralList() : parseSimpleValue());
+            while (at("COMMA")) {
+                next();
+                elements.push(at("LBRACKET") ? parseLiteralList() : parseSimpleValue());
+            }
+        }
+        expect("RBRACKET", "Expected ']' to close list literal");
+        return ast.createListLiteral(elements, filePath, open.line);
     }
 
     function parseGlobalAssign() {

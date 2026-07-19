@@ -76,6 +76,17 @@ never collide with the original). Enhancements so far:
   scene's story-end sweep correctly prevents; see scenes.md "Adoption
   findings".)
 
+- **Data tables** (hacking.lamp, scoring.lamp, pa_broadcasts.lamp,
+  interjections.lamp, linguistics.lamp): the static tables are list-literal
+  globals instead of if-chain functions — the two hidden keypad flip-sets are
+  `list<list<int>>` tables (the puzzle rules readable at a glance), the score
+  ranks and the twelve PA broadcasts and seven interjections are indexed
+  string tables (their lookup functions deleted), and
+  `pa_order`/`interj_order`/`scan_levels` initialize at their declarations
+  (the startup_rules fills dropped; startup only shuffles). Behavior verified
+  identical against `sample/phobos` — endgame golden byte-identical plus the
+  eight-transcript battery.
+
 - **List predicates** (hacking.lamp, linguistics.lamp): the keypad goal checks
   and scan-tier counts use lib/sys's `includes`/`count_of`/`all_true`/`any_true`
   instead of hand-rolled index loops (`nine_solved` is `all_true(nine_buttons)`;

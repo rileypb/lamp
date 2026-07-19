@@ -686,6 +686,33 @@ global person player
 
 Globals are initialized at program startup after all objects have been created, so an object-name initial value always refers to an already-registered instance.
 
+**List-literal initializers.** A list-typed global may declare its contents at
+the declaration — the home for static tables that previously had to start
+`= none` and be filled by a `startup_rules` contribution (which pushed tabular
+data into if-chain functions; devdocs/phobos_gaps.md §3):
+
+```lamp
+global list<int> pa_order = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]
+global list<string> ranks = ["Cyborg Bait", "Rookie", "Veteran"]
+global list<list<int>> flips = [[1], [2, 3], [1, 2, 4]]
+global list<item> kit = [brass_lamp, rope]
+```
+
+Elements are **simple values** — literals, bare object names (resolved and
+validated against the declared element type, like any object-typed position),
+or nested list literals — never expressions: a global initializes at load, so
+its initializer is static data, not computation. `list<list<T>>` nests (the
+type grammar recurses). The result is an ordinary mutable global — element
+assignment, `append`, and `shuffle` work, and undo/save capture it like any
+list — so a startup rule that randomizes a declared order shuffles in place
+instead of building the list first. Inside brackets, **physical lines join
+implicitly**: a long table may wrap across lines (no NEWLINE/indentation
+processing until the `]` closes — the flip side is that a missing `]` joins
+everything after it, so the eventual error points far from the culprit).
+List literals remain *global-initializer-only* as declaration values: a
+type-body field default of list type would be one shared value aliased across
+every instance, so field defaults still reject them. Golden `listglobal1`.
+
 #### Global assignments
 
 A bare `NAME = VALUE` line assigns a new value to a previously-declared global, whether at the top level or inside a local context (an event handler, change handler, or function body). At the top level this lets user files override defaults set by the standard library; inside a local context it mutates shared game state.

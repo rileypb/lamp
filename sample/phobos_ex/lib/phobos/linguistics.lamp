@@ -23,8 +23,9 @@ type item:
 global string siriusian_glyphs = "ĹĺĻļĽľĿŀŁłĹĺĻļĽľĿŀŁłЃΐſŧīı"
 
 # Which difficulty tiers have been scanned: scan_levels[t-1] is true once tier t is
-# scanned. A fixed five-slot list (one per tier). Initialised in startup_rules.
-global list<bool> scan_levels = none
+# scanned. A fixed five-slot list (one per tier), starting all-unscanned — a
+# list-literal initializer (the port filled it in the game's startup_rules).
+global list<bool> scan_levels = [false, false, false, false, false]
 
 # --- The Siriusian cipher (deterministic, deliberately non-invertible) -----------
 # Keep only digits, even-position chars, and the last char; Caesar-shift each surviving

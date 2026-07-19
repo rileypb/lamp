@@ -45,8 +45,6 @@ rule startup_rules:
 	# description (startup_rules runs, then the player is moved into the start room,
 	# which auto-describes it). I7's [bold type]…[roman type] → Lamp's [bold]…[/bold].
 	print "[par]The Moon Sled's hatch opens, and out steps a tall, athletic woman in a black jumpsuit: [bold]Galaxy Jones[/bold].[par]"
-	# Scan state starts empty: one slot per difficulty tier 1-5, all unscanned.
-	scan_levels = [false, false, false, false, false]
 	# Eleven points to earn (six puzzles, the alliance, arming, the commandos, and the escape),
 	# topping out at the rank of Queen of Mars. See lib/phobos/scoring.lamp.
 	max_score = 11
