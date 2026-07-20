@@ -278,8 +278,13 @@ would merge them, and generalizes to any verb with an implied noun.
 
 ## 9. NPC movement (+ route-finding)
 
-> **Status: slices 1-2 BUILT (2026-07-18/19); route-finding + adoption
-> remain.** Slice 2 — witnessed NPC movement: `go` gained a never-grammar-bound
+> **Status: slices 1-3 BUILT (2026-07-18/19); only the phobos_ex adoption
+> remains.** Slice 3 — `route_to(here, destination)`: pure-Lamp BFS over
+> `connects` in advent/rooms.lamp (built on §4's includes/append), returning
+> the first step of a shortest route or none; ties by direction declaration
+> order; doors left to the go checks. Golden `routeto1` (adjacent, multi-hop,
+> tie, none-cases, and a WALK loop driving the robot by route steps through
+> the witnessed-movement narration). Slice 2 — witnessed NPC movement: `go` gained a never-grammar-bound
 > `room origin` slot (stashed in `do`); a `report actor go` rule prints the
 > departure when the player shares the origin and the arrival ("arrives from
 > [way's inverse]") at the destination, silence elsewhere; the failure reports

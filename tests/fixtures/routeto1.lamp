@@ -1,0 +1,77 @@
+# route_to (devdocs/phobos_gaps.md §9): the first step of a shortest route over
+# the connects graph — adjacent, multi-hop, a shortest-of-two-paths tie (broken
+# by direction declaration order), none when already there or unreachable. WALK
+# drives the robot one route step per turn through the ordinary go pipeline, so
+# the witnessed-movement lines narrate its progress.
+
+lib advent
+
+game RouteTo:
+	author "test"
+	title "Route To"
+	version 1
+	release beta
+	start Hall
+
+# A loop plus a spur: Hall-Kitchen-Pantry-Cellar with a trapdoor shortcut
+# Hall-down-Cellar, and an Attic off the Kitchen. Oubliette is unreachable.
+# Pantry-to-Hall is a two-way tie (west via Kitchen, south via Cellar) — broken
+# by direction declaration order (south precedes west), so it answers south.
+room Hall:
+	description "The hall."
+room Kitchen:
+	description "The kitchen."
+room Pantry:
+	description "The pantry."
+room Cellar:
+	description "The cellar."
+room Attic:
+	description "The attic."
+room Oubliette:
+	description "No way in."
+
+bidi connects Hall east Kitchen
+bidi connects Kitchen east Pantry
+bidi connects Pantry south Cellar
+bidi connects Hall down Cellar
+bidi connects Kitchen up Attic
+
+person robot:
+	understand "robot"
+	description "A boxy little robot."
+
+contains Hall robot
+
+action plan:
+	syntax:
+		"plan"
+
+report plan:
+	let a = route_to(Hall, Kitchen)
+	print "Hall to Kitchen: [a]"
+	let b = route_to(Hall, Attic)
+	print "Hall to Attic: [b]"
+	let c = route_to(Hall, Cellar)
+	print "Hall to Cellar: [c]"
+	let d = route_to(Pantry, Hall)
+	print "Pantry to Hall: [d]"
+	let e = route_to(Hall, Hall)
+	if e == none:
+		print "Hall to Hall: no route needed"
+	let f = route_to(Hall, Oubliette)
+	if f == none:
+		print "Hall to Oubliette: unreachable"
+
+action walk:
+	syntax:
+		"walk"
+
+do walk:
+	let here = location_of(robot)
+	let d = route_to(here, Attic)
+	if d == none:
+		print "The robot is already there."
+	else:
+		try go:
+			actor robot
+			way d

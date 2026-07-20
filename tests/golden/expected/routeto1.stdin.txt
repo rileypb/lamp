@@ -1,0 +1,8 @@
+plan
+walk
+walk
+e
+walk
+walk
+quit
+y

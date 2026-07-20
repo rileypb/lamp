@@ -395,3 +395,34 @@ function bool in_darkness(person p):
 	if c is room:
 		return not (c.lighted or light_in_scope(p))
 	return not light_in_scope(p)
+# --- Route-finding (devdocs/phobos_gaps.md §9; Inform's "best route") ---------
+# The first step of a shortest route from `here` toward `destination` over the
+# `connects` graph, or `none` when already there or unreachable. Doors are not
+# considered — passage is adjudicated by the go checks when the step is tried
+# (`try go: actor npc, way route_to(...)`), so a closed door surfaces as a
+# failed try, not a missing route. Breadth-first, so the route is shortest;
+# equal-length ties resolve by direction declaration order (deterministic).
+# Frontier bookkeeping uses two parallel lists: the rooms reached, and for each
+# the first step that reaches it (inherited as the frontier expands).
+function direction route_to(room here, room destination):
+	if here == destination:
+		return none
+	let reached = [here]
+	let first_step = [none]
+	let i = 0
+	while i < reached.size:
+		let r = reached[i]
+		let step0 = first_step[i]
+		for d in direction.all:
+			let nxt = connects r d ?first
+			if not (nxt == none):
+				if not includes(reached, nxt):
+					let s = step0
+					if i == 0:
+						s = d
+					if nxt == destination:
+						return s
+					append(reached, nxt)
+					append(first_step, s)
+		i = i + 1
+	return none

@@ -1,0 +1,23 @@
+Hall
+The hall.
+
+You see a robot here.
+
+> plan
+Hall to Kitchen: eastHall to Attic: eastHall to Cellar: downPantry to Hall: southHall to Hall: no route neededHall to Oubliette: unreachable
+
+> walk
+The robot goes east.
+
+> walk
+> e
+Kitchen
+The kitchen.
+
+> walk
+The robot is already there.
+
+> walk
+The robot is already there.
+
+> quit
