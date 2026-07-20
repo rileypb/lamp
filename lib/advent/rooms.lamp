@@ -426,3 +426,14 @@ function direction route_to(room here, room destination):
 					append(first_step, s)
 		i = i + 1
 	return none
+
+# Region membership (devdocs/phobos_gaps.md §7): whether `r` lies in `reg`,
+# directly or through nesting (the room's region, that region's parent, and so
+# on). A room with no region is in no region.
+function bool in_region(room r, region reg):
+	let g = r.region
+	while not (g == none):
+		if g == reg:
+			return true
+		g = g.region
+	return false

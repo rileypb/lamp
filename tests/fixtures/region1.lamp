@@ -1,0 +1,49 @@
+# Regions (devdocs/phobos_gaps.md §7): named room groups with nesting. The lawn
+# is in the garden, the garden in the estate, the gatehouse in the estate
+# directly, and the road in nothing. in_region walks the chain (the lawn is in
+# the estate through the garden). The birdsong backdrop is scoped to the garden
+# — present on the lawn, absent at the gatehouse and on the road — while the
+# unscoped sky stays everywhere.
+
+lib advent
+
+game Region1:
+	author "test"
+	title "Region One"
+	version 1
+	release beta
+	start Lawn
+
+region estate
+region garden:
+	region estate
+
+room Lawn:
+	region garden
+	description "A trim lawn. The gatehouse is north."
+room Gatehouse:
+	region estate
+	description "The gatehouse. The road is north, the lawn south."
+room Road:
+	description "The open road. The gatehouse is south."
+
+bidi connects Lawn north Gatehouse
+bidi connects Gatehouse north Road
+
+backdrop birdsong:
+	region garden
+	understand "birdsong/birds"
+	description "An unbroken ribbon of song from the hedges."
+
+backdrop sky:
+	understand "sky"
+	description "A pale, high sky."
+
+action survey:
+	syntax:
+		"survey"
+
+report survey:
+	let here = holder(player)
+	print "in garden: [in_region(here, garden)]"
+	print "in estate: [in_region(here, estate)]"

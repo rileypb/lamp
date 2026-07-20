@@ -257,6 +257,21 @@ Both are "this expires after N turns" — an
 
 ## 7. Regions
 
+> **Status: BUILT (2026-07-19).** advent gained `region` (a room-group object
+> with nesting via its own `region` field), a `region` field on rooms and
+> backdrops (a scoped backdrop is in scope only in its region, nesting
+> included), and pure-Lamp `in_region` (golden `region1`; specs.md "Regions").
+> phobos_ex adoption: `the_base` ⊃ `base_interior` ⊃ `labs`; the
+> countdown/PA-broadcast "inside the base" guards read `in_region`; the
+> gray-tile material defaults moved from the room type onto `base_interior`
+> with room-first-then-region-chain fallback helpers (the labs region carries
+> the science lab's white tile; the armory overrides per-room — its prose
+> names itself); and the PA System backdrop is scoped to `base_interior`,
+> **correcting the port's documented over-reach** (X PA outside the indoor
+> base now answers "There is nothing there.", as I7 did — a knowing
+> deviation). Materials transcript diff-clean across every room; endgame
+> golden byte-identical.
+
 Per-room wall/floor/ceiling material text repeats across room groups in
 `backdrops.lamp:33-53` (rough stone ×3 rooms, white tile ×2), and
 `scenery.lamp:147` already notes the PA backdrop over-reaches "until

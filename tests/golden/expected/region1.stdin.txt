@@ -1,0 +1,13 @@
+survey
+x birdsong
+x sky
+n
+survey
+x birdsong
+x sky
+n
+survey
+x birdsong
+x sky
+quit
+y

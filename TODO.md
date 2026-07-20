@@ -559,8 +559,11 @@ greeting (output position) — recorded as "Adoption findings" in scenes.md.
 Endgame golden byte-identical; seven hand-test transcripts identical to
 sample/phobos.
 (6) timed events (already tracked
-under Parser v2 — two new concrete cases); (7) regions (region-scoped backdrops +
-per-region defaults); (8) optional action slots (the fly/fly_thing split); (9) NPC
+under Parser v2 — two new concrete cases); (7) ~~regions~~ **BUILT 2026-07-19** (advent `region` type with nesting, room/
+backdrop `region` fields, region-scoped backdrop scope provider, pure-Lamp
+`in_region`; golden `region1`; phobos_ex: the_base/base_interior/labs nesting,
+in_region guards, region material defaults, PA backdrop confined to the indoor
+base — correcting the documented over-reach, a knowing deviation); (8) optional action slots (the fly/fly_thing split); (9) NPC
 movement — **designed 2026-07-18** (phobos_gaps.md §9): `try go: actor guard, way
 south` over the ordinary pipeline (no bespoke npc_go), with a prerequisite
 rule-hygiene feature inverting Inform's actor default (phase rules match only the

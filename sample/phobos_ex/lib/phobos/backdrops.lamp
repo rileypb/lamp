@@ -17,16 +17,107 @@ lib advent
 # ship is the one low-ceilinged room, so its ceiling can be touched. The custom-text strings are
 # verbatim from the original (third person: "Galaxy Jones runs her hand …").
 
-# The Table of Walls/Floors/Ceilings, as room fields. Defaults are the gray-tile majority; the
-# distinct rooms override below. An empty field falls back to the PBR default message.
+# The Table of Walls/Floors/Ceilings, as room fields with **region fallback**
+# (devdocs/phobos_gaps.md §7): a room's own field wins, else the nearest
+# enclosing region that sets one (the *_of helpers below walk the chain), else
+# "" — the PBR default message. The gray-tile majority lives on base_interior;
+# the labs region carries the white tile (one entry for the pair); the distinct
+# rooms (rough stone near the surface, rubber on the deck and in the ship)
+# override per-room as before.
 type room:
-	string wall_description = "The walls here are made of utilitarian gray tile."
-	string wall_touch = "Galaxy Jones runs her hand along the cool tile walls."
-	string floor_description = "The floor here is made of utilitarian gray tile."
-	string floor_touch = "Galaxy Jones runs her hand along the cool tile floor."
-	string ceiling_description = "The ceiling here is made of utilitarian gray tile."
-	string ceiling_touch = "Galaxy Jones runs her hand along the cool tile ceiling."
+	string wall_description = ""
+	string wall_touch = ""
+	string floor_description = ""
+	string floor_touch = ""
+	string ceiling_description = ""
+	string ceiling_touch = ""
 	bool low_ceiling = false
+
+type region:
+	string wall_description = ""
+	string wall_touch = ""
+	string floor_description = ""
+	string floor_touch = ""
+	string ceiling_description = ""
+	string ceiling_touch = ""
+
+region base_interior:
+	wall_description "The walls here are made of utilitarian gray tile."
+	wall_touch "Galaxy Jones runs her hand along the cool tile walls."
+	floor_description "The floor here is made of utilitarian gray tile."
+	floor_touch "Galaxy Jones runs her hand along the cool tile floor."
+	ceiling_description "The ceiling here is made of utilitarian gray tile."
+	ceiling_touch "Galaxy Jones runs her hand along the cool tile ceiling."
+
+region labs:
+	wall_description "The walls of the science lab are made of white tile."
+	wall_touch "Galaxy Jones runs her hand along the smooth, polished tile walls."
+	floor_description "The floor of the science lab is made of white tile."
+	floor_touch "Galaxy Jones runs her hand along the smooth, polished tile floor."
+	ceiling_description "The ceiling of the science lab is made of white tile."
+	ceiling_touch "Galaxy Jones runs her hand along the smooth, polished tile ceiling."
+
+# Room material text with the region fallback, one helper per field (Lamp has no
+# field-by-name access).
+function string wall_desc_of(room r):
+	if not (r.wall_description == ""):
+		return r.wall_description
+	let g = r.region
+	while not (g == none):
+		if not (g.wall_description == ""):
+			return g.wall_description
+		g = g.region
+	return ""
+
+function string wall_touch_of(room r):
+	if not (r.wall_touch == ""):
+		return r.wall_touch
+	let g = r.region
+	while not (g == none):
+		if not (g.wall_touch == ""):
+			return g.wall_touch
+		g = g.region
+	return ""
+
+function string floor_desc_of(room r):
+	if not (r.floor_description == ""):
+		return r.floor_description
+	let g = r.region
+	while not (g == none):
+		if not (g.floor_description == ""):
+			return g.floor_description
+		g = g.region
+	return ""
+
+function string floor_touch_of(room r):
+	if not (r.floor_touch == ""):
+		return r.floor_touch
+	let g = r.region
+	while not (g == none):
+		if not (g.floor_touch == ""):
+			return g.floor_touch
+		g = g.region
+	return ""
+
+function string ceiling_desc_of(room r):
+	if not (r.ceiling_description == ""):
+		return r.ceiling_description
+	let g = r.region
+	while not (g == none):
+		if not (g.ceiling_description == ""):
+			return g.ceiling_description
+		g = g.region
+	return ""
+
+function string ceiling_touch_of(room r):
+	if not (r.ceiling_touch == ""):
+		return r.ceiling_touch
+	let g = r.region
+	while not (g == none):
+		if not (g.ceiling_touch == ""):
+			return g.ceiling_touch
+		g = g.region
+	return ""
 
 # --- Per-room overrides (Phobos Polish.i7x rows that differ from the gray-tile default) -------
 # Rough stone — the entry passages near the surface.
@@ -52,14 +143,9 @@ room Storeroom:
 	ceiling_description "The ceiling of the storeroom is made of rough stone."
 	ceiling_touch "Galaxy Jones runs her hand along the rough stone ceiling."
 
-# White tile — the labs.
-room Science_Lab:
-	wall_description "The walls of the science lab are made of white tile."
-	wall_touch "Galaxy Jones runs her hand along the smooth, polished tile walls."
-	floor_description "The floor of the science lab is made of white tile."
-	floor_touch "Galaxy Jones runs her hand along the smooth, polished tile floor."
-	ceiling_description "The ceiling of the science lab is made of white tile."
-	ceiling_touch "Galaxy Jones runs her hand along the smooth, polished tile ceiling."
+# White tile — the labs region above carries the science lab's texts; the armory
+# names itself in its prose ("of the armory"), so it overrides per-room — the
+# room field beating the region default, exactly the fallback order at work.
 room armory:
 	wall_description "The walls of the armory are made of white tile."
 	wall_touch "Galaxy Jones runs her hand along the smooth, polished tile walls."
@@ -100,10 +186,11 @@ backdrop walls:
 instead examine when self.target == walls:
 	let r = holder(self.actor)
 	if walled(r):
-		if r.wall_description == "":
+		let t = wall_desc_of(r)
+		if t == "":
 			print "[We] [see] nothing special about the walls."
 		else:
-			print "[r.wall_description]"
+			print "[t]"
 	else:
 		print "There are no walls to see."
 	stop succeeded
@@ -111,10 +198,11 @@ instead examine when self.target == walls:
 instead touch when self.target == walls:
 	let r = holder(self.actor)
 	if walled(r):
-		if r.wall_touch == "":
+		let t = wall_touch_of(r)
+		if t == "":
 			print "[We] [feel] nothing special about the walls."
 		else:
-			print "[r.wall_touch]"
+			print "[t]"
 	else:
 		print "There are no walls to feel."
 	stop succeeded
@@ -133,24 +221,26 @@ backdrop floor:
 
 instead examine when self.target == floor:
 	let r = holder(self.actor)
-	if r.floor_description == "":
+	let t = floor_desc_of(r)
+	if t == "":
 		if r.outdoors:
 			print "[We] [see] nothing special about the ground."
 		else:
 			print "[We] [see] nothing special about the floor."
 	else:
-		print "[r.floor_description]"
+		print "[t]"
 	stop succeeded
 
 instead touch when self.target == floor:
 	let r = holder(self.actor)
-	if r.floor_touch == "":
+	let t = floor_touch_of(r)
+	if t == "":
 		if r.outdoors:
 			print "[We] [feel] nothing special about the ground."
 		else:
 			print "[We] [feel] nothing special about the floor."
 	else:
-		print "[r.floor_touch]"
+		print "[t]"
 	stop succeeded
 
 # --- Ceiling (Ceilings.i7x) --------------------------------------------------
@@ -163,10 +253,11 @@ backdrop ceiling:
 instead examine when self.target == ceiling:
 	let r = holder(self.actor)
 	if ceilinged(r):
-		if r.ceiling_description == "":
+		let t = ceiling_desc_of(r)
+		if t == "":
 			print "[We] [see] nothing special about the ceiling."
 		else:
-			print "[r.ceiling_description]"
+			print "[t]"
 	else:
 		print "There's nothing up there but sky."
 	stop succeeded
@@ -175,10 +266,11 @@ instead touch when self.target == ceiling:
 	let r = holder(self.actor)
 	if ceilinged(r):
 		if r.low_ceiling:
-			if r.ceiling_touch == "":
+			let t = ceiling_touch_of(r)
+			if t == "":
 				print "[We] [feel] nothing special about the ceiling."
 			else:
-				print "[r.ceiling_touch]"
+				print "[t]"
 		else:
 			print "[We] can't reach the ceiling."
 	else:

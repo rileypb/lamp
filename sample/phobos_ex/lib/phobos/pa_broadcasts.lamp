@@ -45,7 +45,7 @@ const list<string> pa_messages = [
 rule every_turn_rules:
 	if holder(player) == Control_Room:
 		control_room_reached = true
-	if not control_room_reached and not (holder(player) == Passage_End) and pa_next < 12:
+	if not control_room_reached and in_region(holder(player), the_base) and pa_next < 12:
 		pa_tick = pa_tick + 1
 		let fire = false
 		if debug_mode:

@@ -20,6 +20,19 @@ type room:
 room Passage_End:
 	description "South of here a maze of passages leads back to the surface. But it is north that Galaxy must go, into the heart of the base, to stop the Siriusian plot to destroy Mars. The Moon Sled is parked here, out of fuel. A heavy green door to the north is labeled '[siriusian(\"This way to the secret base\")]'. The door is [if green_door.closed]closed[else]open[end if]."
 
+# Regions (devdocs/phobos_gaps.md §7): `the_base` is everything past the green
+# door — the countdown/PA-broadcast "inside the base" test (countdown.lamp,
+# pa_broadcasts.lamp) reads it via in_region instead of enumerating rooms.
+# `base_interior` (the indoor rooms) nests inside it — the flight deck and the
+# ship are the_base but exterior — and scopes the PA System backdrop
+# (scenery.lamp) plus the gray-tile material defaults (backdrops.lamp).
+# `labs` (the white-tile pair) nests inside base_interior for its materials.
+region the_base
+region base_interior:
+	region the_base
+region labs:
+	region base_interior
+
 # --- Rooms (Base.i7x "Volume - Rooms") -------------------------------------
 # Descriptions ported from Base.i7x. Siriusian signage uses the static cipher
 # [siriusian("…")] (always alien — same as the Passage End door label; making the
@@ -28,24 +41,32 @@ room Passage_End:
 # real objects (lib/phobos/scenery.lamp, refusals.lamp, control_room.lamp).
 
 room Southern_Spoke:
+	region base_interior
 	description "This is a nondescript hallway. An opening to the west is labeled '[siriusian(\"Storeroom\")]'. The hallway continues north and south."
 room Storeroom:
+	region base_interior
 	always_indefinite true   # I7 "a storeroom"
 	description "Apparently the previous occupants have cleared out. There is a sign on the wall that reads '[siriusian(\"Please sign out any supplies or equipment before taking them\")].'[par]The exit is to the east."
 room Hub_Junction:
+	region base_interior
 	description "Three indistinguishable corridors lead off from here. The western one is labeled '[siriusian(\"Science\")]', the southern one, '[siriusian(\"Storage\")]', and the eastern one, '[siriusian(\"Personnel\")]'. A purple door labeled '[siriusian(\"Control Room\")]' stands [if purple_door.closed]closed[else]open[end if] to the north."
 room Western_Spoke:
+	region base_interior
 	description "This is a nondescript hallway. An opening to the north is labeled '[siriusian(\"Science\")]'. The red door to the south ([if red_door.closed]closed[else]open[end if]) is labeled '[siriusian(\"Armory\")]', and the yellow door at the west end of the hallway is labeled '[siriusian(\"Reactor Room\")]'. It is [if yellow_door.closed]closed[else]open[end if]."
 room Science_Lab:
+	region labs
 	description "Since it's cleaned out, this identification is based purely on the antiseptic nature of the place -- white tile floor, walls, and counters. The exit is to the south."
 room Eastern_Spoke:
+	region base_interior
 	description "This is a nondescript hallway. An opening to the north is labeled '[siriusian(\"Barracks A\")]', one to the south is labeled '[siriusian(\"Barracks B\")]', and the blue door at the east end of the hallway is labeled '[siriusian(\"Commander's Quarters\")]'. It is [if blue_door.closed]closed[else]open[end if]."
 room North_Barracks:
+	region base_interior
 	description "Like most of the base, it's been cleared out, although someone left behind a poster on the wall showing some happy cyborgs. There is a cabinet against the wall next to the sleeping pods. It is [if cabinet.closed]closed[else]open[end if].[par]The exit is to the south."
 
 # Ported in full (unlike its neighbours): its description carries no Siriusian markup,
 # only door/locker-state conditionals. The locker is the locker-puzzle's container.
 room South_Barracks:
+	region base_interior
 	description "Like most of the base, it's been cleared out. By one of the sleeping pods stands what could only be a storage locker, which is [if locker.closed]closed[else]open[end if][if not locker.closed and holder(diary) == locker]. A diary is inside the locker[end if]. The exit is to the north."
 
 # A scenery container, starts closed + locked + sealed; the KIM's four-button puzzle opens
@@ -96,16 +117,21 @@ contains North_Barracks cabinet
 
 # Reached through a locked door (wired below).
 room Reactor_Room:
+	region base_interior
 	description "Unlike the rest of the rooms on the base, this one is still functioning. The actual reactor is not in this room, but beyond the far wall and its enormous control board. Two levers bookend the control board, too far apart for one person to pull at once. A yellow security door stands [if yellow_door.closed]closed[else]open[end if] to the east."
 room armory:
+	region labs
 	always_indefinite true   # I7 "an armory"
 	description "This is evidently where the base kept weapons and armor. A red door, [if red_door.closed]closed[else]open[end if], stands to the north."
 room Commanders_Quarters:
+	region base_interior
 	printed_name "Commander's Quarters"
 	description "Like everywhere else on the base, it is mostly cleared out. A blue door, [if blue_door.closed]closed[else]open[end if], is to the west."
 room Control_Room:
+	region base_interior
 	description "The inner sanctum of the base is dominated by a large control panel, covered with buttons, switches and screens. Two large buttons, one green and one red, stand out among the rest.[par]A chair sits in front of the control panel. A purple door stands [if purple_door.closed]closed[else]open[end if] to the south, while the door to the flight deck, [if flight_deck_door.closed]closed[else]open[end if], is to the north."
 room Flight_Deck:
+	region the_base
 	preposition "on"         # "Galaxy is on the flight deck"
 	outdoors true            # exposed to space: no walls, no ceiling — only sky (backdrops.lamp)
 	description "The platform stands exposed to the blackness above. The expanse of Stickney Crater stretches to the north, and the immense face of Mars dominates the southern sky. A door to the south, [if flight_deck_door.closed]closed[else]open[end if], leads back to the control room."
@@ -353,6 +379,7 @@ item siriusian_ship:
 
 # The ship's interior, reached by entering the ship (flight_deck.lamp) or going north/in.
 room Inside_The_Ship:
+	region the_base
 	printed_name "Siriusian ship"   # the heading rule adds "the"; I7's name carried it
 	preposition "inside"
 	description "It's a small, cramped, utilitarian space with three seats and a control panel. Even Star Trek's shuttlecraft were cooler than this. The only way to go is out, to the flight deck."

@@ -102,10 +102,13 @@ item tile:
 contains Science_Lab counters
 contains Science_Lab tile
 
-# --- PA System (Countdown.i7x): a backdrop heard throughout the base. Examining or feeling it just
-# notes that its source is unclear; it can't be taken. (I7 confines it to the indoor base rooms; the
-# port's backdrops are everywhere — a minor over-reach until region-scoped backdrops land.)
+# --- PA System (Countdown.i7x): a backdrop heard through the indoor base rooms. Examining or
+# feeling it just notes that its source is unclear; it can't be taken. Region-scoped to
+# base_interior, matching I7's confinement — this *corrects* the port's documented over-reach
+# (sample/phobos surfaces it everywhere), so X PA at the passage end / flight deck / ship now
+# answers "can't see any such thing", as the original I7 did. A knowing deviation.
 backdrop pa_system:
+	region base_interior
 	printed_name "PA system"
 	private_name true
 	understand "pa/system/speaker/loudspeaker"

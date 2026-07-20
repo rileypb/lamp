@@ -1859,6 +1859,34 @@ Goldens: `scene1` (condition-latched + startup activation + non-recurrence),
 `scene_writeforbid` / `scene_during_unknown` (the compile errors),
 `scene_runaway` (the fixpoint cap).
 
+### Regions (lib/advent)
+
+A **region** is a named group of rooms (Inform's regions; devdocs/phobos_gaps.md
+§7): `region NAME` declares one (an advent `region` object), a room joins by
+setting its `region` field, and regions nest the same way — a region's own
+`region` is its parent:
+
+```lamp
+region estate
+region garden:
+    region estate
+
+room Lawn:
+    region garden
+```
+
+`in_region(room, region)` (advent, pure Lamp) tests membership through the
+nesting chain — the lawn is in the estate through the garden — replacing
+room-enumeration guards (`in_region(location_of(player), the_base)` instead of
+`not (holder(player) == Passage_End)`). A **backdrop** with a `region` field is
+in scope only in that region's rooms (nesting included; the scope provider
+climbs out of enterables to the room first); an unscoped backdrop stays
+everywhere. Regions also serve as **field-default fallbacks** by convention: a
+game reopens `region` with the same fields as its rooms and reads them through
+a room-first, then-region-chain helper (phobos_ex's wall/floor/ceiling material
+texts — the gray-tile majority lives on one region, rooms override). Golden
+`region1`.
+
 ### Name resolution and scope
 
 A **local context** is the body of an event handler, change handler, or function. Within a local context, names are drawn from two disjoint namespaces:

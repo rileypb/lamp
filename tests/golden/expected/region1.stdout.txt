@@ -1,0 +1,39 @@
+Lawn
+A trim lawn. The gatehouse is north.
+
+> survey
+in garden: truein estate: true
+
+> x birdsong
+An unbroken ribbon of song from the hedges.
+
+> x sky
+A pale, high sky.
+
+> n
+Gatehouse
+The gatehouse. The road is north, the lawn south.
+
+> survey
+in garden: falsein estate: true
+
+> x birdsong
+You can't see any such thing.
+
+> x sky
+A pale, high sky.
+
+> n
+Road
+The open road. The gatehouse is south.
+
+> survey
+in garden: falsein estate: false
+
+> x birdsong
+You can't see any such thing.
+
+> x sky
+A pale, high sky.
+
+> quit

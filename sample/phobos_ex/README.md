@@ -76,6 +76,19 @@ never collide with the original). Enhancements so far:
   scene's story-end sweep correctly prevents; see scenes.md "Adoption
   findings".)
 
+- **Regions** (base.lamp, backdrops.lamp, scenery.lamp, countdown.lamp,
+  pa_broadcasts.lamp): `the_base` ⊃ `base_interior` ⊃ `labs` — the
+  countdown/PA "inside the base" guards read `in_region`, the gray-tile
+  wall/floor/ceiling defaults live on `base_interior` (rooms override;
+  the armory keeps its self-naming prose per-room), and the PA System
+  backdrop is region-scoped to the indoor base. That last one **corrects
+  the port's documented over-reach** (scenery.lamp had noted it "until
+  region-scoped backdrops land"): X PA at the passage end / flight deck /
+  ship now answers "There is nothing there.", as the I7 original did — a
+  knowing deviation from `sample/phobos`. Everything else verified
+  identical (materials transcript across every room; endgame golden
+  byte-identical).
+
 - **Route-driven NPC movement** (guard_endgame.lamp): the guard-leading
   sequences are `try go: actor guard, way route_to(here, goal)` — one step
   per co-located turn through the ordinary go pipeline (doors adjudicated,

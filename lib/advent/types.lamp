@@ -114,6 +114,8 @@ type physical < thing:
 type container < physical
 
 type room < container:
+	# The region this room belongs to (none = no region) — devdocs/phobos_gaps.md §7.
+	region region = none
 	bool lighted = true
 	# Set true the first time the player is described entering the room (see describe_on_arrival,
 	# rooms.lamp). Consulted only by BRIEF verbosity to decide full vs. name-only re-entry.
@@ -168,7 +170,19 @@ type box < item, container:
 # instances regardless of the actor's location; a game makes them examinable/touchable with its
 # own `instead examine`/`instead touch` rules (the per-room/indoors logic is the game's). Lives
 # here (not its own file) so it is emitted after its parent `item`. See specs.md "Backdrops".
-type backdrop < item
+# A region (devdocs/phobos_gaps.md §7; Inform's regions): a named group of rooms.
+# A room joins by setting its `region` field; regions nest the same way (a
+# region's own `region` is its parent), so membership walks the chain — see
+# in_region (rooms.lamp). Regions scope backdrops (below) and serve as guard
+# tests (`in_region(location_of(player), the_base)` replaces enumerating rooms).
+type region < thing:
+	region region = none
+
+# Backdrops are in scope everywhere by default; one with a `region` is in scope
+# only in that region's rooms (nesting included) — the scope provider filters
+# (lib/advent/index.js).
+type backdrop < item:
+	region region = none
 
 type person < physical
 

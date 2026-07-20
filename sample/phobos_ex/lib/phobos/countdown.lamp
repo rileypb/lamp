@@ -46,7 +46,7 @@ function string siriusian_number(int n):
 # zero regardless of location.
 rule every_turn_rules:
 	countdown = countdown - 1
-	let indoors = not (holder(player) == Passage_End)
+	let indoors = in_region(holder(player), the_base)
 	if indoors:
 		if countdown > 0:
 			# The count is Siriusian digit-glyphs — unless Galaxy wears the Cyberhelmet, whose
