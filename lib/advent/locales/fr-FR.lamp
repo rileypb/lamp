@@ -56,6 +56,8 @@ examine_too_dark: "Il fait trop sombre pour voir cela."
 
 # --- go ---
 go_cant: "[cap(sujet_ne_verbe(\"pouvoir\"))] pas aller par là."
+npc_go_departs: "[Le act.actor] part vers [act.way]."
+npc_go_arrives: "[Le act.actor] arrive."
 
 # --- put on ---
 implicit_take_msg: "([sujet_verbe(\"prendre\")] d'abord [le implicit_target])[line break]"

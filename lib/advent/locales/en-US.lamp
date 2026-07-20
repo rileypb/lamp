@@ -113,6 +113,11 @@ go_cant_up: "[We] can neither climb walls nor fly."
 go_cant_down: "[We] can't just dig downward."
 go_cant_in: "What [do] [we] want to enter?"
 go_cant: "[We] can't go that way."
+# Witnessed NPC movement (devdocs/phobos_gaps.md §9): departure seen from the
+# origin, arrival seen at the destination (the way's inverse names the side the
+# actor comes in from).
+npc_go_departs: "[The act.actor] goes [act.way]."
+npc_go_arrives: "[The act.actor] arrives from [the act.way.inverse]."
 implicit_take_msg: "(first taking [the implicit_target])[line break]"
 put_on_report: "[We] [put] [the act.put_item] on [the act.destination]."
 put_on_report_other: "[The act.actor] [put] [the act.put_item] on [the act.destination]."

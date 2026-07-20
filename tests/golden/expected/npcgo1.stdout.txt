@@ -1,0 +1,34 @@
+Alpha
+Room Alpha. Beta is east.
+
+You see a robot here.
+
+> send east
+The robot goes east.
+(order outcome: succeeded)
+
+> e
+Beta
+Room Beta. Alpha is west, Gamma east.
+
+You see a robot here.
+
+> send east
+The robot goes east.
+(order outcome: succeeded)
+
+> send west
+The robot arrives from the east.
+(order outcome: succeeded)
+
+> send north
+(order outcome: failed)
+
+> e
+Gamma
+Room Gamma. Beta is west.
+
+> send west
+(order outcome: succeeded)
+
+> quit

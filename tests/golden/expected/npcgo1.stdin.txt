@@ -1,0 +1,9 @@
+send east
+e
+send east
+send west
+send north
+e
+send west
+quit
+y

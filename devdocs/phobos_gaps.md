@@ -278,8 +278,14 @@ would merge them, and generalizes to any verb with an implied noun.
 
 ## 9. NPC movement (+ route-finding)
 
-> **Status: slice 1 (the actor default) BUILT (2026-07-18); movement report /
-> route-finding / adoption remain.** The actor-default prerequisite below is
+> **Status: slices 1-2 BUILT (2026-07-18/19); route-finding + adoption
+> remain.** Slice 2 — witnessed NPC movement: `go` gained a never-grammar-bound
+> `room origin` slot (stashed in `do`); a `report actor go` rule prints the
+> departure when the player shares the origin and the arrival ("arrives from
+> [way's inverse]") at the destination, silence elsewhere; the failure reports
+> (advent's + the door's) are player-only, so a blocked NPC go is silent and
+> the driver reads the try outcome. en-US + fr-FR messages; golden `npcgo1`;
+> all prior goldens byte-identical (no golden exercised NPC go). The actor-default prerequisite below is
 > in: implicit `self.actor == player` guard on unmarked phase rules, the
 > `actor` marker on all forms (selectors, `report failed`, `during`, body
 > nesting), emitted only when a `player` global exists; advent + conversation

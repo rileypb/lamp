@@ -1020,6 +1020,9 @@ report failed actor exit_object:
 
 action go:
 	direction way
+	# The travel origin, stashed by `do` before the move (the move consumes it) —
+	# read by the witnessed-movement report below. Never grammar-bound.
+	room origin
 
 # A direction while enclosed: DRIVE when the actor sits directly in/on a `vehicle` that itself
 # stands in a room (the vehicle moves; the rider rides along); any other enclosure — a chair, a
@@ -1044,6 +1047,7 @@ check actor go:
 do actor go:
 	let h = holder(self.actor)
 	let here = location_of(self.actor)
+	self.origin = here
 	if h is room:
 		move self.actor to connects here self.way ?first
 	else:
@@ -1052,10 +1056,26 @@ do actor go:
 		move h to connects here self.way ?first
 		describe_player_arrival()
 
+# A non-player actor's movement is witnessed, not narrated: the player sees the
+# departure when they share the origin ("The guard goes south."), the arrival when
+# they are at the destination ("The guard arrives from the north." — the way's
+# inverse), and nothing otherwise. The player's own go reports via the arrival
+# room description (the contains-add handler, rooms.lamp), so this rule bows out
+# for the player. (devdocs/phobos_gaps.md §9.)
+report actor go when not (self.actor == player):
+	if holder(player) == self.origin:
+		print message npc_go_departs  # "[The act.actor] goes [act.way]."
+	else:
+		if location_of(self.actor) == location_of(player):
+			print message npc_go_arrives  # "[The act.actor] arrives from [the act.way.inverse]."
+	stop
+
 # Direction-aware excuses for a blocked exit (Can't Go That Way.i7x): up/down/in get their own
 # default lines, everything else the generic "can't go that way." A game refines per-room by
-# contributing its own `report failed go` rule *from its main file* (author-order, so it runs first).
-report failed actor go:
+# contributing its own `report failed go` rule *from its main file* (author-order, so it runs
+# first). Player-only (unmarked): a non-player actor's failed go is silent — the driver reads
+# the try outcome instead (devdocs/phobos_gaps.md §9).
+report failed go:
 	if self.reason == perched:
 		print message go_perched  # "[We] [need] to leave [the act.actor.perch] first."
 		stop

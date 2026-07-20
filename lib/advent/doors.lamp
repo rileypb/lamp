@@ -40,7 +40,9 @@ check actor go:
 			blocking_door = barrier
 			stop failed door_closed
 
-report failed actor go:
+# Player-only (unmarked): an NPC walked into a closed door fails silently — the
+# driver reads the try outcome (devdocs/phobos_gaps.md §9).
+report failed go:
 	if self.reason == door_closed:
 		print message door_closed_msg  # "[The blocking_door] is closed."
 		stop

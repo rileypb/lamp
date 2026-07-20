@@ -1,0 +1,41 @@
+# Witnessed NPC movement (devdocs/phobos_gaps.md §9): `try go: actor robot`
+# runs the ordinary pipeline — the player sees a departure line when sharing
+# the origin, an arrival line (from the way's inverse) at the destination, and
+# nothing elsewhere; a blocked NPC go is silent (the driver reads the try
+# outcome); the player's own movement reports exactly as before.
+
+lib advent
+
+game NpcGo:
+	author "test"
+	title "NPC Go"
+	version 1
+	release beta
+	start Alpha
+
+room Alpha:
+	description "Room Alpha. Beta is east."
+room Beta:
+	description "Room Beta. Alpha is west, Gamma east."
+room Gamma:
+	description "Room Gamma. Beta is west."
+
+bidi connects Alpha east Beta
+bidi connects Beta east Gamma
+
+person robot:
+	understand "robot"
+	description "A boxy little robot."
+
+contains Alpha robot
+
+action send:
+	direction heading
+	syntax:
+		"send [heading]"
+
+do send:
+	let r = try go:
+		actor robot
+		way self.heading
+	print "(order outcome: [r])"
