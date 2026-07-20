@@ -278,8 +278,16 @@ would merge them, and generalizes to any verb with an implied noun.
 
 ## 9. NPC movement (+ route-finding)
 
-> **Status: slices 1-3 BUILT (2026-07-18/19); only the phobos_ex adoption
-> remains.** Slice 3 — `route_to(here, destination)`: pure-Lamp BFS over
+> **Status: FULLY BUILT (2026-07-19) — all four slices.** Slice 4 — phobos_ex
+> adoption: the guard-leading rules (guard_endgame.lamp) are route-driven —
+> one `try go: actor guard, way route_to(here, goal)` step per co-located
+> turn; the witnessed-movement report reproduces the hand-written narration
+> byte-for-byte ("The Siriusian guard goes south."), the go pipeline
+> adjudicates the (provably open) doors, and the actor default keeps
+> Galaxy-only go rules out of the guard's way. Eight hand-written
+> move-and-print branches became two route steps. Endgame golden
+> byte-identical; deviation transcript (wandering off-route mid-lead,
+> lingering nag, rejoining) diffs clean. Slice 3 — `route_to(here, destination)`: pure-Lamp BFS over
 > `connects` in advent/rooms.lamp (built on §4's includes/append), returning
 > the first step of a shortest route or none; ties by direction declaration
 > order; doors left to the go checks. Golden `routeto1` (adjacent, multi-hop,
@@ -402,7 +410,9 @@ type test.
    and `const` tiers; see §3's status note.
 3. ~~**lib/sys list predicates** (§4)~~ — **DONE (2026-07-16)**, see §4's
    status note.
-4. ~~**Scenes** (§5)~~ — designed & **ALL SLICES BUILT (2026-07-17)**:
+4. ~~**NPC movement** (§9)~~ — **FULLY BUILT (2026-07-19)**: actor default,
+   witnessed movement, route_to, phobos_ex adoption; see §9's status note.
+5. ~~**Scenes** (§5)~~ — designed & **ALL SLICES BUILT (2026-07-17)**:
    `devdocs/scenes.md` (incl. the Slice 3 adoption findings).
 
 ## Open Questions

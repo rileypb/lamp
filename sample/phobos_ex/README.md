@@ -76,6 +76,13 @@ never collide with the original). Enhancements so far:
   scene's story-end sweep correctly prevents; see scenes.md "Adoption
   findings".)
 
+- **Route-driven NPC movement** (guard_endgame.lamp): the guard-leading
+  sequences are `try go: actor guard, way route_to(here, goal)` — one step
+  per co-located turn through the ordinary go pipeline (doors adjudicated,
+  Galaxy-only go rules kept away by the actor default), with advent's
+  witnessed-movement report reproducing the hand-written narration
+  byte-for-byte. Eight move-and-print branches became two route steps.
+
 - **Data tables** (hacking.lamp, scoring.lamp, pa_broadcasts.lamp,
   interjections.lamp, linguistics.lamp): the static tables are list-literal
   globals instead of if-chain functions — the two hidden keypad flip-sets are

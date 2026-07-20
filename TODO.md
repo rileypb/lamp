@@ -576,8 +576,11 @@ inverse at the destination, silence elsewhere; failure reports player-only, driv
 reads the try outcome; `room origin` slot stashed in do; en-US+fr-FR messages;
 golden `npcgo1`) → ~~route_to~~ **BUILT 2026-07-19** (pure-Lamp BFS in
 advent/rooms.lamp, first-step-of-shortest or none, declaration-order ties, doors left
-to the go checks; golden `routeto1`) → phobos_ex guard-leading adoption (the last
-piece of §9); (10) a once-only shuffled deck mode for `pick`.
+to the go checks; golden `routeto1`) → ~~phobos_ex guard-leading adoption~~ **BUILT 2026-07-19 —
+§9 closed**: the guard-leading rules are route-driven try-go (one step per
+co-located turn; the witnessed report reproduces the hand-written narration
+byte-for-byte; eight move-and-print branches became two route steps; endgame
+golden byte-identical, deviation transcript clean); (10) a once-only shuffled deck mode for `pick`.
 Recommended next: a smaller item (§7 regions or §8 optional slots), or §6/§9/§10. The stale
 rulebooks.md status header flagged by the audit is now fixed (points at specs.md as
 source of truth for the shipped surface).

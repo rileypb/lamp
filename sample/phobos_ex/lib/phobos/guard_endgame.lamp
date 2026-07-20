@@ -100,23 +100,16 @@ scene commando_fight:
 	ends when commandos_down()
 
 # --- The guard leads Galaxy to the reactor (before the self-destruct is armed) ---------------
-# Fires while allied, not yet armed, and standing together: the guard takes one step toward the
-# reactor (Galaxy follows next turn), and at the reactor pulls and holds the left lever.
+# Fires while allied, not yet armed, and standing together: the guard takes one route step
+# toward the reactor each turn Galaxy is with it (route_to + `try go` — the witnessed-movement
+# report narrates each step, "The Siriusian guard goes south.", byte-identical to the lines the
+# port hand-wrote), and at the reactor pulls and holds the left lever. The go pipeline
+# adjudicates passage (both doors on the route are provably open — entering the control room
+# required the yellow-door code), and the actor default keeps Galaxy-only go rules (the KIM
+# retrieve) out of the guard's way.
 rule every_turn_rules:
 	if guard_allied and not self_destruct_in_progress and holder(guard) == holder(player):
 		let here = holder(player)
-		# Control room: the guard simply heads off south toward the reactor (the reveal already said
-		# "Come with me, human"); the beckon comes at the hub. (Original: the reveal does this move.)
-		if here == Control_Room:
-			move guard to Hub_Junction
-			print "The Siriusian guard goes south."
-		if here == Hub_Junction:
-			g_say("Time is short, human. We must engage the arming levers on the base reactor before someone comes to stop us.")
-			move guard to Western_Spoke
-			print "The Siriusian guard goes west."
-		if here == Western_Spoke:
-			move guard to Reactor_Room
-			print "The Siriusian guard goes west."
 		if here == Reactor_Room:
 			# Lingering after the guard has the left lever -> an impatient nag (the missed variant).
 			if left_lever_pulled:
@@ -126,6 +119,15 @@ rule every_turn_rules:
 				print "They gesture to two large levers on the wall, one on either side of the reactor. Then they pull the lever on the left side of the reactor and hold it. They say,"
 				g_say("Now you must pull the lever on the right side of the reactor. Do it quickly, human.")
 				left_lever_pulled = true
+		else:
+			# The beckon comes at the hub (the reveal already said "Come with me, human").
+			if here == Hub_Junction:
+				g_say("Time is short, human. We must engage the arming levers on the base reactor before someone comes to stop us.")
+			let d = route_to(here, Reactor_Room)
+			if not (d == none):
+				try go:
+					actor guard
+					way d
 
 # Galaxy pulls the right lever while the guard holds the left -> the reactor arms. (The "guard not
 # present" fallbacks in control_room.lamp bow out once the guard is in the reactor.)
@@ -146,19 +148,19 @@ instead pull when self.target == right_reactor_arming_lever and holder(guard) ==
 	stop succeeded
 
 # --- The guard leads back to the control room (after arming) ---------------------------------
+# Route-driven like the lead-out: one step toward the control room per co-located turn
+# (route_to picks east/east/north, exactly the hand-written sequence); once both stand in
+# the control room, route_to answers none and the ambush scene takes over.
 rule every_turn_rules:
 	if self_destruct_in_progress and guard_allied and not commando_fight.happened and holder(guard) == holder(player):
 		let here = holder(player)
 		if here == Reactor_Room:
 			g_say("We have disabled the failsafe on the base reactor. Now we must get out of here before it explodes. Be careful -- other guards may have been summoned to the base following the self-destruct command.")
-			move guard to Western_Spoke
-			print "The Siriusian guard goes east."
-		if here == Western_Spoke:
-			move guard to Hub_Junction
-			print "The Siriusian guard goes east."
-		if here == Hub_Junction:
-			move guard to Control_Room
-			print "The Siriusian guard goes north."
+		let d = route_to(here, Control_Room)
+		if not (d == none):
+			try go:
+				actor guard
+				way d
 
 # --- Commando attack ------------------------------------------------------------------------
 # Reaching the control room together, armed, springs the ambush: two commandos drop in from the
