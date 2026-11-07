@@ -58,6 +58,55 @@ Sourced from the staged roadmaps and prerequisite lists in
 
 ## Active
 
+### User documentation (started 2026-07-31)
+User-facing docs live in `docs/` (author audience, distinct from `devdocs/`).
+TOC: `docs/README.md` — six parts, 36 pages, ordered on disk by prefix
+(folders `1-`…`6-` per part, files `a-`, `b-`, … within). **Part I DONE
+(2026-07-31)**:
+`1-getting-started/{a-introduction,b-installation,c-first-game,d-tutorial-cloak}.md`.
+**Part II DONE (2026-08-03)**: `2-language/{a-syntax,b-objects-and-kinds,
+c-globals,d-functions,e-events,f-relations,g-rulebooks,h-scenes,
+i-statements-and-expressions,j-text}.md`, sourced from specs.md "Language
+Definition". All code verified by compiling/playing two test games; two
+behaviors discovered live and documented as gotchas: `[one of]`/`[first
+time]` cursors are per-template-site (two prints = two sites), and
+declaration-site templates need `[self.field]` (bare `[field]` falls
+through to a string literal).
+**Part III DONE (2026-08-04)**: `3-advent/{a-world-model,b-map,c-actions,
+d-describing,e-turn-cycle,f-npcs,g-conversation,h-scoring,i-endings}.md`,
+sourced from specs.md "lib/advent" + devdocs/conversation.md, verified with
+two live test games (doors, containers/enterables/supporters, orders +
+persuasion, witnessed route_to movement, conversation, scoring,
+initial_appearance). Stale specs.md spots found while writing (docs follow
+verified implementation): "Ending the story" still says quit-only (the
+RESTART/RESTORE/QUIT triad shipped 2026-07-01), "Doors" says OPEN/CLOSE
+"not yet provided" (they work; verified), "Backdrops" says region-scoping
+isn't modelled (superseded by the Regions section). Consider a specs.md
+cleanup pass.
+**Part IV DONE (2026-08-04)**: `4-presentation/{a-messages,b-text-windows,
+c-custom-shells,d-images,e-i18n}.md`, sourced from devdocs/{messages,
+text-windows,freestyle-windows,custom-shells,i18n}.md. Verified live:
+message overrides by name (take_report/go_cant/parser keys from
+lib/advent/locales/en-US.lamp), `verb` declarations for custom verbs in
+overrides, inline `name:"default"` messages, window declaration + refresh
+rules compile/run on the plain host. cloak_fr claims checked against the
+sample. No remaining forward-link debt except planned Part V/VI pages.
+**Part V DONE (2026-08-05)**: `5-shipping/{a-testing,b-saving,
+c-web-builds,d-electron-builds}.md`, sourced from devdocs/state.md +
+lighthouse.md + specs.md. Verified live: TEST scripts run in debug builds
+and their game-side declarations must sit in a `not_for_release` per-game
+lib file or `--release` fails on the missing `test_script` type (documented
+as the required layout); SCRIPT transcript to cwd file; SAVE/RESTORE/UNDO
+round-trip; CLI saves land in `~/Library/Application Support/lamp/saves`
+namespaced `<Game>__<slot>.sav`. Note: `LAMP_SAVE_DIR` did NOT redirect
+saves under `play.js` (it's read by `sandbox/host.js`; play.js apparently
+takes another path) — left undocumented in user docs; possibly a real gap
+worth checking.
+**Next:** Part VI (reference) — decide hand-written vs generated for
+`b-actions.md`/`c-messages.md` (generation from lib/advent + locale files
+would resist drift); `a-cli.md` and `d-from-inform7.md` are hand-written.
+This completes the manual; then consider a docs link-check test.
+
 ### Code review 2026-07-01 — triage `REVIEW.md`
 A full design review of `src/` + `lib/` is recorded in `REVIEW.md` (layering,
 duplication, JS→Lamp opportunities, missing features). Top items to act on, in
