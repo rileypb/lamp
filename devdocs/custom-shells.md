@@ -104,7 +104,9 @@ by the browser worker bootstrap; no channel ⇒ `shellSend` drops.
   `handler(payload, name)`. Last registration per name wins.
 - `LampShell.command(cmd)` — synthesize a parser command through the ordinary
   submit path (the hotspot mechanism: echoed like typed; dropped mid-turn,
-  mid-modal, mid-[more]).
+  mid-modal, mid-[more]). `LampShell.command(cmd, { silent: true })` skips the
+  echo and removes the pending prompt, for commands such as map steps that
+  shouldn't fill the transcript (devdocs/key-bindings.md).
 
 Unhandled `shell_event`s are dropped (fail-silently, as ever). Handler
 exceptions are caught and logged — an author bug must not kill the broker.

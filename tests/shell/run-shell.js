@@ -56,6 +56,28 @@ test("shellAvailable reads the capability; absent means false", () => {
     assert.strictEqual(lamp.shellAvailable(), false, "the stock web shell declares shell: false");
 });
 
+test("bindKey emits key_bind with a canonical key name", () => {
+    const sent = [];
+    lamp.setKeyChannel((msg) => sent.push(msg));
+    lamp.bindKey("Shift+Up", "step north");
+    lamp.bindKey("shift+ctrl+left", "step west");
+    lamp.bindKey("alt+down", "");
+    assert.deepStrictEqual(sent, [
+        { type: "key_bind", key: "shift+up", command: "step north" },
+        { type: "key_bind", key: "ctrl+shift+left", command: "step west" },
+        { type: "key_bind", key: "alt+down", command: "" },
+    ]);
+    lamp.setKeyChannel(null);
+});
+
+test("bindKey rejects unknown keys and plain arrows, even with no channel", () => {
+    lamp.setKeyChannel(null);
+    assert.throws(() => lamp.bindKey("up", "step north"), /unknown key "up"/);
+    assert.throws(() => lamp.bindKey("shift+home", "x"), /unknown key/);
+    assert.throws(() => lamp.bindKey("shift+shift+up", "x"), /unknown key/);
+    assert.doesNotThrow(() => lamp.bindKey("shift+up", "step north"), "no channel: drops silently");
+});
+
 if (failures > 0) {
     console.error(`\n${failures} test(s) failed`);
     process.exit(1);

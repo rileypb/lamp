@@ -43,6 +43,9 @@
     let paged = false;
     let promptDeferred = false;
     let deferredPromptText = null;
+    // The prompt span of the open input request, so a silent command can take it
+    // back rather than leave a bare "> " behind.
+    let promptSpan = null;
 
     // The input element is the permanent tail of the transcript; all output is
     // inserted before it so the input always sits inline after the last output.
@@ -120,6 +123,7 @@
         transcript.insertBefore(span, inputLine);
         span.textContent = value;
         if (!paged) scrollToBottom();
+        return span;
     }
 
     function scrollToBottom() {
@@ -185,7 +189,7 @@
         scrollToBottom();
         if (promptDeferred) {
             promptDeferred = false;
-            if (deferredPromptText != null) appendClassed(deferredPromptText, "prompt-text");
+            promptSpan = deferredPromptText != null ? appendClassed(deferredPromptText, "prompt-text") : null;
             deferredPromptText = null;
             ackHeight = transcript.scrollHeight;
             requestInput();
@@ -201,7 +205,7 @@
             deferredPromptText = promptText;
             return;
         }
-        if (promptText != null) appendClassed(promptText, "prompt-text");
+        promptSpan = promptText != null ? appendClassed(promptText, "prompt-text") : null;
         ackHeight = transcript.scrollHeight; // everything shown is now seen
         requestInput();
     }
@@ -595,13 +599,37 @@
         return null;
     }
 
-    function synthesizeCommand(command) {
+    // A silent command (bound keys, LampShell.command(cmd, { silent: true })) is
+    // delivered with no echo, and its prompt is removed, so a run of tile steps
+    // doesn't fill the transcript. Its own output still prints, and an open
+    // transcript file still records it (the runtime captures input itself).
+    function synthesizeCommand(command, { silent = false } = {}) {
         if (!awaitingInput || activeModal || paged) return;
         awaitingInput = false;
         inputLine.value = "";
         inputLine.disabled = true;
-        appendClassed(`${String(command)}\n`, "player-echo");
+        if (silent) {
+            if (promptSpan && promptSpan.nextSibling === inputLine) promptSpan.remove();
+        } else {
+            appendClassed(`${String(command)}\n`, "player-echo");
+        }
+        promptSpan = null;
         deliverLine(String(command));
+    }
+
+    // Key bindings (devdocs/key-bindings.md): canonical name → command, from the
+    // game's bind_key calls. A bound modified arrow fires only at an empty input
+    // line, so with text in the line it keeps its usual editing meaning.
+    const keyBindings = new Map();
+
+    function keyEventName(event) {
+        const arrow = { ArrowUp: "up", ArrowDown: "down", ArrowLeft: "left", ArrowRight: "right" }[event.key];
+        if (!arrow) return null;
+        const mods = [];
+        if (event.ctrlKey) mods.push("ctrl");
+        if (event.altKey) mods.push("alt");
+        if (event.shiftKey) mods.push("shift");
+        return mods.length ? mods.concat(arrow).join("+") : null;
     }
 
     function attachHotspotHandlers(pane) {
@@ -632,8 +660,8 @@
         on(name, handler) {
             shellEventHandlers[String(name)] = handler;
         },
-        command(cmd) {
-            synthesizeCommand(String(cmd));
+        command(cmd, options) {
+            synthesizeCommand(String(cmd), options || {});
         },
     };
 
@@ -689,6 +717,10 @@
                 break;
             case "shell_event":
                 dispatchShellEvent(msg);
+                break;
+            case "key_bind":
+                if (msg.command) keyBindings.set(msg.key, msg.command);
+                else keyBindings.delete(msg.key);
                 break;
             case "log":
                 console.log(msg.value);
@@ -758,10 +790,17 @@
     });
 
     inputLine.addEventListener("keydown", (event) => {
+        const bound = keyEventName(event);
+        if (bound && keyBindings.has(bound) && inputLine.value === "") {
+            event.preventDefault();
+            synthesizeCommand(keyBindings.get(bound), { silent: true });
+            return;
+        }
         if (event.key !== "Enter") return;
         event.preventDefault();
         if (!awaitingInput) return;
         const line = inputLine.value;
+        promptSpan = null;
         awaitingInput = false;
         inputLine.value = "";
         inputLine.disabled = true;

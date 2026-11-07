@@ -1230,6 +1230,12 @@ consider a manual browser pass on the color CSS (headless checks can't see
 the shades).
 
 ## Smaller / opportunistic
+- **Key bindings — hand-check and follow-ups (built 2026-11-07).** `bind_key` and silent
+  commands are built and unit-tested (devdocs/key-bindings.md). Still to do: (1) check by
+  hand in real terminals (Terminal.app, iTerm2, VS Code) and a browser build, including
+  that the web shell's prompt removal leaves no stray `> `; (2) decide whether hosts
+  should report which keys they can deliver, so games show key hints only where they work;
+  (3) consider keypad digits for diagonals. Raised by Roguelight.
 - **Global-install ergonomics (raised 2026-07-14).** `npm install -g .` already works —
   `bin` exposes `lantern`/`lantern-exe`, and lib/stdlib resolution is `__dirname`-relative
   so a copied install finds `lib/`. Gaps if global install becomes a supported path:

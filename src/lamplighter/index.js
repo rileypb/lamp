@@ -2423,6 +2423,43 @@ function shellAvailable() {
     return !!(hostCapabilities && hostCapabilities.shell);
 }
 
+// Key bindings (devdocs/key-bindings.md): the game binds a modified arrow key to a
+// command, and the host delivers that command as a silent line (no echo, no
+// history) when the key is pressed at an empty input line. Fire-and-forget like
+// shell_send; a host that can't read modified keys (plain) ignores the binding.
+// Names are canonicalized to ctrl+alt+shift+<arrow> order so hosts match one
+// spelling. An empty command removes the binding.
+const KEY_ARROWS = ["up", "down", "left", "right"];
+const KEY_MODIFIERS = ["ctrl", "alt", "shift"];
+
+function canonicalKeyName(key) {
+    const parts = String(key).toLowerCase().split("+").map((p) => p.trim());
+    const arrow = parts.pop();
+    if (!KEY_ARROWS.includes(arrow)) return null;
+    const mods = new Set();
+    for (const p of parts) {
+        if (!KEY_MODIFIERS.includes(p) || mods.has(p)) return null;
+        mods.add(p);
+    }
+    if (mods.size === 0) return null; // plain arrows stay with caret and history
+    return KEY_MODIFIERS.filter((m) => mods.has(m)).concat(arrow).join("+");
+}
+
+let keyImpl = null;
+function setKeyChannel(nextKeyImpl) {
+    keyImpl = nextKeyImpl;
+}
+
+function bindKey(key, command) {
+    const plain = (v) => parseStyledRuns(renderText(v)).map((r) => r.text).join("");
+    const name = canonicalKeyName(plain(key));
+    if (name === null) {
+        throw new Error(`bind_key: unknown key "${plain(key)}" (expected a modifier and an arrow, such as "shift+up")`);
+    }
+    if (!keyImpl) return;
+    keyImpl({ type: "key_bind", key: name, command: plain(command) });
+}
+
 // Split a rendered string into wire runs [{ text, styles? }], honoring the style
 // push/pop sentinels with a local depth (independent of the main output stream's
 // style state) and dropping break sentinels — a window line is exactly one line.
@@ -4047,4 +4084,7 @@ module.exports = {
     setShellChannel,
     shellSend,
     shellAvailable,
+    setKeyChannel,
+    bindKey,
+    canonicalKeyName,
 };

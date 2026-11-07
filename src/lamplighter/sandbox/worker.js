@@ -133,6 +133,11 @@ function main() {
     lamplighter.setWindowChannel((msg) => {
         parentPort.postMessage(msg);
     });
+    // Key bindings (devdocs/key-bindings.md): { type: "key_bind", key, command },
+    // forwarded verbatim; the TUI backend matches modified arrows against them.
+    lamplighter.setKeyChannel((msg) => {
+        parentPort.postMessage(msg);
+    });
     if (workerData.capabilities) lamplighter.setHostCapabilities(workerData.capabilities);
     lamplighter.setHostInteractive(workerData.interactive === true);
 

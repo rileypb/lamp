@@ -7,8 +7,9 @@
 // transcript, and a bottom input line, on the alternate screen in raw mode.
 //
 // Input: printable + Backspace/Delete + Enter, in-line cursor editing (←/→, Home/
-// End), and ↑/↓ command history; PageUp/PageDown and mouse-wheel scrollback; Ctrl-C
-// quits. The transcript carries bold/italic styling. Deferred: batched redraws,
+// End), and ↑/↓ command history; modified arrows the game bound with bind_key send
+// their command silently at an empty input line; PageUp/PageDown and mouse-wheel
+// scrollback; Ctrl-C quits. The transcript carries bold/italic styling. Deferred: batched redraws,
 // preserving the transcript on exit. The terminal is always restored on
 // exit/error/signal. See devdocs/windows.md, devdocs/sandbox.md.
 //
@@ -230,6 +231,24 @@ function wrapLine(text, cols) {
     return wrapSpans([{ text, bold: false, italic: false }], cols).map((row) => rowToString(row, cols));
 }
 
+// The canonical name (ctrl+alt+shift+<arrow>) of a modified arrow key, or null.
+// xterm-style terminals send ESC [ 1 ; <m> <A-D>, where m - 1 is a bitmask: 1 shift,
+// 2 alt, 4 ctrl. rxvt sends Shift+arrow as ESC [ <a-d>.
+const ARROW_FINALS = { A: "up", B: "down", C: "right", D: "left" };
+function modifiedArrowName(params, final) {
+    const rxvt = { a: "up", b: "down", c: "right", d: "left" }[final];
+    if (rxvt && params === "") return `shift+${rxvt}`;
+    const arrow = ARROW_FINALS[final];
+    const m = /^1;(\d+)$/.exec(params);
+    if (!arrow || !m) return null;
+    const bits = parseInt(m[1], 10) - 1;
+    const mods = [];
+    if (bits & 4) mods.push("ctrl");
+    if (bits & 2) mods.push("alt");
+    if (bits & 1) mods.push("shift");
+    return mods.length ? mods.concat(arrow).join("+") : null;
+}
+
 function createTuiBackend({ out, err, input, exit } = {}) {
     // `input` and `exit` are injectable for testing; they default to the real
     // process stdin and process.exit in production.
@@ -257,6 +276,8 @@ function createTuiBackend({ out, err, input, exit } = {}) {
     const history = []; // submitted command lines
     let historyIdx = 0; // cursor into history; === history.length means "current draft"
     let draft = ""; // the in-progress line, stashed while browsing history
+
+    const keyBindings = new Map(); // canonical key name → command (devdocs/key-bindings.md)
 
     const decoder = new StringDecoder("utf8"); // reassembles UTF-8 split across chunks
     let started = false;
@@ -604,6 +625,21 @@ function createTuiBackend({ out, err, input, exit } = {}) {
         deliver(line); // release the worker (blocked on Atomics.wait)
     }
 
+    // A bound key's command goes to the game with no echo and no history entry, so a
+    // run of tile steps doesn't fill the transcript. The prompt lives only on the
+    // input row, so nothing is left behind; the command's own output still prints.
+    function submitSilently(command) {
+        const deliver = deliverCb;
+        awaiting = false;
+        inputBuf = "";
+        cursorPos = 0;
+        deliverCb = null;
+        currentPrompt = "";
+        scrollOffset = 0;
+        render();
+        deliver(command);
+    }
+
     function pageUp() {
         const viewH = Math.max(1, (out.rows || 24) - 2);
         scrollOffset += Math.max(1, viewH - 1);
@@ -623,6 +659,11 @@ function createTuiBackend({ out, err, input, exit } = {}) {
         if (final === "~" && params === "5") { pageUp(); return; } // PageUp
         if (final === "~" && params === "6") { pageDown(); return; } // PageDown
         if (!awaiting) return; // the rest edit the input line
+        const key = modifiedArrowName(params, final);
+        if (key && inputBuf.length === 0 && keyBindings.has(key)) {
+            submitSilently(keyBindings.get(key));
+            return;
+        }
         switch (final) {
             case "D": cursorLeft(); break; // ←
             case "C": cursorRight(); break; // →
@@ -761,6 +802,10 @@ function createTuiBackend({ out, err, input, exit } = {}) {
             p.lines = msg.lines || [];
             render();
         },
+        bindKey(key, command) {
+            if (command) keyBindings.set(String(key), String(command));
+            else keyBindings.delete(String(key));
+        },
         requestLine(prompt, deliver) {
             pendingPrompt = { prompt: prompt == null ? "" : String(prompt), deliver };
             // If the turn's output is still being paged through, hold the prompt until
@@ -771,4 +816,4 @@ function createTuiBackend({ out, err, input, exit } = {}) {
     };
 }
 
-module.exports = { createTuiBackend, wrapLine, textWidth };
+module.exports = { createTuiBackend, wrapLine, textWidth, modifiedArrowName };

@@ -654,6 +654,21 @@ web shell) it drops silently, so golden output is unaffected by construction.
 fall back to text — shell effects should be enhancement-only; anything
 information-bearing must also exist in text.
 
+### Key bindings
+
+```lamp
+bind_key(KEY, COMMAND)         # e.g. bind_key("shift+up", "step north")
+```
+
+`bind_key` gives a modified arrow key a command (devdocs/key-bindings.md).
+`KEY` is one to three of `ctrl`, `alt`, `shift` and an arrow (`up`, `down`,
+`left`, `right`), joined with `+`. An unknown key name is a runtime error; an
+empty `COMMAND` unbinds. Pressed at an empty input line while the game waits,
+the key sends its command **silently**: no echo, no history, though an open
+transcript still records it. Keys pressed mid-turn are dropped. The TUI and the
+web shell honor bindings; the plain host ignores them, so a bound command must
+also be typeable.
+
 ### Globals
 
 A **global** declares a named value that persists for the lifetime of the game. Globals are accessible to the Lamplighter runtime and may be overridden by user files.

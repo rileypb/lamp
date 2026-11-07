@@ -52,6 +52,31 @@ by your real game rules, nothing new to secure or save. That's the whole
 input model — buttons synthesize commands; there is no separate
 shell-to-game data path.
 
+For commands that would flood the transcript, such as one step per key
+press on a map, pass `{ silent: true }`: the command isn't echoed and its
+prompt is taken back, while its own output still prints and an open
+transcript still records it.
+
+```js
+LampShell.command("step north", { silent: true });
+```
+
+### Keys without a custom shell
+
+A game can give modified arrow keys a command itself, with no shell code:
+
+```lamp
+rule startup_rules:
+	bind_key("shift+up", "step north")
+	bind_key("shift+down", "step south")
+```
+
+The key sends its command silently, and only when the input line is empty
+and the game is waiting. It works in the terminal and in any web build; a
+piped run ignores it, so the command must also work when typed. Some
+terminals don't pass every modified arrow through, and Shift is the most
+reliable. See `devdocs/key-bindings.md`.
+
 Any file in the shell directory whose name matches a stock asset
 (`index.html`, `shell.js`, `shell.css`) **overrides** it; everything else
 (sounds, fonts, art) is copied into the bundle verbatim. For deep

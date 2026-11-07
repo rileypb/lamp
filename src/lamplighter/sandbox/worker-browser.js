@@ -198,6 +198,10 @@ function startIfReady() {
     lamplighter.setShellChannel((msg) => {
         self.postMessage(msg);
     });
+    // Key bindings (devdocs/key-bindings.md): { type: "key_bind", key, command }.
+    lamplighter.setKeyChannel((msg) => {
+        self.postMessage(msg);
+    });
     installInputChannel(pendingInputBuffer);
     installSaveChannel(pendingSaveBuffer);
 

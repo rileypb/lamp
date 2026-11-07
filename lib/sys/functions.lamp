@@ -251,6 +251,14 @@ native function bool window_kind_available(string content_kind)
 native function void shell_send(string name, string payload)
 native function bool shell_available()
 
+# Key bindings (devdocs/key-bindings.md): bind a modified arrow key, such as
+# "shift+up" or "ctrl+alt+left", to a command. Pressed at an empty input line
+# while the game waits, the host sends the command silently: no echo, no
+# history, though an open transcript still records it. Keys pressed mid-turn are
+# dropped. An empty command unbinds. The plain host ignores bindings, so every
+# bound command must also be typeable. Errors on a key name it doesn't know.
+native function void bind_key(string key, string command)
+
 # Paragraph-control markers (text.md H). Each returns an output-stream control token
 # meant to be printed in place; the bare-word sugar [line break] / [par] / [no break]
 # / [run on] / [par if printed] desugars to these calls. line_break/paragraph request

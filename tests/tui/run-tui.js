@@ -6,7 +6,7 @@
 
 const assert = require("assert");
 const { EventEmitter } = require("events");
-const { createTuiBackend, wrapLine, textWidth } = require("../../src/lamplighter/sandbox/backends/tui");
+const { createTuiBackend, wrapLine, textWidth, modifiedArrowName } = require("../../src/lamplighter/sandbox/backends/tui");
 
 let failures = 0;
 function test(name, fn) {
@@ -191,6 +191,69 @@ test("command history recalls previous lines with ↑/↓", () => {
     input.emit("data", Buffer.from("\x1b[A")); // ↑ → "look"
     input.emit("data", Buffer.from("\r"));
     assert.deepStrictEqual(delivered, ["look", "north", "look"]);
+    b.stop();
+});
+
+// --- key bindings (devdocs/key-bindings.md) ---------------------------------
+test("modifiedArrowName: xterm modifier codes and rxvt Shift+arrows", () => {
+    assert.strictEqual(modifiedArrowName("1;2", "A"), "shift+up");
+    assert.strictEqual(modifiedArrowName("1;3", "C"), "alt+right");
+    assert.strictEqual(modifiedArrowName("1;5", "D"), "ctrl+left");
+    assert.strictEqual(modifiedArrowName("1;8", "B"), "ctrl+alt+shift+down");
+    assert.strictEqual(modifiedArrowName("", "a"), "shift+up");
+    assert.strictEqual(modifiedArrowName("", "A"), null, "a plain arrow has no modifier");
+    assert.strictEqual(modifiedArrowName("1;1", "A"), null);
+    assert.strictEqual(modifiedArrowName("1;2", "H"), null, "Home isn't an arrow");
+});
+
+test("a bound Shift+arrow at an empty line delivers its command silently", () => {
+    const out = mockOut(40, 10);
+    const input = mockIn();
+    const b = createTuiBackend({ out, input, exit() {} });
+    b.start();
+    b.bindKey("shift+up", "step north");
+    const delivered = [];
+    const ask = () => b.requestLine("> ", (line) => { delivered.push(line); });
+    ask();
+    input.emit("data", Buffer.from("look\r"));
+    ask();
+    input.emit("data", Buffer.from("\x1b[1;2A")); // Shift+↑
+    assert.deepStrictEqual(delivered, ["look", "step north"]);
+    assert.ok(!out.buf.includes("step north"), "no echo of the silent command");
+    ask();
+    input.emit("data", Buffer.from("\x1b[A\r")); // ↑ recalls "look": the step isn't in history
+    assert.deepStrictEqual(delivered, ["look", "step north", "look"]);
+    b.stop();
+});
+
+test("a bound key keeps its editing meaning when the line has text", () => {
+    const out = mockOut(40, 10);
+    const input = mockIn();
+    const b = createTuiBackend({ out, input, exit() {} });
+    b.start();
+    b.bindKey("shift+left", "step west");
+    let delivered = null;
+    b.requestLine("> ", (line) => { delivered = line; });
+    input.emit("data", Buffer.from("lok"));
+    input.emit("data", Buffer.from("\x1b[1;2D")); // Shift+← moves the caret
+    input.emit("data", Buffer.from("o\r"));
+    assert.strictEqual(delivered, "look");
+    b.stop();
+});
+
+test("a bound key pressed mid-turn is dropped, and an empty command unbinds", () => {
+    const out = mockOut(40, 10);
+    const input = mockIn();
+    const b = createTuiBackend({ out, input, exit() {} });
+    b.start();
+    b.bindKey("shift+up", "step north");
+    input.emit("data", Buffer.from("\x1b[1;2A")); // no input request open
+    const delivered = [];
+    b.requestLine("> ", (line) => { delivered.push(line); });
+    assert.deepStrictEqual(delivered, [], "the mid-turn key wasn't queued");
+    b.bindKey("shift+up", "");
+    input.emit("data", Buffer.from("\x1b[1;2A")); // unbound: acts as ↑ (empty history)
+    assert.deepStrictEqual(delivered, []);
     b.stop();
 });
 

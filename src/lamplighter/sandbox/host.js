@@ -158,6 +158,8 @@ function playFile(generatedPath, { out = process.stdout, err = process.stderr } 
                 backend.windowSet(msg);
             } else if (msg.type === "window_update") {
                 backend.windowUpdate(msg);
+            } else if (msg.type === "key_bind") {
+                if (backend.bindKey) backend.bindKey(msg.key, msg.command);
             } else if (msg.type === "readline") {
                 backend.requestLine(null, deliverLine);
             } else if (msg.type === "prompt_readline") {
