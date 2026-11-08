@@ -1,0 +1,50 @@
+# Scope filter (devdocs/specs.md, "Scope filter"): a game-installed filter hides objects from the
+# parser and, through scope_allows, from advent's room and container listings. Here anything
+# `shadowed` is hidden until REVEAL lights the room. The crate's shadowed key also hides from
+# TAKE X FROM Y, and from TAKE ALL.
+
+lib advent
+
+type thing:
+	bool shadowed = false
+
+game ScopeFilter:
+	start cellar
+
+room cellar:
+	description "A low cellar."
+
+item candle:
+	description "A stub of candle."
+
+item coin:
+	description "A tarnished coin."
+	shadowed true
+
+box crate:
+	description "A wooden crate."
+
+item key:
+	description "An iron key."
+	shadowed true
+
+contains cellar candle
+contains cellar coin
+contains cellar crate
+contains crate key
+
+function bool seen_by(person p, physical x):
+	return not x.shadowed
+
+rule startup_rules:
+	set_scope_filter(seen_by)
+
+action reveal:
+	out_of_world
+
+understand "reveal" as reveal
+
+do reveal:
+	coin.shadowed = false
+	key.shadowed = false
+	print "The shadows lift.[line break]"

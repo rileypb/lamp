@@ -1230,6 +1230,10 @@ consider a manual browser pass on the color CSS (headless checks can't see
 the shades).
 
 ## Smaller / opportunistic
+- **Scope filter (built 2026-11-07).** `set_scope_filter` / `scope_allows` (devdocs/specs.md,
+  golden `scopefilter1`), asked for by Roguelight to tie what the player can name to map lighting
+  and line of sight. Possible follow-ups: a filter-aware `light_in_scope` if a game wants unseen
+  lights not to count; NPC-side use (Roguelight filters only the player).
 - **Key bindings — hand-check and follow-ups (built 2026-11-07).** `bind_key` and silent
   commands are built and unit-tested (devdocs/key-bindings.md). Still to do: (1) check by
   hand in real terminals (Terminal.app, iTerm2, VS Code) and a browser build, including

@@ -116,6 +116,14 @@ native function void set_all_filter(function fn)
 # `check` bands. Returning true means BLOCKED — the gate prints its own refusal and the action
 # fails without running checks or reports. Uninstalled, every slot passes (no reach policy).
 native function void set_reach_gate(function fn)
+# The scope filter (devdocs/specs.md, "Scope filter"): fn(person, physical) -> bool, asked for each
+# object in an actor's scope when the parser resolves a command. False hides the object from the
+# parser ("You can't see any such thing."), pronouns, disambiguation and `all`; scope_allows asks
+# the same question for library code, such as room listings. The actor always passes, and with no
+# filter installed everything does. For a game whose sight is finer than containment, such as a
+# map with lighting and line of sight.
+native function void set_scope_filter(function fn)
+native function bool scope_allows(person p, physical x)
 
 # Install the persuasion gate (devdocs/conversation.md): consulted when a player-typed ORDER
 # ("urchin, take lamp") is about to run with the NPC as actor; called as fn(npc) with the

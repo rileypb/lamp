@@ -1,0 +1,46 @@
+cellar
+A low cellar.
+
+You see a candle and a crate here.
+
+> look
+cellar
+A low cellar.
+
+You see a candle and a crate here.
+
+> x coin
+You can't see any such thing.
+
+> take coin
+You can't see any such thing.
+
+> look in crate
+The crate is empty.
+
+> take key from crate
+You can't see any such thing.
+
+> take all
+candle: Taken.
+crate: Taken.
+
+> reveal
+The shadows lift.
+
+> look
+cellar
+A low cellar.
+
+You see a coin here.
+
+> x coin
+A tarnished coin.
+
+> look in crate
+In the crate is a key.
+
+> take key from crate
+Taken.
+
+> 

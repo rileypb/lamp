@@ -1,0 +1,11 @@
+look
+x coin
+take coin
+look in crate
+take key from crate
+take all
+reveal
+look
+x coin
+look in crate
+take key from crate

@@ -655,6 +655,21 @@ function setReachGate(fn) {
     reachGate = fn;
 }
 
+// The scope filter, installed by a game (lib/sys `set_scope_filter`; devdocs/specs.md): called as
+// filter(actor, object) for each object in the actor's scope when the parser resolves a command's
+// objects, and through `scope_allows` by library code that lists what an actor sees. A false
+// return hides the object: the parser answers as if it weren't there ("You can't see any such
+// thing."), and it drops out of pronouns, disambiguation and `all`. Only the parser's view is
+// filtered: scopeOf itself is unchanged, so light-in-scope and the debug SCOPE verb still see
+// everything. The actor itself always passes. Without a filter every object passes.
+let scopeFilter = null;
+function setScopeFilter(fn) {
+    scopeFilter = fn;
+}
+function scopeAllows(actor, obj) {
+    return !scopeFilter || obj === actor || !!scopeFilter(actor, obj);
+}
+
 // The persuasion gate, installed by the world library (lib/sys `set_persuasion_gate` ->
 // lib/advent's persuasion_gate): consulted when a player-typed ORDER ("urchin, take lamp")
 // is about to dispatch with the NPC as actor. Called as gate(npc) with the resolved action
@@ -1467,7 +1482,9 @@ function resolveSlots(slots, instance, scope, slotTypes, multiOut = { field: nul
         }
         // A FROM-scoped slot resolves within its source's contents (`take X from Y`); everything
         // else against the action's scope.
-        const fieldScope = (scopeCfg && field === scopeCfg.slot) ? contentsScope(instance[scopeCfg.from]) : scope;
+        const fieldScope = (scopeCfg && field === scopeCfg.slot)
+            ? contentsScope(instance[scopeCfg.from]).filter((x) => scopeAllows(instance.actor, x))
+            : scope;
         const candidates = resolveCandidates(span, resolvePool(slotTypes[field], fieldScope), slotTypes[field], instance.actor);
         if (candidates.length === 0) {
             // A multi action's direct slot accepts an ALL phrase ("all", "all but
@@ -1813,7 +1830,7 @@ function runCommand(line, actor, metaOnly = false) {
     // recompute the engine's hottest sweep per candidate. World-scope actions use
     // their own pool and never touch this.
     let actorScopeCache = null;
-    const actorScope = () => (actorScopeCache ??= scopeOf(actor));
+    const actorScope = () => (actorScopeCache ??= scopeOf(actor).filter((x) => scopeAllows(actor, x)));
     for (const entry of grammarRegistry) {
         const matched = matchGrammar(entry.parts, tokens);
         if (!matched) continue;
@@ -4081,6 +4098,8 @@ module.exports = {
     canvasHotspot,
     defineImage,
     getImagePath,
+    setScopeFilter,
+    scopeAllows,
     setShellChannel,
     shellSend,
     shellAvailable,

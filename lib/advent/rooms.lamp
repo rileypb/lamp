@@ -118,7 +118,8 @@ function physical holder(physical x):
 	return contains ?only x
 
 # The non-scenery physical objects held by `r` (a room, or an open container — a closed
-# one has no visible contents), excluding the current player character. Returns the
+# one has no visible contents), excluding the current player character and anything the game's
+# scope filter hides from the player (scope_allows). Returns the
 # objects, not rendered strings, so the caller picks the article at render time. Widened
 # from item to physical so a person present in a room joins the "[We] [see] … here." list
 # (a scenery person — one staged in the description prose — still opts out). Pure Lamp
@@ -128,7 +129,7 @@ function list<physical> contents_of(physical r):
 	if r.closed and not r.transparent:
 		return result
 	for x in physical.all:
-		if holder(x) == r and not x.scenery and not (x == player):
+		if holder(x) == r and not x.scenery and not (x == player) and scope_allows(player, x):
 			append(result, x)
 	return result
 
@@ -150,7 +151,7 @@ function list<physical> listable_contents(room r):
 function list<physical> contents_within(physical c):
 	let result = []
 	for x in physical.all:
-		if holder(x) == c and not x.scenery and not (x == player):
+		if holder(x) == c and not x.scenery and not (x == player) and scope_allows(player, x):
 			append(result, x)
 	return result
 
@@ -167,10 +168,10 @@ function list<physical> listable_within(physical c):
 # (was a native).
 function void describe_supporters(room r):
 	for s in item.all:
-		if holder(s) == r and s.scenery and s.supporter:
+		if holder(s) == r and s.scenery and s.supporter and scope_allows(player, s):
 			let on_it = []
 			for x in item.all:
-				if holder(x) == s and not x.scenery:
+				if holder(x) == s and not x.scenery and scope_allows(player, x):
 					append(on_it, x)
 			if not (on_it.first == none):
 				print "[par]"
