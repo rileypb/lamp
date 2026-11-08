@@ -1230,6 +1230,10 @@ consider a manual browser pass on the color CSS (headless checks can't see
 the shades).
 
 ## Smaller / opportunistic
+- **Output marks (built 2026-11-07).** `LampShell.mark()` / `releaseAll()` hold transcript
+  output behind a custom shell's animation (devdocs/custom-shells.md). Checked by hand through
+  Roguelight only: `shell.js` has no DOM test harness, so a jsdom-free unit test of the hold
+  queue would need it split out of the IIFE.
 - **Scope filter (built 2026-11-07).** `set_scope_filter` / `scope_allows` (devdocs/specs.md,
   golden `scopefilter1`), asked for by Roguelight to tie what the player can name to map lighting
   and line of sight. Possible follow-ups: a filter-aware `light_in_scope` if a game wants unseen

@@ -61,6 +61,17 @@ transcript still records it.
 LampShell.command("step north", { silent: true });
 ```
 
+A shell that animates the game's events can keep the transcript in step with
+the animation. `LampShell.mark()` holds the game's later text, status bar and
+prompt until the returned function is called; `LampShell.releaseAll()` lets
+everything through, for skipping ahead.
+
+```js
+const release = LampShell.mark();   // as an animation frame arrives
+// ... later, when that frame is drawn:
+release();
+```
+
 ### Keys without a custom shell
 
 A game can give modified arrow keys a command itself, with no shell code:

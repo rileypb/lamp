@@ -107,6 +107,16 @@ by the browser worker bootstrap; no channel ⇒ `shellSend` drops.
   mid-modal, mid-[more]). `LampShell.command(cmd, { silent: true })` skips the
   echo and removes the pending prompt, for commands such as map steps that
   shouldn't fill the transcript (devdocs/key-bindings.md).
+- `LampShell.mark()` — place an **output mark** at the current point in the game's message
+  stream; returns a `release()` function. Transcript writes, window updates (the status bar
+  included), input prompts and end-of-game messages that arrive after an unreleased mark are
+  held, in order, and shown once every earlier mark is released. Shell events and save traffic
+  are never held. For a shell that plays events back over time: mark as each event arrives,
+  release when it is shown, and text appears in step (Roguelight's animated walks: "You open the
+  door." when the door opens on screen, the room text when the player arrives).
+  `LampShell.releaseAll()` releases every mark, for skipping an animation. While output is held
+  the input prompt is too, so `LampShell.command` drops until it is released. Verified in a
+  browser through Roguelight (2026-11-07); no automated test, as `shell.js` has no DOM harness.
 
 Unhandled `shell_event`s are dropped (fail-silently, as ever). Handler
 exceptions are caught and logged — an author bug must not kill the broker.

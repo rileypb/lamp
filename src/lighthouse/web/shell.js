@@ -656,9 +656,39 @@
     // script's evaluation the custom.js tag after it does not exist in the DOM yet.
     const shellEventHandlers = Object.create(null);
 
+    // Output marks (devdocs/custom-shells.md): a custom shell that plays the game's events back
+    // over time, such as an animated walk, places a mark as each event arrives and releases it
+    // when that event is shown. Transcript output, window updates, input prompts and the end of
+    // the game that arrive after an unreleased mark are held, in order, and shown once every
+    // earlier mark is released, so text appears in step with the animation. Shell events and save
+    // traffic are never held. With no marks, nothing changes.
+    const HELD_TYPES = new Set(["write", "window_set", "window_update", "readline", "prompt_readline", "done", "error"]);
+    const heldOutput = []; // { mark } or { msg }, in arrival order
+
+    function drainHeldOutput() {
+        while (heldOutput.length > 0) {
+            const item = heldOutput[0];
+            if (item.mark && !item.mark.released) return;
+            heldOutput.shift();
+            if (item.msg) handleWorkerMessage(item.msg);
+        }
+    }
+
     window.LampShell = {
         on(name, handler) {
             shellEventHandlers[String(name)] = handler;
+        },
+        mark() {
+            const mark = { released: false };
+            heldOutput.push({ mark });
+            return () => {
+                mark.released = true;
+                drainHeldOutput();
+            };
+        },
+        releaseAll() {
+            for (const item of heldOutput) if (item.mark) item.mark.released = true;
+            drainHeldOutput();
         },
         command(cmd, options) {
             synthesizeCommand(String(cmd), options || {});
@@ -705,6 +735,14 @@
     worker.addEventListener("message", (event) => {
         const msg = event.data;
         if (!msg) return;
+        if (heldOutput.length > 0 && HELD_TYPES.has(msg.type)) {
+            heldOutput.push({ msg });
+            return;
+        }
+        handleWorkerMessage(msg);
+    });
+
+    function handleWorkerMessage(msg) {
         switch (msg.type) {
             case "write":
                 appendStyled(msg.value, msg.styles);
@@ -783,7 +821,7 @@
             default:
                 break;
         }
-    });
+    }
 
     worker.addEventListener("error", (event) => {
         endGame(event.message || "worker error");
