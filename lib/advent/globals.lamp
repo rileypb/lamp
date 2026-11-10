@@ -108,6 +108,17 @@ relation contains:
 rulebook bool startup_rules():
 	default true
 
+# command_rewrite_rules: followed for each command the player gives, just before it runs (Inform's
+# "after reading a command"). A rule may `stop` with replacement text, which then runs in its
+# place, through the parser, scope and action rules as usual; the first rule to stop wins, and
+# with none the command runs as given. The command is one of a line's commands, after
+# split_commands, so "frotz door. north" offers "frotz door" and "north" separately. Every
+# command passes through it — typed, sent by a custom shell, bound to a key, or queued by TEST —
+# so a rule must match only what it means to rewrite. The transcript echo still shows what was
+# typed; player_command() and AGAIN see the rewritten text. See devdocs/specs.md.
+rulebook string command_rewrite_rules(string command):
+	default command
+
 # every_turn_rules: followed once per turn, after a command that actually spent a turn
 # (run_command returned true) and while the story is ongoing. Side-effect rules for
 # daemons, countdowns, and per-turn upkeep. A game contributes `rule every_turn_rules:

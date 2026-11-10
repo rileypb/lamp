@@ -4,6 +4,7 @@
 
 For each command the player types:
 
+0. `command_rewrite_rules` may replace its text (see below).
 1. The parser resolves it and the action runs through its bands
    (before → instead → check → do → after → report).
 2. If an action actually ran — a **turn was spent** — the
@@ -19,6 +20,25 @@ checkpoints undo — one UNDO steps back exactly one command.
 
 A line may hold several commands (`take lamp then go north`, `n.e`); each
 is a full turn of its own, and a failure abandons the rest of the line.
+
+## Rewriting commands
+
+Before each command runs, advent follows `command_rewrite_rules`, which
+may replace the command's text — for verbs the grammar can't name ahead of
+time, such as spell words invented fresh each game, or for shorthand. A
+rule `stop`s with the new text; the first to stop wins, and otherwise the
+command runs as typed:
+
+```lamp
+rule command_rewrite_rules when to_lower(first_word(command)) == "frotz":
+    let rest = after_first_word(command)
+    stop freeze "cast frotz on [rest]"
+```
+
+Each command of a line is offered separately, and every command comes
+through here — typed, from a custom shell, from a bound key or a TEST
+script — so match only what you mean to rewrite. The transcript still
+shows what the player typed.
 
 ## Every-turn rules
 

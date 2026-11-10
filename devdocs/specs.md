@@ -22,6 +22,7 @@
     - `evaluate_scenes()`, `begin_scene(scene)`, `end_scene(scene)`, `end_all_scenes()` — the scene machinery (see *Scenes* below): one declared-transition evaluation pass; imperative begin/end (immediate, event-dispatching, no-op when already in the target state); end every active scene (the story-end sweep). The advent loop wires the first and last in; a bare-sys game with scenes calls them at its own boundaries.
     - `run_command(string, object) → bool` — parses one command against registered action templates, resolves slot objects in scope, and runs the matched action for the given actor. Returns **true iff a turn was spent** (an action actually ran), so the caller can fire every-turn rules; false for a parse failure, a disambiguation prompt, or an out-of-world verb.
     - `split_commands(string) → list<string>` — splits one typed line into the commands it holds (see *Command sequences* below). A full stop or the locale's sequence word (`then`) ends a command; the conjunction (`and`) does not.
+    - `first_word(string) → string`, `after_first_word(string) → string` — a command's first word, and the rest of it trimmed; pure Lamp, for `command_rewrite_rules` (see *Command rewriting* below).
     - `command_ran() → bool` — whether the last `run_command` reached an action at all. Unlike `run_command`'s own result it stays **true for an out-of-world verb** (which runs but spends no turn) and is false for a parse failure, an unresolved noun, or a disambiguation question. The command loop reads it to decide whether the rest of a multi-command line still stands.
     - `input_ended() → bool` — whether the most recent `prompt`/`readline` hit **end-of-input** (the stream closed: piped input exhausted, or EOF on the plain backend). Distinct from a blank line, which returns `""`. The command loop checks it after each prompt to end the session (an implicit QUIT) instead of re-prompting once no more input can arrive.
 - `lib/en-US/` is the **default locale pack** — English *language data* for the text-substitution layer (article functions `the`/`a`/`an`, case functions `cap`/`upper`/`lower`/`title`, and the list-to-prose formatter `format_list` with its "and"/Oxford comma). Like `lib/sys`, it auto-loads on every invocation, inserted **immediately after `lib/sys/` and before any imported library**. It is the swappable language layer (a future `lib/en-GB`/`lib/fr-FR` replaces it) — `lib/sys` holds only language-agnostic mechanism. See `devdocs/text.md` (three-layer split).
@@ -1404,6 +1405,46 @@ command is recorded **fully resolved** — the answer folded in (`take ball` + `
 again. Because the line is already split, AGAIN never replays a whole `then`
 sequence. It is handled by `run_command` itself, so no game or loop code is
 required. See `devdocs/game_parser.md` (Stage 0 → AGAIN / G).
+
+#### Command rewriting
+
+advent declares `rulebook string command_rewrite_rules(string command)`, with
+`default command`, and its loop follows it for each command just before running it
+(Inform's "after reading a command"):
+
+```lamp
+for command in split_commands(input):
+    let line = follow command_rewrite_rules(command)
+    if run_command(line, player):
+        ...
+```
+
+A rule that `stop`s with text replaces the command; the first rule to stop wins,
+and with none the command runs as given. The replacement is plain text and goes
+through the parser, scope and action rules as usual. It is for verbs the grammar
+can't name at compile time — such as spell words invented each game — and for
+per-game shorthand:
+
+```lamp
+rule command_rewrite_rules when to_lower(first_word(command)) == "frotz":
+    let rest = after_first_word(command)
+    stop freeze "cast frotz on [rest]"
+```
+
+- **Per command.** The rulebook sees each command of a line after
+  `split_commands`, so `frotz lamp. look` offers `frotz lamp` and `look` separately.
+- **Every command.** Typed commands, a custom shell's `LampShell.command`, bound
+  keys and TEST scripts all arrive through the loop, so a rule must match only what
+  it means to rewrite. A disambiguation answer passes through too.
+- **What sees the rewrite.** The transcript echo shows what the player typed;
+  `player_command()` and AGAIN see the rewritten command (AGAIN replays it, which
+  has the same effect).
+- **No rules, no change.** A game that contributes none behaves as before.
+- **Helpers** (lib/sys): `first_word(s)` is a command's first word, and
+  `after_first_word(s)` everything after it, trimmed: `"frotz  the lamp"` →
+  `"frotz"`, `"the lamp"`; a one-word command gives `""` after it.
+
+Golden: `rewrite1`.
 
 #### Phase rules
 

@@ -1,0 +1,38 @@
+# Command rewriting (devdocs/specs.md, "Command rewriting"): command_rewrite_rules sees each
+# command before it runs and may replace it. Here an invented spell word works as a verb:
+# "frotz lamp" becomes "cast frotz on lamp", which only the CAST grammar knows. Rewriting is
+# per command, case-insensitive here, leaves other commands alone, and AGAIN repeats the
+# rewritten command. first_word and after_first_word split a command at its first word.
+
+lib advent
+
+game Rewrite:
+	start study
+
+room study:
+	description "A quiet study."
+	item lamp:
+		description "A brass lamp."
+
+action cast:
+	string word
+	direct item target
+
+understand "cast [word] on [target]" as cast
+
+do cast:
+	print "You cast [self.word] on [the self.target].[line break]"
+
+rule command_rewrite_rules when to_lower(first_word(command)) == "frotz":
+	let rest = after_first_word(command)
+	stop freeze "cast frotz on [rest]"
+
+rule startup_rules:
+	show_split("  frotz   the lamp  ")
+	show_split("look")
+	show_split("")
+
+function void show_split(string s):
+	let a = first_word(s)
+	let b = after_first_word(s)
+	print "\[[a]|[b]\][line break]"

@@ -1,0 +1,38 @@
+[frotz|the lamp]
+[look|]
+[|]
+study
+A quiet study.
+
+You see a lamp here.
+
+> frotz lamp
+You cast frotz on the lamp.
+
+> again
+You cast frotz on the lamp.
+
+> FROTZ the lamp
+You cast frotz on the lamp.
+
+> frotz lamp. look
+You cast frotz on the lamp.
+
+study
+A quiet study.
+
+You see a lamp here.
+
+> x lamp
+A brass lamp.
+
+> frotz
+What do you want to cast frotz on?
+
+> frotzy lamp
+You can't see any such thing.
+
+> cast frotz on lamp
+You cast frotz on the lamp.
+
+> 

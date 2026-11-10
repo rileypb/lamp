@@ -131,6 +131,35 @@ native function bool scope_allows(person p, physical x)
 # own refusal) — the refused order still spends the turn. Uninstalled, orders dispatch freely.
 native function void set_persuasion_gate(function fn)
 
+# A command's first word, and everything after it, split at the first run of whitespace (leading
+# whitespace ignored, the rest trimmed). For command_rewrite_rules (lib/advent): "frotz the
+# door" -> "frotz" and "the door"; a one-word command gives "" after it.
+function string first_word(string sys_s):
+	let sys_i = sys_skip_space(sys_s, 0)
+	let sys_j = sys_i
+	while sys_j < length(sys_s) and not sys_is_space(char_at(sys_s, sys_j)):
+		sys_j = sys_j + 1
+	return substring(sys_s, sys_i, sys_j)
+
+function string after_first_word(string sys_s):
+	let sys_i = sys_skip_space(sys_s, 0)
+	while sys_i < length(sys_s) and not sys_is_space(char_at(sys_s, sys_i)):
+		sys_i = sys_i + 1
+	sys_i = sys_skip_space(sys_s, sys_i)
+	let sys_end = length(sys_s)
+	while sys_end > sys_i and sys_is_space(char_at(sys_s, sys_end - 1)):
+		sys_end = sys_end - 1
+	return substring(sys_s, sys_i, sys_end)
+
+function int sys_skip_space(string sys_s, int sys_from):
+	let sys_i = sys_from
+	while sys_i < length(sys_s) and sys_is_space(char_at(sys_s, sys_i)):
+		sys_i = sys_i + 1
+	return sys_i
+
+function bool sys_is_space(string sys_c):
+	return sys_c == " " or sys_c == "\t"
+
 # The player's most recent command line, as typed (original casing, trimmed). Use
 # it in narration as `[player_command()]` — e.g. "I don't understand
 # \"[player_command()]\"." Empty before the first command. See devdocs/text.md J1.
