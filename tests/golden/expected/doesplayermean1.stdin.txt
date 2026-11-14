@@ -1,0 +1,11 @@
+take coin
+gold
+take coin
+i
+drop coin
+gold
+take coin
+x box
+drop coin
+silver
+i

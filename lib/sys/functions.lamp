@@ -124,6 +124,11 @@ native function void set_reach_gate(function fn)
 # map with lighting and line of sight.
 native function void set_scope_filter(function fn)
 native function bool scope_allows(person p, physical x)
+# The "does the player mean" ranker (devdocs/command_inference.md): fn(person, string, physical)
+# -> int, asked for each candidate when a noun phrase matches more than one, with the actor, the
+# action's name ("take") and the candidate. Only the best-scoring candidates are kept, so a single
+# one resolves without "Which do you mean". advent installs does_player_mean_rules (globals.lamp).
+native function void set_dpm_ranker(function fn)
 
 # Install the persuasion gate (devdocs/conversation.md): consulted when a player-typed ORDER
 # ("urchin, take lamp") is about to run with the NPC as actor; called as fn(npc) with the

@@ -1,6 +1,7 @@
 # Command Inference — "Does the Player Mean…"
 
-> Status: **design; not implemented.** Defines candidate *inference*: when a noun
+> Status: **implemented 2026-11-13** (golden `doesplayermean1`), with the deviations listed
+> under "As built" below. Defines candidate *inference*: when a noun
 > matches several in-scope objects, ranking them by how plausibly the player meant
 > each **given the action**, so an obvious winner is chosen without a disambiguation
 > question. This is Inform's "does the player mean…" activity (DPM). Companion to
@@ -132,6 +133,28 @@ applicability signal (a held coin shouldn't win `take` just because it was "it")
   *single* referent that matched several objects.
 - **Bound pronouns.** `it`/`them` already resolve to a specific referent (no
   multi-candidate step), so ranking never runs on them.
+
+## As built (2026-11-13)
+
+Built for Roguelight, where TAKE SCROLL asked "Which do you mean" between a carried scroll
+and one on the floor. The policy is as designed: infer rank differences, ask ties, ask among
+the top tier, never re-rank an answer, never hide an object. Where it differs:
+
+- **Hook:** `set_dpm_ranker(fn)` (lib/sys), runtime `setDpmRanker`, called as
+  `ranker(actor, actionName, candidate) -> int`, not with the whole action `instance`: a Lamp
+  function can't easily take the instance, and actor plus action name covered every rule
+  wanted so far. Already-resolved slots aren't visible to a rule yet.
+- **Scale:** integers, not an enum, so a rulebook can `stop` a score and the runtime compares
+  them directly. By convention 2 very likely, 1 likely, 0 possible (the default), -1 unlikely,
+  -2 impossible. `impossible` gets no special case: when every candidate scores the same, all
+  are kept, which is the "keep them all" rule.
+- **Library policy:** advent's `does_player_mean_rules` rulebook (globals.lamp), followed by
+  the installed `does_player_mean`. Rules shipped: TAKE of something the actor holds is -1,
+  DROP of something it doesn't hold is -1. Games add rules (author rules run first). PUT,
+  WEAR, OPEN, UNLOCK and the rest are still open (below).
+- **Lists:** each piece of a connector list ("coin and key") is ranked, since each piece
+  names a single referent. ALL is still not ranked.
+- **Echo:** silent; no "(the gold coin)".
 
 ## Non-goals
 

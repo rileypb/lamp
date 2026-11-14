@@ -119,6 +119,28 @@ rulebook bool startup_rules():
 rulebook string command_rewrite_rules(string command):
 	default command
 
+# does_player_mean_rules: when a noun phrase matches more than one thing, the parser asks this of
+# each candidate, with the actor, the action's name ("take") and the candidate, and keeps only the
+# best-scoring ones; if one is left, it runs without asking "Which do you mean". As Inform's "does
+# the player mean" rules: a rule `stop`s with a score, higher meaning more likely, and with none
+# the score is 0. The library's rules say TAKE rarely means something already held and DROP rarely
+# means something not held, so with a carried scroll and one on the floor, TAKE SCROLL takes the
+# one on the floor. A game contributes `rule does_player_mean_rules when action_name == "eat" and
+# …: stop 1`; author rules run first. Scores by convention: 2 very likely, 1 likely, 0 possible,
+# -1 unlikely, -2 impossible. An answer to the question is never re-ranked. Installed through
+# set_dpm_ranker (startup.lamp; devdocs/command_inference.md).
+rulebook int does_player_mean_rules(person p, string action_name, physical x):
+	default 0
+
+rule does_player_mean_rules when action_name == "take" and holder(x) == p:
+	stop -1
+
+rule does_player_mean_rules when action_name == "drop" and not (holder(x) == p):
+	stop -1
+
+function int does_player_mean(person p, string action_name, physical x):
+	return follow does_player_mean_rules(p, action_name, x)
+
 # every_turn_rules: followed once per turn, after a command that actually spent a turn
 # (run_command returned true) and while the story is ongoing. Side-effect rules for
 # daemons, countdowns, and per-turn upkeep. A game contributes `rule every_turn_rules:

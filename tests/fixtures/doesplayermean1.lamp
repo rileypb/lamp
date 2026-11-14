@@ -1,0 +1,41 @@
+# "Does the player mean" (devdocs/command_inference.md): when a noun phrase matches more
+# than one thing, does_player_mean_rules ranks them and only the likeliest are kept. advent's
+# rules: TAKE passes over what is already held, DROP over what isn't. A game rule here makes
+# EXAMINE prefer the painted box. With two coins on the floor TAKE still asks, and an answer to the
+# question stands as given.
+
+lib advent
+
+game DoesPlayerMean:
+	start hall
+
+room hall:
+	description "A bare hall."
+
+item gold_coin:
+	printed_name "gold coin"
+	understand "gold/coin"
+	description "A gold coin."
+
+item silver_coin:
+	printed_name "silver coin"
+	understand "silver/coin"
+	description "A silver coin."
+
+item plain_box:
+	printed_name "plain box"
+	understand "plain/box"
+	description "A plain box."
+
+item painted_box:
+	printed_name "painted box"
+	understand "painted/box"
+	description "A painted box."
+
+contains hall gold_coin
+contains hall silver_coin
+contains hall plain_box
+contains hall painted_box
+
+rule does_player_mean_rules when action_name == "examine" and x == painted_box:
+	stop 1

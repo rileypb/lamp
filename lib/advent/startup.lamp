@@ -86,6 +86,9 @@ on startup:
 	# Install the reach gate (reach_gate, rooms.lamp): touchable slots refuse across a closed
 	# container between actor and object. Same override story as the all filter.
 	set_reach_gate(reach_gate)
+	# Install the "does the player mean" ranker (does_player_mean_rules, globals.lamp): a noun
+	# phrase that matches several things keeps only the likeliest for the action before asking.
+	set_dpm_ranker(does_player_mean)
 	# Install the persuasion gate (persuasion_rules/persuasion_gate, actions.lamp): a player-typed
 	# order runs only when a game rule grants it; the default refuses.
 	set_persuasion_gate(persuasion_gate)

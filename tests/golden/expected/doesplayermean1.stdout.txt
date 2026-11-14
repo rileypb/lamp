@@ -1,0 +1,42 @@
+hall
+A bare hall.
+
+You see a gold coin, a silver coin, a plain box and a painted box here.
+
+> take coin
+Which do you mean: the gold coin or the silver coin?
+
+> gold
+Taken.
+
+> take coin
+Taken.
+
+> i
+You are carrying:
+  a gold coin
+  a silver coin
+
+> drop coin
+Which do you mean: the gold coin or the silver coin?
+
+> gold
+Dropped.
+
+> take coin
+Taken.
+
+> x box
+A painted box.
+
+> drop coin
+Which do you mean: the gold coin or the silver coin?
+
+> silver
+Dropped.
+
+> i
+You are carrying:
+  a gold coin
+
+> 

@@ -666,6 +666,24 @@ let scopeFilter = null;
 function setScopeFilter(fn) {
     scopeFilter = fn;
 }
+
+// The "does the player mean" ranker (devdocs/command_inference.md), installed by the world
+// library (lib/sys `set_dpm_ranker` -> lib/advent's does_player_mean_rules): called as
+// ranker(actor, actionName, object) for each candidate when a noun phrase matches more than one, and
+// returns a score, 0 by default. Only the best-scoring candidates are kept, so one left resolves
+// without a "Which do you mean" question, as Inform's "does the player mean" rules do: TAKE
+// passes over what the actor already holds. An answer to the question isn't re-ranked: the player
+// chose. Without a preference, every candidate is kept.
+let dpmRanker = null;
+function setDpmRanker(fn) {
+    dpmRanker = fn;
+}
+function preferCandidates(candidates, instance) {
+    if (!dpmRanker || candidates.length < 2) return candidates;
+    const scores = candidates.map((c) => Number(dpmRanker(instance.actor, String(instance.type), c)) || 0);
+    const best = Math.max(...scores);
+    return candidates.filter((c, i) => scores[i] === best);
+}
 function scopeAllows(actor, obj) {
     return !scopeFilter || obj === actor || !!scopeFilter(actor, obj);
 }
@@ -1485,7 +1503,7 @@ function resolveSlots(slots, instance, scope, slotTypes, multiOut = { field: nul
         const fieldScope = (scopeCfg && field === scopeCfg.slot)
             ? contentsScope(instance[scopeCfg.from]).filter((x) => scopeAllows(instance.actor, x))
             : scope;
-        const candidates = resolveCandidates(span, resolvePool(slotTypes[field], fieldScope), slotTypes[field], instance.actor);
+        const candidates = preferCandidates(resolveCandidates(span, resolvePool(slotTypes[field], fieldScope), slotTypes[field], instance.actor), instance);
         if (candidates.length === 0) {
             // A multi action's direct slot accepts an ALL phrase ("all", "all but
             // the sword") or a connector-separated list ("ball and umbrella") —
@@ -1588,7 +1606,7 @@ function resolveAllPhrase(all, instance, field, scope, slotTypes, multiOut) {
 // so the player's answer resumes it.
 function resolveMultiPieces(pieces, startIdx, resolved, instance, field, remainingSlots, scope, slotTypes, multiOut) {
     for (let i = startIdx; i < pieces.length; i++) {
-        const candidates = resolveCandidates(pieces[i], resolvePool(slotTypes[field], scope), slotTypes[field], instance.actor);
+        const candidates = preferCandidates(resolveCandidates(pieces[i], resolvePool(slotTypes[field], scope), slotTypes[field], instance.actor), instance);
         if (candidates.length === 0) {
             return "unresolved";
         }
@@ -4100,6 +4118,7 @@ module.exports = {
     getImagePath,
     setScopeFilter,
     scopeAllows,
+    setDpmRanker,
     setShellChannel,
     shellSend,
     shellAvailable,
